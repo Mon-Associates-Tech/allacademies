@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SignInController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,11 +15,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', 'dashboard');
 
 Route::middleware('guest')->group(function () {
-    Route::get('sign-in', [SignInController::class, 'new'])->name('sign-in');
+    Route::get('sign-in', [SignInController::class, 'index'])->name('sign-in');
     Route::post('sign-in', [SignInController::class, 'store']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });

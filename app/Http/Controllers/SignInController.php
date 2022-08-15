@@ -6,7 +6,7 @@ use App\Http\Requests\SignInRequest;
 
 class SignInController extends Controller
 {
-    public function new()
+    public function index()
     {
         return view('sign-in');
     }
