@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SignInController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +16,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::middleware('guest')->group(function () {
+    Route::get('sign-in', [SignInController::class, 'new'])->name('sign-in');
+    Route::post('sign-in', [SignInController::class, 'store']);
 });
