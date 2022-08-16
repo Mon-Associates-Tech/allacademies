@@ -16,14 +16,14 @@
             </div>
             <div class="flex items-center group">
                 <svg class="w-5 h-5 text-primary-200 group-hover:text-primary-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-layers"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                <a href="{{ route('dashboard') }}" class="ml-2 block group-hover:text-white">Levels</a>
+                <a href="{{ route('academic-levels.index') }}" class="ml-2 block group-hover:text-white">Academic Levels</a>
             </div>
         </div>
     </div>
     <div class="pl-64">
         <div class="p-8">
             <div class="py-4">
-                <div class="text-xl font-semibold tracking-wider text-gray-800">{{ $title }}</div>
+                <div class="text-xl font-semibold tracking-wider text-gray-900">{{ $title }}</div>
                 <div class="text-sm font-light text-gray-500">{{ $summary }}</div>
             </div>
             {{ $slot }}
