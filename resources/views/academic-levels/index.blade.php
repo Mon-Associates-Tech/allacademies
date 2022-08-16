@@ -3,7 +3,7 @@
         <caption>
             <div class="flex items-center justify-between px-2 py-3">
                 <div class="font-medium text-gray-500 tracking-wide">
-                    Academic Levels
+                    List of academic levels
                 </div>
                 <div>
                     <x-button :to="route('academic-levels.create')">Add new academic level</x-button>
