@@ -18,6 +18,14 @@
                 <svg class="w-5 h-5 text-primary-200 group-hover:text-primary-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-layers"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                 <a href="{{ route('academic-levels.index') }}" class="ml-2 block group-hover:text-white">Academic Levels</a>
             </div>
+            <div class="flex items-center group">
+                <svg class="w-5 h-5 text-primary-200 group-hover:text-primary-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <a href="{{ route('academic-subjects.index') }}" class="ml-2 block group-hover:text-white">Academic Subjects</a>
+            </div>
+            <div class="flex items-center group">
+                <svg class="w-5 h-5 text-primary-200 group-hover:text-primary-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                <a href="{{ route('academic-topics.index') }}" class="ml-2 block group-hover:text-white">Academic Topics</a>
+            </div>
         </div>
     </div>
     <div class="pl-64">

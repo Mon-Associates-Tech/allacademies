@@ -1,11 +1,11 @@
-<x-dashboard title="Academic Levels" summary="Add educational levels">
+<x-dashboard title="Academic Subjects" summary="Add academic subject">
     <div class="font-medium text-gray-500 tracking-wide">
-        Create new academic level
+        Create new academic subject
     </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-levels.store') }}">
+    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-subjects.store') }}">
         @csrf
         <x-form.input full name="name" />
-        <x-form.input full name="label" />
+        <x-form.input full name="code" />
         <div class="flex items-center justify-end">
             <x-button>Save</x-button>
         </div>

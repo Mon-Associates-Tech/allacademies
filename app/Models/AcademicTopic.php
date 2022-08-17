@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AcademicLevel extends Model
+class AcademicTopic extends Model
 {
     use HasFactory;
 
@@ -14,11 +14,15 @@ class AcademicLevel extends Model
      */
     protected $fillable = [
         'name',
-        'label',
     ];
 
-    public function academicTopics()
+    public function academicLevel()
     {
-        return $this->hasMany(AcademicTopic::class);
+        return $this->belongsTo(AcademicLevel::class);
+    }
+
+    public function academicSubject()
+    {
+        return $this->belongsTo(AcademicSubject::class);
     }
 }

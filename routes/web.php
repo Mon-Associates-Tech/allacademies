@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AcademicLevelController;
+use App\Http\Controllers\AcademicSubjectController;
+use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\SignInController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +28,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('academic-levels', AcademicLevelController::class);
+    Route::resource('academic-subjects', AcademicSubjectController::class);
+    Route::resource('academic-topics', AcademicTopicController::class);
 });

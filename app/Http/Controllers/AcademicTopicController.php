@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AcademicLevelRequest;
+use App\Http\Requests\AcademicTopicRequest;
 use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
+use App\Models\AcademicTopic;
 use Illuminate\Http\Request;
 
-class AcademicLevelController extends Controller
+class AcademicTopicController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,10 +17,7 @@ class AcademicLevelController extends Controller
      */
     public function index()
     {
-        $academicLevels = AcademicLevel::all();
-
-        return view('academic-levels.index', [
-            'academicLevels' => $academicLevels,
+        return view('academic-topics.index', [
         ]);
     }
 
@@ -29,7 +28,13 @@ class AcademicLevelController extends Controller
      */
     public function create()
     {
-        return view('academic-levels.create');
+        $academicLevels = AcademicLevel::all(['id', 'name', 'label'])->toArray();
+        $academicSubjects = AcademicSubject::all(['id', 'name', 'code'])->toArray();
+
+        return view('academic-topics.create', [
+            'academicLevels' => $academicLevels,
+            'academicSubjects' => $academicSubjects
+        ]);
     }
 
     /**
@@ -38,20 +43,20 @@ class AcademicLevelController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicLevelRequest $request)
+    public function store(AcademicTopicRequest $request)
     {
-        AcademicLevel::query()->create($request->validated());
+        AcademicTopic::query()->create($request->validated());
 
-        return redirect()->route('academic-levels.index');
+        return redirect()->route('academic-topics.index');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\AcademicLevel  $academicLevel
+     * @param  \App\Models\AcademicTopic  $academicTopic
      * @return \Illuminate\Http\Response
      */
-    public function show(AcademicLevel $academicLevel)
+    public function show(AcademicTopic $academicTopic)
     {
         //
     }
@@ -59,10 +64,10 @@ class AcademicLevelController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\AcademicLevel  $academicLevel
+     * @param  \App\Models\AcademicTopic  $academicTopic
      * @return \Illuminate\Http\Response
      */
-    public function edit(AcademicLevel $academicLevel)
+    public function edit(AcademicTopic $academicTopic)
     {
         //
     }
@@ -71,10 +76,10 @@ class AcademicLevelController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AcademicLevel  $academicLevel
+     * @param  \App\Models\AcademicTopic  $academicTopic
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, AcademicLevel $academicLevel)
+    public function update(Request $request, AcademicTopic $academicTopic)
     {
         //
     }
@@ -82,10 +87,10 @@ class AcademicLevelController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\AcademicLevel  $academicLevel
+     * @param  \App\Models\AcademicTopic  $academicTopic
      * @return \Illuminate\Http\Response
      */
-    public function destroy(AcademicLevel $academicLevel)
+    public function destroy(AcademicTopic $academicTopic)
     {
         //
     }

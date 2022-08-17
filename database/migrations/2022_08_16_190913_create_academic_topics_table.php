@@ -13,10 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('academic_levels', function (Blueprint $table) {
+        Schema::create('academic_topics', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('label')->index();
+            $table->foreignId('academic_level_id')->constrained();
+            $table->foreignId('academic_subject_id')->constrained();
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('academic_levels');
+        Schema::dropIfExists('academic_topics');
     }
 };

@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('academic_levels', function (Blueprint $table) {
+        Schema::create('academic_subjects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('label')->index();
+            $table->string('code')->index();
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('academic_levels');
+        Schema::dropIfExists('academic_subjects');
     }
 };
