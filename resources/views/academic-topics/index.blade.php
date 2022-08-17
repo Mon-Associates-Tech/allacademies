@@ -14,14 +14,18 @@
             <tr>
                 <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">ID</th>
                 <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">Name</th>
+                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">Academic Level</th>
+                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">Academic Subject</th>
                 <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500"><span class="sr-only">Actions</span></th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-            @foreach ([] as $academicTopic)
+            @foreach ($academicTopics as $academicTopic)
             <tr>
                 <td class="p-2 text-sm text-gray-500">#{{ $academicTopic->id }}</td>
                 <td class="p-2 text-sm text-gray-900 font-medium">{{ $academicTopic->name }}</td>
+                <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicLevel->name }}</td>
+                <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicSubject->name }}</td>
                 <td class="p-2 text-sm text-primary-600 space-x-3">
                     <a href="{{ route('academic-topics.edit', ['academic_topic' => $academicTopic]) }}">Edit</a>
                 </td>

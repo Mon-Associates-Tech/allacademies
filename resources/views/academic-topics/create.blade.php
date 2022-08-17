@@ -6,6 +6,7 @@
         @csrf
         <x-form.input full name="name" />
         <x-form.select full name="academic_level_id" label="Academic level" :options="$academicLevels" />
+        <x-form.select full name="academic_subject_id" label="Academic Subject" :options="$academicSubjects" />
         <div class="flex items-center justify-end">
             <x-button>Save</x-button>
         </div>
