@@ -27,6 +27,8 @@
                 <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicLevel->name }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicSubject->name }}</td>
                 <td class="p-2 text-sm text-primary-600 space-x-3">
+                    <a href="{{ route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]) }}">MCQ</a>
+                    <a href="{{ route('academic-topics.theory-questions.create', ['academic_topic' => $academicTopic]) }}">Theory</a>
                     <a href="{{ route('academic-topics.edit', ['academic_topic' => $academicTopic]) }}">Edit</a>
                 </td>
             </tr>

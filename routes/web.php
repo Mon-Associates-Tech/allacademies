@@ -4,7 +4,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\AcademicTopicController;
+use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\SignInController;
+use App\Http\Controllers\TheoryQuestionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,4 +32,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('academic-levels', AcademicLevelController::class);
     Route::resource('academic-subjects', AcademicSubjectController::class);
     Route::resource('academic-topics', AcademicTopicController::class);
+    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class);
+    Route::resource('academic-topics.theory-questions', TheoryQuestionController::class);
 });

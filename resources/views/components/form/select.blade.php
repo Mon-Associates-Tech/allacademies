@@ -5,8 +5,9 @@
 @endphp
 
 <div class="space-y-1 relative"
-    x-data="{{ json_encode(['open' => false, 'label' => '', 'value' => $value, 'options' => $options]) }}"
-    x-init="value = value ? options.find(o => o.value == value).value : value;label = value ? options.find(o => o.value == value).label : label">
+    x-data="{{ json_encode(['open' => false, 'label' => '', 'search' => '', 'filtered' => $options, 'value' => $value, 'options' => $options, 'searchable' => count($options) > 15]) }}"
+    x-init="value = value ? options.find(o => o.value == value).value : value;label = value ? options.find(o => o.value == value).label : label"
+    x-effect="filtered = search ? options.filter(o => o.label.toLowerCase().includes(search)) : options;">
     <label class="text-gray-800 font-medium text-sm">{{ $label ?? ucfirst($name) }}</label>
     <div class="relative">
         <input x-model="value" class="hidden" type="text" id="{{ $name }}" name="{{ $name }}" type="text">
@@ -25,8 +26,11 @@
     </div>
     <ul x-cloak class="absolute z-10 mt-1 w-full bg-white max-h-60 overflow-x-auto focus:outline-none text-sm py-2 border border-gray-200"
         role="listbox" x-on:click.outside="open = false" x-show="open" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <template x-for="option in options" x-bind:key="option.value">
-            <li x-on:click="value = option.value;label = option.label;open = false" x-bind:class="option.value == value && 'bg-primary-600 text-white'" class="pl-4 pr-12 py-2 cursor-default select-none relative hover:bg-primary-600 hover:text-white" role="option">
+        <template x-if="searchable">
+            <li><input x-model="search" placeholder="Search..." class="block w-full px-4 pt-1 pb-3 mb-2 focus:outline-none border-b border-gray-200 text-gray-700" type="search"></li>
+        </template>
+        <template x-for="option in filtered" x-bind:key="option.value">
+            <li x-on:click="value = option.value;label = option.label;open = false;search = ''" x-bind:class="option.value == value && 'bg-primary-600 text-white'" class="pl-4 pr-12 py-2 cursor-default select-none relative hover:bg-primary-600 hover:text-white" role="option">
                 <span x-text="option.label" class="block truncate"></span>
 
                 <template x-if="option.value == value">

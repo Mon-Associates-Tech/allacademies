@@ -25,4 +25,14 @@ class AcademicTopic extends Model
     {
         return $this->belongsTo(AcademicSubject::class);
     }
+
+    public function multipleChoiceQuestion()
+    {
+        return $this->hasMany(MultipleChoiceQuestion::class);
+    }
+
+    public function theoryQuestion()
+    {
+        return $this->hasMany(TheoryQuestion::class);
+    }
 }
