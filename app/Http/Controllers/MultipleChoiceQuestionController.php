@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MultipleChoiceQuestionRequest;
+use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
 use Illuminate\Http\Request;
 
@@ -22,9 +24,11 @@ class MultipleChoiceQuestionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(AcademicTopic $academicTopic)
     {
-        //
+        return view('multiple-choice-questions.create', [
+            'academicTopic' => $academicTopic,
+        ]);
     }
 
     /**
@@ -33,9 +37,11 @@ class MultipleChoiceQuestionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request)
     {
-        //
+        $academicTopic->multipleChoiceQuestion()->create($request->validated());
+
+        return redirect()->route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]);
     }
 
     /**

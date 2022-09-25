@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Mark;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +22,19 @@ class MultipleChoiceQuestion extends Model
         'option_e',
         'answer',
         'score',
-        'difficult_level',
+        'difficulty_level',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'question' => Mark::class,
+        'option_a' => Mark::class,
+        'option_b' => Mark::class,
+        'option_c' => Mark::class,
+        'option_d' => Mark::class,
+        'option_e' => Mark::class,
     ];
 
     public function academicTopic()

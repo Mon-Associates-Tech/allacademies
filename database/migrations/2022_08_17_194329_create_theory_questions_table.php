@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,10 +14,10 @@ return new class extends Migration
     {
         Schema::create('theory_questions', function (Blueprint $table) {
             $table->id();
-            $table->longText('question');
-            $table->longText('answer');
-            $table->integer('score')->default(1);
-            $table->string('difficult_level');
+            $table->json('question');
+            $table->json('answer');
+            $table->integer('score');
+            $table->string('difficulty_level');
             $table->foreignId('academic_topic_id')->constrained();
             $table->timestamps();
         });

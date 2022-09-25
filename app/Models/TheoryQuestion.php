@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Support\Mark;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TheoryQuestion extends Model
 {
@@ -16,7 +17,15 @@ class TheoryQuestion extends Model
         'question',
         'answer',
         'score',
-        'difficult_level',
+        'difficulty_level',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'question' => Mark::class,
+        'answer' => Mark::class,
     ];
 
     public function academicTopic()

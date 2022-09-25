@@ -1,0 +1,15 @@
+<x-dashboard title="Theory Question" summary="Add theory question">
+    <div class="font-medium text-gray-500 tracking-wide">
+        Add new theory question
+    </div>
+    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-topics.theory-questions.store', ['academic_topic' => $academicTopic]) }}">
+        @csrf
+        <x-form.editor full name="question" />
+        <x-form.editor full name="answer" />
+        <input type="hidden" name="difficulty_level" value="easy">
+        <input type="hidden" name="score" value="1">
+        <div class="flex items-center justify-end">
+            <x-button>Save</x-button>
+        </div>
+    </form>
+</x-dashboard>

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TheoryQuestion;
+use App\Http\Requests\TheoryQuestionRequest;
 use Illuminate\Http\Request;
+use App\Models\AcademicTopic;
+use App\Models\TheoryQuestion;
 
 class TheoryQuestionController extends Controller
 {
@@ -22,9 +24,11 @@ class TheoryQuestionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(AcademicTopic $academicTopic)
     {
-        //
+        return view('theory-questions.create', [
+            'academicTopic' => $academicTopic,
+        ]);
     }
 
     /**
@@ -33,9 +37,11 @@ class TheoryQuestionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(AcademicTopic $academicTopic, TheoryQuestionRequest $request)
     {
-        //
+        $academicTopic->theoryQuestion()->create($request->validated());
+
+        return redirect()->route('academic-topics.theory-questions.create', ['academic_topic' => $academicTopic]);
     }
 
     /**
