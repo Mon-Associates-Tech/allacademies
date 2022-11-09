@@ -6,17 +6,16 @@
                     List of academic topics
                 </div>
                 <div>
-                    <x-button :to="route('academic-topics.create')">Add new academic topic</x-button>
                 </div>
             </div>
         </caption>
         <thead>
             <tr>
-                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">ID</th>
-                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">Name</th>
-                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">Academic Level</th>
-                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500">Academic Subject</th>
-                <th class="px-2 py-4 text-left text-sm tracking-wider text-gray-500"><span class="sr-only">Actions</span></th>
+                <x-table.th>ID</x-table.th>
+                <x-table.th>Name</x-table.th>
+                <x-table.th>Academic Subject</x-table.th>
+                <x-table.th>Academic Level</x-table.th>
+                <x-table.th><span class="sr-only">Actions</span></x-table.th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -24,11 +23,12 @@
             <tr>
                 <td class="p-2 text-sm text-gray-500">#{{ $academicTopic->id }}</td>
                 <td class="p-2 text-sm text-gray-900 font-medium">{{ $academicTopic->name }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicLevel->name }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicSubject->name }}</td>
+                <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicSubject->academicLevel->name }}</td>
                 <td class="p-2 text-sm text-primary-600 space-x-3">
                     <a href="{{ route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]) }}">MCQ</a>
-                    <a href="{{ route('academic-topics.theory-questions.create', ['academic_topic' => $academicTopic]) }}">Theory</a>
+                    <a href="{{ route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]) }}">Essay</a>
+                    <a href="{{ route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]) }}">T/F Q</a>
                     <a href="{{ route('academic-topics.edit', ['academic_topic' => $academicTopic]) }}">Edit</a>
                 </td>
             </tr>

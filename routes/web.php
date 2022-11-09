@@ -6,7 +6,8 @@ use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\SignInController;
-use App\Http\Controllers\TheoryQuestionController;
+use App\Http\Controllers\EssayQuestionController;
+use App\Http\Controllers\TrueOrFalseQuestionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,8 +31,14 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('academic-levels', AcademicLevelController::class);
-    Route::resource('academic-subjects', AcademicSubjectController::class);
-    Route::resource('academic-topics', AcademicTopicController::class);
-    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class);
-    Route::resource('academic-topics.theory-questions', TheoryQuestionController::class);
+    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->only(['create', 'store']);
+    Route::resource('academic-subjects', AcademicSubjectController::class)->except(['create', 'store']);
+    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->only(['create', 'store']);
+    Route::resource('academic-topics', AcademicTopicController::class)->except(['create', 'store']);
+    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->only(['create', 'store']);
+    Route::resource('multiple-choice-questions', MultipleChoiceQuestionController::class)->except(['create', 'store']);
+    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->only(['create', 'store']);
+    Route::resource('essay-questions', EssayQuestionController::class)->except(['create', 'store']);
+    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->only(['create', 'store']);
+    Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class)->except(['create', 'store']);
 });

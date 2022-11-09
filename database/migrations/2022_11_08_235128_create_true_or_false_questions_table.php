@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -12,11 +13,11 @@ return new class () extends Migration {
      */
     public function up()
     {
-        Schema::create('theory_questions', function (Blueprint $table) {
+        Schema::create('true_or_false_questions', function (Blueprint $table) {
             $table->id();
             $table->json('question');
-            $table->json('answer');
-            $table->integer('score');
+            $table->boolean('answer');
+            $table->integer('score')->default(1);
             $table->string('difficulty_level');
             $table->foreignId('academic_topic_id')->constrained();
             $table->timestamps();
@@ -30,6 +31,6 @@ return new class () extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('theory_questions');
+        Schema::dropIfExists('true_or_false_questions');
     }
 };

@@ -1,8 +1,8 @@
-<x-dashboard title="Theory Question" summary="Add theory question">
+<x-dashboard title="Essay Question" summary="Add essay question">
     <div class="font-medium text-gray-500 tracking-wide">
-        Add new theory question
+        Add new essay question
     </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-topics.theory-questions.store', ['academic_topic' => $academicTopic]) }}">
+    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-topics.essay-questions.store', ['academic_topic' => $academicTopic]) }}">
         @csrf
         <x-form.editor full name="question" />
         <x-form.editor full name="answer" />

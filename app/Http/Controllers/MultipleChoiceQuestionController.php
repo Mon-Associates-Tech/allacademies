@@ -16,7 +16,11 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function index()
     {
-        //
+        $multipleChoiceQuestions = MultipleChoiceQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
+
+        return view('multiple-choice-questions.index', [
+            'multipleChoiceQuestions' => $multipleChoiceQuestions,
+        ]);
     }
 
     /**

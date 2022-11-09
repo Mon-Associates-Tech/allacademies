@@ -17,7 +17,7 @@ class AcademicTopicController extends Controller
      */
     public function index()
     {
-        $academicTopics = AcademicTopic::query()->with(['academicLevel', 'academicSubject'])->get();
+        $academicTopics = AcademicTopic::query()->with('academicSubject.academicLevel')->get();
 
         return view('academic-topics.index', [
             'academicTopics' => $academicTopics
@@ -29,24 +29,23 @@ class AcademicTopicController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(AcademicSubject $academicSubject)
     {
-        $academicLevels = AcademicLevel::query()->get()->map(function (AcademicLevel $academicLevel) {
-            return [
-                'label' => $academicLevel->name,
-                'value' => $academicLevel->id,
-            ];
-        })->all();
-        $academicSubjects = AcademicSubject::query()->get()->map(function (AcademicSubject $academicSubject) {
-            return [
-                'label' => $academicSubject->name,
-                'value' => $academicSubject->id,
-            ];
-        })->all();
+        // $academicLevels = AcademicLevel::query()->get()->map(function (AcademicLevel $academicLevel) {
+        //     return [
+        //         'label' => $academicLevel->name,
+        //         'value' => $academicLevel->id,
+        //     ];
+        // })->all();
+        // $academicSubjects = AcademicSubject::query()->get()->map(function (AcademicSubject $academicSubject) {
+        //     return [
+        //         'label' => $academicSubject->name,
+        //         'value' => $academicSubject->id,
+        //     ];
+        // })->all();
 
         return view('academic-topics.create', [
-            'academicLevels' => $academicLevels,
-            'academicSubjects' => $academicSubjects
+            'academicSubject' => $academicSubject,
         ]);
     }
 
@@ -56,14 +55,16 @@ class AcademicTopicController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicTopicRequest $request)
+    public function store(AcademicSubject $academicSubject, AcademicTopicRequest $request)
     {
-        $academicLevel = AcademicLevel::query()->findOrFail($request->post('academic_level_id'));
-        $academicSubject = AcademicSubject::query()->findOrFail($request->post('academic_subject_id'));
-        $academicTopic = new AcademicTopic($request->only('name'));
-        $academicTopic->academicLevel()->associate($academicLevel);
-        $academicTopic->academicSubject()->associate($academicSubject);
-        $academicTopic->save();
+        // $academicLevel = AcademicLevel::query()->findOrFail($request->post('academic_level_id'));
+        // $academicSubject = AcademicSubject::query()->findOrFail($request->post('academic_subject_id'));
+        // $academicTopic = new AcademicTopic($request->only('name'));
+        // $academicTopic->academicLevel()->associate($academicLevel);
+        // $academicTopic->academicSubject()->associate($academicSubject);
+        // $academicTopic->save();
+
+        $academicSubject->academicTopics()->create($request->validated());
 
         return redirect()->route('academic-topics.index');
     }

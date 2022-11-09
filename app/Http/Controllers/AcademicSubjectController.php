@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AcademicSubjectRequest;
+use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,7 @@ class AcademicSubjectController extends Controller
      */
     public function index()
     {
-        $academicSubjects = AcademicSubject::all();
+        $academicSubjects = AcademicSubject::query()->with('academicLevel')->get();
 
         return view('academic-subjects.index', [
             'academicSubjects' => $academicSubjects,
@@ -27,9 +28,11 @@ class AcademicSubjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(AcademicLevel $academicLevel)
     {
-        return view('academic-subjects.create');
+        return view('academic-subjects.create', [
+            'academicLevel' => $academicLevel,
+        ]);
     }
 
     /**
@@ -38,9 +41,9 @@ class AcademicSubjectController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicSubjectRequest $request)
+    public function store(AcademicLevel $academicLevel, AcademicSubjectRequest $request)
     {
-        AcademicSubject::query()->create($request->validated());
+        $academicLevel->academicSubjects()->create($request->validated());
 
         return redirect()->route('academic-subjects.index');
     }

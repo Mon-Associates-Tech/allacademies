@@ -1,6 +1,6 @@
-<x-dashboard title="Academic Levels" summary="Add educational levels">
+<x-dashboard title="Academic Levels" summary="Add new educational level">
     <div class="font-medium text-gray-500 tracking-wide">
-        Create new academic level
+        Add new academic level
     </div>
     <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-levels.store') }}">
         @csrf

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TheoryQuestionRequest;
+use App\Http\Requests\EssayQuestionRequest;
 use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
-use App\Models\TheoryQuestion;
+use App\Models\EssayQuestion;
 
-class TheoryQuestionController extends Controller
+class EssayQuestionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,7 +16,11 @@ class TheoryQuestionController extends Controller
      */
     public function index()
     {
-        //
+        $essayQuestions = EssayQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
+
+        return view('essay-questions.index', [
+            'essayQuestions' => $essayQuestions,
+        ]);
     }
 
     /**
@@ -26,7 +30,7 @@ class TheoryQuestionController extends Controller
      */
     public function create(AcademicTopic $academicTopic)
     {
-        return view('theory-questions.create', [
+        return view('essay-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
     }
@@ -37,20 +41,20 @@ class TheoryQuestionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicTopic $academicTopic, TheoryQuestionRequest $request)
+    public function store(AcademicTopic $academicTopic, EssayQuestionRequest $request)
     {
-        $academicTopic->theoryQuestion()->create($request->validated());
+        $academicTopic->essayQuestion()->create($request->validated());
 
-        return redirect()->route('academic-topics.theory-questions.create', ['academic_topic' => $academicTopic]);
+        return redirect()->route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\TheoryQuestion  $theoryQuestion
+     * @param  \App\Models\EssayQuestion  $essayQuestion
      * @return \Illuminate\Http\Response
      */
-    public function show(TheoryQuestion $theoryQuestion)
+    public function show(EssayQuestion $essayQuestion)
     {
         //
     }
@@ -58,10 +62,10 @@ class TheoryQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\TheoryQuestion  $theoryQuestion
+     * @param  \App\Models\EssayQuestion  $essayQuestion
      * @return \Illuminate\Http\Response
      */
-    public function edit(TheoryQuestion $theoryQuestion)
+    public function edit(EssayQuestion $essayQuestion)
     {
         //
     }
@@ -70,10 +74,10 @@ class TheoryQuestionController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\TheoryQuestion  $theoryQuestion
+     * @param  \App\Models\EssayQuestion  $essayQuestion
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, TheoryQuestion $theoryQuestion)
+    public function update(Request $request, EssayQuestion $essayQuestion)
     {
         //
     }
@@ -81,10 +85,10 @@ class TheoryQuestionController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\TheoryQuestion  $theoryQuestion
+     * @param  \App\Models\EssayQuestion  $essayQuestion
      * @return \Illuminate\Http\Response
      */
-    public function destroy(TheoryQuestion $theoryQuestion)
+    public function destroy(EssayQuestion $essayQuestion)
     {
         //
     }

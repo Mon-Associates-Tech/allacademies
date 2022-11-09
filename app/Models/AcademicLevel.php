@@ -17,8 +17,8 @@ class AcademicLevel extends Model
         'label',
     ];
 
-    public function academicTopics()
+    public function academicSubjects()
     {
-        return $this->hasMany(AcademicTopic::class);
+        return $this->hasMany(AcademicSubject::class);
     }
 }

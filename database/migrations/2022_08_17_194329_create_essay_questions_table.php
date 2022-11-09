@@ -12,10 +12,13 @@ return new class () extends Migration {
      */
     public function up()
     {
-        Schema::create('academic_topics', function (Blueprint $table) {
+        Schema::create('essay_questions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('academic_subject_id')->constrained();
+            $table->json('question');
+            $table->json('answer');
+            $table->integer('score');
+            $table->string('difficulty_level');
+            $table->foreignId('academic_topic_id')->constrained();
             $table->timestamps();
         });
     }
@@ -27,6 +30,6 @@ return new class () extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('academic_topics');
+        Schema::dropIfExists('essay_questions');
     }
 };

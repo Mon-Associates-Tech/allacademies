@@ -17,6 +17,11 @@ class AcademicSubject extends Model
         'code',
     ];
 
+    public function academicLevel()
+    {
+        return $this->belongsTo(AcademicLevel::class);
+    }
+
     public function academicTopics()
     {
         return $this->hasMany(AcademicTopic::class);

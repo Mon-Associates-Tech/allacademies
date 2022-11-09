@@ -16,11 +16,6 @@ class AcademicTopic extends Model
         'name',
     ];
 
-    public function academicLevel()
-    {
-        return $this->belongsTo(AcademicLevel::class);
-    }
-
     public function academicSubject()
     {
         return $this->belongsTo(AcademicSubject::class);
@@ -31,8 +26,13 @@ class AcademicTopic extends Model
         return $this->hasMany(MultipleChoiceQuestion::class);
     }
 
-    public function theoryQuestion()
+    public function essayQuestion()
     {
-        return $this->hasMany(TheoryQuestion::class);
+        return $this->hasMany(EssayQuestion::class);
+    }
+
+    public function trueOrFalseQuestion()
+    {
+        return $this->hasMany(TrueOrFalseQuestion::class);
     }
 }
