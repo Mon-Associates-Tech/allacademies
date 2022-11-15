@@ -7,6 +7,7 @@ use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\EssayQuestionController;
+use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,4 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('essay-questions', EssayQuestionController::class)->except(['create', 'store']);
     Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->only(['create', 'store']);
     Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class)->except(['create', 'store']);
+    Route::resource('academic-subjects.examinations', ExaminationController::class)->only(['create', 'store']);
+    Route::resource('examinations', ExaminationController::class)->except(['create', 'store']);
+    // TODO: examination, quizzes
 });

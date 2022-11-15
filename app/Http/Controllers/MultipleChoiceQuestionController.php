@@ -43,7 +43,7 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function store(AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request)
     {
-        $academicTopic->multipleChoiceQuestion()->create($request->validated());
+        $academicTopic->multipleChoiceQuestions()->create($request->validated());
 
         return redirect()->route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]);
     }

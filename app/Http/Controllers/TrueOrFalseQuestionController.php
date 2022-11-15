@@ -43,7 +43,7 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function store(AcademicTopic $academicTopic, TrueOrFalseRequest $request)
     {
-        $academicTopic->trueOrFalseQuestion()->create($request->validated());
+        $academicTopic->trueOrFalseQuestions()->create($request->validated());
 
         return redirect()->route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]);
     }

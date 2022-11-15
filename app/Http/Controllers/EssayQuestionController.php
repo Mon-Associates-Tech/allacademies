@@ -43,7 +43,7 @@ class EssayQuestionController extends Controller
      */
     public function store(AcademicTopic $academicTopic, EssayQuestionRequest $request)
     {
-        $academicTopic->essayQuestion()->create($request->validated());
+        $academicTopic->essayQuestions()->create($request->validated());
 
         return redirect()->route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]);
     }

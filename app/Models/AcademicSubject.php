@@ -26,4 +26,9 @@ class AcademicSubject extends Model
     {
         return $this->hasMany(AcademicTopic::class);
     }
+
+    public function examinations()
+    {
+        return $this->hasMany(Examination::class);
+    }
 }

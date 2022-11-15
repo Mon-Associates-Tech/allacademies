@@ -5,7 +5,8 @@
 @endphp
 
 <div class="space-y-1 relative"
-    x-data="{{ json_encode(['open' => false, 'label' => '', 'search' => '', 'filtered' => $options, 'value' => $value, 'options' => $options, 'searchable' => count($options) > 15]) }}"
+    {{-- x-data="{{ json_encode(['open' => false, 'label' => '', 'search' => '', 'filtered' => $options, 'value' => $value, 'options' => $options, 'searchable' => count($options) > 15]) }}" --}}
+    x-data="{ open: false, label: '', search: '', filtered: @js($options), value: @if($attributes->has('wire:model')) @entangle($attributes->wire('model')) @else @js($value) @endif, options: @js($options), searchable: @js(count($options) > 15) }"
     x-init="value = value ? options.find(o => o.value == value).value : value;label = value ? options.find(o => o.value == value).label : label"
     x-effect="filtered = search ? options.filter(o => o.label.toLowerCase().includes(search)) : options;">
     <label class="text-gray-800 font-medium text-sm">{{ $label ?? ucfirst($name) }}</label>

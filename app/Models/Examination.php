@@ -6,7 +6,7 @@ use App\Support\Mark;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class TrueOrFalseQuestion extends Model
+class Examination extends Model
 {
     use HasFactory;
 
@@ -14,22 +14,22 @@ class TrueOrFalseQuestion extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'question',
-        'answer',
-        'score',
-        'difficulty_level',
+        'title',
+        'heading',
+        'sections',
+        'examiners',
     ];
 
     /**
      * @var array<string, string>
      */
     protected $casts = [
-        'question' => Mark::class,
-        'answer' => 'boolean',
+        'heading' => Mark::class,
+        'sections' => 'array',
     ];
 
-    public function academicTopic()
+    public function academicSubject()
     {
-        return $this->belongsTo(AcademicTopic::class);
+        return $this->belongsTo(AcademicSubject::class);
     }
 }

@@ -27,6 +27,7 @@
                 <td class="p-2 text-sm text-gray-500">{{ $academicSubject->academicLevel->name }}</td>
                 <td class="p-2 text-sm text-primary-600 space-x-3">
                     <a href="{{ route('academic-subjects.academic-topics.create', ['academic_subject' => $academicSubject]) }}">Topic</a>
+                    <a href="{{ route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject]) }}">Exam</a>
                     <a href="{{ route('academic-subjects.edit', ['academic_subject' => $academicSubject]) }}">Edit</a>
                 </td>
             </tr>

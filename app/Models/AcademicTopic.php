@@ -21,17 +21,17 @@ class AcademicTopic extends Model
         return $this->belongsTo(AcademicSubject::class);
     }
 
-    public function multipleChoiceQuestion()
+    public function multipleChoiceQuestions()
     {
         return $this->hasMany(MultipleChoiceQuestion::class);
     }
 
-    public function essayQuestion()
+    public function essayQuestions()
     {
         return $this->hasMany(EssayQuestion::class);
     }
 
-    public function trueOrFalseQuestion()
+    public function trueOrFalseQuestions()
     {
         return $this->hasMany(TrueOrFalseQuestion::class);
     }
