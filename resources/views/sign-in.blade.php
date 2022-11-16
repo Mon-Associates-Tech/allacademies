@@ -7,6 +7,7 @@
             <x-form.input full name="password" type="password" />
             <x-button full>Sign In</x-button>
             <a class="block text-center text-sm text-primary-800 hover:text-primary-700">Forgot password?</a>
+            <a href="{{ route('sign-up') }}" class="block text-center text-xs text-primary-800 hover:text-primary-700">Sign Up Now!</a>
         </div>
     </form>
 </x-layout>

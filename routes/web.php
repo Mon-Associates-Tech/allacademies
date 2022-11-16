@@ -8,6 +8,7 @@ use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\SignUpController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +26,10 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', 'dashboard');
 
 Route::middleware('guest')->group(function () {
-    Route::get('sign-in', [SignInController::class, 'index'])->name('sign-in');
+    Route::get('sign-in', [SignInController::class, 'create'])->name('sign-in');
     Route::post('sign-in', [SignInController::class, 'store']);
+    Route::get('sign-up', [SignUpController::class, 'create'])->name('sign-up');
+    Route::post('sign-up', [SignUpController::class, 'store']);
 });
 
 Route::middleware('auth')->group(function () {

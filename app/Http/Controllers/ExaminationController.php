@@ -17,7 +17,11 @@ class ExaminationController extends Controller
      */
     public function index()
     {
-        //
+        $examinations = Examination::query()->with('academicSubject.academicLevel')->get();
+
+        return view('examinations.index', [
+            'examinations' => $examinations,
+        ]);
     }
 
     /**
