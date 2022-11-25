@@ -9,4 +9,6 @@ enum QuestionDifficultyLevel: string
     case MEDIUM = 'medium';
 
     case DIFFICULT = 'difficult';
+
+    case UNSPECIFIED = 'unspecified';
 }

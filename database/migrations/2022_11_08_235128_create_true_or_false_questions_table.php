@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('question');
             $table->boolean('answer');
             $table->integer('score')->default(1);
-            $table->string('difficulty_level');
+            $table->string('difficulty_level')->default('unspecified');
             $table->foreignId('academic_topic_id')->constrained();
             $table->timestamps();
         });

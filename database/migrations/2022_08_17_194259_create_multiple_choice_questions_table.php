@@ -22,7 +22,7 @@ return new class () extends Migration {
             $table->json('option_e');
             $table->char('answer', 1);
             $table->integer('score')->default(1);
-            $table->string('difficulty_level');
+            $table->string('difficulty_level')->default('unspecified');
             $table->foreignId('academic_topic_id')->constrained();
             $table->timestamps();
         });
