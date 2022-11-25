@@ -66,7 +66,7 @@ class AcademicTopicController extends Controller
 
         $academicSubject->academicTopics()->create($request->validated());
 
-        return redirect()->route('academic-topics.index');
+        return to_route('academic-topics.index');
     }
 
     /**

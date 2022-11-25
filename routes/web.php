@@ -8,6 +8,7 @@ use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SignUpController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
@@ -49,5 +50,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('academic-subjects.examinations', ExaminationController::class)->only(['create', 'store']);
     Route::resource('examinations', ExaminationController::class)->except(['create', 'store']);
     Route::resource('subscriptions', SubscriptionController::class);
+    Route::resource('payments', PaymentController::class);
     // TODO: examination, quizzes
 });

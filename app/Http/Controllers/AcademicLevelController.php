@@ -42,7 +42,7 @@ class AcademicLevelController extends Controller
     {
         AcademicLevel::query()->create($request->validated());
 
-        return redirect()->route('academic-levels.index');
+        return to_route('academic-levels.index');
     }
 
     /**

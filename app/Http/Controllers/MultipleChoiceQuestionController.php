@@ -45,7 +45,7 @@ class MultipleChoiceQuestionController extends Controller
     {
         $academicTopic->multipleChoiceQuestions()->create($request->validated());
 
-        return redirect()->route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]);
+        return to_route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]);
     }
 
     /**

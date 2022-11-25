@@ -59,7 +59,7 @@ class ExaminationController extends Controller
             $request->validated('examiners')
         ));
 
-        return redirect()->route('examinations.index');
+        return to_route('examinations.index');
     }
 
     /**

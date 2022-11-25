@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SubscriptionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,6 +18,7 @@ class Subscription extends Model
         'amount',
         'currency',
         'reference',
+        'beneficiaries',
         'status',
         'expires_at',
     ];
@@ -25,6 +27,7 @@ class Subscription extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'status' => SubscriptionStatus::class,
         'expires_at' => 'datetime',
     ];
 
@@ -36,5 +39,10 @@ class Subscription extends Model
     public function academicSubjects()
     {
         return $this->belongsToMany(AcademicSubject::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }

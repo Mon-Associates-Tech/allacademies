@@ -45,7 +45,7 @@ class AcademicSubjectController extends Controller
     {
         $academicLevel->academicSubjects()->create($request->validated());
 
-        return redirect()->route('academic-subjects.index');
+        return to_route('academic-subjects.index');
     }
 
     /**

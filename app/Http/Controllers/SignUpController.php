@@ -28,6 +28,6 @@ class SignUpController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return to_route('dashboard');
     }
 }

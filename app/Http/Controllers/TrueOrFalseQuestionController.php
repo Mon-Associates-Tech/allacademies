@@ -45,7 +45,7 @@ class TrueOrFalseQuestionController extends Controller
     {
         $academicTopic->trueOrFalseQuestions()->create($request->validated());
 
-        return redirect()->route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]);
+        return to_route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]);
     }
 
     /**

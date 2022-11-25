@@ -1,6 +1,6 @@
 <x-dashboard title="Subscriptions" summary="All subscriptions">
     <div>
-        Dial <strong>*772*30#</strong> to pay for any subscription. Merchant Code is <em>13260001</em>. Please use the  reference indicated
+        Dial <strong>*772*30#</strong> to pay for any subscription. Merchant Code is <em>1326001</em>. Please use the  reference indicated
     </div>
     <table class="w-full divide-y divide-gray-300">
         <caption>
@@ -16,9 +16,9 @@
         <thead>
             <tr>
                 <x-table.th>ID</x-table.th>
+                <x-table.th>Reference</x-table.th>
                 <x-table.th>Package</x-table.th>
                 <x-table.th>Beneficiaries</x-table.th>
-                <x-table.th>Reference</x-table.th>
                 <x-table.th>Amount</x-table.th>
                 <x-table.th>Status</x-table.th>
                 <x-table.th>Expires</x-table.th>
@@ -29,9 +29,9 @@
             @foreach ($subscriptions as $subscription)
             <tr>
                 <td class="p-2 text-sm text-gray-500">#{{ $subscription->id }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{{ $subscription->package }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{{ $subscription->beneficiaries }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $subscription->reference }}</td>
+                <td class="p-2 text-sm text-gray-900 font-medium">{{ $subscription->reference }}</td>
+                <td class="p-2 text-sm text-gray-500">{{ $subscription->package }}</td>
+                <td class="p-2 text-sm text-gray-500">{{ $subscription->beneficiaries }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $subscription->currency }} {{ $subscription->amount }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $subscription->status }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $subscription->expires_at->diffForHumans(['parts' => 2]) }}</td>
