@@ -8,9 +8,11 @@ use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SignUpController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,5 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('examinations', ExaminationController::class)->except(['create', 'store']);
     Route::resource('subscriptions', SubscriptionController::class);
     Route::resource('payments', PaymentController::class);
+    Route::resource('teams', TeamController::class);
+    Route::resource('teams.members', MemberController::class)->only(['create', 'store', 'destroy']);
     // TODO: examination, quizzes
 });

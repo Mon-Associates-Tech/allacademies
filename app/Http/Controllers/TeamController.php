@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TeamController extends Controller
 {
@@ -14,7 +15,14 @@ class TeamController extends Controller
      */
     public function index()
     {
-        //
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $team = $user->team()->with('members', 'owner')->firstOrCreate(['name' => "{$user->name}'s Team"]);
+        $team->members->prepend($user);
+
+        return view('teams.index', [
+            'team' => $team,
+        ]);
     }
 
     /**

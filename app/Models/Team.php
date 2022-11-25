@@ -9,12 +9,19 @@ class Team extends Model
 {
     use HasFactory;
 
+    /**
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+    ];
+
     public function owner()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function users()
+    public function members()
     {
         return $this->belongsToMany(User::class);
     }
