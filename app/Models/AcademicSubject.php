@@ -31,4 +31,9 @@ class AcademicSubject extends Model
     {
         return $this->hasMany(Examination::class);
     }
+
+    public function subscriptions()
+    {
+        return $this->belongsToMany(Subscription::class);
+    }
 }
