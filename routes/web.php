@@ -10,6 +10,8 @@ use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SignOutController;
 use App\Http\Controllers\SignUpController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeamController;
@@ -37,6 +39,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('sign-out', [SignOutController::class, 'store'])->name('sign-out');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('academic-levels', AcademicLevelController::class);
     Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->only(['create', 'store']);
@@ -53,7 +56,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('examinations', ExaminationController::class)->except(['create', 'store']);
     Route::resource('subscriptions', SubscriptionController::class);
     Route::resource('payments', PaymentController::class);
+    Route::post('teams/{team}/activate', [TeamController::class, 'activate'])->name('teams.activate');
     Route::resource('teams', TeamController::class);
     Route::resource('teams.members', MemberController::class)->only(['create', 'store', 'destroy']);
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::match(['GET', 'POST'], 'settings/role', [SettingsController::class, 'role'])->name('settings.role');
     // TODO: examination, quizzes
 });

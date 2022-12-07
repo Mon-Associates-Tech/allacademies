@@ -15,6 +15,8 @@ class AcademicLevelController extends Controller
      */
     public function index()
     {
+        $this->authorize('moderate');
+
         $academicLevels = AcademicLevel::all();
 
         return view('academic-levels.index', [
@@ -29,6 +31,8 @@ class AcademicLevelController extends Controller
      */
     public function create()
     {
+        $this->authorize('administrate');
+
         return view('academic-levels.create');
     }
 
@@ -40,6 +44,8 @@ class AcademicLevelController extends Controller
      */
     public function store(AcademicLevelRequest $request)
     {
+        $this->authorize('administrate');
+
         AcademicLevel::query()->create($request->validated());
 
         return to_route('academic-levels.index');
@@ -53,7 +59,7 @@ class AcademicLevelController extends Controller
      */
     public function show(AcademicLevel $academicLevel)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -64,7 +70,7 @@ class AcademicLevelController extends Controller
      */
     public function edit(AcademicLevel $academicLevel)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -76,7 +82,7 @@ class AcademicLevelController extends Controller
      */
     public function update(Request $request, AcademicLevel $academicLevel)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -87,6 +93,6 @@ class AcademicLevelController extends Controller
      */
     public function destroy(AcademicLevel $academicLevel)
     {
-        //
+        $this->authorize('administrate');
     }
 }

@@ -26,9 +26,13 @@
                 <td class="p-2 text-sm text-gray-500">{{ $academicSubject->code }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $academicSubject->academicLevel->name }}</td>
                 <td class="p-2 text-sm text-primary-600 space-x-3">
+                    @can('administrate')
                     <a href="{{ route('academic-subjects.academic-topics.create', ['academic_subject' => $academicSubject]) }}">Topic</a>
+                    @endcan
                     <a href="{{ route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject]) }}">Exam</a>
+                    @can('administrate')
                     <a href="{{ route('academic-subjects.edit', ['academic_subject' => $academicSubject]) }}">Edit</a>
+                    @endcan
                 </td>
             </tr>
             @endforeach

@@ -98,6 +98,12 @@ class MemberController extends Controller
      */
     public function destroy(Team $team, User $member)
     {
+        $member->load('currentTeam');
+
+        if ($member->currentTeam->is($team)) {
+            $member->currentTeam()->associate($member->ownedTeams()->where('is_personal', true)->first())->save();
+        }
+
         $team->members()->detach($member);
 
         return to_route('teams.index');

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ExaminationRequest;
-use App\Jobs\GenerateExaminationJob;
-use App\Models\AcademicSubject;
+use App\Models\Team;
+use App\Models\User;
 use App\Models\Examination;
 use Illuminate\Http\Request;
+use App\Models\AcademicSubject;
+use App\Jobs\GenerateExaminationJob;
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\ExaminationRequest;
 
 class ExaminationController extends Controller
 {
@@ -17,7 +20,12 @@ class ExaminationController extends Controller
      */
     public function index()
     {
-        $examinations = Examination::query()->with('academicSubject.academicLevel')->get();
+        if (Gate::check('administrate')) {
+            $examinations = Examination::query()->with('academicSubject.academicLevel')->get();
+        } else {
+            $examinations = Examination::query()->with('academicSubject.academicLevel')->where('team_id', auth()->user()->current_team_id)->get();
+        }
+
 
         return view('examinations.index', [
             'examinations' => $examinations,
@@ -53,6 +61,8 @@ class ExaminationController extends Controller
     {
         dispatch(new GenerateExaminationJob(
             $academicSubject,
+            Team::query()->find($request->validated('team_id')),
+            User::query()->find($request->validated('creator_id')),
             $request->validated('title'),
             $request->validated('heading'),
             $request->validated('sections'),

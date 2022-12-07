@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 class TeamController extends Controller
 {
+    public function activate(Team $team)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $team->load('members', 'owner');
+
+        abort_unless($team->owner->is($user) || $team->members->contains($user), 403);
+
+        $user->currentTeam()->associate($team)->save();
+
+        return to_route('teams.index');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,11 +31,19 @@ class TeamController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $team = $user->team()->with('members', 'owner')->firstOrCreate(['name' => "{$user->name}'s Team"]);
-        $team->members->prepend($user);
+
+        $user->load(['currentTeam' => ['members', 'owner']]);
+
+        $user->currentTeam->members->prepend($user->currentTeam->owner);
+
+        $ownedTeams = $user->ownedTeams()->get();
+
+        $joinedTeams = $user->joinedTeams()->with('owner')->get();
 
         return view('teams.index', [
-            'team' => $team,
+            'ownedTeams' => $ownedTeams,
+            'joinedTeams' => $joinedTeams,
+            'user' => $user,
         ]);
     }
 

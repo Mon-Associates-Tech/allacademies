@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('amount');
             $table->string('currency')->default('GHS');
             $table->string('status')->default('unpaid');
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('team_id')->constrained();
+            $table->foreignId('subscriber_id')->constrained('users');
             $table->timestamp('expires_at');
             $table->timestamps();
         });

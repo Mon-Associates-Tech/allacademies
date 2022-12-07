@@ -6,8 +6,6 @@
         @csrf
         <x-form.editor full name="question" />
         <x-form.editor full name="answer" />
-        <input type="hidden" name="difficulty_level" value="easy">
-        <input type="hidden" name="score" value="1">
         <div class="flex items-center justify-end">
             <x-button>Save</x-button>
         </div>

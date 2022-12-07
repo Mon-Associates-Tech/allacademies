@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EssayQuestionRequest;
 use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
+use App\Http\Requests\EssayQuestionRequest;
 
 class EssayQuestionController extends Controller
 {
@@ -16,6 +16,8 @@ class EssayQuestionController extends Controller
      */
     public function index()
     {
+        $this->authorize('moderate');
+
         $essayQuestions = EssayQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
 
         return view('essay-questions.index', [
@@ -30,6 +32,8 @@ class EssayQuestionController extends Controller
      */
     public function create(AcademicTopic $academicTopic)
     {
+        $this->authorize('moderate');
+
         return view('essay-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
@@ -43,6 +47,8 @@ class EssayQuestionController extends Controller
      */
     public function store(AcademicTopic $academicTopic, EssayQuestionRequest $request)
     {
+        $this->authorize('moderate');
+
         $academicTopic->essayQuestions()->create($request->validated());
 
         return to_route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]);
@@ -56,7 +62,7 @@ class EssayQuestionController extends Controller
      */
     public function show(EssayQuestion $essayQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -67,7 +73,7 @@ class EssayQuestionController extends Controller
      */
     public function edit(EssayQuestion $essayQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -79,7 +85,7 @@ class EssayQuestionController extends Controller
      */
     public function update(Request $request, EssayQuestion $essayQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -90,6 +96,6 @@ class EssayQuestionController extends Controller
      */
     public function destroy(EssayQuestion $essayQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 }

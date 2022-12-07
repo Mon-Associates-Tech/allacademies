@@ -19,6 +19,8 @@ return new class () extends Migration {
             $table->json('sections');
             $table->string('examiners');
             $table->foreignId('academic_subject_id')->constrained();
+            $table->foreignId('team_id')->constrained();
+            $table->foreignId('creator_id')->constrained('users');
             $table->timestamps();
         });
     }

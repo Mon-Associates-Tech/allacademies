@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Exceptions\NotEnoughQuestionsException;
 use App\Models\AcademicSubject;
 use App\Models\Examination;
+use App\Models\Team;
+use App\Models\User;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -26,6 +28,8 @@ class GenerateExaminationJob implements ShouldQueue
      */
     public function __construct(
         private AcademicSubject $academicSubject,
+        private Team $team,
+        private User $creator,
         private string $title,
         private array $heading,
         private array $sections,
@@ -78,12 +82,17 @@ class GenerateExaminationJob implements ShouldQueue
                 ${$section['type']} = array_merge(${$section['type']}, $questions);
             });
 
-            $this->academicSubject->examinations()->create([
+            $examination = new Examination([
                 'title' => $this->title,
                 'heading' => $this->heading,
                 'sections' => $sections,
                 'examiners' => $this->examiners,
             ]);
+
+            $examination->creator()->associate($this->creator);
+            $examination->team()->associate($this->team);
+
+            $this->academicSubject->examinations()->save($examination);
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
         }

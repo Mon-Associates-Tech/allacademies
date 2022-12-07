@@ -29,7 +29,9 @@
                     <a href="{{ route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]) }}">MCQ</a>
                     <a href="{{ route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]) }}">Essay</a>
                     <a href="{{ route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]) }}">T/F Q</a>
+                    @can('administrate')
                     <a href="{{ route('academic-topics.edit', ['academic_topic' => $academicTopic]) }}">Edit</a>
+                    @endcan
                 </td>
             </tr>
             @endforeach

@@ -25,6 +25,8 @@ class ExaminationRequest extends FormRequest
             'sections.*.topics' => ['required', 'array'],
             'sections.*.topics.*' => ['required', 'exists:academic_topics,id'],
             'examiners' => ['required', 'string', 'min:2', 'max:255'],
+            'team_id' => ['required', 'numeric', 'exists:teams,id'],
+            'creator_id' => ['required', 'numeric', 'exists:users,id'],
         ];
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\MultipleChoiceQuestionRequest;
+use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
-use Illuminate\Http\Request;
+use App\Http\Requests\MultipleChoiceQuestionRequest;
 
 class MultipleChoiceQuestionController extends Controller
 {
@@ -16,6 +16,8 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function index()
     {
+        $this->authorize('moderate');
+
         $multipleChoiceQuestions = MultipleChoiceQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
 
         return view('multiple-choice-questions.index', [
@@ -30,6 +32,8 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function create(AcademicTopic $academicTopic)
     {
+        $this->authorize('moderate');
+
         return view('multiple-choice-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
@@ -43,6 +47,8 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function store(AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request)
     {
+        $this->authorize('moderate');
+
         $academicTopic->multipleChoiceQuestions()->create($request->validated());
 
         return to_route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]);
@@ -56,7 +62,7 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function show(MultipleChoiceQuestion $multipleChoiceQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -67,7 +73,7 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function edit(MultipleChoiceQuestion $multipleChoiceQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -79,7 +85,7 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function update(Request $request, MultipleChoiceQuestion $multipleChoiceQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -90,6 +96,6 @@ class MultipleChoiceQuestionController extends Controller
      */
     public function destroy(MultipleChoiceQuestion $multipleChoiceQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 }

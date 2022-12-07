@@ -19,7 +19,7 @@ class TrueOrFalseRequest extends FormRequest
             'question.down' => ['required', 'string'],
             'answer' => ['required', 'boolean'],
             'score' => ['nullable','numeric'],
-            'difficulty_level' => ['required', 'string'],
+            'difficulty_level' => ['nullable', 'string', 'in:easy,medium,difficult,unspecified'],
         ];
     }
 }

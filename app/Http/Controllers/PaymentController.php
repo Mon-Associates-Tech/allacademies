@@ -22,6 +22,8 @@ class PaymentController extends Controller
      */
     public function index()
     {
+        $this->authorize('administrate');
+
         $payments = Payment::query()->get();
 
         return view('payments.index', [
@@ -36,6 +38,8 @@ class PaymentController extends Controller
      */
     public function create()
     {
+        $this->authorize('administrate');
+
         return view('payments.create');
     }
 
@@ -47,6 +51,8 @@ class PaymentController extends Controller
      */
     public function store(PaymentRequest $request)
     {
+        $this->authorize('administrate');
+
         $reference = Str::beforeLast($request->validated('reference'), '_1326001');
 
         /** @var \App\Models\Subscription $subscription */
@@ -83,7 +89,7 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -94,7 +100,7 @@ class PaymentController extends Controller
      */
     public function edit(Payment $payment)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -106,7 +112,7 @@ class PaymentController extends Controller
      */
     public function update(Request $request, Payment $payment)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -117,6 +123,6 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
-        //
+        $this->authorize('administrate');
     }
 }

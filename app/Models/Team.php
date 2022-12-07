@@ -14,6 +14,7 @@ class Team extends Model
      */
     protected $fillable = [
         'name',
+        'is_personal',
     ];
 
     public function owner()

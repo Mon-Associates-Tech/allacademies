@@ -6,7 +6,9 @@
                     List all available academic levels
                 </div>
                 <div>
+                    @can('administrate')
                     <x-button :to="route('academic-levels.create')">Add new academic level</x-button>
+                    @endcan
                 </div>
             </div>
         </caption>
@@ -15,7 +17,9 @@
                 <x-table.th>ID</x-table.th>
                 <x-table.th>Name</x-table.th>
                 <x-table.th>Label</x-table.th>
+                @can('administrate')
                 <x-table.th><span class="sr-only">Actions</span></x-table.th>
+                @endcan
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -24,10 +28,12 @@
                 <td class="p-2 text-sm text-gray-500">#{{ $academicLevel->id }}</td>
                 <td class="p-2 text-sm text-gray-900 font-medium">{{ $academicLevel->name }}</td>
                 <td class="p-2 text-sm text-gray-500">{{ $academicLevel->label }}</td>
+                @can('administrate')
                 <td class="p-2 text-sm text-primary-600 space-x-3">
                     <a href="{{ route('academic-levels.academic-subjects.create', ['academic_level' => $academicLevel]) }}">Subject</a>
                     <a href="{{ route('academic-levels.edit', ['academic_level' => $academicLevel]) }}">Edit</a>
                 </td>
+                @endcan
             </tr>
             @endforeach
         </tbody>

@@ -18,11 +18,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        User::query()->create([
-            'name' => 'Isaac Sai',
-            'email' => 'isaacsai030@gmail.com',
-            'password' => Hash::make('secret.pass'),
-            'role' => UserRole::OWNER,
-        ]);
+        collect(UserRole::cases())->each(function (UserRole $userRole) {
+            /** @var \App\Models\User $user */
+            $user = User::query()->create([
+                'name' => 'Real ' . ucfirst($userRole->value),
+                'email' => $userRole->value . '@exams.com',
+                'password' => Hash::make('secret.pass'),
+                'role' => $userRole,
+            ]);
+
+            $team = $user->ownedTeams()->create(['name' => $user->name . "'s Team", 'is_personal' => true]);
+
+            $user->currentTeam()->associate($team)->save();
+        });
     }
 }

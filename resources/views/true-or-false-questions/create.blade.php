@@ -9,8 +9,6 @@
             ['value' => '1', 'label' => 'True'],
             ['value' => '0', 'label' => 'False'],
         ]" />
-        <input type="hidden" name="difficulty_level" value="easy">
-        <input type="hidden" name="score" value="1">
         <div class="flex items-center justify-end">
             <x-button>Save</x-button>
         </div>

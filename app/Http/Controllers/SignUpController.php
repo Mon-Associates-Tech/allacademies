@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SignUpController extends Controller
 {
@@ -18,11 +19,20 @@ class SignUpController extends Controller
 
     public function store(SignUpRequest $request)
     {
-        $user = User::query()->create([
-            ...$request->validated(),
-            'password' => bcrypt($request->validated('password')),
-            'role' => UserRole::SUBSCRIBER,
-        ]);
+        $user = DB::transaction(function () use ($request) {
+            /** @var \App\Models\User $user */
+            $user = User::query()->create([
+                ...$request->validated(),
+                'password' => bcrypt($request->validated('password')),
+                'role' => UserRole::SUBSCRIBER,
+            ]);
+
+            $team = $user->ownedTeams()->create(['name' => "{$user->name}'s Team", 'is_personal' => true]);
+
+            $user->currentTeam()->associate($team)->save();
+
+            return $user;
+        });
 
         event(new Registered($user));
 

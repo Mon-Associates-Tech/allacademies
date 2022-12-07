@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TrueOrFalseRequest;
 use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\TrueOrFalseQuestion;
+use App\Http\Requests\TrueOrFalseRequest;
 
 class TrueOrFalseQuestionController extends Controller
 {
@@ -16,6 +16,8 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function index()
     {
+        $this->authorize('moderate');
+
         $trueOrFalseQuestions = TrueOrFalseQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
 
         return view('true-or-false-questions.index', [
@@ -30,6 +32,8 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function create(AcademicTopic $academicTopic)
     {
+        $this->authorize('moderate');
+
         return view('true-or-false-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
@@ -43,6 +47,8 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function store(AcademicTopic $academicTopic, TrueOrFalseRequest $request)
     {
+        $this->authorize('moderate');
+
         $academicTopic->trueOrFalseQuestions()->create($request->validated());
 
         return to_route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]);
@@ -56,7 +62,7 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function show(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -67,7 +73,7 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function edit(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -79,7 +85,7 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function update(Request $request, TrueOrFalseQuestion $trueOrFalseQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 
     /**
@@ -90,6 +96,6 @@ class TrueOrFalseQuestionController extends Controller
      */
     public function destroy(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
-        //
+        $this->authorize('moderate');
     }
 }

@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AcademicTopicRequest;
-use App\Models\AcademicLevel;
-use App\Models\AcademicSubject;
-use App\Models\AcademicTopic;
 use Illuminate\Http\Request;
+use App\Models\AcademicTopic;
+use App\Models\AcademicSubject;
+use App\Http\Requests\AcademicTopicRequest;
 
 class AcademicTopicController extends Controller
 {
@@ -17,6 +16,8 @@ class AcademicTopicController extends Controller
      */
     public function index()
     {
+        $this->authorize('moderate');
+
         $academicTopics = AcademicTopic::query()->with('academicSubject.academicLevel')->get();
 
         return view('academic-topics.index', [
@@ -31,18 +32,7 @@ class AcademicTopicController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
-        // $academicLevels = AcademicLevel::query()->get()->map(function (AcademicLevel $academicLevel) {
-        //     return [
-        //         'label' => $academicLevel->name,
-        //         'value' => $academicLevel->id,
-        //     ];
-        // })->all();
-        // $academicSubjects = AcademicSubject::query()->get()->map(function (AcademicSubject $academicSubject) {
-        //     return [
-        //         'label' => $academicSubject->name,
-        //         'value' => $academicSubject->id,
-        //     ];
-        // })->all();
+        $this->authorize('administrate');
 
         return view('academic-topics.create', [
             'academicSubject' => $academicSubject,
@@ -57,12 +47,7 @@ class AcademicTopicController extends Controller
      */
     public function store(AcademicSubject $academicSubject, AcademicTopicRequest $request)
     {
-        // $academicLevel = AcademicLevel::query()->findOrFail($request->post('academic_level_id'));
-        // $academicSubject = AcademicSubject::query()->findOrFail($request->post('academic_subject_id'));
-        // $academicTopic = new AcademicTopic($request->only('name'));
-        // $academicTopic->academicLevel()->associate($academicLevel);
-        // $academicTopic->academicSubject()->associate($academicSubject);
-        // $academicTopic->save();
+        $this->authorize('administrate');
 
         $academicSubject->academicTopics()->create($request->validated());
 
@@ -77,7 +62,7 @@ class AcademicTopicController extends Controller
      */
     public function show(AcademicTopic $academicTopic)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -88,7 +73,7 @@ class AcademicTopicController extends Controller
      */
     public function edit(AcademicTopic $academicTopic)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -100,7 +85,7 @@ class AcademicTopicController extends Controller
      */
     public function update(Request $request, AcademicTopic $academicTopic)
     {
-        //
+        $this->authorize('administrate');
     }
 
     /**
@@ -111,6 +96,6 @@ class AcademicTopicController extends Controller
      */
     public function destroy(AcademicTopic $academicTopic)
     {
-        //
+        $this->authorize('administrate');
     }
 }

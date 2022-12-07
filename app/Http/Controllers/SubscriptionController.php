@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class SubscriptionController extends Controller
 {
@@ -21,7 +22,11 @@ class SubscriptionController extends Controller
      */
     public function index()
     {
-        $subscriptions = Subscription::query()->get();
+        if (Gate::check('administrate')) {
+            $subscriptions = Subscription::query()->get();
+        } else {
+            $subscriptions = Subscription::query()->where('team_id', auth()->user()->current_team_id)->get();
+        }
 
         return view('subscriptions.index', [
             'subscriptions' => $subscriptions,
@@ -65,16 +70,20 @@ class SubscriptionController extends Controller
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
+        $user->load('currentTeam');
 
         DB::transaction(function () use ($user, $package, $money, $beneficiaries, $duration, $subjects) {
-            /** @var \App\Models\Subscription $subscription */
-            $subscription = $user->subscriptions()->create([
+            $subscription = new Subscription([
                 'package' => $package,
                 'reference' => uniqid(),
                 'amount' => (string) $money->getAmount(),
                 'beneficiaries' => $beneficiaries,
                 'expires_at' => Carbon::now()->addMonths($duration),
             ]);
+
+            $subscription->team()->associate($user->currentTeam);
+
+            $subscription = $user->subscriptions()->save($subscription);
 
             $subscription->academicSubjects()->attach($subjects);
         });
