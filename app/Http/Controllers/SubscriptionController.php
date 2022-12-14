@@ -41,10 +41,10 @@ class SubscriptionController extends Controller
     public function create()
     {
         $groups = AcademicSubject::query()
-            ->select(['id', 'name', 'code', 'academic_level_id'])
-            ->with('academicLevel:id,name,label')
+            ->with('academicLevel.academicGroup')
             ->get()
-            ->groupBy('academic_level_id')
+            ->groupBy([fn ($subject) => $subject->academicLevel->academic_group_id, 'academic_level_id'])
+            ->map(fn ($group) => $group->values())
             ->values()
             ->toArray();
 

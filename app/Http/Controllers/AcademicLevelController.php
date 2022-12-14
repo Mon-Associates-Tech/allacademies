@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AcademicLevelRequest;
+use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,7 @@ class AcademicLevelController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicLevels = AcademicLevel::all();
+        $academicLevels = AcademicLevel::query()->with('academicGroup')->get();
 
         return view('academic-levels.index', [
             'academicLevels' => $academicLevels,
@@ -29,11 +30,13 @@ class AcademicLevelController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(AcademicGroup $academicGroup)
     {
         $this->authorize('administrate');
 
-        return view('academic-levels.create');
+        return view('academic-levels.create', [
+            'academicGroup' => $academicGroup,
+        ]);
     }
 
     /**
@@ -42,11 +45,11 @@ class AcademicLevelController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicLevelRequest $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevelRequest $request)
     {
         $this->authorize('administrate');
 
-        AcademicLevel::query()->create($request->validated());
+        $academicGroup->academicLevels()->create($request->validated());
 
         return to_route('academic-levels.index');
     }

@@ -1,22 +1,23 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\AcademicLevelController;
-use App\Http\Controllers\AcademicSubjectController;
-use App\Http\Controllers\AcademicTopicController;
-use App\Http\Controllers\MultipleChoiceQuestionController;
-use App\Http\Controllers\SignInController;
-use App\Http\Controllers\EssayQuestionController;
-use App\Http\Controllers\ExaminationController;
-use App\Http\Controllers\MemberController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SignOutController;
-use App\Http\Controllers\SignUpController;
-use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\TeamController;
-use App\Http\Controllers\TrueOrFalseQuestionController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\SignInController;
+use App\Http\Controllers\SignUpController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SignOutController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\AcademicGroupController;
+use App\Http\Controllers\AcademicLevelController;
+use App\Http\Controllers\AcademicTopicController;
+use App\Http\Controllers\EssayQuestionController;
+use App\Http\Controllers\AcademicSubjectController;
+use App\Http\Controllers\TrueOrFalseQuestionController;
+use App\Http\Controllers\MultipleChoiceQuestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +42,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('sign-out', [SignOutController::class, 'store'])->name('sign-out');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('academic-levels', AcademicLevelController::class);
+    Route::resource('academic-groups', AcademicGroupController::class);
+    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->only(['create', 'store']);
+    Route::resource('academic-levels', AcademicLevelController::class)->except(['create', 'store']);
     Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->only(['create', 'store']);
     Route::resource('academic-subjects', AcademicSubjectController::class)->except(['create', 'store']);
     Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->only(['create', 'store']);

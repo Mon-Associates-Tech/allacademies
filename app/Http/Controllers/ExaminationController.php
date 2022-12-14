@@ -80,7 +80,9 @@ class ExaminationController extends Controller
      */
     public function show(Examination $examination)
     {
-        //
+        return view('examinations.show', [
+            'examination' => $examination
+        ]);
     }
 
     /**
