@@ -76,7 +76,7 @@ class GenerateExaminationJob implements ShouldQueue
                 $sections[] = [
                     'name' => $section['name'],
                     'type' => $section['type'],
-                    $section['type'] => $questions,
+                    'questions' => $questions,
                 ];
 
                 ${$section['type']} = array_merge(${$section['type']}, $questions);

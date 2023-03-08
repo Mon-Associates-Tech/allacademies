@@ -9,7 +9,10 @@ use Illuminate\Http\Request;
 use App\Models\AcademicSubject;
 use App\Jobs\GenerateExaminationJob;
 use Illuminate\Support\Facades\Gate;
+use App\Models\MultipleChoiceQuestion;
 use App\Http\Requests\ExaminationRequest;
+use App\Models\EssayQuestion;
+use App\Models\TrueOrFalseQuestion;
 
 class ExaminationController extends Controller
 {
@@ -80,8 +83,29 @@ class ExaminationController extends Controller
      */
     public function show(Examination $examination)
     {
+        $sections = array_map(function ($section) {
+            $questions = collect();
+            if ('multiple_choice_questions' === $section['type']) {
+                $questions = MultipleChoiceQuestion::query()->find($section['questions']);
+            }
+
+            if ('true_or_false_questions' === $section['type']) {
+                $questions = TrueOrFalseQuestion::query()->find($section['questions']);
+            }
+
+            if ('essay_questions' === $section['type']) {
+                $questions = EssayQuestion::query()->find($section['questions']);
+            }
+
+            return [
+                ...$section,
+                'questions' => $questions
+            ];
+        }, $examination->sections);
+
         return view('examinations.show', [
-            'examination' => $examination
+            'examination' => $examination,
+            'sections' => $sections,
         ]);
     }
 
