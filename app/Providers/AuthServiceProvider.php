@@ -27,7 +27,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Gate::define('preside', function (User $user) {
+        Gate::define('own', function (User $user) {
             return UserRole::OWNER === $user->role;
         });
 

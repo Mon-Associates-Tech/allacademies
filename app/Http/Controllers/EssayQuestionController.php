@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
 use App\Http\Requests\EssayQuestionRequest;
@@ -14,14 +13,15 @@ class EssayQuestionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
-        $essayQuestions = EssayQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
+        $essayQuestions = $academicTopic->essayQuestions()->with('academicTopic.academicSubject.academicLevel')->latest('id')->paginate();
 
         return view('essay-questions.index', [
             'essayQuestions' => $essayQuestions,
+            'academicTopic' => $academicTopic,
         ]);
     }
 
@@ -49,9 +49,10 @@ class EssayQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicTopic->essayQuestions()->create($request->validated());
+        $essayQuestion = $academicTopic->essayQuestions()->create($request->validated());
 
-        return to_route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]);
+        return to_route('academic-topics.essay-questions.index', ['academic_topic' => $academicTopic])
+            ->with('success', __('status.resource.created', ['name' => $essayQuestion->question->summary]));
     }
 
     /**
@@ -63,6 +64,12 @@ class EssayQuestionController extends Controller
     public function show(EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
+
+        $essayQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+
+        return view('essay-questions.show', [
+            'essayQuestion' => $essayQuestion,
+        ]);
     }
 
     /**
@@ -74,6 +81,12 @@ class EssayQuestionController extends Controller
     public function edit(EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
+
+        $essayQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+
+        return view('essay-questions.edit', [
+            'essayQuestion' => $essayQuestion,
+        ]);
     }
 
     /**
@@ -83,9 +96,14 @@ class EssayQuestionController extends Controller
      * @param  \App\Models\EssayQuestion  $essayQuestion
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, EssayQuestion $essayQuestion)
+    public function update(EssayQuestionRequest $request, EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
+
+        $essayQuestion->update($request->validated());
+
+        return to_route('essay-questions.show', ['essay_question' =>  $essayQuestion])
+            ->with('success', __('status.resource.updated', ['name' => $essayQuestion->question->summary]));
     }
 
     /**
@@ -97,5 +115,10 @@ class EssayQuestionController extends Controller
     public function destroy(EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
+
+        $essayQuestion->load('academicTopic')->delete();
+
+        return to_route('academic-topics.essay-questions.index', ['academic_topic' => $essayQuestion->academicTopic])
+            ->with('success', __('status.resource.deleted', ['name' => $essayQuestion->question->summary]));
     }
 }

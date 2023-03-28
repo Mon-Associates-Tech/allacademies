@@ -1,13 +1,22 @@
-<x-dashboard title="Subscriptions" summary="Add new subscription">
-    <div class="font-medium text-gray-500 tracking-wide">
-        Add new subscription
-    </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('payments.store') }}">
+<x-auth title="New Payment">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Payments' => route('payments.index'),
+        ]" />
+    </x-slot>
+
+    <form method="POST" action="{{ route('payments.store') }}">
         @csrf
-        <x-form.input full name="reference" />
-        <x-form.input full name="amount" />
-        <div class="flex items-center justify-end">
-            <x-button>Save</x-button>
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+                <x-form.input name="reference" type="text" />
+            </div>
+            <div>
+                <x-form.input name="amount" type="text" />
+            </div>
+        </div>
+        <div class="flex justify-end mt-3">
+            <x-button.primary class="ml-2">Create Payment</x-button.primary>
         </div>
     </form>
-</x-dashboard>
+</x-auth>

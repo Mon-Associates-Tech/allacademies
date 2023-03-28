@@ -1,41 +1,55 @@
-<x-dashboard title="Multiple Choice Questions" summary="Available multiple choice questions">
-    <table class="w-full divide-y divide-gray-300">
-        <caption>
-            <div class="flex items-center justify-between px-2 py-3">
-                <div class="font-medium text-gray-500 tracking-wide">
-                    List of available multiple choice questions
-                </div>
-                <div>
-                </div>
-            </div>
-        </caption>
-        <thead>
+<x-auth title="Multiple Choice Questions">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Academic Groups' => route('academic-groups.index'),
+            $academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
+            $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel]),
+            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $academicTopic->academicSubject->academicLevel]),
+            $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject]),
+            'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject]),
+            $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic]),
+        ]" />
+    </x-slot>
+    @can('moderate')
+    <x-slot name="action">
+        <x-link.primary :to="route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic])">New Multiple Choice Question</x-link.primary>
+    </x-slot>
+    @endcan
+
+    @if ($multipleChoiceQuestions->count())
+    <x-table>
+        <x-slot name="head">
             <tr>
-                <x-table.th>ID</x-table.th>
                 <x-table.th>Question</x-table.th>
                 <x-table.th>Score</x-table.th>
                 <x-table.th>Difficulty Level</x-table.th>
-                <x-table.th>Academic Topic</x-table.th>
-                <x-table.th>Academic Subject</x-table.th>
-                <x-table.th>Academic Level</x-table.th>
                 <x-table.th><span class="sr-only">Actions</span></x-table.th>
             </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @foreach ($multipleChoiceQuestions as $multipleChoiceQuestion)
+        </x-slot>
+
+        @foreach ($multipleChoiceQuestions as $multipleChoiceQuestion)
             <tr>
-                <td class="p-2 text-sm text-gray-500">#{{ $multipleChoiceQuestion->id }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{!! $multipleChoiceQuestion->question->up() !!}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $multipleChoiceQuestion->score }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $multipleChoiceQuestion->difficulty_level }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $multipleChoiceQuestion->academicTopic->name }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $multipleChoiceQuestion->academicTopic->academicSubject->name }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->name }}</td>
-                <td class="p-2 text-sm text-primary-600 space-x-3">
-                    <a href="{{ route('multiple-choice-questions.edit', ['multiple_choice_question' => $multipleChoiceQuestion]) }}">Edit</a>
-                </td>
+                <x-table.td bold>{{ $multipleChoiceQuestion->question->summary }}</x-table.td>
+                <x-table.td>{{ $multipleChoiceQuestion->score }}</x-table.td>
+                <x-table.td>{{ $multipleChoiceQuestion->difficulty_level }}</x-table.td>
+                <x-table.td action>
+                    <x-action name="view" :to="route('multiple-choice-questions.show', ['multiple_choice_question' => $multipleChoiceQuestion])" />
+                    @can('moderate')
+                    <x-action name="edit" :to="route('multiple-choice-questions.edit', ['multiple_choice_question' => $multipleChoiceQuestion])" />
+                    <x-action name="delete" :to="route('multiple-choice-questions.destroy', ['multiple_choice_question' => $multipleChoiceQuestion])">
+                        Are you sure you want to delete {{ $multipleChoiceQuestion->question->summary }}
+                    </x-action>
+                    @endcan
+                </x-table.td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
-</x-dashboard>
+        @endforeach
+    </x-table>
+
+    <div class="mt-3">
+        {{ $multipleChoiceQuestions->links() }}
+    </div>
+    @else
+    <x-blank />
+    @endif
+</x-auth>

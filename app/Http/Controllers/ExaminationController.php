@@ -8,7 +8,6 @@ use App\Models\Examination;
 use Illuminate\Http\Request;
 use App\Models\AcademicSubject;
 use App\Jobs\GenerateExaminationJob;
-use Illuminate\Support\Facades\Gate;
 use App\Models\MultipleChoiceQuestion;
 use App\Http\Requests\ExaminationRequest;
 use App\Models\EssayQuestion;
@@ -21,17 +20,13 @@ class ExaminationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(AcademicSubject $academicSubject)
     {
-        if (Gate::check('administrate')) {
-            $examinations = Examination::query()->with('academicSubject.academicLevel')->get();
-        } else {
-            $examinations = Examination::query()->with('academicSubject.academicLevel')->where('team_id', auth()->user()->current_team_id)->get();
-        }
-
+        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
+            'academicSubject' => $academicSubject,
         ]);
     }
 
@@ -72,7 +67,8 @@ class ExaminationController extends Controller
             $request->validated('examiners')
         ));
 
-        return to_route('examinations.index');
+        return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
+            ->with('success', __('status.exam.generating'));
     }
 
     /**
@@ -109,28 +105,6 @@ class ExaminationController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Examination  $examination
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Examination $examination)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Examination  $examination
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Examination $examination)
-    {
-        //
-    }
 
     /**
      * Remove the specified resource from storage.

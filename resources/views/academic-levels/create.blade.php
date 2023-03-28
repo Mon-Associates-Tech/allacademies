@@ -1,14 +1,24 @@
-<x-dashboard title="Academic Levels" summary="Add new educational level">
-    <div class="font-medium text-gray-500 tracking-wide">
-        Add new academic level
-    </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-groups.academic-levels.store', ['academic_group' => $academicGroup]) }}">
+<x-auth title="New Academic Level">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Academic Groups' => route('academic-groups.index'),
+            $academicGroup->name => route('academic-groups.show', ['academic_group' => $academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicGroup]),
+        ]" />
+    </x-slot>
+
+    <form method="POST" action="{{ route('academic-groups.academic-levels.store', ['academic_group' => $academicGroup]) }}">
         @csrf
-        <x-form.input full label="Academic Group" name="academic_group" value="{{ $academicGroup->name }}" readonly />
-        <x-form.input full name="name" />
-        <x-form.input full name="label" />
-        <div class="flex items-center justify-end">
-            <x-button>Save</x-button>
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+                <x-form.input name="name" type="text" />
+            </div>
+            <div>
+                <x-form.input name="label" type="text"  />
+            </div>
+        </div>
+        <div class="flex justify-end mt-3">
+            <x-button.primary class="ml-2">Create Academic Level</x-button.primary>
         </div>
     </form>
-</x-dashboard>
+</x-auth>

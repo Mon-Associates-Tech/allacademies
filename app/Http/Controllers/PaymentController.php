@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
-use App\Events\PaymentSucceeded;
+use App\Events\SubscriptionUpdated;
 use App\Models\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class PaymentController extends Controller
     {
         $this->authorize('administrate');
 
-        $payments = Payment::query()->get();
+        $payments = Payment::query()->latest('id')->paginate();
 
         return view('payments.index', [
             'payments' => $payments,
@@ -69,60 +69,20 @@ class PaymentController extends Controller
                 'reference' => $reference,
                 'amount' => (string) $amount->getAmount(),
                 'status' => PaymentStatus::SUCCEEDED,
-            ]);
+            ])->refresh();
 
-            event(new PaymentSucceeded($payment));
+            event(new SubscriptionUpdated($subscription));
         } catch (Exception) {
             throw ValidationException::withMessages([
                 'amount' => 'Invalid amount',
             ]);
         }
 
-        return to_route('payments.index');
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Payment  $payment
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Payment $payment)
-    {
-        $this->authorize('administrate');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Payment  $payment
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Payment $payment)
-    {
-        $this->authorize('administrate');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Payment  $payment
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Payment $payment)
-    {
-        $this->authorize('administrate');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Payment  $payment
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Payment $payment)
-    {
-        $this->authorize('administrate');
+        return to_route('payments.index')
+            ->with('success', __('status.payment.created', [
+                'currency' => $payment->currency,
+                'amount' => $payment->amount,
+                'reference' => $payment->reference,
+            ]));
     }
 }

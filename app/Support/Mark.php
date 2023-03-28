@@ -2,14 +2,20 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Str;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Support\HtmlString;
 
 class Mark implements Castable
 {
-    public function __construct(private ?string $up, private ?string $down)
-    {
+    public ?string $summary;
+    public ?HtmlString $html;
 
+    public function __construct(public ?string $up, public ?string $down)
+    {
+        $this->summary = is_string($up) ? Str::words(strip_tags($up), 10) : null;
+        $this->html = is_string($up) ? new HtmlString($up) : null;
     }
 
     public static function fromArray(array $array)
@@ -33,16 +39,6 @@ class Mark implements Castable
     public function toString(): string
     {
         return json_encode($this->toArray());
-    }
-
-    public function up(): ?string
-    {
-        return $this->up;
-    }
-
-    public function down(): ?string
-    {
-        return $this->down;
     }
 
     public static function castUsing(array $arguments)

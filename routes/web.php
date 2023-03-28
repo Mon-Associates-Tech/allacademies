@@ -6,7 +6,10 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\SignUpController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SignOutController;
+use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExaminationController;
@@ -39,30 +42,53 @@ Route::middleware('guest')->group(function () {
     Route::post('sign-up', [SignUpController::class, 'store']);
 });
 
+Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('sign-out');
+
+Route::middleware('auth')->prefix('verify/email')->name('verification.')->group(function () {
+    Route::get('notice', [EmailVerificationController::class, 'notice'])->name('notice');
+    Route::post('send', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('send');
+    Route::get('{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verify');
+});
+
+Route::prefix('password')->name('password.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('forgot', [PasswordController::class, 'forgotForm'])->name('request');
+        Route::post('forgot', [PasswordController::class, 'forgot'])->name('email');
+        Route::get('reset/{token}', [PasswordController::class, 'resetForm'])->name('reset');
+        Route::post('reset', [PasswordController::class, 'reset'])->name('update');
+    });
+    Route::middleware('auth')->group(function () {
+        Route::get('change', [PasswordController::class, 'changeForm'])->name('change');
+        Route::post('change', [PasswordController::class, 'change']);
+    });
+});
+
 Route::middleware('auth')->group(function () {
-    Route::post('sign-out', [SignOutController::class, 'store'])->name('sign-out');
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('academic-groups', AcademicGroupController::class);
-    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->only(['create', 'store']);
-    Route::resource('academic-levels', AcademicLevelController::class)->except(['create', 'store']);
-    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->only(['create', 'store']);
-    Route::resource('academic-subjects', AcademicSubjectController::class)->except(['create', 'store']);
-    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->only(['create', 'store']);
-    Route::resource('academic-topics', AcademicTopicController::class)->except(['create', 'store']);
-    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->only(['create', 'store']);
-    Route::resource('multiple-choice-questions', MultipleChoiceQuestionController::class)->except(['create', 'store']);
-    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->only(['create', 'store']);
-    Route::resource('essay-questions', EssayQuestionController::class)->except(['create', 'store']);
-    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->only(['create', 'store']);
-    Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class)->except(['create', 'store']);
-    Route::resource('academic-subjects.examinations', ExaminationController::class)->only(['create', 'store']);
-    Route::resource('examinations', ExaminationController::class)->except(['create', 'store']);
-    Route::resource('subscriptions', SubscriptionController::class);
-    Route::resource('payments', PaymentController::class);
+    Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('security', SecurityController::class)->name('security');
+
     Route::post('teams/{team}/activate', [TeamController::class, 'activate'])->name('teams.activate');
-    Route::resource('teams', TeamController::class);
-    Route::resource('teams.members', MemberController::class)->only(['create', 'store', 'destroy']);
+    Route::resource('teams', TeamController::class)->except('show');
+    Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
+
+    Route::resource('subscriptions', SubscriptionController::class)->except(['show', 'edit', 'update']);
+    Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
+
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::match(['GET', 'POST'], 'settings/role', [SettingsController::class, 'role'])->name('settings.role');
+
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::resource('academic-groups', AcademicGroupController::class);
+    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->shallow();
+    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->shallow();
+    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->shallow();
+    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->shallow();
+    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
+    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
+
+    Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     // TODO: examination, quizzes
 });

@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Enums\SubscriptionStatus;
-use App\Events\PaymentSucceeded;
+use App\Events\SubscriptionUpdated;
 use App\Models\Payment;
 use Brick\Money\Money;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,24 +24,20 @@ class EvaluateSubscription implements ShouldQueue
     /**
      * Handle the event.
      *
-     * @param  PaymentSucceeded  $event
+     * @param  SubscriptionUpdated  $event
      * @return void
      */
-    public function handle(PaymentSucceeded $event)
+    public function handle(SubscriptionUpdated $event)
     {
-        if (is_null($event->payment->subscription_id)) {
-            return;
-        }
-
-        $event->payment->load('subscription.payments');
-        $cost = Money::of($event->payment->subscription->amount, 'GHS');
+        $event->subscription->load('payments');
+        $cost = Money::of($event->subscription->amount, 'GHS');
         $paid = Money::of('0', 'GHS');
 
-        $event->payment->subscription->payments->each(function (Payment $payment) use (&$paid) {
+        $event->subscription->payments->each(function (Payment $payment) use (&$paid) {
             $paid = $paid->plus($payment->amount);
         });
 
-        $event->payment->subscription->update([
+        $event->subscription->update([
             'status' => $paid->isGreaterThanOrEqualTo($cost) ? SubscriptionStatus::PAID : SubscriptionStatus::PART_PAID
         ]);
     }

@@ -11,25 +11,30 @@ class SubscriptionForm extends Component
     public $package;
     public $duration;
     public $beneficiaries;
-    public $groups;
-    public $subjects;
+    public $academicGroups;
+    public $academicSubjects;
+
+    protected $rules = [
+        'academicGroups.*.is_open' => ['boolean'],
+        'academicGroups.*.academicLevels.*.is_open' => ['boolean'],
+    ];
 
     public function getAmountProperty()
     {
         $money = Pricer::calculate(
             SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
-            (int) is_null($this->duration) ? '3' : $this->duration,
-            count($this->subjects) > 1 ? count($this->subjects) : 1,
-            (int) is_null($this->beneficiaries) ? '1' : $this->beneficiaries
+            (int) empty($this->duration) ? '3' : $this->duration,
+            count($this->academicSubjects) > 1 ? count($this->academicSubjects) : 1,
+            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries
         );
 
         return (string) $money->getAmount();
     }
 
-    public function mount($groups)
+    public function mount($academicGroups)
     {
-        $this->groups = $groups;
-        $this->subjects = [];
+        $this->academicGroups = $academicGroups;
+        $this->academicSubjects = [];
     }
 
     public function render()

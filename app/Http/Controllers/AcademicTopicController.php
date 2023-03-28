@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\AcademicSubject;
 use App\Http\Requests\AcademicTopicRequest;
@@ -14,14 +13,17 @@ class AcademicTopicController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(AcademicSubject $academicSubject)
     {
         $this->authorize('moderate');
 
-        $academicTopics = AcademicTopic::query()->with('academicSubject.academicLevel')->get();
+        $academicTopics = $academicSubject->academicTopics()->latest('id')->paginate();
+
+        $academicSubject->load('academicLevel.academicGroup');
 
         return view('academic-topics.index', [
-            'academicTopics' => $academicTopics
+            'academicTopics' => $academicTopics,
+            'academicSubject' => $academicSubject,
         ]);
     }
 
@@ -33,6 +35,8 @@ class AcademicTopicController extends Controller
     public function create(AcademicSubject $academicSubject)
     {
         $this->authorize('administrate');
+
+        $academicSubject->load('academicLevel.academicGroup');
 
         return view('academic-topics.create', [
             'academicSubject' => $academicSubject,
@@ -49,9 +53,10 @@ class AcademicTopicController extends Controller
     {
         $this->authorize('administrate');
 
-        $academicSubject->academicTopics()->create($request->validated());
+        $academicTopic = $academicSubject->academicTopics()->create($request->validated());
 
-        return to_route('academic-topics.index');
+        return to_route('academic-subjects.academic-topics.index', ['academic_subject' => $academicSubject])
+            ->with('success', __('status.resource.created', ['name' => $academicTopic->name]));
     }
 
     /**
@@ -62,7 +67,14 @@ class AcademicTopicController extends Controller
      */
     public function show(AcademicTopic $academicTopic)
     {
-        $this->authorize('administrate');
+        $this->authorize('moderate');
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup')
+            ->loadCount('multipleChoiceQuestions', 'trueOrFalseQuestions', 'essayQuestions');
+
+        return view('academic-topics.show', [
+            'academicTopic' => $academicTopic,
+        ]);
     }
 
     /**
@@ -74,6 +86,12 @@ class AcademicTopicController extends Controller
     public function edit(AcademicTopic $academicTopic)
     {
         $this->authorize('administrate');
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
+
+        return view('academic-topics.edit', [
+            'academicTopic' => $academicTopic,
+        ]);
     }
 
     /**
@@ -83,9 +101,14 @@ class AcademicTopicController extends Controller
      * @param  \App\Models\AcademicTopic  $academicTopic
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, AcademicTopic $academicTopic)
+    public function update(AcademicTopicRequest $request, AcademicTopic $academicTopic)
     {
         $this->authorize('administrate');
+
+        $academicTopic->update($request->validated());
+
+        return to_route('academic-topics.show', ['academic_topic' =>  $academicTopic])
+            ->with('success', __('status.resource.updated', ['name' => $academicTopic->name]));
     }
 
     /**
@@ -97,5 +120,10 @@ class AcademicTopicController extends Controller
     public function destroy(AcademicTopic $academicTopic)
     {
         $this->authorize('administrate');
+
+        $academicTopic->load('academicSubject')->delete();
+
+        return to_route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject])
+            ->with('success', __('status.resource.deleted', ['name' => $academicTopic->name]));
     }
 }

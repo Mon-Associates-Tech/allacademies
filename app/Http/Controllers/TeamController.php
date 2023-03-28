@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TeamRequest;
 use App\Models\Team;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TeamController extends Controller
 {
@@ -19,7 +20,7 @@ class TeamController extends Controller
 
         $user->currentTeam()->associate($team)->save();
 
-        return to_route('teams.index');
+        return to_route('teams.index')->with('success', __('status.team.activate', ['name' => $team->name]));
     }
 
     /**
@@ -33,16 +34,19 @@ class TeamController extends Controller
         $user = Auth::user();
 
         $user->load(['currentTeam' => ['members', 'owner']]);
+        $user->currentTeam->loadCount('subscriptions');
 
-        $user->currentTeam->members->prepend($user->currentTeam->owner);
+        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
+        $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
 
-        $ownedTeams = $user->ownedTeams()->get();
+        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
 
-        $joinedTeams = $user->joinedTeams()->with('owner')->get();
+        $teams = $ownedTeams->merge($joinedTeams);
+        unset($ownedTeams, $joinedTeams);
+        $teams = $teams->sort();
 
         return view('teams.index', [
-            'ownedTeams' => $ownedTeams,
-            'joinedTeams' => $joinedTeams,
+            'teams' => $teams,
             'user' => $user,
         ]);
     }
@@ -54,7 +58,7 @@ class TeamController extends Controller
      */
     public function create()
     {
-        //
+        return view('teams.create');
     }
 
     /**
@@ -63,20 +67,17 @@ class TeamController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(TeamRequest $request)
     {
-        //
-    }
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Team  $team
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Team $team)
-    {
-        //
+        $team = new Team($request->validated());
+        $team->owner()->associate($user);
+        $team->save();
+
+        return to_route('teams.index')
+            ->with('success', __('status.resource.created', ['name' => $team->name]));
     }
 
     /**
@@ -87,7 +88,11 @@ class TeamController extends Controller
      */
     public function edit(Team $team)
     {
-        //
+        abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
+
+        return view('teams.edit', [
+            'team' => $team,
+        ]);
     }
 
     /**
@@ -97,9 +102,14 @@ class TeamController extends Controller
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Team $team)
+    public function update(TeamRequest $request,  Team $team)
     {
-        //
+        abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
+
+        $team->update($request->validated());
+
+        return to_route('teams.index')
+            ->with('success', __('status.resource.updated', ['name' => $team->name]));
     }
 
     /**
@@ -110,6 +120,15 @@ class TeamController extends Controller
      */
     public function destroy(Team $team)
     {
-        //
+        abort_if($team->is_personal, 403, 'You can not delete a personal team');
+        abort_unless($team->owner_id === auth()->id(), 403, "You can not delete another's team");
+
+        DB::transaction(function () use ($team) {
+            $team->members()->detach();
+            $team->delete();
+        });
+
+        return to_route('teams.index')
+            ->with('success', __('status.resource.deleted', ['name' => $team->name]));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
 use App\Http\Requests\MultipleChoiceQuestionRequest;
@@ -14,14 +13,17 @@ class MultipleChoiceQuestionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
-        $multipleChoiceQuestions = MultipleChoiceQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
+        $multipleChoiceQuestions = $academicTopic->multipleChoiceQuestions()->with('academicTopic.academicSubject.academicLevel')->latest('id')->paginate();
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
         return view('multiple-choice-questions.index', [
             'multipleChoiceQuestions' => $multipleChoiceQuestions,
+            'academicTopic' => $academicTopic,
         ]);
     }
 
@@ -33,6 +35,8 @@ class MultipleChoiceQuestionController extends Controller
     public function create(AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
         return view('multiple-choice-questions.create', [
             'academicTopic' => $academicTopic,
@@ -49,9 +53,10 @@ class MultipleChoiceQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicTopic->multipleChoiceQuestions()->create($request->validated());
+        $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($request->validated());
 
-        return to_route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]);
+        return to_route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $academicTopic])
+            ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 
     /**
@@ -63,6 +68,12 @@ class MultipleChoiceQuestionController extends Controller
     public function show(MultipleChoiceQuestion $multipleChoiceQuestion)
     {
         $this->authorize('moderate');
+
+        $multipleChoiceQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+
+        return view('multiple-choice-questions.show', [
+            'multipleChoiceQuestion' => $multipleChoiceQuestion,
+        ]);
     }
 
     /**
@@ -74,6 +85,12 @@ class MultipleChoiceQuestionController extends Controller
     public function edit(MultipleChoiceQuestion $multipleChoiceQuestion)
     {
         $this->authorize('moderate');
+
+        $multipleChoiceQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+
+        return view('multiple-choice-questions.edit', [
+            'multipleChoiceQuestion' => $multipleChoiceQuestion,
+        ]);
     }
 
     /**
@@ -83,9 +100,14 @@ class MultipleChoiceQuestionController extends Controller
      * @param  \App\Models\MultipleChoiceQuestion  $multipleChoiceQuestion
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, MultipleChoiceQuestion $multipleChoiceQuestion)
+    public function update(MultipleChoiceQuestionRequest $request, MultipleChoiceQuestion $multipleChoiceQuestion)
     {
         $this->authorize('moderate');
+
+        $multipleChoiceQuestion->update($request->validated());
+
+        return to_route('multiple-choice-questions.show', ['multiple_choice_question' =>  $multipleChoiceQuestion])
+            ->with('success', __('status.resource.updated', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 
     /**
@@ -97,5 +119,10 @@ class MultipleChoiceQuestionController extends Controller
     public function destroy(MultipleChoiceQuestion $multipleChoiceQuestion)
     {
         $this->authorize('moderate');
+
+        $multipleChoiceQuestion->load('academicTopic')->delete();
+
+        return to_route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $multipleChoiceQuestion->academicTopic])
+            ->with('success', __('status.resource.deleted', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 }

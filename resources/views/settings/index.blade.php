@@ -1,27 +1,30 @@
-<x-dashboard title="Settings" summary="System Settings">
-    <table class="w-full divide-y divide-gray-300">
-        <caption>
-            <div class="flex items-center justify-between px-2 py-3">
-                <div class="font-medium text-gray-500 tracking-wide">
-                    System settings
-                </div>
-                <div>
+<x-auth title="Settings">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb />
+    </x-slot>
+
+    <div>
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="sm:flex sm:items-start sm:justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">
+                            Manage User Role
+                        </h3>
+                        <div class="mt-2 max-w-xl text-sm text-gray-500">
+                            <p>
+                                All users are subscribers by default. Do you want to change their role to a moderator or admin?
+                                Simple change their role to give them more previlege.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-0 sm:ml-6 sm:flex-shrink-0 sm:flex sm:items-center">
+                        <x-link.primary :to="route('settings.role')">
+                            Change User Role
+                        </x-link.primary>
+                    </div>
                 </div>
             </div>
-        </caption>
-        <thead>
-            <tr>
-                <x-table.th>Name</x-table.th>
-                <x-table.th><span class="sr-only">Actions</span></x-table.th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            <tr>
-                <td class="p-2 text-sm text-gray-900 font-medium">Role</td>
-                <td class="p-2 text-sm text-primary-600 space-x-3">
-                    <a href="{{ route('settings.role') }}">Change</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</x-dashboard>
+        </div>
+    </div>
+</x-auth>

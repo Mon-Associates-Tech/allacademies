@@ -7,6 +7,7 @@ module.exports = {
     "./resources/**/*.blade.php",
     "./resources/**/*.js",
     "./resources/**/*.vue",
+    "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
   ],
   theme: {
     extend: {
@@ -15,8 +16,15 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Exo', ...defaultTheme.fontFamily.sans],
-      }
+      },
+      height: {
+        panel: 'calc(100vh - 1rem)',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/aspect-ratio'),
+  ],
 }

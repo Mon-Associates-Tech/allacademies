@@ -1,0 +1,5 @@
+<a target="_blank" href="https://icons8.com/icon/y3NHs4jL5tI1/examination">Examination</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+
+<a href="https://www.flaticon.com/free-icons/exam" title="exam icons">Exam icons created by Freepik - Flaticon</a>
+
+wire:key="subject-{{ $loop->parent->parent->index }}-{{ $loop->parent->index }}-{{ $loop->index }}"

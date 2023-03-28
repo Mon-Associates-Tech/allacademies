@@ -1,15 +1,25 @@
-<x-dashboard title="Academic Topics" summary="Add academic topic">
-    <div class="font-medium text-gray-500 tracking-wide">
-        Create new academic topic
-    </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-subjects.academic-topics.store', ['academic_subject' => $academicSubject]) }}">
+<x-auth title="New Academic Topic">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Academic Groups' => route('academic-groups.index'),
+            $academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicSubject->academicLevel->academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicSubject->academicLevel->academicGroup]),
+            $academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicSubject->academicLevel]),
+            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $academicSubject->academicLevel]),
+            $academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicSubject]),
+            'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $academicSubject]),
+        ]" />
+    </x-slot>
+
+    <form method="POST" action="{{ route('academic-subjects.academic-topics.store', ['academic_subject' => $academicSubject]) }}">
         @csrf
-        <x-form.input full label="Academic Subject" name="academic_subject" value="{{ $academicSubject->name }}" readonly />
-        <x-form.input full name="name" />
-        {{-- <x-form.select full name="academic_level_id" label="Academic level" :options="$academicLevels" />
-        <x-form.select full name="academic_subject_id" label="Academic Subject" :options="$academicSubjects" /> --}}
-        <div class="flex items-center justify-end">
-            <x-button>Save</x-button>
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+                <x-form.input name="name" type="text" />
+            </div>
+        </div>
+        <div class="flex justify-end mt-3">
+            <x-button.primary class="ml-2">Create Academic Topic</x-button.primary>
         </div>
     </form>
-</x-dashboard>
+</x-auth>

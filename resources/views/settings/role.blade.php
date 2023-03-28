@@ -1,17 +1,26 @@
-<x-dashboard title="Change Role" summary="Change User Role">
-    <div class="font-medium text-gray-500 tracking-wide">
-        Change user role
-    </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('settings.role') }}">
-        @csrf
-        <x-form.input full name="email" />
-        <x-form.select full name="role" :options="[
-            ['value' => 'subscriber', 'label' => 'Subscriber'],
-            ['value' => 'moderator', 'label' => 'Moderator'],
-            ['value' => 'admin', 'label' => 'Admin'],
+<x-auth title="Change User Role">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Settings' => route('settings.index'),
         ]" />
-        <div class="flex items-center justify-end">
-            <x-button>Save</x-button>
+    </x-slot>
+
+    <form method="POST" action="{{ route('settings.role') }}">
+        @csrf
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+                <x-form.input name="email" type="email" />
+            </div>
+            <div>
+                <x-form.select name="role" :options="[
+                    'subscriber' => 'Subscriber',
+                    'moderator' => 'Moderator',
+                    'admin' => 'Admin',
+                ]" />
+            </div>
+        </div>
+        <div class="flex justify-end mt-3">
+            <x-button.primary class="ml-2">Change Role</x-button.primary>
         </div>
     </form>
-</x-dashboard>
+</x-auth>

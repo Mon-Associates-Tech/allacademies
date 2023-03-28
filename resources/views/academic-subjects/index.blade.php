@@ -1,41 +1,49 @@
-<x-dashboard title="Academic Subjects" summary="Available academic subjects">
-    <table class="w-full divide-y divide-gray-300">
-        <caption>
-            <div class="flex items-center justify-between px-2 py-3">
-                <div class="font-medium text-gray-500 tracking-wide">
-                    List all available academic subjects
-                </div>
-                <div>
-                </div>
-            </div>
-        </caption>
-        <thead>
+<x-auth title="Academic Subjects">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Academic Groups' => route('academic-groups.index'),
+            $academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicLevel->academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicLevel->academicGroup]),
+            $academicLevel->name => route('academic-levels.show', ['academic_level' => $academicLevel]),
+        ]" />
+    </x-slot>
+    @can('administrate')
+    <x-slot name="action">
+        <x-link.primary :to="route('academic-levels.academic-subjects.create', ['academic_level' => $academicLevel])">New Academic Subject</x-link.primary>
+    </x-slot>
+    @endcan
+
+    @if ($academicSubjects->count())
+    <x-table>
+        <x-slot name="head">
             <tr>
-                <x-table.th>ID</x-table.th>
                 <x-table.th>Name</x-table.th>
                 <x-table.th>Code</x-table.th>
-                <x-table.th>Academic Level</x-table.th>
                 <x-table.th><span class="sr-only">Actions</span></x-table.th>
             </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @foreach ($academicSubjects as $academicSubject)
+        </x-slot>
+
+        @foreach ($academicSubjects as $academicSubject)
             <tr>
-                <td class="p-2 text-sm text-gray-500">#{{ $academicSubject->id }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{{ $academicSubject->name }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $academicSubject->code }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $academicSubject->academicLevel->name }}</td>
-                <td class="p-2 text-sm text-primary-600 space-x-3">
+                <x-table.td bold>{{ $academicSubject->name }}</x-table.td>
+                <x-table.td>{{ $academicSubject->code }}</x-table.td>
+                <x-table.td action>
+                    <x-action name="view" :to="route('academic-subjects.show', ['academic_subject' => $academicSubject])" />
                     @can('administrate')
-                    <a href="{{ route('academic-subjects.academic-topics.create', ['academic_subject' => $academicSubject]) }}">Topic</a>
+                    <x-action name="edit" :to="route('academic-subjects.edit', ['academic_subject' => $academicSubject])" />
+                    <x-action name="delete" :to="route('academic-subjects.destroy', ['academic_subject' => $academicSubject])">
+                        Are you sure you want to delete {{ $academicSubject->name }}
+                    </x-action>
                     @endcan
-                    <a href="{{ route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject]) }}">Exam</a>
-                    @can('administrate')
-                    <a href="{{ route('academic-subjects.edit', ['academic_subject' => $academicSubject]) }}">Edit</a>
-                    @endcan
-                </td>
+                </x-table.td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
-</x-dashboard>
+        @endforeach
+    </x-table>
+
+    <div class="mt-3">
+        {{ $academicSubjects->links() }}
+    </div>
+    @else
+    <x-blank />
+    @endif
+</x-auth>

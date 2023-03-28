@@ -1,12 +1,19 @@
-<x-dashboard title="Academic Groups" summary="Add new educational group">
-    <div class="font-medium text-gray-500 tracking-wide">
-        Add new academic group
-    </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('academic-groups.store') }}">
+<x-auth title="New Academic Group">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Academic Groups' => route('academic-groups.index'),
+        ]" />
+    </x-slot>
+
+    <form method="POST" action="{{ route('academic-groups.store') }}">
         @csrf
-        <x-form.input full name="name" />
-        <div class="flex items-center justify-end">
-            <x-button>Save</x-button>
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+                <x-form.input name="name" type="text" />
+            </div>
+        </div>
+        <div class="flex justify-end mt-3">
+            <x-button.primary class="ml-2">Create Academic Group</x-button.primary>
         </div>
     </form>
-</x-dashboard>
+</x-auth>

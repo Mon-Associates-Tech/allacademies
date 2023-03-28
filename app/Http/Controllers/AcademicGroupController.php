@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AcademicGroupRequest;
 use App\Models\AcademicGroup;
-use Illuminate\Http\Request;
 
 class AcademicGroupController extends Controller
 {
@@ -15,9 +14,9 @@ class AcademicGroupController extends Controller
      */
     public function index()
     {
-        $this->authorize('administrate');
+        $this->authorize('moderate');
 
-        $academicGroups = AcademicGroup::all();
+        $academicGroups = AcademicGroup::query()->latest('id')->paginate();
 
         return view('academic-groups.index', [
             'academicGroups' => $academicGroups,
@@ -46,9 +45,10 @@ class AcademicGroupController extends Controller
     {
         $this->authorize('administrate');
 
-        AcademicGroup::query()->create($request->validated());
+        $academicGroup = AcademicGroup::query()->create($request->validated());
 
-        return to_route('academic-groups.index');
+        return to_route('academic-groups.index')
+            ->with('success', __('status.resource.created', ['name' => $academicGroup->name]));
     }
 
     /**
@@ -59,7 +59,13 @@ class AcademicGroupController extends Controller
      */
     public function show(AcademicGroup $academicGroup)
     {
-        //
+        $this->authorize('moderate');
+
+        $academicGroup->loadCount('academicLevels');
+
+        return view('academic-groups.show', [
+            'academicGroup' => $academicGroup,
+        ]);
     }
 
     /**
@@ -70,7 +76,11 @@ class AcademicGroupController extends Controller
      */
     public function edit(AcademicGroup $academicGroup)
     {
-        //
+        $this->authorize('administrate');
+
+        return view('academic-groups.edit', [
+            'academicGroup' => $academicGroup,
+        ]);
     }
 
     /**
@@ -80,9 +90,14 @@ class AcademicGroupController extends Controller
      * @param  \App\Models\AcademicGroup  $academicGroup
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, AcademicGroup $academicGroup)
+    public function update(AcademicGroupRequest $request, AcademicGroup $academicGroup)
     {
-        //
+        $this->authorize('administrate');
+
+        $academicGroup->update($request->validated());
+
+        return to_route('academic-groups.show', ['academic_group' =>  $academicGroup])
+            ->with('success', __('status.resource.updated', ['name' => $academicGroup->name]));
     }
 
     /**
@@ -93,6 +108,11 @@ class AcademicGroupController extends Controller
      */
     public function destroy(AcademicGroup $academicGroup)
     {
-        //
+        $this->authorize('administrate');
+
+        $academicGroup->delete();
+
+        return to_route('academic-groups.index')
+            ->with('success', __('status.resource.deleted', ['name' => $academicGroup->name]));
     }
 }

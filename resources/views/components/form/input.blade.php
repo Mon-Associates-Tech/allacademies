@@ -1,12 +1,9 @@
-@props(['name', 'type' => 'text', 'label' => null, 'full' => false, 'value' => ''])
+@props(['name', 'type', 'value' => null, 'label' => null, 'error' => null])
 
 <div class="space-y-1">
-    <label class="text-gray-800 font-medium text-sm">{{ $label ?? ucfirst($name) }}</label>
-    <input {{ $attributes }} @class([
-        'block px-4 py-2 text-gray-700 focus:outline-none focus:border-gray-700 bg-white border border-gray-300',
-        'w-full' => $full
-        ]) id="{{ $name }}" name="{{ $name }}" type="{{ $type }}" value="{{ old($name, $value) }}" >
-    @error($name)
-        <p class="text-xs text-red-700">{{ $message }}</p>
+    <label for="{{ $name }}" class="block text-sm tracking-wide font-medium text-gray-700">{{ $label ?? ucfirst($name) }}</label>
+    <input name="{{ $name }}" id="{{ $name }}" type="{{ $type }}" value="{{ old($name, $value) }}" {{ $attributes->merge(['class' => 'border-gray-300 rounded-lg shadow-sm w-full leading-tight']) }}>
+    @error($error ?? $name)
+    <div class="text-xs font-medium text-red-600">{{ $message }}</div>
     @enderror
 </div>

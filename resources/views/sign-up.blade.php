@@ -1,13 +1,12 @@
-<x-layout>
-    <form method="POST" action="{{ route('sign-up') }}" class="w-screen h-screen grid place-items-center">
+<x-center>
+    <x-logo>Sign Up</x-logo>
+    <form method="POST" action="{{ route('sign-up') }}" class="space-y-3">
         @csrf
-        <div class="space-y-3 w-full max-w-sm">
-            <h4 class="text-center text-lg text-primary-800">🔥 {{ config('app.name') }} 🔥</h4>
-            <x-form.input full name="name" />
-            <x-form.input full name="email" />
-            <x-form.input full name="password" type="password" />
-            <x-button full>Sign Up</x-button>
-            <a href="{{ route('sign-in') }}" class="block text-center text-sm text-primary-800 hover:text-primary-700">Sign In Rather</a>
-        </div>
+        <x-form.input name="name" type="text" />
+        <x-form.input name="email" type="email" />
+        <x-form.password name="password" />
+        <x-form.password name="password_confirmation" label="Confirm Password" />
+        <x-button.primary class="w-full justify-center">Sign Up</x-button.primary>
     </form>
-</x-layout>
+    <a href="{{ route('sign-in') }}" class="block w-full mt-5 text-center text-primary-600 text-sm">Already have an account? Sign In</a>
+</x-center>

@@ -14,14 +14,17 @@ class TrueOrFalseQuestionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
-        $trueOrFalseQuestions = TrueOrFalseQuestion::query()->with('academicTopic.academicSubject.academicLevel')->get();
+        $trueOrFalseQuestions = $academicTopic->trueOrFalseQuestions()->with('academicTopic.academicSubject.academicLevel')->latest('id')->paginate();
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
         return view('true-or-false-questions.index', [
             'trueOrFalseQuestions' => $trueOrFalseQuestions,
+            'academicTopic' => $academicTopic,
         ]);
     }
 
@@ -33,6 +36,8 @@ class TrueOrFalseQuestionController extends Controller
     public function create(AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
         return view('true-or-false-questions.create', [
             'academicTopic' => $academicTopic,
@@ -49,9 +54,10 @@ class TrueOrFalseQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicTopic->trueOrFalseQuestions()->create($request->validated());
+        $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($request->validated());
 
-        return to_route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]);
+        return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic])
+            ->with('success', __('status.resource.created', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 
     /**
@@ -63,6 +69,12 @@ class TrueOrFalseQuestionController extends Controller
     public function show(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
+
+        $trueOrFalseQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+
+        return view('true-or-false-questions.show', [
+            'trueOrFalseQuestion' => $trueOrFalseQuestion,
+        ]);
     }
 
     /**
@@ -74,6 +86,12 @@ class TrueOrFalseQuestionController extends Controller
     public function edit(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
+
+        $trueOrFalseQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+
+        return view('true-or-false-questions.edit', [
+            'trueOrFalseQuestion' => $trueOrFalseQuestion,
+        ]);
     }
 
     /**
@@ -83,9 +101,14 @@ class TrueOrFalseQuestionController extends Controller
      * @param  \App\Models\TrueOrFalseQuestion  $trueOrFalseQuestion
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function update(TrueOrFalseRequest $request, TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
+
+        $trueOrFalseQuestion->update($request->validated());
+
+        return to_route('true-or-false-questions.show', ['true_or_false_question' =>  $trueOrFalseQuestion])
+            ->with('success', __('status.resource.updated', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 
     /**
@@ -97,5 +120,10 @@ class TrueOrFalseQuestionController extends Controller
     public function destroy(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
+
+        $trueOrFalseQuestion->load('academicTopic')->delete();
+
+        return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $trueOrFalseQuestion->academicTopic])
+            ->with('success', __('status.resource.deleted', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 }

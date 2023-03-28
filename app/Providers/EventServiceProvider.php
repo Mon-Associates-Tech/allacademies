@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Events\PaymentSucceeded;
+use App\Events\SubscriptionUpdated;
 use App\Listeners\EvaluateSubscription;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -20,7 +20,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        PaymentSucceeded::class => [
+        SubscriptionUpdated::class => [
             EvaluateSubscription::class,
         ],
     ];

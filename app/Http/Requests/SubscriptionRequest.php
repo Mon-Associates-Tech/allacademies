@@ -17,8 +17,8 @@ class SubscriptionRequest extends FormRequest
             'package' => ['required', 'string', 'in:individual:full,institution:full'],
             'duration' => ['required', 'numeric'],
             'beneficiaries' => ['required_if:package,institution:full'],
-            'subjects' => ['required', 'array'],
-            'subjects.*' => ['required', 'numeric', 'exists:academic_subjects,id']
+            'academic_subject_ids' => ['required', 'array'],
+            'academic_subjects_ids.*' => ['required', 'numeric', 'exists:academic_subjects,id']
         ];
     }
 }

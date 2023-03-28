@@ -26,4 +26,9 @@ class Team extends Model
     {
         return $this->belongsToMany(User::class);
     }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
 }

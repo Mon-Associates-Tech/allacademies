@@ -1,40 +1,49 @@
-<x-dashboard title="Academic Topics" summary="Available academic topics">
-    <table class="w-full divide-y divide-gray-300">
-        <caption>
-            <div class="flex items-center justify-between px-2 py-3">
-                <div class="font-medium text-gray-500 tracking-wide">
-                    List of academic topics
-                </div>
-                <div>
-                </div>
-            </div>
-        </caption>
-        <thead>
+<x-auth title="Academic Topics">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Academic Groups' => route('academic-groups.index'),
+            $academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicSubject->academicLevel->academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicSubject->academicLevel->academicGroup]),
+            $academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicSubject->academicLevel]),
+            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $academicSubject->academicLevel]),
+            $academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicSubject]),
+        ]" />
+    </x-slot>
+    @can('administrate')
+    <x-slot name="action">
+        <x-link.primary :to="route('academic-subjects.academic-topics.create', ['academic_subject' => $academicSubject])">New Academic Topic</x-link.primary>
+    </x-slot>
+    @endcan
+
+    @if ($academicTopics->count())
+    <x-table>
+        <x-slot name="head">
             <tr>
-                <x-table.th>ID</x-table.th>
                 <x-table.th>Name</x-table.th>
-                <x-table.th>Academic Subject</x-table.th>
-                <x-table.th>Academic Level</x-table.th>
                 <x-table.th><span class="sr-only">Actions</span></x-table.th>
             </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @foreach ($academicTopics as $academicTopic)
+        </x-slot>
+
+        @foreach ($academicTopics as $academicTopic)
             <tr>
-                <td class="p-2 text-sm text-gray-500">#{{ $academicTopic->id }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{{ $academicTopic->name }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicSubject->name }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $academicTopic->academicSubject->academicLevel->name }}</td>
-                <td class="p-2 text-sm text-primary-600 space-x-3">
-                    <a href="{{ route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic]) }}">MCQ</a>
-                    <a href="{{ route('academic-topics.essay-questions.create', ['academic_topic' => $academicTopic]) }}">Essay</a>
-                    <a href="{{ route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic]) }}">T/F Q</a>
+                <x-table.td bold>{{ $academicTopic->name }}</x-table.td>
+                <x-table.td action>
+                    <x-action name="view" :to="route('academic-topics.show', ['academic_topic' => $academicTopic])" />
                     @can('administrate')
-                    <a href="{{ route('academic-topics.edit', ['academic_topic' => $academicTopic]) }}">Edit</a>
+                    <x-action name="edit" :to="route('academic-topics.edit', ['academic_topic' => $academicTopic])" />
+                    <x-action name="delete" :to="route('academic-topics.destroy', ['academic_topic' => $academicTopic])">
+                        Are you sure you want to delete {{ $academicTopic->name }}
+                    </x-action>
                     @endcan
-                </td>
+                </x-table.td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
-</x-dashboard>
+        @endforeach
+    </x-table>
+
+    <div class="mt-3">
+        {{ $academicTopics->links() }}
+    </div>
+    @else
+    <x-blank />
+    @endif
+</x-auth>

@@ -1,36 +1,36 @@
-<x-dashboard title="Subscriptions" summary="All subscriptions">
-    <table class="w-full divide-y divide-gray-300">
-        <caption>
-            <div class="flex items-center justify-between px-2 py-3">
-                <div class="font-medium text-gray-500 tracking-wide">
-                    List all subscriptions
-                </div>
-                <div>
-                    <x-button :to="route('payments.create')">Add new payment</x-button>
-                </div>
-            </div>
-        </caption>
-        <thead>
+<x-auth title="Payments">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb />
+    </x-slot>
+    @can('administrate')
+    <x-slot name="action">
+        <x-link.primary :to="route('payments.create')">New Payment</x-link.primary>
+    </x-slot>
+    @endcan
+
+    @if ($payments->count())
+    <x-table>
+        <x-slot name="head">
             <tr>
-                <x-table.th>ID</x-table.th>
                 <x-table.th>Reference</x-table.th>
                 <x-table.th>Amount</x-table.th>
                 <x-table.th>Status</x-table.th>
-                {{-- <x-table.th><span class="sr-only">Actions</span></x-table.th> --}}
             </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @foreach ($payments as $payment)
+        </x-slot>
+
+        @foreach ($payments as $payment)
             <tr>
-                <td class="p-2 text-sm text-gray-500">#{{ $payment->id }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{{ $payment->reference }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $payment->currency }} {{ $payment->amount }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $payment->status }}</td>
-                {{-- <td class="p-2 text-sm text-primary-600 space-x-3">
-                    <a href="{{ route('subscriptions.edit', ['subscription' => $subscription]) }}">Edit</a>
-                </td> --}}
+                <x-table.td bold>{{ $payment->reference }}</x-table.td>
+                <x-table.td>{{ $payment->currency }} {{ $payment->amount }}</x-table.td>
+                <x-table.td><span class="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 capitalize">{{ $payment->status }}</span></x-table.td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
-</x-dashboard>
+        @endforeach
+    </x-table>
+
+    <div class="mt-3">
+        {{ $payments->links() }}
+    </div>
+    @else
+    <x-blank />
+    @endif
+</x-auth>

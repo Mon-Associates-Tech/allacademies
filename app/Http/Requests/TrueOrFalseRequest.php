@@ -22,4 +22,9 @@ class TrueOrFalseRequest extends FormRequest
             'difficulty_level' => ['nullable', 'string', 'in:easy,medium,difficult,unspecified'],
         ];
     }
+
+    protected function prepareForValidation()
+    {
+        $this->merge(['answer' => $this->has('answer')]);
+    }
 }

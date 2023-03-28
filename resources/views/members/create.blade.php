@@ -1,12 +1,20 @@
-<x-dashboard title="Member" summary="Add new member">
-    <div class="font-medium text-gray-500 tracking-wide">
-        Add new member
-    </div>
-    <form class="w-full max-w-md space-y-2" method="POST" action="{{ route('teams.members.store', ['team' => $team]) }}">
+<x-auth title="New Member">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Teams' => route('teams.index'),
+            'Members' => route('teams.members.index', ['team' => $team])
+        ]" />
+    </x-slot>
+
+    <form method="POST" action="{{ route('teams.members.store', ['team' => $team]) }}">
         @csrf
-        <x-form.input full name="email" />
-        <div class="flex items-center justify-end">
-            <x-button>Save</x-button>
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+                <x-form.input name="email" type="email" />
+            </div>
+        </div>
+        <div class="flex justify-end mt-3">
+            <x-button.primary class="ml-2">Add Member</x-button.primary>
         </div>
     </form>
-</x-dashboard>
+</x-auth>

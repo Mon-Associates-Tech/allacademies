@@ -2,15 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\SubscriptionPackage;
-use Illuminate\Http\Request;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Enums\SubscriptionStatus;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AcademicSubjectRequest;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 
 class AcademicSubjectController extends Controller
 {
@@ -19,31 +13,17 @@ class AcademicSubjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(AcademicLevel $academicLevel)
     {
-        if (Gate::check('moderate')) {
-            $academicSubjects = AcademicSubject::query()->with('academicLevel')->get();
-        } else {
-            $academicSubjects = AcademicSubject::query()->with('academicLevel')->whereHas('subscriptions', function (Builder $query) {
-                $query->where('status', SubscriptionStatus::PAID)
-                    ->where('team_id', auth()->user()->current_team_id)
-                    ->where(function (Builder $query) {
-                        $query->where(function (Builder $query) {
-                            $query->where('package', SubscriptionPackage::INSTITUTION_FULL)->where(function (Builder $query) {
-                                $query->whereRelation('subscriber', 'id', auth()->id())->orWhereHas('team', function (Builder $query) {
-                                    $query->whereRelation('members', 'user_id', auth()->id());
-                                });
-                            });
-                        })->orWhere(function (Builder $query) {
-                            $query->where('package', SubscriptionPackage::INDIVIDUAL_FULL)->whereRelation('subscriber', 'id', auth()->id());
-                        });
-                    })
-                ;
-            })->get();
-        }
+        $this->authorize('moderate');
+
+        $academicSubjects = $academicLevel->academicSubjects()->latest('id')->paginate();
+
+        $academicLevel->load('academicGroup');
 
         return view('academic-subjects.index', [
             'academicSubjects' => $academicSubjects,
+            'academicLevel' => $academicLevel,
         ]);
     }
 
@@ -55,6 +35,8 @@ class AcademicSubjectController extends Controller
     public function create(AcademicLevel $academicLevel)
     {
         $this->authorize('administrate');
+
+        $academicLevel->load('academicGroup');
 
         return view('academic-subjects.create', [
             'academicLevel' => $academicLevel,
@@ -71,9 +53,10 @@ class AcademicSubjectController extends Controller
     {
         $this->authorize('administrate');
 
-        $academicLevel->academicSubjects()->create($request->validated());
+        $academicSubject = $academicLevel->academicSubjects()->create($request->validated());
 
-        return to_route('academic-subjects.index');
+        return to_route('academic-levels.academic-subjects.index', ['academic_level' => $academicLevel])
+            ->with('success', __('status.resource.created', ['name' => $academicSubject->name]));
     }
 
     /**
@@ -84,7 +67,13 @@ class AcademicSubjectController extends Controller
      */
     public function show(AcademicSubject $academicSubject)
     {
-        $this->authorize('administrate');
+        $this->authorize('moderate');
+
+        $academicSubject->load('academicLevel.academicGroup')->loadCount('academicTopics');
+
+        return view('academic-subjects.show', [
+            'academicSubject' => $academicSubject,
+        ]);
     }
 
     /**
@@ -96,6 +85,12 @@ class AcademicSubjectController extends Controller
     public function edit(AcademicSubject $academicSubject)
     {
         $this->authorize('administrate');
+
+        $academicSubject->load('academicLevel.academicGroup');
+
+        return view('academic-subjects.edit', [
+            'academicSubject' => $academicSubject,
+        ]);
     }
 
     /**
@@ -105,9 +100,14 @@ class AcademicSubjectController extends Controller
      * @param  \App\Models\AcademicSubject  $academicSubject
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, AcademicSubject $academicSubject)
+    public function update(AcademicSubjectRequest $request, AcademicSubject $academicSubject)
     {
         $this->authorize('administrate');
+
+        $academicSubject->update($request->validated());
+
+        return to_route('academic-subjects.show', ['academic_subject' =>  $academicSubject])
+            ->with('success', __('status.resource.updated', ['name' => $academicSubject->name]));
     }
 
     /**
@@ -119,5 +119,10 @@ class AcademicSubjectController extends Controller
     public function destroy(AcademicSubject $academicSubject)
     {
         $this->authorize('administrate');
+
+        $academicSubject->load('academicLevel')->delete();
+
+        return to_route('academic-levels.academic-subjects.index', ['academic_level' => $academicSubject->academicLevel])
+            ->with('success', __('status.resource.deleted', ['name' => $academicSubject->name]));
     }
 }

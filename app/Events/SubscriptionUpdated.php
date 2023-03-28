@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Payment;
+use App\Models\Subscription;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -11,7 +12,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentSucceeded
+class SubscriptionUpdated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -20,7 +21,7 @@ class PaymentSucceeded
      *
      * @return void
      */
-    public function __construct(public readonly Payment $payment)
+    public function __construct(public readonly Subscription $subscription)
     {
         //
     }

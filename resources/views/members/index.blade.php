@@ -1,36 +1,36 @@
-<x-dashboard title="Subscriptions" summary="All subscriptions">
-    <table class="w-full divide-y divide-gray-300">
-        <caption>
-            <div class="flex items-center justify-between px-2 py-3">
-                <div class="font-medium text-gray-500 tracking-wide">
-                    List all subscriptions
-                </div>
-                <div>
-                    <x-button :to="route('payments.create')">Add new payment</x-button>
-                </div>
-            </div>
-        </caption>
-        <thead>
+<x-auth :title="'Members of ' . $team->name">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Team' => route('teams.index'),
+        ]" />
+    </x-slot>
+    <x-slot name="action">
+        @if ($team->owner->is($user) && !$team->is_personal)
+        <x-link.primary :to="route('teams.members.create', ['team' => $team])">New Member</x-link.primary>
+        @endif
+    </x-slot>
+
+    <x-table>
+        <x-slot name="head">
             <tr>
-                <x-table.th>ID</x-table.th>
-                <x-table.th>Reference</x-table.th>
-                <x-table.th>Amount</x-table.th>
-                <x-table.th>Status</x-table.th>
-                {{-- <x-table.th><span class="sr-only">Actions</span></x-table.th> --}}
+                <x-table.th>Name</x-table.th>
+                <x-table.th>Email</x-table.th>
+                <x-table.th>Role</x-table.th>
+                <x-table.th><span class="sr-only">Actions</span></x-table.th>
             </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @foreach ($payments as $payment)
+        </x-slot>
+
+        @foreach ($team->members as $member)
             <tr>
-                <td class="p-2 text-sm text-gray-500">#{{ $payment->id }}</td>
-                <td class="p-2 text-sm text-gray-900 font-medium">{{ $payment->reference }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $payment->currency }} {{ $payment->amount }}</td>
-                <td class="p-2 text-sm text-gray-500">{{ $payment->status }}</td>
-                {{-- <td class="p-2 text-sm text-primary-600 space-x-3">
-                    <a href="{{ route('subscriptions.edit', ['subscription' => $subscription]) }}">Edit</a>
-                </td> --}}
+                <x-table.td bold>{{ $member->name }}</x-table.td>
+                <x-table.td>{{ $member->email }}</x-table.td>
+                <x-table.td>{{ $team->owner->is($member) ? 'Owner' : 'Member' }}</x-table.td>
+                <x-table.td>
+                @if ($team->owner->is($user) && $member->isNot($user))
+                    <button x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to remove {{ $member->name }} from {{ $team->name }}', '{{ route('teams.members.destroy', ['team' => $team, 'member' => $member]) }}', 'Remove')" class="text-primary-600 hover:text-primary-900">Remove</button>
+                @endif
+                </x-table.td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
-</x-dashboard>
+        @endforeach
+    </x-table>
+</x-auth>
