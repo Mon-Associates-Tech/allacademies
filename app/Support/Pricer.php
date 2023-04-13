@@ -25,7 +25,7 @@ class Pricer
     public static function getUnitPrice(SubscriptionPackage $package, int $duration): int
     {
         if (SubscriptionPackage::INSTITUTION_FULL === $package && 12 === $duration) {
-            return 6;
+            return 15;
         }
 
         if (SubscriptionPackage::INSTITUTION_FULL === $package && 6 === $duration) {
@@ -33,17 +33,17 @@ class Pricer
         }
 
         if (SubscriptionPackage::INSTITUTION_FULL === $package) {
-            return 15;
+            return 6;
         }
 
         if (12 === $duration) {
-            return 8;
+            return 30;
         }
 
         if (6 === $duration) {
-            return 12;
+            return 20;
         }
 
-        return 20;
+        return 15;
     }
 }
