@@ -13,8 +13,6 @@ class Pricer
 
         $money = Money::of($unit, 'GHS');
 
-        $money = $money->multipliedBy($duration);
-
         if (SubscriptionPackage::INSTITUTION_FULL === $package) {
             $money = $money->multipliedBy($beneficiaries);
         }
