@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="{{ asset('katex.min.css') }}">
     <style>
         p {
-            margin-block-start: 0.5rem;
-            margin-block-end: 0.5rem;
+            margin-block-start: 0.2rem;
+            margin-block-end: 0.2rem;
             line-height: 1.5;
         }
     </style>

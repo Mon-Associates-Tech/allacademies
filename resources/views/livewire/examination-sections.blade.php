@@ -49,7 +49,7 @@
                                 </div>
                             </div>
                             <div>
-                                <span class="text-gray-500">{{ $count($topic, $sections[$loop->parent->index]['type']) }} Available</span>
+                                {{-- <span class="text-gray-500">{{ $count($topic, $sections[$loop->parent->index]['type']) }} Available</span> --}}
                             </div>
                         </div>
                     </li>
