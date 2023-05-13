@@ -105,6 +105,40 @@ class ExaminationController extends Controller
         ]);
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Examination  $examination
+     * @return \Illuminate\Http\Response
+     */
+    public function answers(Examination $examination)
+    {
+        $sections = array_map(function ($section) {
+            $questions = collect();
+            if ('multiple_choice_questions' === $section['type']) {
+                $questions = MultipleChoiceQuestion::query()->find($section['questions']);
+            }
+
+            if ('true_or_false_questions' === $section['type']) {
+                $questions = TrueOrFalseQuestion::query()->find($section['questions']);
+            }
+
+            if ('essay_questions' === $section['type']) {
+                $questions = EssayQuestion::query()->find($section['questions']);
+            }
+
+            return [
+                ...$section,
+                'questions' => $questions
+            ];
+        }, $examination->sections);
+
+        return view('examinations.answer', [
+            'examination' => $examination,
+            'sections' => $sections,
+        ]);
+    }
+
 
     /**
      * Remove the specified resource from storage.
