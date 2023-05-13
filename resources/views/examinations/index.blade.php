@@ -20,6 +20,7 @@
                 <x-table.td bold>{{ $examination->title }}</x-table.td>
                 <x-table.td action>
                     <a class="text-primary-600 hover:text-primary-900" href="{{ route('examinations.show', ['examination' => $examination]) }}">Question Paper</a>
+                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('examinations.answers', ['examination' => $examination]) }}">Answer Scheme</a>
                 </x-table.td>
             </tr>
         @endforeach

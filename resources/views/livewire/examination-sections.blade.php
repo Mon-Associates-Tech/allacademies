@@ -49,7 +49,22 @@
                                 </div>
                             </div>
                             <div>
-                                {{-- <span class="text-gray-500">{{ $count($topic, $sections[$loop->parent->index]['type']) }} Available</span> --}}
+                            @can('administrate')
+                                <span class="text-gray-500 mr-2">{{ $count($topic, $sections[$loop->parent->index]['type']) }} Available</span>
+                            @endcan
+                                <span @class([
+                                    'inline-flex items-center rounded-full px-1.5 py-1.5',
+                                    'bg-green-100 text-green-700' => $count($topic, $sections[$loop->parent->index]['type']) > 0,
+                                    'bg-red-100 text-red-700' => $count($topic, $sections[$loop->parent->index]['type']) == 0,
+                                ])>
+                                    <svg @class([
+                                        'h-1.5 w-1.5',
+                                        'fill-green-500' => $count($topic, $sections[$loop->parent->index]['type']) > 0,
+                                        'fill-red-500' => $count($topic, $sections[$loop->parent->index]['type']) == 0
+                                    ]) viewBox="0 0 6 6" aria-hidden="true">
+                                        <circle cx="3" cy="3" r="3" />
+                                    </svg>
+                                </span>
                             </div>
                         </div>
                     </li>

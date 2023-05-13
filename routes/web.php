@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
     Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
 
+    Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     // TODO: examination, quizzes
 });
