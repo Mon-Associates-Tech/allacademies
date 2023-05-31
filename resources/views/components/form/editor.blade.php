@@ -19,7 +19,7 @@
 
 <div class="space-y-1">
     <label class="text-gray-800 font-medium text-sm">{{ $label ?? ucfirst($name) }}</label>
-    <div x-data="{ preview: false, down: '{{ $down }}', up: '{{ $up }}' }"
+    <div x-data="{ preview: false, down: @js($down), up: @js($up) }"
         x-effect="up = marked.parse(down)">
         <div class="bg-white border-x border-t border-gray-300 rounded-t-lg">
             <div class="text-xs pl-3">
