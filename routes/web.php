@@ -33,7 +33,8 @@ use App\Http\Controllers\MultipleChoiceQuestionController;
 |
 */
 
-Route::redirect('/', 'dashboard');
+// Route::redirect('/', 'dashboard');
+Route::view('/', 'branding');
 
 Route::middleware('guest')->group(function () {
     Route::get('sign-in', [SignInController::class, 'create'])->name('sign-in');
