@@ -785,7 +785,7 @@
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
           <span class="text-primary-600 mb-4 block text-lg font-semibold">
-            Pro
+            Professional
           </span>
           <h2 class="text-gray-900 mb-5 text-[42px] font-bold">
             GHS 30
