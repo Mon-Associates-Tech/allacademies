@@ -21,6 +21,7 @@ use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
+use App\Http\Controllers\QuizController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,7 +34,6 @@ use App\Http\Controllers\MultipleChoiceQuestionController;
 |
 */
 
-// Route::redirect('/', 'dashboard');
 Route::view('/', 'branding');
 
 Route::middleware('guest')->group(function () {
@@ -92,5 +92,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    // TODO: examination, quizzes
+    Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
+    Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
 });

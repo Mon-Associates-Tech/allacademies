@@ -31,4 +31,7 @@ return [
     'exam' => [
         'generating' => 'Examination is generating... Will be available soon'
     ],
+    'quiz' => [
+        'generating' => 'Quiz is generating... Will be available soon'
+    ],
 ];
