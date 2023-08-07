@@ -38,5 +38,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('moderate', function (User $user) {
             return in_array($user->role, [UserRole::OWNER, UserRole::ADMIN, UserRole::MODERATOR], true);
         });
+
+        Gate::define('super_administrate', function (User $user) {
+            return UserRole::ADMIN === $user->role;
+        });
     }
 }
