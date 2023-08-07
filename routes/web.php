@@ -97,7 +97,7 @@ Route::middleware('auth')->group(function () {
     // TODO: examination, quizzes
 
     
-    Route::resource('users', UserController::class);
+    Route::resource('users', UserController::class)->except(['edit', 'update', 'destroy','store']);;
 
     
 });

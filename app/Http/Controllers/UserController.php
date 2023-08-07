@@ -23,30 +23,7 @@ class UserController extends Controller
         ]);
     }
 
-     /**
-     * Show the form for creating a new resource (user).
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        $this->authorize('administrate');
-
-        return view('users.create');
-    }
-
-    /**
-     * Store a newly created resource (user) in the db.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store()
-    {
-        $this->authorize('administrate');
-
-        return to_route('users .index');
-    }
+    
 
     /**
      * Display the specified resource(user).
@@ -54,54 +31,17 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function show()
+    public function show(User $user)
     {
         $this->authorize('administrate');
 
+        $user->loadCount('subscriptions');
+        $user->loadCount('ownedTeams');
 
-        return view('users.show');
+        return view('users.show', [
+            'user' => $user,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource (user).
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
-     */
-    public function edit()
-    {
-        $this->authorize('administrate');
-
-        return view('users.edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
-     */
-    public function update()
-    {
-        $this->authorize('administrate');
-
-    
-        return to_route('academic-groups.show');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy()
-    {
-        $this->authorize('administrate');
-
-       
-        return to_route('users.index');
-    }
 }
 

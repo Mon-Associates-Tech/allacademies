@@ -2,9 +2,6 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    <x-slot name="action">
-        <x-link.primary :to="route('users.create')">New User</x-link.primary>
-    </x-slot>
 
     @if ($users->count())
     <x-table>
@@ -21,11 +18,7 @@
                 <x-table.td bold>{{ $user->name }}</x-table.td>
                 <x-table.td bold>{{ $user->role }}</x-table.td>
                 <x-table.td action>
-                    <x-action name="view" :to="route('users.show', ['user' => $user])" />
-                    <x-action name="edit" :to="route('users.edit', ['user' => $user])" />
-                    <x-action name="delete" :to="route('users.destroy', ['user' => $user])">
-                        Are you sure you want to delete {{ $user->name }}
-                    </x-action>
+                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('users.show', ['user' => $user]) }}">View</a>
                 </x-table.td>
             </tr>
         @endforeach
