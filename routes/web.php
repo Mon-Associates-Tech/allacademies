@@ -22,6 +22,8 @@ use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
 
+use App\Http\Controllers\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -93,4 +95,9 @@ Route::middleware('auth')->group(function () {
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     // TODO: examination, quizzes
+
+    
+    Route::resource('users', UserController::class);
+
+    
 });
