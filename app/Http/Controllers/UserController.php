@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
         $users = User::query()->latest('id')->paginate();
 
@@ -30,7 +30,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
         return view('users.create');
     }
@@ -43,7 +43,7 @@ class UserController extends Controller
      */
     public function store()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
         return to_route('users .index');
     }
@@ -56,7 +56,7 @@ class UserController extends Controller
      */
     public function show()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
 
         return view('users.show');
@@ -70,7 +70,7 @@ class UserController extends Controller
      */
     public function edit()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
         return view('users.edit');
     }
@@ -84,7 +84,7 @@ class UserController extends Controller
      */
     public function update()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
     
         return to_route('academic-groups.show');
@@ -98,7 +98,7 @@ class UserController extends Controller
      */
     public function destroy()
     {
-        $this->authorize('super_administrate');
+        $this->authorize('administrate');
 
        
         return to_route('users.index');
