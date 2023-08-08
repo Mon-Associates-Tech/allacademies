@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('causer_id')->nullable()->constrained('users')->nullOnDelete();
             $table->json('snapshot');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
