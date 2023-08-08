@@ -6,10 +6,12 @@ use App\Support\Mark;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TrueOrFalseQuestion extends Model
 {
     use HasFactory;
+    use SoftDeletes;
     use Trackable;
 
     /**
