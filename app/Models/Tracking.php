@@ -17,7 +17,6 @@ class Tracking extends Model
     protected $fillable = [
         'event',
         'snapshot',
-        'causer_id',
     ];
 
     /**
