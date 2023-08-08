@@ -2,24 +2,30 @@
 
 namespace App\Models;
 
-use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AcademicGroup extends Model
+class Tracking extends Model
 {
     use HasFactory;
-    use Trackable;
 
     /**
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'event',
+        'snapshot',
     ];
 
-    public function academicLevels()
+    /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'snapshot' => 'array',
+    ];
+
+    public function trackable()
     {
-        return $this->hasMany(AcademicLevel::class);
+        return $this->morphTo();
     }
 }
