@@ -23,6 +23,8 @@ use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
 use App\Http\Controllers\QuizController;
 
+use App\Http\Controllers\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -89,6 +91,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->shallow();
     Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
     Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
+
+    Route::resource('users', UserController::class)->only(['index', 'show']);
 
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
