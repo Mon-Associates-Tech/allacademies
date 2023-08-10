@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Image extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     /**
      * @var array<int, string>
@@ -19,5 +18,7 @@ class Image extends Model
         'description',
         'tags',
     ];
+
+   protected $dates = ['deleted_at'];
     
 }
