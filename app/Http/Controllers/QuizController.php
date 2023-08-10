@@ -9,6 +9,7 @@ use App\Models\AcademicSubject;
 use App\Http\Requests\QuizRequest;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\Quizzer;
 
 class QuizController extends Controller
 {
@@ -91,7 +92,7 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function take(Quiz $quiz)
+    public function take(Quiz $quiz, Request $request)
     {
         $worksheet = $quiz->worksheets()->firstOrCreate([
             'user_id' => auth()->id(),
@@ -100,17 +101,44 @@ class QuizController extends Controller
             'seed' => mt_rand(),
         ]);
 
-        if (
-            !$worksheet->ended_at &&
-            now() > $worksheet->started_at->addMinutes($quiz->duration_in_minutes)
-        ) {
+        if ($request->isMethod('POST')) {
+            $answer = $request->input('type') === 'true_or_false_questions'
+                ? $request->boolean('answer')
+                : $request->input('answer');
+            Quizzer::markAnswer($quiz, $worksheet, $answer);
+        }
+
+        if (Quizzer::shouldStopWork($quiz, $worksheet)) {
             $worksheet->update(['ended_at' => now()]);
         }
 
-        // if ended redirect to finish
+        if ($worksheet->ended_at) {
+            return to_route('quizzes.stop', ['quiz' => $quiz]);
+        }
+
+        $question = Quizzer::askQuestion($quiz, $worksheet);
 
         return view('quizzes.take', [
             'quiz' => $quiz,
+            'question' => $question,
+        ]);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Quiz  $quiz
+     * @return \Illuminate\Http\Response
+     */
+    public function stop(Quiz $quiz)
+    {
+        $quiz->load('academicSubject');
+        $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->firstOrFail();
+
+        return view('quizzes.stop', [
+            'quiz' => $quiz,
+            'worksheet' => $worksheet,
+            'academicSubject' => $quiz->academicSubject,
         ]);
     }
 

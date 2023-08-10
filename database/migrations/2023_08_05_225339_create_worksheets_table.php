@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -16,8 +17,8 @@ return new class extends Migration
         Schema::create('worksheets', function (Blueprint $table) {
             $table->id();
             $table->integer('seed');
-            $table->string('cursor')->default('1,1');
-            $table->json('sheets');
+            $table->string('cursor')->default('0,0');
+            $table->json('sheets')->default(new Expression('(JSON_ARRAY())'));
             $table->foreignId('quiz_id')->constrained();
             $table->foreignId('user_id')->constrained();
             $table->unique(['quiz_id', 'user_id']);
