@@ -26,8 +26,9 @@ class Examination extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'heading' => Mark::class,
+        // 'heading' => Mark::class,
         'sections' => 'array',
+        'heading' => 'array',
     ];
 
     public function academicSubject()

@@ -21,7 +21,7 @@ class GenerateExaminationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
+   /**
      * Create a new job instance.
      *
      * @return void
@@ -87,7 +87,7 @@ class GenerateExaminationJob implements ShouldQueue
                 ${$section['type']} = array_merge(${$section['type']}, $questions);
             });
 
-            $heading[] = [
+            $heading = [
                 'heading_type' => $this->heading_type,
                 'date' => $this->date,
                 'start' => $this->start,

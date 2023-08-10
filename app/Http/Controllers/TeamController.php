@@ -121,7 +121,6 @@ class TeamController extends Controller
             'department' => $request->department,
             'logo' => $path
         ];
-  
         MetaData::updateOrCreate(
             ['team_id' => $team->id],
             ['meta' => $meta]

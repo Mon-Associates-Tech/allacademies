@@ -27,7 +27,6 @@ class ExaminationController extends Controller
     public function index(AcademicSubject $academicSubject)
     {
         $examinations = $academicSubject->examinations()->with('metaData')->where('team_id', auth()->user()->current_team_id)->paginate();
-
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
@@ -49,7 +48,7 @@ class ExaminationController extends Controller
 
         $package = Subscription::where('package', SubscriptionPackage::INSTITUTION_FULL)->where('status', SubscriptionStatus::PAID)->where('team_id', auth()->user()->current_team_id)->select('package')->first();
         $academicLevel = $academicSubject->academicLevel()->with('academicGroup')->first();
-        $metaData = MetaData::where('team_id', auth()->user()->current_team_id)->first();
+        $metaData = MetaData::where('team_id', auth()->user()->current_team_id)->with('team')->first();
         return view('examinations.create', [
             'academicSubject' => $academicSubject,
             'topics' => $topics,
@@ -67,7 +66,6 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, Subscription $package, ExaminationRequest $request)
     {
-
         dispatch(new GenerateExaminationJob(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),

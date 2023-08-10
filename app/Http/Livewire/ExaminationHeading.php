@@ -10,7 +10,7 @@ class ExaminationHeading extends Component
     public $academicLevel;
     public $metaData;
     public $heading;
-    public $heading_type = 0;
+    public $heading_type = 1;
     public $title;
     public $date;
     public $start;
