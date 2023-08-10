@@ -23,7 +23,6 @@ class UserController extends Controller
         ]);
     }
 
-    
 
     /**
      * Display the specified resource(user).
@@ -36,7 +35,6 @@ class UserController extends Controller
         $this->authorize('administrate');
 
         $user->loadCount('subscriptions');
-        $user->loadCount('ownedTeams');
 
         return view('users.show', [
             'user' => $user,

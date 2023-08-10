@@ -18,7 +18,7 @@
                 <x-table.td bold>{{ $user->name }}</x-table.td>
                 <x-table.td bold>{{ $user->role }}</x-table.td>
                 <x-table.td action>
-                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('users.show', ['user' => $user]) }}">View</a>
+                    <x-action name="view" :to="route('users.show', ['user' => $user])" />
                 </x-table.td>
             </tr>
         @endforeach

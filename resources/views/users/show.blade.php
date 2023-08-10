@@ -1,6 +1,8 @@
 <x-auth title="User Details">
     <x-slot name="breadcrumb">
-        <x-breadcrumb />
+        <x-breadcrumb :paths="[
+            'Users' => route('users.index'),
+        ]" />
     </x-slot>
 
     <div class="flex">

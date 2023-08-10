@@ -95,9 +95,6 @@ Route::middleware('auth')->group(function () {
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     // TODO: examination, quizzes
-
     
-    Route::resource('users', UserController::class)->except(['edit', 'update', 'destroy','store']);;
-
-    
+    Route::resource('users', UserController::class)->only(['index', 'show']);
 });
