@@ -18,7 +18,5 @@ class Image extends Model
         'description',
         'tags',
     ];
-
-   protected $dates = ['deleted_at'];
     
 }
