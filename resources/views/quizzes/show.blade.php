@@ -1,55 +1,70 @@
-@extends('layout.examination')
+<x-auth title="Quiz Review">
+    <x-slot name="breadcrumb">
+        <x-breadcrumb :paths="[
+            'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),
+        ]" />
+    </x-slot>
 
-@section('content')
-
-{{ $examination->heading->html }}
-
-@foreach ($sections as $section)
-    @if ($section['name'])
-    {{ $section['name'] }}
-    @endif
-    @if ("multiple_choice_questions" === $section['type'])
-        <ol>
-        @foreach ($section['questions'] as $mc)
-            <li>
-                {{ $mc->question->html }}
-                @foreach (['a', 'b', 'c', 'd', 'e'] as $o)
-                    @if ($mc->{"option_{$o}"}->up)
-                    <div style="display: flex; align-items: center; column-gap: 1rem;">
-                        <div style="flex: 0 1 auto;">({{ $o }})</div>
-                        <div style="flex: 1 1 0%;">{{ $mc->{"option_{$o}"}->html }}</div>
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <dl class="divide-y divide-gray-100">
+        @foreach ($sections as $section)
+            @foreach ($section['questions'] as $question)
+            <div class="px-4 py-6 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-900 sm:col-span-2">{!! $question->question->up !!}</dt>
+                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-3 sm:mt-0">
+                @if ($question instanceof \App\Models\MultipleChoiceQuestion)
+                    @foreach (['a', 'b', 'c', 'd', 'e'] as $option)
+                    <div class="flex space-x-2">
+                        <span class="w-8 flex-none">
+                            @if (isset($section['sheets'][$question->id]) && $section['sheets'][$question->id] === $question->answer && $question->answer === $option)
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            @elseif (isset($section['sheets'][$question->id]) && $section['sheets'][$question->id] === $option)
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            @elseif ($question->answer === $option)
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            @endif
+                        </span>
+                        <span class="uppercase">{{ $option }})</span>
+                        <span>{!! $question->{"option_{$option}"}->up !!}</span>
                     </div>
-                    @endif
-                @endforeach
-                <p style="text-align: right;">[{{ $mc->score }} mark(s)]</p>
-            </li>
-        @endforeach
-        </ol>
-    @elseif ("true_or_false_questions" === $section['type'])
-        <ol>
-        @foreach ($section['questions'] as $tf)
-            <li>
-                {{ $tf->question->html }}
-                @foreach (['a', 'b'] as $o)
-                    <div style="display: flex; align-items: center; column-gap: 1rem;">
-                        <div style="flex: 0 1 auto;">({{ $o }})</div>
-                        <div style="flex: 1 1 0%;">{{ 'a' === $o ? 'True' : 'False' }}</div>
-                    </div>
-                @endforeach
-                <p style="text-align: right;">[{{ $tf->score }} mark(s)]</p>
-            </li>
-        @endforeach
-        </ol>
-    @elseif ("essay_questions" === $section['type'])
-    <ol>
-        @foreach ($section['questions'] as $es)
-            <li>
-                {{ $es->question->html }}
-                <p style="text-align: right;">[{{ $es->score }} mark(s)]</p>
-            </li>
-        @endforeach
-        </ol>
-    @endif
-@endforeach
+                    @endforeach
+                @endif
 
-@endsection
+                @if ($question instanceof \App\Models\TrueOrFalseQuestion)
+                    @foreach ([true, false] as $option)
+                    <div class="flex space-x-2">
+                        <span class="w-8 flex-none">
+                            @if (isset($section['sheets'][$question->id]) && $section['sheets'][$question->id] === $question->answer && $question->answer === $option)
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            @elseif (isset($section['sheets'][$question->id]) && $section['sheets'][$question->id] === $option)
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            @elseif ($question->answer === $option)
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            @endif
+                        </span>
+                        <span>{{ $option ? 'True' : 'False' }}</span>
+                    </div>
+                    @endforeach
+                @endif
+                </dd>
+            </div>
+            @endforeach
+        @endforeach
+        </dl>
+    <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end space-x-5">
+        <span class="font-bold">{{ $score['value'] }} / {{ $score['max'] }}</span>
+        <x-link.primary :to="route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject])">Back to Quizzes</x-link.primary>
+    </div>
+</x-auth>

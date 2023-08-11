@@ -20,7 +20,7 @@ class QuizController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
-        $quizzes = $academicSubject->quizzes()->where('team_id', auth()->user()->current_team_id)->paginate();
+        $quizzes = $academicSubject->quizzes()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('quizzes.index', [
             'quizzes' => $quizzes,
@@ -80,6 +80,12 @@ class QuizController extends Controller
     {
         $quiz->load('academicSubject');
 
+        $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
+
+        if ($worksheet) {
+            return to_route('quizzes.take', ['quiz' => $quiz]);
+        }
+
         return view('quizzes.start', [
             'quiz' => $quiz,
             'academicSubject' => $quiz->academicSubject,
@@ -99,7 +105,7 @@ class QuizController extends Controller
         ], [
             'started_at' => now(),
             'seed' => mt_rand(),
-        ]);
+        ])->refresh();
 
         if ($request->isMethod('POST')) {
             $answer = $request->input('type') === 'true_or_false_questions'
@@ -135,10 +141,13 @@ class QuizController extends Controller
         $quiz->load('academicSubject');
         $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->firstOrFail();
 
+        $score = Quizzer::getScore($quiz, $worksheet);
+
         return view('quizzes.stop', [
             'quiz' => $quiz,
             'worksheet' => $worksheet,
             'academicSubject' => $quiz->academicSubject,
+            'score' => $score,
         ]);
     }
 
@@ -150,40 +159,22 @@ class QuizController extends Controller
      */
     public function show(Quiz $quiz)
     {
-        //
-    }
+        $quiz->load('academicSubject');
+        $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Quiz $quiz)
-    {
-        //
-    }
+        if (!$worksheet || !$worksheet->ended_at) {
+            return to_route('quizzes.take', ['quiz' => $quiz]);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Quiz $quiz)
-    {
-        //
-    }
+        $sections = Quizzer::createSections($quiz, $worksheet);
+        $score = Quizzer::getScore($quiz, $worksheet);
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Quiz $quiz)
-    {
-        //
+        return view('quizzes.show', [
+            'quiz' => $quiz,
+            'worksheet' => $worksheet,
+            'sections' => $sections,
+            'academicSubject' => $quiz->academicSubject,
+            'score' => $score,
+        ]);
     }
 }

@@ -19,8 +19,7 @@
             <tr>
                 <x-table.td bold>{{ $quiz->title }}</x-table.td>
                 <x-table.td action>
-                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Take Quiz</a>
-                    {{-- <a class="text-primary-600 hover:text-primary-900" href="{{ route('examinations.answers', ['examination' => $examination]) }}">Answer Scheme</a> --}}
+                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Quiz</a>
                 </x-table.td>
             </tr>
         @endforeach

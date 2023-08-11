@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Worksheet extends Model
 {
@@ -19,13 +20,14 @@ class Worksheet extends Model
         'sheets',
         'started_at',
         'ended_at',
+        'user_id',
     ];
 
     /**
      * @var array<string, string>
      */
     protected $casts = [
-        'sections' => 'array',
+        'sheets' => 'array',
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
     ];
@@ -36,6 +38,15 @@ class Worksheet extends Model
             get: fn ($value) => explode(',', $value),
             set: fn (array $value) => implode(',', $value)
         );
+    }
+
+    protected function duration(): Attribute
+    {
+        return Attribute::make(function (mixed $value, array $attributes) {
+            return $attributes['started_at'] && $attributes['ended_at']
+                ? Carbon::parse($attributes['ended_at'])->diffInMinutes($attributes['started_at'])
+                : 0;
+        });
     }
 
     public function quiz()

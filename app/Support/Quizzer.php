@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Quiz;
 use App\Models\Worksheet;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class Quizzer
@@ -38,8 +39,10 @@ class Quizzer
 
     public static function shouldStopWork(Quiz $quiz, Worksheet $worksheet): bool
     {
-        return static::durationElapsed($quiz, $worksheet) ||
-            static::questionOutOfBounds($quiz, $worksheet);
+        return !$worksheet->ended_at && (
+            static::durationElapsed($quiz, $worksheet) ||
+            static::questionOutOfBounds($quiz, $worksheet)
+        );
     }
 
     /** @return \App\Models\MultipleChoiceQuestion|\App\Models\TrueOrFalseQuestion|\App\Models\EssayQuestion */
@@ -53,14 +56,14 @@ class Quizzer
         $shuffledQuestions = fisher_yates_shuffle($section['questions'], $worksheet->seed);
         $questionId = $shuffledQuestions[$questionIndex];
 
-        $model = (string) Str::of($questionType)->singular()->studly();
+        $model = (string) Str::of($questionType)->singular()->studly()->prepend('App\\Models\\');
 
         return $model::query()->find($questionId);
     }
 
     public static function markAnswer(Quiz $quiz, Worksheet $worksheet, string|bool $answer): void
     {
-        [$sectionIndex, $questionIndex] = $worksheet->cursor;
+        [$sectionIndex,] = $worksheet->cursor;
 
         if (
             static::questionOutOfBounds($quiz, $worksheet)
@@ -79,5 +82,40 @@ class Quizzer
         static::incrementCursor($quiz, $worksheet);
 
         $worksheet->save();
+    }
+
+    public static function createSections(Quiz $quiz, Worksheet $worksheet): array
+    {
+        return array_map(function ($section, $sheets) {
+            $model = (string) Str::of($section['type'])->singular()->studly()->prepend('App\\Models\\');
+            $questions = $model::query()->find($section['questions']);
+
+            return [
+                ...$section,
+                'questions' => Collection::unwrap($questions),
+                'sheets' => $sheets,
+            ];
+        }, $quiz->sections, $worksheet->sheets);
+    }
+
+    public static function getScore(Quiz $quiz, Worksheet $worksheet): array
+    {
+        $sections = static::createSections($quiz, $worksheet);
+
+        [$total, $score] = [0, 0];
+
+        foreach ($sections as $section) {
+            foreach ($section['questions'] as $question) {
+                if (
+                    isset($section['sheets'][$question->id]) &&
+                    $section['sheets'][$question->id] === $question->answer
+                ) {
+                    $score += $question->score;
+                }
+                $total += $question->score;
+            }
+        }
+
+        return ['max' => $total, 'value' => $score];
     }
 }

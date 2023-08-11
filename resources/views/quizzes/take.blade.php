@@ -1,21 +1,44 @@
-<x-auth title="Start Quiz">
-    <x-slot name="breadcrumb">
+<x-auth title="Quizzing">
+    {{-- <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),
         ]" />
-    </x-slot>
+    </x-slot> --}}
 
-    <x-detail>
-        <x-detail.data label="Academic Subject">{{ $academicSubject->name }}</x-detail.data>
-        <x-detail.data label="Title">{{ $quiz->title }}</x-detail.data>
-        <x-detail.data label="Duration">{{ $quiz->duration_in_minutes }} minutes</x-detail.data>
-        <x-detail.data label="Notice">When you start this quiz, you will have to finish within the given duration.</x-detail.data>
+    <form method="POST" action="{{ route('quizzes.take', ['quiz' => $quiz]) }}">
+        @csrf
+        <x-detail>
+            <x-detail.data expand label="Question">{!! $question->question->up !!}</x-detail.data>
 
-        @can('administrate')
-        <x-slot name="action">
-            {{-- <x-link.primary :to="route('academic-groups.edit', ['academic_group' => $academicGroup])">Edit Academic Group</x-link.primary> --}}
-            <x-link.secondary :to="route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject])">Not Now</x-link.secondary>
-        </x-slot>
-        @endcan
-    </x-detail>
+            @if ($question instanceof \App\Models\MultipleChoiceQuestion)
+            <input type="hidden" name="type" value="multiple_choice_questions">
+            <x-detail.data label="Option A">{!! $question->option_a->up !!}</x-detail.data>
+            <x-detail.data label="Option B">{!! $question->option_b->up !!}</x-detail.data>
+            <x-detail.data label="Option C">{!! $question->option_c->up !!}</x-detail.data>
+            <x-detail.data label="Option D">{!! $question->option_d->up !!}</x-detail.data>
+            <x-detail.data label="Option E">{!! $question->option_e->up !!}</x-detail.data>
+
+            <x-form.select full name="answer" :options="[
+                'a' => 'Option A',
+                'b' => 'Option B',
+                'c' => 'Option C',
+                'd' => 'Option D',
+                'e' => 'Option E',
+            ]" />
+            @endif
+            @if ($question instanceof \App\Models\TrueOrFalseQuestion)
+            <input type="hidden" name="type" value="true_or_false_questions">
+            <x-detail.data label="Option">True or False</x-detail.data>
+
+            <x-form.select full name="answer" :options="[
+                '1' => 'True',
+                '0' => 'False',
+            ]" :value="1" />
+            @endif
+
+            <x-slot name="action">
+                <x-button.primary>Save and Continue</x-button.primary>
+            </x-slot>
+        </x-detail>
+    </form>
 </x-auth>

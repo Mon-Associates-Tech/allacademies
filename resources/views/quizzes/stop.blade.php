@@ -1,4 +1,4 @@
-<x-auth title="Stop Quiz">
+<x-auth title="Quiz Summary">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),
@@ -9,11 +9,12 @@
         <x-detail.data label="Academic Subject">{{ $academicSubject->name }}</x-detail.data>
         <x-detail.data label="Title">{{ $quiz->title }}</x-detail.data>
         <x-detail.data label="Duration">{{ $quiz->duration_in_minutes }} minutes</x-detail.data>
-        <x-detail.data label="Notice">When you start this quiz, you will have to finish within the given duration.</x-detail.data>
+        <x-detail.data label="Time Spent">{{ $worksheet->duration }} minutes</x-detail.data>
+        <x-detail.data label="Score">{{ $score['value'] }} / {{ $score['max'] }}</x-detail.data>
 
         <x-slot name="action">
-            {{-- <x-link.primary :to="route('academic-groups.edit', ['academic_group' => $academicGroup])">Edit Academic Group</x-link.primary> --}}
-            <x-link.secondary :to="route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject])">Not Now</x-link.secondary>
+            <x-link.secondary :to="route('quizzes.show', ['quiz' => $quiz])">Review Results</x-link.secondary>
+            <x-link.primary :to="route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject])">Back to Quizzes</x-link.primary>
         </x-slot>
     </x-detail>
 </x-auth>
