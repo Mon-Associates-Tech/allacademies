@@ -8,6 +8,7 @@
         <x-slot name="head">
             <tr>
                 <x-table.th>Name</x-table.th>
+                <x-table.th>Email</x-table.th>
                 <x-table.th>Role</x-table.th>
                 <x-table.th><span class="sr-only">Actions</span></x-table.th>
             </tr>
@@ -16,6 +17,7 @@
         @foreach ($users as $user)
             <tr>
                 <x-table.td bold>{{ $user->name }}</x-table.td>
+                <x-table.td bold>{{ $user->email }}</x-table.td>
                 <x-table.td bold>{{ $user->role }}</x-table.td>
                 <x-table.td action>
                     <x-action name="view" :to="route('users.show', ['user' => $user])" />

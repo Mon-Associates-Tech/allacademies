@@ -18,6 +18,7 @@
                 <span>{{ $academicSubject->name }}</span>
               </x-table.td>
               <x-table.td action>
+                  <a class="text-primary-600 hover:text-primary-900" href="{{ route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]) }}">Quizzes</a>
                   <a class="text-primary-600 hover:text-primary-900" href="{{ route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]) }}">Examinations</a>
               </x-table.td>
           </tr>
