@@ -1,28 +1,22 @@
-<x-app>
-    <div class="w-full mx-auto max-w-screen-sm py-10">
-        @if(session('status'))
-            <div class="bg-green-400 py-3 px-5 rounded">{{ session('status') }}</div>
-        @endif
-        <form class="space-y-4" method="POST" action="{{ route('password.update') }}">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
-            <div>
-                <label class="block">Email</label>
-                <input class="w-full" type="email" name="email" value="{{ old('email', $email) }}">
-                @error('email')
-                <div class="text-xs text-red-500">{{ $message }}</div>
-                @enderror
-            </div>
-            <div>
-                <label class="block">Password</label>
-                <input class="w-full" type="password" name="password">
-                @error('password')
-                <div class="text-xs text-red-500">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="flex justify-between items-center">
-                <button class="bg-gray-800 text-white py-3 px-4">Submit</button>
-            </div>
-        </form>
-    </div>
-</x-app>
+<x-center>
+    @if(session('status'))
+        <div class="text-gray-600 text-sm bg-gray-200 p-3 border border-gray-300 rounded-lg flex space-x-3 mb-5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 flex-none">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            <span>
+                {{ session('status') }}
+            </span>
+        </div>
+    @endif
+
+    <x-logo>Reset Password</x-logo>
+
+    <form class="space-y-3" method="POST" action="{{ route('password.update') }}">
+        @csrf
+        <input type="hidden" name="token" value="{{ $token }}">
+        <x-form.input name="email" type="email" :value="$email" />
+        <x-form.input name="password" type="password" />
+        <x-button.primary class="w-full justify-center">Update Password</x-button.primary>
+    </form>
+</x-center>

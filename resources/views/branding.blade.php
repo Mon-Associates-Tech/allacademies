@@ -73,8 +73,8 @@
           </div>
         </div>
         <div class="text-center">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Learn and assess yourself online</h1>
-          <p class="mt-6 text-lg leading-8 text-gray-600">Learn and move at your own pace without any pressure. Easily assess yourself to enhance your understanding. Learning made easier and flexible.</p>
+          <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Study and assess yourself online</h1>
+          <p class="mt-6 text-lg leading-8 text-gray-600">Study and move at your own pace without any pressure. Easily assess yourself to enhance your understanding. Learning made easier and flexible.</p>
           <div class="mt-10 flex items-center justify-center gap-x-6">
             <a href="{{ route('sign-up') }}" class="rounded-md bg-primary-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">Get started</a>
             <a href="#about" class="text-sm font-semibold leading-6 text-gray-900">Learn more <span aria-hidden="true">→</span></a>
@@ -94,7 +94,7 @@
     <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
         <div class="max-w-screen-lg text-gray-500 sm:text-lg">
             <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">Learning and Assessment Application Platform (<span class="font-extrabold">LAAPP</span>)</h2>
-            <p class="mb-4 font-light">This program is a Learning and Assessment Application Platform (LAAPP) designed for pupils (learners) from pre-school to senior high school (technical & vocational). The goal of LAAPP is to give learners an opportunity to have good and affordable reading materials on all subjects of their study and to provide a medium for easy assessments of learners’ performances through quizzes, written tests, assignments and examinations. Available now is the assessment aspect of the program for Primary and Junior High Schools learners. Coverage for Senior High School learners and reading materials for all categories of schools.</p>
+            <p class="mb-4 font-light">This program is a Learning and Assessment Application Platform (LAAPP) designed for pupils (learners) from pre-school to senior high school (technical & vocational). The goal of LAAPP is to give learners an opportunity to have good and affordable reading materials on all subjects of their study and to provide a medium for easy assessments of learners’ performances through quizzes, written tests, assignments and examinations. Available now is the assessment aspect of the program for Primary and Junior High Schools learners. Coverage for Senior High School learners and reading materials for all categories of schools to follow soon.</p>
             <p class="mb-4 font-medium">LAAPP is designed and developed by Mon and Associates Technology Ltd, a registered company in Ghana.</p>
             <a href="#features" class="inline-flex items-center font-medium text-primary-600 hover:text-primary-800">
                 Learn more
@@ -1091,7 +1091,7 @@
             <div class="divide-y divide-gray--200 -my-9">
                 <div class="py-9">
                     <p class="text-xl font-semibold text-black">How to Create an Account?</p>
-                    <p class="mt-3 text-base text-gray-600">Please, click on the “No account yet? Sign Up” option below the Login provision on this page. Provide your full name under “Name”, your email address under “Email”, a password of your choice under “Password” and repeat the password under “Confirm Password”. Click on the “Sign UP” button (green bar) after you have filled out all the information required for signing up. This signs up to a blank dashboard of LAAPP.</p>
+                    <p class="mt-3 text-base text-gray-600">Please, click on the “No account yet? Sign Up” option below the Login provision on this page. Provide your full name under “Name”, your email address under “Email”, a password of your choice under “Password” and repeat the password under “Confirm Password”. Click on the “Sign UP” button (green bar) after you have filled out all the information required for signing up.</p>
                 </div>
 
                 <div class="py-9">
