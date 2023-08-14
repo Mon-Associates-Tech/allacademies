@@ -21,7 +21,6 @@ use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
-
 use App\Http\Controllers\UserController;
 
 /*
@@ -43,6 +42,7 @@ Route::middleware('guest')->group(function () {
     Route::post('sign-in', [SignInController::class, 'store']);
     Route::get('sign-up', [SignUpController::class, 'create'])->name('sign-up');
     Route::post('sign-up', [SignUpController::class, 'store']);
+
 });
 
 Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('sign-out');
@@ -67,6 +67,9 @@ Route::prefix('password')->name('password.')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    //for testing component
+    Route::view('image-upload', 'test-image-upload');
+
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -96,5 +99,5 @@ Route::middleware('auth')->group(function () {
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     // TODO: examination, quizzes
     
-    Route::resource('users', UserController::class)->only(['index', 'show']);
+    Route::resource('users', UserController::class)->only(['index', 'show']); 
 });
