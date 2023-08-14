@@ -10,7 +10,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    <!-- <link href="{{ asset('css/app.css') }}" rel="stylesheet"> -->
     <!-- <style>[x-cloak] { display: none !important; }</style> -->
     <!-- <script src="https://unpkg.com/alpinejs@3.0.6/dist/cdn.min.js" defer></script> -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
