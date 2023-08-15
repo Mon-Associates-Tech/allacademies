@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QuizController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\SignUpController;
@@ -19,11 +21,10 @@ use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
+use App\Http\Controllers\EmailVerificationController;
+
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
-use App\Http\Controllers\QuizController;
-
-use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,13 +61,13 @@ Route::prefix('password')->name('password.')->group(function () {
         Route::get('reset/{token}', [PasswordController::class, 'resetForm'])->name('reset');
         Route::post('reset', [PasswordController::class, 'reset'])->name('update');
     });
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('change', [PasswordController::class, 'changeForm'])->name('change');
         Route::post('change', [PasswordController::class, 'change']);
     });
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
