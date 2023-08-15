@@ -13,7 +13,7 @@ class SignInController extends Controller
 
     public function store(SignInRequest $request)
     {
-        if (auth()->attempt($request->validated())) {
+        if (auth()->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended('dashboard');
