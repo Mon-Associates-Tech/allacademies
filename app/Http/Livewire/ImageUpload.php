@@ -14,22 +14,28 @@ class ImageUpload extends Component
     public $image;
     public $description;
     public $tags = [];
+
+        protected $rules = [
+            'description' => 'required|string',
+            'tags' => 'required|array',
+            'image' => 'required|image',
+        ];
     
 
 
     public function upload()
     {
-        $data = $this->validate([
-            'description' => ['required','string'],
-            'tags' => ['required','array'],
-            'image' => ['required', 'image'],
-          ]);
-
+        $this->validate();
+ 
         $url = $this->image->store('images', 'public');
-    
-        Image::create($data + ['path' => $url]);
-    
-        return to_route('image')
+ 
+        Image::create([
+            'tags' => json_encode($this->tags),
+            'description' => $this->description,
+            'path' => $url,
+        ]);
+
+        return to_route('image-upload')
             ->with('success', "Image successfully uploaded.");
   
     }
@@ -40,4 +46,5 @@ class ImageUpload extends Component
         return view('livewire.image-upload');
         
     }
+    
 }

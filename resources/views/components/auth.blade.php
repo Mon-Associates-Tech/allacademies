@@ -21,6 +21,14 @@
                 }
             })
         })
+        // Init Event tagify
+        $this->dispatchBrowserEvent('pharaonic.tagify.init');
+        
+        // Load Event
+        $this->dispatchBrowserEvent('pharaonic.tagify.load', [
+            'component' => $this->id,
+            'target'    => '#input-here'
+        ]);
     </script>
 @endpush
 
