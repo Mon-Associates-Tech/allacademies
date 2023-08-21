@@ -26,10 +26,6 @@
     <script src="https://unpkg.com/@yaireo/tagify"></script>
     <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     @livewireScripts
-    <!-- Way 1 -->
-    <x:pharaonic-tagify::scripts />
- 
-    <!-- Way 2 : Vendor Publishing REQURIED -->
     <script src="{{ asset('vendor/pharaonic/pharaonic.tagify.min.js') }}"></script>
 </body>
 </html>
