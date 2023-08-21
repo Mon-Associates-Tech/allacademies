@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Image;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class ImageUpload extends Component
 {
@@ -16,16 +17,13 @@ class ImageUpload extends Component
     public $description;
     public $tags = [];
     public $term;
-    public $fruits = [];
 
-        protected $rules = [
-            'description' => 'required|string',
-            'tags' => 'required|array',
-            'image' => 'required|image',
-        ];
+    protected $rules = [
+        'description' => 'required|string',
+        'tags' => 'required|array',
+        'image' => 'required|image',
+    ];
     
-
-
     public function upload()
     {
         $this->validate();
@@ -45,16 +43,14 @@ class ImageUpload extends Component
 
     public function render()
     {
-        $test = Image::whereJsonContains('tags', 'Calculus')->get()->toArray();
-        $phones = Image::whereRaw('json_contains(tags, \'["Calculus"]\')')->get();
-        // var_dump($test);
-
+        $tags_suggest  = array_unique(Arr::flatten(Image::all()->pluck('tags')->toArray()));
+        
         return view('livewire.image-upload', [
             'images' => Image::when($this->term, function($query, $term){
-                return $query->whereJsonContains('tags', $term)
+                return $query->where(DB::raw('lower(tags)'), "LIKE", "%".strtolower($term)."%")
                 ->orWhere('description', 'LIKE', "%{$term}%");
             })->latest()->limit(3)->get(),
-            'tags_suggest' => array_unique(Arr::flatten(Image::all()->pluck('tags')->toArray()))
+            'tags_suggest' => $tags_suggest
         ]);
         
     }

@@ -29,6 +29,7 @@
             'component' => $this->id,
             'target'    => '#input-here'
         ]);
+
     </script>
 @endpush
 

@@ -4,6 +4,7 @@
             'Back to Dashboard' => route('dashboard'),
         ]" />
     </x-slot>
-
-    @livewire('image-upload')
+    <div class="space-y-6 max-w-2xl">   
+        @livewire('image-upload')
+    </div>
 </x-auth>
