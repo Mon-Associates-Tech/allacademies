@@ -1,9 +1,12 @@
+<style>
+  .customSuggestionsList{border:0px!important; outline:0px !important;}
+</style>
 <form method="post" enctype="multipart/form-data" wire:submit.prevent="upload">
   @csrf
   <div class="sm:col-span-2 relative overflow-hidden rounded-md border border-gray-300 focus-within:ring bg-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500"> 
     @error('tags') <span class="text-xs font-medium text-red-600 ml-2">{{ $message }}</span> @enderror
     <div wire:ignore>
-      <input class="block w-full border-0 focus:border-0 focus:ring-0 pt-2 text-lg" placeholder="Enter Tags" data-pharaonic="tagify" data-component-id="{{ $this->id }}" wire:model="tags" data-suggest data-suggest-list="{{json_encode($tags_suggest)}}" data-classname="customSuggestionsList" data-direct>
+      <input class="block w-full border-0 focus:border-0 focus:ring-0 pt-2 text-lg" placeholder="Enter Tags" data-pharaonic="tagify" data-component-id="{{ $this->id }}" wire:model="tags" data-suggest data-suggest-list="{{ json_encode($tags_suggest) }}" data-classname="customSuggestionsList" data-direct>
     </div>
     @error('description') <span class="text-xs font-medium text-red-600 ml-2">{{ $message }}</span> @enderror
     <textarea id="description" class="block w-full border-0 focus:border-0 focus:ring-0" rows="4" placeholder="Description" wire:model="description"></textarea>
@@ -36,66 +39,91 @@
   </div>
 </form>
 
-<div class="relative">
-  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-      </svg>
+
+{{-- <form method="post" enctype="multipart/form-data" wire:submit.prevent="upload">
+  @csrf
+  <div class="space-y-6">
+    <div class="sm:col-span-2">
+      <x-form.file name="image" name="image" wire:model="image"/>
+    </div>
+    <div class="sm:col-span-2">
+      <x-form.textarea name="description" type="text" wire:model="description"/>
+    </div>
+    <div class="space-y-1">
+      <div class="sm:col-span-2 space-y-1">
+        <label class="block text-sm tracking-wide font-medium text-gray-700">Tags</label>
+        <div wire:ignore>
+          <input name="tags" id="tags" type="text" class="bg-white border-gray-300 rounded-lg shadow-sm w-full leading-tight" data-pharaonic="tagify" data-component-id="{{ $this->id }}" wire:model="tags" data-suggest data-suggest-list="{{ json_encode($tags_suggest) }}" data-direct />
+        </div>
+      </div>
+      @error('tags') <span class="text-xs font-medium text-red-600 ml-2">{{ $message }}</span> @enderror
+    </div>
   </div>
-  <x-form.input class="p-4 pl-10" name="" type="search" placeholder="Search Images..." wire:model="term"/>
-</div>
+  <div class="flex justify-end mt-5">
+    <x-button.primary class="ml-2">Upload Image</x-button.primary>
+  </div>
+</form> --}}
 
-<div class="overflow-hidden rounded-lg bg-white shadow">
-  @if ($images->count())
-  <ul class="divide-y divide-gray-100 px-4">
-    @foreach($images as $img)
-      <li class="flex py-2 relative justify-center items-center">
-        <div class="mr-4 flex-1">
-          <h4 class="text-lg font-medium text-gray-900">{{$img->description}}</h4>
-          <div class="mt-1 text-sm text-gray-400 align-baseline mb-4"><span>Uploaded On</span> • <time>{{ $img->created_at->format('F d, Y') }}</time></div>
-          <div class="mt-1 text-sm text-gray-400 inline-flex">
-            <span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
-                <path fill-rule="evenodd" d="M5.5 3A2.5 2.5 0 003 5.5v2.879a2.5 2.5 0 00.732 1.767l6.5 6.5a2.5 2.5 0 003.536 0l2.878-2.878a2.5 2.5 0 000-3.536l-6.5-6.5A2.5 2.5 0 008.38 3H5.5zM6 7a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-              </svg>
-            </span>
+{{-- <form method="post" enctype="multipart/form-data" wire:submit.prevent="upload" class="bg-white">
+  @csrf
+  <div class="editor flex flex-col text-gray-800 border border-gray-300 p-4 shadow-lg space-y-1">
+    @error('tags') <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
+    <div wire:ignore>
+      <input class="bg-gray-100 border border-gray-300 p-2 mb-4 rounded-lg shadow-sm w-full leading-tight" placeholder="Enter Tags" type="text" data-pharaonic="tagify" data-component-id="{{ $this->id }}" wire:model="tags" data-suggest data-suggest-list="{{ json_encode($tags_suggest) }}" data-direct />
+    </div>
+    @error('description') <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
+    <textarea class="bg-gray-100 sec p-3 h-40 border border-gray-300 outline-none rounded-lg shadow-sm w-full leading-tight" placeholder="Describe image here" wire:model="description"></textarea>
+    <label class="icons flex text-gray-500 m-2 pt-4" for="image">
+      <svg class="mr-2 cursor-pointer hover:text-gray-700 border rounded-full p-1 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/>   
+      </svg>
+      <div class="relative">
+        <span class="flex space-x-1 cursor-pointer">Attach Image</span>
+      </div>
+    </label>
+    @if ($image)
+      <label class="px-6">{{$image->getClientOriginalName()}} </label>
+    @endif
+    <input hidden type="file" id="image" name="image" wire:model="image">
+    @error('image') <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
+    <div class="flex justify-end mt-3">
+      <x-button.primary class="ml-2">Upload Image</x-button.primary>
+    </div>
+  </div>
+</form> --}}
 
-            @foreach($img->tags as $tag) 
-                <span class="mr-2">#{{$tag}}</span>
-              @endforeach
-          </div>
-        </div> 
-        <div class="mb-4 md:mb-0">
-          <div class="relative max-w-xs overflow-hidden bg-cover bg-no-repeat">
-            <img
-              src="{{ asset('storage/' . $img->path) }}"
-              class="max-w-xs"
-              alt="Image" />
-            <div class="group absolute bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-200 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-90">
-              <button class="flex group-hover:visible bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-4 px-4 rounded inline-flex items-center justify-center w-full" data-path="{{ asset('storage/' . $img->path) }}" onclick="copyText(this)">
-                Copy Image Url
-              </button>
-            </div>
-            
+{{-- <form method="post" enctype="multipart/form-data" wire:submit.prevent="upload">
+  @csrf
+  <div class="editor flex flex-col text-gray-800 border border-gray-300 p-4 shadow-lg space-y-1">
+    <div class="space-y-6">
+      <div class="sm:col-span-2">
+        <x-form.textarea name="description" type="text" rows=5 wire:model="description"/>
+      </div>
+      <div class="space-y-1">
+        <div class="sm:col-span-2 space-y-1">
+          <label class="block text-sm tracking-wide font-medium text-gray-700">Tags</label>
+          <div wire:ignore>
+            <input name="tags" id="tags" type="text" class="bg-white border-gray-300 rounded-lg shadow-sm w-full leading-tight" data-pharaonic="tagify" data-component-id="{{ $this->id }}" wire:model="tags" data-suggest data-suggest-list="{{ json_encode($tags_suggest) }}" data-direct />
           </div>
         </div>
-      </li>
-    @endforeach
-  </ul>
-  @else
-  <x-blank />
-  @endif
-</div>
-<script>
-  let copyText = button => {
-    path = button.getAttribute('data-path');
-    navigator.clipboard.writeText(path)
-      .then(() => {
-        button.innerHTML = "Copied!";
-      })
-      .catch(() => {
-        button.innerHTML = "Error!";
-    });
-  }
-</script>
-
+        @error('tags') <span class="text-xs font-medium text-red-600 ml-2">{{ $message }}</span> @enderror
+      </div>
+    </div>
+    <label class="icons flex text-gray-500 m-2 pt-4" for="image">
+      <svg class="mr-2 cursor-pointer hover:text-gray-700 border rounded-full p-1 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/>   
+      </svg>
+      <div class="relative">
+        <span class="flex space-x-1 cursor-pointer">Attach Image</span>
+      </div>
+    </label>
+    @if ($image)
+      <label class="px-6">{{$image->getClientOriginalName()}} </label>
+    @endif
+    <input hidden type="file" id="image" name="image" wire:model="image">
+    @error('image') <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
+    <div class="flex justify-end mt-3">
+      <x-button.primary class="ml-2">Upload Image</x-button.primary>
+    </div>
+  </div>
+</form> --}}
