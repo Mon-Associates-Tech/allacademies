@@ -29,14 +29,14 @@
               </div> 
               <div class="mb-4 md:mb-0">
                 <div class="relative max-w-xs overflow-hidden bg-cover bg-no-repeat">
-                  <img
-                    src="{{ asset('storage/' . $img->path) }}"
-                    class="max-w-xs rounded-lg"
-                    alt="Image" />
-                  <div class="group absolute bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-200 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-90">
-                    <button class="flex group-hover:visible bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-4 px-4 rounded inline-flex items-center justify-center w-full" data-path="{{ asset('storage/' . $img->path) }}" onclick="copyText(this)">
-                      Copy Image Url
-                    </button>
+                  <img src="{{ asset('storage/' . $img->path) }}" class="max-w-xs rounded-lg" alt="Image" />
+                  <div x-data="{ input: '{{ asset('storage/' . $img->path) }}', showMsg: false }"  class="group absolute bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-gray-200 bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-90">  
+                    <a class="flex items-center justify-center px-5 text-sm font-normal text-center text-black border-t border-purple-50 bg-purple-50 hover:bg-gray-100 truncate rounded-b" type="button" @click="navigator.clipboard.writeText(input), showMsg = true, setTimeout(() => showMsg = false, 1000)"> 
+                      <button id="clipboard" class="relative pl-1 py-4 text-md font-medium">Copy Image Url</button>
+                    </a>
+                    <div x-show="showMsg" @click.away="showMsg = false" class="overflow-hidden mt-10">
+                      <p class="flex items-center justify-center text-gray-600">Copied!</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -49,16 +49,3 @@
     @endif
   </div>
 </div>
-  
-<script>
-    let copyText = button => {
-      path = button.getAttribute('data-path');
-      navigator.clipboard.writeText(path)
-        .then(() => {
-          button.innerHTML = "Copied!";
-        })
-        .catch(() => {
-          button.innerHTML = "Error!";
-      });
-    }
-</script>
