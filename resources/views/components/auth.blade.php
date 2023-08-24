@@ -21,7 +21,6 @@
                 }
             })
         })
-
     </script>
 @endpush
 

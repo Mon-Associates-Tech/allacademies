@@ -18,10 +18,10 @@ class ImageUpload extends Component
     public $description;
     public $tags = [];
     public $tag;
-    public $showDiv = false;
+    public $showTagsSuggestions = false;
    
     protected $rules = [
-        'description' => 'required|string|max:255',
+        'description' => 'required|string|max:180',
         'tags' => 'required|array',
         'image' => 'required|image',
     ];
@@ -45,14 +45,15 @@ class ImageUpload extends Component
 
     public function addTag($newTag)
     {
-        if(!in_array($newTag, $this->tags))
+        $this->tags = array_map('strtolower', $this->tags);
+        if(!in_array(strtolower($newTag), $this->tags))
         {
             array_push($this->tags, $newTag);
             $this->tag="";
         }else{
             $this->tag="";
         }
-        $this->showDiv = false;
+        $this->showTagsSuggestions = false;
         
     }
 
@@ -69,7 +70,7 @@ class ImageUpload extends Component
         $unique_tags = array();
     
         if($this->tag){
-            $this->showDiv = true;
+            $this->showTagsSuggestions = true;
             $tags_suggest = Arr::flatten(Image::pluck('tags')->toArray());
         
             $unique_tags = collect($tags_suggest);
