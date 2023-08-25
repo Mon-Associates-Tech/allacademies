@@ -9,20 +9,19 @@
   </div>
   <div class="overflow-hidden rounded-lg bg-white shadow">
     @if ($images->count())
-      <ul class="divide-y divide-gray-100 py-1 px-4">
+      <ul class="divide-y divide-gray-100 py-1 px-2">
         @foreach($images as $img)
           <li class="flex">
-            <div class="mr-4 flex-1">
-              <h6 class="text-sm font-medium text-gray-900">{{$img->description}}</h6>
-              <div class="mt-1 text-sm text-gray-400 inline-flex bottom-0">
-                <span>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            <div class="mr-4 flex-1 w-2/3">
+              <h6 class="text-sm font-medium text-gray-900 text-clip overflow-hidden">{{$img->description}}</h6>
+              <div class="text-xs text-gray-400 bottom-0">
+                <span class="inline-flex">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M5.5 3A2.5 2.5 0 003 5.5v2.879a2.5 2.5 0 00.732 1.767l6.5 6.5a2.5 2.5 0 003.536 0l2.878-2.878a2.5 2.5 0 000-3.536l-6.5-6.5A2.5 2.5 0 008.38 3H5.5zM6 7a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
                   </svg>
                 </span>
                 @foreach($img->tags as $tag) 
-                    <span class="mr-2 text-clip overflow-hidden">#{{$tag}}</span>
+                    <span class="mr-2">#{{$tag}}</span>
                   @endforeach
               </div>
             </div>

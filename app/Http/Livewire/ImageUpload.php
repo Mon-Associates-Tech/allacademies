@@ -8,6 +8,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Redirect;
 
 class ImageUpload extends Component
 {
@@ -21,7 +22,7 @@ class ImageUpload extends Component
     public $showTagsSuggestions = false;
    
     protected $rules = [
-        'description' => 'required|string|max:180',
+        'description' => 'required|string|max:120',
         'tags' => 'required|array',
         'image' => 'required|image',
     ];
@@ -38,8 +39,8 @@ class ImageUpload extends Component
             'path' => $url,
         ]);
 
-        return to_route('image-upload')
-            ->with('success', "Image successfully uploaded.");
+        session()->flash('success', 'Image successfully uploaded');
+        return redirect(request()->header('Referer'));    
     }
     
 
@@ -53,8 +54,7 @@ class ImageUpload extends Component
         }else{
             $this->tag="";
         }
-        $this->showTagsSuggestions = false;
-        
+        $this->showTagsSuggestions = false;  
     }
 
     
@@ -88,6 +88,5 @@ class ImageUpload extends Component
         return view('livewire.image-upload', [
             'tags_suggest' => $unique_tags,
         ]);  
-
     } 
 }
