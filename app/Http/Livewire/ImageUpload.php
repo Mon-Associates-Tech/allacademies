@@ -6,9 +6,7 @@ use Livewire\Component;
 use App\Models\Image;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Redirect;
 
 class ImageUpload extends Component
 {
