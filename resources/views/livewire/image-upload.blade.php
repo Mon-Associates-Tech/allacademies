@@ -1,4 +1,3 @@
-
 <div class="space-y-2">
   <x-form.file-upload name="image" name="image" wire:model="image"/>
   <x-form.textarea name="description" type="text" wire:model="description"/>

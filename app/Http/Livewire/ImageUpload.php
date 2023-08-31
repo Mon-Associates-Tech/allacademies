@@ -44,13 +44,16 @@ class ImageUpload extends Component
 
     public function addTag($newTag)
     {
-        $this->tags = array_map('strtolower', $this->tags);
-        if(!in_array(strtolower($newTag), $this->tags))
+        if($newTag != '')
         {
-            array_push($this->tags, $newTag);
-            $this->tag="";
-        }else{
-            $this->tag="";
+            $this->tags = array_map('strtolower', $this->tags);
+            if(!in_array(strtolower($newTag), $this->tags))
+            {
+                array_push($this->tags, $newTag);
+                $this->tag="";
+            }else{
+                $this->tag="";
+            }
         }
         $this->showTagsSuggestions = false;  
     }

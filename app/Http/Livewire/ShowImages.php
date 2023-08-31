@@ -12,11 +12,17 @@ class ShowImages extends Component
 
     public function render()
     { 
+        $images = [];
+        if($this->searchTerm)
+        {
+            $images = Image::search($this->searchTerm)->latest('id')->take(3)->get();
+        }else{
+            $images = Image::latest('id')->limit(3)->get();
+        }
+
         return view('livewire.show-images', [
-            'images' => Image::when($this->searchTerm, function($query, $searchTerm){
-                return $query->where(DB::raw('lower(tags)'), 'LIKE', "%".strtolower($searchTerm)."%")
-                ->orWhere('description', 'LIKE', "%{$searchTerm}%");
-            })->latest()->limit(3)->get(),
-        ]);  
+            'images' => $images,
+        ]);
     } 
+    
 }
