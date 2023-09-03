@@ -32,7 +32,7 @@ class Image extends Model
             foreach ($searchValues as $value) {
                 $q->orWhere('description', 'like', "%{$value}%")
                 ->orWhereFullText('description', $value)
-                ->orWhere(DB::raw('lower(tags)'), 'LIKE', "%".strtolower($value)."%")
+                ->orWhereRaw('lower(tags) like lower(?)', ["%{$value}%"])
                 ->orWhere('description', 'sounds like', $value)
                 ->orWhere('tags', 'sounds like', $value);
             }
