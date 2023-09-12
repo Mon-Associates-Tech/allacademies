@@ -16,6 +16,12 @@
             margin-block-end: 0.2rem;
             line-height: 1.5;
         }
+
+        h1, h2, h3, h4, h5, h6{
+            font-weight: normal;
+            margin-bottom: 0.2rem;
+            margin-top:0;
+        }
     </style>
 </head>
 <body>

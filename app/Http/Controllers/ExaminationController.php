@@ -12,6 +12,10 @@ use App\Models\MultipleChoiceQuestion;
 use App\Http\Requests\ExaminationRequest;
 use App\Models\EssayQuestion;
 use App\Models\TrueOrFalseQuestion;
+use App\Models\MetaData;
+use App\Models\Subscription;
+use App\Enums\SubscriptionStatus;
+use App\Enums\SubscriptionPackage;
 
 class ExaminationController extends Controller
 {
@@ -22,7 +26,7 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
-        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->paginate();
+        $examinations = $academicSubject->examinations()->with('metaData')->where('team_id', auth()->user()->current_team_id)->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
@@ -43,9 +47,15 @@ class ExaminationController extends Controller
             'essayQuestions',
         )->get()->toArray();
 
+        $package = Subscription::where('package', SubscriptionPackage::INSTITUTION_FULL)->where('status', SubscriptionStatus::PAID)->where('team_id', auth()->user()->current_team_id)->select('package')->first();
+        $academicLevel = $academicSubject->academicLevel()->with('academicGroup')->first();
+        $metaData = MetaData::where('team_id', auth()->user()->current_team_id)->first();
         return view('examinations.create', [
             'academicSubject' => $academicSubject,
             'topics' => $topics,
+            'academicLevel' => $academicLevel,
+            'metaData' => $metaData,
+            'package' => $package,
         ]);
     }
 
@@ -55,17 +65,22 @@ class ExaminationController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
+    public function store(AcademicSubject $academicSubject, Subscription $package, ExaminationRequest $request)
     {
-        dispatch(new GenerateExaminationJob(
+
+        GenerateExaminationJob::dispatch(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),
             User::query()->find($request->validated('creator_id')),
+            $request->validated('heading_type'),
             $request->validated('title'),
-            $request->validated('heading'),
+            $request->validated('date'),
+            $request->validated('start'),
+            $request->validated('end'),
+            $request->validated('instructions'),
             $request->validated('sections'),
-            $request->validated('examiners')
-        ));
+            $request->validated('examiners'),
+        );
 
         return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
             ->with('success', __('status.exam.generating'));
@@ -79,6 +94,7 @@ class ExaminationController extends Controller
      */
     public function show(Examination $examination)
     {
+        $academicSubject = $examination->academicSubject()->with('academicLevel.academicGroup')->first();
         $sections = array_map(function ($section) {
             $questions = collect();
             if ('multiple_choice_questions' === $section['type']) {
@@ -102,6 +118,7 @@ class ExaminationController extends Controller
         return view('examinations.show', [
             'examination' => $examination,
             'sections' => $sections,
+            'academicSubject' => $academicSubject,
         ]);
     }
 

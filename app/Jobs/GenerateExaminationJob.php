@@ -30,10 +30,14 @@ class GenerateExaminationJob implements ShouldQueue
         private AcademicSubject $academicSubject,
         private Team $team,
         private User $creator,
+        private string $heading_type,
         private string $title,
-        private array $heading,
+        private string $date,
+        private string $start,
+        private string $end,
+        private string $instructions,
         private array $sections,
-        private string $examiners
+        private ?string $examiners
     )
     {
         //
@@ -50,6 +54,7 @@ class GenerateExaminationJob implements ShouldQueue
         $multiple_choice_questions = [];
         $true_or_false_questions = [];
         $essay_questions = [];
+        $heading = [];
 
         try {
             collect($this->sections)->each(function ($section) use (
@@ -82,9 +87,17 @@ class GenerateExaminationJob implements ShouldQueue
                 ${$section['type']} = array_merge(${$section['type']}, $questions);
             });
 
+            $heading[] = [
+                'heading_type' => $this->heading_type,
+                'date' => $this->date,
+                'start' => $this->start,
+                'end' => $this->end,
+                'instructions' => $this->instructions,
+            ];
+
             $examination = new Examination([
                 'title' => $this->title,
-                'heading' => $this->heading,
+                'heading' => $heading,
                 'sections' => $sections,
                 'examiners' => $this->examiners,
             ]);

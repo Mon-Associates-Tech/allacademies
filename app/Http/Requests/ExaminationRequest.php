@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
 class ExaminationRequest extends FormRequest
 {
@@ -13,18 +14,23 @@ class ExaminationRequest extends FormRequest
      */
     public function rules()
     {
+
         return [
+            'heading_type' => ['required', 'string'],
             'title' => ['required', 'string', 'min:5', 'max:255'],
-            'heading' => ['required', 'array'],
-            'heading.up' => ['required', 'string'],
-            'heading.down' => ['required', 'string'],
+            'date' => ['required'],
+            'start' => ['required'],
+            'end' => ['required'],
+            'instructions' => ['required', 'string', 'min:5', 'max:255'],
+            'examiners' => ['nullable', 'required_if:heading_type,3'],
+            // 'heading.up' => ['required', 'string'],
+            // 'heading.down' => ['required', 'string'],
             'sections' => ['required', 'array', 'min:1', 'max:20'],
             'sections.*.name' => ['required', 'string', 'min:2', 'max:255'],
             'sections.*.type' => ['required', 'string', 'in:multiple_choice_questions,true_or_false_questions,essay_questions'],
             'sections.*.count' => ['required', 'numeric', 'min:1', 'max:100'],
             'sections.*.topics' => ['required', 'array'],
             'sections.*.topics.*' => ['required', 'exists:academic_topics,id'],
-            'examiners' => ['required', 'string', 'min:2', 'max:255'],
             'team_id' => ['required', 'numeric', 'exists:teams,id'],
             'creator_id' => ['required', 'numeric', 'exists:users,id'],
         ];

@@ -168,4 +168,10 @@ return [
 
     'attributes' => [],
 
+    'values' => [
+        'heading_type' => [
+            '3' => 'Advanced - Institutional'
+        ],
+    ],
+
 ];

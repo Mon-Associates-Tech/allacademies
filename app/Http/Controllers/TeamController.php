@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TeamRequest;
 use App\Models\Team;
+use App\Models\MetaData;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TeamController extends Controller
 {
@@ -36,10 +38,10 @@ class TeamController extends Controller
         $user->load(['currentTeam' => ['members', 'owner']]);
         $user->currentTeam->loadCount('subscriptions');
 
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
+        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->with('metaData')->get();
         $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
 
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
+        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->with('metaData')->get();
 
         $teams = $ownedTeams->merge($joinedTeams);
         unset($ownedTeams, $joinedTeams);
@@ -108,6 +110,23 @@ class TeamController extends Controller
 
         $team->update($request->validated());
 
+        //create or update meta data
+        $path = is_null($team->metaData) ? null : $team->metaData->meta['logo'] ?? '';
+        if($request->hasFile('logo')){
+            $path = $request->file('logo')->store('images', 'public');
+        }
+
+        $meta = [
+            'school' => $request->school,
+            'department' => $request->department,
+            'logo' => $path
+        ];
+  
+        MetaData::updateOrCreate(
+            ['team_id' => $team->id],
+            ['meta' => $meta]
+        );
+    
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));
     }

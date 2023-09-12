@@ -5,24 +5,23 @@
         ]" />
     </x-slot>
 
-    <form method="POST" action="{{ route('academic-subjects.examinations.store', ['academic_subject' => $academicSubject]) }}">
+    <form method="POST" action="{{ route('academic-subjects.examinations.store', ['academic_subject' => $academicSubject, 'package' => $package]) }}">
         @csrf
-
         <input type="hidden" name="team_id" value="{{ auth()->user()->current_team_id }}">
         <input type="hidden" name="creator_id" value="{{ auth()->id() }}">
 
         <div class="grid sm:grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
+            {{-- <div class="sm:col-span-2">
                 <x-form.input name="title" type="text" />
-            </div>
+            </div> --}}
             <div class="sm:col-span-2">
-                <x-form.editor name="heading" />
+                @livewire('examination-heading', ['academicSubject' => $academicSubject, 'academicLevel' => $academicLevel, 'metaData' => $metaData, 'package' => $package])
             </div>
+            {{-- <div class="sm:col-span-2">
+                <x-form.editor name="heading" />
+            </div> --}}
             <div class="sm:col-span-2">
                 @livewire('examination-sections', ['topics' => $topics])
-            </div>
-            <div class="sm:col-span-2">
-                <x-form.input name="examiners" type="text" />
             </div>
         </div>
 
