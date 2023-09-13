@@ -68,7 +68,7 @@ class ExaminationController extends Controller
     public function store(AcademicSubject $academicSubject, Subscription $package, ExaminationRequest $request)
     {
 
-        GenerateExaminationJob::dispatch(
+        dispatch(new GenerateExaminationJob(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),
             User::query()->find($request->validated('creator_id')),
@@ -80,7 +80,7 @@ class ExaminationController extends Controller
             $request->validated('instructions'),
             $request->validated('sections'),
             $request->validated('examiners'),
-        );
+        ));
 
         return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
             ->with('success', __('status.exam.generating'));
