@@ -128,6 +128,7 @@ class ExaminationController extends Controller
      */
     public function answers(Examination $examination)
     {
+        $academicSubject = $examination->academicSubject()->with('academicLevel.academicGroup')->first();
         $sections = array_map(function ($section) {
             $questions = collect();
             if ('multiple_choice_questions' === $section['type']) {
@@ -151,6 +152,7 @@ class ExaminationController extends Controller
         return view('examinations.answer', [
             'examination' => $examination,
             'sections' => $sections,
+            'academicSubject' => $academicSubject,
         ]);
     }
 
