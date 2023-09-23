@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TeamRequest;
 use App\Models\Team;
-use App\Models\MetaData;
+use App\Models\Subscription;
+use App\Enums\SubscriptionStatus;
+use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\MetaDataController;
+use App\Http\Requests\MetaDataRequest;
 
 class TeamController extends Controller
 {
@@ -91,9 +95,15 @@ class TeamController extends Controller
     public function edit(Team $team)
     {
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
-
+        $package = $team->subscriptions()->select('package')
+            ->where('package', SubscriptionPackage::INSTITUTION_FULL)
+            ->where('status', SubscriptionStatus::PAID)
+            ->where('expires_at', '>', now())
+            ->where('team_id', auth()->user()->current_team_id)
+            ->get()->toArray();
         return view('teams.edit', [
             'team' => $team,
+            'package' => $package,
         ]);
     }
 
@@ -104,28 +114,14 @@ class TeamController extends Controller
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function update(TeamRequest $request,  Team $team)
+    public function update(TeamRequest $request, MetaDataRequest $metarequest, Team $team)
     {
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
 
         $team->update($request->validated());
 
-        //create or update meta data
-        $path = is_null($team->metaData) ? null : $team->metaData->meta['logo'] ?? '';
-        if($request->hasFile('logo')){
-            $path = $request->file('logo')->store('images', 'public');
-        }
-
-        $meta = [
-            'school' => $request->school,
-            'department' => $request->department,
-            'logo' => $path
-        ];
-        MetaData::updateOrCreate(
-            ['team_id' => $team->id],
-            ['meta' => $meta]
-        );
-    
+        $metaData = (new MetaDataController)->updateOrCreate($metarequest, $team);
+        
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));
     }

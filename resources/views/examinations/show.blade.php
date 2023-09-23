@@ -1,5 +1,4 @@
 @extends('layout.examination')
-
 @section('content')
 @extends('layout.exam-heading')
 @foreach ($sections as $section)

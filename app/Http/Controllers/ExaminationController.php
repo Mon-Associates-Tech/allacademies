@@ -16,6 +16,8 @@ use App\Models\MetaData;
 use App\Models\Subscription;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
+use App\Enums\TeamStatus;
+use Illuminate\Support\Facades\Auth;
 
 class ExaminationController extends Controller
 {
@@ -40,6 +42,9 @@ class ExaminationController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
+        $team_status = Team::find(Auth::user()->current_team_id);
+        abort_unless($team_status->status === TeamStatus::APPROVED, 403, 'Team must be approved before you create an examination.');
+
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
             'trueOrFalseQuestions',
@@ -66,6 +71,9 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, Subscription $package, ExaminationRequest $request)
     {
+        $team_status = Team::find(Auth::user()->current_team_id);
+        abort_unless($team_status->status === TeamStatus::APPROVED, 403, 'Team must be approved before you create an examination.');
+
         dispatch(new GenerateExaminationJob(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),

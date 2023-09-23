@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('teams', function (Blueprint $table) {
-            $table->string('status')->nullable();
+            $table->string('status')->default('approved');
         });
     }
 

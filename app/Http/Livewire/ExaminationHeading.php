@@ -9,15 +9,16 @@ class ExaminationHeading extends Component
     public $academicSubject;
     public $academicLevel;
     public $metaData;
+    public $package;
     public $heading;
-    public $heading_type = 1;
+    public $heading_type = "basic";
     public $title;
     public $date;
     public $start;
     public $end;
     public $instructions;
     public $examiners;
-    
+
     public function mount($academicSubject, $academicLevel, $metaData, $package)
     {
         $this->academicSubject = $academicSubject;

@@ -10,17 +10,12 @@
         <div class="grid grid-cols-3 gap-4">
             <div class="col-span-2">
                 <x-form.input name="name" type="text" :value="$team->name" />
+                {{-- <input name="status" type="text" value="pending" hidden /> --}}
             </div>
-            @if(!$team->is_personal)
-                <div class="col-span-2">
-                    <x-form.input name="school" type="text" :value="is_null($team->metaData) ? null : $team->metaData->meta['school'] ?? '' "  />
-                </div>
-                <div class="col-span-2">
-                    <x-form.input name="department" type="text" :value="is_null($team->metaData) ? null : $team->metaData->meta['department'] ?? '' "  />
-                </div>
-                <div class="col-span-2">
-                    <x-form.file-upload name="logo"/>
-                </div>
+            @if(!$team->is_personal && $package)
+            <div class="col-span-2 space-y-2">
+                @livewire('institution-type', ['team' => $team])
+            </div>
             @endif
         </div>
         <div class="flex justify-end mt-3">

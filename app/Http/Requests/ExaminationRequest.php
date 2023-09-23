@@ -22,7 +22,7 @@ class ExaminationRequest extends FormRequest
             'start' => ['required'],
             'end' => ['required'],
             'instructions' => ['required', 'string', 'min:5', 'max:255'],
-            'examiners' => ['nullable', 'required_if:heading_type,3'],
+            'examiners' => ['nullable', 'required_if:heading_type,institutional_advanced'],
             // 'heading.up' => ['required', 'string'],
             // 'heading.down' => ['required', 'string'],
             'sections' => ['required', 'array', 'min:1', 'max:20'],
