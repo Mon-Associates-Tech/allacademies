@@ -12,7 +12,7 @@ class MetaDataController extends Controller
      * create a new resource if does not already exist
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Team  $team
-     */
+    */
     public function updateOrCreate(MetaDataRequest $request, Team $team)
     {
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
