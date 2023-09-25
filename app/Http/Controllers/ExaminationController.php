@@ -4,20 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use App\Models\User;
-use App\Models\Examination;
-use Illuminate\Http\Request;
-use App\Models\AcademicSubject;
-use App\Jobs\GenerateExaminationJob;
-use App\Models\MultipleChoiceQuestion;
-use App\Http\Requests\ExaminationRequest;
-use App\Models\EssayQuestion;
-use App\Models\TrueOrFalseQuestion;
 use App\Models\MetaData;
+use App\Support\Examiner;
+use App\Enums\TeamStatus;
+use App\Models\Examination;
 use App\Models\Subscription;
+use App\Models\AcademicSubject;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
-use App\Enums\TeamStatus;
-use Illuminate\Support\Facades\Auth;
+use App\Jobs\GenerateExaminationJob;
+use App\Http\Requests\ExaminationRequest;
 
 class ExaminationController extends Controller
 {
@@ -42,7 +38,7 @@ class ExaminationController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
-        $team_status = Team::find(Auth::user()->current_team_id);
+        $team_status = Team::find(auth()->user()->current_team_id);
         abort_unless($team_status->status === TeamStatus::APPROVED, 403, 'Team must be approved before you create an examination.');
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
@@ -71,7 +67,7 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, Subscription $package, ExaminationRequest $request)
     {
-        $team_status = Team::find(Auth::user()->current_team_id);
+        $team_status = Team::find(auth()->user()->current_team_id);
         abort_unless($team_status->status === TeamStatus::APPROVED, 403, 'Team must be approved before you create an examination.');
 
         dispatch(new GenerateExaminationJob(
@@ -101,25 +97,7 @@ class ExaminationController extends Controller
     public function show(Examination $examination)
     {
         $academicSubject = $examination->academicSubject()->with('academicLevel.academicGroup')->first();
-        $sections = array_map(function ($section) {
-            $questions = collect();
-            if ('multiple_choice_questions' === $section['type']) {
-                $questions = MultipleChoiceQuestion::query()->find($section['questions']);
-            }
-
-            if ('true_or_false_questions' === $section['type']) {
-                $questions = TrueOrFalseQuestion::query()->find($section['questions']);
-            }
-
-            if ('essay_questions' === $section['type']) {
-                $questions = EssayQuestion::query()->find($section['questions']);
-            }
-
-            return [
-                ...$section,
-                'questions' => $questions
-            ];
-        }, $examination->sections);
+        $sections = Examiner::createSections($examination);
 
         return view('examinations.show', [
             'examination' => $examination,
@@ -137,42 +115,12 @@ class ExaminationController extends Controller
     public function answers(Examination $examination)
     {
         $academicSubject = $examination->academicSubject()->with('academicLevel.academicGroup')->first();
-        $sections = array_map(function ($section) {
-            $questions = collect();
-            if ('multiple_choice_questions' === $section['type']) {
-                $questions = MultipleChoiceQuestion::query()->find($section['questions']);
-            }
-
-            if ('true_or_false_questions' === $section['type']) {
-                $questions = TrueOrFalseQuestion::query()->find($section['questions']);
-            }
-
-            if ('essay_questions' === $section['type']) {
-                $questions = EssayQuestion::query()->find($section['questions']);
-            }
-
-            return [
-                ...$section,
-                'questions' => $questions
-            ];
-        }, $examination->sections);
+        $sections = Examiner::createSections($examination);
 
         return view('examinations.answer', [
             'examination' => $examination,
             'sections' => $sections,
             'academicSubject' => $academicSubject,
         ]);
-    }
-
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Examination  $examination
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Examination $examination)
-    {
-        //
     }
 }
