@@ -9,10 +9,10 @@
     $logo_path = is_null($team->metaData) ? null : $team->metaData->meta['logo'] ?? '';  
 @endphp
 <div>
-    <div class="bg-primary-50 border border-primary-300 text-sm text-gray-600 rounded-md p-4 mb-2 mt-2" role="alert">
+    {{-- <div class="bg-primary-50 border border-primary-300 text-sm text-gray-600 rounded-md p-4 mb-2 mt-2" role="alert">
         <span class="font-bold">Note!</span> 
-        <span>Institution details will be used for examination heading. Please provide these details before creating an examination.</span>
-    </div>
+        <span>Institution details will be used for examination heading. These details must be approved before you can create an examination.</span>
+    </div> --}}
     <label class="block text-gray-800 font-medium text-sm">Institution</label>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-3 mt-3">
         <div class="col-span-1">

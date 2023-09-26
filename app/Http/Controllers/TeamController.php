@@ -117,7 +117,7 @@ class TeamController extends Controller
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
 
         $team->update($request->validated());
-
+        
         $metaData = (new MetaDataController)->updateOrCreate($metarequest, $team);
 
         return to_route('teams.index')

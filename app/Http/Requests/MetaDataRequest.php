@@ -14,8 +14,8 @@ class MetaDataRequest extends FormRequest
     public function rules()
     {
         return [
-            'institution_type' => ['required', 'string'],
-            'institution_name' => ['required', 'string'],
+            'institution_type' => ['nullable', 'required_if:institution_type,department_based,faculty_based,college_based,institution_only'],
+            'institution_name' => ['nullable', 'required_if:institution_type,department_based,faculty_based,college_based,institution_only'],
             'college' => ['nullable', 'required_if:institution_type,college_based'],
             'school' => ['nullable', 'required_if:institution_type,college_based'],
             'faculty' => ['nullable', 'required_if:institution_type,faculty_based'],
