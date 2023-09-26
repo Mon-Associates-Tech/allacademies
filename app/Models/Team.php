@@ -19,9 +19,10 @@ class Team extends Model
         'name',
         'is_personal',
         'status',
+        'reason',
     ];
 
-     /**
+    /**
      * @var array<string, string>
      */
     protected $casts = [
@@ -46,5 +47,5 @@ class Team extends Model
     public function metaData()
     {
         return $this->hasOne(MetaData::class);
-    }    
+    }
 }

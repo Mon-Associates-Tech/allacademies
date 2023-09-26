@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TeamRequest;
 use App\Models\Team;
-use App\Models\Subscription;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\MetaDataController;
+use App\Http\Requests\TeamRequest;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\MetaDataRequest;
+use App\Http\Controllers\MetaDataController;
 
 class TeamController extends Controller
 {
@@ -121,7 +119,7 @@ class TeamController extends Controller
         $team->update($request->validated());
 
         $metaData = (new MetaDataController)->updateOrCreate($metarequest, $team);
-        
+
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));
     }

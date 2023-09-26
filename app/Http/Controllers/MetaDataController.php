@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Requests\MetaDataRequest;
+
 use App\Models\Team;
 use App\Models\MetaData;
+use App\Http\Requests\MetaDataRequest;
 
 class MetaDataController extends Controller
 {
