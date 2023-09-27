@@ -39,7 +39,8 @@ class ExaminationController extends Controller
     public function create(AcademicSubject $academicSubject)
     {
         $team_status = Team::find(auth()->user()->current_team_id);
-        abort_unless($team_status->status === TeamStatus::APPROVED, 403, 'Team must be approved before you create an examination.');
+        // dd($team_status);
+        abort_unless((!$team_status->is_personal && $team_status->status === TeamStatus::APPROVED) || ($team_status->is_personal), 403, 'Provide institution details under edit teams and these details must be approved before you create examinations.');
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -68,7 +69,7 @@ class ExaminationController extends Controller
     public function store(AcademicSubject $academicSubject, Subscription $package, ExaminationRequest $request)
     {
         $team_status = Team::find(auth()->user()->current_team_id);
-        abort_unless($team_status->status === TeamStatus::APPROVED, 403, 'Team must be approved before you create an examination.');
+        abort_unless((!$team_status->is_personal && $team_status->status === TeamStatus::APPROVED) || ($team_status->is_personal), 403, 'Provide institution details under edit teams and these details must be approved before you create examinations.');
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,

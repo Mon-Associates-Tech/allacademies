@@ -173,5 +173,11 @@ return [
             '3' => 'Advanced - Institutional'
         ],
     ],
+    'institution_type' => [
+        'department_based' => 'department based',
+        'faculty_based' => 'faculty based',
+        'college_based' => 'college based',
+        'institution_only' => 'institution only'
+    ],
 
 ];
