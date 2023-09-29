@@ -66,9 +66,6 @@ Route::prefix('password')->name('password.')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    //for testing image upload
-    Route::view('image-upload', 'test-image-upload')->name('image-upload');
-
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -97,6 +94,6 @@ Route::middleware('auth')->group(function () {
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     // TODO: examination, quizzes
-    
-    Route::resource('users', UserController::class)->only(['index', 'show']); 
+
+    Route::resource('users', UserController::class)->only(['index', 'show']);
 });

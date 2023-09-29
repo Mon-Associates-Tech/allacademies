@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -24,10 +25,10 @@ class Image extends Model
         'tags' => 'array'
     ];
 
-    public static function search(string $userSearch)
-    { 
+    public static function scopeSearch(Builder $query, string $userSearch)
+    {
         // split on 1+ whitespace & ignore empty (eg. trailing space)
-        $searchValues = preg_split('/\s+/', $userSearch, -1, PREG_SPLIT_NO_EMPTY); 
+        $searchValues = preg_split('/\s+/', $userSearch, -1, PREG_SPLIT_NO_EMPTY);
         return static::where(function ($q) use ($searchValues) {
             foreach ($searchValues as $value) {
                 $q->orWhere('description', 'like', "%{$value}%")

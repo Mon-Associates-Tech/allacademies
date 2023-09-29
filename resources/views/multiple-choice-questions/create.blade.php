@@ -30,15 +30,14 @@
                     'd' => 'Option D',
                     'e' => 'Option E',
                 ]" />
-            
+
                 <div class="flex justify-end mt-3">
                     <x-button.primary class="ml-2">Create Multiple Choice Question</x-button.primary>
                 </div>
             </form>
         </div>
         <div class="sm:col-span-1 space-y-2">
-            @livewire('image-upload')
-            @livewire('show-images')
+            <x-plugins />
         </div>
     </div>
 </x-auth>
