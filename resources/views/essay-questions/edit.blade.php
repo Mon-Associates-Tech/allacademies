@@ -13,19 +13,20 @@
         ]" />
     </x-slot>
 
-    <form method="POST" action="{{ route('essay-questions.update', ['essay_question' => $essayQuestion]) }}">
-        @csrf
-        @method('PATCH')
-        <div class="grid grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
+    <div class="grid sm:grid-cols-3 gap-12">
+        <div class="sm:col-span-2">
+            <form method="POST" action="{{ route('essay-questions.update', ['essay_question' => $essayQuestion]) }}">
+                @csrf
+                @method('PATCH')
                 <x-form.editor name="question" :value="$essayQuestion->question" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.editor name="answer"  :value="$essayQuestion->answer" />
-            </div>
+                <div class="flex justify-end mt-3">
+                    <x-button.primary class="ml-2">Update Essay Question</x-button.primary>
+                </div>
+            </form>
         </div>
-        <div class="flex justify-end mt-3">
-            <x-button.primary class="ml-2">Update Essay Question</x-button.primary>
+        <div class="sm:col-span-1 space-y-2">
+            <x-plugins />
         </div>
-    </form>
+    </div>
 </x-auth>

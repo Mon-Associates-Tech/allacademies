@@ -13,28 +13,16 @@
         ]" />
     </x-slot>
 
-    <form method="POST" action="{{ route('academic-topics.multiple-choice-questions.store', ['academic_topic' => $academicTopic]) }}">
-        @csrf
-        <div class="grid sm:grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
+    <div class="grid sm:grid-cols-3 gap-12">
+        <div class="sm:col-span-2">
+            <form method="POST" action="{{ route('academic-topics.multiple-choice-questions.store', ['academic_topic' => $academicTopic]) }}">
+                @csrf
                 <x-form.editor full name="question" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.editor full name="option_a" label="Option A" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.editor full name="option_b" label="Option B" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.editor full name="option_c" label="Option C" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.editor full name="option_d" label="Option D" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.editor full name="option_e" label="Option E" />
-            </div>
-            <div class="sm:col-span-2">
                 <x-form.select full name="answer" :options="[
                     'a' => 'Option A',
                     'b' => 'Option B',
@@ -42,10 +30,14 @@
                     'd' => 'Option D',
                     'e' => 'Option E',
                 ]" />
-            </div>
+
+                <div class="flex justify-end mt-3">
+                    <x-button.primary class="ml-2">Create Multiple Choice Question</x-button.primary>
+                </div>
+            </form>
         </div>
-        <div class="flex justify-end mt-3">
-            <x-button.primary class="ml-2">Create Multiple Choice Question</x-button.primary>
+        <div class="sm:col-span-1 space-y-2">
+            <x-plugins />
         </div>
-    </form>
+    </div>
 </x-auth>
