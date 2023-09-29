@@ -22,7 +22,6 @@ use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\EmailVerificationController;
-
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
 
