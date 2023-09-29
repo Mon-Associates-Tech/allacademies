@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * @method static Builder search(string $words)
+ **/
 class Image extends Model
 {
     use HasFactory, SoftDeletes;
@@ -25,17 +27,17 @@ class Image extends Model
         'tags' => 'array'
     ];
 
-    public static function scopeSearch(Builder $query, string $userSearch)
+    public static function scopeSearch(Builder $query, string $words)
     {
         // split on 1+ whitespace & ignore empty (eg. trailing space)
-        $searchValues = preg_split('/\s+/', $userSearch, -1, PREG_SPLIT_NO_EMPTY);
-        return static::where(function ($q) use ($searchValues) {
-            foreach ($searchValues as $value) {
-                $q->orWhere('description', 'like', "%{$value}%")
-                ->orWhereFullText('description', $value)
-                ->orWhereRaw('lower(tags) like lower(?)', ["%{$value}%"])
-                ->orWhere('description', 'sounds like', $value)
-                ->orWhere('tags', 'sounds like', $value);
+        $words = preg_split('/\s+/', $words, -1, PREG_SPLIT_NO_EMPTY);
+        return $query->where(function (Builder $query) use ($words) {
+            foreach ($words as $word) {
+                $query->orWhere('description', 'like', "%{$word}%")
+                ->orWhereFullText('description', $word)
+                ->orWhereRaw('lower(tags) like lower(?)', ["%{$word}%"])
+                ->orWhere('description', 'sounds like', $word)
+                ->orWhere('tags', 'sounds like', $word);
             }
         });
     }
