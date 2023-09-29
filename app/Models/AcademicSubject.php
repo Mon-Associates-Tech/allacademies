@@ -40,4 +40,9 @@ class AcademicSubject extends Model
     {
         return $this->belongsToMany(Subscription::class);
     }
+
+    public function quizzes()
+    {
+        return $this->hasMany(Quiz::class);
+    }
 }

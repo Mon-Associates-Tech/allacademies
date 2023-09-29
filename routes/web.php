@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QuizController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\SignUpController;
@@ -19,9 +21,9 @@ use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
-use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,7 +36,6 @@ use App\Http\Controllers\UserController;
 |
 */
 
-// Route::redirect('/', 'dashboard');
 Route::view('/', 'branding');
 
 Route::middleware('guest')->group(function () {
@@ -59,13 +60,13 @@ Route::prefix('password')->name('password.')->group(function () {
         Route::get('reset/{token}', [PasswordController::class, 'resetForm'])->name('reset');
         Route::post('reset', [PasswordController::class, 'reset'])->name('update');
     });
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('change', [PasswordController::class, 'changeForm'])->name('change');
         Route::post('change', [PasswordController::class, 'change']);
     });
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -91,9 +92,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
     Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
 
+    Route::resource('users', UserController::class)->only(['index', 'show']);
+
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    // TODO: examination, quizzes
-
-    Route::resource('users', UserController::class)->only(['index', 'show']);
+    Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
+    Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
+    Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
+    Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
 });

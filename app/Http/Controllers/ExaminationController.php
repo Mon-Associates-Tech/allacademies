@@ -8,10 +8,8 @@ use App\Models\Examination;
 use Illuminate\Http\Request;
 use App\Models\AcademicSubject;
 use App\Jobs\GenerateExaminationJob;
-use App\Models\MultipleChoiceQuestion;
 use App\Http\Requests\ExaminationRequest;
-use App\Models\EssayQuestion;
-use App\Models\TrueOrFalseQuestion;
+use App\Support\Examiner;
 
 class ExaminationController extends Controller
 {
@@ -22,7 +20,7 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
-        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->paginate();
+        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
@@ -79,25 +77,7 @@ class ExaminationController extends Controller
      */
     public function show(Examination $examination)
     {
-        $sections = array_map(function ($section) {
-            $questions = collect();
-            if ('multiple_choice_questions' === $section['type']) {
-                $questions = MultipleChoiceQuestion::query()->find($section['questions']);
-            }
-
-            if ('true_or_false_questions' === $section['type']) {
-                $questions = TrueOrFalseQuestion::query()->find($section['questions']);
-            }
-
-            if ('essay_questions' === $section['type']) {
-                $questions = EssayQuestion::query()->find($section['questions']);
-            }
-
-            return [
-                ...$section,
-                'questions' => $questions
-            ];
-        }, $examination->sections);
+        $sections = Examiner::createSections($examination);
 
         return view('examinations.show', [
             'examination' => $examination,
@@ -113,41 +93,11 @@ class ExaminationController extends Controller
      */
     public function answers(Examination $examination)
     {
-        $sections = array_map(function ($section) {
-            $questions = collect();
-            if ('multiple_choice_questions' === $section['type']) {
-                $questions = MultipleChoiceQuestion::query()->find($section['questions']);
-            }
-
-            if ('true_or_false_questions' === $section['type']) {
-                $questions = TrueOrFalseQuestion::query()->find($section['questions']);
-            }
-
-            if ('essay_questions' === $section['type']) {
-                $questions = EssayQuestion::query()->find($section['questions']);
-            }
-
-            return [
-                ...$section,
-                'questions' => $questions
-            ];
-        }, $examination->sections);
+        $sections = Examiner::createSections($examination);
 
         return view('examinations.answer', [
             'examination' => $examination,
             'sections' => $sections,
         ]);
-    }
-
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Examination  $examination
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Examination $examination)
-    {
-        //
     }
 }
