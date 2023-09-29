@@ -29,7 +29,7 @@ class ImageUpload extends Component
     {
         $this->validate();
 
-        $path = $this->image->storePublicly('images');
+        $path = $this->image->storePublicly('images', 's3');
 
         if (false === $path) {
             throw ValidationException::withMessages(['image' => 'Image upload failed.']);
