@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
-use App\Enums\SubscriptionStatus;
-use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
@@ -93,15 +91,9 @@ class TeamController extends Controller
     public function edit(Team $team)
     {
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
-        $package = $team->subscriptions()->select('package')
-            ->where('package', SubscriptionPackage::INSTITUTION_FULL)
-            ->where('status', SubscriptionStatus::PAID)
-            ->where('expires_at', '>', now())
-            ->where('team_id', auth()->user()->current_team_id)
-            ->get()->toArray();
+
         return view('teams.edit', [
             'team' => $team,
-            'package' => $package,
         ]);
     }
 
@@ -119,7 +111,7 @@ class TeamController extends Controller
         $team->update($request->validated());
 
         if (!$team->is_personal)
-            $metaData = (new MetaDataController)->updateOrCreate($metarequest, $team);
+            (new MetaDataController)->updateOrCreate($metarequest, $team);
 
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));

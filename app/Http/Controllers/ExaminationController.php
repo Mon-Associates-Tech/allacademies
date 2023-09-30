@@ -24,10 +24,14 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
-        $examinations = $academicSubject->examinations()->with('metaData')->where('team_id', auth()->user()->current_team_id)->paginate();
+        $team = Team::find(auth()->user()->current_team_id);
+        $canCreate = ((!$team->is_personal && $team->status === TeamStatus::APPROVED) || ($team->is_personal));
+
+        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->paginate();
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
+            'canCreate' => $canCreate,
         ]);
     }
 
@@ -39,7 +43,6 @@ class ExaminationController extends Controller
     public function create(AcademicSubject $academicSubject)
     {
         $team_status = Team::find(auth()->user()->current_team_id);
-        // dd($team_status);
         abort_unless((!$team_status->is_personal && $team_status->status === TeamStatus::APPROVED) || ($team_status->is_personal), 403, 'Provide institution details under edit teams and these details must be approved before you create examinations.');
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(

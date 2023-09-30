@@ -6,53 +6,49 @@
         'college_based' => 'College Based'
     ];
 
-    $logo_path = is_null($team->metaData) ? null : $team->metaData->meta['logo'] ?? '';  
+    $logo_path = is_null($metaData) ? null : $metaData['logo'] ?? '';  
 @endphp
 <div>
-    {{-- <div class="bg-primary-50 border border-primary-300 text-sm text-gray-600 rounded-md p-4 mb-2 mt-2" role="alert">
-        <span class="font-bold">Note!</span> 
-        <span>Institution details will be used for examination heading. These details must be approved before you can create an examination.</span>
-    </div> --}}
     <label class="block text-gray-800 font-medium text-sm">Institution</label>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-3 mt-3">
         <div class="col-span-1">
-            <x-form.select name="institution_type" wire:model="institution_type" label="Type" type="text" :options="$options" />
+            <x-form.select name="type" wire:model="type" type="text" :options="$options"/>
         </div>
         <div class="col-span-1">
-            <x-form.input name="institution_name" type="text" label="Name" :value="is_null($team->metaData) ? null : $team->metaData->meta['institution_name'] ?? '' " />
+            <x-form.input name="institution" type="text" label="Name" :value="is_null($metaData) ? null : $metaData['name'] ?? ''"/>
         </div> 
     </div>
-    @if($institution_type == "college_based")
+    @if($type == "college_based")
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-3 mt-3">
             <div class="col-span-1">
-                <x-form.input name="college" type="text" :value="is_null($team->metaData) ? null : $team->metaData->meta['college'] ?? '' "  />
+                <x-form.input name="college" type="text" :value="is_null($metaData) ? null : $metaData['college'] ?? ''"/>
             </div>
             <div class="col-span-1">
-                <x-form.input name="school" type="text" :value="is_null($team->metaData) ? null : $team->metaData->meta['school'] ?? '' "  />
+                <x-form.input name="school" type="text" :value="is_null($metaData) ? null : $metaData['school'] ?? ''"/>
             </div>
         </div>
     @endif
-    @if($institution_type == "faculty_based")
+    @if($type == "faculty_based")
         <div class="col-span-2 mt-3">
-            <x-form.input name="faculty" type="text" :value="is_null($team->metaData) ? null : $team->metaData->meta['faculty'] ?? '' "  />
+            <x-form.input name="faculty" type="text" :value="is_null($metaData) ? null : $metaData['faculty'] ?? ''"/>
         </div>
     @endif
-    @if($institution_type != "institution_only")
+    @if($type != "institution_only")
         <div class="col-span-2 mt-3">
-            <x-form.input name="department" type="text" :value="is_null($team->metaData) ? null : $team->metaData->meta['department'] ?? '' "  />
+            <x-form.input name="department" type="text" :value="is_null($metaData) ? null : $metaData['department'] ?? '' "/>
         </div>
     @endif
     <div class="grid grid-cols-1 md:grid-cols-6 gap-x-3 mt-3">
         @if($logo_path)
             <div class="col-span-1">
-                <img src="{{ asset('storage/' . $logo_path) }}" class="w-15" alt="" onerror="this.style.display='none'" />
+                <img src="{{ asset('storage/' . $logo_path) }}" class="w-15" alt="" onerror="this.style.display='none'"/>
             </div>
             <div class="col-span-5">
                 <x-form.file-upload name="logo" class="block"/>
             </div>
         @else
             <div class="col-span-6">
-                <x-form.file-upload name="logo" class="block"/>
+                <x-form.file-upload name="logo"/>
             </div>
         @endif
     </div>

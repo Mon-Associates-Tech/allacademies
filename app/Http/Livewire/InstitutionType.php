@@ -6,13 +6,16 @@ use Livewire\Component;
 
 class InstitutionType extends Component
 {
-    public $team;
-    public $institution_type;
-   
+    public $type;
+    public $metaData;
+
     public function mount($team)
     {
-        $this->team = $team;
-        $this->institution_type = is_null($this->team->metaData) ? 'institution_only' : $this->team->metaData->meta['institution_type'] ?? 'institution_only';
+        $this->metaData = is_null($team->metaData) ? null : $team->metaData->meta ?? null;
+
+        $this->metaData = is_null($this->metaData) ? null : $this->metaData[count($this->metaData) - 1] ?? null;
+
+        $this->type = is_null($this->metaData) ? 'institution_only' : $this->metaData['type'];
     }
 
     public function render()

@@ -19,12 +19,28 @@ class ManageTeamsController extends Controller
     {
         $this->authorize('administrate');
 
-        $pendingTeams = Team::query()->orderBy('updated_at', 'asc')->where('status', TeamStatus::PENDING)->paginate();
+        $pendingTeams = Team::orderBy('updated_at', 'asc')->where('status', TeamStatus::PENDING)->paginate();
 
         return view('manage-teams.index', [
             'pendingTeams' => $pendingTeams,
         ]);
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Team  $team
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Team $team)
+    {
+        $metaData = $team->metaData()->pluck('meta');
+        return view('manage-teams.edit', [
+            'team' => $team,
+            'institutionDetails' => $metaData,
+        ]);
+    }
+
 
     /**
      * approve the specified resource.
@@ -47,12 +63,12 @@ class ManageTeamsController extends Controller
     }
 
     /**
-     * Show the form for decining the specified resource.
+     * Show the form for declining the specified resource.
      *
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function edit(Team $team)
+    public function editDecline(Team $team)
     {
         $this->authorize('administrate');
 

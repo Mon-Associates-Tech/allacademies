@@ -173,7 +173,7 @@ return [
             '3' => 'Advanced - Institutional'
         ],
     ],
-    'institution_type' => [
+    'type' => [
         'department_based' => 'department based',
         'faculty_based' => 'faculty based',
         'college_based' => 'college based',

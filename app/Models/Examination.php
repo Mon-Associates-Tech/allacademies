@@ -46,7 +46,7 @@ class Examination extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function metaData()    
+    public function metaData()
     {
         return $this->hasOne(MetaData::class, 'team_id', 'team_id');
     }

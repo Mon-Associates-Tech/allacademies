@@ -23,7 +23,10 @@ class ExaminationHeading extends Component
     {
         $this->academicSubject = $academicSubject;
         $this->academicLevel = $academicLevel;
-        $this->metaData = $metaData;
+        if ($package) {
+            $this->metaData = $metaData->meta[count($metaData->meta) - 1];
+        }
+
         $this->package = $package;
     }
 
