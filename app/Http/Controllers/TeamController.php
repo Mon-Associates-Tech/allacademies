@@ -110,8 +110,7 @@ class TeamController extends Controller
 
         $team->update($request->validated());
 
-        if (!$team->is_personal)
-            (new MetaDataController)->updateOrCreate($metarequest, $team);
+        (!$team->is_personal) ? (new MetaDataController)->updateOrCreate($metarequest, $team) : '';
 
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));

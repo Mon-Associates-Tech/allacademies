@@ -38,11 +38,10 @@
         <div class="grid grid-cols-3 gap-4">
             <div class="col-span-2">
                 <x-form.input name="name" type="text" :value="$team->name" />
-                {{-- <input name="status" type="text" value="pending" hidden /> --}}
             </div>
             @if (!$team->is_personal)
                 <div class="col-span-2 space-y-2">
-                    @livewire('institution-type', ['team' => $team])
+                    @livewire('institution-details', ['team' => $team])
                 </div>
             @endif
         </div>

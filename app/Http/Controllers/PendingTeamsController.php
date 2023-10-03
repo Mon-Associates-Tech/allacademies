@@ -7,6 +7,7 @@ use App\Enums\TeamStatus;
 use App\Notifications\ApproveTeam;
 use App\Notifications\DeclineTeam;
 use App\Http\Requests\PendingTeamsRequest;
+use Illuminate\Support\Facades\Notification;
 
 class PendingTeamsController extends Controller
 {
@@ -34,7 +35,7 @@ class PendingTeamsController extends Controller
      */
     public function show(Team $pending_team)
     {
-        $metaData = $pending_team->metaData()->pluck('meta')->toArray();
+        $metaData = $pending_team->metaData()->first()->toArray();
 
         return view('pending-teams.show', [
             'team' => $pending_team,
@@ -57,7 +58,8 @@ class PendingTeamsController extends Controller
 
         $user = auth()->user();
         $message =  $team->name . " has been approved. You are all set to create examinations.";
-        $user->notify(new ApproveTeam($message));
+
+        Notification::send($user, new ApproveTeam($message));
 
         return to_route('pending-teams.index')
             ->with('success', __('status.resource.approved', ['name' => $team->name]));
@@ -91,7 +93,8 @@ class PendingTeamsController extends Controller
         $user = auth()->user();
         $message =  $pending_team->name . " has been declined.";
         $reason = $request->validated('reason');
-        $user->notify(new DeclineTeam($message, $reason));
+
+        Notification::send($user, new DeclineTeam($message, $reason));
 
         return to_route('pending-teams.index')
             ->with('success', __('status.resource.declined', ['name' => $pending_team->name]));

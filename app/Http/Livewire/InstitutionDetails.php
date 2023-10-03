@@ -4,7 +4,7 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 
-class InstitutionType extends Component
+class InstitutionDetails extends Component
 {
     public $type;
     public $metaData;
@@ -20,6 +20,6 @@ class InstitutionType extends Component
 
     public function render()
     {
-        return view('livewire.institution-type');
+        return view('livewire.institution-details');
     }
 }

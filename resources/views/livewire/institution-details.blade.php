@@ -41,8 +41,10 @@
     <div class="grid grid-cols-1 md:grid-cols-6 gap-x-3 mt-3">
         @if ($logo_path)
             <div class="col-span-1">
-                <img src="{{ asset('storage/' . $logo_path) }}" class="w-15" alt=""
-                    onerror="this.style.display='none'" />
+                <div class="w-14 h-14">
+                    <img src="{{ asset('storage/' . $logo_path) }}" class="w-fit h-fit" alt=""
+                        onerror="this.style.display='none'" />
+                </div>
             </div>
             <div class="col-span-5">
                 <x-form.file-upload name="logo" class="block" />

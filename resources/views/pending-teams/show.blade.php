@@ -1,4 +1,4 @@
-<x-auth title="Institution changes">
+<x-auth title="Institution Details">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Pending Teams' => route('pending-teams.index'),
