@@ -6,9 +6,9 @@ use App\Models\Team;
 use App\Enums\TeamStatus;
 use App\Notifications\ApproveTeam;
 use App\Notifications\DeclineTeam;
-use App\Http\Requests\ManageTeamsRequest;
+use App\Http\Requests\PendingTeamsRequest;
 
-class ManageTeamsController extends Controller
+class PendingTeamsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -21,7 +21,7 @@ class ManageTeamsController extends Controller
 
         $pendingTeams = Team::orderBy('updated_at', 'asc')->where('status', TeamStatus::PENDING)->paginate();
 
-        return view('manage-teams.index', [
+        return view('pending-teams.index', [
             'pendingTeams' => $pendingTeams,
         ]);
     }
@@ -32,11 +32,12 @@ class ManageTeamsController extends Controller
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function edit(Team $team)
+    public function show(Team $pending_team)
     {
-        $metaData = $team->metaData()->pluck('meta');
-        return view('manage-teams.edit', [
-            'team' => $team,
+        $metaData = $pending_team->metaData()->pluck('meta')->toArray();
+
+        return view('pending-teams.show', [
+            'team' => $pending_team,
             'institutionDetails' => $metaData,
         ]);
     }
@@ -58,7 +59,7 @@ class ManageTeamsController extends Controller
         $message =  $team->name . " has been approved. You are all set to create examinations.";
         $user->notify(new ApproveTeam($message));
 
-        return to_route('manage-teams.index')
+        return to_route('pending-teams.index')
             ->with('success', __('status.resource.approved', ['name' => $team->name]));
     }
 
@@ -68,11 +69,11 @@ class ManageTeamsController extends Controller
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function editDecline(Team $team)
+    public function decline(Team $team)
     {
         $this->authorize('administrate');
 
-        return view('manage-teams.edit', [
+        return view('pending-teams.decline', [
             'team' => $team,
         ]);
     }
@@ -83,16 +84,16 @@ class ManageTeamsController extends Controller
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function decline(ManageTeamsRequest $request, Team $team)
+    public function declineTeam(PendingTeamsRequest $request, Team $pending_team)
     {
-        $team->update($request->validated());
+        $pending_team->update($request->validated());
 
         $user = auth()->user();
-        $message =  $team->name . " has been declined.";
+        $message =  $pending_team->name . " has been declined.";
         $reason = $request->validated('reason');
         $user->notify(new DeclineTeam($message, $reason));
 
-        return to_route('manage-teams.index')
-            ->with('success', __('status.resource.declined', ['name' => $team->name]));
+        return to_route('pending-teams.index')
+            ->with('success', __('status.resource.declined', ['name' => $pending_team->name]));
     }
 }

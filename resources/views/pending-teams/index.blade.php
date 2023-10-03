@@ -16,14 +16,8 @@
                 <tr>
                     <x-table.td bold>{{ $team->name }}</x-table.td>
                     <x-table.td action>
-                        {{-- <form class="inline" method="POST" action="{{ route('manage-teams.approve', ['team' => $team]) }}">
-                        @csrf
-                        <button class="text-primary-600 hover:text-primary-900">Approve</button>
-                    </form>
-                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('manage-teams.edit', ['team' => $team]) }}">Decline</a> --}}
-
-                        <x-action name="edit" :to="route('manage-teams.edit', [
-                            'team' => $team
+                        <x-action name="view" :to="route('pending-teams.show', [
+                            'pending_team' => $team,
                         ])" />
                     </x-table.td>
                 </tr>

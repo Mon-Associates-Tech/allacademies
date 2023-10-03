@@ -15,7 +15,7 @@ use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExaminationController;
-use App\Http\Controllers\ManageTeamsController;
+use App\Http\Controllers\PendingTeamsController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AcademicGroupController;
 use App\Http\Controllers\AcademicLevelController;
@@ -105,8 +105,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
 
-    Route::resource('manage-teams', ManageTeamsController::class)->only(['index']);
-    Route::post('manage-teams/{team}/approve', [ManageTeamsController::class, 'approve'])->name('manage-teams.approve');
-    Route::get('manage-teams/{team}/edit', [ManageTeamsController::class, 'edit'])->name('manage-teams.edit');
-    Route::post('manage-teams/{team}/decline', [ManageTeamsController::class, 'decline'])->name('manage-teams.decline');
+    Route::resource('pending-teams', PendingTeamsController::class)->only(['index', 'show']);
+    Route::post('pending-teams/{team}/approve', [PendingTeamsController::class, 'approve'])->name('pending-teams.approve');
+    Route::post('pending-teams/{pending_team}/decline_team', [PendingTeamsController::class, 'declineTeam'])->name('pending-teams.decline_team');
+    Route::get('pending-teams/{team}/decline', [PendingTeamsController::class, 'decline'])->name('pending-teams.decline');
 });
