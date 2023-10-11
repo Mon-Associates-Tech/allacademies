@@ -5,8 +5,8 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Image;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ImageUpload extends Component
 {
@@ -17,11 +17,11 @@ class ImageUpload extends Component
     public $description;
     public $tags = [];
     public $tag;
-    public $showTagsSuggestions = false;
 
     protected $rules = [
-        'description' => 'required|string|max:120',
+        'description' => 'required|string|min:5|max:255',
         'tags' => 'required|array',
+        'tags.*' => 'required|string|min:2|max:255',
         'image' => 'required|image',
     ];
 
@@ -29,31 +29,31 @@ class ImageUpload extends Component
     {
         $this->validate();
 
-        $url = $this->image->store('images', 'public');
+        $path = $this->image->storePublicly('images', 's3');
+
+        if (false === $path) {
+            throw ValidationException::withMessages(['image' => 'Image upload failed.']);
+        }
 
         Image::create([
             'tags' => $this->tags,
-            'description' => $this->description,
-            'path' => $url,
+            'description' => Str::headline($this->description),
+            'path' => $path,
         ]);
 
-        session()->flash('success', 'Image successfully uploaded');
-        return redirect(request()->header('Referer'));
+        $this->reset();
     }
 
 
     public function addTag($newTag)
     {
-        if ($newTag != '') {
-            $this->tags = array_map('strtolower', $this->tags);
-            if (!in_array(strtolower($newTag), $this->tags)) {
-                array_push($this->tags, $newTag);
-                $this->tag = "";
-            } else {
-                $this->tag = "";
-            }
+        $newTag = Str::studly($newTag);
+
+        if ('' !== $newTag && !in_array($newTag, $this->tags, true)) {
+            array_push($this->tags, $newTag);
         }
-        $this->showTagsSuggestions = false;
+
+        $this->reset('tag');
     }
 
 
@@ -66,26 +66,26 @@ class ImageUpload extends Component
 
     public function render()
     {
-        $unique_tags = array();
+        $suggestedTags = [];
 
-        if ($this->tag) {
-            $this->showTagsSuggestions = true;
-            $tags_suggest = Arr::flatten(Image::pluck('tags')->toArray());
-
-            $unique_tags = collect($tags_suggest);
-            $unique_tags = $unique_tags->unique();
-            $unique_tags->values()->all();
-
-            $unique_tags = $unique_tags->filter(function ($value, $key) {
-
-                return Str::contains(strtolower($value), strtolower($this->tag));
-            });
-
-            $unique_tags->all();
+        if ('' !== $search = Str::studly($this->tag)) {
+            $suggestedTags = Image::query()
+                ->select('tags')
+                ->whereRaw("JSON_SEARCH(tags, 'one', ?) IS NOT NULL", ["{$search}%"])
+                ->limit(15)
+                ->get()
+                ->pluck('tags')
+                ->flatten()
+                ->unique()
+                ->filter(function ($tag) use ($search) {
+                    return str_starts_with($tag, $search) && !in_array($tag, $this->tags, true);
+                })
+                ->values()
+                ->all();
         }
 
         return view('livewire.image-upload', [
-            'tags_suggest' => $unique_tags,
+            'suggestedTags' => $suggestedTags,
         ]);
     }
 }

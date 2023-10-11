@@ -68,9 +68,6 @@ Route::prefix('password')->name('password.')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    //for testing image upload
-    Route::view('image-upload', 'test-image-upload')->name('image-upload');
-
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -26,8 +26,7 @@
             </form>
         </div>
         <div class="sm:col-span-1 space-y-2">
-            @livewire('image-upload')
-            @livewire('show-images')
+            <x-plugins />
         </div>
-    </div>  
+    </div>
 </x-auth>

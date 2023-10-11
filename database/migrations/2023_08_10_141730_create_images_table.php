@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -20,8 +21,10 @@ return new class extends Migration
             $table->string('description')->fullText();
             $table->json('tags');
             $table->timestamps();
-            $table->softDeletes();  
+            $table->softDeletes();
         });
+
+        DB::statement("ALTER TABLE images ADD INDEX images_tags_index((CAST(tags AS CHAR(255) ARRAY)))");
     }
 
     /**
