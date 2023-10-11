@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Team;
 use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
@@ -48,8 +49,25 @@ class SubscriptionController extends Controller
             })
             ->toArray();
 
+        //get user teams
+        $user = Auth::user();
+
+        $user->load(['currentTeam' => ['members', 'owner']]);
+        $user->currentTeam->loadCount('subscriptions');
+
+        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
+        $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
+
+        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
+
+        $teams = $ownedTeams->merge($joinedTeams);
+        unset($ownedTeams, $joinedTeams);
+        $teams = $teams->sort();
+
+
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
+            'teams' => $teams,
         ]);
     }
 
@@ -84,7 +102,7 @@ class SubscriptionController extends Controller
             || !$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
         ) {
             throw ValidationException::withMessages([
-                'package' => 'You can not subscibe to this package for the current team',
+                'package' => 'You can not subscribe to this package for the current team',
             ]);
         }
 
@@ -120,5 +138,58 @@ class SubscriptionController extends Controller
 
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.deleted', ['name' => $subscription->reference]));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Subscription  $subscription
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Subscription $subscription)
+    {
+        $subscription->load('team')->load('academicSubjects')->loadCount('academicSubjects');
+        $canRenew = false;
+
+        if ((now()->diffInMonths($subscription->expires_at)) == 0) {
+            $canRenew = true;
+        }
+
+        return view('subscriptions.show', [
+            'subscription' => $subscription,
+            'renew' => $canRenew,
+        ]);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Subscription  $subscription
+     * @return \Illuminate\Http\Response
+     */
+    public function subjects(Subscription $subscription)
+    {
+        $subscription->load('academicSubjects');
+        return view('subscriptions.subjects', [
+            'subscription' => $subscription,
+        ]);
+    }
+
+    /**
+     * Renew resource/subscription in storage.
+     *
+     * @param  \App\Models\Subscription  $subscription
+     * @return \Illuminate\Http\Response
+     */
+    public function renew(Subscription $subscription)
+    {
+        $subscription->reference = uniqid();
+        $subscription->save();
+
+        // $remainingDays = $subscription->updated_at->diffInMonths($subscription->expires_at);
+        // dd($remainingDays);
+
+        return to_route('subscriptions.index')
+            ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
     }
 }

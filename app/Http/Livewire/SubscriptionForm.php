@@ -8,6 +8,8 @@ use Livewire\Component;
 
 class SubscriptionForm extends Component
 {
+    public $team;
+    public $teams;
     public $package;
     public $duration;
     public $beneficiaries;
@@ -31,8 +33,9 @@ class SubscriptionForm extends Component
         return (string) $money->getAmount();
     }
 
-    public function mount($academicGroups)
+    public function mount($academicGroups, $teams)
     {
+        $this->teams = $teams;
         $this->academicGroups = $academicGroups;
         $this->academicSubjects = [];
     }

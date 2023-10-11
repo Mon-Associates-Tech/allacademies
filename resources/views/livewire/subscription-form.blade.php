@@ -1,4 +1,13 @@
+@php
+    $options = [];
+    foreach ($teams as $team) {
+        $options = Arr::add($options, $team->id, $team->name);
+    }
+@endphp
 <div class="grid sm:grid-cols-3 gap-4">
+    <div class="sm:col-span-2">
+        <x-form.select wire:model="team" name="team" :options="$options" />
+    </div>
     <div class="sm:col-span-2">
         <x-form.select wire:model="package" name="package" :options="[
             'individual:full' => 'Individual (Full Option)',

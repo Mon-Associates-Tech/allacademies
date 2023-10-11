@@ -8,7 +8,7 @@
     <form method="POST" action="{{ route('subscriptions.store') }}">
         @csrf
 
-        @livewire('subscription-form', ['academicGroups' => $academicGroups])
+        @livewire('subscription-form', ['academicGroups' => $academicGroups, 'teams' => $teams])
 
         @error('package')
         <div class="text-xs font-medium text-red-600 pt-4">{{ $message }}</div>
