@@ -16,6 +16,7 @@ class SubscriptionForm extends Component
     public $academicGroups;
     public $academicSubjects;
 
+
     protected $rules = [
         'academicGroups.*.is_open' => ['boolean'],
         'academicGroups.*.academicLevels.*.is_open' => ['boolean'],

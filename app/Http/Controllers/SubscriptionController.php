@@ -7,6 +7,7 @@ use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
@@ -106,6 +107,15 @@ class SubscriptionController extends Controller
             ]);
         }
 
+        $subjectIds = $request->academic_subject_ids;
+        $belongsToOneGroup = AcademicSubject::belongToOneAcademicGroup($subjectIds);
+
+        if (!$belongsToOneGroup) {
+            throw ValidationException::withMessages([
+                'group' => 'Selected subjects must belong to one Academic Group',
+            ]);
+        }
+
 
         DB::transaction(function () use ($subscription, $user, $subjects) {
             $subscription->team()->associate($user->currentTeam);
@@ -169,7 +179,11 @@ class SubscriptionController extends Controller
      */
     public function subjects(Subscription $subscription)
     {
+        // $subject = AcademicSubject::find(4); // Replace 1 with the actual subject ID
+        // $academicGroup = $subject->academicGroup;
+        // dd($academicGroup);
         $subscription->load('academicSubjects');
+
         return view('subscriptions.subjects', [
             'subscription' => $subscription,
         ]);
@@ -185,6 +199,7 @@ class SubscriptionController extends Controller
     {
         $subscription->reference = uniqid();
         $subscription->save();
+
 
         // $remainingDays = $subscription->updated_at->diffInMonths($subscription->expires_at);
         // dd($remainingDays);

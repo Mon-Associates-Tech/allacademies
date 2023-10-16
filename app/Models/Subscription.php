@@ -52,4 +52,9 @@ class Subscription extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function renewals()
+    {
+        return $this->hasMany(SubscriptionRenewal::class);
+    }
 }

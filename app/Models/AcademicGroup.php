@@ -24,4 +24,9 @@ class AcademicGroup extends Model
     {
         return $this->hasMany(AcademicLevel::class);
     }
+
+    public function academicSubjects()
+    {
+        return $this->hasManyThrough(AcademicSubject::class, AcademicLevel::class, 'academic_group_id', 'academic_level_id');
+    }
 }
