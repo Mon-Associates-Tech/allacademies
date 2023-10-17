@@ -39,6 +39,7 @@ class SubscriptionController extends Controller
      */
     public function create()
     {
+
         $academicGroups = AcademicGroup::query()
             ->with('academicLevels.academicSubjects')
             ->get()
@@ -80,6 +81,7 @@ class SubscriptionController extends Controller
      */
     public function store(SubscriptionRequest $request)
     {
+
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($package = $request->input('package')),
             $duration = $request->integer('duration'),
@@ -89,7 +91,7 @@ class SubscriptionController extends Controller
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $user->load('currentTeam');
+        // $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
             'reference' => uniqid(),
@@ -98,9 +100,11 @@ class SubscriptionController extends Controller
             'expires_at' => Carbon::now()->addMonths($duration),
         ]);
 
+        $team = Team::find($request->team);
+
         if (
-            $user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package
-            || !$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
+            $team->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package
+            || !$team->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
         ) {
             throw ValidationException::withMessages([
                 'package' => 'You can not subscribe to this package for the current team',
@@ -117,8 +121,8 @@ class SubscriptionController extends Controller
         }
 
 
-        DB::transaction(function () use ($subscription, $user, $subjects) {
-            $subscription->team()->associate($user->currentTeam);
+        DB::transaction(function () use ($subscription, $user, $subjects, $team) {
+            $subscription->team()->associate($team);
 
             $subscription = $user->subscriptions()->save($subscription);
 
