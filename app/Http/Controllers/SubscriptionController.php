@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
+use App\Models\SubscriptionRenewal;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Validation\ValidationException;
@@ -201,12 +202,10 @@ class SubscriptionController extends Controller
      */
     public function renew(Subscription $subscription)
     {
-        $subscription->reference = uniqid();
-        $subscription->save();
+        $renewal = new SubscriptionRenewal();
 
-
-        // $remainingDays = $subscription->updated_at->diffInMonths($subscription->expires_at);
-        // dd($remainingDays);
+        $renewal->reference = uniqid();
+        $renewal = $subscription->renewals()->save($renewal);
 
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.created', ['name' => $subscription->reference]));

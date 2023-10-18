@@ -22,8 +22,10 @@ use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\SubscriptionRenewalController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -102,4 +104,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
     Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
+
+    // Route::resource('renew-subscriptions', SubscriptionRenewalController::class)->only(['index', 'show']);
 });
