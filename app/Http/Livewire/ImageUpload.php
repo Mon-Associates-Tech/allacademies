@@ -60,7 +60,6 @@ class ImageUpload extends Component
     public function removeTag($index)
     {
         unset($this->tags[$index]);
-
         $this->tags = array_values($this->tags);
     }
 

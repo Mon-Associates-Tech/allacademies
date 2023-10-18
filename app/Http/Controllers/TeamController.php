@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TeamRequest;
 use App\Models\Team;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\TeamRequest;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\MetaDataRequest;
+use App\Http\Controllers\MetaDataController;
 
 class TeamController extends Controller
 {
@@ -36,10 +38,10 @@ class TeamController extends Controller
         $user->load(['currentTeam' => ['members', 'owner']]);
         $user->currentTeam->loadCount('subscriptions');
 
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
+        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->with('metaData')->get();
         $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
 
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
+        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->with('metaData')->get();
 
         $teams = $ownedTeams->merge($joinedTeams);
         unset($ownedTeams, $joinedTeams);
@@ -102,11 +104,13 @@ class TeamController extends Controller
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function update(TeamRequest $request,  Team $team)
+    public function update(TeamRequest $request, MetaDataRequest $metarequest, Team $team)
     {
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
 
         $team->update($request->validated());
+
+        (!$team->is_personal) ? (new MetaDataController)->updateOrCreate($metarequest, $team) : '';
 
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));

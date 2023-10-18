@@ -15,6 +15,7 @@ use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\PendingTeamsController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AcademicGroupController;
 use App\Http\Controllers\AcademicLevelController;
@@ -106,4 +107,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
 
     // Route::resource('renew-subscriptions', SubscriptionRenewalController::class)->only(['index', 'show']);
+    Route::resource('pending-teams', PendingTeamsController::class)->only(['index', 'show']);
+    Route::post('pending-teams/{team}/approve', [PendingTeamsController::class, 'approve'])->name('pending-teams.approve');
+    Route::post('pending-teams/{pending_team}/decline_team', [PendingTeamsController::class, 'declineTeam'])->name('pending-teams.decline_team');
+    Route::get('pending-teams/{team}/decline', [PendingTeamsController::class, 'decline'])->name('pending-teams.decline');
 });

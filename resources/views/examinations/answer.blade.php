@@ -1,8 +1,8 @@
 @extends('layout.examination')
 
 @section('content')
-
-{{ $examination->heading->html }}
+@extends('layout.exam-heading')
+{{-- {{ $examination->heading->html }} --}}
 
 @foreach ($sections as $section)
     @if ($section['name'])
