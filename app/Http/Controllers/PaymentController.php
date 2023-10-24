@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PaymentStatus;
-use App\Events\SubscriptionUpdated;
+use Exception;
+use Brick\Money\Money;
 use App\Models\Payment;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Http\Requests\PaymentRequest;
+use App\Enums\PaymentStatus;
 use App\Models\Subscription;
-use Brick\Money\Money;
-use Exception;
+use App\Models\SubscriptionRenewal;
+use App\Events\SubscriptionUpdated;
+use App\Events\SubscriptionRenewed;
+use App\Http\Requests\PaymentRequest;
 use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
@@ -56,10 +57,12 @@ class PaymentController extends Controller
         $reference = Str::beforeLast($request->validated('reference'), '_1326001');
 
         /** @var \App\Models\Subscription $subscription */
-        $subscription = Subscription::query()->where('reference', $reference)->firstOr(callback: function () {
-            throw ValidationException::withMessages([
-                'reference' => 'No subscriptions found for payment',
-            ]);
+        $subscription = Subscription::query()->where('reference', $reference)->firstOr(callback: function () use ($reference) {
+            return SubscriptionRenewal::query()->where('reference', $reference)->with('subscription')->firstOr(callback: function () {
+                throw ValidationException::withMessages([
+                    'reference' => 'No subscriptions found for payment',
+                ]);
+            });
         });
 
         try {
@@ -71,13 +74,18 @@ class PaymentController extends Controller
                 'status' => PaymentStatus::SUCCEEDED,
             ])->refresh();
 
-            event(new SubscriptionUpdated($subscription));
+            if (!$subscription->subscription) {
+                event(new SubscriptionUpdated($subscription));
+            } else {
+                /** @var \App\Models\SubscriptionRenewal $subscription */
+                event(new SubscriptionRenewed($subscription));
+            }
         } catch (Exception) {
             throw ValidationException::withMessages([
                 'amount' => 'Invalid amount',
             ]);
         }
-
+        // dd($subscription->subscription->expires_at->addMonths((int)($subscription->subscription->duration)));
         return to_route('payments.index')
             ->with('success', __('status.payment.created', [
                 'currency' => $payment->currency,

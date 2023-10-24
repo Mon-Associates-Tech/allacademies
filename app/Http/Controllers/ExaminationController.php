@@ -25,7 +25,7 @@ class ExaminationController extends Controller
     public function index(AcademicSubject $academicSubject)
     {
         $team = Team::find(auth()->user()->current_team_id);
-        $canCreate = ((!$team->is_personal && $team->status === TeamStatus::APPROVED) || ($team->is_personal));
+        $canCreate = ((!$team->is_personal && $team->status === TeamStatus::APPROVED) && $team->metadata !== null || ($team->is_personal));
 
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->paginate();
         return view('examinations.index', [

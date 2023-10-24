@@ -81,7 +81,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('subscriptions', SubscriptionController::class)->except(['edit', 'update']);
     Route::get('subscriptions/{subscription}/subjects', [SubscriptionController::class, 'subjects'])->name('subscriptions.subjects');
-    Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -106,9 +105,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
 
-    // Route::resource('renew-subscriptions', SubscriptionRenewalController::class)->only(['index', 'show']);
     Route::resource('pending-teams', PendingTeamsController::class)->only(['index', 'show']);
     Route::post('pending-teams/{team}/approve', [PendingTeamsController::class, 'approve'])->name('pending-teams.approve');
     Route::post('pending-teams/{pending_team}/decline_team', [PendingTeamsController::class, 'declineTeam'])->name('pending-teams.decline_team');
     Route::get('pending-teams/{team}/decline', [PendingTeamsController::class, 'decline'])->name('pending-teams.decline');
+
+    Route::post('subscriptions/{subscription}/renew', [SubscriptionRenewalController::class, 'store'])->name('subscriptions.renew');
 });

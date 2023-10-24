@@ -33,4 +33,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Subscription::class);
     }
+
+    public function renewal()
+    {
+        return $this->belongsTo(SubscriptionRenewal::class);
+    }
 }

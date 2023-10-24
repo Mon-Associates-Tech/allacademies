@@ -37,4 +37,25 @@ class SubscriptionRenewalController extends Controller
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
     }
+
+    /**
+     * Renew resource/subscription in storage.
+     *
+     * @param  \App\Models\Subscription  $subscription
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Subscription $subscription)
+    {
+        $renewal = new SubscriptionRenewal();
+
+        $reference = uniqid();
+        $renewal->reference = $reference;
+        $renewal = $subscription->renewals()->save($renewal);
+
+        return to_route('subscriptions.index')
+            ->with('success', __('status.subscription.renewed', [
+                'reference' => $subscription->reference,
+                'new' => $reference,
+            ]));
+    }
 }

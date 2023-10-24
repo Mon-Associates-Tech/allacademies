@@ -23,6 +23,8 @@ class Subscription extends Model
         'beneficiaries',
         'status',
         'expires_at',
+        'renewed_at',
+        'period',
     ];
 
     /**

@@ -5,7 +5,7 @@
         'faculty_based' => 'Faculty Based',
         'college_based' => 'College Based',
     ];
-    
+
     $logo_path = is_null($metaData) ? null : $metaData['logo'] ?? '';
 @endphp
 <div>
@@ -47,11 +47,11 @@
                 </div>
             </div>
             <div class="col-span-5">
-                <x-form.file-upload name="logo" class="block" />
+                <x-form.file name="logo" class="block" />
             </div>
         @else
             <div class="col-span-6">
-                <x-form.file-upload name="logo" />
+                <x-form.file name="logo" />
             </div>
         @endif
     </div>

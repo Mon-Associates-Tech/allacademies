@@ -2,10 +2,10 @@
 
 namespace App\Listeners;
 
+use Brick\Money\Money;
+use App\Models\Payment;
 use App\Enums\SubscriptionStatus;
 use App\Events\SubscriptionUpdated;
-use App\Models\Payment;
-use Brick\Money\Money;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 

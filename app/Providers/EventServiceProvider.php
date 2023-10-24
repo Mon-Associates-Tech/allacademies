@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Events\SubscriptionUpdated;
 use App\Listeners\EvaluateSubscription;
+use App\Events\SubscriptionRenewed;
+use App\Listeners\RenewSubscription;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -22,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         SubscriptionUpdated::class => [
             EvaluateSubscription::class,
+        ],
+        SubscriptionRenewed::class => [
+            RenewSubscription::class,
         ],
     ];
 

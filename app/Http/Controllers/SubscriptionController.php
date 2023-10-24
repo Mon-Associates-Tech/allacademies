@@ -7,12 +7,11 @@ use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Models\AcademicSubject;
 use Illuminate\Support\Carbon;
+use App\Models\AcademicSubject;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
-use App\Models\SubscriptionRenewal;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Validation\ValidationException;
@@ -98,6 +97,7 @@ class SubscriptionController extends Controller
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
+            'period' => $duration,
             'expires_at' => Carbon::now()->addMonths($duration),
         ]);
 
@@ -192,22 +192,5 @@ class SubscriptionController extends Controller
         return view('subscriptions.subjects', [
             'subscription' => $subscription,
         ]);
-    }
-
-    /**
-     * Renew resource/subscription in storage.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function renew(Subscription $subscription)
-    {
-        $renewal = new SubscriptionRenewal();
-
-        $renewal->reference = uniqid();
-        $renewal = $subscription->renewals()->save($renewal);
-
-        return to_route('subscriptions.index')
-            ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
     }
 }
