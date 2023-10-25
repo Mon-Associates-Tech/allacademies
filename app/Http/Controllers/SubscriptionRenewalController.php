@@ -6,7 +6,6 @@ use App\Models\Subscription;
 use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Models\SubscriptionRenewal;
-use App\Models\User;
 
 class SubscriptionRenewalController extends Controller
 {
@@ -18,7 +17,6 @@ class SubscriptionRenewalController extends Controller
      */
     public function index()
     {
-        $now = Carbon::now();
         $subscriptions = Subscription::query()
             ->where('team_id', auth()->user()->current_team_id)
             ->whereRaw("TIMESTAMPDIFF(MONTH, expires_at, ?) = 0", [$now])
@@ -32,7 +30,7 @@ class SubscriptionRenewalController extends Controller
 
 
     /**
-     * Renew resource/subscription in storage.
+     * Renew resource/subscription renewal in storage.
      *
      * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
@@ -45,7 +43,7 @@ class SubscriptionRenewalController extends Controller
         $renewal->reference = $reference;
         $renewal = $expiring_subscription->renewals()->save($renewal);
 
-        return to_route('expiring-subscriptions.index')
+        return to_route('expiring-subscriptions.renewals')
             ->with('success', __('status.subscription.renewed', [
                 'reference' => $expiring_subscription->reference,
                 'new' => $reference,

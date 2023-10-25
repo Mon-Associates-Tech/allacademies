@@ -35,7 +35,6 @@
                             @csrf
                             <button class="text-primary-600 hover:text-primary-900">Renew</button>
                         </form>
-                        {{-- <x-action name="view" :to="route('subscriptions.show', ['subscription' => $subscription])" /> --}}
                     </x-table.td>
                 </tr>
             @endforeach

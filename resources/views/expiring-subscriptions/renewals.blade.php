@@ -1,4 +1,4 @@
-<x-auth title="Expiring Subscriptions">
+<x-auth title="Renewals - Subscriptions">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Subscriptions' => route('subscriptions.index'),
@@ -23,12 +23,6 @@
                 <p class="text-sm text-blue-700">Dial <strong>*772*30#</strong> to pay for any subscription renewal.
                     Merchant
                     Code is <em>1326001</em>. Please use the reference indicated.</p>
-                {{-- <p class="mt-3 text-sm md:mt-0 md:ml-6">
-                    <a href="#" class="whitespace-nowrap font-medium text-blue-700 hover:text-blue-600">
-                    Learn More
-                    <span aria-hidden="true"> &rarr;</span>
-                    </a>
-                </p> --}}
             </div>
         </div>
     </div>
