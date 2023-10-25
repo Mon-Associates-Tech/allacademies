@@ -49,9 +49,6 @@ class AcademicSubject extends Model
 
     public function academicGroup()
     {
-        // return $this->belongsTo(AcademicGroup::class, 'academic_group_id')
-        //     ->through('academicLevel');
-
         return $this->hasOneThrough(
             AcademicGroup::class,
             AcademicLevel::class,

@@ -110,5 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('pending-teams/{pending_team}/decline_team', [PendingTeamsController::class, 'declineTeam'])->name('pending-teams.decline_team');
     Route::get('pending-teams/{team}/decline', [PendingTeamsController::class, 'decline'])->name('pending-teams.decline');
 
-    Route::post('subscriptions/{subscription}/renew', [SubscriptionRenewalController::class, 'store'])->name('subscriptions.renew');
+    Route::resource('expiring-subscriptions', SubscriptionRenewalController::class)->only(['index']);
+    Route::post('expiring-subscriptions/{expiring_subscription}/store', [SubscriptionRenewalController::class, 'store'])->name('expiring-subscriptions.store');
+    Route::get('expiring-subscriptions/renewals', [SubscriptionRenewalController::class, 'renewals'])->name('expiring-subscriptions.renewals');
 });

@@ -25,7 +25,7 @@
         @if ($renew)
             <x-slot name="action">
                 <form class="inline" method="POST"
-                    action="{{ route('subscriptions.renew', ['subscription' => $subscription]) }}">
+                    action="{{ route('expiring-subscriptions.store', ['expiring_subscription' => $subscription]) }}">
                     @csrf
                     <x-button.primary class="text-primary-600 hover:text-primary-900">Renew
                         Subscription</x-button.primary>

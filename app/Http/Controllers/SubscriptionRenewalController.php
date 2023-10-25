@@ -3,59 +3,68 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subscription;
+use Illuminate\Support\Carbon;
+use App\Enums\SubscriptionStatus;
 use App\Models\SubscriptionRenewal;
+use App\Models\User;
 
 class SubscriptionRenewalController extends Controller
 {
+
     /**
-     * Renew resource/subscription in storage.
+     * Display a listing of the resource that are less than 1 month to expiration.
      *
-     * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function renew(Subscription $subscription)
+    public function index()
     {
+        $now = Carbon::now();
+        $subscriptions = Subscription::query()
+            ->where('team_id', auth()->user()->current_team_id)
+            ->whereRaw("TIMESTAMPDIFF(MONTH, expires_at, ?) = 0", [$now])
+            ->where('status', SubscriptionStatus::PAID)
+            ->latest('id')->paginate();
 
-        // $renewal = new SubscriptionRenewal();
-
-        // $renewal->reference = uniqid();
-        // $renewal->subscription_id = $subscription->id;
-        // $renewal->save();
-
-
-        // // $remainingDays = $subscription->updated_at->diffInMonths($subscription->expires_at);
-        // // dd($remainingDays);
-
-        // return to_route('subscriptions.index')
-        //     ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
-
-        $renewal = new SubscriptionRenewal();
-
-        $renewal->reference = uniqid();
-        $renewal = $subscription->renewals()->save($renewal);
-
-        return to_route('subscriptions.index')
-            ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
+        return view('expiring-subscriptions.index', [
+            'subscriptions' => $subscriptions,
+        ]);
     }
 
+
     /**
      * Renew resource/subscription in storage.
      *
      * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function store(Subscription $subscription)
+    public function store(Subscription $expiring_subscription)
     {
         $renewal = new SubscriptionRenewal();
 
         $reference = uniqid();
         $renewal->reference = $reference;
-        $renewal = $subscription->renewals()->save($renewal);
+        $renewal = $expiring_subscription->renewals()->save($renewal);
 
-        return to_route('subscriptions.index')
+        return to_route('expiring-subscriptions.index')
             ->with('success', __('status.subscription.renewed', [
-                'reference' => $subscription->reference,
+                'reference' => $expiring_subscription->reference,
                 'new' => $reference,
             ]));
+    }
+
+    /**
+     * Display a listing of renewals
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function renewals()
+    {
+        $subscriptions = SubscriptionRenewal::with(['subscription' => function ($query) {
+            $query->where('team_id', auth()->user()->current_team_id);
+        }])->latest('id')->paginate();
+
+        return view('expiring-subscriptions.renewals', [
+            'subscriptions' => $subscriptions,
+        ]);
     }
 }

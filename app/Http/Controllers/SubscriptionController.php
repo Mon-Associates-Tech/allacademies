@@ -52,9 +52,10 @@ class SubscriptionController extends Controller
             ->toArray();
 
         //get user teams
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $user->load(['currentTeam' => ['members', 'owner']]);
+        // $user->load(['currentTeam' => ['members', 'owner']]);
         $user->currentTeam->loadCount('subscriptions');
 
         $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
@@ -184,9 +185,6 @@ class SubscriptionController extends Controller
      */
     public function subjects(Subscription $subscription)
     {
-        // $subject = AcademicSubject::find(4); // Replace 1 with the actual subject ID
-        // $academicGroup = $subject->academicGroup;
-        // dd($academicGroup);
         $subscription->load('academicSubjects');
 
         return view('subscriptions.subjects', [
