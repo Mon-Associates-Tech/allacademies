@@ -41,6 +41,7 @@
             </x-slot>
 
             @foreach ($subscriptions as $subscription)
+                {{-- {{ dd($subscription) }} --}}
                 <tr>
                     <x-table.td bold>{{ $subscription->reference }}</x-table.td>
                     <x-table.td>{{ $subscription->subscription->package }}</x-table.td>

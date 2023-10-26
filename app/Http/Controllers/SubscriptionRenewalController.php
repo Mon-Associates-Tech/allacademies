@@ -17,6 +17,8 @@ class SubscriptionRenewalController extends Controller
      */
     public function index()
     {
+        $now = Carbon::now();
+
         $subscriptions = Subscription::query()
             ->where('team_id', auth()->user()->current_team_id)
             ->whereRaw("TIMESTAMPDIFF(MONTH, expires_at, ?) = 0", [$now])
@@ -57,9 +59,15 @@ class SubscriptionRenewalController extends Controller
      */
     public function renewals()
     {
-        $subscriptions = SubscriptionRenewal::with(['subscription' => function ($query) {
-            $query->where('team_id', auth()->user()->current_team_id);
-        }])->latest('id')->paginate();
+
+        $subscriptions = SubscriptionRenewal::whereHas('subscription')
+            ->with(['subscription' => function ($query) {
+                $query->where('subscriber_id', auth()->user()->id);
+            }])
+            ->latest('id')
+            ->paginate();
+
+        // dd($subscriptions);
 
         return view('expiring-subscriptions.renewals', [
             'subscriptions' => $subscriptions,
