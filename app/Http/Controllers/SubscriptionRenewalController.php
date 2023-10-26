@@ -60,14 +60,13 @@ class SubscriptionRenewalController extends Controller
     public function renewals()
     {
 
-        $subscriptions = SubscriptionRenewal::whereHas('subscription')
-            ->with(['subscription' => function ($query) {
-                $query->where('subscriber_id', auth()->user()->id);
-            }])
+        $teamId = auth()->user()->current_team_id;
+        $subscriptions = SubscriptionRenewal::whereHas('subscription', function ($query) use ($teamId) {
+            $query->where('team_id', $teamId);
+        })
+            ->with('subscription')
             ->latest('id')
-            ->paginate();
-
-        // dd($subscriptions);
+            ->paginate();;
 
         return view('expiring-subscriptions.renewals', [
             'subscriptions' => $subscriptions,

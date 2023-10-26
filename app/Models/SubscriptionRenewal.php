@@ -34,4 +34,13 @@ class SubscriptionRenewal extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function getRenewalsWithSubscriptionByTeamId($teamId)
+{
+    $renewals = SubscriptionRenewal::whereHas('subscription', function($query) use ($teamId) {
+        $query->where('team_id', $teamId);
+    })->with('subscription')->get();
+  
+    return $renewals;
+}
 }
