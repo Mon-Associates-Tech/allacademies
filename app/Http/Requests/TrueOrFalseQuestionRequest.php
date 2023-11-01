@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class TrueOrFalseRequest extends FormRequest
+class TrueOrFalseQuestionRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -20,6 +20,13 @@ class TrueOrFalseRequest extends FormRequest
             'answer' => ['required', 'boolean'],
             'score' => ['nullable','numeric'],
             'difficulty_level' => ['nullable', 'string', 'in:easy,medium,difficult,unspecified'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'question.up' => 'question',
         ];
     }
 

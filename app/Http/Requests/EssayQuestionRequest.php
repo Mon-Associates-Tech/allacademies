@@ -24,4 +24,12 @@ class EssayQuestionRequest extends FormRequest
             'difficulty_level' => ['nullable', 'string', 'in:easy,medium,difficult,unspecified'],
         ];
     }
+
+    public function attributes(): array
+    {
+        return [
+            'question.up' => 'question',
+            'answer.up' => 'answer',
+        ];
+    }
 }

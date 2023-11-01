@@ -1,19 +1,3 @@
-{{-- @php
-    $up = null;
-    $down = null;
-
-    $mark = old($name, $value);
-
-    if ($mark instanceof \App\Support\Mark) {
-        $down = $mark->down;
-        $up = $mark->up;
-    }
-
-    if (is_string($down)) {
-        $down = addslashes($down);
-    }
-@endphp --}}
-
 <div class="space-y-1">
     <label class="text-gray-800 font-medium text-sm">Heading</label>
     <div x-data="{ preview: false, down: @entangle('down'), up: @entangle('up') }"
