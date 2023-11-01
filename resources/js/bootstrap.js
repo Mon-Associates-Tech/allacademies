@@ -3,12 +3,18 @@ import { marked } from "marked";
 import katex from "katex";
 // import _ from 'lodash';
 
+const tempest =  {
+    parse: function (data) {
+        console.log(data)
+    }
+}
+
 
 
 // window._ = _;
 window.Alpine = Alpine
 window.marked = marked
-// window.katex = katex
+window.tempest = tempest
 
 marked.use({
     renderer: {

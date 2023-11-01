@@ -6,14 +6,14 @@
     </x-slot>
 
     <form method="POST"
-        action="{{ route('academic-subjects.examinations.store', ['academic_subject' => $academicSubject, 'package' => $package]) }}">
+        action="{{ route('academic-subjects.examinations.store', ['academic_subject' => $academicSubject]) }}">
         @csrf
         <input type="hidden" name="team_id" value="{{ auth()->user()->current_team_id }}">
         <input type="hidden" name="creator_id" value="{{ auth()->id() }}">
 
         <div class="grid sm:grid-cols-3 gap-4">
             <div class="sm:col-span-2">
-                @livewire('examination-heading', ['academicSubject' => $academicSubject, 'academicLevel' => $academicLevel, 'metaData' => $metaData, 'package' => $package])
+                @livewire('examination-heading', ['metadata' => $metadata])
             </div>
             <div class="sm:col-span-2">
                 @livewire('examination-sections', ['topics' => $topics])

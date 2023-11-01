@@ -30,14 +30,8 @@ class GenerateExaminationJob implements ShouldQueue
         private AcademicSubject $academicSubject,
         private Team $team,
         private User $creator,
-        private string $heading_type,
-        private string $title,
-        private string $date,
-        private string $start,
-        private string $end,
-        private string $instructions,
-        private array $sections,
-        private ?string $examiners
+        private array $heading,
+        private array $sections
     )
     {
         //
@@ -87,19 +81,10 @@ class GenerateExaminationJob implements ShouldQueue
                 ${$section['type']} = array_merge(${$section['type']}, $questions);
             });
 
-            $heading = [
-                'heading_type' => $this->heading_type,
-                'date' => $this->date,
-                'start' => $this->start,
-                'end' => $this->end,
-                'instructions' => $this->instructions,
-            ];
-
             $examination = new Examination([
-                'title' => $this->title,
-                'heading' => $heading,
+                'title' => $this->heading['title'],
+                'heading' => $this->heading,
                 'sections' => $sections,
-                'examiners' => $this->examiners,
             ]);
 
             $examination->creator()->associate($this->creator);

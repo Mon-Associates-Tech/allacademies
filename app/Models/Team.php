@@ -18,8 +18,9 @@ class Team extends Model
     protected $fillable = [
         'name',
         'is_personal',
+        'meta',
         'status',
-        'reason',
+        'declined_reason',
     ];
 
     /**
@@ -27,6 +28,7 @@ class Team extends Model
      */
     protected $casts = [
         'status' => TeamStatus::class,
+        'meta' => 'array'
     ];
 
     public function owner()
@@ -42,10 +44,5 @@ class Team extends Model
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
-    }
-
-    public function metaData()
-    {
-        return $this->hasOne(MetaData::class);
     }
 }

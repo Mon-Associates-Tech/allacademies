@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TeamStatus;
 use App\Models\Team;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\MetaDataRequest;
-use App\Http\Controllers\MetaDataController;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class TeamController extends Controller
 {
@@ -38,10 +40,10 @@ class TeamController extends Controller
         $user->load(['currentTeam' => ['members', 'owner']]);
         $user->currentTeam->loadCount('subscriptions');
 
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->with('metaData')->get();
+        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
         $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
 
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->with('metaData')->get();
+        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
 
         $teams = $ownedTeams->merge($joinedTeams);
         unset($ownedTeams, $joinedTeams);
@@ -100,17 +102,64 @@ class TeamController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\TeamRequest  $request
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function update(TeamRequest $request, MetaDataRequest $metarequest, Team $team)
+    public function update(TeamRequest $request, Team $team)
     {
         abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
 
-        $team->update($request->validated());
+        $attributes = $request->validated();
 
-        (!$team->is_personal) ? (new MetaDataController)->updateOrCreate($metarequest, $team) : '';
+        if (!$team->is_personal) {
+            $validated = $request->validate([
+                'type' => ['required', 'string', 'in:institution,department,faculty,college'],
+                'institution' => ['required', 'string', 'min:2', 'max:255'],
+                'department' => ['exclude_if:type,institution', 'required_unless:type,institution', 'string', 'min:2', 'max:255'],
+                'faculty' => ['exclude_unless:type,faculty', 'required_if:type,faculty', 'string', 'min:2', 'max:255'],
+                'school' => ['exclude_unless:type,college', 'required_if:type,college', 'string', 'min:2', 'max:255'],
+                'college' => ['exclude_unless:type,college', 'required_if:type,college', 'string', 'min:2', 'max:255'],
+                'logo' => ['nullable', 'image'],
+            ], [
+                'required_if' => 'The :attribute field is required.',
+                'required_unless' => 'The :attribute field is required.',
+            ], [
+                'institution' => 'name',
+            ]);
+
+            $logo = Arr::pull($validated, 'logo');
+
+            Arr::set($attributes, 'meta', [
+                ...$team->meta,
+                'future' => $validated,
+            ]);
+
+            if ($logo) {
+                $path = $request->file('logo')->storePublicly('logos', 's3');
+
+                if (false === $path) {
+                    throw ValidationException::withMessages(['logo' => 'Logo upload failed.']);
+                }
+
+                Arr::set($attributes, 'meta.logo', $path);
+
+                if ($logo = Arr::get($team->meta, 'logo')) {
+                    Storage::disk('s3')->delete($logo);
+                }
+            }
+
+            if (
+                array_diff(
+                    Arr::get($attributes, 'meta.future', []),
+                    Arr::get($attributes, 'meta.present', [])
+                )
+            ) {
+                Arr::set($attributes, 'status', TeamStatus::PENDING);
+            }
+        }
+
+        $team->update($attributes);
 
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));

@@ -16,15 +16,11 @@ class ExaminationRequest extends FormRequest
     {
 
         return [
-            'heading_type' => ['required', 'string'],
-            'title' => ['required', 'string', 'min:5', 'max:255'],
-            'date' => ['required'],
-            'start' => ['required'],
-            'end' => ['required'],
-            'instructions' => ['required', 'string', 'min:5', 'max:255'],
-            'examiners' => ['nullable', 'required_if:heading_type,institutional_advanced'],
-            // 'heading.up' => ['required', 'string'],
-            // 'heading.down' => ['required', 'string'],
+            'heading.up' => ['required', 'string'],
+            'heading.down' => ['required', 'string'],
+            'heading.title' => ['required', 'string', 'min:2', 'max:255'],
+            'heading.duration' => ['required', 'string', 'min:2', 'max:255'],
+            'heading.instructions' => ['required', 'string', 'min:2', 'max:1023'],
             'sections' => ['required', 'array', 'min:1', 'max:20'],
             'sections.*.name' => ['required', 'string', 'min:2', 'max:255'],
             'sections.*.type' => ['required', 'string', 'in:multiple_choice_questions,true_or_false_questions,essay_questions'],
