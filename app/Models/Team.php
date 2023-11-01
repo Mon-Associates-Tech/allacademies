@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\TeamStatus;
 
 class Team extends Model
 {
@@ -17,6 +18,17 @@ class Team extends Model
     protected $fillable = [
         'name',
         'is_personal',
+        'meta',
+        'status',
+        'declined_reason',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'status' => TeamStatus::class,
+        'meta' => 'array'
     ];
 
     public function owner()

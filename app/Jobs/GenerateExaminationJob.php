@@ -21,7 +21,7 @@ class GenerateExaminationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
+   /**
      * Create a new job instance.
      *
      * @return void
@@ -30,10 +30,8 @@ class GenerateExaminationJob implements ShouldQueue
         private AcademicSubject $academicSubject,
         private Team $team,
         private User $creator,
-        private string $title,
         private array $heading,
-        private array $sections,
-        private string $examiners
+        private array $sections
     )
     {
         //
@@ -50,6 +48,7 @@ class GenerateExaminationJob implements ShouldQueue
         $multiple_choice_questions = [];
         $true_or_false_questions = [];
         $essay_questions = [];
+        $heading = [];
 
         try {
             collect($this->sections)->each(function ($section) use (
@@ -83,10 +82,9 @@ class GenerateExaminationJob implements ShouldQueue
             });
 
             $examination = new Examination([
-                'title' => $this->title,
+                'title' => $this->heading['title'],
                 'heading' => $this->heading,
                 'sections' => $sections,
-                'examiners' => $this->examiners,
             ]);
 
             $examination->creator()->associate($this->creator);

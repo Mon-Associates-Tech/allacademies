@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
+use App\Models\AcademicSubject;
 use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +39,15 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('moderate', function (User $user) {
             return in_array($user->role, [UserRole::OWNER, UserRole::ADMIN, UserRole::MODERATOR], true);
+        });
+
+        Gate::define('subscribed', function (User $user, AcademicSubject $academicSubject) {
+            return $academicSubject
+                ->subscriptions()
+                ->where('team_id', $user->current_team_id)
+                ->where('expires_at', '>', now())
+                ->where('status', SubscriptionStatus::PAID)
+                ->exists();
         });
     }
 }

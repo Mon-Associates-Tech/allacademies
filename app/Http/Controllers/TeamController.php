@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TeamRequest;
+use App\Enums\TeamStatus;
 use App\Models\Team;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\TeamRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class TeamController extends Controller
 {
@@ -16,7 +21,7 @@ class TeamController extends Controller
 
         $team->load('members', 'owner');
 
-        abort_unless($team->owner->is($user) || $team->members->contains($user), 403);
+        Gate::allowIf($team->owner->is($user) || $team->members->contains($user));
 
         $user->currentTeam()->associate($team)->save();
 
@@ -88,7 +93,7 @@ class TeamController extends Controller
      */
     public function edit(Team $team)
     {
-        abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
+        Gate::allowIf($team->owner_id === auth()->id());
 
         return view('teams.edit', [
             'team' => $team,
@@ -98,15 +103,64 @@ class TeamController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\TeamRequest  $request
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
-    public function update(TeamRequest $request,  Team $team)
+    public function update(TeamRequest $request, Team $team)
     {
-        abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
+        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
 
-        $team->update($request->validated());
+        $attributes = $request->validated();
+
+        if (!$team->is_personal) {
+            $validated = $request->validate([
+                'type' => ['required', 'string', 'in:institution,department,faculty,college'],
+                'institution' => ['required', 'string', 'min:2', 'max:255'],
+                'department' => ['exclude_if:type,institution', 'required_unless:type,institution', 'string', 'min:2', 'max:255'],
+                'faculty' => ['exclude_unless:type,faculty', 'required_if:type,faculty', 'string', 'min:2', 'max:255'],
+                'school' => ['exclude_unless:type,college', 'required_if:type,college', 'string', 'min:2', 'max:255'],
+                'college' => ['exclude_unless:type,college', 'required_if:type,college', 'string', 'min:2', 'max:255'],
+                'logo' => ['nullable', 'image'],
+            ], [
+                'required_if' => 'The :attribute field is required.',
+                'required_unless' => 'The :attribute field is required.',
+            ], [
+                'institution' => 'name',
+            ]);
+
+            $logo = Arr::pull($validated, 'logo');
+
+            Arr::set($attributes, 'meta', [
+                ...$team->meta,
+                'future' => $validated,
+            ]);
+
+            if ($logo) {
+                $path = $request->file('logo')->storePublicly('logos', 's3');
+
+                if (false === $path) {
+                    throw ValidationException::withMessages(['logo' => 'Logo upload failed.']);
+                }
+
+                Arr::set($attributes, 'meta.logo', $path);
+
+                if ($logo = Arr::get($team->meta, 'logo')) {
+                    Storage::disk('s3')->delete($logo);
+                }
+            }
+
+            if (
+                array_diff(
+                    Arr::get($attributes, 'meta.future', []),
+                    Arr::get($attributes, 'meta.present', [])
+                )
+            ) {
+                Arr::set($attributes, 'status', TeamStatus::PENDING);
+            }
+        }
+
+        $team->update($attributes);
 
         return to_route('teams.index')
             ->with('success', __('status.resource.updated', ['name' => $team->name]));
@@ -120,8 +174,8 @@ class TeamController extends Controller
      */
     public function destroy(Team $team)
     {
-        abort_if($team->is_personal, 403, 'You can not delete a personal team');
-        abort_unless($team->owner_id === auth()->id(), 403, "You can not delete another's team");
+        Gate::denyIf($team->is_personal);
+        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
 
         DB::transaction(function () use ($team) {
             $team->members()->detach();

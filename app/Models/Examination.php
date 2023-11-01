@@ -19,7 +19,6 @@ class Examination extends Model
         'title',
         'heading',
         'sections',
-        'examiners',
     ];
 
     /**
