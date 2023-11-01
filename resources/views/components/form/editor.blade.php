@@ -1,19 +1,14 @@
 @props(['name', 'label' => null, 'value' => ''])
 
 @php
-    $up = null;
-    $down = null;
-
     $mark = old($name, $value);
 
-    if ($mark instanceof \App\Support\Mark) {
-        $down = $mark->down;
-        $up = $mark->up;
+    if (is_array($mark)) {
+        $mark = \App\Support\Mark::fromArray($mark);
     }
 
-    if (is_string($down)) {
-        $down = addslashes($down);
-    }
+    $down = $mark instanceof \App\Support\Mark ? ($mark->down ?? '') : (string) $mark;
+    $up = $mark instanceof \App\Support\Mark ? ($mark->up ?? '') : '';
 @endphp
 
 
