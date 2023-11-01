@@ -15,6 +15,7 @@ use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\AuditTeamController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AcademicGroupController;
 use App\Http\Controllers\AcademicLevelController;
@@ -100,4 +101,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
     Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
+
+    Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
+    Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
+    Route::get('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'reason'])->name('audit-teams.reason');
+    Route::resource('audit-teams', AuditTeamController::class)->only(['index', 'show']);
 });

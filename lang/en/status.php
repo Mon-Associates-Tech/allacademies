@@ -14,6 +14,8 @@ return [
         'created' => ':name created successfully',
         'updated' => ':name updated successfully',
         'deleted' => ':name deleted successfully',
+        'approved' => ':name approved successfully',
+        'declined' => ':name declined successfully',
     ],
     'payment' => [
         'created' => 'Payment of :currency :amount made successfully for :reference'

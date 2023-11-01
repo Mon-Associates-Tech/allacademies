@@ -8,7 +8,6 @@ import katex from "katex";
 // window._ = _;
 window.Alpine = Alpine
 window.marked = marked
-// window.katex = katex
 
 marked.use({
     renderer: {
