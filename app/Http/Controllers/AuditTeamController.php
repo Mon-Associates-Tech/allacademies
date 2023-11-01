@@ -8,6 +8,7 @@ use App\Notifications\TeamApprovedNotification;
 use App\Notifications\TeamDeclinedNotification;
 use App\Support\Wordy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 
 class AuditTeamController extends Controller
@@ -64,7 +65,7 @@ class AuditTeamController extends Controller
     {
         $this->authorize('administrate');
 
-        abort_unless($auditTeam->status === TeamStatus::PENDING, 403);
+        Gate::allowIf($auditTeam->status === TeamStatus::PENDING);
 
         $auditTeam->update([
             'status' => TeamStatus::APPROVED,
@@ -109,7 +110,7 @@ class AuditTeamController extends Controller
             'reason' => ['required', 'string', 'min:2', 'max:1023'],
         ]);
 
-        abort_unless($auditTeam->status === TeamStatus::PENDING, 403);
+        Gate::allowIf($auditTeam->status === TeamStatus::PENDING);
 
         $reason = $validated['reason'];
         $meta = $auditTeam->meta;

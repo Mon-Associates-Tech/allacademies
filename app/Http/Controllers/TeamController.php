@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -20,7 +21,7 @@ class TeamController extends Controller
 
         $team->load('members', 'owner');
 
-        abort_unless($team->owner->is($user) || $team->members->contains($user), 403);
+        Gate::allowIf($team->owner->is($user) || $team->members->contains($user));
 
         $user->currentTeam()->associate($team)->save();
 
@@ -92,7 +93,7 @@ class TeamController extends Controller
      */
     public function edit(Team $team)
     {
-        abort_unless($team->owner_id === auth()->id(), 403);
+        Gate::allowIf($team->owner_id === auth()->id());
 
         return view('teams.edit', [
             'team' => $team,
@@ -108,7 +109,7 @@ class TeamController extends Controller
      */
     public function update(TeamRequest $request, Team $team)
     {
-        abort_unless($team->owner_id === auth()->id(), 403);
+        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
 
         $attributes = $request->validated();
 
@@ -173,8 +174,8 @@ class TeamController extends Controller
      */
     public function destroy(Team $team)
     {
-        abort_if($team->is_personal, 403);
-        abort_unless($team->owner_id === auth()->id(), 403);
+        Gate::denyIf($team->is_personal);
+        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
 
         DB::transaction(function () use ($team) {
             $team->members()->detach();
