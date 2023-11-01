@@ -92,7 +92,7 @@ class TeamController extends Controller
      */
     public function edit(Team $team)
     {
-        abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
+        abort_unless($team->owner_id === auth()->id(), 403);
 
         return view('teams.edit', [
             'team' => $team,
@@ -108,7 +108,7 @@ class TeamController extends Controller
      */
     public function update(TeamRequest $request, Team $team)
     {
-        abort_unless($team->owner_id === auth()->id(), 403, 'You can not edit this team');
+        abort_unless($team->owner_id === auth()->id(), 403);
 
         $attributes = $request->validated();
 
@@ -173,8 +173,8 @@ class TeamController extends Controller
      */
     public function destroy(Team $team)
     {
-        abort_if($team->is_personal, 403, 'You can not delete a personal team');
-        abort_unless($team->owner_id === auth()->id(), 403, "You can not delete another's team");
+        abort_if($team->is_personal, 403);
+        abort_unless($team->owner_id === auth()->id(), 403);
 
         DB::transaction(function () use ($team) {
             $team->members()->detach();

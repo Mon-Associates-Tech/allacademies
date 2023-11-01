@@ -109,8 +109,8 @@ class SubscriptionController extends Controller
      */
     public function destroy(Subscription $subscription)
     {
-        abort_unless(auth()->user()->current_team_id === $subscription->team_id, 403, 'Subscription not in your current team.');
-        abort_unless(SubscriptionStatus::UNPAID === $subscription->status, 403, 'Subscription can not be deleted.');
+        abort_unless(auth()->user()->current_team_id === $subscription->team_id, 403);
+        abort_unless(SubscriptionStatus::UNPAID === $subscription->status, 403);
 
         DB::transaction(function () use ($subscription) {
             $subscription->academicSubjects()->detach();

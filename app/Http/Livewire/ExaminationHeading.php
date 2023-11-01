@@ -14,11 +14,8 @@ class ExaminationHeading extends Component
     public $title;
     public $duration;
     public $instructions;
+
     public $metadata;
-    public $date;
-    public $start;
-    public $end;
-    public $examiners;
 
     public function mount($metadata)
     {
