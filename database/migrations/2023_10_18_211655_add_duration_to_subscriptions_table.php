@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('subscriptions', function (Blueprint $table) {
-            $table->timestamp('renewed_at')->nullable();
+            $table->integer('duration')->nullable();
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('subscriptions', function (Blueprint $table) {
-            $table->dropColumn('renewed_at');
+            $table->dropColumn('duration');
         });
     }
 };

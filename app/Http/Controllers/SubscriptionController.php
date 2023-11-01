@@ -25,7 +25,9 @@ class SubscriptionController extends Controller
      */
     public function index()
     {
-        $subscriptions = Subscription::query()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
+        $subscriptions = Subscription::query()
+            ->where('team_id', auth()->user()->current_team_id)->latest('id')
+            ->paginate();
 
         return view('subscriptions.index', [
             'subscriptions' => $subscriptions,
@@ -52,21 +54,7 @@ class SubscriptionController extends Controller
             ->toArray();
 
         //get user teams
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        // $user->load(['currentTeam' => ['members', 'owner']]);
-        $user->currentTeam->loadCount('subscriptions');
-
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
-        $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
-
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
-
-        $teams = $ownedTeams->merge($joinedTeams);
-        unset($ownedTeams, $joinedTeams);
-        $teams = $teams->sort();
-
+        $teams = Team::getUserTeams();
 
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
@@ -92,13 +80,12 @@ class SubscriptionController extends Controller
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        // $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
-            'period' => $duration,
+            'duration' => $duration,
             'expires_at' => Carbon::now()->addMonths($duration),
         ]);
 
@@ -165,15 +152,12 @@ class SubscriptionController extends Controller
     public function show(Subscription $subscription)
     {
         $subscription->load('team')->load('academicSubjects')->loadCount('academicSubjects');
-        $canRenew = false;
+        $canRenew = now()->diffInMonths($subscription->expires_at) == 0 && $subscription->status === SubscriptionStatus::PAID ? true : false;
 
-        if ((now()->diffInMonths($subscription->expires_at)) == 0) {
-            $canRenew = true;
-        }
 
         return view('subscriptions.show', [
             'subscription' => $subscription,
-            'renew' => $canRenew,
+            'canRenew' => $canRenew,
         ]);
     }
 
@@ -190,5 +174,41 @@ class SubscriptionController extends Controller
         return view('subscriptions.subjects', [
             'subscription' => $subscription,
         ]);
+    }
+
+
+    /**
+     * Renew subscription
+     * Create a new record with new subscription id, refrence and expires_at
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function renew(Subscription $subscription)
+    {
+        $newReference = uniqid();
+
+        $newSubscription = new Subscription([
+            'package' => $subscription->package,
+            'reference' => $newReference,
+            'amount' => $subscription->amount,
+            'beneficiaries' => $subscription->beneficiaries,
+            'duration' => $subscription->duration,
+            'expires_at' => $subscription->expires_at->addMonths($subscription->duration),
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $team = $subscription->team;
+
+        DB::transaction(function () use ($newSubscription, $user, $subscription, $team) {
+            $newSubscription->team()->associate($team);
+            $user->subscriptions()->save($newSubscription);
+            $newSubscription->academicSubjects()->attach($subscription->academicSubjects->pluck('id')->toArray());
+        });
+
+        return redirect()->route('subscriptions.index')
+            ->with('success', __('status.subscription.renewed', [
+                'reference' => $newReference
+            ]));
     }
 }

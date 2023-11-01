@@ -37,6 +37,6 @@ return [
         'generating' => 'Quiz is generating... Will be available soon'
     ],
     'subscription' => [
-        'renewed' => 'Subscription with reference :reference successfully renewed. New reference for payment is :new'
+        'renewed' => 'Subscription successfully renewed. New reference for payment is :reference'
     ],
 ];

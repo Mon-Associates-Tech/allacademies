@@ -10,12 +10,13 @@ class SubscriptionForm extends Component
 {
     public $team;
     public $teams;
+    public $teamsOptions;
     public $package;
     public $duration;
     public $beneficiaries;
     public $academicGroups;
     public $academicSubjects;
-
+    public $academicGroupsOptions;
 
     protected $rules = [
         'academicGroups.*.is_open' => ['boolean'],
@@ -39,10 +40,24 @@ class SubscriptionForm extends Component
         $this->teams = $teams;
         $this->academicGroups = $academicGroups;
         $this->academicSubjects = [];
+        $this->teamsOptions = $this->teams->pluck('name', 'id')->all();
+
+        $columnsToExtract = ['id', 'name'];
+
+        $this->academicGroupsOptions = array_reduce($this->academicGroups, function ($options, $item) use ($columnsToExtract) {
+            $options[$item['id']] = $item['name'];
+            return $options;
+        }, []);
     }
 
     public function render()
     {
-        return view('livewire.subscription-form');
+        $selectedTeam = $this->teams->find($this->team) ?? $this->teams->first();
+        $this->package = $selectedTeam->is_personal ? 'individual:full' : 'institution:full';
+
+
+        return view('livewire.subscription-form', [
+            'package' => $this->package,
+        ]);
     }
 }

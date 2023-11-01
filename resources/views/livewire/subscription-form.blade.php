@@ -1,12 +1,6 @@
-@php
-    $options = [];
-    foreach ($teams as $team) {
-        $options = Arr::add($options, $team->id, $team->name);
-    }
-@endphp
 <div class="grid sm:grid-cols-3 gap-4">
     <div class="sm:col-span-2">
-        <x-form.select wire:model="team" name="team" :options="$options" />
+        <x-form.select wire:model="team" name="team" :options="$teamsOptions" />
     </div>
     <div class="sm:col-span-2">
         <x-form.select wire:model="package" name="package" :options="[
@@ -31,14 +25,15 @@
 
         <div class="space-y-1">
             <label class="block text-gray-800 font-medium text-sm mt-2">Subjects</label>
-
             <div class="overflow-hidden rounded-lg border border-gray-300 bg-white">
                 <ul role="list" class="divide-y divide-gray-300">
                     @foreach ($academicGroups as $groupIndex => $academicGroup)
                         <li wire:key="academic_group_{{ $academicGroup['id'] }}" class="p-3">
                             <p wire:click="$toggle('academicGroups.{{ $groupIndex }}.is_open')" role="button"
                                 class="flex items-center justify-between cursor-pointer">
+
                                 <span>{{ $academicGroup['name'] }}</span>
+
                                 <span class="text-gray-500">
                                     @if ($academicGroup['is_open'])
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -55,6 +50,7 @@
                                     @endif
                                 </span>
                             </p>
+
                             @if ($academicGroup['is_open'])
                                 <div class="mt-3 pt-3 px-3 border-t border-gray-300">
                                     <ul role="list" class="divide-y divide-gray-200">

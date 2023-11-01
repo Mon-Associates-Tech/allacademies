@@ -35,23 +35,14 @@ class TeamController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $user->load(['currentTeam' => ['members', 'owner']]);
-        $user->currentTeam->loadCount('subscriptions');
-
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->with('metaData')->get();
-        $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
-
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->with('metaData')->get();
-
-        $teams = $ownedTeams->merge($joinedTeams);
-        unset($ownedTeams, $joinedTeams);
-        $teams = $teams->sort();
+        $teams = Team::getUserTeams();
 
         return view('teams.index', [
             'teams' => $teams,
             'user' => $user,
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.

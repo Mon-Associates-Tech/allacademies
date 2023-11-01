@@ -2,11 +2,7 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    {{-- <x-slot name="action">
-        <x-link.primary :to="route('subscriptions.create')">New Subscription</x-link.primary>
-    </x-slot> --}}
     <x-slot name="action">
-        <x-link.secondary :to="route('expiring-subscriptions.index')" class="mr-2">Expiring Subscription</x-link.secondary>
         <x-link.primary :to="route('subscriptions.create')">New Subscription</x-link.primary>
     </x-slot>
 
