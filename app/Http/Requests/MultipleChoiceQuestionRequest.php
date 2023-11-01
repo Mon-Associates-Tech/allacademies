@@ -38,4 +38,16 @@ class MultipleChoiceQuestionRequest extends FormRequest
             'difficulty_level' => ['nullable', 'string', 'in:easy,medium,difficult,unspecified'],
         ];
     }
+
+    public function attributes(): array
+    {
+        return [
+            'question.up' => 'question',
+            'option_a.up' => 'option A',
+            'option_b.up' => 'option B',
+            'option_c.up' => 'option C',
+            'option_d.up' => 'option D',
+            'option_e.up' => 'option E',
+        ];
+    }
 }
