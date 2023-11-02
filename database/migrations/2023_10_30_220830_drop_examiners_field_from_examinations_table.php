@@ -13,11 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('meta_data', function (Blueprint $table) {
-            $table->id();
-            $table->json('meta');
-            $table->foreignId('team_id')->constrained();
-            $table->timestamps(); 
+        Schema::table('examinations', function (Blueprint $table) {
+            $table->dropColumn('examiners');
         });
     }
 
@@ -28,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('meta_data');
+        Schema::table('examinations', function (Blueprint $table) {
+            $table->string('examiners')->nullable();
+        });
     }
 };

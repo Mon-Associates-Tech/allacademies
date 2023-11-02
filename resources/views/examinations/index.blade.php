@@ -2,17 +2,9 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    @if ($canCreate)
-        <x-slot name="action">
-            <x-link.primary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])">New Examination</x-link.primary>
-        </x-slot>
-    @else
-        <x-alert.info name="Note"
-            message="Institution details must be provided under edit teams and approved before you can create an examination."
-            :svg="[
-                'M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z',
-            ]" />
-    @endif
+    <x-slot name="action">
+        <x-link.primary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])">New Examination</x-link.primary>
+    </x-slot>
 
     @if ($examinations->count())
         <x-table>

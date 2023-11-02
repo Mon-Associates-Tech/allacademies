@@ -9,6 +9,4 @@ enum TeamStatus: string
     case DECLINED = 'declined';
 
     case APPROVED = 'approved';
-
-    case null = '';
 }

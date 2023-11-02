@@ -9,7 +9,7 @@ use App\Events\SubscriptionUpdated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class EvaluateSubscription implements ShouldQueue
+class EvaluateSubscriptionListener implements ShouldQueue
 {
     /**
      * Create the event listener.

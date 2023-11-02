@@ -4,33 +4,24 @@
             'Teams' => route('teams.index'),
         ]" />
     </x-slot>
-    <div class="grid grid-cols-3 gap-4">
-        @if (!$team->is_personal)
-            @if ($team->metaData)
-                @if ($team->status->value == 'approved')
-                    <x-alert.info name="Approved"
-                        message="You are all set to create examinations. Institution details will be used for examination heading."
-                        :svg="['M4.5 12.75l6 6 9-13.5']" />
-                @elseif($team->status->value == 'pending')
-                    <x-alert.info name="Pending"
-                        message="Institution details pending approval. Details must be approved before you can create examinations because they will be used for examination heading."
-                        :svg="[
-                            'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99',
-                        ]" />
-                @elseif($team->status->value == 'declined')
-                    <x-alert.info name="Declined"
-                        message="Institution details have been declined. Please make the necessary changes and update team for review."
-                        :svg="['M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z']" />
-                @endif
-            @else
-                <x-alert.info name="Note"
-                    message="Institution details must be provided. These details will be used for examination heading and they must be approved before you can create examinations."
-                    :svg="[
-                        'M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z',
-                    ]" />
-            @endif
-        @endif
+
+    @if (!$team->is_personal && $team->status == \App\Enums\TeamStatus::PENDING)
+    <div class="rounded-md bg-yellow-50 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+            </div>
+            <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">Changes Pending</h3>
+            <div class="mt-2 text-sm text-yellow-700">
+                <p>Changes made to your institutional information are currently pending approval. The status should be updated soon.</p>
+            </div>
+            </div>
+        </div>
     </div>
+    @endif
 
     <form method="POST" action="{{ route('teams.update', ['team' => $team]) }}" enctype="multipart/form-data">
         @csrf
@@ -38,11 +29,19 @@
         <div class="grid grid-cols-3 gap-4">
             <div class="col-span-2">
                 <x-form.input name="name" type="text" :value="$team->name" />
+                @if (!$team->is_personal)
+                    <div class="pt-4">
+                        @livewire('institutional-information', ['team' => $team])
+                    </div>
+                @endif
             </div>
-            @if (!$team->is_personal)
-                <div class="col-span-2 space-y-2">
-                    @livewire('institution-details', ['team' => $team])
+            @isset ($team->meta['logo'])
+            <div class="col-span-1">
+                <div class="relative">
+                    <img class="inline-block h-auto w-1/2 rounded-md border border-gray-300 shadow-sm" src="{{ Storage::disk('s3')->url($team->meta['logo']) }}" alt="">
+                    <span class="absolute left-0 bottom-0 p-1 text-sm font-medium bg-white rounded-bl-md rounded-tr-md">Current Logo</span>
                 </div>
+            </div>
             @endif
         </div>
         <div class="flex justify-end mt-3">

@@ -14,6 +14,7 @@ use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\SubscriptionRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class SubscriptionController extends Controller
@@ -130,8 +131,8 @@ class SubscriptionController extends Controller
      */
     public function destroy(Subscription $subscription)
     {
-        abort_unless(auth()->user()->current_team_id === $subscription->team_id, 403, 'Subscription not in your current team.');
-        abort_unless(SubscriptionStatus::UNPAID === $subscription->status, 403, 'Subscription can not be deleted.');
+        Gate::allowIf(fn ($user) => $user->current_team_id === $subscription->team_id);
+        Gate::allowIf(SubscriptionStatus::UNPAID === $subscription->status);
 
         DB::transaction(function () use ($subscription) {
             $subscription->academicSubjects()->detach();

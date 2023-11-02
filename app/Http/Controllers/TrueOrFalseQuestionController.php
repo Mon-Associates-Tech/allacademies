@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\AcademicTopic;
 use App\Models\TrueOrFalseQuestion;
-use App\Http\Requests\TrueOrFalseRequest;
+use App\Http\Requests\TrueOrFalseQuestionRequest;
 
 class TrueOrFalseQuestionController extends Controller
 {
@@ -50,7 +50,7 @@ class TrueOrFalseQuestionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(AcademicTopic $academicTopic, TrueOrFalseRequest $request)
+    public function store(AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request)
     {
         $this->authorize('moderate');
 
@@ -101,7 +101,7 @@ class TrueOrFalseQuestionController extends Controller
      * @param  \App\Models\TrueOrFalseQuestion  $trueOrFalseQuestion
      * @return \Illuminate\Http\Response
      */
-    public function update(TrueOrFalseRequest $request, TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function update(TrueOrFalseQuestionRequest $request, TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
 

@@ -19,16 +19,14 @@ class Examination extends Model
         'title',
         'heading',
         'sections',
-        'examiners',
     ];
 
     /**
      * @var array<string, string>
      */
     protected $casts = [
-        // 'heading' => Mark::class,
+        'heading' => Mark::class,
         'sections' => 'array',
-        'heading' => 'array',
     ];
 
     public function academicSubject()
@@ -44,10 +42,5 @@ class Examination extends Model
     public function team()
     {
         return $this->belongsTo(Team::class);
-    }
-
-    public function metaData()
-    {
-        return $this->hasOne(MetaData::class, 'team_id', 'team_id');
     }
 }

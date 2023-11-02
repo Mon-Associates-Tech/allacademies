@@ -2,12 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Models\Team;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ApproveTeam extends Notification
+class TeamApprovedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -18,10 +19,9 @@ class ApproveTeam extends Notification
      *
      * @return void
      */
-    public function __construct($message)
-    {
-        $this->message = $message;
-    }
+    public function __construct(
+        private Team $team
+    ) { }
 
     /**
      * Get the notification's delivery channels.
@@ -43,9 +43,8 @@ class ApproveTeam extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Team Approved')
-            ->line($this->message)
-            ->line('Thank you for using All Academies.');
+            ->subject('Institutional Information Approved')
+            ->line("Your changes to {$this->team->name}'s institutional information has been approved.");
     }
 
     /**
