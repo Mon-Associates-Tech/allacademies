@@ -116,7 +116,15 @@
                 </ul>
             </div>
         </div>
+    </div>
 
+    <div class="sm:col-span-2">
+
+        <div class="space-y-1">
+            <label class="block text-gray-800 font-medium text-sm mt-2">Subjects</label>
+            <div class="overflow-hidden rounded-lg border border-gray-300 bg-white">
+            </div>
+        </div>
     </div>
 
     <div class="sm:col-span-2">
