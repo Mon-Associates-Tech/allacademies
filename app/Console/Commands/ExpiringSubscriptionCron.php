@@ -44,7 +44,7 @@ class ExpiringSubscriptionCron extends Command
 
         $subscriptions->each(function ($subscription) {
             $user = $subscription->subscriber;
-            $message =  "Subscriptions with reference no. " . $subscription->reference . " will expire in 7 days. Kindy renew this subscription to keep using All Academies.";
+            $message =  "Your subscription with reference no. " . $subscription->reference . " will expire in 7 days. Kindy renew this subscription to continue using All Academies.";
             Notification::send($user, new ExpiringSubscription($message));
         });
     }

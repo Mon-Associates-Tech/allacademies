@@ -23,8 +23,7 @@ class Subscription extends Model
         'beneficiaries',
         'status',
         'expires_at',
-        'renewed_at',
-        'period',
+        'duration',
     ];
 
     /**
@@ -53,10 +52,5 @@ class Subscription extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
-    }
-
-    public function renewals()
-    {
-        return $this->hasMany(SubscriptionRenewal::class);
     }
 }

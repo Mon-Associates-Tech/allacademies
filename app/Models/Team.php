@@ -47,11 +47,6 @@ class Team extends Model
         return $this->hasMany(Subscription::class);
     }
 
-    public function metaData()
-    {
-        return $this->hasOne(MetaData::class);
-    }
-
     public static function getUserTeams()
     {
         //get user teams

@@ -10,14 +10,6 @@
 
         @livewire('subscription-form', ['academicGroups' => $academicGroups, 'teams' => $teams])
 
-        @error('package')
-            <div class="text-xs font-medium text-red-600 pt-4">{{ $message }}</div>
-        @enderror
-
-        @error('group')
-            <div class="text-xs font-medium text-red-600 pt-4">{{ $message }}</div>
-        @enderror
-
         <div class="flex justify-end mt-3">
             <x-button.primary class="ml-2">Create Subscription</x-button.primary>
         </div>

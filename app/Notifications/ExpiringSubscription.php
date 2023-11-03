@@ -42,7 +42,7 @@ class ExpiringSubscription extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Subscription Expiring Soon - All Academies')
+            ->subject('Subscription Expiring in 7 Days - All Academies')
             ->line($this->message)
             ->line('Thank you for using All Academies.');
     }

@@ -23,9 +23,6 @@ class EventServiceProvider extends ServiceProvider
         SubscriptionUpdated::class => [
             EvaluateSubscriptionListener::class,
         ],
-        SubscriptionRenewed::class => [
-            RenewSubscription::class,
-        ],
     ];
 
     /**
