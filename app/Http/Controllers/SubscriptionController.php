@@ -169,14 +169,17 @@ class SubscriptionController extends Controller
     {
         $newReference = uniqid();
 
+        $duration = $subscription->duration ?? $subscription->created_at->diffInMonths($subscription->expires_at);
+
         $newSubscription = new Subscription([
             'package' => $subscription->package,
             'reference' => $newReference,
             'amount' => $subscription->amount,
             'beneficiaries' => $subscription->beneficiaries,
-            'duration' => $subscription->duration,
-            'expires_at' => $subscription->expires_at->addMonths($subscription->duration),
+            'duration' => $duration,
+            'expires_at' => ($subscription->expires_at > now() ? $subscription->expires_at : now())->addMonths($duration),
         ]);
+
 
         /** @var \App\Models\User $user */
         $user = Auth::user();

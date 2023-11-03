@@ -37,8 +37,10 @@ class EvaluateSubscriptionListener implements ShouldQueue
             $paid = $paid->plus($payment->amount);
         });
 
+        $duration = $event->subscription->duration ?? $event->subscription->created_at->diffInMonths($event->subscription->expires_at);
         $event->subscription->update([
-            'status' => $paid->isGreaterThanOrEqualTo($cost) ? SubscriptionStatus::PAID : SubscriptionStatus::PART_PAID
+            'status' => $paid->isGreaterThanOrEqualTo($cost) ? SubscriptionStatus::PAID : SubscriptionStatus::PART_PAID,
+            'expires_at' => ($event->subscription->expires_at->diffInMonths($event->subscription->created_at) < $duration) ? now()->addMonths($duration) : $event->subscription->expires_at
         ]);
     }
 }
