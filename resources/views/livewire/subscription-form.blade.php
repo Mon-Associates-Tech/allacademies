@@ -4,10 +4,13 @@
             <x-form.select wire:model="team" name="team" :options="$teamsOptions" />
         </div>
         <div class="sm:col-span-1">
-            <x-form.select wire:model="package" name="package" :options="[
+            {{-- <x-form.select wire:model="package" name="package" :options="[
                 'individual:full' => 'Individual (Full Option)',
                 'institution:full' => 'Institution (Full Option)',
-            ]" readonly />
+            ]" readonly /> --}}
+            <div class="sm:col-span-2">
+                <x-form.input wire:model="package" name="package" type="text" readonly />
+            </div>
         </div>
     </div>
     <div class="grid sm:grid-cols-3 gap-4">

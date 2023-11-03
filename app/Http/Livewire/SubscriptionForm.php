@@ -25,23 +25,6 @@ class SubscriptionForm extends Component
         'academicGroups.*.academicLevels.*.is_open' => ['boolean'],
     ];
 
-    public function getAmountProperty()
-    {
-        $money = Pricer::calculate(
-            SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
-            (int) empty($this->duration) ? '3' : $this->duration,
-            count($this->academicSubjects) > 1 ? count($this->academicSubjects) : 1,
-            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries
-        );
-
-        return (string) $money->getAmount();
-    }
-
-    public function updated()
-    {
-        $this->compile();
-    }
-
     public function mount($academicGroups, $teams)
     {
         $this->teams = $teams;
@@ -50,11 +33,15 @@ class SubscriptionForm extends Component
         $this->academicSubjects = [];
         $this->teamsOptions = $this->teams->pluck('name', 'id')->all();
         $this->selectedAcademicGroupId = $this->academicGroups[0]['id'];
-
-        $this->compile();
+        $this->update();
     }
 
-    private function compile()
+    public function updated()
+    {
+        $this->update();
+    }
+
+    private function update()
     {
         $selectedTeam = $this->teams->find($this->team) ?? $this->teams->first();
         $this->package = $selectedTeam->is_personal ? 'individual:full' : 'institution:full';
@@ -70,6 +57,18 @@ class SubscriptionForm extends Component
         $this->academicSubjects = [];
         $this->countSelectedSubjects = 0;
         $this->academicGroups = $this->originalAcademicGroups;
+    }
+
+    public function getAmountProperty()
+    {
+        $money = Pricer::calculate(
+            SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
+            (int)empty($this->duration) ? '3' : $this->duration,
+            count($this->academicSubjects) > 1 ? count($this->academicSubjects) : 1,
+            (int)empty($this->beneficiaries) ? '1' : $this->beneficiaries
+        );
+
+        return (string)$money->getAmount();
     }
 
     public function render()
