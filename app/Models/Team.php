@@ -47,7 +47,7 @@ class Team extends Model
         return $this->hasMany(Subscription::class);
     }
 
-    public static function getUserTeams()
+    public static function userTeams()
     {
         //get user teams
         /** @var \App\Models\User $user */

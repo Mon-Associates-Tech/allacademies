@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('expiringsubscription:cron')->daily();
+        $schedule->command('expiringsubscription:cron')->dailyAt('00:00');;
     }
 
     /**

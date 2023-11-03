@@ -56,7 +56,6 @@
                                 Are you sure you want to delete {{ $subscription->reference }}
                             </x-action>
                         @endif
-                        <x-action name="view" :to="route('subscriptions.show', ['subscription' => $subscription])" />
                     </x-table.td>
                 </tr>
             @endforeach

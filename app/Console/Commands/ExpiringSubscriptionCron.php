@@ -2,13 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Subscription;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Console\Command;
 use App\Enums\SubscriptionStatus;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 use App\Notifications\ExpiringSubscription;
+use Illuminate\Support\Facades\Notification;
 
 class ExpiringSubscriptionCron extends Command
 {
@@ -33,19 +32,19 @@ class ExpiringSubscriptionCron extends Command
      */
     public function handle()
     {
-        $now = Carbon::now();
-        Log::info("cron job running at " . $now);
+        $today = now()->toDateString();
+        Log::info("cron job running at " . $today);
 
         $subscriptions = Subscription::query()
             ->with('subscriber')
-            ->where('expires_at', $now->copy()->addDays(7))
+            ->whereDate('expires_at', $today)
             ->where('status', SubscriptionStatus::PAID)
             ->get();
 
         $subscriptions->each(function ($subscription) {
             $user = $subscription->subscriber;
-            $message =  "Your subscription with reference no. " . $subscription->reference . " will expire in 7 days. Kindy renew this subscription to continue using All Academies.";
-            Notification::send($user, new ExpiringSubscription($message));
+            $reference =  $subscription->reference;
+            Notification::send($user, new ExpiringSubscription($reference));
         });
     }
 }

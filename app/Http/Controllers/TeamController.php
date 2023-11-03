@@ -38,8 +38,7 @@ class TeamController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        //get user teams
-        $teams = Team::getUserTeams();
+        $teams = Team::userTeams();
 
         return view('teams.index', [
             'teams' => $teams,

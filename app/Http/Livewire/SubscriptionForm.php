@@ -31,6 +31,7 @@ class SubscriptionForm extends Component
         $this->academicGroups = $academicGroups;
         $this->originalAcademicGroups = $academicGroups;
         $this->academicSubjects = [];
+
         $this->teamsOptions = $this->teams->pluck('name', 'id')->all();
         $this->selectedAcademicGroupId = $this->academicGroups[0]['id'];
         $this->update();

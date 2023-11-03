@@ -27,7 +27,7 @@ class SubscriptionController extends Controller
     public function index()
     {
         $subscriptions = Subscription::query()
-            ->where('team_id', auth()->user()->current_team_id)->latest('id')
+            ->where('subscriber_id', auth()->user()->id)->latest('id')
             ->paginate();
 
         return view('subscriptions.index', [
@@ -53,9 +53,7 @@ class SubscriptionController extends Controller
             })
             ->toArray();
 
-
-        //get user teams
-        $teams = Team::getUserTeams();
+        $teams = Team::userTeams();
 
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
@@ -123,77 +121,5 @@ class SubscriptionController extends Controller
 
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.deleted', ['name' => $subscription->reference]));
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Subscription $subscription)
-    {
-        $subscription->load('team')->load('academicSubjects')->loadCount('academicSubjects');
-        $canRenew = now()->diffInMonths($subscription->expires_at) == 0 && $subscription->status === SubscriptionStatus::PAID ? true : false;
-
-
-        return view('subscriptions.show', [
-            'subscription' => $subscription,
-            'canRenew' => $canRenew,
-        ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function subjects(Subscription $subscription)
-    {
-        $subscription->load('academicSubjects');
-
-        return view('subscriptions.subjects', [
-            'subscription' => $subscription,
-        ]);
-    }
-
-
-    /**
-     * Renew subscription
-     * Create a new record with new subscription id, refrence and expires_at
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function renew(Subscription $subscription)
-    {
-        $newReference = uniqid();
-
-        $duration = $subscription->duration ?? $subscription->created_at->diffInMonths($subscription->expires_at);
-
-        $newSubscription = new Subscription([
-            'package' => $subscription->package,
-            'reference' => $newReference,
-            'amount' => $subscription->amount,
-            'beneficiaries' => $subscription->beneficiaries,
-            'duration' => $duration,
-            'expires_at' => ($subscription->expires_at > now() ? $subscription->expires_at : now())->addMonths($duration),
-        ]);
-
-
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $team = $subscription->team;
-
-        DB::transaction(function () use ($newSubscription, $user, $subscription, $team) {
-            $newSubscription->team()->associate($team);
-            $user->subscriptions()->save($newSubscription);
-            $newSubscription->academicSubjects()->attach($subscription->academicSubjects->pluck('id')->toArray());
-        });
-
-        return redirect()->route('subscriptions.index')
-            ->with('success', __('status.subscription.renewed', [
-                'reference' => $newReference
-            ]));
     }
 }

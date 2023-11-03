@@ -4,10 +4,6 @@
             <x-form.select wire:model="team" name="team" :options="$teamsOptions" />
         </div>
         <div class="sm:col-span-1">
-            {{-- <x-form.select wire:model="package" name="package" :options="[
-                'individual:full' => 'Individual (Full Option)',
-                'institution:full' => 'Institution (Full Option)',
-            ]" readonly /> --}}
             <div class="sm:col-span-2">
                 <x-form.input wire:model="package" name="package" type="text" readonly />
             </div>
@@ -68,12 +64,21 @@
                                             role="button" class="flex items-center justify-between cursor-pointer">
                                             <span class="font-medium text-sm">{{ $academicLevel['name'] }}</span>
                                             <span class="text-gray-500">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                    class="w-5 h-5">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="@if ($academicLevel['is_open']) M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5 @else M19.5 5.25l-7.5 7.5-7.5-7.5m15 6l-7.5 7.5-7.5-7.5 @endif" />
-                                                </svg>
+                                                @if ($academicLevel['is_open'])
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="w-6 h-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
+                                                    </svg>
+                                                @else
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="w-6 h-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
+                                                    </svg>
+                                                @endif
                                             </span>
                                         </p>
                                         @if ($academicLevel['is_open'])

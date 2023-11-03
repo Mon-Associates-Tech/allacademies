@@ -10,16 +10,16 @@ use Illuminate\Notifications\Notification;
 class ExpiringSubscription extends Notification
 {
     use Queueable;
-    private $message;
+    private $reference;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($message)
+    public function __construct($reference)
     {
-        $this->message = $message;
+        $this->reference = $reference;
     }
 
     /**
@@ -42,9 +42,8 @@ class ExpiringSubscription extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Subscription Expiring in 7 Days - All Academies')
-            ->line($this->message)
-            ->line('Thank you for using All Academies.');
+            ->subject('Subscription Expiring Soon - All Academies')
+            ->line("Your subscription with reference no. " . $this->reference . " expires today. Kindy create a new subscription to continue using All Academies.");
     }
 
     /**
