@@ -78,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('teams', TeamController::class)->except('show');
     Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
 
-    Route::resource('subscriptions', SubscriptionController::class)->except(['edit', 'update']);
+    Route::resource('subscriptions', SubscriptionController::class)->except(['show', 'edit', 'update']);
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');

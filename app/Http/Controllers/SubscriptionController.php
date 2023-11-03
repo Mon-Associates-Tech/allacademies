@@ -42,7 +42,6 @@ class SubscriptionController extends Controller
      */
     public function create()
     {
-
         $academicGroups = AcademicGroup::query()
             ->with('academicLevels.academicSubjects')
             ->get()
@@ -69,7 +68,6 @@ class SubscriptionController extends Controller
      */
     public function store(SubscriptionRequest $request)
     {
-
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($package = $request->input('package')),
             $duration = $request->integer('duration'),
