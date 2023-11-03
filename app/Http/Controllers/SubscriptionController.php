@@ -47,12 +47,12 @@ class SubscriptionController extends Controller
             ->with('academicLevels.academicSubjects')
             ->get()
             ->each(function (AcademicGroup $academicGroup) {
-                $academicGroup->is_open = false;
                 $academicGroup->academicLevels->each(function (AcademicLevel $academicLevel) {
                     $academicLevel->is_open = false;
                 });
             })
             ->toArray();
+
 
         //get user teams
         $teams = Team::getUserTeams();
@@ -91,25 +91,6 @@ class SubscriptionController extends Controller
         ]);
 
         $team = Team::find($request->team);
-
-        if (
-            $team->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package
-            || !$team->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
-        ) {
-            throw ValidationException::withMessages([
-                'package' => 'You can not subscribe to this package for the current team',
-            ]);
-        }
-
-        $subjectIds = $request->academic_subject_ids;
-        $belongsToOneGroup = AcademicSubject::belongToOneAcademicGroup($subjectIds);
-
-        if (!$belongsToOneGroup) {
-            throw ValidationException::withMessages([
-                'group' => 'Selected subjects must belong to one Academic Group',
-            ]);
-        }
-
 
         DB::transaction(function () use ($subscription, $user, $subjects, $team) {
             $subscription->team()->associate($team);

@@ -10,17 +10,17 @@ class SubscriptionForm extends Component
 {
     public $team;
     public $teams;
-    public $teamsOptions;
     public $package;
     public $duration;
+    public $teamsOptions;
     public $beneficiaries;
+    public $academicLevels;
     public $academicGroups;
     public $academicSubjects;
-    public $academicGroupsOptions;
-    public $selectedAcademicGroup;
+    public $countSelectedSubjects;
+    public $selectedAcademicGroupId;
 
     protected $rules = [
-        'academicGroups.*.is_open' => ['boolean'],
         'academicGroups.*.academicLevels.*.is_open' => ['boolean'],
     ];
 
@@ -36,29 +36,41 @@ class SubscriptionForm extends Component
         return (string) $money->getAmount();
     }
 
+    public function updated()
+    {
+        $this->compile();
+    }
+
     public function mount($academicGroups, $teams)
     {
         $this->teams = $teams;
         $this->academicGroups = $academicGroups;
         $this->academicSubjects = [];
         $this->teamsOptions = $this->teams->pluck('name', 'id')->all();
+        $this->selectedAcademicGroupId = $this->academicGroups[0]['id'];
 
-        $columnsToExtract = ['id', 'name'];
-
-        $this->academicGroupsOptions = array_reduce($this->academicGroups, function ($options, $item) use ($columnsToExtract) {
-            $options[$item['id']] = $item['name'];
-            return $options;
-        }, []);
+        $this->compile();
     }
 
-    public function render()
+    private function compile()
     {
         $selectedTeam = $this->teams->find($this->team) ?? $this->teams->first();
         $this->package = $selectedTeam->is_personal ? 'individual:full' : 'institution:full';
 
+        $selectedGroup = collect($this->academicGroups)->firstWhere('id', $this->selectedAcademicGroupId);
+        $this->academicLevels = $selectedGroup['academic_levels'];
 
-        return view('livewire.subscription-form', [
-            'package' => $this->package,
-        ]);
+        $this->countSelectedSubjects = count($this->academicSubjects);
+    }
+
+    public function updatedSelectedAcademicGroupId()
+    {
+        $this->academicSubjects = [];
+        $this->countSelectedSubjects = 0;
+    }
+
+    public function render()
+    {
+        return view('livewire.subscription-form');
     }
 }

@@ -38,17 +38,8 @@ class TeamController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $user->load(['currentTeam' => ['members', 'owner']]);
-        $user->currentTeam->loadCount('subscriptions');
-
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
-        $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
-
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
-
-        $teams = $ownedTeams->merge($joinedTeams);
-        unset($ownedTeams, $joinedTeams);
-        $teams = $teams->sort();
+        //get user teams
+        $teams = Team::getUserTeams();
 
         return view('teams.index', [
             'teams' => $teams,

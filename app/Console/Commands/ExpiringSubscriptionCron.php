@@ -24,7 +24,7 @@ class ExpiringSubscriptionCron extends Command
      *
      * @var string
      */
-    protected $description = 'Expiring subscriptions reminder';
+    protected $description = 'Sends email reminder to subscribers of expiring subscription.';
 
     /**
      * Execute the console command.
@@ -36,20 +36,16 @@ class ExpiringSubscriptionCron extends Command
         $now = Carbon::now();
         Log::info("cron job running at " . $now);
 
-        $notify = Subscription::query()
+        $subscriptions = Subscription::query()
             ->with('subscriber')
-            ->whereRaw("TIMESTAMPDIFF(DAY, expires_at, ?) = 7", [$now])
+            ->where('expires_at', $now->copy()->addDays(7))
             ->where('status', SubscriptionStatus::PAID)
             ->get();
 
-        if (count($notify)) {
-            foreach ($notify as $notification) {
-                $user = $notification->subscriber;
-                $message =  "Subscriptions with reference no. " . $notification->reference . " will expire in 7 days. Kindy renew this subscription to keep using All Academies.";
-                Notification::send($user, new ExpiringSubscription($message));
-            }
-        }
-
-        // return Command::SUCCESS;
+        $subscriptions->each(function ($subscription) {
+            $user = $subscription->subscriber;
+            $message =  "Subscriptions with reference no. " . $subscription->reference . " will expire in 7 days. Kindy renew this subscription to keep using All Academies.";
+            Notification::send($user, new ExpiringSubscription($message));
+        });
     }
 }
