@@ -18,6 +18,7 @@ class SubscriptionForm extends Component
     public $academicGroups;
     public $academicSubjects;
     public $countSelectedSubjects;
+    public $originalAcademicGroups;
     public $selectedAcademicGroupId;
 
     protected $rules = [
@@ -45,6 +46,7 @@ class SubscriptionForm extends Component
     {
         $this->teams = $teams;
         $this->academicGroups = $academicGroups;
+        $this->originalAcademicGroups = $academicGroups;
         $this->academicSubjects = [];
         $this->teamsOptions = $this->teams->pluck('name', 'id')->all();
         $this->selectedAcademicGroupId = $this->academicGroups[0]['id'];
@@ -67,6 +69,7 @@ class SubscriptionForm extends Component
     {
         $this->academicSubjects = [];
         $this->countSelectedSubjects = 0;
+        $this->academicGroups = $this->originalAcademicGroups;
     }
 
     public function render()

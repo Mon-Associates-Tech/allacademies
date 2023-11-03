@@ -84,7 +84,7 @@
                                                                     <input value="{{ $academicSubject['id'] }}"
                                                                         wire:model="academicSubjects"
                                                                         name="academic_subject_ids[]" type="checkbox"
-                                                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                                                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 ml-4">
                                                                 </div>
                                                                 <div class="ml-3 text-sm leading-6">
                                                                     <label
