@@ -67,6 +67,8 @@ class AuditTeamController extends Controller
 
         Gate::allowIf($auditTeam->status === TeamStatus::PENDING);
 
+        $auditTeam->load('owner');
+
         $auditTeam->update([
             'status' => TeamStatus::APPROVED,
             'meta' => [
@@ -75,7 +77,7 @@ class AuditTeamController extends Controller
             ]
         ]);
 
-        Notification::send(auth()->user(), new TeamApprovedNotification($auditTeam));
+        Notification::send($auditTeam->owner, new TeamApprovedNotification($auditTeam));
 
         return to_route('audit-teams.index')
             ->with('success', __('status.resource.approved', ['name' => $auditTeam->name]));
@@ -112,6 +114,8 @@ class AuditTeamController extends Controller
 
         Gate::allowIf($auditTeam->status === TeamStatus::PENDING);
 
+        $auditTeam->load('owner');
+
         $reason = $validated['reason'];
         $meta = $auditTeam->meta;
 
@@ -123,7 +127,7 @@ class AuditTeamController extends Controller
             'declined_reason' => $reason
         ]);
 
-        Notification::send(auth()->user(), new TeamDeclinedNotification($auditTeam));
+        Notification::send($auditTeam->owner, new TeamDeclinedNotification($auditTeam));
 
         return to_route('audit-teams.index')
             ->with('success', __('status.resource.declined', ['name' => $auditTeam->name]));

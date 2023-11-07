@@ -15,7 +15,7 @@ class SubscriptionRequest extends FormRequest
     {
         return [
             'package' => ['required', 'string', 'in:individual:full,institution:full'],
-            'duration' => ['required', 'numeric'],
+            'duration_in_months' => ['required', 'numeric'],
             'beneficiaries' => ['required_if:package,institution:full'],
             'academic_subject_ids' => ['required', 'array'],
             'academic_subjects_ids.*' => ['required', 'numeric', 'exists:academic_subjects,id']
