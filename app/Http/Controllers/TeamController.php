@@ -38,8 +38,7 @@ class TeamController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $user->load(['currentTeam' => ['members', 'owner']]);
-        $user->currentTeam->loadCount('subscriptions');
+        $user->load('currentTeam');
 
         $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
         $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));

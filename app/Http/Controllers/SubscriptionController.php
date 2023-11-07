@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Team;
 use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
@@ -10,7 +11,6 @@ use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -38,19 +38,14 @@ class SubscriptionController extends Controller
      */
     public function create()
     {
-        $academicGroups = AcademicGroup::query()
-            ->with('academicLevels.academicSubjects')
-            ->get()
-            ->each(function (AcademicGroup $academicGroup) {
-                $academicGroup->is_open = false;
-                $academicGroup->academicLevels->each(function (AcademicLevel $academicLevel) {
-                    $academicLevel->is_open = false;
-                });
-            })
-            ->toArray();
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $user->load('currentTeam');
+        $academicGroups = AcademicGroup::query()->with('academicLevels.academicSubjects')->get()->toArray();
 
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
+            'currentTeam' => $user->currentTeam,
         ]);
     }
 
@@ -64,20 +59,20 @@ class SubscriptionController extends Controller
     {
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($package = $request->input('package')),
-            $duration = $request->integer('duration'),
+            $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
             $beneficiaries = SubscriptionPackage::INDIVIDUAL_FULL === $package ? 1 : $request->integer('beneficiaries')
         );
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = auth()->user();
         $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
-            'expires_at' => Carbon::now()->addMonths($duration),
+            'expires_at' => Carbon::now()->addMonths($durationInMonths),
         ]);
 
         if (
@@ -88,7 +83,6 @@ class SubscriptionController extends Controller
                 'package' => 'You can not subscibe to this package for the current team',
             ]);
         }
-
 
         DB::transaction(function () use ($subscription, $user, $subjects) {
             $subscription->team()->associate($user->currentTeam);

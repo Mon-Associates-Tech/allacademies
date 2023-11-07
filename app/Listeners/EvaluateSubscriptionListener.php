@@ -2,12 +2,14 @@
 
 namespace App\Listeners;
 
+use Brick\Money\Money;
+use App\Models\Payment;
 use App\Enums\SubscriptionStatus;
 use App\Events\SubscriptionUpdated;
-use App\Models\Payment;
-use Brick\Money\Money;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\SubscriptionPaidNotification;
 
 class EvaluateSubscriptionListener implements ShouldQueue
 {
@@ -29,7 +31,7 @@ class EvaluateSubscriptionListener implements ShouldQueue
      */
     public function handle(SubscriptionUpdated $event)
     {
-        $event->subscription->load('payments');
+        $event->subscription->load('payments', 'subscriber');
         $cost = Money::of($event->subscription->amount, 'GHS');
         $paid = Money::of('0', 'GHS');
 
@@ -38,7 +40,11 @@ class EvaluateSubscriptionListener implements ShouldQueue
         });
 
         $event->subscription->update([
-            'status' => $paid->isGreaterThanOrEqualTo($cost) ? SubscriptionStatus::PAID : SubscriptionStatus::PART_PAID
+            'status' => $paid->isGreaterThanOrEqualTo($cost) ? SubscriptionStatus::PAID : SubscriptionStatus::PART_PAID,
         ]);
+
+        if ($event->subscription->status === SubscriptionStatus::PAID) {
+            Notification::send($event->subscription->subscriber, new SubscriptionPaidNotification($event->subscription));
+        }
     }
 }

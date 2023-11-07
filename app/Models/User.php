@@ -18,7 +18,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory;
     use Notifiable;
     use HasAvatar;
-    Use Trackable;
+    use Trackable;
 
     /**
      * @var array<int, string>
