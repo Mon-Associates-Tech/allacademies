@@ -17,6 +17,9 @@
         <div class="sm:col-span-2">
             <form method="POST" action="{{ route('academic-topics.multiple-choice-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
+                <div class="grid grid-cols-2 gap-6">
+                    <x-question-attributes score=1 />
+                </div>
                 <x-form.editor full name="question" />
                 <x-form.editor full name="option_a" label="Option A" />
                 <x-form.editor full name="option_b" label="Option B" />

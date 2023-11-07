@@ -17,6 +17,9 @@
         <div class="sm:col-span-2">
             <form method="POST" action="{{ route('academic-topics.true-or-false-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
+                <div class="grid grid-cols-2 gap-6">
+                    <x-question-attributes score=1 />
+                </div>
                 <x-form.editor name="question" />
                 <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise."  />
                 <div class="flex justify-end mt-3">

@@ -21,7 +21,7 @@ class EssayQuestionRequest extends FormRequest
             'answer.up' => ['required', 'string'],
             'answer.down' => ['required', 'string'],
             'score' => ['required', 'numeric'],
-            'difficulty_level' => ['required', 'string', 'in:easy,medium,difficult,unspecified'],
+            'difficulty_level' => ['required', 'string'],
         ];
     }
 
