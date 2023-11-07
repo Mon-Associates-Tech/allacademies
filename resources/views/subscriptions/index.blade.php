@@ -48,7 +48,15 @@
                     <x-table.td>{{ $subscription->package }}</x-table.td>
                     <x-table.td>{{ $subscription->beneficiaries }}</x-table.td>
                     <x-table.td>{{ $subscription->currency }} {{ $subscription->amount }}</x-table.td>
-                    <x-table.td>{{ $subscription->status }}</x-table.td>
+                    <x-table.td>
+                        <span @class([
+                            'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium capitalize',
+                            'bg-red-100 text-red-700' => \App\Enums\SubscriptionStatus::UNPAID === $subscription->status,
+                            'bg-yellow-100 text-yellow-800' => \App\Enums\SubscriptionStatus::PART_PAID === $subscription->status,
+                            'bg-green-100 text-green-700' => \App\Enums\SubscriptionStatus::PAID === $subscription->status,
+                            ])>{{ $subscription->status }}
+                        </span>
+                    </x-table.td>
                     <x-table.td>{{ $subscription->expires_at->diffForHumans(['parts' => 2]) }}</x-table.td>
                     <x-table.td action>
                         @if (\App\Enums\SubscriptionStatus::UNPAID === $subscription->status)
