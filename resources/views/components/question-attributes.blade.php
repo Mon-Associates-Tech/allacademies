@@ -1,4 +1,4 @@
-@props(['score'])
+@props(['score' => null, 'difficulty_level' => null, 'value' => null])
 <div>
     <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
         'unspecified' => 'Unspecified',
