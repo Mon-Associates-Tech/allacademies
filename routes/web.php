@@ -26,7 +26,6 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\TrueOrFalseQuestionController;
 use App\Http\Controllers\MultipleChoiceQuestionController;
 
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
