@@ -2,28 +2,14 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
-            $academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', [
-                'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup,
-            ]),
-            'Academic Levels' => route('academic-groups.academic-levels.index', [
-                'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup,
-            ]),
-            $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', [
-                'academic_level' => $academicTopic->academicSubject->academicLevel,
-            ]),
-            'Academic Subjects' => route('academic-levels.academic-subjects.index', [
-                'academic_level' => $academicTopic->academicSubject->academicLevel,
-            ]),
-            $academicTopic->academicSubject->name => route('academic-subjects.show', [
-                'academic_subject' => $academicTopic->academicSubject,
-            ]),
-            'Academic Topics' => route('academic-subjects.academic-topics.index', [
-                'academic_subject' => $academicTopic->academicSubject,
-            ]),
+            $academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
+            $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel]),
+            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $academicTopic->academicSubject->academicLevel]),
+            $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject]),
+            'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject]),
             $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic]),
-            'True or False Questions' => route('academic-topics.true-or-false-questions.index', [
-                'academic_topic' => $academicTopic,
-            ]),
+            'True or False Questions' => route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic]),
         ]" />
     </x-slot>
 

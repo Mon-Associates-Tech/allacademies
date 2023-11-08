@@ -2,36 +2,14 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
-            $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup->name => route(
-                'academic-groups.show',
-                [
-                    'academic_group' =>
-                        $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup,
-                ],
-            ),
-            'Academic Levels' => route('academic-groups.academic-levels.index', [
-                'academic_group' =>
-                    $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup,
-            ]),
-            $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->name => route(
-                'academic-levels.show',
-                ['academic_level' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel],
-            ),
-            'Academic Subjects' => route('academic-levels.academic-subjects.index', [
-                'academic_level' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel,
-            ]),
-            $multipleChoiceQuestion->academicTopic->academicSubject->name => route('academic-subjects.show', [
-                'academic_subject' => $multipleChoiceQuestion->academicTopic->academicSubject,
-            ]),
-            'Academic Topics' => route('academic-subjects.academic-topics.index', [
-                'academic_subject' => $multipleChoiceQuestion->academicTopic->academicSubject,
-            ]),
-            $multipleChoiceQuestion->academicTopic->name => route('academic-topics.show', [
-                'academic_topic' => $multipleChoiceQuestion->academicTopic,
-            ]),
-            'Multiple Choice Questions' => route('academic-topics.multiple-choice-questions.index', [
-                'academic_topic' => $multipleChoiceQuestion->academicTopic,
-            ]),
+            $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup]),
+            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup]),
+            $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel]),
+            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel]),
+            $multipleChoiceQuestion->academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $multipleChoiceQuestion->academicTopic->academicSubject]),
+            'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $multipleChoiceQuestion->academicTopic->academicSubject]),
+            $multipleChoiceQuestion->academicTopic->name => route('academic-topics.show', ['academic_topic' => $multipleChoiceQuestion->academicTopic]),
+            'Multiple Choice Questions' => route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $multipleChoiceQuestion->academicTopic]),
         ]" />
     </x-slot>
 
