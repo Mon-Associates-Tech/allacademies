@@ -11,7 +11,6 @@
             $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic]),
             'Multiple Choice Questions' => route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $academicTopic]),
         ]" />
-
     </x-slot>
 
     <div class="grid sm:grid-cols-3 gap-12">
