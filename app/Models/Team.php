@@ -6,7 +6,6 @@ use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\TeamStatus;
-use Illuminate\Support\Facades\Auth;
 
 class Team extends Model
 {
@@ -45,31 +44,5 @@ class Team extends Model
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
-    }
-
-    public static function userTeams()
-    {
-        //get user teams
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        $user->currentTeam->loadCount('subscriptions');
-
-        $ownedTeams = $user->ownedTeams()
-            ->withCount('subscriptions')
-            ->get()
-            ->each(function (Team $team) use ($user) {
-                $team->setRelation('owner', $user);
-            });
-
-        $joinedTeams = $user->joinedTeams()
-            ->with('owner')
-            ->withCount('subscriptions')
-            ->get();
-
-        $teams = $ownedTeams->merge($joinedTeams);
-        $teams->sort();
-
-        return $teams;
     }
 }

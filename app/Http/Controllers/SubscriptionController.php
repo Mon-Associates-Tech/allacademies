@@ -8,11 +8,9 @@ use App\Models\Subscription;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use Illuminate\Support\Carbon;
-use App\Models\AcademicSubject;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -26,9 +24,7 @@ class SubscriptionController extends Controller
      */
     public function index()
     {
-        $subscriptions = Subscription::query()
-            ->where('subscriber_id', auth()->user()->id)->latest('id')
-            ->paginate();
+        $subscriptions = Subscription::query()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('subscriptions.index', [
             'subscriptions' => $subscriptions,
@@ -42,21 +38,14 @@ class SubscriptionController extends Controller
      */
     public function create()
     {
-        $academicGroups = AcademicGroup::query()
-            ->with('academicLevels.academicSubjects')
-            ->get()
-            ->each(function (AcademicGroup $academicGroup) {
-                $academicGroup->academicLevels->each(function (AcademicLevel $academicLevel) {
-                    $academicLevel->is_open = false;
-                });
-            })
-            ->toArray();
-
-        $teams = Team::userTeams();
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $user->load('currentTeam');
+        $academicGroups = AcademicGroup::query()->with('academicLevels.academicSubjects')->get()->toArray();
 
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
-            'teams' => $teams,
+            'currentTeam' => $user->currentTeam,
         ]);
     }
 
@@ -70,26 +59,33 @@ class SubscriptionController extends Controller
     {
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($package = $request->input('package')),
-            $duration = $request->integer('duration'),
+            $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
             $beneficiaries = SubscriptionPackage::INDIVIDUAL_FULL === $package ? 1 : $request->integer('beneficiaries')
         );
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = auth()->user();
+        $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
-            'duration' => $duration,
-            'expires_at' => Carbon::now()->addMonths($duration),
+            'expires_at' => Carbon::now()->addMonths($durationInMonths),
         ]);
 
-        $team = Team::find($request->team);
+        if (
+            $user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package
+            || !$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
+        ) {
+            throw ValidationException::withMessages([
+                'package' => 'You can not subscibe to this package for the current team',
+            ]);
+        }
 
-        DB::transaction(function () use ($subscription, $user, $subjects, $team) {
-            $subscription->team()->associate($team);
+        DB::transaction(function () use ($subscription, $user, $subjects) {
+            $subscription->team()->associate($user->currentTeam);
 
             $subscription = $user->subscriptions()->save($subscription);
 

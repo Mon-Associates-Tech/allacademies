@@ -2,13 +2,13 @@
 
 namespace App\Notifications;
 
-use App\Models\Team;
+use App\Models\Subscription;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TeamApprovedNotification extends Notification implements ShouldQueue
+class SubscriptionExpiredNotification extends Notification
 {
     use Queueable;
 
@@ -18,7 +18,7 @@ class TeamApprovedNotification extends Notification implements ShouldQueue
      * @return void
      */
     public function __construct(
-        private Team $team
+        private Subscription $subscription
     ) { }
 
     /**
@@ -41,8 +41,8 @@ class TeamApprovedNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Institutional Information Approved')
-            ->line("Your changes to {$this->team->name}'s institutional information has been approved.");
+            ->subject('Subscription Expired')
+            ->line("Your subscription with reference {$this->subscription->reference} has expired.");
     }
 
     /**

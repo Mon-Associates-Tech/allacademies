@@ -2,25 +2,24 @@
 
 namespace App\Notifications;
 
+use App\Models\Subscription;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ExpiringSubscription extends Notification
+class SubscriptionPaidNotification extends Notification
 {
     use Queueable;
-    private $reference;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($reference)
-    {
-        $this->reference = $reference;
-    }
+    public function __construct(
+        private Subscription $subscription
+    ) { }
 
     /**
      * Get the notification's delivery channels.
@@ -42,8 +41,8 @@ class ExpiringSubscription extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Subscription Expiring Soon - All Academies')
-            ->line("Your subscription with reference no. " . $this->reference . " expires today. Kindy create a new subscription to continue using All Academies.");
+            ->subject('Subscription Paid')
+            ->line("Your subscription with reference {$this->subscription->reference} has been paid in full.");
     }
 
     /**
