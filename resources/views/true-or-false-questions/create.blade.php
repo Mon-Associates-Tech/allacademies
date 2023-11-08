@@ -32,8 +32,18 @@
             <form method="POST"
                 action="{{ route('academic-topics.true-or-false-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
-                <div class="grid grid-cols-2 gap-6">
-                    <x-question-attributes score=1 />
+                <div class="flex gap-x-3">
+                    <div class="w-1/2">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]" />
+                    </div>
+                    <div class="w-1/2">
+                        <x-form.input name="score" type="number" value="1" />
+                    </div>
                 </div>
                 <x-form.editor name="question" />
                 <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise." />

@@ -30,8 +30,18 @@
             <form method="POST"
                 action="{{ route('academic-topics.essay-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
-                <div class="grid grid-cols-2 gap-6">
-                    <x-question-attributes score=15 />
+                <div class="flex gap-x-3">
+                    <div class="w-1/2">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]" />
+                    </div>
+                    <div class="w-1/2">
+                        <x-form.input name="score" type="number" value="15" />
+                    </div>
                 </div>
                 <x-form.editor full name="question" />
                 <x-form.editor full name="answer" />

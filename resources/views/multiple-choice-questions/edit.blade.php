@@ -41,8 +41,19 @@
                 action="{{ route('multiple-choice-questions.update', ['multiple_choice_question' => $multipleChoiceQuestion]) }}">
                 @csrf
                 @method('PATCH')
-                <div class="grid grid-cols-2 gap-6">
-                    <x-question-attributes :score="$multipleChoiceQuestion->score" :difficulty_level="$multipleChoiceQuestion->difficulty_level" />
+                <div class="flex gap-x-3">
+                    <div class="w-1/2">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]"
+                            :value="$multipleChoiceQuestion->difficulty_level" />
+                    </div>
+                    <div class="w-1/2">
+                        <x-form.input name="score" type="number" :value="$multipleChoiceQuestion->score" />
+                    </div>
                 </div>
                 <x-form.editor full name="question" :value="$multipleChoiceQuestion->question" />
                 <x-form.editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" />

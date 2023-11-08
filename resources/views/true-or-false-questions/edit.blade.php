@@ -39,8 +39,19 @@
                 action="{{ route('true-or-false-questions.update', ['true_or_false_question' => $trueOrFalseQuestion]) }}">
                 @csrf
                 @method('PATCH')
-                <div class="grid grid-cols-2 gap-6">
-                    <x-question-attributes :score="$trueOrFalseQuestion->score" :difficulty_level="$trueOrFalseQuestion->difficulty_level" />
+                <div class="flex gap-x-3">
+                    <div class="w-1/2">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]"
+                            :value="$trueOrFalseQuestion->difficulty_level" />
+                    </div>
+                    <div class="w-1/2">
+                        <x-form.input name="score" type="number" :value="$trueOrFalseQuestion->score" />
+                    </div>
                 </div>
                 <x-form.editor name="question" :value="$trueOrFalseQuestion->question" />
                 <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise."

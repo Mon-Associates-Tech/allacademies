@@ -35,8 +35,19 @@
             <form method="POST" action="{{ route('essay-questions.update', ['essay_question' => $essayQuestion]) }}">
                 @csrf
                 @method('PATCH')
-                <div class="grid grid-cols-2 gap-6">
-                    <x-question-attributes :score="$essayQuestion->score" :difficulty_level="$essayQuestion->difficulty_level" />
+                <div class="flex gap-x-3">
+                    <div class="w-1/2">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]"
+                            :value="$essayQuestion->difficulty_level" />
+                    </div>
+                    <div class="w-1/2">
+                        <x-form.input name="score" type="number" :value="$essayQuestion->score" />
+                    </div>
                 </div>
                 <x-form.editor name="question" :value="$essayQuestion->question" />
                 <x-form.editor name="answer" :value="$essayQuestion->answer" />
