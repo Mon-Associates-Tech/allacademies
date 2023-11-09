@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('teams/{team}/activate', [TeamController::class, 'activate'])->name('teams.activate');
     Route::resource('teams', TeamController::class)->except('show');
     Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
+    Route::post('teams/{team}/code', [TeamController::class, 'generateJoiningCode'])->name('teams.code');
 
     Route::resource('subscriptions', SubscriptionController::class)->except(['show', 'edit', 'update']);
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);

@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Enums\TeamStatus;
 use App\Models\Team;
+use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -183,5 +184,22 @@ class TeamController extends Controller
 
         return to_route('teams.index')
             ->with('success', __('status.resource.deleted', ['name' => $team->name]));
+    }
+
+    /**
+     * Generate members joining code
+     *
+     * @param  \App\Models\Team  $team
+     * @return \Illuminate\Http\Response
+     */
+    public function generateJoiningCode(Team $team)
+    {
+        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
+        $membersJoiningCode = uniqid();
+        $team->update(['joining_code' => $membersJoiningCode]);
+
+        return view('teams.edit', [
+            'team' => $team,
+        ]);
     }
 }

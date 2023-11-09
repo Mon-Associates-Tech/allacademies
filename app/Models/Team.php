@@ -21,6 +21,7 @@ class Team extends Model
         'meta',
         'status',
         'declined_reason',
+        'joining_code',
     ];
 
     /**
