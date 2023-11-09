@@ -19,8 +19,8 @@
                 action="{{ route('multiple-choice-questions.update', ['multiple_choice_question' => $multipleChoiceQuestion]) }}">
                 @csrf
                 @method('PATCH')
-                <div class="flex gap-x-3">
-                    <div class="w-1/2">
+                <div class="grid sm:grid-cols-2 gap-x-3">
+                    <div class="sm:col-span-1">
                         <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
                             'unspecified' => 'Unspecified',
                             'easy' => 'Easy',
@@ -29,26 +29,28 @@
                         ]"
                             :value="$multipleChoiceQuestion->difficulty_level" />
                     </div>
-                    <div class="w-1/2">
+                    <div class="sm:col-span-1">
                         <x-form.input name="score" type="number" :value="$multipleChoiceQuestion->score" />
                     </div>
-                </div>
-                <x-form.editor full name="question" :value="$multipleChoiceQuestion->question" />
-                <x-form.editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" />
-                <x-form.editor full name="option_b" label="Option B" :value="$multipleChoiceQuestion->option_b" />
-                <x-form.editor full name="option_c" label="Option C" :value="$multipleChoiceQuestion->option_c" />
-                <x-form.editor full name="option_d" label="Option D" :value="$multipleChoiceQuestion->option_d" />
-                <x-form.editor full name="option_e" label="Option E" :value="$multipleChoiceQuestion->option_e" />
-                <x-form.select full name="answer" :options="[
-                    'a' => 'Option A',
-                    'b' => 'Option B',
-                    'c' => 'Option C',
-                    'd' => 'Option D',
-                    'e' => 'Option E',
-                ]" :value="$multipleChoiceQuestion->answer" />
-                <div class="flex justify-end mt-3">
-                    <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
-                </div>
+                    <div class="sm:col-span-2">
+                        <x-form.editor full name="question" :value="$multipleChoiceQuestion->question" />
+                        <x-form.editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" />
+                        <x-form.editor full name="option_b" label="Option B" :value="$multipleChoiceQuestion->option_b" />
+                        <x-form.editor full name="option_c" label="Option C" :value="$multipleChoiceQuestion->option_c" />
+                        <x-form.editor full name="option_d" label="Option D" :value="$multipleChoiceQuestion->option_d" />
+                        <x-form.editor full name="option_e" label="Option E" :value="$multipleChoiceQuestion->option_e" />
+                        <x-form.select full name="answer" :options="[
+                            'a' => 'Option A',
+                            'b' => 'Option B',
+                            'c' => 'Option C',
+                            'd' => 'Option D',
+                            'e' => 'Option E',
+                        ]" :value="$multipleChoiceQuestion->answer" />
+                        <div class="flex justify-end mt-3">
+                            <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
+                        </div>
+                    </div>
+                </div>    
             </form>
         </div>
         <div class="sm:col-span-1 space-y-2">
