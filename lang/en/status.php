@@ -16,6 +16,7 @@ return [
         'deleted' => ':name deleted successfully',
         'approved' => ':name approved successfully',
         'declined' => ':name declined successfully',
+        'joined_team' => 'Successfully joined :name',
     ],
     'payment' => [
         'created' => 'Payment of :currency :amount made successfully for :reference'

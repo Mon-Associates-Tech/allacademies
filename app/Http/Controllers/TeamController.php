@@ -8,8 +8,10 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
+use App\Enums\SubscriptionStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\joinTeamRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -201,5 +203,56 @@ class TeamController extends Controller
         return view('teams.edit', [
             'team' => $team,
         ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function joinTeam()
+    {
+        return view('teams.join-team');
+    }
+
+    /**
+     * Add member to a team
+     *  @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addTeamMember(joinTeamRequest $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $code = $request->code;
+        $team = Team::where('joining_code', $code)
+            ->with(['subscriptions' => function ($query) {
+                $query->where('expires_at', '>', now())
+                    ->where('status', SubscriptionStatus::PAID);
+            }])
+            ->firstOr(callback: function () {
+                throw ValidationException::withMessages([
+                    'code' => 'No team found for the provided code.',
+                ]);
+            });
+
+        $subscription = $team->subscriptions->first();
+        $subscription ?: throw ValidationException::withMessages(['code' => 'No active subscription for this team.']);
+
+        $beneficiaryCount = $subscription->beneficiaries;
+        $teamMembersCount = $team->members()->count();
+        $teamMembersCount < $beneficiaryCount ?: throw ValidationException::withMessages([
+            'code' => 'This team has exceeded the allowed number of members.',
+        ]);
+
+        !$team->members->contains($user) ?: throw ValidationException::withMessages([
+            'code' => 'You are already a member of this team.',
+        ]);
+
+        $user->joinedTeams()->attach($team);
+
+        return to_route('teams.index')
+            ->with('success', __('status.resource.joined_team', ['name' => $team->name]));
     }
 }

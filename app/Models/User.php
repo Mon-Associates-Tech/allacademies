@@ -54,7 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function joinedTeams()
     {
-        return $this->belongsToMany(Team::class);
+        return $this->belongsToMany(Team::class)->withTimestamps();
     }
 
     public function ownedTeams()

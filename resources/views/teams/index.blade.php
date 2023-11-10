@@ -4,8 +4,11 @@
     </x-slot>
     <x-slot name="action">
         <x-link.primary :to="route('teams.create')">New Team</x-link.primary>
+        <x-link.secondary :to="route('teams.join-team')" class="ml-4">
+            Join Team
+            <span aria-hidden="true"> &rarr;</span>
+        </x-link.secondary>
     </x-slot>
-
     <x-table>
         <x-slot name="head">
             <tr>
