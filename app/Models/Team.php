@@ -39,7 +39,7 @@ class Team extends Model
 
     public function members()
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
     }
 
     public function subscriptions()

@@ -20,8 +20,10 @@ class MemberController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $team->load(['members', 'owner']);
-        $team->members->add($team->owner);
+        $team->load(['members' => function ($query) {
+            $query->withPivot('role');
+        }, 'owner']);
+        $team->members->push($team->owner);
         $team->members = $team->members->sort();
 
         return view('members.index', [
@@ -99,5 +101,27 @@ class MemberController extends Controller
         $team->members()->detach($member);
 
         return to_route('teams.index')->with('success', __('status.member.removed', ['member' => $member->name, 'team' => $team->name]));
+    }
+
+    /**
+     * Change team member role from member to admin and the vice versa
+     * @param  Team  $team
+     * @param  User  $member 
+     * @return \Illuminate\Http\Response
+     */
+    public function changeMemberRole(Team $team, User $user)
+    {
+        /** @var \App\Models\User $user */
+        $relationship = $team->members()->where('user_id', $user->id)->first();
+
+        $relationship->pivot->role = ($relationship->pivot->role === 'member') ? 'admin' : 'member';
+
+        $relationship->pivot->save();
+
+        return to_route('teams.members.index', ['team' => $team])->with('success', __('status.member.role_changed', [
+            'member' => $user->name,
+            'new_role' => $relationship->pivot->role,
+            'team' => $team->name,
+        ]));
     }
 }

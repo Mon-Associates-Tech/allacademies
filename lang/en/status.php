@@ -24,6 +24,7 @@ return [
     'member' => [
         'added' => ':member added to :team successfully',
         'removed' => ':member removed from :team successfully',
+        'role_changed' => ':member made :new_role of :team successfully',
     ],
     'team' => [
         'activate' => ':name set as current team',
