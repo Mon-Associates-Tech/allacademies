@@ -7,7 +7,7 @@ final class Version
     public const MAJOR = 1;
     public const MINOR = 0;
     public const PATCH = 0;
-    public const META = 'beta.10';
+    public const META = 'beta.11';
 
     public static function full()
     {

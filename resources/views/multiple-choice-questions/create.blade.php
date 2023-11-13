@@ -15,24 +15,40 @@
 
     <div class="grid sm:grid-cols-3 gap-12">
         <div class="sm:col-span-2">
-            <form method="POST" action="{{ route('academic-topics.multiple-choice-questions.store', ['academic_topic' => $academicTopic]) }}">
+            <form method="POST"
+                action="{{ route('academic-topics.multiple-choice-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
-                <x-form.editor full name="question" />
-                <x-form.editor full name="option_a" label="Option A" />
-                <x-form.editor full name="option_b" label="Option B" />
-                <x-form.editor full name="option_c" label="Option C" />
-                <x-form.editor full name="option_d" label="Option D" />
-                <x-form.editor full name="option_e" label="Option E" />
-                <x-form.select full name="answer" :options="[
-                    'a' => 'Option A',
-                    'b' => 'Option B',
-                    'c' => 'Option C',
-                    'd' => 'Option D',
-                    'e' => 'Option E',
-                ]" />
+                <div class="grid sm:grid-cols-2 gap-x-3">
+                    <div class="sm:col-span-1">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]" />
+                    </div>
+                    <div class="sm:col-span-1">
+                        <x-form.input name="score" type="number" value="1" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <x-form.editor full name="question" />
+                        <x-form.editor full name="option_a" label="Option A" />
+                        <x-form.editor full name="option_b" label="Option B" />
+                        <x-form.editor full name="option_c" label="Option C" />
+                        <x-form.editor full name="option_d" label="Option D" />
+                        <x-form.editor full name="option_e" label="Option E" />
+                        <x-form.select full name="answer" :options="[
+                            'a' => 'Option A',
+                            'b' => 'Option B',
+                            'c' => 'Option C',
+                            'd' => 'Option D',
+                            'e' => 'Option E',
+                        ]" />
 
-                <div class="flex justify-end mt-3">
-                    <x-button.primary class="ml-2">Create Multiple Choice Question</x-button.primary>
+                        <div class="flex justify-end mt-3">
+                            <x-button.primary class="ml-2">Create Multiple Choice Question</x-button.primary>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

@@ -15,13 +15,31 @@
 
     <div class="grid sm:grid-cols-3 gap-12">
         <div class="sm:col-span-2">
-            <form method="POST" action="{{ route('true-or-false-questions.update', ['true_or_false_question' => $trueOrFalseQuestion]) }}">
+            <form method="POST"
+                action="{{ route('true-or-false-questions.update', ['true_or_false_question' => $trueOrFalseQuestion]) }}">
                 @csrf
                 @method('PATCH')
-                <x-form.editor name="question" :value="$trueOrFalseQuestion->question" />
-                <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise." :value="$trueOrFalseQuestion->answer"  />
-                <div class="flex justify-end mt-3">
-                    <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
+                <div class="grid sm:grid-cols-2 gap-x-3">
+                    <div class="sm:col-span-1">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]"
+                            :value="$trueOrFalseQuestion->difficulty_level" />
+                    </div>
+                    <div class="sm:col-span-1">
+                        <x-form.input name="score" type="number" :value="$trueOrFalseQuestion->score" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <x-form.editor name="question" :value="$trueOrFalseQuestion->question" />
+                        <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise."
+                            :value="$trueOrFalseQuestion->answer" />
+                        <div class="flex justify-end mt-3">
+                            <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

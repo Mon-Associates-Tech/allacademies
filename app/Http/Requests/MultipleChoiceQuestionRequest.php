@@ -34,8 +34,8 @@ class MultipleChoiceQuestionRequest extends FormRequest
             'option_e.up' => ['nullable', 'string'],
             'option_e.down' => ['nullable', 'string'],
             'answer' => ['required', 'string', 'in:a,b,c,d,e'],
-            'score' => ['nullable','numeric'],
-            'difficulty_level' => ['nullable', 'string', 'in:easy,medium,difficult,unspecified'],
+            'score' => ['required', 'numeric', 'min:1'],
+            'difficulty_level' => ['required', 'string', 'in:easy,medium,difficult,unspecified'],
         ];
     }
 
