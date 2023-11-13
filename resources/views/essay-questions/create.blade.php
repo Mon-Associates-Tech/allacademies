@@ -15,12 +15,28 @@
 
     <div class="grid sm:grid-cols-3 gap-12">
         <div class="sm:col-span-2">
-            <form method="POST" action="{{ route('academic-topics.essay-questions.store', ['academic_topic' => $academicTopic]) }}">
+            <form method="POST"
+                action="{{ route('academic-topics.essay-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
-                <x-form.editor full name="question" />
-                <x-form.editor full name="answer" />
-                <div class="flex justify-end mt-3">
-                    <x-button.primary class="ml-2">Create Essay Question</x-button.primary>
+                <div class="grid sm:grid-cols-2 gap-x-3">
+                    <div class="sm:col-span-1">
+                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+                            'unspecified' => 'Unspecified',
+                            'easy' => 'Easy',
+                            'medium' => 'Medium',
+                            'difficult' => 'Difficult',
+                        ]" />
+                    </div>
+                    <div class="sm:col-span-1">
+                        <x-form.input name="score" type="number" value="15" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <x-form.editor full name="question" />
+                        <x-form.editor full name="answer" />
+                        <div class="flex justify-end mt-3">
+                            <x-button.primary class="ml-2">Create Essay Question</x-button.primary>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
