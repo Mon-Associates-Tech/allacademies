@@ -24,14 +24,11 @@
             <tr>
                 <x-table.td bold>{{ $member->name }}</x-table.td>
                 <x-table.td>{{ $member->email }}</x-table.td>
-                <x-table.td>{{ $team->owner->is($member) ? 'Owner' : $member->pivot->role }}</x-table.td>
+                <x-table.td>{{ $team->owner->is($member) ? 'owner' : $member->pivot->role }}</x-table.td>
                 <x-table.td>
                 @if ($team->owner->is($user) && $member->isNot($user))
                     <button x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to remove {{ $member->name }} from {{ $team->name }}', '{{ route('teams.members.destroy', ['team' => $team, 'member' => $member]) }}', 'Remove')" class="text-primary-600 hover:text-primary-900 mr-2">Remove</button>
-                    <form class="inline" method="POST" action="{{ route('members.change-role', ['team' => $team, 'user' => $member]) }}">
-                        @csrf
-                        <button class="text-primary-600 hover:text-primary-900">Change role</button>
-                    </form>
+                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('members.edit', ['team' => $team, 'member' => $member]) }}">Edit Member</a>
                 @endif
                 </x-table.td>
             </tr>

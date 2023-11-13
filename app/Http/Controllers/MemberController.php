@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\MemberRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class MemberController extends Controller
@@ -20,10 +21,8 @@ class MemberController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $team->load(['members' => function ($query) {
-            $query->withPivot('role');
-        }, 'owner']);
-        $team->members->push($team->owner);
+        $team->load(['members', 'owner']);
+        $team->members->add($team->owner);
         $team->members = $team->members->sort();
 
         return view('members.index', [
@@ -104,24 +103,42 @@ class MemberController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     * @param  \App\Models\Team  $team
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Team $team, User $member)
+    {
+        Gate::allowIf($team->owner_id === auth()->id());
+        $member = $team->members()->where('user_id', $member->id)->withPivot('role')->firstOrFail();
+
+        return view('members.edit', [
+            'team' => $team,
+            'member' => $member,
+        ]);
+    }
+
+    /**
      * Change team member role from member to admin and the vice versa
      * @param  Team  $team
      * @param  User  $member 
      * @return \Illuminate\Http\Response
      */
-    public function changeMemberRole(Team $team, User $user)
+    public function update(Request $request, Team $team, User $member)
     {
-        /** @var \App\Models\User $user */
-        $relationship = $team->members()->where('user_id', $user->id)->first();
+        $request->validate([
+            'role' => 'required|in:member,admin',
+        ]);
 
-        $relationship->pivot->role = ($relationship->pivot->role === 'member') ? 'admin' : 'member';
-
-        $relationship->pivot->save();
+        $team->members()->updateExistingPivot($member->id, [
+            'role' => $request->role,
+        ]);
 
         return to_route('teams.members.index', ['team' => $team])->with('success', __('status.member.role_changed', [
-            'member' => $user->name,
-            'new_role' => $relationship->pivot->role,
+            'member' => $member->name,
+            'new_role' => $request->role,
             'team' => $team->name,
-        ]));
+        ]));;
     }
 }

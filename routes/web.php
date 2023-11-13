@@ -76,10 +76,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('teams/{team}/activate', [TeamController::class, 'activate'])->name('teams.activate');
     Route::resource('teams', TeamController::class)->except('show');
     Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
-    Route::post('members/{team}/{user}/change-role', [MemberController::class, 'changeMemberRole'])->name('members.change-role');
+    Route::get('teams/{team}/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
+    Route::post('teams/{team}/members/{member}', [MemberController::class, 'update'])->name('members.update');
     Route::post('teams/{team}/code', [TeamController::class, 'generateJoiningCode'])->name('teams.code');
-    Route::get('teams/join-team', [TeamController::class, 'joinTeam'])->name('teams.join-team');
-    Route::post('teams/add-member', [TeamController::class, 'addTeamMember'])->name('teams.add-member');
+    Route::get('teams/joining', [TeamController::class, 'joining'])->name('teams.joining');
+    Route::post('teams/add-member', [TeamController::class, 'join'])->name('teams.add-member');
 
     Route::resource('subscriptions', SubscriptionController::class)->except(['show', 'edit', 'update']);
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);

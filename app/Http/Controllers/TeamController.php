@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\TeamStatus;
 use App\Models\Team;
+use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
-use App\Enums\SubscriptionStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\joinTeamRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -196,8 +196,17 @@ class TeamController extends Controller
     public function generateJoiningCode(Team $team)
     {
         Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
-        $membersJoiningCode = uniqid();
-        $team->update(['joining_code' => $membersJoiningCode]);
+
+        $joiningCode = Str::random(8);
+
+        while (Team::where('joining_code', $joiningCode)->exists()) {
+            $joiningCode = Str::random(8);
+        }
+
+
+        $team->joining_code = $joiningCode;
+
+        $team->update(['joining_code' => $joiningCode]);
 
         return view('teams.edit', [
             'team' => $team,
@@ -205,13 +214,13 @@ class TeamController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for joining a team.
      *
      * @return \Illuminate\Http\Response
      */
-    public function joinTeam()
+    public function joining()
     {
-        return view('teams.join-team');
+        return view('teams.joining');
     }
 
     /**
@@ -219,31 +228,22 @@ class TeamController extends Controller
      *  @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function addTeamMember(joinTeamRequest $request)
+    public function join(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $this->validate($request, [
+            'code' => ['required', 'string', 'size:9'],
+        ]);
+
         $code = $request->code;
         $team = Team::where('joining_code', $code)
-            ->with(['subscriptions' => function ($query) {
-                $query->where('expires_at', '>', now())
-                    ->where('status', SubscriptionStatus::PAID);
-            }])
             ->firstOr(callback: function () {
                 throw ValidationException::withMessages([
                     'code' => 'No team found for the provided code.',
                 ]);
             });
-
-        $subscription = $team->subscriptions->first();
-        $subscription ?: throw ValidationException::withMessages(['code' => 'No active subscription for this team.']);
-
-        $beneficiaryCount = $subscription->beneficiaries;
-        $teamMembersCount = $team->members()->count();
-        $teamMembersCount < $beneficiaryCount ?: throw ValidationException::withMessages([
-            'code' => 'This team has exceeded the allowed number of members.',
-        ]);
 
         !$team->members->contains($user) && !$team->owner->is($user) ?: throw ValidationException::withMessages([
             'code' => 'You are already a member of this team.',
