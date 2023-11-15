@@ -188,7 +188,7 @@ class TeamController extends Controller
     }
 
     /**
-     * Generate members joining code
+     * Generate member joining code
      *
      * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
@@ -202,7 +202,6 @@ class TeamController extends Controller
         while (Team::where('joining_code', $joiningCode)->exists()) {
             $joiningCode = Str::random(8);
         }
-
 
         $team->joining_code = $joiningCode;
 
@@ -249,7 +248,7 @@ class TeamController extends Controller
         $user = Auth::user();
 
         $this->validate($request, [
-            'code' => ['required', 'string', 'size:9'],
+            'code' => ['required', 'string', 'size:8'],
         ]);
 
         $code = $request->code;

@@ -111,7 +111,7 @@ class MemberController extends Controller
     public function edit(Team $team, User $member)
     {
         Gate::allowIf($team->owner_id === auth()->id());
-        $member = $team->members()->where('user_id', $member->id)->withPivot('role')->firstOrFail();
+        $member = $team->members()->where('user_id', $member->id)->firstOrFail();
 
         return view('members.edit', [
             'team' => $team,
