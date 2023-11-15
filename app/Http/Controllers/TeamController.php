@@ -210,7 +210,25 @@ class TeamController extends Controller
 
         return view('teams.edit', [
             'team' => $team,
-        ]);
+        ])->with('success', __('status.resource.generate_code', ['name' => $team->name]));;
+    }
+
+    /**
+     * Delete member joining code
+     *
+     * @param  \App\Models\Team  $team
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteJoiningCode(Team $team)
+    {
+        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
+
+        $team->joining_code = null;
+        $team->save();
+
+        return view('teams.edit', [
+            'team' => $team,
+        ])->with('success', __('status.resource.delete_code', ['name' => $team->name]));
     }
 
     /**
