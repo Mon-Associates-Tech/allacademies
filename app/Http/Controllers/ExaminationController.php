@@ -25,9 +25,17 @@ class ExaminationController extends Controller
 
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
+        $isTeamAdmin = Team::where('id', auth()->user()->current_team_id)
+            ->whereHas('members', function ($query) {
+                $query->where('team_user.user_id', auth()->user()->id)
+                    ->where('team_user.role', 'admin');
+            })
+            ->exists();
+
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
+            'isTeamAdmin' => $isTeamAdmin,
         ]);
     }
 
@@ -39,6 +47,7 @@ class ExaminationController extends Controller
     public function create(AcademicSubject $academicSubject)
     {
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('team_admin', auth()->user());
 
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
