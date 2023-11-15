@@ -208,9 +208,7 @@ class TeamController extends Controller
 
         $team->update(['joining_code' => $joiningCode]);
 
-        return view('teams.edit', [
-            'team' => $team,
-        ])->with('success', __('status.resource.generate_code', ['name' => $team->name]));;
+        return to_route('teams.index')->with('success', __('status.resource.generate_code', ['name' => $team->name]));
     }
 
     /**
@@ -226,9 +224,8 @@ class TeamController extends Controller
         $team->joining_code = null;
         $team->save();
 
-        return view('teams.edit', [
-            'team' => $team,
-        ])->with('success', __('status.resource.delete_code', ['name' => $team->name]));
+        return to_route('teams.index')
+            ->with('success', __('status.resource.delete_code', ['name' => $team->name]));
     }
 
     /**
