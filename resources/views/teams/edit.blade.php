@@ -85,7 +85,7 @@
         @csrf
         @method('PATCH')
         <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-2">   
+            <div class="col-span-2">
                 <x-form.input name="name" type="text" :value="$team->name" />
                 @if (!$team->is_personal)
                     <div class="pt-4">
