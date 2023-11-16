@@ -2,9 +2,11 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    <x-slot name="action">
-        <x-link.primary :to="route('academic-subjects.quizzes.create', ['academic_subject' => $academicSubject])">New Quiz</x-link.primary>
-    </x-slot>
+    @if($privileged)
+        <x-slot name="action">
+            <x-link.primary :to="route('academic-subjects.quizzes.create', ['academic_subject' => $academicSubject])">New Quiz</x-link.primary>
+        </x-slot>
+    @endif
 
     @if ($quizzes->count())
     <x-table>

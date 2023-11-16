@@ -197,17 +197,11 @@ class TeamController extends Controller
     {
         Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
 
-        $joiningCode = Str::random(8);
+        retry(5, function () use ($team) {
+            $team->update(['joining_code' => Str::random(8)]);
+        });
 
-        while (Team::where('joining_code', $joiningCode)->exists()) {
-            $joiningCode = Str::random(8);
-        }
-
-        $team->joining_code = $joiningCode;
-
-        $team->update(['joining_code' => $joiningCode]);
-
-        return to_route('teams.index')->with('success', __('status.resource.generate_code', ['name' => $team->name]));
+        return back()->with('success', __('status.resource.generate_code', ['name' => $team->name]));
     }
 
     /**
@@ -223,7 +217,7 @@ class TeamController extends Controller
         $team->joining_code = null;
         $team->save();
 
-        return to_route('teams.index')
+        return back()
             ->with('success', __('status.resource.delete_code', ['name' => $team->name]));
     }
 

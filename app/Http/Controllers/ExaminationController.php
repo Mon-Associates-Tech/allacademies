@@ -23,19 +23,15 @@ class ExaminationController extends Controller
     {
         $this->authorize('subscribed', $academicSubject);
 
-        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $privileged = Gate::allows('privileged', $currentTeam);
 
-        $isTeamAdmin = Team::where('id', auth()->user()->current_team_id)
-            ->whereHas('members', function ($query) {
-                $query->where('team_user.user_id', auth()->user()->id)
-                    ->where('team_user.role', 'admin');
-            })
-            ->exists();
+        $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
-            'isTeamAdmin' => $isTeamAdmin,
+            'privileged' => $privileged,
         ]);
     }
 
@@ -46,10 +42,9 @@ class ExaminationController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('team_admin', auth()->user());
-
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -84,7 +79,9 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,

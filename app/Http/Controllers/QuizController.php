@@ -23,11 +23,15 @@ class QuizController extends Controller
     {
         $this->authorize('subscribed', $academicSubject);
 
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $privileged = Gate::allows('privileged', $currentTeam);
+
         $quizzes = $academicSubject->quizzes()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('quizzes.index', [
             'quizzes' => $quizzes,
             'academicSubject' => $academicSubject,
+            'privileged' => $privileged,
         ]);
     }
 
@@ -38,7 +42,9 @@ class QuizController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -60,7 +66,9 @@ class QuizController extends Controller
      */
     public function store(AcademicSubject $academicSubject, QuizRequest $request)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateQuizJob(
             $academicSubject,

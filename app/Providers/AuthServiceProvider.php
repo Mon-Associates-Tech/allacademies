@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
+use App\Models\AcademicGroup;
 use App\Models\AcademicSubject;
 use App\Models\User;
 use App\Models\Team;
@@ -51,12 +52,15 @@ class AuthServiceProvider extends ServiceProvider
                 ->exists();
         });
 
-        Gate::define('team_admin', function (User $user) {
-            return Team::where('id', $user->current_team_id)
-                ->whereHas('members', function ($query) use ($user) {
-                    $query->where('team_user.user_id', $user->id)
-                        ->where('team_user.role', 'admin');
+        Gate::define('privileged', function (User $user, Team $team) {
+            return $team
+                ->where(function ($query) use ($user) {
+                    $query->whereHas('members', function ($query) use ($user) {
+                        $query->where('team_user.user_id', $user->id)
+                            ->where('team_user.role', 'admin');
+                    });
                 })
+                ->orWhere('teams.owner_id', $user->id)
                 ->exists();
         });
     }

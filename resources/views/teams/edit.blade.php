@@ -25,62 +25,63 @@
     @if (!$team->is_personal && Auth::user()->id === $team->owner_id)
         @if ($team->joining_code)
             <div class="grid grid-cols-3">
-                <div class="col-span-2"> 
-                    <label class="block text-sm tracking-wide font-medium text-gray-700 mb-1">Joining Code</label>
-                    <div x-data="{ code: @js($team->joining_code)}" class="flex items-center justify-between py-4 bg-white border border-gray-300 rounded-lg shadow-sm w-full leading-tight mb-4 px-4">
-                        <div class="flex w-0 flex-1 items-center text-center">
-                            <input name="code" type="text" class="border-gray-300 rounded-l-lg shadow-sm w-full leading-tight" value="{{$team->joining_code}}" disabled/>
-                        </div>
-                        <div class="inline-flex shadow-sm rounded-md" role="group">
-                            <div x-data="{ show: false }" class="relative inline-block">
-                                <button x-on:click.away="show = false" x-on:click="navigator.clipboard && navigator.clipboard.writeText(code).then(() => show = true, setTimeout(() => show = false, 1000)).catch(() => {})" type="button" class="border border-gray-200 bg-white text-sm font-medium px-6 py-2 text-gray-900 hover:bg-gray-100 hover:text-blue-700">
-                                Copy
-                                </button>
-                                <span x-cloak x-show="show" class="absolute -top-6 left-1/2 -translate-x-1/2 inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Copied!</span>
+                <div class="col-span-3"> 
+                    <div class="rounded-md bg-blue-50 p-4 mb-3">
+                        <div x-data="{ code: @js($team->joining_code)}" class="flex">
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-blue-800">Joining Code</h3>
+                                <div class="mt-2 text-sm text-blue-700">
+                                <p>The unique joining code which others can use to join your team is <strong>{{ $team->joining_code }}</strong>. If you no longer want users to join, you can simply remove the code.</p>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="-mx-2 -my-1.5 flex">
+                                        <div x-data="{ show: false }" class="relative inline-block">
+                                            <button x-on:click.away="show = false" x-on:click="navigator.clipboard && navigator.clipboard.writeText(code).then(() => show = true, setTimeout(() => show = false, 1000)).catch(() => {})" type="button" class=" mr-3 rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Copy</button>
+                                            <span x-cloak x-show="show" class="absolute -bottom-6 left-1/2 -translate-x-1/2 inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Copied!</span>
+                                        </div>
+                                        <form method="POST" action="{{ route('teams.code', ['team' => $team]) }}">
+                                            @csrf
+                                            <button type="submit" class="rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Regenerate</button>
+                                        </form>
+                                        <button x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete joining code for {{ $team->name }}', '{{ route('teams.remove-code', ['team' => $team]) }}', 'Delete')" class="ml-3 rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Remove</button>
+                                    </div>
+                                </div>
                             </div>
-                            <form class="inline" method="POST" action="{{ route('teams.code', ['team' => $team]) }}">
-                                @csrf
-                                <button type="submit" class="border-t border-b border-gray-200 bg-white text-sm font-medium px-6 py-2 text-gray-900 hover:bg-gray-100 hover:text-blue-700">
-                                Re-generate
-                                </button>
-                            </form>
-                            <button x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete joining code for {{ $team->name }}', '{{ route('teams.delete-code', ['team' => $team]) }}', 'Delete')" class="rounded-r-md border border-gray-200 bg-white text-sm font-medium px-6 py-2 text-gray-900 hover:bg-gray-100 hover:text-blue-700">
-                              Delete
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         @else
             <div class="grid grid-cols-3 gap-4">
-                <div class="col-span-2">
-                    <div class="rounded-md bg-blue-50 p-4 mb-6">
+                <div class="col-span-3">
+                    <div class="rounded-md bg-blue-50 p-4 mb-3">
                         <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
-                                </svg>
+                          <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                            </svg>
+                          </div>
+                          <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Joining Code</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                              <p>Generate a code and share it with others, allowing them to effortlessly join your team and collaborate seamlessly.</p>
                             </div>
-                            <div class="ml-3 flex-1 md:flex md:justify-between">
-                            <p class="text-sm text-blue-700">Generate a <strong>code</strong> that other users can use to join your team.</p>
-                                <form class="inline" method="POST" action="{{  route('teams.code', ['team' => $team]) }}">
+                            <div class="mt-4">
+                              <div class="-mx-2 -my-1.5 flex">
+                                <form class="inline" method="POST" action="{{ route('teams.code', ['team' => $team]) }}">
                                     @csrf
-                                    <button class="whitespace-nowrap font-medium text-blue-700 hover:text-blue-600 flex flex-inline">
-                                        Generate Code
-                                        <span aria-hidden="true"> 
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 ml-2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                        </span>
-                                    </button>
+                                    <button type="submit" class="rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Generate</button>
                                 </form>
+                              </div>
                             </div>
+                          </div>
                         </div>
-                    </div> 
+                    </div>
                 </div>
             </div>   
         @endif
     @endif
+
     <form method="POST" action="{{ route('teams.update', ['team' => $team]) }}" enctype="multipart/form-data">
         @csrf
         @method('PATCH')

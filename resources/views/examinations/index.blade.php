@@ -2,7 +2,8 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    @if($isTeamAdmin == true)
+    
+    @if($privileged)
         <x-slot name="action">
             <x-link.primary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])">New Examination</x-link.primary>
         </x-slot>
