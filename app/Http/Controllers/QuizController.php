@@ -96,7 +96,11 @@ class QuizController extends Controller
         $quiz->load('academicSubject');
 
         $this->authorize('subscribed', $quiz->academicSubject);
-        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id);
+
+        $creator = User::find($quiz->creator_id);
+        $team = Team::find($quiz->team_id);
+
+        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id) && $this->isOwnerOrAdmin($creator, $team);
 
         $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
 
@@ -110,6 +114,22 @@ class QuizController extends Controller
         ]);
     }
 
+    private function isOwnerOrAdmin(User $user, Team $team): bool
+    {
+        // Check if the user is the owner of the team
+        if ($team->owner_id === $user->id) {
+            return true;
+        }
+
+        // Check if the user is an admin member of the team
+        $isAdmin = $team->members()
+            ->where('user_id', $user->id)
+            ->where('role', 'admin')
+            ->exists();
+
+        return $isAdmin;
+    }
+
     /**
      * Display the specified resource.
      *
@@ -121,7 +141,10 @@ class QuizController extends Controller
         $quiz->load('academicSubject');
 
         $this->authorize('subscribed', $quiz->academicSubject);
-        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id);
+        $creator = User::find($quiz->creator_id);
+        $team = Team::find($quiz->team_id);
+
+        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id) && $this->isOwnerOrAdmin($creator, $team);
 
         $worksheet = $quiz->worksheets()->firstOrCreate([
             'user_id' => auth()->id(),
@@ -177,6 +200,36 @@ class QuizController extends Controller
             'score' => $score,
         ]);
     }
+
+    /**
+     * get results for a quiz
+     *
+     * @param  \App\Models\Quiz  $quiz
+     * @return \Illuminate\Http\Response
+     */
+    public function result(Quiz $quiz)
+    {
+        $quiz->load('academicSubject');
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $this->authorize('subscribed', $quiz->academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
+        $scores = [];
+        $worksheets = $quiz->worksheets()->with('user')->where('quiz_id', $quiz->id)->paginate();
+        foreach ($worksheets as $worksheet) {
+            $score = Quizzer::getScore($quiz, $worksheet);
+            $worksheet->score = $score;
+            $scores[] = $score;
+        }
+
+        return view('quizzes.result', [
+            'quiz' => $quiz,
+            'worksheets' => $worksheets,
+            'academicSubject' => $quiz->academicSubject,
+            'score' => $scores[0],
+        ]);
+    }
+
 
     /**
      * Display the specified resource.

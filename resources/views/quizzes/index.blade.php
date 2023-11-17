@@ -22,6 +22,9 @@
                 <x-table.td bold>{{ $quiz->title }}</x-table.td>
                 <x-table.td action>
                     <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Quiz</a>
+                    @if($privileged)
+                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.result', ['quiz' => $quiz]) }}">Result</a>
+                    @endif
                 </x-table.td>
             </tr>
         @endforeach
