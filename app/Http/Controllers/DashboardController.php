@@ -12,22 +12,33 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $academicSubjects = AcademicSubject::query()->with('academicLevel.academicGroup')->whereHas('subscriptions', function (Builder $query) {
-            $query->where('status', SubscriptionStatus::PAID)
-                ->where('team_id', auth()->user()->current_team_id)
-                ->where(function (Builder $query) {
-                    $query->where(function (Builder $query) {
-                        $query->where('package', SubscriptionPackage::INSTITUTION_FULL)->where(function (Builder $query) {
-                            $query->whereRelation('subscriber', 'id', auth()->id())->orWhereHas('team', function (Builder $query) {
-                                $query->whereRelation('members', 'user_id', auth()->id());
-                            });
+        $academicSubjects = AcademicSubject::query()
+            ->with('academicLevel.academicGroup')
+            ->whereHas('subscriptions', function (Builder $query) {
+                $query->where('status', SubscriptionStatus::PAID)
+                    ->where('team_id', auth()->user()->current_team_id)
+                    ->where(function (Builder $query) {
+                        $query->where(function (Builder $query) {
+                            $query->where('package', SubscriptionPackage::INSTITUTION_FULL)
+                                ->where(function (Builder $query) {
+                                    $query->whereRelation('subscriber', 'id', auth()->id())
+                                        ->orWhereHas('team', function (Builder $query) {
+                                            $query->whereHas('members', function (Builder $query) {
+                                                $query->where('user_id', auth()->id())
+                                                    ->where('team_user.role', 'admin')
+                                                    ->orWhere('teams.owner_id', auth()->id());
+                                            });
+                                        });
+                                });
+                        })->orWhere(function (Builder $query) {
+                            $query->where('package', SubscriptionPackage::INDIVIDUAL_FULL)
+                                ->whereRelation('subscriber', 'id', auth()->id());
                         });
-                    })->orWhere(function (Builder $query) {
-                        $query->where('package', SubscriptionPackage::INDIVIDUAL_FULL)->whereRelation('subscriber', 'id', auth()->id());
                     });
-                })
-            ;
-        })->latest('id')->paginate();
+            })
+            ->latest('id')
+            ->paginate();
+
 
         return view('dashboard', [
             'academicSubjects' => $academicSubjects,

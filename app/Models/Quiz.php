@@ -46,4 +46,14 @@ class Quiz extends Model
     {
         return $this->hasMany(Worksheet::class);
     }
+
+    public function privilegedCreator(User $user, Team $team): bool
+    {
+        // Check if the user is the owner of the team or admin
+        return $team->owner_id === $user->id ||
+            $team->members()
+            ->where('user_id', $user->id)
+            ->where('role', 'admin')
+            ->exists();
+    }
 }

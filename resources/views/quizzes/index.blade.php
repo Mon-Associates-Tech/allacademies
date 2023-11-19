@@ -2,11 +2,11 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    @if($privileged)
+    @can('privileged', Auth::user()->currentTeam)
         <x-slot name="action">
             <x-link.primary :to="route('academic-subjects.quizzes.create', ['academic_subject' => $academicSubject])">New Quiz</x-link.primary>
         </x-slot>
-    @endif
+    @endcan
 
     @if ($quizzes->count())
     <x-table>
@@ -22,9 +22,9 @@
                 <x-table.td bold>{{ $quiz->title }}</x-table.td>
                 <x-table.td action>
                     <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Quiz</a>
-                    @if($privileged)
-                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.result', ['quiz' => $quiz]) }}">Result</a>
-                    @endif
+                    @can('privileged', Auth::user()->currentTeam)
+                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.result', ['quiz' => $quiz]) }}">Results</a>
+                    @endcan
                 </x-table.td>
             </tr>
         @endforeach

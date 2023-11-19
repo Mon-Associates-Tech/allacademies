@@ -53,14 +53,10 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('privileged', function (User $user, Team $team) {
-            return $team
-                ->where(function ($query) use ($user) {
-                    $query->whereHas('members', function ($query) use ($user) {
-                        $query->where('team_user.user_id', $user->id)
-                            ->where('team_user.role', 'admin');
-                    });
-                })
-                ->orWhere('teams.owner_id', $user->id)
+            return $team->owner_id === $user->id ||
+                $team->members()
+                ->where('user_id', $user->id)
+                ->where('team_user.role', 'admin')
                 ->exists();
         });
     }

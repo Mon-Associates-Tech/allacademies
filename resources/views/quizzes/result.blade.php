@@ -14,10 +14,7 @@
                 </svg>
             </div>
             <div class="ml-3">
-                <p class="text-blue-700">Results for {{$quiz->title}}</p>
-                <div class="mt-2 text-sm text-blue-700">
-                    <h3 class="text-sm font-medium text-blue-800">Max Score: <strong>{{$score['value']}} </strong></h3>
-                </div>
+                <p class="text-blue-700 text-sm">These are results for {{$quiz->title}}. The maximum score for this quiz is <strong>{{$score[0]['value']}} </strong></p>
             </div>
             </div>
         </div>

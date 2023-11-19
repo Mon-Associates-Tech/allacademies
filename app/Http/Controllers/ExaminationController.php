@@ -23,15 +23,11 @@ class ExaminationController extends Controller
     {
         $this->authorize('subscribed', $academicSubject);
 
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $privileged = Gate::allows('privileged', $currentTeam);
-
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
-            'privileged' => $privileged,
         ]);
     }
 
@@ -43,8 +39,8 @@ class ExaminationController extends Controller
     public function create(AcademicSubject $academicSubject)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
+
+        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -80,8 +76,8 @@ class ExaminationController extends Controller
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
+
+        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,

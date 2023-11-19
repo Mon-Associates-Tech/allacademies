@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TeamStatus;
 use App\Models\Team;
-use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
@@ -185,81 +183,5 @@ class TeamController extends Controller
 
         return to_route('teams.index')
             ->with('success', __('status.resource.deleted', ['name' => $team->name]));
-    }
-
-    /**
-     * Generate member joining code
-     *
-     * @param  \App\Models\Team  $team
-     * @return \Illuminate\Http\Response
-     */
-    public function generateJoiningCode(Team $team)
-    {
-        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
-
-        retry(5, function () use ($team) {
-            $team->update(['joining_code' => Str::random(8)]);
-        });
-
-        return back()->with('success', __('status.resource.generate_code', ['name' => $team->name]));
-    }
-
-    /**
-     * Delete member joining code
-     *
-     * @param  \App\Models\Team  $team
-     * @return \Illuminate\Http\Response
-     */
-    public function deleteJoiningCode(Team $team)
-    {
-        Gate::allowIf(fn ($user) => $user->id === $team->owner_id);
-
-        $team->joining_code = null;
-        $team->save();
-
-        return back()
-            ->with('success', __('status.resource.delete_code', ['name' => $team->name]));
-    }
-
-    /**
-     * Show the form for joining a team.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function joining()
-    {
-        return view('teams.joining');
-    }
-
-    /**
-     * Add member to a team
-     *  @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function join(Request $request)
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        $this->validate($request, [
-            'code' => ['required', 'string', 'size:8'],
-        ]);
-
-        $code = $request->code;
-        $team = Team::where('joining_code', $code)
-            ->firstOr(callback: function () {
-                throw ValidationException::withMessages([
-                    'code' => 'No team found for the provided code.',
-                ]);
-            });
-
-        !$team->members->contains($user) && !$team->owner->is($user) ?: throw ValidationException::withMessages([
-            'code' => 'You are already a member of this team.',
-        ]);
-
-        $team->members()->attach($user);
-
-        return to_route('teams.index')
-            ->with('success', __('status.resource.joined_team', ['name' => $team->name]));
     }
 }

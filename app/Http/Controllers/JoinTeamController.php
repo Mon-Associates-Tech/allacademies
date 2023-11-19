@@ -42,11 +42,11 @@ class JoinTeamController extends Controller
         $team->save();
 
         return back()
-            ->with('success', __('status.resource.delete_code', ['name' => $team->name]));
+            ->with('success', __('status.resource.remove_code', ['name' => $team->name]));
     }
 
     /**
-     * Show the form for joining a team.
+     * Show the form for joining a team
      *
      * @return \Illuminate\Http\Response
      */
@@ -62,23 +62,22 @@ class JoinTeamController extends Controller
      */
     public function join(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
         $this->validate($request, [
             'code' => ['required', 'string', 'size:8'],
         ]);
 
+        $user = Auth::user();
         $code = $request->code;
+
         $team = Team::where('joining_code', $code)
             ->firstOr(callback: function () {
                 throw ValidationException::withMessages([
-                    'code' => 'No team found for the provided code.',
+                    'code' => 'Invalid joining code',
                 ]);
             });
 
         !$team->members->contains($user) && !$team->owner->is($user) ?: throw ValidationException::withMessages([
-            'code' => 'You are already a member of this team.',
+            'code' => 'You are already a member of this team',
         ]);
 
         $team->members()->attach($user);

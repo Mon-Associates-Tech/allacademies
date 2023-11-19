@@ -23,15 +23,11 @@ class QuizController extends Controller
     {
         $this->authorize('subscribed', $academicSubject);
 
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $privileged = Gate::allows('privileged', $currentTeam);
-
         $quizzes = $academicSubject->quizzes()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('quizzes.index', [
             'quizzes' => $quizzes,
             'academicSubject' => $academicSubject,
-            'privileged' => $privileged,
         ]);
     }
 
@@ -43,8 +39,8 @@ class QuizController extends Controller
     public function create(AcademicSubject $academicSubject)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
+
+        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -67,8 +63,8 @@ class QuizController extends Controller
     public function store(AcademicSubject $academicSubject, QuizRequest $request)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
+
+        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateQuizJob(
             $academicSubject,
@@ -100,7 +96,7 @@ class QuizController extends Controller
         $creator = User::find($quiz->creator_id);
         $team = Team::find($quiz->team_id);
 
-        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id) && $this->isOwnerOrAdmin($creator, $team);
+        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id) && $quiz->privilegedCreator($creator, $team);
 
         $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
 
@@ -114,22 +110,6 @@ class QuizController extends Controller
         ]);
     }
 
-    private function isOwnerOrAdmin(User $user, Team $team): bool
-    {
-        // Check if the user is the owner of the team
-        if ($team->owner_id === $user->id) {
-            return true;
-        }
-
-        // Check if the user is an admin member of the team
-        $isAdmin = $team->members()
-            ->where('user_id', $user->id)
-            ->where('role', 'admin')
-            ->exists();
-
-        return $isAdmin;
-    }
-
     /**
      * Display the specified resource.
      *
@@ -141,10 +121,11 @@ class QuizController extends Controller
         $quiz->load('academicSubject');
 
         $this->authorize('subscribed', $quiz->academicSubject);
+
         $creator = User::find($quiz->creator_id);
         $team = Team::find($quiz->team_id);
 
-        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id) && $this->isOwnerOrAdmin($creator, $team);
+        Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id) && $quiz->privilegedCreator($creator, $team);
 
         $worksheet = $quiz->worksheets()->firstOrCreate([
             'user_id' => auth()->id(),
@@ -211,8 +192,8 @@ class QuizController extends Controller
     {
         $quiz->load('academicSubject');
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-        $this->authorize('subscribed', $quiz->academicSubject);
-        $this->authorize('privileged', $currentTeam);
+
+        $this->authorize('subscribed', $quiz->academicSubject) && $this->authorize('privileged', $currentTeam);
 
         $scores = [];
         $worksheets = $quiz->worksheets()->with('user')->where('quiz_id', $quiz->id)->paginate();
@@ -226,7 +207,7 @@ class QuizController extends Controller
             'quiz' => $quiz,
             'worksheets' => $worksheets,
             'academicSubject' => $quiz->academicSubject,
-            'score' => $scores[0],
+            'score' => $scores,
         ]);
     }
 

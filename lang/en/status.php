@@ -18,7 +18,7 @@ return [
         'declined' => ':name declined successfully',
         'joined_team' => 'Successfully joined :name',
         'generate_code' => 'Successfully generated joining code for :name',
-        'delete_code' => 'Successfully deleted joining code for :name',
+        'remove_code' => 'Successfully removed joining code for :name',
     ],
     'payment' => [
         'created' => 'Payment of :currency :amount made successfully for :reference'
