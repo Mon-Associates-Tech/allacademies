@@ -40,7 +40,8 @@ class QuizController extends Controller
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
-        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -64,7 +65,8 @@ class QuizController extends Controller
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
-        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateQuizJob(
             $academicSubject,
@@ -191,23 +193,25 @@ class QuizController extends Controller
     public function result(Quiz $quiz)
     {
         $quiz->load('academicSubject');
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $currentTeam = Team::findOrFail(auth()->user()->current_team_id);
 
-        $this->authorize('subscribed', $quiz->academicSubject) && $this->authorize('privileged', $currentTeam);
+        $this->authorize('subscribed', $quiz->academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
-        $scores = [];
-        $worksheets = $quiz->worksheets()->with('user')->where('quiz_id', $quiz->id)->paginate();
-        foreach ($worksheets as $worksheet) {
-            $score = Quizzer::getScore($quiz, $worksheet);
-            $worksheet->score = $score;
-            $scores[] = $score;
-        }
+        $worksheets = $quiz->worksheets()
+            ->with('user')
+            ->where('quiz_id', $quiz->id)
+            ->paginate();
+
+        $worksheets->each(function ($worksheet) use ($quiz) {
+            $worksheet->score = Quizzer::getScore($quiz, $worksheet);
+        });
 
         return view('quizzes.result', [
             'quiz' => $quiz,
             'worksheets' => $worksheets,
             'academicSubject' => $quiz->academicSubject,
-            'score' => $scores,
+            'scores' => $worksheets->pluck('score')->toArray(),
         ]);
     }
 

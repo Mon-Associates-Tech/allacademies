@@ -42,7 +42,8 @@ class ExaminationController extends Controller
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
-        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -79,7 +80,8 @@ class ExaminationController extends Controller
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
-        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,
