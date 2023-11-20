@@ -21,7 +21,9 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
-        $this->authorize('subscribed', $academicSubject);
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
+        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
 
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 

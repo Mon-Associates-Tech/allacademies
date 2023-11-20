@@ -25,7 +25,7 @@ class DashboardController extends Controller
                                         ->orWhereHas('team', function (Builder $query) {
                                             $query->whereHas('members', function (Builder $query) {
                                                 $query->where('user_id', auth()->id())
-                                                    ->where('team_user.role', 'admin')
+                                                    // ->where('team_user.role', 'admin')
                                                     ->orWhere('teams.owner_id', auth()->id());
                                             });
                                         });
