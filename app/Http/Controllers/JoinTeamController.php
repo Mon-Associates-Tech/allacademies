@@ -57,7 +57,7 @@ class JoinTeamController extends Controller
 
     /**
      * Add member to a team
-     *  @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function join(Request $request)
@@ -67,9 +67,8 @@ class JoinTeamController extends Controller
         ]);
 
         $user = Auth::user();
-        $code = $request->code;
 
-        $team = Team::where('joining_code', $code)
+        $team = Team::where('joining_code', $request->code)
             ->firstOr(callback: function () {
                 throw ValidationException::withMessages([
                     'code' => 'Invalid joining code',

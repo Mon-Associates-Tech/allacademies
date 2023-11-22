@@ -7,9 +7,10 @@ use App\Models\User;
 use App\Support\Examiner;
 use App\Models\Examination;
 use App\Models\AcademicSubject;
+use Illuminate\Support\Facades\Auth;
 use App\Jobs\GenerateExaminationJob;
-use App\Http\Requests\ExaminationRequest;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\ExaminationRequest;
 use Illuminate\Support\Facades\Storage;
 
 class ExaminationController extends Controller
@@ -21,9 +22,8 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-
-        $this->authorize('subscribed', $academicSubject) && $this->authorize('privileged', $currentTeam);
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', Auth::user()->currentTeam);
 
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
@@ -78,10 +78,8 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-
         $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
+        $this->authorize('privileged', Auth::user()->currentTeam);
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,
@@ -106,6 +104,8 @@ class ExaminationController extends Controller
         $examination->load('academicSubject');
 
         $this->authorize('subscribed', $examination->academicSubject);
+        $this->authorize('privileged', Auth::user()->currentTeam);
+
         Gate::allowIf(fn ($user) => $user->current_team_id === $examination->team_id);
 
         $sections = Examiner::createSections($examination);
@@ -127,6 +127,8 @@ class ExaminationController extends Controller
         $examination->load('academicSubject');
 
         $this->authorize('subscribed', $examination->academicSubject);
+        $this->authorize('privileged', Auth::user()->currentTeam);
+
         Gate::allowIf(fn ($user) => $user->current_team_id === $examination->team_id);
 
         $sections = Examiner::createSections($examination);

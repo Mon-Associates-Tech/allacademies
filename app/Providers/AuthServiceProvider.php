@@ -2,14 +2,13 @@
 
 namespace App\Providers;
 
-use App\Enums\SubscriptionStatus;
-use App\Enums\UserRole;
-use App\Models\AcademicGroup;
-use App\Models\AcademicSubject;
 use App\Models\User;
 use App\Models\Team;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use App\Enums\UserRole;
+use App\Models\AcademicSubject;
+use App\Enums\SubscriptionStatus;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -56,7 +55,7 @@ class AuthServiceProvider extends ServiceProvider
             return $team->owner_id === $user->id ||
                 $team->members()
                 ->where('user_id', $user->id)
-                ->where('team_user.role', 'admin')
+                ->wherePivot('role', 'admin')
                 ->exists();
         });
     }

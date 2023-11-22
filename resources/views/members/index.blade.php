@@ -1,12 +1,12 @@
 <x-auth :title="'Members of ' . $team->name">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
-            'Team' => route('teams.index'),
+            'Teams' => route('teams.index'),
         ]" />
     </x-slot>
     <x-slot name="action">
         @if ($team->owner->is($user) && !$team->is_personal)
-        <x-link.primary :to="route('teams.members.create', ['team' => $team])">New Member</x-link.primary>
+            <x-link.primary :to="route('teams.members.create', ['team' => $team])">New Member</x-link.primary>
         @endif
     </x-slot>
 

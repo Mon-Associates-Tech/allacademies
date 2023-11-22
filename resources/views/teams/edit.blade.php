@@ -31,14 +31,14 @@
                         <p class="mt-2 text-sm text-blue-700">The unique joining code others can use to join your team is <strong>{{ $team->joining_code }}</strong>. If you no longer want users to join, you can simply remove the code.</p>
                         <div class="mt-5 -mx-2 -my-1.5 flex">
                             <div x-data="{ show: false }" class="relative inline-block">
-                                <button x-on:click.away="show = false" x-on:click="navigator.clipboard && navigator.clipboard.writeText(code).then(() => show = true, setTimeout(() => show = false, 1000)).catch(() => {})" type="button" class=" mr-3 rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Copy</button>
+                                <button x-on:click.away="show = false" x-on:click="navigator.clipboard && navigator.clipboard.writeText(code).then(() => show = true, setTimeout(() => show = false, 1000)).catch(() => {})" type="button" class=" mr-3 rounded-md bg-blue-50 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Copy</button>
                                 <span x-cloak x-show="show" class="absolute -bottom-6 left-1/2 -translate-x-1/2 inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Copied!</span>
                             </div>
                             <form method="POST" action="{{ route('teams.code', ['team' => $team]) }}">
                                 @csrf
-                                <button type="submit" class="rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Regenerate</button>
+                                <button type="submit" class="rounded-md bg-blue-50 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Regenerate</button>
                             </form>
-                            <button x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to remove joining code for {{ $team->name }}', '{{ route('teams.remove-code', ['team' => $team]) }}', 'Delete')" class="ml-3 rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Remove</button>
+                            <button x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to remove joining code for {{ $team->name }}', '{{ route('teams.remove-code', ['team' => $team]) }}', 'Delete')" class="ml-3 rounded-md bg-blue-50 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Remove</button>
                         </div>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                         <div class="mt-4 -mx-2 -my-1.5 flex">
                             <form class="inline" method="POST" action="{{ route('teams.code', ['team' => $team]) }}">
                                 @csrf
-                                <button type="submit" class="rounded-md bg-blue-100 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Generate</button>
+                                <button type="submit" class="rounded-md bg-blue-50 px-2 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-blue-50">Generate</button>
                             </form>
                         </div>
                     </div>

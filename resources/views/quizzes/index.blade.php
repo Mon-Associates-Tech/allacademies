@@ -23,7 +23,7 @@
                 <x-table.td action>
                     <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Quiz</a>
                     @can('privileged', Auth::user()->currentTeam)
-                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.result', ['quiz' => $quiz]) }}">Scores</a>
+                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.scores', ['quiz' => $quiz]) }}">Scores</a>
                     @endcan
                 </x-table.td>
             </tr>

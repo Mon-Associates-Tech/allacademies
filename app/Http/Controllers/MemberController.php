@@ -139,6 +139,6 @@ class MemberController extends Controller
             'member' => $member->name,
             'new_role' => $request->role,
             'team' => $team->name,
-        ]));;
+        ]));
     }
 }

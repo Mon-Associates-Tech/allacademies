@@ -14,7 +14,7 @@
                 </svg>
             </div>
             <div class="ml-3">
-                <p class="text-blue-700 text-sm">These are results for {{$quiz->title}}. The maximum score for this quiz is <strong>{{$score[0]['max']}}</strong></p>
+                <p class="text-blue-700 text-sm">These are results for <strong>{{$quiz->title}}.</strong> The maximum score for this quiz is <strong>{{$score['max']}}</strong></p>
             </div>
             </div>
         </div>
@@ -32,12 +32,6 @@
                 <x-table.td bold>{{ $worksheet->user->name }}</x-table.td>
                 <x-table.td>{{ $worksheet->user->email }}</x-table.td>
                 <x-table.td bold>{{ $worksheet->score['value'] }}</x-table.td>
-                {{-- <x-table.td action>
-                    <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Quiz</a>
-                    @if($privileged)
-                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Result</a>
-                    @endif
-                </x-table.td> --}}
             </tr>
         @endforeach
     </x-table>

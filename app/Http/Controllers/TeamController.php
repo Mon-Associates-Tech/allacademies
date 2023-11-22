@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TeamStatus;
 use App\Models\Team;
+use App\Enums\TeamStatus;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;

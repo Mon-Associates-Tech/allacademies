@@ -109,7 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
     Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    Route::get('quizzes/{quiz}/result', [QuizController::class, 'result'])->name('quizzes.result');
+    Route::get('quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
 
     Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
