@@ -35,7 +35,7 @@
                 '0' => 'False',
             ]" :value="1" />
             @endif
-
+            <p class="text-sm">[{{$question->score}} {{ Str::plural('mark', $question->score) }}]</p>
             <x-slot name="action">
                 <x-button.primary>Save and Continue</x-button.primary>
             </x-slot>
