@@ -2,7 +2,7 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    @can('privileged', Auth::user()->currentTeam)
+    @can('privileged', $currentTeam)
         <x-slot name="action">
             <x-link.primary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])">New Examination</x-link.primary>
         </x-slot>

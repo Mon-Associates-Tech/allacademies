@@ -75,9 +75,11 @@ class JoinTeamController extends Controller
                 ]);
             });
 
-        !$team->members->contains($user) && !$team->owner->is($user) ?: throw ValidationException::withMessages([
-            'code' => 'You are already a member of this team',
-        ]);
+        if ($team->members->contains($user) || $team->owner->is($user)) {
+            throw ValidationException::withMessages([
+                'code' => 'You are already a member of this team',
+            ]);
+        }
 
         $team->members()->attach($user);
 

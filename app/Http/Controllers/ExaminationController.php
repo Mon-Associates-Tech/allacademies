@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Support\Examiner;
 use App\Models\Examination;
 use App\Models\AcademicSubject;
-use Illuminate\Support\Facades\Auth;
 use App\Jobs\GenerateExaminationJob;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\ExaminationRequest;
@@ -22,14 +21,17 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', Auth::user()->currentTeam);
+        $this->authorize('privileged', $currentTeam);
 
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
+            'currentTeam' => $currentTeam,
         ]);
     }
 
@@ -78,8 +80,10 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', Auth::user()->currentTeam);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,
@@ -102,9 +106,10 @@ class ExaminationController extends Controller
     public function show(Examination $examination)
     {
         $examination->load('academicSubject');
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $examination->academicSubject);
-        $this->authorize('privileged', Auth::user()->currentTeam);
+        $this->authorize('privileged', $currentTeam);
 
         Gate::allowIf(fn ($user) => $user->current_team_id === $examination->team_id);
 
@@ -125,9 +130,10 @@ class ExaminationController extends Controller
     public function answers(Examination $examination)
     {
         $examination->load('academicSubject');
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $examination->academicSubject);
-        $this->authorize('privileged', Auth::user()->currentTeam);
+        $this->authorize('privileged', $currentTeam);
 
         Gate::allowIf(fn ($user) => $user->current_team_id === $examination->team_id);
 
