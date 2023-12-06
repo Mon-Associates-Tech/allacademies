@@ -21,6 +21,7 @@ class Team extends Model
         'meta',
         'status',
         'declined_reason',
+        'joining_code',
     ];
 
     /**
@@ -38,7 +39,7 @@ class Team extends Model
 
     public function members()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->withPivot('role');
     }
 
     public function subscriptions()

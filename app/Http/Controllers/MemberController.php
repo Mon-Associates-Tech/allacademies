@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\MemberRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class MemberController extends Controller
@@ -99,5 +100,45 @@ class MemberController extends Controller
         $team->members()->detach($member);
 
         return to_route('teams.index')->with('success', __('status.member.removed', ['member' => $member->name, 'team' => $team->name]));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     * @param  \App\Models\Team  $team
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Team $team, User $member)
+    {
+        Gate::allowIf($team->owner_id === auth()->id());
+        $member = $team->members()->where('user_id', $member->id)->firstOrFail();
+
+        return view('members.edit', [
+            'team' => $team,
+            'member' => $member,
+        ]);
+    }
+
+    /**
+     * Change team member role from member to admin and the vice versa
+     * @param  Team  $team
+     * @param  User  $member 
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Team $team, User $member)
+    {
+        $request->validate([
+            'role' => 'required|in:member,admin',
+        ]);
+
+        $team->members()->updateExistingPivot($member->id, [
+            'role' => $request->role,
+        ]);
+
+        return to_route('teams.members.index', ['team' => $team])->with('success', __('status.member.role_changed', [
+            'member' => $member->name,
+            'new_role' => $request->role,
+            'team' => $team->name,
+        ]));
     }
 }

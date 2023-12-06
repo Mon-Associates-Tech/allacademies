@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TeamStatus;
 use App\Models\Team;
+use App\Enums\TeamStatus;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;

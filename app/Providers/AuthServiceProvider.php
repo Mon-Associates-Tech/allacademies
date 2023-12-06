@@ -2,12 +2,13 @@
 
 namespace App\Providers;
 
-use App\Enums\SubscriptionStatus;
+use App\Models\User;
+use App\Models\Team;
 use App\Enums\UserRole;
 use App\Models\AcademicSubject;
-use App\Models\User;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use App\Enums\SubscriptionStatus;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -47,6 +48,14 @@ class AuthServiceProvider extends ServiceProvider
                 ->where('team_id', $user->current_team_id)
                 ->where('expires_at', '>', now())
                 ->where('status', SubscriptionStatus::PAID)
+                ->exists();
+        });
+
+        Gate::define('privileged', function (User $user, Team $team) {
+            return $team->owner_id === $user->id ||
+                $team->members()
+                ->where('user_id', $user->id)
+                ->wherePivot('role', 'admin')
                 ->exists();
         });
     }

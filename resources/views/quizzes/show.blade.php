@@ -10,7 +10,10 @@
         @foreach ($sections as $section)
             @foreach ($section['questions'] as $question)
             <div class="px-4 py-6 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6">
-                <dt class="text-sm font-medium text-gray-900 sm:col-span-2">{!! $question->question->up !!}</dt>
+                <dt class="text-sm font-medium text-gray-900 sm:col-span-2">
+                    {!! $question->question->up !!}
+                    <p class="text-sm mt-1">[{{$question->score}} {{ Str::plural('mark', $question->score) }}]</p>
+                </dt>
                 <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-3 sm:mt-0">
                 @if ($question instanceof \App\Models\MultipleChoiceQuestion)
                     @foreach (['a', 'b', 'c', 'd', 'e'] as $option)

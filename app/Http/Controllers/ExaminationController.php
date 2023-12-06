@@ -8,8 +8,8 @@ use App\Support\Examiner;
 use App\Models\Examination;
 use App\Models\AcademicSubject;
 use App\Jobs\GenerateExaminationJob;
-use App\Http\Requests\ExaminationRequest;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\ExaminationRequest;
 use Illuminate\Support\Facades\Storage;
 
 class ExaminationController extends Controller
@@ -21,13 +21,17 @@ class ExaminationController extends Controller
      */
     public function index(AcademicSubject $academicSubject)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $examinations = $academicSubject->examinations()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('examinations.index', [
             'examinations' => $examinations,
             'academicSubject' => $academicSubject,
+            'currentTeam' => $currentTeam,
         ]);
     }
 
@@ -38,9 +42,10 @@ class ExaminationController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
-        $this->authorize('subscribed', $academicSubject);
-
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -75,7 +80,10 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateExaminationJob(
             $academicSubject,
@@ -98,8 +106,11 @@ class ExaminationController extends Controller
     public function show(Examination $examination)
     {
         $examination->load('academicSubject');
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $examination->academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
         Gate::allowIf(fn ($user) => $user->current_team_id === $examination->team_id);
 
         $sections = Examiner::createSections($examination);
@@ -119,8 +130,11 @@ class ExaminationController extends Controller
     public function answers(Examination $examination)
     {
         $examination->load('academicSubject');
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $examination->academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
         Gate::allowIf(fn ($user) => $user->current_team_id === $examination->team_id);
 
         $sections = Examiner::createSections($examination);
