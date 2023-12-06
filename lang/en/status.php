@@ -16,6 +16,9 @@ return [
         'deleted' => ':name deleted successfully',
         'approved' => ':name approved successfully',
         'declined' => ':name declined successfully',
+        'joined_team' => 'Successfully joined :name',
+        'generate_code' => 'Successfully generated joining code for :name',
+        'remove_code' => 'Successfully removed joining code for :name',
     ],
     'payment' => [
         'created' => 'Payment of :currency :amount made successfully for :reference'
@@ -23,6 +26,7 @@ return [
     'member' => [
         'added' => ':member added to :team successfully',
         'removed' => ':member removed from :team successfully',
+        'role_changed' => ':member made :new_role of :team successfully',
     ],
     'team' => [
         'activate' => ':name set as current team',

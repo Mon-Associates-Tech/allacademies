@@ -2,9 +2,11 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
-    <x-slot name="action">
-        <x-link.primary :to="route('academic-subjects.quizzes.create', ['academic_subject' => $academicSubject])">New Quiz</x-link.primary>
-    </x-slot>
+    @can('privileged', $currentTeam)
+        <x-slot name="action">
+            <x-link.primary :to="route('academic-subjects.quizzes.create', ['academic_subject' => $academicSubject])">New Quiz</x-link.primary>
+        </x-slot>
+    @endcan
 
     @if ($quizzes->count())
     <x-table>
@@ -20,6 +22,9 @@
                 <x-table.td bold>{{ $quiz->title }}</x-table.td>
                 <x-table.td action>
                     <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.start', ['quiz' => $quiz]) }}">Quiz</a>
+                    @can('privileged', $currentTeam)
+                        <a class="text-primary-600 hover:text-primary-900" href="{{ route('quizzes.scores', ['quiz' => $quiz]) }}">Scores</a>
+                    @endcan
                 </x-table.td>
             </tr>
         @endforeach

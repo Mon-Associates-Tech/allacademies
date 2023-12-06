@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Team;
+use App\Models\User;
 use App\Models\Quiz;
+use App\Support\Quizzer;
 use Illuminate\Http\Request;
 use App\Jobs\GenerateQuizJob;
 use App\Models\AcademicSubject;
 use App\Http\Requests\QuizRequest;
-use App\Models\Team;
-use App\Models\User;
-use App\Support\Quizzer;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 
 class QuizController extends Controller
 {
@@ -23,11 +24,14 @@ class QuizController extends Controller
     {
         $this->authorize('subscribed', $academicSubject);
 
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $quizzes = $academicSubject->quizzes()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
 
         return view('quizzes.index', [
             'quizzes' => $quizzes,
             'academicSubject' => $academicSubject,
+            'currentTeam' => $currentTeam,
         ]);
     }
 
@@ -38,7 +42,10 @@ class QuizController extends Controller
      */
     public function create(AcademicSubject $academicSubject)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
             'multipleChoiceQuestions',
@@ -60,7 +67,10 @@ class QuizController extends Controller
      */
     public function store(AcademicSubject $academicSubject, QuizRequest $request)
     {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
         $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
 
         dispatch(new GenerateQuizJob(
             $academicSubject,
@@ -88,6 +98,7 @@ class QuizController extends Controller
         $quiz->load('academicSubject');
 
         $this->authorize('subscribed', $quiz->academicSubject);
+
         Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id);
 
         $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
@@ -113,6 +124,7 @@ class QuizController extends Controller
         $quiz->load('academicSubject');
 
         $this->authorize('subscribed', $quiz->academicSubject);
+
         Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id);
 
         $worksheet = $quiz->worksheets()->firstOrCreate([
@@ -167,6 +179,37 @@ class QuizController extends Controller
             'worksheet' => $worksheet,
             'academicSubject' => $quiz->academicSubject,
             'score' => $score,
+        ]);
+    }
+
+    /**
+     * get results for a quiz
+     *
+     * @param  \App\Models\Quiz  $quiz
+     * @return \Illuminate\Http\Response
+     */
+    public function scores(Quiz $quiz)
+    {
+        $quiz->load('academicSubject');
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
+        $this->authorize('subscribed', $quiz->academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
+        $worksheets = $quiz->worksheets()
+            ->with('user')
+            ->where('quiz_id', $quiz->id)
+            ->paginate();
+
+        $worksheets->each(function ($worksheet) use ($quiz) {
+            $worksheet->score = Quizzer::getScore($quiz, $worksheet);
+        });
+
+        return view('quizzes.scores', [
+            'quiz' => $quiz,
+            'worksheets' => $worksheets,
+            'academicSubject' => $quiz->academicSubject,
+            'score' => $worksheets->pluck('score')->first(),
         ]);
     }
 

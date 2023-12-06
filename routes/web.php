@@ -13,6 +13,7 @@ use App\Http\Controllers\SignOutController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\AuditTeamController;
@@ -75,7 +76,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('teams/{team}/activate', [TeamController::class, 'activate'])->name('teams.activate');
     Route::resource('teams', TeamController::class)->except('show');
+    Route::post('teams/{team}/code', [JoinTeamController::class, 'generate'])->name('teams.code');
+    Route::delete('teams/{team}/remove-code', [JoinTeamController::class, 'remove'])->name('teams.remove-code');
+    Route::get('teams/joining', [JoinTeamController::class, 'joining'])->name('teams.joining');
+    Route::post('teams/add-member', [JoinTeamController::class, 'join'])->name('teams.add-member');
+
     Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
+    Route::get('teams/{team}/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
+    Route::post('teams/{team}/members/{member}', [MemberController::class, 'update'])->name('members.update');
 
     Route::resource('subscriptions', SubscriptionController::class)->except(['show', 'edit', 'update']);
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
@@ -101,6 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
     Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
     Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
+    Route::get('quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
 
     Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
