@@ -16,6 +16,7 @@ class DashboardController extends Controller
 
         $academicSubjects = AcademicSubject::query()->with('academicLevel.academicGroup')->whereHas('subscriptions', function (Builder $query) {
             $query->where('status', SubscriptionStatus::PAID)
+                ->where('expires_at', '>', now())
                 ->where('team_id', auth()->user()->current_team_id)
                 ->where(function (Builder $query) {
                     $query->where(function (Builder $query) {
