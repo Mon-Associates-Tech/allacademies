@@ -13,7 +13,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: colors.teal
+        ...colors,
+        primary: colors.teal,
+        'retro': '#01B3EF',
+        'range': '#F05F19',
+        'vert' : '#7DC353',
       },
       fontFamily: {
         sans: ['Exo', ...defaultTheme.fontFamily.sans],
