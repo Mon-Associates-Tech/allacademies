@@ -1,11 +1,12 @@
 <x-app>
   <div class="bg-white">
-    <header x-data="{ open: false }" class="absolute inset-x-0 top-0 z-50">
-      <nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+    <div x-data="{ open: false }" class="absolute inset-x-0 top-12 w-11/12 mx-auto z-50">
+      <nav class="flex items-center justify-between bg-white shadow-md rounded-3xl p-4 lg:px-8" aria-label="Global">
         <div class="flex lg:flex-1">
-          <a href="#" class="-m-1.5 p-1.5">
+          <a href="#" class="-m-1.5 p-1.5 flex items-center gap-4">
             <span class="sr-only">{{ config('app.name') }}</span>
             <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo">
+            <span>All Academies</span>
           </a>
         </div>
         <div class="flex lg:hidden">
@@ -17,14 +18,14 @@
           </button>
         </div>
         <div class="hidden lg:flex lg:gap-x-12">
-          <a href="#home" class="text-sm font-semibold leading-6 text-gray-900">Home</a>
-          <a href="#about" class="text-sm font-semibold leading-6 text-gray-900">About</a>
-          <a href="#features" class="text-sm font-semibold leading-6 text-gray-900">Features</a>
-          <a href="#pricing" class="text-sm font-semibold leading-6 text-gray-900">Pricing</a>
-          <a href="#faq" class="text-sm font-semibold leading-6 text-gray-900">FAQ</a>
+          <a href="#home" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-300">Home</a>
+          <a href="#about" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-300">About</a>
+          <a href="#features" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-300">Features</a>
+          <a href="#pricing" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-300">Pricing</a>
+          <a href="#faq" class="text-lg font-semibold leading-6 text-gray-900">FAQ</a>
         </div>
         <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="{{ route('sign-in') }}" class="text-sm font-semibold leading-6 text-gray-900">Sign in <span aria-hidden="true">&rarr;</span></a>
+          <a href="{{ route('sign-in') }}" class="text-sm font-semibold leading-6 text-white p-2  bg-vert shadow-2xl hover:bg-green-600 rounded-md">Sign Up <span aria-hidden="true">&rarr;</span></a>
         </div>
       </nav>
       <!-- Mobile menu, show/hide based on menu open state. -->
@@ -54,15 +55,15 @@
                 <a href="#faq" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">FAQ</a>
               </div>
               <div class="py-6">
-                <a href="{{ route('sign-in') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Sign in</a>
+                <a href="{{ route('sign-in') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Sign Up</a>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </header>
+</div>
 
-  <div id="home" class="relative isolate px-6 pt-14 lg:px-8">
+  <!-- <div id="home" class="relative isolate px-6 pt-14 lg:px-8">
       <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
         <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-amber-400 to-cyan-400 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
       </div>
@@ -73,10 +74,10 @@
           </div>
         </div>
         <div class="text-center">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Study and assess yourself online 🔥</h1>
+          <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Study and assess yourself online!</h1>
           <p class="mt-6 text-lg leading-8 text-gray-600">Study and move at your own pace without any pressure. Easily assess yourself to enhance your understanding. Learning made easier and flexible.</p>
           <div class="mt-10 flex items-center justify-center gap-x-6">
-            <a href="{{ route('sign-up') }}" class="rounded-md bg-primary-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">Get started</a>
+            <a href="{{ route('sign-up') }}" class="rounded-md bg-primary-600 px-4 py-4 text-lg font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">Get started</a>
             <a href="#about" class="text-sm font-semibold leading-6 text-gray-900">Learn more <span aria-hidden="true">→</span></a>
           </div>
         </div>
@@ -85,12 +86,157 @@
         <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-amber-400 to-cyan-400 opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
       </div>
     </div>
+  </div> -->
+
+  <div
+class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG9ubGluZSUyMGNsYXNzfGVufDB8fDB8fHww)] bg-cover bg-center bg-no-repeat object-cover "
+>
+<div
+  class="absolute inset-0 bg-blue-900/85 sm:bg-transparent sm:from-gray-900/95 sm:to-gray-900/25 ltr:sm:bg-gradient-to-r "
+></div>
+
+<div
+  class="relative mx-auto max-w-screen-xl h-2/3 px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8"
+>
+  <div class="max-w-xl text-center ltr:sm:text-left ">
+    <h1 class="text-3xl font-extrabold text-white sm:text-5xl">
+      Study and assess yourself online with ease on
+
+      <strong class="block font-extrabold text-orange-400"> All Academies </strong>
+    </h1>
+
+    <p class="mt-4 max-w-lg text-white  sm:text-xl/relaxed">
+      Study and move at your own pace without any pressure. Easily assess yourself or your students to enhance understanding. Learning made easier and flexible.
+    </p>
+
+    <div class="mt-8 flex flex-wrap gap-4 text-center">
+      <a
+        href="{{ route('sign-up') }}"
+        class="block w-full rounded bg-orange-400 px-12 py-3 text-md font-medium text-white shadow hover:bg-orange-500 focus:outline-none focus:ring  sm:w-auto animate-bounce"
+      >
+        Get Started
+      </a>
+
+      <a
+        href="#about"
+        class="block w-full rounded bg-white px-12 py-3 text-sm font-medium text-orange-400 shadow hover:text-white hover:bg-green-300 focus:outline-none focus:ring active:text-rose-500 sm:w-auto"
+      >
+        Learn More
+      </a>
+    </div>
   </div>
+  <div class=" bg-gray-200 px-4 py-2 shadow-lg rounded-2xl text-lg mt-8 font-semibold" >Announcing our Interactive online quizzes. <span class="text-orange-500 ">Try It</span></div>
+</div>
+</div>
 
 
 
 
-  <section id="about" class="bg-white">
+
+  <section class="about bg-blue-200 p-12" id="about">
+    <div class='grid grid-cols-3 gap-4 mb-8'>
+
+      <p class="text-lg font-light text-left text-black max-md:max-w-full col-span-2">
+        Welcome to All Academies, the premier <span class=" font-semibold">
+          Learning and Assessment Application Platform( LAAPP)</span> tailored for students ranging 
+          from pre-school to senior high school, including technical and vocational education.  Our mission is to 
+          provide students with accessible and affordable reading materials across all subjects while offering a seamless medium for assessing their 
+          performance through quizzes, tests, assignments, and examinations.  Join us as we empower learners to reach their 
+          full potential through accessible resources and innovative assessment solutions. Start your educational journey with
+           All Academies today!
+      </p>
+      <div class="flex items-center justify-center">
+        <img src="{{ asset('img/animation.gif') }}" alt="animation" class=''>
+      </div>
+    </div>
+    <section class="flex flex-col items-center bg-sky-500 bg-opacity-40 p-4">
+      <h2 class="text-3xl font-light text-black max-md:max-w-full max-md:text-4xl">
+        What does <span>All Academies</span> offer?
+      </h2>
+      <div class="self-stretch px-12 py-11 w-full max-md:px-5 max-md:max-w-full">
+        <div class="flex gap-5 max-md:flex-col ">
+          <article class="flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
+            <div class="flex flex-col justify-center rounded-2xl shadow-2xl max-md:mt-10 max-md:max-w-full">
+              <div class="flex flex-col py-7 bg-sky-500 rounded-2xl shadow-2xl max-md:max-w-full">
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
+                  <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/5918391c11d5999c1b6c61c11b8d41cf68b412a68956669469119e0028b6ad89?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[1.06]" alt="Comprehensive Resources Icon" />
+                </div>
+                <div class="flex flex-col px-7 mt-3.5 max-md:px-5 max-md:max-w-full">
+                  <h3 class="text-2xl text-center font-semibold text-range">Comprehensive Resources</h3>
+                  <p class="self-start ml-3.5 text-md font-light text-center text-black max-md:ml-2.5">
+                    Gain access to a vast array of high-quality reading materials covering all subjects relevant to your academic journey Whether you're a primary school student or a junior high school learner, <span>All Academies</span> ensures you have the resources you need to excel.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+          <article class="flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
+            <div class="flex flex-col justify-center rounded-2xl shadow-2xl max-md:mt-10 max-md:max-w-full">
+              <div class="flex flex-col py-7 bg-sky-500 rounded-2xl shadow-2xl max-md:max-w-full">
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
+                  <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/f312d9196a5ed6fab09812d973f97643e572dee8989e44a5a2ccf13500c71687?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[0.96]" alt="Effortless Assessment Tools Icon" />
+                </div>
+                <div class="flex flex-col px-7 mt-3.5 max-md:px-5 max-md:max-w-full">
+                  <h3 class="text-2xl text-center font-semibold text-range">Effortless Assessment Tools</h3>
+                  <p class="self-start ml-3.5 text-md font-light text-center text-black max-md:ml-2.5">
+                  Measure your progress effortlessly with our user-friendly assessment tools. From quick quizzes to in-depth written tests, <span class='font-semibold'>All Academies</span> provides a variety of assessment options to suit every learning style.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+          <article class="flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
+            <div class="flex flex-col justify-center rounded-2xl shadow-2xl max-md:mt-10 max-md:max-w-full">
+              <div class="flex flex-col py-7 bg-sky-500 rounded-2xl shadow-2xl max-md:max-w-full">
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
+                <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/3e2dbf7296eced50346c88233e6afb47da6a16e944399eef56db3c7e0b6c400b?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[1.06]" alt="Future Expansion Icon" />
+                </div>
+                <div class="flex flex-col px-7 mt-3.5 max-md:px-5 max-md:max-w-full">
+                  <h3 class="text-2xl text-center font-semibold text-range">Future Expansion</h3>
+                  <p class="self-start ml-3.5 text-md font-light text-center text-black max-md:ml-2.5">
+                  While we currently cater to Primary and Junior High School learners, our commitment to excellence means that coverage for Senior High School students is on the horizon. Stay tuned as we continue to expand our offerings to meet the evolving needs of learners across all educational levels.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- <article class="flex flex-col ml-5 w-[33%] max-md:ml-0 max-md:w-full">
+            <div class="flex flex-col justify-center rounded-[74px] shadow-[8px_8px_2px_rgba(0,0,0,0.25)] max-md:mt-10 max-md:max-w-full">
+              <div class="flex flex-col pt-8 pr-4 pb-20 bg-sky-500 rounded-3xl max-md:max-w-full">
+                <div class="flex justify-center items-center self-center px-7 py-7 max-w-full rounded-full border border-black border-solid w-[145px] max-md:px-5">
+                  <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/f312d9196a5ed6fab09812d973f97643e572dee8989e44a5a2ccf13500c71687?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[0.96]" alt="Effortless Assessment Tools Icon" />
+                </div>
+                <h3 class="self-start mt-3.5 ml-5 text-3xl font-semibold text-center text-orange-600 max-md:ml-2.5">Effortless Assessment Tools</h3>
+                <p class="text-lg font-light text-center text-black">
+                  Measure your progress effortlessly with our user-friendly assessment tools. From quick quizzes to in-depth written tests, <span>All Academies</span> provides a variety of assessment options to suit every learning style.
+                </p>
+              </div>
+            </div>
+          </article>
+          <article class="flex flex-col ml-5 w-[33%] max-md:ml-0 max-md:w-full">
+            <div class="flex flex-col grow justify-center rounded-[74px] shadow-[8px_8px_2px_rgba(0,0,0,0.25)] max-md:mt-10 max-md:max-w-full">
+              <div class="flex flex-col py-8 pr-1 pl-3.5 bg-sky-500 rounded-3xl max-md:max-w-full">
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
+                  <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/3e2dbf7296eced50346c88233e6afb47da6a16e944399eef56db3c7e0b6c400b?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[1.06]" alt="Future Expansion Icon" />
+                </div>
+                <h3 class="self-start mt-3.5 ml-5 text-3xl font-semibold text-center text-orange-600 max-md:ml-2.5">Future Expansion</h3>
+                <p class=" text-lg font-light text-center text-black ">
+                  While we currently cater to Primary and Junior High School learners, our commitment to excellence means that coverage for Senior High School students is on the horizon. Stay tuned as we continue to expand our offerings to meet the evolving needs of learners across all educational levels.
+                </p>
+              </div>
+            </div>
+          </article> -->
+        </div>
+      </div>
+      <!-- <p class="text-lg font-light text-center text-black max-md:max-w-full">
+        Welcome to All Academies, the premier <span class=" font-semibold">Learning and Assessment Application Platform( LAAPP)</span> tailored for students ranging from pre-school to senior high school, including technical and vocational education. Our mission is to provide students with accessible and affordable reading materials across all subjects while offering a seamless medium for assessing their performance through quizzes, tests, assignments, and examinations. Join us as we empower learners to reach their full potential through accessible resources and innovative assessment solutions. Start your educational journey with All Academies today!
+      </p> -->
+    </section>
+    
+  </section>
+
+  <!-- <section id="about" class="bg-white">
     <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
         <div class="max-w-screen-lg text-gray-500 sm:text-lg">
             <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">Learning and Assessment Application Platform (<span class="font-extrabold">LAAPP</span>)</h2>
@@ -102,13 +248,65 @@
             </a>
         </div>
     </div>
+  </section> -->
+
+  <section class="evidence">
+    <div class="">
+    <div class="flex flex-col justify-center">
+      <div class="flex relative flex-col justify-center px-10 py-20 w-full h-[427px] max-md:px-5 max-md:max-w-full">
+        <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/86be9205ff627cda51b00a6d0863a4e02917b18be9e5f3ca127228cf98115a83?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="object-cover absolute inset-0 size-full" alt="" />
+        <div class="relative mt-7 mb-9 max-md:max-w-full">
+          <div class="flex gap-5 max-md:flex-col">
+            <div class="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
+              <div class="mx-auto max-w-3xl text-center">
+                <h2 class="text-3xl font-bold text-orange-500 sm:text-4xl">Trusted by Schools and Educational Institutions Nationwide</h2>
+          
+                <p class="mt-4 text-white sm:text-xl">
+                  All Academies boasts of a quickly growing outreach nationwide. Join our growing community and transform your learning experience.
+                </p>
+              </div>
+          
+              <div class="mt-8 sm:mt-12">
+                <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
+                    <dt class="order-last text-lg font-medium text-gray-500">Total Users</dt>
+          
+                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">4.8M</dd>
+                  </div>
+          
+                  <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
+                    <dt class="order-last text-lg font-medium text-gray-500">Tests generated daily</dt>
+          
+                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">24+</dd>
+                  </div>
+          
+                  <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
+                    <dt class="order-last text-lg font-medium text-gray-500">Hours of lessons weekly</dt>
+          
+                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">86+</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    </div>
+
   </section>
 
 
+  
 
 
 
-  <div id="features" class="bg-white py-24 sm:py-32">
+
+
+  <div id="features" class="bg-white py-24  sm:py-32">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-2xl lg:text-center">
         <h2 class="text-base font-semibold leading-7 text-primary-600">Learn smarter</h2>
@@ -117,9 +315,9 @@
       </div>
       <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
         <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-          <div class="relative pl-16">
+          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
-              <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
+              <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 ">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                 </svg>
@@ -128,9 +326,9 @@
             </dt>
             <dd class="mt-2 text-base leading-7 text-gray-600">Easy to maneuver interface with high speed loading to meet your demand within a short time.</dd>
           </div>
-          <div class="relative pl-16">
+          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
-              <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
+              <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
@@ -139,9 +337,9 @@
             </dt>
             <dd class="mt-2 text-base leading-7 text-gray-600">It shields your personal information from intruders.</dd>
           </div>
-          <div class="relative pl-16">
+          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
-              <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
+              <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L12 12m6.894 5.785l-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864l-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
                 </svg>
@@ -150,9 +348,9 @@
             </dt>
             <dd class="mt-2 text-base leading-7 text-gray-600">It gives you accessibility on an operating system (iOS, Android and Windows) and any smart phone or tablet.</dd>
           </div>
-          <div class="relative pl-16">
+          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
-              <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
+              <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                 </svg>
@@ -190,14 +388,14 @@
       </div>
     </div>
     <div class="-mx-4 flex flex-wrap justify-center">
-      <div class="w-full px-4 md:w-1/2 lg:w-1/3">
+      <div class="w-full px-4 md:w-1/2 lg:w-1/3 ">
         <div
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
-          <span class="text-primary-600 mb-4 block text-lg font-semibold">
+          <span class=" text-range mb-4 block text-lg font-semibold">
             Basic
           </span>
-          <h2 class="text-gray-900 mb-5 text-[42px] font-bold">
+          <h2 class="text-primary-600 mb-5 text-[42px] font-bold">
             GHS 15
             <span class="text-gray-600 text-base font-medium"> / subject </span>
           </h2>
@@ -219,7 +417,7 @@
           </div>
           <a
             href="{{ route('sign-in') }}"
-            class="text-primary-600 hover:bg-primary-600 hover:border-primary-600 block w-full rounded-md border border-[#D4DEFF] bg-transparent p-4 text-center text-base font-semibold transition hover:text-white"
+            class="bg-retro text-white hover:bg-blue-600 hover:border-primary-600 block w-full rounded-full border border-[#D4DEFF]  p-4 text-center text-base font-semibold transition  hover:shadow-lg animate-pulse"
           >
             Choose Basic
           </a>
@@ -489,10 +687,10 @@
         <div
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
-          <span class="text-primary-600 mb-4 block text-lg font-semibold">
+          <span class="text-range mb-4 block text-lg font-semibold">
             Standard
           </span>
-          <h2 class="text-gray-900 mb-5 text-[42px] font-bold">
+          <h2 class=" text-primary-600 mb-5 text-[42px] font-bold">
             GHS 20
             <span class="text-gray-600 text-base font-medium"> / subject </span>
           </h2>
@@ -514,7 +712,7 @@
           </div>
           <a
             href="{{ route('sign-in') }}"
-            class="bg-primary-600 border-primary-600 block w-full rounded-md border p-4 text-center text-base font-semibold text-white transition hover:bg-opacity-90"
+            class="bg-retro text-white hover:bg-blue-600 hover:border-primary-600 block w-full rounded-full border border-[#D4DEFF]  p-4 text-center text-base font-semibold transition  hover:shadow-lg animate-pulse"
           >
             Choose Standard
           </a>
@@ -784,10 +982,10 @@
         <div
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
-          <span class="text-primary-600 mb-4 block text-lg font-semibold">
+          <span class=" text-range mb-4 block text-lg font-semibold">
             Professional
           </span>
-          <h2 class="text-gray-900 mb-5 text-[42px] font-bold">
+          <h2 class=" text-primary-600 mb-5 text-[42px] font-bold">
             GHS 30
             <span class="text-gray-600 text-base font-medium"> / subject </span>
           </h2>
@@ -809,7 +1007,7 @@
           </div>
           <a
             href="{{ route('sign-in') }}"
-            class="text-primary-600 hover:bg-primary-600 hover:border-primary-600 block w-full rounded-md border border-[#D4DEFF] bg-transparent p-4 text-center text-base font-semibold transition hover:text-white"
+            class="bg-retro text-white hover:bg-blue-600 hover:border-primary-600 block w-full rounded-full border border-[#D4DEFF]  p-4 text-center text-base font-semibold transition  hover:shadow-lg animate-pulse"
           >
             Choose Professional
           </a>
@@ -1083,7 +1281,7 @@
 
 
 
-<section id="faq" class="py-10 bg-white sm:py-16 lg:py-24">
+<!-- <section id="faq" class="py-10 bg-white sm:py-16 lg:py-24">
     <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
         <h2 class="text-3xl font-bold leading-tight text-black sm:text-4xl lg:text-5xl">Frequently Asked Questions</h2>
 
@@ -1107,12 +1305,127 @@
             </div>
         </div>
     </div>
+</section> -->
+
+<section class="faq" id="faq">
+  <div class="w-3/4 mx-auto mb-8">
+    <h2 class="text-3xl font-light text-center mb-4 text-black max-md:max-w-full max-md:text-4xl">
+      Frequently Asked Questions
+    </h2>
+      <div class="space-y-4 ">
+          <details class="group [&_summary::-webkit-details-marker]:hidden mx-auto" open>
+            <summary
+              class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900"
+            >
+              <h2 class="font-medium">How do I create an Account?</h2>
+        
+              <svg
+                class="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+        
+            <p class="mt-4 px-4 leading-relaxed text-gray-700">
+            Please, click on the “No account yet? Sign Up” option below the Login provision on this page. Provide your full name under “Name”, your email address under “Email”, a password of your choice under “Password” and repeat the password under “Confirm Password”. Click on the “Sign UP” button (green bar) after you have filled out all the information required for signing up.
+            </p>
+          </details>
+        
+          <details class="group [&_summary::-webkit-details-marker]:hidden">
+            <summary
+              class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900"
+            >
+              <h2 class="font-medium">How do i subscribe?</h2>
+        
+              <svg
+                class="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+        
+            <p class="mt-4 px-4 leading-relaxed text-gray-700">
+            At the top right corner of your home page is your initials, which is a dropdown. Click on it to display the items. Choose “Subscriptions” from the menu. Now click on “New Subscription” on the blank subscription page. Under “package” are two options: individual subscription and institutional subscription. Choose the option you want to subscribe for. Under “duration” are three options: 3 months subscription, 6 months subscription and 12 months subscription. Choose the duration you want. Next, click on the category of school that pertains to you (e.g., Primary/Basic School) and choose the level that applies to you (e.g., Basic Three). This will list all the subjects captured under the level. Now, click on the boxes (on the left hand of the subjects) of the subjects you want to subscribe for. Under “Amount” at the bottom of the page shows, the subscription fee you need to pay for your selection for the duration of your subscription. Inspect and click “Create Subscription” (green bar to the right) to submit your subscription to the LAAPP server.
+            </p>
+          </details>
+          <details class="group [&_summary::-webkit-details-marker]:hidden">
+            <summary
+              class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900"
+            >
+              <h2 class="font-medium">How do i pay for my subscription?</h2>
+        
+              <svg
+                class="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+        
+            <p class="mt-3 text-base text-gray-700">Payment is made using phone. Please, dial *772*30#, then enter 1326001 as the merchant code and send. Next, choose option 1 if you want to pay using mobile money and option 2 if you want to pay with a Prudential Bank account. A request page for your subscription reference number will appear next. Please, inter exactly the reference number that was generated by the LAAPP system for your subscription and send. In the final stage, you choose 1 to confirm your payment and submit to the bank.</p>
+                    <p class="mt-3 text-base text-gray-600">After the payment, your subscription status will change from “unpaid” to “paid” and you are now ready use the system.</p>
+          </details>
+      </div>
+      
+  </div>
+  
+</section>
+
+
+<Section class="cta overflow-hidden bg-retro sm:grid sm:grid-cols-2 sm:items-center">
+  <div class="p-8 md:p-12 lg:px-16 lg:py-24">
+    <div class="mx-auto max-w-xl text-center ltr:sm:text-left ">
+        <div class="flex lg:flex-1">
+          <a href="#" class="-m-1.5 p-1.5 flex items-center gap-4">
+            <span class="sr-only">{{ config('app.name') }}</span>
+            <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo">
+            <span>All Academies</span>
+          </a>
+        </div>
+      <h2 class="text-2xl font-bold text-white md:text-3xl">
+        Join our growing family of educators and learners and streamline your learning and assessment process.
+      </h2>
+
+      <p class="hidden text-white md:mt-4 md:block">
+        Sign up and subscribe now to access All Academies 
+      </p>
+
+      <div class="mt-4 md:mt-8">
+        <a
+         href="{{ route('sign-in') }}"
+          class="inline-block rounded bg-range px-12 py-3 text-2xl font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring focus:ring-yellow-400 animate-bounce drop-shadow-2xl"
+        >
+          Get Started Today
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <img
+    alt=""
+    src="https://cdn.pixabay.com/photo/2021/08/20/16/06/distance-learning-6560788_640.png"
+    class="h-full w-full object-cover sm:h-[calc(100%_-_2rem)] sm:self-end sm:rounded-ss-[30px] md:h-[calc(100%_-_4rem)] md:rounded-ss-[60px]"
+  />
 </section>
 
 
 
 
-<footer class="bg-white rounded-lg shadow">
+
+
+
+<footer class="bg-black text-white  shadow">
     <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
         <div class="sm:flex sm:items-center sm:justify-between">
             <a href="https://flowbite.com/" class="flex items-center mb-4 sm:mb-0">
