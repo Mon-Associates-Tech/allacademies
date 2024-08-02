@@ -28,10 +28,15 @@
     <div class="w-full mx-auto max-w-7xl py-8 px-2 lg:px-0 space-y-5">
         <div class="flex justify-between items-center bg-white rounded-xl px-4 py-3 shadow print:hidden">
             <x-title :name="config('app.name')" :image="asset('img/logo.png')" />
+            <div class='flex items-center justify-between w-1/2'>
+                {{-- Notification and other links --}}
+
+                <a href="{{ route('dashboard') }}" class='text-lg font-semibold hover:text-blue-400 '>Dashboard</a>
+                <a href="{{ route('subscriptions.index') }}" class='text-lg font-semibold hover:text-blue-400 '>Subscriptions</a>
+                <a href="{{ route('teams.index') }}" class='text-lg font-semibold hover:text-blue-400 '>Team</a>
+                <a href="{{ route('profile.show') }}" class='text-lg font-semibold hover:text-blue-400 '>Profile</a>
+            </div>
             <div class="flex items-center">
-                <div>
-                    {{-- Notification and other links --}}
-                </div>
                 <div class="relative ml-5" x-data="{ open: false }">
                     <img x-on:click="open = !open" x-on:click.outside="open = false" src="{{ auth()->user()->avatar_url }}"
                         alt="{{ auth()->user()->name }} Logo" loading="lazy" class="w-8 h-8 rounded-lg cursor-pointer">
