@@ -25,7 +25,7 @@
           <a href="#faq" class="text-lg font-semibold leading-6 text-gray-900">FAQ</a>
         </div>
         <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="{{ route('sign-in') }}" class="text-sm font-semibold leading-6 text-white p-2  bg-vert shadow-2xl hover:bg-green-600 rounded-md">Sign Up <span aria-hidden="true">&rarr;</span></a>
+          <a href="{{ route('sign-in') }}" class="text-sm font-semibold leading-6 text-white p-2  bg-vert shadow-2xl hover:bg-green-600 rounded-md">Sign In <span aria-hidden="true">&rarr;</span></a>
         </div>
       </nav>
       <!-- Mobile menu, show/hide based on menu open state. -->
@@ -55,7 +55,7 @@
                 <a href="#faq" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">FAQ</a>
               </div>
               <div class="py-6">
-                <a href="{{ route('sign-in') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Sign Up</a>
+                <a href="{{ route('sign-in') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Sign In</a>
               </div>
             </div>
           </div>
