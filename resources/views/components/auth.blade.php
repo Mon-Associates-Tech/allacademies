@@ -25,7 +25,7 @@
 @endpush
 
 <x-app>
-    <div class="w-full mx-auto max-w-7xl py-8 px-2 lg:px-0 space-y-5">
+    <div class="w-full min-h-screen mx-auto max-w-7xl py-8 px-2 lg:px-0 space-y-5">
         <div class="flex justify-between items-center bg-white rounded-xl px-4 py-3 shadow print:hidden">
             <x-title :name="config('app.name')" :image="asset('img/logo.png')" />
             <div class='flex items-center justify-between w-1/2'>
@@ -34,7 +34,7 @@
                 <a href="{{ route('dashboard') }}" class='text-lg font-semibold hover:text-blue-400 '>Dashboard</a>
                 <a href="{{ route('subscriptions.index') }}" class='text-lg font-semibold hover:text-blue-400 '>Subscriptions</a>
                 <a href="{{ route('teams.index') }}" class='text-lg font-semibold hover:text-blue-400 '>Team</a>
-                <a href="{{ route('profile.show') }}" class='text-lg font-semibold hover:text-blue-400 '>Profile</a>
+                <a href="{{ route('profile.show') }}"  class='text-lg font-semibold hover:text-blue-400 '>Profile</a>
             </div>
             <div class="flex items-center">
                 <div class="relative ml-5" x-data="{ open: false }">
@@ -195,6 +195,8 @@
             </div>
         </div>
 
+        
+
         <div class="print:hidden">
             {{ $breadcrumb }}
             <div class="mt-2 md:flex md:items-center md:justify-between">
@@ -216,7 +218,7 @@
             {{ $slot }}
         </div>
 
-        <div class="text-xs text-gray-600 mt-5 print:hidden">
+        <div class="text-xs bg-gray-100 w-[95%] text-gray-600 mt-5 print:hidden">
             <div class="flex justify-between items-center">
                 <span>&copy;
                     <script>
@@ -227,4 +229,6 @@
             </div>
         </div>
     </div>
+
+
 </x-app>

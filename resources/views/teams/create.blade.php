@@ -1,9 +1,5 @@
 <x-auth title="New Team">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb :paths="[
-            'Teams' => route('teams.index'),
-        ]" />
-    </x-slot>
+    
 
     <form method="POST" action="{{ route('teams.store') }}">
         @csrf
@@ -12,7 +8,7 @@
                 <x-form.input name="name" type="text" />
             </div>
         </div>
-        <div class="flex justify-end mt-3">
+        <div class=" mt-3">
             <x-button.primary class="ml-2">Create Team</x-button.primary>
         </div>
     </form>
