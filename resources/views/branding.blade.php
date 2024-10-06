@@ -253,7 +253,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
   <section class="evidence">
     <div class="">
     <div class="flex flex-col justify-center">
-      <div class="flex relative flex-col justify-center px-10 py-20 w-full h-[427px] max-md:px-5 max-md:max-w-full">
+      <div class="flex relative flex-col justify-center px-10 py-20 w-full h-[400px] max-md:px-5 max-md:max-w-full">
         <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/86be9205ff627cda51b00a6d0863a4e02917b18be9e5f3ca127228cf98115a83?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="object-cover absolute inset-0 size-full" alt="" />
         <div class="relative mt-7 mb-9 max-md:max-w-full">
           <div class="flex gap-5 max-md:flex-col">
@@ -271,13 +271,13 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
                   <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">Total Users</dt>
           
-                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">4.8M</dd>
+                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">150k +</dd>
                   </div>
           
                   <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">Tests generated daily</dt>
           
-                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">24+</dd>
+                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">50+</dd>
                   </div>
           
                   <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
@@ -1320,7 +1320,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
               <h2 class="font-medium">How do I create an Account?</h2>
         
               <svg
-                class="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                class="w-8 h-8 transition duration-300 group-open:-rotate-180"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -1342,7 +1342,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
               <h2 class="font-medium">How do i subscribe?</h2>
         
               <svg
-                class="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                class="w-8 h-8 transition duration-300 group-open:-rotate-180"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -1363,7 +1363,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
               <h2 class="font-medium">How do i pay for my subscription?</h2>
         
               <svg
-                class="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                class="w-8 h-8 transition duration-300 group-open:-rotate-180"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

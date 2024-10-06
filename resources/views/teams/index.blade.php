@@ -1,14 +1,6 @@
 <x-auth title="Teams">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb />
-    </x-slot>
-    <x-slot name="action">
-        <x-link.primary :to="route('teams.create')">New Team</x-link.primary>
-        <x-link.secondary :to="route('teams.joining')" class="ml-6">
-            Join Team
-            <span class="ml-1" aria-hidden="true"> &rarr;</span>
-        </x-link.secondary>
-    </x-slot>
+    
+    
     <x-table>
         <x-slot name="head">
             <tr>
@@ -23,10 +15,10 @@
                 <x-table.td bold>
                     {{ $team->name }}
                     @if ($team->owner->is($user) && $team->is_personal)
-                    <span class="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 capitalize">personal</span>
+                    <span class="inline-flex items-center rounded-full bg-vert px-2.5 py-0.5 text-xs font-medium text-white capitalize">personal</span>
                     @endif
                     @if ($user->currentTeam->is($team))
-                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 capitalize">current</span>
+                    <span class="inline-flex items-center rounded-full bg-range px-2.5 py-0.5 text-xs font-medium text-white capitalize">current</span>
                     @endif
                 </x-table.td>
                 <x-table.td>{{ $team->owner->is($user) ? 'You' : $team->owner->name }}</x-table.td>
@@ -51,4 +43,14 @@
             </tr>
         @endforeach
     </x-table>
+
+    <x-slot name="action">
+        <x-link.primary :to="route('teams.create')">New Team</x-link.primary>
+        <x-link.secondary :to="route('teams.joining')" class="ml-6">
+            Join Team
+            <span class="ml-1" aria-hidden="true"> &rarr;</span>
+        </x-link.secondary>
+    </x-slot>
+
+
 </x-auth>
