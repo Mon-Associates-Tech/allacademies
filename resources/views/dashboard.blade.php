@@ -85,13 +85,20 @@
       {{ $academicSubjects->links() }}
   </div>
   @else
-  <a href="{{ route('subscriptions.create') }}" type="button" class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-    </svg>
+  <div class="min-w-min max-w-md h-fit p-4 my-10 mx-auto bg-white border border-solid border-gray-400 shadow-2xl rounded-2xl text-xl">
+            <div class="h-3/4 w-full mb-4 ">
+                <img src="{{ asset('img/image.gif') }}" alt="subscribe" class="rounded-lg">
+            </div>
+            <div class="content">
+                <p>It appears you do not have a subscription. Click below to join the All Academies Family</p>
+                <a href="{{ route('subscriptions.create') }}">
 
-    <span class="mt-2 block text-sm font-semibold text-gray-900">No active package found. Subscribe here.</span>
-  </a>
+                    <div class="bg-blue-400 inline-block px-4 py-2 text-white rounded-full mt-2.5">
+                        Join Us
+                    </div>
+                </a>
+            </div>
+    </div>
 
   @endif
 
