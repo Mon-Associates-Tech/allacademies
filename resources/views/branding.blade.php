@@ -89,45 +89,49 @@
   </div> -->
 
   <div
-class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG9ubGluZSUyMGNsYXNzfGVufDB8fDB8fHww)] bg-cover bg-center bg-no-repeat object-cover "
+  class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG9ubGluZSUyMGNsYXNzfGVufDB8fDB8fHww)] bg-cover bg-center bg-no-repeat object-cover"
 >
-<div
-  class="absolute inset-0 bg-blue-900/85 sm:bg-transparent sm:from-gray-900/95 sm:to-gray-900/25 ltr:sm:bg-gradient-to-r "
-></div>
+  <div
+    class="absolute inset-0 bg-gradient-to-r from-blue-900/85 to-transparent" 
+    style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);" 
+  ></div>
 
-<div
-  class="relative mx-auto max-w-screen-xl h-2/3 px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8"
->
-  <div class="max-w-xl text-center ltr:sm:text-left ">
-    <h1 class="text-3xl font-extrabold text-white sm:text-5xl">
-      Study and assess yourself online with ease on
+  <div
+    class="relative mx-auto max-w-screen-xl h-2/3 px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8"
+  >
+    <div class="max-w-xl text-center ltr:sm:text-left">
+      <h1 class="text-3xl font-extrabold text-white sm:text-5xl">
+        Study and assess yourself online with ease on
+        <strong class="block font-extrabold text-orange-400"> All Academies </strong>
+      </h1>
 
-      <strong class="block font-extrabold text-orange-400"> All Academies </strong>
-    </h1>
+      <p class="mt-4 max-w-lg text-white sm:text-xl/relaxed">
+        Study and move at your own pace without any pressure. Easily assess yourself or your students to enhance understanding. Learning made easier and flexible.
+      </p>
 
-    <p class="mt-4 max-w-lg text-white  sm:text-xl/relaxed">
-      Study and move at your own pace without any pressure. Easily assess yourself or your students to enhance understanding. Learning made easier and flexible.
-    </p>
+      <div class="mt-8 flex flex-wrap gap-4 text-center">
+        <a
+          href="{{ route('sign-up') }}"
+          class="block w-full rounded bg-orange-400 px-12 py-3 text-md font-medium text-white shadow hover:bg-orange-500 focus:outline-none focus:ring sm:w-auto animate-bounce"
+        >
+          Get Started
+        </a>
 
-    <div class="mt-8 flex flex-wrap gap-4 text-center">
-      <a
-        href="{{ route('sign-up') }}"
-        class="block w-full rounded bg-orange-400 px-12 py-3 text-md font-medium text-white shadow hover:bg-orange-500 focus:outline-none focus:ring  sm:w-auto animate-bounce"
-      >
-        Get Started
-      </a>
+        <a
+          href="#about"
+          class="block w-full rounded bg-white px-12 py-3 text-sm font-medium text-orange-400 shadow hover:text-white hover:bg-green-300 focus:outline-none focus:ring active:text-rose-500 sm:w-auto"
+        >
+          Learn More
+        </a>
+      </div>
+    </div>
 
-      <a
-        href="#about"
-        class="block w-full rounded bg-white px-12 py-3 text-sm font-medium text-orange-400 shadow hover:text-white hover:bg-green-300 focus:outline-none focus:ring active:text-rose-500 sm:w-auto"
-      >
-        Learn More
-      </a>
+    <div class="bg-gray-200 px-4 py-2 shadow-lg rounded-2xl text-lg mt-8 font-semibold">
+      Announcing our Interactive online quizzes. <span class="text-orange-500">Try It</span>
     </div>
   </div>
-  <div class=" bg-gray-200 px-4 py-2 shadow-lg rounded-2xl text-lg mt-8 font-semibold" >Announcing our Interactive online quizzes. <span class="text-orange-500 ">Try It</span></div>
 </div>
-</div>
+
 
 
 
@@ -136,7 +140,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
   <section class="about bg-blue-200 p-12" id="about">
     <div class='grid grid-cols-3 gap-4 mb-8'>
 
-      <p class="text-lg font-light text-left text-black max-md:max-w-full col-span-2">
+      <p class="fade-in-text text-lg font-light text-left text-black max-md:max-w-full col-span-2">
         Welcome to All Academies, the premier <span class=" font-semibold">
           Learning and Assessment Application Platform( LAAPP)</span> tailored for students ranging 
           from pre-school to senior high school, including technical and vocational education.  Our mission is to 
@@ -154,12 +158,12 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
         What does <span>All Academies</span> offer?
       </h2>
       <div class="self-stretch px-12 py-11 w-full max-md:px-5 max-md:max-w-full">
-        <div class="flex gap-5 max-md:flex-col ">
-          <article class="flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
+        <div class="flex gap-5 max-md:flex-col article-container ">
+          <article class="article flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
             <div class="flex flex-col justify-center rounded-2xl shadow-2xl max-md:mt-10 max-md:max-w-full">
               <div class="flex flex-col py-7 bg-sky-500 rounded-2xl shadow-2xl max-md:max-w-full">
-                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
-                  <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/5918391c11d5999c1b6c61c11b8d41cf68b412a68956669469119e0028b6ad89?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[1.06]" alt="Comprehensive Resources Icon" />
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full  w-[145px]">
+                  <img loading="lazy" src="{{ asset('img/books.png') }}" class="w-full aspect-[1.06]" alt="Comprehensive Resources Icon" />
                 </div>
                 <div class="flex flex-col px-7 mt-3.5 max-md:px-5 max-md:max-w-full">
                   <h3 class="text-2xl text-center font-semibold text-range">Comprehensive Resources</h3>
@@ -170,11 +174,11 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
               </div>
             </div>
           </article>
-          <article class="flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
+          <article class=" article flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
             <div class="flex flex-col justify-center rounded-2xl shadow-2xl max-md:mt-10 max-md:max-w-full">
               <div class="flex flex-col py-7 bg-sky-500 rounded-2xl shadow-2xl max-md:max-w-full">
-                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
-                  <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/f312d9196a5ed6fab09812d973f97643e572dee8989e44a5a2ccf13500c71687?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[0.96]" alt="Effortless Assessment Tools Icon" />
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full  w-[145px]">
+                  <img loading="lazy" src="{{ asset('img/stationery.png') }}" class="w-full aspect-[0.96]" alt="Effortless Assessment Tools Icon" />
                 </div>
                 <div class="flex flex-col px-7 mt-3.5 max-md:px-5 max-md:max-w-full">
                   <h3 class="text-2xl text-center font-semibold text-range">Effortless Assessment Tools</h3>
@@ -185,11 +189,11 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
               </div>
             </div>
           </article>
-          <article class="flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
+          <article class="article flex flex-col w-[33%]  max-md:ml-0 max-md:w-full">
             <div class="flex flex-col justify-center rounded-2xl shadow-2xl max-md:mt-10 max-md:max-w-full">
               <div class="flex flex-col py-7 bg-sky-500 rounded-2xl shadow-2xl max-md:max-w-full">
-                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
-                <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/3e2dbf7296eced50346c88233e6afb47da6a16e944399eef56db3c7e0b6c400b?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[1.06]" alt="Future Expansion Icon" />
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full  w-[145px]">
+                <img loading="lazy" src="{{ asset('img/green-home.png') }}" class="w-full aspect-[1.06]" alt="Future Expansion Icon" />
                 </div>
                 <div class="flex flex-col px-7 mt-3.5 max-md:px-5 max-md:max-w-full">
                   <h3 class="text-2xl text-center font-semibold text-range">Future Expansion</h3>
@@ -204,7 +208,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
           <!-- <article class="flex flex-col ml-5 w-[33%] max-md:ml-0 max-md:w-full">
             <div class="flex flex-col justify-center rounded-[74px] shadow-[8px_8px_2px_rgba(0,0,0,0.25)] max-md:mt-10 max-md:max-w-full">
               <div class="flex flex-col pt-8 pr-4 pb-20 bg-sky-500 rounded-3xl max-md:max-w-full">
-                <div class="flex justify-center items-center self-center px-7 py-7 max-w-full rounded-full border border-black border-solid w-[145px] max-md:px-5">
+                <div class="flex justify-center items-center self-center px-7 py-7 max-w-full rounded-full  w-[145px] max-md:px-5">
                   <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/f312d9196a5ed6fab09812d973f97643e572dee8989e44a5a2ccf13500c71687?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[0.96]" alt="Effortless Assessment Tools Icon" />
                 </div>
                 <h3 class="self-start mt-3.5 ml-5 text-3xl font-semibold text-center text-orange-600 max-md:ml-2.5">Effortless Assessment Tools</h3>
@@ -217,7 +221,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
           <article class="flex flex-col ml-5 w-[33%] max-md:ml-0 max-md:w-full">
             <div class="flex flex-col grow justify-center rounded-[74px] shadow-[8px_8px_2px_rgba(0,0,0,0.25)] max-md:mt-10 max-md:max-w-full">
               <div class="flex flex-col py-8 pr-1 pl-3.5 bg-sky-500 rounded-3xl max-md:max-w-full">
-                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full border border-black border-solid w-[145px]">
+                <div class="flex justify-center items-center self-center px-5 py-6 max-w-full rounded-full  w-[145px]">
                   <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/3e2dbf7296eced50346c88233e6afb47da6a16e944399eef56db3c7e0b6c400b?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="w-full aspect-[1.06]" alt="Future Expansion Icon" />
                 </div>
                 <h3 class="self-start mt-3.5 ml-5 text-3xl font-semibold text-center text-orange-600 max-md:ml-2.5">Future Expansion</h3>
@@ -266,21 +270,21 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
                 </p>
               </div>
           
-              <div class="mt-8 sm:mt-12">
-                <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
+              <div class="dl-container mt-8 sm:mt-12">
+                <dl class=" grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div class=" dl flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">Total Users</dt>
           
                     <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">150k +</dd>
                   </div>
           
-                  <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
+                  <div class="dl flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">Tests generated daily</dt>
           
                     <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">50+</dd>
                   </div>
           
-                  <div class="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
+                  <div class="dl flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">Hours of lessons weekly</dt>
           
                     <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">86+</dd>
@@ -314,8 +318,8 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
         <p class="mt-6 text-lg leading-8 text-gray-600">We have got all the features that will help you learn virtually. Have more confidence in your hardwork by quizzing yourself.</p>
       </div>
       <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
-        <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
+        <dl class="feature-grid grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+          <div class="feature-item left relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
               <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 ">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -326,7 +330,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
             </dt>
             <dd class="mt-2 text-base leading-7 text-gray-600">Easy to maneuver interface with high speed loading to meet your demand within a short time.</dd>
           </div>
-          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
+          <div class="feature-item right relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
               <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -337,7 +341,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
             </dt>
             <dd class="mt-2 text-base leading-7 text-gray-600">It shields your personal information from intruders.</dd>
           </div>
-          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
+          <div class="feature-item left relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
               <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -348,7 +352,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
             </dt>
             <dd class="mt-2 text-base leading-7 text-gray-600">It gives you accessibility on an operating system (iOS, Android and Windows) and any smart phone or tablet.</dd>
           </div>
-          <div class="relative pl-16 border border-blue-300 rounded-lg p-1">
+          <div class="feature-item right relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
               <div class="absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
                 <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -387,8 +391,8 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
         </div>
       </div>
     </div>
-    <div class="-mx-4 flex flex-wrap justify-center">
-      <div class="w-full px-4 md:w-1/2 lg:w-1/3 ">
+    <div class="price-card-container  -mx-4 flex flex-wrap justify-center">
+      <div class="price-card w-full px-4 md:w-1/2 lg:w-1/3 ">
         <div
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
@@ -683,7 +687,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
           </div>
         </div>
       </div>
-      <div class="w-full px-4 md:w-1/2 lg:w-1/3">
+      <div class="price-card w-full px-4 md:w-1/2 lg:w-1/3">
         <div
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
@@ -978,7 +982,7 @@ class="relative bg-[url(https://images.unsplash.com/photo-1588702547919-26089e69
           </div>
         </div>
       </div>
-      <div class="w-full px-4 md:w-1/2 lg:w-1/3">
+      <div class="price-card w-full px-4 md:w-1/2 lg:w-1/3">
         <div
           class="border-primary-600 shadow-lg relative z-10 mb-10 overflow-hidden rounded-xl border border-opacity-20 bg-white py-10 px-8 sm:p-12 lg:py-10 lg:px-6 xl:p-12"
         >
