@@ -137,8 +137,8 @@
 
 
 
-  <section class="about bg-blue-200 p-12" id="about">
-    <div class='grid grid-cols-3 gap-4 mb-8'>
+  <section class="about bg-blue-200 md:p-12" id="about">
+    <div class='flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-4 mb-8 p-4'>
 
       <p class="fade-in-text text-lg font-light text-left text-black max-md:max-w-full col-span-2">
         Welcome to All Academies, the premier <span class=" font-semibold">
@@ -154,7 +154,7 @@
       </div>
     </div>
     <section class="flex flex-col items-center bg-sky-500 bg-opacity-40 p-4">
-      <h2 class="text-3xl font-light text-black max-md:max-w-full max-md:text-4xl">
+      <h2 class="md:text-3xl text-xl font-light w-full text-black max-md:max-w-full max-md:text-4xl">
         What does <span>All Academies</span> offer?
       </h2>
       <div class="self-stretch px-12 py-11 w-full max-md:px-5 max-md:max-w-full">
@@ -254,40 +254,40 @@
     </div>
   </section> -->
 
-  <section class="evidence">
-    <div class="">
-    <div class="flex flex-col justify-center">
-      <div class="flex relative flex-col justify-center px-10 py-20 w-full h-[400px] max-md:px-5 max-md:max-w-full">
-        <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/86be9205ff627cda51b00a6d0863a4e02917b18be9e5f3ca127228cf98115a83?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="object-cover absolute inset-0 size-full" alt="" />
+  <section class="evidence bg-blue-300 h-full md:bg-none">
+    <div class="mt-4">
+    <div class="flex flex-col justify-center mt-4">
+      <div class="flex relative flex-col justify-center px-10 py-20 w-full h-[400px] max-md:px-5 max-md:max-w-full ">
+        <img loading="lazy" src="https://cdn.builder.io/api/v1/image/assets/TEMP/86be9205ff627cda51b00a6d0863a4e02917b18be9e5f3ca127228cf98115a83?apiKey=351c2ab942384950b268d9c39a958507&&apiKey=351c2ab942384950b268d9c39a958507" class="object-cover absolute inset-0 size-full opacity-0 md:opacity-100" alt="" />
         <div class="relative mt-7 mb-9 max-md:max-w-full">
           <div class="flex gap-5 max-md:flex-col">
             <div class="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
               <div class="mx-auto max-w-3xl text-center">
-                <h2 class="text-3xl font-bold text-orange-500 sm:text-4xl">Trusted by Schools and Educational Institutions Nationwide</h2>
+                <h2 class="md:text-3xl text-lg font-bold text-orange-500">Trusted by Schools and Educational Institutions Nationwide</h2>
           
-                <p class="mt-4 text-white sm:text-xl">
+                <p class="mt-4 text-black md:text-white  text-md font-extralight">
                   All Academies boasts of a quickly growing outreach nationwide. Join our growing community and transform your learning experience.
                 </p>
               </div>
           
               <div class="dl-container mt-8 sm:mt-12">
                 <dl class=" grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div class=" dl flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                    <dt class="order-last text-lg font-medium text-gray-500">Total Users</dt>
+                  <div class=" dl flex flex-col rounded-lg bg-blue-50 px-2 py-4 md:px-4 md:py-8 text-center">
+                    <dt class="order-last text-sm md:text-lg font-medium text-gray-500">Total Users</dt>
           
-                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">150k +</dd>
+                    <dd class="text-xl font-extrabold text-blue-600 md:text-5xl">150k +</dd>
                   </div>
           
-                  <div class="dl flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                    <dt class="order-last text-lg font-medium text-gray-500">Tests generated daily</dt>
+                  <div class="dl flex flex-col rounded-lg bg-blue-50 px-2 py-4 md:px-4 md:py-8 text-center">
+                    <dt class="order-last text-sm md:text-lg font-medium text-gray-500">Tests generated daily</dt>
           
-                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">50+</dd>
+                    <dd class="text-xl font-extrabold text-blue-600 md:text-5xl">50+</dd>
                   </div>
           
-                  <div class="dl flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                    <dt class="order-last text-lg font-medium text-gray-500">Hours of lessons weekly</dt>
+                  <div class="dl flex flex-col rounded-lg bg-blue-50 px-2 py-4 md:px-4 md:py-8 text-center">
+                    <dt class="order-last text-sm md:text-lg font-medium text-gray-500">Hours of lessons weekly</dt>
           
-                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">86+</dd>
+                    <dd class="text-xl font-extrabold text-blue-600 md:text-5xl">86+</dd>
                   </div>
                 </dl>
               </div>
