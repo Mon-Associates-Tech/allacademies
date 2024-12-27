@@ -350,7 +350,7 @@
               </div>
               Flexibility
             </dt>
-            <dd class="mt-2 text-base leading-7 text-gray-600">It gives you accessibility on an operating system (iOS, Android and Windows) and any smart phone or tablet.</dd>
+            <dd class="mt-2 text-base leading-7 text-gray-600">It gives you accessibility on any operating system (iOS, Android and Windows) and any smart phone or tablet.</dd>
           </div>
           <div class="feature-item right relative pl-16 border border-blue-300 rounded-lg p-1">
             <dt class="text-base font-semibold leading-7 text-gray-900">
@@ -386,7 +386,7 @@
             Our Pricing Plan
           </h2>
           <p class="text-gray-600 text-base">
-            Simple no-trick pricing with great discount for your money. The more months you pay, the more discount applied.
+            Simple pricing with great discount, value for your money and no hidden extra charges. The more months you pay, the more discount applied.
           </p>
         </div>
       </div>
@@ -1343,7 +1343,7 @@
             <summary
               class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900"
             >
-              <h2 class="font-medium">How do i subscribe?</h2>
+              <h2 class="font-medium">How do I subscribe?</h2>
         
               <svg
                 class="w-8 h-8 transition duration-300 group-open:-rotate-180"
@@ -1364,7 +1364,7 @@
             <summary
               class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900"
             >
-              <h2 class="font-medium">How do i pay for my subscription?</h2>
+              <h2 class="font-medium">How do I pay for my subscription?</h2>
         
               <svg
                 class="w-8 h-8 transition duration-300 group-open:-rotate-180"
