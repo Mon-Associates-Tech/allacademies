@@ -10,7 +10,7 @@ export default defineConfig({
     ],
     build: {
         rollupOptions: {
-            external: ['gsap']
+            external: ['gsap', 'gsap/ScrollTrigger']
         }
     }
 });
