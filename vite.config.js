@@ -8,9 +8,5 @@ export default defineConfig({
             refresh: true,
         }),
     ],
-    build: {
-        rollupOptions: {
-            external: ['gsap', 'gsap/ScrollTrigger']
-        }
-    }
+
 });
