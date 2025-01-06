@@ -43,7 +43,7 @@
     
 
     <h3 class="font-semibold text-2xl">My Courses</h3>
-    <nav class="w-full mb-4 py-2">
+    <!-- <nav class="w-full mb-4 py-2">
         <ul class="flex justify-between items-center">
             <li><a href="/">University</a></li>
             <li><a href="/">Senior High</a></li>
@@ -53,7 +53,7 @@
             
             
         </ul>
-    </nav>
+    </nav> -->
   <x-table>
       <x-slot name="head">
           <tr>
