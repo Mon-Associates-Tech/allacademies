@@ -25,16 +25,41 @@
 @endpush
 
 <x-app>
-    <div class="w-full mx-auto max-w-7xl py-8 px-2 lg:px-0 space-y-5">
+    <div class="w-full min-h-screen mx-auto max-w-7xl py-8 px-2 lg:px-0 space-y-5">
         <div class="flex justify-between items-center bg-white rounded-xl px-4 py-3 shadow print:hidden">
             <x-title :name="config('app.name')" :image="asset('img/logo.png')" />
+            <div class='flex items-center justify-between w-2 opacity-0 md:opacity-100 md:w-1/2 text-md'>
+                {{-- Notification and other links --}}
+
+                <a href="{{ route('dashboard') }}" class='text-md font-semibold hover:text-blue-400 '>Dashboard</a>
+                <a href="{{ route('subscriptions.index') }}" class='text-md font-semibold hover:text-blue-400 '>Subscriptions</a>
+                <a href="{{ route('teams.index') }}" class='text-md font-semibold hover:text-blue-400 '>Team</a>
+                <a href="{{ route('profile.show') }}"  class='text-md font-semibold hover:text-blue-400 '>Profile</a>
+            </div>
             <div class="flex items-center">
-                <div>
-                    {{-- Notification and other links --}}
-                </div>
                 <div class="relative ml-5" x-data="{ open: false }">
-                    <img x-on:click="open = !open" x-on:click.outside="open = false" src="{{ auth()->user()->avatar_url }}"
-                        alt="{{ auth()->user()->name }} Logo" loading="lazy" class="w-8 h-8 rounded-lg cursor-pointer">
+                    <div
+                     x-on:click="open = !open" x-on:click.outside="open = false"
+                     class="flex gap-2 px-4 py-2 rounded-full items-center bg-gray-100">
+
+                        <img  
+                            src="{{ auth()->user()->avatar_url }}"
+                            alt="{{ auth()->user()->name }} Logo"
+                            loading="lazy" 
+                            class="w-8 h-8 rounded-lg cursor-pointer border border-gray-400"
+                        />
+
+                        <svg
+                            class="w-4 h-4 transition duration-300 group-open:-rotate-180"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+                    </div>
+
                     <div x-cloak x-show="open" x-transition
                         class="origin-top-right absolute z-10 right-0 bg-white rounded-lg w-56 mt-1 shadow-md border border-gray-200">
                         <div class="divide-y">
@@ -190,6 +215,8 @@
             </div>
         </div>
 
+        
+
         <div class="print:hidden">
             {{ $breadcrumb }}
             <div class="mt-2 md:flex md:items-center md:justify-between">
@@ -211,7 +238,7 @@
             {{ $slot }}
         </div>
 
-        <div class="text-xs text-gray-600 mt-5 print:hidden">
+        <div class="text-xs bg-gray-100 w-[95%] text-gray-600 mt-5 print:hidden">
             <div class="flex justify-between items-center">
                 <span>&copy;
                     <script>
@@ -222,4 +249,6 @@
             </div>
         </div>
     </div>
+
+
 </x-app>
