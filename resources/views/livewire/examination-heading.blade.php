@@ -25,7 +25,7 @@
 
         <div x-show="!preview" class="grid sm:grid-cols-6 gap-4 px-4 py-2 text-gray-700 focus:outline-none focus:border-gray-700 bg-gray-50 border border-gray-300 rounded-b-lg">
             <div class="sm:col-span-4">
-                <x-form.input wire:model="title" name="heading[title]" label="Title" type="text" />
+                <x-form.textarea wire:model="title" name="heading[title]" label="Title" type="text" />
             </div>
             <div class="sm:col-span-2">
                 <x-form.input wire:model="duration" name="heading[duration]" label="Duration" type="text" />
