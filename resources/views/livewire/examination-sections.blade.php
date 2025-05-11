@@ -71,7 +71,13 @@
                             @foreach($subtopics['essay'] as $subtopic)
                                 <div>{{$subtopic['name']}}</div>
                             @endforeach
+                                @foreach($subtopics['mcq'] as $subtopic)
+                                    <div>{{$subtopic['name']}}</div>
+                                @endforeach
 
+                                @foreach($subtopics['trueFalse'] as $subtopic)
+                                    <div>{{$subtopic['name']}}</div>
+                                @endforeach
                         </div>
                     </li>
                     @endforeach

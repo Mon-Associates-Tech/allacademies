@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Team;
 use App\Models\User;
+use App\Support\AcademicGroupTag;
 use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
-use App\Models\AcademicLevel;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
@@ -50,7 +48,6 @@ class SubscriptionController extends Controller
         $user->load('currentTeam');
         $academicGroups = AcademicGroup::query()->with('academicLevels.academicSubjects')->get()->toArray();
 
-//        dd($academicGroups);
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
             'currentTeam' => $user->currentTeam,
@@ -70,7 +67,8 @@ class SubscriptionController extends Controller
             $package = SubscriptionPackage::from($package = $request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
-            $beneficiaries =  $request->integer('beneficiaries')
+            $beneficiaries =  $request->integer('beneficiaries'),
+            AcademicGroupTag::BASIC
         );
 
         /** @var User $user */

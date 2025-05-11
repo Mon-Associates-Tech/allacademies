@@ -17,13 +17,11 @@ class Pricer
      * @throws UnknownCurrencyException
      * @throws NumberFormatException
      */
-    public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries)
+    public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries, ?string $tag)
     {
-        $unit = static::getUnitPrice($package, $duration);
-//            return 5;
-//        return Money::of(SubscriptionPackageAmount::subscriptionPrice($package, $duration, $subjects, $beneficiaries), 'GHS');
+//        $unit = static::getUnitPrice($package, $duration);
 
-        $unit = SubscriptionPackageAmount::unitSubscriptionPrice($package, $duration);
+        $unit = SubscriptionCalculator::unitSubscriptionPrice($package,  $duration, $tag);
 
         $money = Money::of($unit, 'GHS');
 

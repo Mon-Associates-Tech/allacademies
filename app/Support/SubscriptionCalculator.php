@@ -3,25 +3,23 @@
 namespace App\Support;
 
 use App\Enums\SubscriptionPackage;
-use Brick\Money\Money;
-use InvalidArgumentException;
 
-class SubscriptionPackageAmount
+class SubscriptionCalculator
 {
 
 
     public static function subscriptionPrice(
         $package = SubscriptionPackage::INDIVIDUAL_FULL,
-        string $level = AcademicLevel::BASIC,
-        string $duration = AcademicDuration::QUARTER,
+        string $level = AcademicGroupTag::BASIC,
+        int $duration = AcademicDuration::QUARTER,
         int $numberOfSubjects = 1,
         int $numberOfStudents = 1
-    )
+    ): float|int
     {
         switch ($package) {
 
             case SubscriptionPackage::INDIVIDUAL_FULL:
-                if ($level === AcademicLevel::BASIC) {
+                if ($level === AcademicGroupTag::BASIC) {
                     switch ($duration) {
                         case AcademicDuration::YEAR:
                             return SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_YEAR * $numberOfSubjects;
@@ -30,7 +28,7 @@ class SubscriptionPackageAmount
                         case AcademicDuration::QUARTER:
                             return SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_QUARTER * $numberOfSubjects;
                     }
-                } elseif ($level === AcademicLevel::SENIOR) {
+                } elseif ($level === AcademicGroupTag::SENIOR) {
                     switch ($duration) {
                         case AcademicDuration::YEAR:
                             return SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_YEAR * $numberOfSubjects;
@@ -43,7 +41,7 @@ class SubscriptionPackageAmount
                 break;
 
             case SubscriptionPackage::INSTITUTION_FULL:
-                if ($level === AcademicLevel::BASIC) {
+                if ($level === AcademicGroupTag::BASIC) {
                     switch ($duration) {
                         case AcademicDuration::YEAR:
                             return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS * $numberOfStudents;
@@ -52,7 +50,7 @@ class SubscriptionPackageAmount
                         case AcademicDuration::QUARTER:
                             return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS * $numberOfStudents;
                     }
-                } elseif ($level === AcademicLevel::SENIOR) {
+                } elseif ($level === AcademicGroupTag::SENIOR) {
                     switch ($duration) {
                         case AcademicDuration::YEAR:
                             return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS * $numberOfStudents;
@@ -65,17 +63,17 @@ class SubscriptionPackageAmount
                 break;
 
             case SubscriptionPackage::INSTITUTION_MID_TERM:
-                if ($level === AcademicLevel::BASIC) {
+                if ($level === AcademicGroupTag::BASIC) {
                     return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE * $numberOfStudents;
-                } elseif ($level === AcademicLevel::SENIOR) {
+                } elseif ($level === AcademicGroupTag::SENIOR) {
                     return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE * $numberOfStudents;
                 }
                 break;
 
             case SubscriptionPackage::INSTITUTION_MOCK_EXAMS:
-                if ($level === AcademicLevel::BASIC) {
+                if ($level === AcademicGroupTag::BASIC) {
                     return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE * $numberOfStudents;
-                } elseif ($level === AcademicLevel::SENIOR) {
+                } elseif ($level === AcademicGroupTag::SENIOR) {
                     return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE * $numberOfStudents;
                 }
                 break;
@@ -87,54 +85,50 @@ class SubscriptionPackageAmount
 
     public static function unitSubscriptionPrice(
         $package = SubscriptionPackage::INDIVIDUAL_FULL,
-        string $level = AcademicLevel::BASIC,
-        string $duration = AcademicDuration::QUARTER
-    )
+        int $duration = AcademicDuration::QUARTER,
+        string $tag = AcademicGroupTag::BASIC
+    ): int
     {
         switch ($package) {
             case SubscriptionPackage::INDIVIDUAL_FULL:
-                if ($level === AcademicLevel::BASIC) {
+                if ($tag === AcademicGroupTag::BASIC) {
                     return match ($duration) {
                         AcademicDuration::YEAR => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_YEAR,
                         AcademicDuration::HALF => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_HALF,
-                        AcademicDuration::QUARTER => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_QUARTER,
-                        default => 0
+                        default => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_QUARTER
                     };
-                } elseif ($level === AcademicLevel::SENIOR) {
+                } elseif ($tag === AcademicGroupTag::SENIOR) {
                     return match ($duration) {
                         AcademicDuration::YEAR => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_YEAR,
                         AcademicDuration::HALF => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_HALF,
-                        AcademicDuration::QUARTER => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_QUARTER,
-                        default => 0
+                        default => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_QUARTER
                     };
                 }
                 break;
 
             case SubscriptionPackage::INSTITUTION_FULL:
-                if ($level === AcademicLevel::BASIC) {
+                if ($tag === AcademicGroupTag::BASIC) {
                     return match ($duration) {
                         AcademicDuration::YEAR => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
                         AcademicDuration::HALF => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
-                        AcademicDuration::QUARTER => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS,
-                        default => 0
+                        default => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
                     };
-                } elseif ($level === AcademicLevel::SENIOR) {
+                } elseif ($tag === AcademicGroupTag::SENIOR) {
                     return match ($duration) {
                         AcademicDuration::YEAR => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
                         AcademicDuration::HALF => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
-                        AcademicDuration::QUARTER => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS,
-                        default => 0
+                        default => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
                     };
                 }
                 break;
 
             case SubscriptionPackage::INSTITUTION_MID_TERM:
-                return $level === AcademicLevel::BASIC
+                return $tag === AcademicGroupTag::BASIC
                     ? SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE
                     : SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
 
             case SubscriptionPackage::INSTITUTION_MOCK_EXAMS:
-                return $level === AcademicLevel::BASIC
+                return $tag === AcademicGroupTag::BASIC
                     ? SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE
                     : SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
         }

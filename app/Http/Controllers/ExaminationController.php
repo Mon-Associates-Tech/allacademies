@@ -93,7 +93,7 @@ class ExaminationController extends Controller
      */
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
-        dd($request->all());
+
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $academicSubject);
@@ -104,14 +104,14 @@ class ExaminationController extends Controller
         $heading = $request->validated('heading');
         //$heading['duration'] = convertMinutesToHoursMinutes($heading['duration']);
 
-        dd($request->all());
-        $this->handle(
+
+        dispatch(new GenerateExaminationJob(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),
             User::query()->find($request->validated('creator_id')),
             $request->validated('heading'),
             $request->validated('sections')
-        );
+        ));
 
         return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
             ->with('success', __('status.exam.generating', ['title' => $heading['title']]));

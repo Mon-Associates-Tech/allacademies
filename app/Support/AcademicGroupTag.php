@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-enum AcademicLevel
+enum AcademicGroupTag
 {
     public const BASIC = 'basic';
     public const SENIOR = 'senior';

@@ -3,21 +3,24 @@
 namespace App\Http\Livewire;
 
 use App\Enums\SubscriptionPackage;
+use App\Models\AcademicGroup;
 use App\Support\Pricer;
 use App\Support\SubscriptionAmount;
-use App\Support\SubscriptionPackageAmount;
+use App\Support\SubscriptionCalculator;
 use Illuminate\Support\Arr;
 use Livewire\Component;
 
 class SubscriptionForm extends Component
 {
     public $package;
-    public $durationInMonths;
+    public $durationInMonths = 3;
     public $beneficiaries;
     public $academicLevels;
     public $academicGroups;
     public $academicGroupId;
     public $academicSubjects;
+
+    public $academicGroupTag;
 
     public function mount($academicGroups, $currentTeam)
     {
@@ -38,21 +41,12 @@ class SubscriptionForm extends Component
 
     public function getAmountProperty()
     {
-
-
-         SubscriptionPackageAmount::subscriptionPrice(SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
-            (int) empty($this->durationInMonths) ? '3' : $this->durationInMonths,
-            count($this->academicSubjects) > 1 ? count($this->academicSubjects) : 1,
-            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries
-        );
-
-
-
         $money = Pricer::calculate(
             SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
-            (int) empty($this->durationInMonths) ? '3' : $this->durationInMonths,
+            $this->getDurationInMonthsProperty(),
             count($this->academicSubjects) > 1 ? count($this->academicSubjects) : 1,
-            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries
+            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries,
+            $this->getAcademicGroupTagProperty() ?? 'basic'
         );
 
         return (string) $money->getAmount();
@@ -66,5 +60,22 @@ class SubscriptionForm extends Component
     public function render()
     {
         return view('livewire.subscription-form');
+    }
+
+    public function getAcademicGroupTagProperty(){
+        return AcademicGroup::find($this->academicGroupId)->tag;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDurationInMonthsProperty()
+    {
+        return (int) $this->durationInMonths;
+    }
+
+    public function updatedDurationInMonths(): void
+    {
+        $this->getAmountProperty();
     }
 }
