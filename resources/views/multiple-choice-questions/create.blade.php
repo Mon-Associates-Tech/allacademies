@@ -45,6 +45,11 @@
                             'e' => 'Option E',
                         ]" />
 
+                        <div class="">
+                            <x-form.input type="text" Label="Sub Topic" name="subtopic" ></x-form.input>
+                            <hr class="my-6">
+                        </div>
+
                         <div class="flex justify-end mt-3">
                             <x-button.primary class="ml-2">Create Multiple Choice Question</x-button.primary>
                         </div>

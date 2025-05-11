@@ -79,8 +79,9 @@ class GenerateExaminationJob implements ShouldQueue
                 ];
 
                 ${$section['type']} = array_merge(${$section['type']}, $questions);
+                $this->heading['duration'] = convertMinutesToHoursMinutes($section['duration']);
             });
-
+            $this->heading['duration'] = convertMinutesToHoursMinutes($sections['duration']);
             $examination = new Examination([
                 'title' => $this->heading['title'],
                 'heading' => $this->heading,

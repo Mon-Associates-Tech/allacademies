@@ -10,14 +10,16 @@ class ExaminationSections extends Component
 
     public $sections;
 
+    public $subtopics;
+
     public function plus()
     {
-        array_push($this->sections, [
+        $this->sections[] = [
             'name' => '',
             'type' => '',
             'count' => '',
             'topics' => []
-        ]);
+        ];
     }
 
     public function minus()

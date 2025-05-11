@@ -1,4 +1,4 @@
-<div class="grid sm:grid-cols-3 gap-4">
+<div class="grid sm:grid-cols-3 gap-4  mx-auto">
     <div class="sm:col-span-2">
         <x-form.select wire:model="durationInMonths" name="duration_in_months" label="Duration" :options="[
             '3' => '3 Months',

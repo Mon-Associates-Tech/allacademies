@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotEnoughQuestionsException;
+use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
+use App\Models\EssayQuestion;
 use App\Models\Team;
 use App\Models\User;
 use App\Support\Examiner;
 use App\Models\Examination;
 use App\Models\AcademicSubject;
 use App\Jobs\GenerateExaminationJob;
+use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\ExaminationRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ExaminationController extends Controller
@@ -38,7 +45,7 @@ class ExaminationController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\View\View
      */
     public function create(AcademicSubject $academicSubject)
     {
@@ -65,36 +72,49 @@ class ExaminationController extends Controller
         $metadata['level_label'] = $academicSubject->academicLevel->label;
         $metadata['group_name'] = $academicSubject->academicLevel->academicGroup->name;
 
+        $subtopics['essay'] = $academicSubject->essayQuestions()->with('subtopic')->get()->pluck('subtopic')->toArray();
+        $subtopics['mcq'] = $academicSubject->mcqQuestions()->with('subtopic')->get()->pluck('subtopic')->toArray();
+        $subtopics['trueFalse'] = $academicSubject->trueFalseQuestions()->with('subtopic')->get()->pluck('subtopic')->toArray();
+
         return view('examinations.create', [
             'academicSubject' => $academicSubject,
             'topics' => $topics,
             'metadata' => $metadata,
+            'subtopics' => $subtopics
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
+     * @throws NotEnoughQuestionsException
      */
     public function store(AcademicSubject $academicSubject, ExaminationRequest $request)
     {
+        dd($request->all());
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        dispatch(new GenerateExaminationJob(
+
+
+        $heading = $request->validated('heading');
+        //$heading['duration'] = convertMinutesToHoursMinutes($heading['duration']);
+
+        dd($request->all());
+        $this->handle(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),
             User::query()->find($request->validated('creator_id')),
             $request->validated('heading'),
             $request->validated('sections')
-        ));
+        );
 
         return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
-            ->with('success', __('status.exam.generating'));
+            ->with('success', __('status.exam.generating', ['title' => $heading['title']]));
     }
 
     /**
@@ -143,5 +163,61 @@ class ExaminationController extends Controller
             'examination' => $examination,
             'sections' => $sections,
         ]);
+    }
+
+    public function handle( AcademicSubject $academicSubject,
+                            Team $team,
+                            User $creator,
+                            array $heading,
+                            array $sections)
+    {
+        $multiple_choice_questions = [];
+        $true_or_false_questions = [];
+        $essay_questions = [];
+        try {
+            collect($sections)->each(function ($section) use (
+                &$sections,
+                &$multiple_choice_questions,
+                &$true_or_false_questions,
+                &$essay_questions
+            ) {
+                // TODO: validate that topics are under the right subject;
+                $questions = DB::table($section['type'])
+                    ->select('id')
+                    ->whereIn('academic_topic_id', $section['topics'])
+                    ->whereNotIn('id', ${$section['type']})
+                    ->inRandomOrder()
+                    ->take($section['count'])
+                    ->get()
+                    ->pluck('id')
+                    ->all();
+
+                if (count($questions) < $section['count']) {
+                    throw new NotEnoughQuestionsException();
+                }
+
+                $sections[] = [
+                    'name' => $section['name'],
+                    'type' => $section['type'],
+                    'questions' => $questions,
+                ];
+
+                ${$section['type']} = array_merge(${$section['type']}, $questions);
+//                $heading['duration'] = convertMinutesToHoursMinutes($section['duration']);
+            });
+//            $heading['duration'] = convertMinutesToHoursMinutes($heading['duration']);
+            $examination = new Examination([
+                'title' => $heading['title'],
+                'heading' => $heading,
+                'sections' => $sections,
+            ]);
+
+            $examination->creator()->associate($creator);
+            $examination->team()->associate($team);
+
+            $academicSubject->examinations()->save($examination);
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+        }
     }
 }

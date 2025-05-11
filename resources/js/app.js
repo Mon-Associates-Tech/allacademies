@@ -3,7 +3,9 @@ import './bootstrap';
 import {gsap} from 'gsap';
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
+import Quill from 'quill';
+window.Quill = Quill;
+console.log('quill', Quill)
 gsap.registerPlugin(ScrollTrigger);
 
 gsap.from(".article", {
@@ -89,5 +91,3 @@ gsap.from(".fade-in-text", {
         toggleActions: "play none none none", // Play only once
     }
 });
-
-

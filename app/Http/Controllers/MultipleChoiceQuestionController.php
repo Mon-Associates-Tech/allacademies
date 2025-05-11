@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
 use App\Http\Requests\MultipleChoiceQuestionRequest;
@@ -53,7 +54,13 @@ class MultipleChoiceQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($request->validated());
+        $subTopic = AcademicSubtopic::create(['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]);
+        $data = $request->validated();
+        $data['academic_subtopic_id'] = $subTopic->id;
+        $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($data);
+
+
+
 
         return to_route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $academicTopic])
             ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
@@ -87,6 +94,7 @@ class MultipleChoiceQuestionController extends Controller
         $this->authorize('moderate');
 
         $multipleChoiceQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+        $multipleChoiceQuestion->load('subtopic');
 
         return view('multiple-choice-questions.edit', [
             'multipleChoiceQuestion' => $multipleChoiceQuestion,

@@ -15,3 +15,25 @@ if (!function_exists('fisher_yates_shuffle')) {
         return $array;
     }
 }
+
+function convertMinutesToHoursMinutes($minutes): string
+{
+    // Ensure input is a non-negative integer
+    $minutes = (int)$minutes;
+    if ($minutes < 0) {
+        return "Invalid duration";
+    }
+
+    $hours = intdiv($minutes, 60);
+    $remainingMinutes = $minutes % 60;
+
+    $result = [];
+    if ($hours > 0) {
+        $result[] = $hours . ' hour' . ($hours > 1 ? 's' : '');
+    }
+    if ($remainingMinutes > 0 || $hours === 0) {
+        $result[] = $remainingMinutes . ' minute' . ($remainingMinutes != 1 ? 's' : '');
+    }
+
+    return implode(' ', $result);
+}

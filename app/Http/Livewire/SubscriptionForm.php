@@ -4,6 +4,8 @@ namespace App\Http\Livewire;
 
 use App\Enums\SubscriptionPackage;
 use App\Support\Pricer;
+use App\Support\SubscriptionAmount;
+use App\Support\SubscriptionPackageAmount;
 use Illuminate\Support\Arr;
 use Livewire\Component;
 
@@ -36,6 +38,16 @@ class SubscriptionForm extends Component
 
     public function getAmountProperty()
     {
+
+
+         SubscriptionPackageAmount::subscriptionPrice(SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
+            (int) empty($this->durationInMonths) ? '3' : $this->durationInMonths,
+            count($this->academicSubjects) > 1 ? count($this->academicSubjects) : 1,
+            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries
+        );
+
+
+
         $money = Pricer::calculate(
             SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
             (int) empty($this->durationInMonths) ? '3' : $this->durationInMonths,

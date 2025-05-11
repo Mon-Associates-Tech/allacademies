@@ -13,7 +13,7 @@
             return $topic['essay_questions_count'];
         }
 
-        return $topic['multiple_choice_questions_count'];;
+        return $topic['multiple_choice_questions_count'];
     };
 @endphp
 
@@ -29,7 +29,7 @@
                 <x-form.select wire:key="type-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.type" name="sections[{{ $loop->index }}][type]" type="text" label="Type" :options="$options" />
             </div>
             <div>
-                <x-form.input wire:key="count-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.count" name="sections[{{ $loop->index }}][count]" type="text" label="Count" />
+                <x-form.input wire:key="count-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.count" name="sections[{{ $loop->index }}][count]" type="number" label="Number of Questions" />
             </div>
         </div>
         <label class="block text-gray-800 font-medium text-sm mt-3">Available Questions</label>
@@ -66,6 +66,12 @@
                                     </svg>
                                 </span>
                             </div>
+                        </div>
+                        <div class="">
+                            @foreach($subtopics['essay'] as $subtopic)
+                                <div>{{$subtopic['name']}}</div>
+                            @endforeach
+
                         </div>
                     </li>
                     @endforeach

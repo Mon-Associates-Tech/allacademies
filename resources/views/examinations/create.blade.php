@@ -16,7 +16,7 @@
                 @livewire('examination-heading', ['metadata' => $metadata])
             </div>
             <div class="sm:col-span-2">
-                @livewire('examination-sections', ['topics' => $topics])
+                @livewire('examination-sections', ['topics' => $topics, 'subtopics' => $subtopics])
             </div>
         </div>
         <div class="flex justify-end mt-3">

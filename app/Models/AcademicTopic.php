@@ -39,4 +39,5 @@ class AcademicTopic extends Model
     {
         return $this->hasMany(TrueOrFalseQuestion::class);
     }
+
 }

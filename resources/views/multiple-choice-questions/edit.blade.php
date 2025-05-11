@@ -1,4 +1,4 @@
-<x-auth title="Edit Mutiple Choice Question">
+<x-auth title="Edit Multiple Choice Question">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -46,11 +46,16 @@
                             'd' => 'Option D',
                             'e' => 'Option E',
                         ]" :value="$multipleChoiceQuestion->answer" />
+
+                        <div class="">
+                            <x-form.input type="text" Label="Sub Topic" :value="$multipleChoiceQuestion->subtopic->name" name="subtopic" ></x-form.input>
+                            <hr class="my-6">
+                        </div>
                         <div class="flex justify-end mt-3">
                             <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
                         </div>
                     </div>
-                </div>    
+                </div>
             </form>
         </div>
         <div class="sm:col-span-1 space-y-2">

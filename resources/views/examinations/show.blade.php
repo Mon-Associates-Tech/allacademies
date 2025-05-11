@@ -44,7 +44,7 @@
                                 @endif
                             @endforeach
                             </div>
-                            <p class="text-sm text-right">[{{ $mc->score }} {{ Str::plural('mark', $mc->score) }}]</p>
+{{--                            <p class="text-sm text-right">[{{ $mc->score }} {{ Str::plural('mark', $mc->score) }}]</p>--}}
                         </li>
                     @endforeach
                 </ol>

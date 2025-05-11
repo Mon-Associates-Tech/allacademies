@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
+use App\Models\User;
 use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
@@ -20,7 +27,7 @@ class SubscriptionController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|\Illuminate\View\View
      */
     public function index()
     {
@@ -34,15 +41,16 @@ class SubscriptionController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function create()
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = auth()->user();
         $user->load('currentTeam');
         $academicGroups = AcademicGroup::query()->with('academicLevels.academicSubjects')->get()->toArray();
 
+//        dd($academicGroups);
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
             'currentTeam' => $user->currentTeam,
@@ -52,8 +60,9 @@ class SubscriptionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param SubscriptionRequest $request
+     * @return RedirectResponse
+     * @throws \Throwable
      */
     public function store(SubscriptionRequest $request)
     {
@@ -61,10 +70,10 @@ class SubscriptionController extends Controller
             $package = SubscriptionPackage::from($package = $request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
-            $beneficiaries = SubscriptionPackage::INDIVIDUAL_FULL === $package ? 1 : $request->integer('beneficiaries')
+            $beneficiaries =  $request->integer('beneficiaries')
         );
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = auth()->user();
         $user->load('currentTeam');
         $subscription = new Subscription([
@@ -80,7 +89,7 @@ class SubscriptionController extends Controller
             || !$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
         ) {
             throw ValidationException::withMessages([
-                'package' => 'You can not subscibe to this package for the current team',
+                'package' => 'You can not subscribe to this package for the current team',
             ]);
         }
 
@@ -100,7 +109,7 @@ class SubscriptionController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function destroy(Subscription $subscription)
     {
