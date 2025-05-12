@@ -17,10 +17,10 @@
     };
 @endphp
 
-<div>
-    <label class="block text-gray-800 font-medium text-sm">Sections</label>
+<div class="mt-5">
+    <label class="block text-gray-800 font-medium">Sections</label>
     @foreach ($sections as $section)
-    <div class="mt-3">
+    <div class="mt-3 bg-white border-x border-t border-gray-300 rounded-t-lg p-5 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-x-3">
             <div class="col-span-2">
                 <x-form.input wire:key="name-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.name" name="sections[{{ $loop->index }}][name]" type="text" label="Name" />
@@ -32,6 +32,10 @@
                 <x-form.input wire:key="count-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.count" name="sections[{{ $loop->index }}][count]" type="number" label="Number of Questions" />
             </div>
         </div>
+            <div class="my-5">
+                <x-form.textarea wire:key="instructions-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.instructions" name="sections[{{ $loop->index }}][instructions]" type="text" label="Instructions" />
+            </div>
+
         <label class="block text-gray-800 font-medium text-sm mt-3">Available Questions</label>
 
         <fieldset>
@@ -48,6 +52,7 @@
                                     <label class="font-medium text-gray-700">{{ $topic['name'] }}</label>
                                 </div>
                             </div>
+
                             <div>
                             @can('administrate')
                                 <span class="text-gray-500 mr-2">{{ $count($topic, $sections[$loop->parent->index]['type']) }} Available</span>
@@ -81,9 +86,27 @@
                         </div>
                     </li>
                     @endforeach
+
                 </ul>
             </div>
         </fieldset>
+        <div class="mb-4 mt-8">
+            <div>
+                <x-form.select wire:key="type-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.type" name="sections[{{ $loop->index }}][type]" type="text" label="Additional Options"
+                               :options="[
+    'page' => 'Insert Blank Page',
+    'external' => 'Insert Document',
+    'image' => 'Insert Image',
+    'space' => 'Insert Empty Spaces',
+]"
+                />
+
+                <div class="mt-4">
+                    <livewire:image-upload />
+                </div>
+
+            </div>
+        </div>
     </div>
     @endforeach
     <div class="relative mt-5">

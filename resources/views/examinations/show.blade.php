@@ -25,12 +25,12 @@
             {{ $examination->heading->html }}
 
             @foreach ($sections as $section)
-                @if ($multiple)
-                <h2 @class(["font-medium uppercase text-sm", "pt-5" => !$loop->first])>{{ $section['name'] }}</h2>
-                @endif
-
+                <h2 @class(["font-medium uppercase text-sm text-center", "pt-5" => !$loop->first])>{{ $section['name'] }}</h2>
+                    <div class="text-center italic mb-4">
+                        {{$section['instructions']}}
+                    </div>
                 @if ('multiple_choice_questions' === $section['type'])
-                <ol class="list-decimal">
+                <ol class="list-decimal mb-12">
                     @foreach ($section['questions'] as $mc)
                         <li>
                             {{ $mc->question->html }}
@@ -49,7 +49,7 @@
                     @endforeach
                 </ol>
                 @elseif ('true_or_false_questions' === $section['type'])
-                <ol class="list-decimal">
+                <ol class="list-decimal mb-12">
                     @foreach ($section['questions'] as $tf)
                         <li>
                             {{ $tf->question->html }}
@@ -61,12 +61,12 @@
                                 </div>
                             @endforeach
                             </div>
-                            <p class="text-sm text-right">[{{ $tf->score }} {{ Str::plural('mark', $tf->score) }}]</p>
+{{--                            <p class="text-sm text-right">[{{ $tf->score }} {{ Str::plural('mark', $tf->score) }}]</p>--}}
                         </li>
                     @endforeach
                 </ol>
                 @elseif ('essay_questions' === $section['type'])
-                <ol class="list-decimal">
+                <ol class="list-decimal mb-12">
                     @foreach ($section['questions'] as $es)
                         <li>
                             {{ $es->question->html }}

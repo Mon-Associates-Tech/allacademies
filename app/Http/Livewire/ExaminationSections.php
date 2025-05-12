@@ -12,13 +12,16 @@ class ExaminationSections extends Component
 
     public $subtopics;
 
+    public $instructions;
+
     public function plus()
     {
         $this->sections[] = [
             'name' => '',
             'type' => '',
             'count' => '',
-            'topics' => []
+            'topics' => [],
+            'instructions' => '',
         ];
     }
 
@@ -32,7 +35,7 @@ class ExaminationSections extends Component
         $this->topics = $topics;
 
         $this->sections = old('sections') ?? [
-            ['name' => '', 'type' => '', 'count' => '', 'topics' => []]
+            ['name' => '', 'type' => '', 'count' => '', 'topics' => [], 'instructions' => ''],
         ];
     }
 

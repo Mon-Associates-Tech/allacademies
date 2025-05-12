@@ -9,7 +9,6 @@ use App\Models\Team;
 use App\Models\User;
 use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -42,7 +41,7 @@ class GenerateExaminationJob implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $sections = [];
         $multiple_choice_questions = [];
@@ -76,12 +75,13 @@ class GenerateExaminationJob implements ShouldQueue
                     'name' => $section['name'],
                     'type' => $section['type'],
                     'questions' => $questions,
+                    'instructions' => $section['instructions'],
                 ];
 
                 ${$section['type']} = array_merge(${$section['type']}, $questions);
-                $this->heading['duration'] = convertMinutesToHoursMinutes($section['duration']);
+
             });
-            $this->heading['duration'] = convertMinutesToHoursMinutes($sections['duration']);
+
             $examination = new Examination([
                 'title' => $this->heading['title'],
                 'heading' => $this->heading,

@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Request;
 
 class ExaminationRequest extends FormRequest
 {
@@ -12,7 +11,7 @@ class ExaminationRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
 
         return [
@@ -27,6 +26,7 @@ class ExaminationRequest extends FormRequest
             'sections.*.count' => ['required', 'numeric', 'min:1', 'max:100'],
             'sections.*.topics' => ['required', 'array'],
             'sections.*.topics.*' => ['required', 'exists:academic_topics,id'],
+            'sections.*.instructions' => ['string', 'min:2', 'max:255'],
             'team_id' => ['required', 'numeric', 'exists:teams,id'],
             'creator_id' => ['required', 'numeric', 'exists:users,id'],
         ];

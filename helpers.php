@@ -29,10 +29,10 @@ function convertMinutesToHoursMinutes($minutes): string
 
     $result = [];
     if ($hours > 0) {
-        $result[] = $hours . ' hour' . ($hours > 1 ? 's' : '');
+        $result[] = $hours . ' Hour' . ($hours > 1 ? 's' : '');
     }
     if ($remainingMinutes > 0 || $hours === 0) {
-        $result[] = $remainingMinutes . ' minute' . ($remainingMinutes != 1 ? 's' : '');
+        $result[] = $remainingMinutes . ' Minute' . ($remainingMinutes != 1 ? 's' : '');
     }
 
     return implode(' ', $result);

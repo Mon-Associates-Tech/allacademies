@@ -1,5 +1,5 @@
 <div class="space-y-1">
-    <label class="text-gray-800 font-medium text-sm">Heading</label>
+    <label class="text-gray-800 font-medium">Heading</label>
     <div x-data="{ preview: false, down: @entangle('down'), up: @entangle('up') }"
         x-init="up = marked.parse(down)"
         x-effect="up = marked.parse(down)">
