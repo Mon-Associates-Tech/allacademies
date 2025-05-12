@@ -23,6 +23,7 @@ class EssayQuestion extends Model
         'answer',
         'score',
         'difficulty_level',
+        'academic_subtopic_id'
     ];
 
     /**

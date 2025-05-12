@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\AcademicSubtopic;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use App\Models\AcademicTopic;
 use App\Models\TrueOrFalseQuestion;
 use App\Http\Requests\TrueOrFalseQuestionRequest;
@@ -12,7 +16,7 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|\Illuminate\View\View
      */
     public function index(AcademicTopic $academicTopic)
     {
@@ -31,7 +35,7 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function create(AcademicTopic $academicTopic)
     {
@@ -47,14 +51,22 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param AcademicTopic $academicTopic
+     * @param TrueOrFalseQuestionRequest $request
+     * @return RedirectResponse
      */
     public function store(AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request)
     {
         $this->authorize('moderate');
 
-        $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($request->validated());
+        $subTopic = AcademicSubtopic::firstOrCreate(
+            ['name' => $request->subtopic],
+            ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
+        );
+        $data = $request->validated();
+        $data['academic_subtopic_id'] = $subTopic->id;
+
+        $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
 
         return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic])
             ->with('success', __('status.resource.created', ['name' => $trueOrFalseQuestion->question->summary]));
@@ -63,14 +75,15 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\TrueOrFalseQuestion  $trueOrFalseQuestion
-     * @return \Illuminate\Http\Response
+     * @param TrueOrFalseQuestion $trueOrFalseQuestion
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function show(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
 
         $trueOrFalseQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+        $trueOrFalseQuestion->load('subtopic');
 
         return view('true-or-false-questions.show', [
             'trueOrFalseQuestion' => $trueOrFalseQuestion,
@@ -80,8 +93,8 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\TrueOrFalseQuestion  $trueOrFalseQuestion
-     * @return \Illuminate\Http\Response
+     * @param TrueOrFalseQuestion $trueOrFalseQuestion
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function edit(TrueOrFalseQuestion $trueOrFalseQuestion)
     {
@@ -97,15 +110,23 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\TrueOrFalseQuestion  $trueOrFalseQuestion
-     * @return \Illuminate\Http\Response
+     * @param TrueOrFalseQuestionRequest $request
+     * @param TrueOrFalseQuestion $trueOrFalseQuestion
+     * @return RedirectResponse
      */
     public function update(TrueOrFalseQuestionRequest $request, TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
 
-        $trueOrFalseQuestion->update($request->validated());
+
+        $subTopic = AcademicSubtopic::updateOrCreate(
+            ['name' => $trueOrFalseQuestion->subtopic->name],
+            ['name' => $request->subtopic, 'academic_topic_id' => $trueOrFalseQuestion->academic_topic_id]
+        );
+        $data = $request->validated();
+        $data['academic_subtopic_id'] = $subTopic->id;
+
+        $trueOrFalseQuestion->update($data);
 
         return to_route('true-or-false-questions.show', ['true_or_false_question' =>  $trueOrFalseQuestion])
             ->with('success', __('status.resource.updated', ['name' => $trueOrFalseQuestion->question->summary]));
@@ -114,8 +135,8 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\TrueOrFalseQuestion  $trueOrFalseQuestion
-     * @return \Illuminate\Http\Response
+     * @param TrueOrFalseQuestion $trueOrFalseQuestion
+     * @return RedirectResponse
      */
     public function destroy(TrueOrFalseQuestion $trueOrFalseQuestion)
     {

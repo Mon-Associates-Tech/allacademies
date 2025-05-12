@@ -23,6 +23,8 @@ class TrueOrFalseQuestion extends Model
         'answer',
         'score',
         'difficulty_level',
+        'academic_topic_id',
+        'academic_subtopic_id'
     ];
 
     /**

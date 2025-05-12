@@ -30,6 +30,11 @@
                     <div class="sm:col-span-1">
                         <x-form.input name="score" type="number" value="1" />
                     </div>
+
+                    <div class="sm:col-span-1 my-3">
+                        <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic" name="subtopic"/>
+                    </div>
+
                     <div class="sm:col-span-2">
                         <x-form.editor name="question" />
                         <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise." />
@@ -37,7 +42,7 @@
                             <x-button.primary class="ml-2">Create True Or False Question</x-button.primary>
                         </div>
                     </div>
-                </div>    
+                </div>
             </form>
         </div>
         <div class="sm:col-span-1 space-y-2">

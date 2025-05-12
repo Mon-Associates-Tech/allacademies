@@ -22,9 +22,15 @@
             </x-anchor>
         </x-detail.data>
 
+        <x-detail.data label="Sub Topic" disabled>
+            <x-anchor to="#">
+                {{ $trueOrFalseQuestion->subtopic->name }}
+            </x-anchor>
+        </x-detail.data>
+
         @can('moderate')
         <x-slot name="action">
-            <x-button.secondary type="buttton" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $trueOrFalseQuestion->question->summary }}', '{{ route('true-or-false-questions.destroy', ['true_or_false_question' => $trueOrFalseQuestion]) }}')">Delete True Or False Question</x-button.secondary>
+            <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $trueOrFalseQuestion->question->summary }}', '{{ route('true-or-false-questions.destroy', ['true_or_false_question' => $trueOrFalseQuestion]) }}')">Delete True Or False Question</x-button.secondary>
             <x-link.primary :to="route('true-or-false-questions.edit', ['true_or_false_question' => $trueOrFalseQuestion])">Edit True Or False Question</x-link.primary>
         </x-slot>
         @endcan

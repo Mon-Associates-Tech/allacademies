@@ -32,6 +32,11 @@
                     <div class="sm:col-span-1">
                         <x-form.input name="score" type="number" :value="$trueOrFalseQuestion->score" />
                     </div>
+
+                    <div class="sm:col-span-1 my-3">
+                        <x-form.input type="text" placeholder="Enter subtopic or leave blank" :value="$trueOrFalseQuestion->subtopic->name" Label="Sub Topic" name="subtopic" />
+                    </div>
+
                     <div class="sm:col-span-2">
                         <x-form.editor name="question" :value="$trueOrFalseQuestion->question" />
                         <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise."

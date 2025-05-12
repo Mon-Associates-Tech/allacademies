@@ -30,9 +30,17 @@
                     <div class="sm:col-span-1">
                         <x-form.input name="score" type="number" value="15" />
                     </div>
+
+                    <div class="sm:col-span-1 my-3">
+                        <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic" name="subtopic"/>
+                    </div>
+
                     <div class="sm:col-span-2">
-                        <x-form.editor full name="question" />
-                        <x-form.editor full name="answer" />
+                        <x-form.editor full name="question"  />
+                        <div class="my-3">
+                            <x-form.editor full name="answer" />
+                        </div>
+
                         <div class="flex justify-end mt-3">
                             <x-button.primary class="ml-2">Create Essay Question</x-button.primary>
                         </div>

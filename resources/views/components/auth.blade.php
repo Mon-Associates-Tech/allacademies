@@ -42,10 +42,10 @@
                      x-on:click="open = !open" x-on:click.outside="open = false"
                      class="flex gap-2 px-4 py-2 rounded-full items-center bg-gray-100">
 
-                        <img  
+                        <img
                             src="{{ auth()->user()->avatar_url }}"
                             alt="{{ auth()->user()->name }} Logo"
-                            loading="lazy" 
+                            loading="lazy"
                             class="w-8 h-8 rounded-lg cursor-pointer border border-gray-400"
                         />
 
@@ -215,7 +215,7 @@
             </div>
         </div>
 
-        
+
 
         <div class="print:hidden">
             {{ $breadcrumb }}
