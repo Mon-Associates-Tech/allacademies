@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\AcademicSubtopic;
+
 if (!function_exists('fisher_yates_shuffle')) {
     function fisher_yates_shuffle($array, $seed)
     {
@@ -37,3 +39,38 @@ function convertMinutesToHoursMinutes($minutes): string
 
     return implode(' ', $result);
 }
+
+function getTopicQuestionCount($topicId)
+{
+    $subtopics = AcademicSubtopic::where('academic_topic_id', $topicId)
+        ->withCount([
+            'essayQuestions',
+            'multipleChoiceQuestions',
+            'trueOrFalseQuestions'
+        ])
+        ->get();
+
+    return $subtopics->sum(function ($subtopic) {
+        return $subtopic->essay_questions_count
+            + $subtopic->multiple_choice_questions_count
+            + $subtopic->true_or_false_questions_count;
+    });
+}
+
+function getSubtopicQuestionCount($subtopicId)
+{
+    $subtopic = AcademicSubtopic::withCount([
+        'essayQuestions',
+        'multipleChoiceQuestions',
+        'trueOrFalseQuestions'
+    ])->find($subtopicId);
+
+    if (!$subtopic) {
+        return 0;
+    }
+
+    return $subtopic->essay_questions_count
+        + $subtopic->multiple_choice_questions_count
+        + $subtopic->true_or_false_questions_count;
+}
+

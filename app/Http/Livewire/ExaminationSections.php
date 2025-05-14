@@ -19,7 +19,7 @@ class ExaminationSections extends Component
         $this->sections[] = [
             'name' => '',
             'type' => '',
-            'count' => '',
+            'count' => 2,
             'topics' => [],
             'instructions' => '',
         ];
@@ -43,4 +43,15 @@ class ExaminationSections extends Component
     {
         return view('livewire.examination-sections');
     }
+
+    public function countQuestions($topic, $type)
+    {
+        return $topic[$type . '_count'] ?? 0;
+    }
+
+    public function countSubQuestions($subtopic, $type)
+    {
+        return $subtopic[$type . '_count'] ?? 0;
+    }
+
 }

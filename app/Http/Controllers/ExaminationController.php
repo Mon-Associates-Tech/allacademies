@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicTopic;
 use App\Models\Team;
 use App\Models\User;
 use App\Support\Examiner;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\ExaminationRequest;
 use Illuminate\Support\Facades\Storage;
@@ -51,11 +53,16 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        $topics = $academicSubject->academicTopics()->select(['id', 'name'])->withCount(
-            'multipleChoiceQuestions',
-            'trueOrFalseQuestions',
-            'essayQuestions',
-        )->get()->toArray();
+//        $topics = $academicSubject->academicTopics()->select(['id', 'name'])->with(
+//        ['multipleChoiceQuestions',
+//        'trueOrFalseQuestions',
+//        'essayQuestions',]
+//    )->withCount(
+//            'multipleChoiceQuestions',
+//            'trueOrFalseQuestions',
+//            'essayQuestions',
+//        )->get()->toArray();
+
 
         $metadata =  data_get($currentTeam->meta, 'present', []);
 
@@ -69,15 +76,49 @@ class ExaminationController extends Controller
         $metadata['level_label'] = $academicSubject->academicLevel->label;
         $metadata['group_name'] = $academicSubject->academicLevel->academicGroup->name;
 
-        $subtopics['essay'] = $academicSubject->essayQuestions()->with('subtopic')->get()->pluck('subtopic')->toArray();
-        $subtopics['mcq'] = $academicSubject->mcqQuestions()->with('subtopic')->get()->pluck('subtopic')->toArray();
-        $subtopics['trueFalse'] = $academicSubject->trueFalseQuestions()->with('subtopic')->get()->pluck('subtopic')->toArray();
+        $topics = AcademicTopic::where('academic_subject_id', $academicSubject->id)
+            ->select(['id', 'name'])
+            ->with([
+                'subtopics' => function ($query) {
+                    $query->withCount([
+                        'essayQuestions',
+                        'multipleChoiceQuestions',
+                        'trueOrFalseQuestions'
+                    ]);
+                }
+            ])
+            ->get()
+            ->map(function ($topic) {
+                $subtopics = $topic->subtopics->map(function ($subtopic) {
+                    return [
+                        'id' => $subtopic->id,
+                        'name' => $subtopic->name,
+                        'essay_questions_count' => $subtopic->essay_questions_count,
+                        'multiple_choice_questions_count' => $subtopic->multiple_choice_questions_count,
+                        'true_or_false_questions_count' => $subtopic->true_or_false_questions_count,
+                    ];
+                });
+
+                $questionsCount = $subtopics->sum(function ($sub) {
+                    return $sub['essay_questions_count']
+                        + $sub['multiple_choice_questions_count']
+                        + $sub['true_or_false_questions_count'];
+                });
+
+                return [
+                    'id' => $topic->id,
+                    'name' => $topic->name,
+                    'questions_count' => $questionsCount,
+                    'subtopics' => $subtopics->toArray(),
+                ];
+            })
+            ->toArray();
+
 
         return view('examinations.create', [
             'academicSubject' => $academicSubject,
             'topics' => $topics,
             'metadata' => $metadata,
-            'subtopics' => $subtopics
         ]);
     }
 

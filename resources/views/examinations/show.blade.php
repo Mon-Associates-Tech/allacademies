@@ -27,7 +27,9 @@
             @foreach ($sections as $section)
                 <h2 @class(["font-medium uppercase text-sm text-center", "pt-5" => !$loop->first])>{{ $section['name'] }}</h2>
                     <div class="text-center italic mb-4">
-                        {{$section['instructions']}}
+                        <div x-data="{ instructions: @js($section['instructions']) }">
+                            <p x-html="marked.parse(instructions)"></p>
+                        </div>
                     </div>
                 @if ('multiple_choice_questions' === $section['type'])
                 <ol class="list-decimal mb-12">

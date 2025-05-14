@@ -46,12 +46,12 @@ class AcademicSubject extends Model
         return $this->hasMany(Quiz::class);
     }
     public function subtopic(){
-        return $this->hasMany(AcademicSubtopic::class, AcademicTopic::class);
+        return $this->hasManyThrough(AcademicSubtopic::class, AcademicTopic::class);
     }
 
     public function topics()
     {
-        return $this->hasMany(Topic::class);
+        return $this->hasMany(AcademicTopic::class);
     }
 
     public function essayQuestions()

@@ -20,7 +20,7 @@ class AcademicSubtopic extends Model
         'academic_topic_id',
     ];
 
-    public function essays(): HasMany {
+    public function essayQuestions(): HasMany {
         return $this->hasMany(EssayQuestion::class);
     }
 
@@ -29,7 +29,7 @@ class AcademicSubtopic extends Model
         return $this->hasMany(MultipleChoiceQuestion::class);
     }
 
-    public function trueFalseQuestions()
+    public function trueOrFalseQuestions()
     {
         return $this->hasMany(TrueOrFalseQuestion::class);
     }

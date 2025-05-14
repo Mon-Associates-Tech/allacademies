@@ -29,7 +29,9 @@ class Pricer
             $money = $money->multipliedBy($beneficiaries);
         }
 
-        $money = $money->multipliedBy($subjects);
+        if(SubscriptionPackage::INDIVIDUAL_FULL === $package) {
+            $money = $money->multipliedBy($subjects);
+        }
 
         return $money;
     }

@@ -23,13 +23,15 @@
             <div class="grid sm:grid-cols-5 gap-4 place-items-center">
                 <div class="sm:col-span-1"></div>
                 <div class="sm:col-span-3">
-                    @livewire('examination-sections', ['topics' => $topics, 'subtopics' => $subtopics])
+                    @livewire('examination-sections', ['topics' => $topics])
                 </div>
                 <div class="sm:col-span-1"></div>
             </div>
 
-            <div class="flex justify-center mt-3">
-                <x-button.primary class="ml-2">Create Examination</x-button.primary>
+            <div class="grid sm:grid-cols-5 gap-4 place-items-center">
+                <div class="sm:col-span-4 text-start ms-auto">
+                    <x-button.primary class="text-right">Create Examination</x-button.primary>
+                </div>
             </div>
         </form>
     </div>
