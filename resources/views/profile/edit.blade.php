@@ -1,5 +1,5 @@
 <x-auth title="Edit Profile">
-    
+
 
     <form method="POST" action="{{ route('profile.update') }}" class="bg-white p-4 rounded-lg w-[70%] mx-auto">
 	@csrf
@@ -21,7 +21,7 @@
             		<div>
                 		<x-form.input name="email" type="email" :value="$user->email" />
             		</div>
-			
+
 		</div>
 
 	</div>

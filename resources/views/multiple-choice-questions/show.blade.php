@@ -28,11 +28,13 @@
             </x-anchor>
         </x-detail.data>
 
-        <x-detail.data label="Sub Topic" disabled>
-            <x-anchor to="#">
-                {{ $multipleChoiceQuestion->subtopic->name }}
-            </x-anchor>
-        </x-detail.data>
+        @if(isset($multipleChoiceQuestion->subtopic))
+            <x-detail.data label="Sub Topic" disabled>
+                <x-anchor to="#">
+                    {{ $multipleChoiceQuestion?->subtopic?->name }}
+                </x-anchor>
+            </x-detail.data>
+        @endif
 
         @can('moderate')
         <x-slot name="action">

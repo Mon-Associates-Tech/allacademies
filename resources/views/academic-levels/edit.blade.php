@@ -7,19 +7,22 @@
         ]" />
     </x-slot>
 
-    <form method="POST" action="{{ route('academic-levels.update', ['academic_level' => $academicLevel]) }}">
-        @csrf
-        @method('PATCH')
-        <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-2">
-                <x-form.input name="name" type="text" :value="$academicLevel->name" />
+    <div class="mx-auto bg-white px-4 py-8 rounded-md">
+        <form method="POST" action="{{ route('academic-levels.update', ['academic_level' => $academicLevel]) }}">
+            @csrf
+            @method('PATCH')
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <x-form.input name="name" type="text" :value="$academicLevel->name" />
+                </div>
+                <div>
+                    <x-form.input name="label" type="text" :value="$academicLevel->label"  />
+                </div>
             </div>
-            <div>
-                <x-form.input name="label" type="text" :value="$academicLevel->label"  />
+            <div class="flex justify-end mt-3">
+                <x-button.primary class="ml-2">Update Academic Level</x-button.primary>
             </div>
-        </div>
-        <div class="flex justify-end mt-3">
-            <x-button.primary class="ml-2">Update Academic Level</x-button.primary>
-        </div>
-    </form>
+        </form>
+    </div>
+
 </x-auth>

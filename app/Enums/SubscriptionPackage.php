@@ -10,4 +10,6 @@ enum SubscriptionPackage: string
 
     const INSTITUTION_MOCK_EXAMS = 'institution:mock';
     const INSTITUTION_MID_TERM = 'institution:midterm';
+
+    const ONCE_OFF = 'once:off';
 }

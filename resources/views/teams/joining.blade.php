@@ -1,5 +1,5 @@
 <x-auth title="Join Team">
-    
+
 
     <form method="POST" action="{{ route('teams.add-member') }}">
         @csrf

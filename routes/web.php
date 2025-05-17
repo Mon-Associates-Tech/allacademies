@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SubtopicController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\TeamController;
@@ -115,4 +116,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
     Route::get('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'reason'])->name('audit-teams.reason');
     Route::resource('audit-teams', AuditTeamController::class)->only(['index', 'show']);
+
+    Route::resource('academic-topics.subtopics', SubtopicController::class);
+
+
+    Route::post('export/pdf', function(Request $request){
+       return exportToPdf();
+
+    })->name('export.pdf');
+    Route::post('export/word', function(Request $request){
+        return exportToWord();
+
+    })->name('export.word');
 });

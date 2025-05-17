@@ -1,4 +1,4 @@
-<x-auth title="Academic Groups">
+<x-auth title="Academic Groups" :main-only="true">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>

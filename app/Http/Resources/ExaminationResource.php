@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Support\Examiner;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class ExaminationResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     */
+    public function toArray($request)
+    {
+        return [
+            'examination' => $this->resource,
+            'sections' => ''
+        ];
+    }
+}

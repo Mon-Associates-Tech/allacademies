@@ -4,7 +4,6 @@
         "dev": "vite",
         "build": "vite build",
         "postinstall": "cp -r vendor/tinymce/tinymce public/js/tinymce"
-
     },
     "devDependencies": {
         "@tailwindcss/aspect-ratio": "^0.4.2",
@@ -22,7 +21,6 @@
         "vite": "^3.0.0"
     },
     "dependencies": {
-        "gsap": "^3.12.5",
-        "quill": "^2.0.3"
+        "gsap": "^3.12.5"
     }
 }

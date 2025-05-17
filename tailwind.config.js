@@ -31,5 +31,15 @@ module.exports = {
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
     require('@tailwindcss/aspect-ratio'),
+      function({ addUtilities }) {
+          addUtilities({
+              '.break-before-page': {
+                  'break-before': 'page',
+              },
+              '.break-after-page': {
+                  'break-after': 'page',
+              }
+          })
+      }
   ],
 }

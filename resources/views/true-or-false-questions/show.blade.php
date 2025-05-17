@@ -1,4 +1,4 @@
-<x-auth title="True Or False Question Details">
+<x-auth title="True Or False Question Details" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -22,12 +22,13 @@
             </x-anchor>
         </x-detail.data>
 
+        @if(isset($trueOrFalseQuestion->subtopic))
         <x-detail.data label="Sub Topic" disabled>
             <x-anchor to="#">
-                {{ $trueOrFalseQuestion->subtopic->name }}
+                {{ $trueOrFalseQuestion?->subtopic?->name }}
             </x-anchor>
         </x-detail.data>
-
+        @endif
         @can('moderate')
         <x-slot name="action">
             <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $trueOrFalseQuestion->question->summary }}', '{{ route('true-or-false-questions.destroy', ['true_or_false_question' => $trueOrFalseQuestion]) }}')">Delete True Or False Question</x-button.secondary>

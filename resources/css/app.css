@@ -18,3 +18,7 @@
         display: list-item; /* ensure it's not overridden */
     }
 }
+
+.page-break {
+    page-break-after: always;
+}

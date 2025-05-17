@@ -10,43 +10,51 @@
             'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject]),
             $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic]),
             'True or False Questions' => route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic]),
-        ]" />
+        ]"/>
     </x-slot>
 
-    <div class="grid sm:grid-cols-3 gap-12">
-        <div class="sm:col-span-2">
-            <form method="POST"
-                action="{{ route('academic-topics.true-or-false-questions.store', ['academic_topic' => $academicTopic]) }}">
-                @csrf
-                <div class="grid sm:grid-cols-2 gap-x-3">
-                    <div class="sm:col-span-1">
-                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+    <div class="bg-white p-4 rounded-md border-slate-300 border">
+        <form method="POST"
+              action="{{ route('academic-topics.true-or-false-questions.store', ['academic_topic' => $academicTopic]) }}">
+            @csrf
+            <div class="grid sm:grid-cols-2 gap-x-3">
+                <div class="sm:col-span-1">
+                    <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
                             'unspecified' => 'Unspecified',
                             'easy' => 'Easy',
                             'medium' => 'Medium',
                             'difficult' => 'Difficult',
-                        ]" />
-                    </div>
-                    <div class="sm:col-span-1">
-                        <x-form.input name="score" type="number" value="1" />
-                    </div>
+                        ]"/>
+                </div>
+                <div class="sm:col-span-1">
+                    <x-form.input name="score" type="number" value="1"/>
+                </div>
 
-                    <div class="sm:col-span-1 my-3">
-                        <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic" name="subtopic"/>
-                    </div>
+                <div class="sm:col-span-2 my-3">
+                    <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic"
+                                  name="subtopic"/>
+                </div>
 
-                    <div class="sm:col-span-2">
-                        <x-form.editor name="question" />
-                        <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise." />
-                        <div class="flex justify-end mt-3">
-                            <x-button.primary class="ml-2">Create True Or False Question</x-button.primary>
-                        </div>
+                <div class="sm:col-span-2">
+                    <div class="">
+                        <x-form.editor class="rich-editor" name="question"/>
+                    </div>
+                    <div class="my-4">
+                        <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise."/>
+
+                    </div>
+                    <div class="flex justify-end mt-3">
+                        <x-button.primary class="ml-2">Create True Or False Question</x-button.primary>
                     </div>
                 </div>
-            </form>
-        </div>
-        <div class="sm:col-span-1 space-y-2">
-            <x-plugins />
-        </div>
+            </div>
+        </form>
     </div>
+
+    <x-slot name="right">
+        <div class="mt-4">
+            <x-plugins/>
+        </div>
+
+    </x-slot>
 </x-auth>

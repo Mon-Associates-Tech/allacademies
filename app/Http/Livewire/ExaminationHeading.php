@@ -131,7 +131,7 @@ class ExaminationHeading extends Component
     private function generate(string $template): string
     {
         $template = Str::of($template);
-        $details = [$this->metadata['institution']];
+//        $details = [$this->metadata['institution']];
 
         if ('college' === $this->metadata['type']) {
             $details[] = $this->metadata['college'];

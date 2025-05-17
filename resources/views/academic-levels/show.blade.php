@@ -1,4 +1,4 @@
-<x-auth title="Academic Level Details">
+<x-auth title="Academic Level Details" page-name="Academic Details">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -25,7 +25,7 @@
 
         @can('administrate')
         <x-slot name="action">
-            <x-button.secondary type="buttton" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicLevel->name }}', '{{ route('academic-levels.destroy', ['academic_level' => $academicLevel]) }}')">Delete Academic Level</x-button.secondary>
+            <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicLevel->name }}', '{{ route('academic-levels.destroy', ['academic_level' => $academicLevel]) }}')">Delete Academic Level</x-button.secondary>
             <x-link.primary :to="route('academic-levels.edit', ['academic_level' => $academicLevel])">Edit Academic Level</x-link.primary>
         </x-slot>
         @endcan

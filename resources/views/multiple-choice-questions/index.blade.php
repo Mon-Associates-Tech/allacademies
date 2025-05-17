@@ -50,6 +50,6 @@
         {{ $multipleChoiceQuestions->links() }}
     </div>
     @else
-    <x-blank />
+    <x-blank text="Add Questions" />
     @endif
 </x-auth>

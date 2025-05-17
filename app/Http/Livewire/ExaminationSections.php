@@ -3,9 +3,12 @@
 namespace App\Http\Livewire;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ExaminationSections extends Component
 {
+
+    use withFileUploads;
     public $topics;
 
     public $sections;
@@ -13,15 +16,20 @@ class ExaminationSections extends Component
     public $subtopics;
 
     public $instructions;
+    public $metafields = [];
+
+    public array $selectedOptions = [];
 
     public function plus()
     {
         $this->sections[] = [
             'name' => '',
             'type' => '',
-            'count' => 2,
+            'count' => '',
             'topics' => [],
             'instructions' => '',
+            'subtopics' => [],
+            'metafields' => [],
         ];
     }
 
@@ -35,7 +43,7 @@ class ExaminationSections extends Component
         $this->topics = $topics;
 
         $this->sections = old('sections') ?? [
-            ['name' => '', 'type' => '', 'count' => '', 'topics' => [], 'instructions' => ''],
+            ['name' => '', 'type' => '', 'count' => '', 'topics' => [], 'instructions' => '', 'subtopics' => [], 'metafields' => []],
         ];
     }
 
@@ -53,5 +61,38 @@ class ExaminationSections extends Component
     {
         return $subtopic[$type . '_count'] ?? 0;
     }
+
+    public function addMetafield()
+    {
+        $this->metafields[] = [
+            'option' => null,
+            'pages_count' => 1,
+            'spaces_count' => 1,
+            'file' => null,
+        ];
+    }
+
+    public function __construct($id = null)
+    {
+        parent::__construct($id);
+        $this->metafields[] = [
+            'option' => null,
+            'pages_count' => 1,
+            'spaces_count' => 1,
+            'file' => null,
+        ];
+    }
+
+//    public function save()
+//    {
+//        foreach ($this->sections as $i => &$section) {
+//            if (isset($section['document']) && $section['document'] instanceof \Livewire\TemporaryUploadedFile) {
+//                $section['document'] = $section['document']->store('documents', 'public');
+//            }
+//        }
+//
+//        // Pass the processed data to controller or save to DB
+//    }
+
 
 }

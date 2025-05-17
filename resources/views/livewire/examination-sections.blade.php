@@ -12,6 +12,13 @@
     $subcount = function ($subtopic, $type) {
         return $subtopic[$type . '_count'] ?? 0;
     };
+
+    $metafields_options=[
+                    'page' => 'Insert Blank Page',
+                    'external' => 'Insert Document',
+                    'image' => 'Insert Image',
+                    'space' => 'Insert Empty Spaces',
+                ]
 @endphp
 
 <div class="mt-5">
@@ -25,12 +32,13 @@
                     <x-form.input wire:key="name-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.name"
                                   name="sections[{{ $sectionIndex }}][name]" type="text" label="Name"/>
                 </div>
-                <div>
+                <div class="col-span-2">
                     <x-form.select wire:key="type-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.type"
                                    name="sections[{{ $sectionIndex }}][type]" type="text" label="Type"
                                    :options="$options"/>
                 </div>
-                <div>
+
+                <div class="col-span-2 mt-3">
                     <x-form.input wire:key="count-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.count"
                                   name="sections[{{ $sectionIndex }}][count]" type="number" label="Number of Questions"/>
                 </div>
@@ -88,7 +96,7 @@
                                      x-transition:leave-start="opacity-100 translate-y-0"
                                      x-transition:leave-end="opacity-0 translate-y-2"
                                      style="display: none;"
-                                     class="mt-2 space-y-2 ps-5"
+                                     class="mt-2 space-y-2 ps-5 bg-green-50 py-2"
                                 >
                                     @foreach ($topic['subtopics'] as $subIndex => $subtopic)
                                         <div class="flex items-center justify-between text-sm">
@@ -96,8 +104,8 @@
                                                 <div class="flex h-6 items-center">
                                                     <input
                                                         wire:key="subtopic-{{ $sectionIndex }}-{{ $subtopic['id'] }}"
-                                                        wire:model="sections.{{ $sectionIndex }}.subtopics"
-                                                        name="sections[{{ $sectionIndex }}][subtopics][]"
+                                                        wire:model="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
+                                                        name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
                                                         value="{{ $subtopic['id'] }}"
                                                         type="checkbox"
                                                         class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
@@ -114,19 +122,66 @@
                                                 @endcan
 
                                                 <span class="inline-flex items-center rounded-full px-1.5 py-1.5 {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                                    <svg class="h-1.5 w-1.5 {{ $subcount($subtopic, $section['type']) > 0 ? 'fill-green-500' : 'fill-red-500' }}" viewBox="0 0 6 6" aria-hidden="true">
-                                                        <circle cx="3" cy="3" r="3" />
-                                                    </svg>
-                                                </span>
+                <svg class="h-1.5 w-1.5 {{ $subcount($subtopic, $section['type']) > 0 ? 'fill-green-500' : 'fill-red-500' }}" viewBox="0 0 6 6" aria-hidden="true">
+                    <circle cx="3" cy="3" r="3" />
+                </svg>
+            </span>
                                             </div>
                                         </div>
+
+                                        <div class="flex">
+                                            <label class="text-xs my-auto mr-3">Number of questions</label>
+                                            <x-form.input
+                                                :has-label="false"
+                                                class="max-w-[100px]"
+                                                name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
+                                                wire:model="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
+                                                type="number"
+                                                value="0"
+                                            />
+                                        </div>
                                     @endforeach
+
                                 </div>
                             </li>
                         @endforeach
+
                     </ul>
+
                 </div>
             </fieldset>
+
+            <section class="mt-5">
+                <div class="italic"><label>Additional Options</label></div>
+                <div class="flex py-4 px-4">
+                    <input
+                        wire:key="section-{{ $sectionIndex }}-page"
+                        wire:model="sections.{{ $sectionIndex }}.page"
+                        name="sections[{{ $sectionIndex }}][page]"
+                        value="blank-page"
+                        type="checkbox"
+                        class="h-4 w-4 rounded my-auto border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    >
+                    <div class="ml-1 my-auto text-xs">
+                        <label class="font-medium capitalize text-gray-700">Insert Blank Page</label>
+                    </div>
+                </div>
+
+                <div class="flex flex-col pb-4 px-4">
+
+                    <div class="ml-1 my-auto text-xs">
+                        <label class="font-medium capitalize mb-2 text-gray-700">Insert Document</label>
+                    </div>
+                    <input
+                        wire:key="section-{{ $sectionIndex }}-document"
+                        wire:model="sections.{{ $sectionIndex }}.document"
+                        name="sections[{{ $sectionIndex }}][document]"
+                        type="file"
+                        id="section_document_id"
+                        class="rounded my-auto border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    >
+                </div>
+            </section>
         </div>
     @endforeach
 

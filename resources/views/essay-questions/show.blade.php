@@ -23,7 +23,7 @@
         </x-detail.data>
 
         <x-detail.data label="Sub Topic" disabled>
-            <x-anchor to="#">
+            <x-anchor to="{{route('academic-topics.subtopics.index', ['academic_topic' => $essayQuestion->academicTopic])}}">
                 {{ $essayQuestion->subtopic->name }}
             </x-anchor>
         </x-detail.data>

@@ -1,5 +1,5 @@
 <x-auth title="New Team">
-    
+
 
     <form method="POST" action="{{ route('teams.store') }}">
         @csrf

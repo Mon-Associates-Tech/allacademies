@@ -14,9 +14,9 @@
             selector: 'textarea.rich-editor',
             height: 200,
             menubar: false,
-            toolbar: 'undo redo | bold italic underline strikethrough | numlist bullist | superscript subscript | outdent indent | image code table | tiny_mce_wiris_formulaEditor tiny_mce_wiris_formulaEditorChemistry {{ isset($full) ? "| alignleft aligncenter alignright alignjustify | h1 h2 h3 h4 h5 h6" : "" }}',
-            plugins: 'code image lists table',
-            table_toolbar: 'tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol',
+            toolbar: ' media undo redo | bold italic underline strikethrough | numlist bullist | superscript subscript | outdent indent | image code table | tiny_mce_wiris_formulaEditor tiny_mce_wiris_formulaEditorChemistry {{ isset($full) ? "| alignleft aligncenter alignright alignjustify | h1 h2 h3 h4 h5 h6" : "" }}',
+            plugins: 'code image lists table media',
+            table_toolbar: 'media | tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol',
             // image_list: [
             //     { title: 'My image 1', value: 'https://www.example.com/my1.gif' },
             //     { title: 'My image 2', value: 'http://www.moxiecode.com/my2.gif' }

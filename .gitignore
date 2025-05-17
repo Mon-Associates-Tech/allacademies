@@ -15,3 +15,5 @@ yarn-error.log
 /.idea
 /.vscode
 **/.DS_Store
+/public/vendor/
+/public/js/tinymce/

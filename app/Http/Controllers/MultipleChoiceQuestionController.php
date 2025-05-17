@@ -61,13 +61,16 @@ class MultipleChoiceQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $subTopic = AcademicSubtopic::firstOrCreate(
-            ['name' => $request->subtopic],
-            ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
-        );
-
         $data = $request->validated();
-        $data['academic_subtopic_id'] = $subTopic->id;
+
+        if(isset($request->subtopic)){
+            $subTopic = AcademicSubtopic::firstOrCreate(
+                ['name' => $request->subtopic],
+                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
+            );
+            $data['academic_subtopic_id'] = $subTopic->id;
+        }
+
         $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($data);
 
         return to_route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $academicTopic])

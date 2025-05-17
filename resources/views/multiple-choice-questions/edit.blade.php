@@ -13,33 +13,33 @@
         ]" />
     </x-slot>
 
-    <div class="grid sm:grid-cols-3 gap-12">
-        <div class="sm:col-span-2">
-            <form method="POST"
-                action="{{ route('multiple-choice-questions.update', ['multiple_choice_question' => $multipleChoiceQuestion]) }}">
-                @csrf
-                @method('PATCH')
-                <div class="grid sm:grid-cols-2 gap-x-3">
-                    <div class="sm:col-span-1">
-                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
+
+            <div class="bg-white p-4 rounded-md border-slate-300 border">
+                <form method="POST"
+                      action="{{ route('multiple-choice-questions.update', ['multiple_choice_question' => $multipleChoiceQuestion]) }}">
+                    @csrf
+                    @method('PATCH')
+                    <div class="grid sm:grid-cols-2 gap-x-3">
+                        <div class="sm:col-span-1">
+                            <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
                             'unspecified' => 'Unspecified',
                             'easy' => 'Easy',
                             'medium' => 'Medium',
                             'difficult' => 'Difficult',
                         ]"
-                            :value="$multipleChoiceQuestion->difficulty_level" />
-                    </div>
-                    <div class="sm:col-span-1">
-                        <x-form.input name="score" type="number" :value="$multipleChoiceQuestion->score" />
-                    </div>
-                    <div class="sm:col-span-2">
-                        <x-form.editor full name="question" :value="$multipleChoiceQuestion->question" />
-                        <x-form.editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" />
-                        <x-form.editor full name="option_b" label="Option B" :value="$multipleChoiceQuestion->option_b" />
-                        <x-form.editor full name="option_c" label="Option C" :value="$multipleChoiceQuestion->option_c" />
-                        <x-form.editor full name="option_d" label="Option D" :value="$multipleChoiceQuestion->option_d" />
-                        <x-form.editor full name="option_e" label="Option E" :value="$multipleChoiceQuestion->option_e" />
-                        <x-form.select full name="answer" :options="[
+                                           :value="$multipleChoiceQuestion->difficulty_level" />
+                        </div>
+                        <div class="sm:col-span-1">
+                            <x-form.input name="score" type="number" :value="$multipleChoiceQuestion->score" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <x-form.editor full name="question" :value="$multipleChoiceQuestion->question" />
+                            <x-form.editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" />
+                            <x-form.editor full name="option_b" label="Option B" :value="$multipleChoiceQuestion->option_b" />
+                            <x-form.editor full name="option_c" label="Option C" :value="$multipleChoiceQuestion->option_c" />
+                            <x-form.editor full name="option_d" label="Option D" :value="$multipleChoiceQuestion->option_d" />
+                            <x-form.editor full name="option_e" label="Option E" :value="$multipleChoiceQuestion->option_e" />
+                            <x-form.select full name="answer" :options="[
                             'a' => 'Option A',
                             'b' => 'Option B',
                             'c' => 'Option C',
@@ -47,19 +47,21 @@
                             'e' => 'Option E',
                         ]" :value="$multipleChoiceQuestion->answer" />
 
-                        <div class="">
-                            <x-form.input type="text" Label="Sub Topic" :value="$multipleChoiceQuestion->subtopic->name" name="subtopic" ></x-form.input>
-                            <hr class="my-6">
-                        </div>
-                        <div class="flex justify-end mt-3">
-                            <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
+                            <div class="">
+                                <x-form.input type="text" Label="Sub Topic" :value="$multipleChoiceQuestion?->subtopic?->name" name="subtopic" ></x-form.input>
+                                <hr class="my-6">
+                            </div>
+                            <div class="flex justify-end mt-3">
+                                <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        </div>
-        <div class="sm:col-span-1 space-y-2">
-            <x-plugins />
-        </div>
-    </div>
+                </form>
+            </div>
+
+        <x-slot name="right">
+            <div class="mt-5">
+                <x-plugins />
+            </div>
+        </x-slot>
 </x-auth>

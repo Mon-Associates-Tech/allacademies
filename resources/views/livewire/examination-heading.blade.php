@@ -15,10 +15,9 @@
                         <option value="twig">Twig</option>
                         <option value="pug">Pug</option>
 
-                        @isset($metadata['institution'])
                         <option value="tera">Tera</option>
                         <option value="jinja">Jinja</option>
-                        @endisset
+
                     </select>
                 </span>
             </div>
@@ -29,7 +28,7 @@
                 <x-form.textarea wire:model="title" name="heading[title]" label="Title" type="text" />
             </div>
             <div class="sm:col-span-2">
-                <x-form.input wire:model="duration" name="heading[duration]" label="Duration" type="text" />
+                <x-form.input wire:model="duration" name="heading[duration]" label="Duration [In Minutes]" type="text" />
             </div>
 
             <div class="sm:col-span-6 mb-3">

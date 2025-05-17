@@ -59,12 +59,14 @@ class TrueOrFalseQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $subTopic = AcademicSubtopic::firstOrCreate(
-            ['name' => $request->subtopic],
-            ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
-        );
         $data = $request->validated();
-        $data['academic_subtopic_id'] = $subTopic->id;
+        if(isset($request->subtopic)){
+            $subTopic = AcademicSubtopic::firstOrCreate(
+                ['name' => $request->subtopic],
+                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
+            );
+            $data['academic_subtopic_id'] = $subTopic->id;
+        }
 
         $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
 

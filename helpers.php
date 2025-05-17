@@ -1,6 +1,12 @@
 <?php
 
+use App\Http\Controllers\ExaminationController;
 use App\Models\AcademicSubtopic;
+use App\Models\Examination;
+use App\Support\Examiner;
+use League\CommonMark\CommonMarkConverter;
+use League\CommonMark\Exception\CommonMarkException;
+use League\CommonMark\Output\RenderedContentInterface;
 
 if (!function_exists('fisher_yates_shuffle')) {
     function fisher_yates_shuffle($array, $seed)
@@ -72,5 +78,77 @@ function getSubtopicQuestionCount($subtopicId)
     return $subtopic->essay_questions_count
         + $subtopic->multiple_choice_questions_count
         + $subtopic->true_or_false_questions_count;
+}
+
+
+function greetUser($name): string
+{
+    // Get the current hour (0-23)
+    $hour = (int)date('H');
+
+
+    if ($hour >= 5 && $hour < 12) {
+        $greeting = "Good Morning";
+    } elseif ($hour >= 12 && $hour < 17) {
+        $greeting = "Good Afternoon";
+    } elseif ($hour >= 17 && $hour < 21) {
+        $greeting = "Good Evening";
+    } else {
+        $greeting = "Good Night";
+    }
+
+    return "$greeting, $name";
+}
+
+
+/**
+ * @throws CommonMarkException
+ */
+function parsedMarkdown($markdown): RenderedContentInterface
+{
+    $converter = new CommonMarkConverter();
+    return $converter->convert($markdown);
+}
+
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
+use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpWord\Shared\Html;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+/**
+ * @throws Throwable
+ * @throws \PhpOffice\PhpWord\Exception\Exception
+ */
+function exportToWord(): BinaryFileResponse
+{
+    $phpWord = new PhpWord();
+    $section = $phpWord->addSection();
+    $examination = Examination::find(request()->examination_id);
+    //$sections = Examiner::createSections($examination);
+
+    $controller = app(ExaminationController::class);
+
+    $view = $controller->show($examination);
+    $html = $view->render();
+
+    Html::addHtml($section, $html, false, false);
+
+    $filePath = storage_path('app/public/exported.docx');
+    $writer = IOFactory::createWriter($phpWord, 'Word2007');
+    $writer->save($filePath);
+
+    return response()->download($filePath)->deleteFileAfterSend();
+}
+
+
+ function exportToPdf(): \Illuminate\Http\Response
+ {
+    $examination = Examination::find(request()->examination_id);
+     $sections = Examiner::createSections($examination);
+
+    $pdf = Pdf::loadView('exports.examination', ['examination' => $examination, 'sections' => $sections]);
+
+    return $pdf->download($examination->title.'.pdf');
 }
 

@@ -16,7 +16,7 @@
                 <x-form.input name="name" type="text" />
             </div>
             <div>
-                <x-form.input name="code" type="text"  />
+                <x-form.input name="code" type="text" label="Subject Code" />
             </div>
         </div>
         <div class="flex justify-end mt-3">
