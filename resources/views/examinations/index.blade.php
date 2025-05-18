@@ -52,14 +52,7 @@
     @endif
 
     <script>
-       function redirect() {
-            if (this.format === 'pdf') {
-                window.location.href = `/examinations/{{ $examination->id }}/pdf`;
-            } else if (this.format === 'word') {
-                window.location.href = `/examinations/{{ $examination->id }}/word`;
-            }}
-
-       function fileExport(type = 'pdf', examination_id){
+        function fileExport(type = 'pdf', examination_id){
            if(type === 'none') {
                return
            }
