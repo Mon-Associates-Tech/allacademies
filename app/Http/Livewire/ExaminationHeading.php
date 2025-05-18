@@ -53,7 +53,7 @@ class ExaminationHeading extends Component
                     <p class="font-semibold">%s</p>
                 </div>
             </div>
-            TWIG, $this->title ? $this->title : 'TITLE', $this->metadata['level_label'], $this->metadata['subject_code'], $this->duration ? $this->duration : 'DURATION', $this->instructions ? $this->instructions : 'INSTRUCTIONS');
+            TWIG, $this->title ?: 'TITLE', $this->metadata['level_label'], $this->metadata['subject_code'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', $this->instructions ?: 'INSTRUCTIONS');
         }
 
         if ('pug' === $this->template) {
@@ -74,7 +74,7 @@ class ExaminationHeading extends Component
                     <p class="font-semibold">%s</p>
                 </div>
             </div>
-            PUG, $this->title ? $this->title : 'TITLE', $this->metadata['level_name'], $this->metadata['subject_name'], $this->duration ? $this->duration : 'DURATION', $this->instructions ? $this->instructions : 'INSTRUCTIONS');
+            PUG, $this->title ?: 'TITLE', $this->metadata['level_name'], $this->metadata['subject_name'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', $this->instructions ?: 'INSTRUCTIONS');
         }
 
         if ('tera' === $this->template) {
@@ -96,7 +96,7 @@ class ExaminationHeading extends Component
                     <h1 class="font-semibold uppercase">Time Allowed: %s</h1>
                 </div>
             </div>
-            TERA, $this->metadata['logo'], $this->generate('<h1 class="font-semibold uppercase"></h1>'), $this->title ? $this->title : 'TITLE', $this->metadata['subject_code'], $this->metadata['subject_name'], $this->instructions ? $this->instructions : 'INSTRUCTIONS', $this->duration ? $this->duration : 'DURATION');
+            TERA, $this->metadata['logo'], $this->generate('<h1 class="font-semibold uppercase"></h1>'), $this->title ?: 'TITLE', $this->metadata['subject_code'], $this->metadata['subject_name'], $this->instructions ?: 'INSTRUCTIONS', $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION');
         }
 
         if ('jinja' === $this->template) {
@@ -124,14 +124,14 @@ class ExaminationHeading extends Component
                 </div>
                 <p>Instructions: %s</p>
             </div>
-            JINJA, $this->metadata['subject_code'], $this->title ? $this->title : 'TITLE', $this->metadata['subject_name'], $this->duration ? $this->duration : 'DURATION', Str::repeat('.', 500), Str::repeat('.', 500), $this->generate('<h1 class="font-semibold uppercase"></h1>'), $this->metadata['level_label'], $this->metadata['subject_name'], $this->duration ? $this->duration : 'DURATION', $this->instructions ? $this->instructions : 'INSTRUCTIONS');
+            JINJA, $this->metadata['subject_code'], $this->title ?: 'TITLE', $this->metadata['subject_name'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', Str::repeat('.', 500), Str::repeat('.', 500), $this->generate('<h1 class="font-semibold uppercase"></h1>'), $this->metadata['level_label'], $this->metadata['subject_name'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', $this->instructions ?: 'INSTRUCTIONS');
         }
     }
 
     private function generate(string $template): string
     {
         $template = Str::of($template);
-        $details = [$this->metadata['institution']];
+//        $details = [$this->metadata['institution']];
 
         if ('college' === $this->metadata['type']) {
             $details[] = $this->metadata['college'];

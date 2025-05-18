@@ -35,7 +35,7 @@ return [
         'role' => ':name is now :role',
     ],
     'exam' => [
-        'generating' => 'Examination is generating... Will be available soon'
+        'generating' => ':title  is generating... Will be available soon'
     ],
     'quiz' => [
         'generating' => 'Quiz is generating... Will be available soon'

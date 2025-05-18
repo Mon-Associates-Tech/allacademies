@@ -6,6 +6,7 @@ use App\Support\Mark;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EssayQuestion extends Model
@@ -22,6 +23,7 @@ class EssayQuestion extends Model
         'answer',
         'score',
         'difficulty_level',
+        'academic_subtopic_id'
     ];
 
     /**
@@ -32,8 +34,12 @@ class EssayQuestion extends Model
         'answer' => Mark::class,
     ];
 
-    public function academicTopic()
+    public function academicTopic(): BelongsTo
     {
         return $this->belongsTo(AcademicTopic::class);
+    }
+    public function subtopic(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubtopic::class, 'academic_subtopic_id');
     }
 }

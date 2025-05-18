@@ -7,4 +7,7 @@
             Oops, Nothing here yet. When there is data available, it will appear here.
         </p>
     </div>
+    <div class="text-center">
+        <x-link.primary to="{{$link ?? url()->current().'/new'}}" >{{$text ?? 'Create One'}}</x-link.primary>
+    </div>
 </div>

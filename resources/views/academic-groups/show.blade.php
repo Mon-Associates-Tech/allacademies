@@ -16,7 +16,7 @@
 
         @can('administrate')
         <x-slot name="action">
-            <x-button.secondary type="buttton" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicGroup->name }}', '{{ route('academic-groups.destroy', ['academic_group' => $academicGroup]) }}')">Delete Academic Group</x-button.secondary>
+            <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicGroup->name }}', '{{ route('academic-groups.destroy', ['academic_group' => $academicGroup]) }}')">Delete Academic Group</x-button.secondary>
             <x-link.primary :to="route('academic-groups.edit', ['academic_group' => $academicGroup])">Edit Academic Group</x-link.primary>
         </x-slot>
         @endcan

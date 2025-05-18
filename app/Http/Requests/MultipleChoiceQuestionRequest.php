@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class MultipleChoiceQuestionRequest extends FormRequest
 {
@@ -12,7 +11,7 @@ class MultipleChoiceQuestionRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'question' => ['required', 'array'],
@@ -24,18 +23,19 @@ class MultipleChoiceQuestionRequest extends FormRequest
             'option_b' => ['required', 'array'],
             'option_b.up' => ['required', 'string'],
             'option_b.down' => ['required', 'string'],
-            'option_c' => ['required', 'array'],
-            'option_c.up' => ['required', 'string'],
-            'option_c.down' => ['required', 'string'],
-            'option_d' => ['required', 'array'],
-            'option_d.up' => ['required', 'string'],
-            'option_d.down' => ['required', 'string'],
-            'option_e' => ['required', 'array'],
+            'option_c' => ['nullable', 'array'],
+            'option_c.up' => ['nullable', 'string'],
+            'option_c.down' => ['nullable', 'string'],
+            'option_d' => ['nullable', 'array'],
+            'option_d.up' => ['nullable', 'string'],
+            'option_d.down' => ['nullable', 'string'],
+            'option_e' => ['nullable', 'array'],
             'option_e.up' => ['nullable', 'string'],
             'option_e.down' => ['nullable', 'string'],
             'answer' => ['required', 'string', 'in:a,b,c,d,e'],
             'score' => ['required', 'numeric', 'min:1'],
             'difficulty_level' => ['required', 'string', 'in:easy,medium,difficult,unspecified'],
+            'subtopic' => ['nullable','string'],
         ];
     }
 

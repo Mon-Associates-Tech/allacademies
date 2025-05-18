@@ -1,4 +1,4 @@
-<x-auth title="Academic Subjects">
+<x-auth title="Academic Subjects" page-name="Academic Subjects">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),

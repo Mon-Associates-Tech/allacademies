@@ -22,9 +22,15 @@
             </x-anchor>
         </x-detail.data>
 
+        <x-detail.data label="Sub Topic" disabled>
+            <x-anchor to="{{route('academic-topics.subtopics.index', ['academic_topic' => $essayQuestion->academicTopic])}}">
+                {{ $essayQuestion->subtopic->name }}
+            </x-anchor>
+        </x-detail.data>
+
         @can('moderate')
         <x-slot name="action">
-            <x-button.secondary type="buttton" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $essayQuestion->question->summary }}', '{{ route('essay-questions.destroy', ['essay_question' => $essayQuestion]) }}')">Delete Essay Question</x-button.secondary>
+            <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $essayQuestion->question->summary }}', '{{ route('essay-questions.destroy', ['essay_question' => $essayQuestion]) }}')">Delete Essay Question</x-button.secondary>
             <x-link.primary :to="route('essay-questions.edit', ['essay_question' => $essayQuestion])">Edit Essay Question</x-link.primary>
         </x-slot>
         @endcan

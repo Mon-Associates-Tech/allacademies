@@ -2,14 +2,26 @@
 
 namespace App\Support;
 
+use Brick\Math\Exception\MathException;
+use Brick\Math\Exception\NumberFormatException;
+use Brick\Math\Exception\RoundingNecessaryException;
+use Brick\Money\Exception\UnknownCurrencyException;
 use Brick\Money\Money;
 use App\Enums\SubscriptionPackage;
 
 class Pricer
 {
-    public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries): Money
+    /**
+     * @throws RoundingNecessaryException
+     * @throws MathException
+     * @throws UnknownCurrencyException
+     * @throws NumberFormatException
+     */
+    public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries, ?string $tag)
     {
-        $unit = static::getUnitPrice($package, $duration);
+//        $unit = static::getUnitPrice($package, $duration);
+
+        $unit = SubscriptionCalculator::unitSubscriptionPrice($package,  $duration, $tag);
 
         $money = Money::of($unit, 'GHS');
 
@@ -17,7 +29,9 @@ class Pricer
             $money = $money->multipliedBy($beneficiaries);
         }
 
-        $money = $money->multipliedBy($subjects);
+        if(SubscriptionPackage::INDIVIDUAL_FULL === $package) {
+            $money = $money->multipliedBy($subjects);
+        }
 
         return $money;
     }

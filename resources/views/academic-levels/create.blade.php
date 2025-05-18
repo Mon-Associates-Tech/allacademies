@@ -7,18 +7,21 @@
         ]" />
     </x-slot>
 
-    <form method="POST" action="{{ route('academic-groups.academic-levels.store', ['academic_group' => $academicGroup]) }}">
-        @csrf
-        <div class="grid sm:grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
-                <x-form.input name="name" type="text" />
+    <div class="mx-auto bg-white px-4 py-8 rounded-md">
+        <form method="POST" action="{{ route('academic-groups.academic-levels.store', ['academic_group' => $academicGroup]) }}">
+            @csrf
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
+                    <x-form.input name="name" type="text" />
+                </div>
+                <div>
+                    <x-form.input name="label" type="text"  />
+                </div>
             </div>
-            <div>
-                <x-form.input name="label" type="text"  />
+            <div class="flex justify-end mt-5">
+                <x-button.primary class="ml-2">Create Academic Level</x-button.primary>
             </div>
-        </div>
-        <div class="flex justify-end mt-3">
-            <x-button.primary class="ml-2">Create Academic Level</x-button.primary>
-        </div>
-    </form>
+        </form>
+    </div>
+
 </x-auth>

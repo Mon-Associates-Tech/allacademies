@@ -1,7 +1,24 @@
 @import 'katex/dist/katex.css';
+/*@import 'quill/dist/quill.core.css';*/
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 [x-cloak] { display: none !important; }
+
+@media print {
+    ol {
+        list-style-type: decimal;
+        list-style-position: outside;
+        margin-left: 20px; /* or whatever fits */
+    }
+
+    li {
+        display: list-item; /* ensure it's not overridden */
+    }
+}
+
+.page-break {
+    page-break-after: always;
+}

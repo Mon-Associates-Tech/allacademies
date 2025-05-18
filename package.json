@@ -2,7 +2,8 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "postinstall": "cp -r vendor/tinymce/tinymce public/js/tinymce"
     },
     "devDependencies": {
         "@tailwindcss/aspect-ratio": "^0.4.2",

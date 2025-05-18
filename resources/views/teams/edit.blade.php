@@ -42,7 +42,7 @@
                         </div>
                     </div>
                 </div>
-            </div>    
+            </div>
         @else
             <div class="rounded-md bg-blue-50 p-4 mb-6">
                 <div class="flex">

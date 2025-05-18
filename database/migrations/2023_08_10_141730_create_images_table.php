@@ -24,7 +24,11 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("ALTER TABLE images ADD INDEX images_tags_index((CAST(tags AS CHAR(255) ARRAY)))");
+//        DB::statement("ALTER TABLE images ADD INDEX images_tags_index((CAST(tags AS CHAR(255) ARRAY)))");
+        DB::statement("ALTER TABLE images
+ADD COLUMN first_tag VARCHAR(255) GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(tags, '$[0]'))) STORED,
+ADD INDEX images_tags_index (first_tag);
+");
     }
 
     /**

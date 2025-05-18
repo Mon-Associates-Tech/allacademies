@@ -45,4 +45,57 @@ class AcademicSubject extends Model
     {
         return $this->hasMany(Quiz::class);
     }
+    public function subtopic(){
+        return $this->hasManyThrough(AcademicSubtopic::class, AcademicTopic::class);
+    }
+
+    public function topics()
+    {
+        return $this->hasMany(AcademicTopic::class);
+    }
+
+    public function essayQuestions()
+    {
+        return $this->hasManyThrough(
+            EssayQuestion::class,  // or change to a base Question model if unified later
+            AcademicSubtopic::class,
+            'academic_topic_id', // Foreign key on Subtopic
+            'academic_subtopic_id', // Foreign key on EssayQuestion
+            'id', // Local key on Subject
+            'id'  // Local key on Subtopic
+        )->whereHas('subtopic.academicTopic', function ($q) {
+            $q->whereColumn('academic_topics.academic_subject_id', 'id');
+        });
+    }
+
+
+    public function mcqQuestions()
+    {
+        return $this->hasManyThrough(
+            MultipleChoiceQuestion::class,  // or change to a base Question model if unified later
+            AcademicSubtopic::class,
+            'academic_topic_id', // Foreign key on Subtopic
+            'academic_subtopic_id', // Foreign key on EssayQuestion
+            'id', // Local key on Subject
+            'id'  // Local key on Subtopic
+        )->whereHas('subtopic.academicTopic', function ($q) {
+            $q->whereColumn('academic_topics.academic_subject_id', 'id');
+        });
+    }
+
+
+    public function trueFalseQuestions()
+    {
+        return $this->hasManyThrough(
+            TrueOrFalseQuestion::class,  // or change to a base Question model if unified later
+            AcademicSubtopic::class,
+            'academic_topic_id', // Foreign key on Subtopic
+            'academic_subtopic_id', // Foreign key on EssayQuestion
+            'id', // Local key on Subject
+            'id'  // Local key on Subtopic
+        )->whereHas('subtopic.academicTopic', function ($q) {
+            $q->whereColumn('academic_topics.academic_subject_id', 'id');
+        });
+    }
+
 }

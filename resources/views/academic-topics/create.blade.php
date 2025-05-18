@@ -11,15 +11,17 @@
         ]" />
     </x-slot>
 
-    <form method="POST" action="{{ route('academic-subjects.academic-topics.store', ['academic_subject' => $academicSubject]) }}">
-        @csrf
-        <div class="grid sm:grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
-                <x-form.input name="name" type="text" />
+    <div class="mx-auto bg-white px-4 py-8 rounded-md">
+        <form method="POST" action="{{ route('academic-subjects.academic-topics.store', ['academic_subject' => $academicSubject]) }}">
+            @csrf
+            <div class="">
+                <div class="max-w-">
+                    <x-form.input  name="name" type="text"  />
+                </div>
             </div>
-        </div>
-        <div class="flex justify-end mt-3">
-            <x-button.primary class="ml-2">Create Academic Topic</x-button.primary>
-        </div>
-    </form>
+            <div class="flex justify-end mt-3">
+                <x-button.primary class="ml-2">Create Academic Topic</x-button.primary>
+            </div>
+        </form>
+    </div>
 </x-auth>

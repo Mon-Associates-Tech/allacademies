@@ -1,4 +1,7 @@
-<x-auth title="Academic Subject Details">
+<x-auth title="Academic Subject Details" page-name="Academic Subject Details"
+action-link-text="Add Subject Topic"
+action_link="{{route('academic-subjects.academic-topics.create', ['academic_subject' => $academicSubject])  }}"
+>
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -27,7 +30,7 @@
 
         @can('administrate')
         <x-slot name="action">
-            <x-button.secondary type="buttton" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicSubject->name }}', '{{ route('academic-subjects.destroy', ['academic_subject' => $academicSubject]) }}')">Delete Academic Subject</x-button.secondary>
+            <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicSubject->name }}', '{{ route('academic-subjects.destroy', ['academic_subject' => $academicSubject]) }}')">Delete Academic Subject</x-button.secondary>
             <x-link.primary :to="route('academic-subjects.edit', ['academic_subject' => $academicSubject])">Edit Academic Subject</x-link.primary>
         </x-slot>
         @endcan

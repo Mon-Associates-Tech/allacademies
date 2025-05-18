@@ -6,6 +6,7 @@ use App\Support\Mark;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TrueOrFalseQuestion extends Model
@@ -22,6 +23,8 @@ class TrueOrFalseQuestion extends Model
         'answer',
         'score',
         'difficulty_level',
+        'academic_topic_id',
+        'academic_subtopic_id'
     ];
 
     /**
@@ -32,8 +35,13 @@ class TrueOrFalseQuestion extends Model
         'answer' => 'boolean',
     ];
 
-    public function academicTopic()
+    public function academicTopic(): BelongsTo
     {
         return $this->belongsTo(AcademicTopic::class);
+    }
+
+    public function subtopic(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubtopic::class, 'academic_subtopic_id');
     }
 }

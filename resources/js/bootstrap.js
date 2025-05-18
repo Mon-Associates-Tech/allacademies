@@ -1,6 +1,7 @@
 import Alpine from "alpinejs";
 import { marked } from "marked";
 import katex from "katex";
+import axios from 'axios'
 // import _ from 'lodash';
 
 
@@ -8,6 +9,7 @@ import katex from "katex";
 // window._ = _;
 window.Alpine = Alpine
 window.marked = marked
+window.axios = axios
 
 marked.use({
     renderer: {

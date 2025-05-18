@@ -1,6 +1,6 @@
 <x-auth title="Profile">
-    
-   
+
+
 
 
     <div class="flex flex-col items-center">
@@ -19,7 +19,7 @@
                     <x-link.primary :to="route('profile.edit')">Edit Profile</x-link.primary>
                 </x-slot>
 
-                
+
             </x-detail>
         </div>
     </div>

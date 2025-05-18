@@ -1,9 +1,9 @@
-<x-auth title="Dashboard">
+<x-auth title="Dashboard" :has-action="false">
     @if ($academicSubjects->count())
 
     <section class="w-full h-60 mb-8 grid grid-rows-2 gap-4 md:grid md:grid-cols-[30%_68%] md:h-40">
         <div class="flex flex-col justify-between text-center items-center rounded-3xl bg-blue-300 p-4 md:h-40">
-            <h3 class="text-2xl font-semibold">Hello User</h3>
+            <h3 class="text-2xl font-semibold">{{greetUser(auth()->user()->name)}}</h3>
             <p>Welcome to your Dashboard</p>
             <div class="btn bg-range drop-shadow-2xl px-4 py-2 rounded-full w-1/2 text-sm text-white md:w-full">Explore more courses</div>
         </div>
@@ -15,7 +15,7 @@
 
                 <h3>Toolbox</h3>
                 <div class="flex w-full justify-between">
-    
+
                     <div class="border-r w-full flex flex-col items-center">
                         <img src="{{ asset('img/deadline.gif') }}" alt="animation" class='w-10 h-10 bg-inherit'>
                         <p class="text-sm">Calendar</p>
@@ -28,8 +28,6 @@
                         <img src="{{ asset('img/history.png') }}" alt="animation" class='w-10 h-10 bg-inherit'>
                         <p class="text-sm">Recent</p>
                     </div>
-                    
-                    
                 </div>
             </div>
 
@@ -38,11 +36,11 @@
 
     </section>
 
-    <section class="mt-8">
+    <section class="mt-10 max-w-6xl mx-auto">
 
-    
 
-    <h3 class="font-semibold text-2xl">My Courses</h3>
+
+    <h3 class="font-semibold text-2xl pb-4">My Courses</h3>
     <!-- <nav class="w-full mb-4 py-2">
         <ul class="flex justify-between items-center">
             <li><a href="/">University</a></li>
@@ -50,8 +48,8 @@
             <li><a href="/">Junior High</a></li>
             <li><a href="/">Primary </a></li>
             <li><a href="/">PreSchool</a></li>
-            
-            
+
+
         </ul>
     </nav> -->
   <x-table>

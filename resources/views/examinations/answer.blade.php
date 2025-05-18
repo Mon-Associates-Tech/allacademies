@@ -2,7 +2,7 @@
     $multiple = count($sections) > 1;
 @endphp
 
-<x-auth title="Examination Details">
+<x-auth title="Examination Details" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $examination->academicSubject]),

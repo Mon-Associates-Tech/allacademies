@@ -1,6 +1,6 @@
 <x-auth title="Teams">
-    
-    
+
+
     <x-table>
         <x-slot name="head">
             <tr>

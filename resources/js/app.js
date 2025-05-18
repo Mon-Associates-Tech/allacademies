@@ -89,5 +89,3 @@ gsap.from(".fade-in-text", {
         toggleActions: "play none none none", // Play only once
     }
 });
-
-

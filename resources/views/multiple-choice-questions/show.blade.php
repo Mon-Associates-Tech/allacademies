@@ -28,9 +28,17 @@
             </x-anchor>
         </x-detail.data>
 
+        @if(isset($multipleChoiceQuestion->subtopic))
+            <x-detail.data label="Sub Topic" disabled>
+                <x-anchor to="#">
+                    {{ $multipleChoiceQuestion?->subtopic?->name }}
+                </x-anchor>
+            </x-detail.data>
+        @endif
+
         @can('moderate')
         <x-slot name="action">
-            <x-button.secondary type="buttton" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $multipleChoiceQuestion->question->summary }}', '{{ route('multiple-choice-questions.destroy', ['multiple_choice_question' => $multipleChoiceQuestion]) }}')">Delete Multiple Choice Question</x-button.secondary>
+            <x-button.secondary type="button" x-data="{}" x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $multipleChoiceQuestion->question->summary }}', '{{ route('multiple-choice-questions.destroy', ['multiple_choice_question' => $multipleChoiceQuestion]) }}')">Delete Multiple Choice Question</x-button.secondary>
             <x-link.primary :to="route('multiple-choice-questions.edit', ['multiple_choice_question' => $multipleChoiceQuestion])">Edit Multiple Choice Question</x-link.primary>
         </x-slot>
         @endcan

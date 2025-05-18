@@ -30,7 +30,7 @@
 
         @livewire('subscription-form', ['academicGroups' => $academicGroups, 'currentTeam' => $currentTeam])
 
-        <div class="flex justify-end mt-3">
+        <div x-data="{hasSubjects: $numberOfSubjects >= 1}" class="flex justify-end mt-3">
             <x-button.primary class="ml-2">Create Subscription</x-button.primary>
         </div>
     </form>
