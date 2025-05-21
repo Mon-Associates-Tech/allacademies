@@ -33,6 +33,32 @@ class TrueOrFalseQuestionController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     *
+     * @param AcademicTopic $academicTopic
+     * @param TrueOrFalseQuestionRequest $request
+     * @return RedirectResponse
+     */
+    public function store(AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request)
+    {
+        $this->authorize('moderate');
+
+        $data = $request->validated();
+        if (isset($request->subtopic)) {
+            $subTopic = AcademicSubtopic::firstOrCreate(
+                ['name' => $request->subtopic],
+                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
+            );
+            $data['academic_subtopic_id'] = $subTopic->id;
+        }
+
+        $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
+
+        return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic])
+            ->with('success', __('status.resource.created', ['name' => $trueOrFalseQuestion->question->summary]));
+    }
+
+    /**
      * Show the form for creating a new resource.
      *
      * @return Application|Factory|\Illuminate\View\View|View
@@ -46,32 +72,6 @@ class TrueOrFalseQuestionController extends Controller
         return view('true-or-false-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param AcademicTopic $academicTopic
-     * @param TrueOrFalseQuestionRequest $request
-     * @return RedirectResponse
-     */
-    public function store(AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request)
-    {
-        $this->authorize('moderate');
-
-        $data = $request->validated();
-        if(isset($request->subtopic)){
-            $subTopic = AcademicSubtopic::firstOrCreate(
-                ['name' => $request->subtopic],
-                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
-
-        $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
-
-        return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic])
-            ->with('success', __('status.resource.created', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 
     /**
@@ -120,17 +120,18 @@ class TrueOrFalseQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-
-        $subTopic = AcademicSubtopic::updateOrCreate(
-            ['name' => $trueOrFalseQuestion->subtopic->name],
-            ['name' => $request->subtopic, 'academic_topic_id' => $trueOrFalseQuestion->academic_topic_id]
-        );
         $data = $request->validated();
-        $data['academic_subtopic_id'] = $subTopic->id;
+        if (isset($request->subtopic) && isset($trueOrFalseQuestion->subtopic->name)) {
+            $subTopic = AcademicSubtopic::updateOrCreate(
+                ['name' => $trueOrFalseQuestion->subtopic->name],
+                ['name' => $request->subtopic, 'academic_topic_id' => $trueOrFalseQuestion->academic_topic_id]
+            );
+            $data['academic_subtopic_id'] = $subTopic->id;
+        }
 
         $trueOrFalseQuestion->update($data);
 
-        return to_route('true-or-false-questions.show', ['true_or_false_question' =>  $trueOrFalseQuestion])
+        return to_route('true-or-false-questions.show', ['true_or_false_question' => $trueOrFalseQuestion])
             ->with('success', __('status.resource.updated', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 

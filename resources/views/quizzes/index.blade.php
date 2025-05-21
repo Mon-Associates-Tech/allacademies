@@ -1,4 +1,4 @@
-<x-auth title="Quizzes">
+<x-auth title="Quizzes" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>

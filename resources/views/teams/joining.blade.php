@@ -1,15 +1,19 @@
-<x-auth title="Join Team">
+<x-auth title="Join Team" :has-action="false">
 
 
-    <form method="POST" action="{{ route('teams.add-member') }}">
-        @csrf
-        <div class="grid sm:grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
-                <x-form.input name="code" type="text" />
+    <div class="max-w-xl mx-auto py-10 bg-white rounded-md sm:px-6 lg:px-8">
+        <form method="POST" action="{{ route('teams.add-member') }}">
+            @csrf
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-3">
+                    <x-form.input name="code" type="text" />
+                </div>
+                <div class=" text-end col-span-3">
+                    <x-button.primary class="ml-2">Join Team</x-button.primary>
+                </div>
             </div>
-        </div>
-        <div class=" mt-3">
-            <x-button.primary class="ml-2">Join Team</x-button.primary>
-        </div>
-    </form>
+
+        </form>
+    </div>
+
 </x-auth>

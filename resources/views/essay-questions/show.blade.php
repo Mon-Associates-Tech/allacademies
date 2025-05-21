@@ -22,11 +22,13 @@
             </x-anchor>
         </x-detail.data>
 
-        <x-detail.data label="Sub Topic" disabled>
-            <x-anchor to="{{route('academic-topics.subtopics.index', ['academic_topic' => $essayQuestion->academicTopic])}}">
-                {{ $essayQuestion->subtopic->name }}
-            </x-anchor>
-        </x-detail.data>
+        @if (isset( $essayQuestion->academicTopic->subtopic))
+            <x-detail.data label="Sub Topic" disabled>
+                <x-anchor to="{{route('academic-topics.subtopics.index', ['academic_topic' => $essayQuestion->academicTopic])}}">
+                    {{ $essayQuestion->subtopic->name }}
+                </x-anchor>
+            </x-detail.data>
+        @endif
 
         @can('moderate')
         <x-slot name="action">

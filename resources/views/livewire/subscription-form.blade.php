@@ -4,6 +4,7 @@
             '3' => '3 Months',
             '6' => '6 Months',
             '12' => '12 Months',
+            '1' => 'One off',
         ]" />
     </div>
 

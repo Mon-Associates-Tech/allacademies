@@ -87,6 +87,11 @@ class ExaminationController extends Controller
 
         $topics = AcademicTopic::where('academic_subject_id', $academicSubject->id)
             ->select(['id', 'name'])
+            ->withCount([
+                'essayQuestions',
+                'multipleChoiceQuestions',
+                'trueOrFalseQuestions'
+            ])
             ->with([
                 'subtopics' => function ($query) {
                     $query->withCount([
@@ -108,22 +113,32 @@ class ExaminationController extends Controller
                     ];
                 });
 
-                $questionsCount = $subtopics->sum(function ($sub) {
-                    return $sub['essay_questions_count']
-                        + $sub['multiple_choice_questions_count']
-                        + $sub['true_or_false_questions_count'];
-                });
+                $questionsCount = $subtopics->isEmpty()
+                    ? ($topic->essay_questions_count + $topic->multiple_choice_questions_count + $topic->true_or_false_questions_count)
+                    : $subtopics->sum(function ($sub) {
+                        return $sub['essay_questions_count']
+                            + $sub['multiple_choice_questions_count']
+                            + $sub['true_or_false_questions_count'];
+                    });
 
                 return [
                     'id' => $topic->id,
                     'name' => $topic->name,
                     'questions_count' => $questionsCount,
+                    'essay_questions_count' => $subtopics->isEmpty()
+                        ? $topic->essay_questions_count
+                        : $subtopics->sum('essay_questions_count'),
+                    'multiple_choice_questions_count' => $subtopics->isEmpty()
+                        ? $topic->multiple_choice_questions_count
+                        : $subtopics->sum('multiple_choice_questions_count'),
+                    'true_or_false_questions_count' => $subtopics->isEmpty()
+                        ? $topic->true_or_false_questions_count
+                        : $subtopics->sum('true_or_false_questions_count'),
                     'subtopics' => $subtopics->toArray(),
                     'selectedOptions' => []
                 ];
             })
             ->toArray();
-
 
         return view('examinations.create', [
             'academicSubject' => $academicSubject,
@@ -133,47 +148,11 @@ class ExaminationController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param AcademicSubject $academicSubject
-     * @param ExaminationRequest $request
-     * @return RedirectResponse
-     */
-    public function store(AcademicSubject $academicSubject, HttpRequest $request)
-    {
-
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
-
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
-
-        $heading = $request->heading;
-
-        $this->handle(
-            $academicSubject,
-            Team::query()->find($request->team_id),
-            User::query()->find($request->creator_id),
-            $heading,
-            $request->sections
-        );
-
-//        GenerateExaminationJob::dispatch(
-//            $academicSubject,
-//            Team::query()->find($request->team_id),
-//            User::query()->find($request->creator_id),
-//            $heading,
-//            $request->sections
-//        );
-
-        return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
-            ->with('success', __('status.exam.generating', ['title' => $heading['title']]));
-    }
-
-    /**
      * Display the specified resource.
      *
      * @param Examination $examination
      * @return Application|Factory|View|\Illuminate\View\View
+     * @throws \ImagickException
      */
     public function show(Examination $examination)
     {
@@ -188,53 +167,56 @@ class ExaminationController extends Controller
         $sections = Examiner::createSections($examination);
 
         foreach ($sections as $index => $section) {
-            $path = storage_path('app/public/' . $section['document']);
-            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-            $sections[$index]['extension'] = $ext;
-            $sections[$index]['original_path'] = $section['document'];
-            $sections[$index]['pdf_images'] = [];
+            if (isset($section['document'])) {
+                $path = storage_path('app/public/' . $section['document']);
+                $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-            if (in_array($ext, ['doc', 'docx']) && file_exists($path)) {
-                $phpWord = IOFactory::load($path, 'Word2007');
-                $docxText = '';
+                $sections[$index]['extension'] = $ext;
+                $sections[$index]['original_path'] = $section['document'];
+                $sections[$index]['pdf_images'] = [];
 
-                foreach ($phpWord->getSections() as $sec) {
-                    foreach ($sec->getElements() as $element) {
-                        if (method_exists($element, 'getText')) {
-                            $docxText .= $element->getText() . "\n";
+                if (in_array($ext, ['doc', 'docx']) && file_exists($path)) {
+                    $phpWord = IOFactory::load($path, 'Word2007');
+                    $docxText = '';
+
+                    foreach ($phpWord->getSections() as $sec) {
+                        foreach ($sec->getElements() as $element) {
+                            if (method_exists($element, 'getText')) {
+                                $docxText .= $element->getText() . "\n";
+                            }
                         }
                     }
+
+                    $sections[$index]['document'] = $docxText;
                 }
 
-                $sections[$index]['document'] = $docxText;
-            }
+                $pdfPath = storage_path('app/public/' . $sections[$index]['original_path']);
+                $images = [];
 
-            $pdfPath = storage_path('app/public/' . $sections[$index]['original_path']);
-            $images = [];
+                if (file_exists($pdfPath)) {
+                    $outputDir = storage_path('app/public/pdf_pages');
 
-            if (file_exists($pdfPath)) {
-                $outputDir = storage_path('app/public/pdf_pages');
+                    if (!file_exists($outputDir)) {
+                        mkdir($outputDir, 0755, true);
+                    }
 
-                if (!file_exists($outputDir)) {
-                    mkdir($outputDir, 0755, true);
+                    $imagick = new \Imagick();
+                    $imagick->setResolution(300, 300);
+                    $imagick->readImage($pdfPath);
+
+                    foreach ($imagick as $i => $page) {
+                        $page->setImageFormat('jpg');
+                        $filename = 'pdf_page_' . $i . '.jpg';
+                        $outputPath = $outputDir . '/' . $filename;
+
+                        $page->writeImage($outputPath);
+
+                        $images[] = 'pdf_pages/' . $filename; // relative path for Blade
+                    }
+
+                    $sections[$index]['pdf_images'] = $images;
                 }
-
-                $imagick = new \Imagick();
-                $imagick->setResolution(300, 300);
-                $imagick->readImage($pdfPath);
-
-                foreach ($imagick as $i => $page) {
-                    $page->setImageFormat('jpg');
-                    $filename = 'pdf_page_' . $i  . '.jpg';
-                    $outputPath = $outputDir . '/' . $filename;
-
-                    $page->writeImage($outputPath);
-
-                    $images[] = 'pdf_pages/' . $filename; // relative path for Blade
-                }
-
-                $sections[$index]['pdf_images'] = $images;
             }
 
         }
@@ -270,73 +252,119 @@ class ExaminationController extends Controller
         ]);
     }
 
+    /**
+     * @throws NotEnoughQuestionsException
+     */
     public function handle(
-         AcademicSubject $academicSubject,
-         Team $team,
-         User $creator,
-         array $heading,
-         array $sections
+        AcademicSubject $academicSubject,
+        Team            $team,
+        User            $creator,
+        array           $heading,
+        array           $sections,
+        bool            $useSubtopics = false,
     ): void
     {
+        $topicQuestions = [];
+        $questionsWithSubtopics = [];
+        $processedSections = []; // New array for processed sections
 
-            $allQuestions = [];
+        foreach ($sections as $section) {
+            $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
+            $subtopics = $section['subtopics'] ?? [];
+            $table = $section['type'];
 
-            foreach ($sections as $section) {
-                $topicIds = collect($section['topics'])->map(fn($id) => (int) $id)->all();
-                $subtopics = $section['subtopics'];
-                $table = $section['type'];
+            if (isset($section['document']) && $section['document'] instanceof UploadedFile) {
+                $file = $section['document'];
+                $path = $file->store('documents', 'public');
+                $section['document'] = $path;
+            }
 
-                if ($section['document'] instanceof UploadedFile) {
-                    $file = $section['document'];
-                    $path = $file->store('documents', 'public');
-                    $section['document'] = $path;
-                }
-
+            if ($useSubtopics && count($subtopics)) {
                 foreach ($subtopics as $subtopic) {
-                    $count = (int) $subtopic['count'];
+                    $count = (int)$subtopic['count'];
 
                     $questions = DB::table($table)
                         ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-
                         ->whereIn('academic_subtopics.academic_topic_id', $topicIds)
+                        ->whereNotIn('id', ${$section['type']})
                         ->inRandomOrder()
                         ->select($table . '.id')
                         ->take($count)
                         ->get()
                         ->pluck('id');
 
+                    if (count($questionsWithSubtopics) < $section['count']) {
+                        throw new NotEnoughQuestionsException();
+                    }
 
-                    $allQuestions = array_merge($allQuestions, $questions->all());
+                    $questionsWithSubtopics = array_merge($questionsWithSubtopics, $questions->all());
                 }
-                $page = isset($section['page']) ? '<div class="h-screen w-full bg-white print:break-before-page print:break-after-page"></div>' : null;
+            } else {
+                // TODO: validate that topics are under the right subject;
+                $questions = DB::table($section['type'])
+                    ->select('id')
+                    ->whereIn('academic_topic_id', $section['topics'])
+                    ->whereNotIn('id', $topicIds)
+                    ->inRandomOrder()
+                    ->take($section['count'])
+                    ->get()
+                    ->pluck('id')
+                    ->all();
 
-
-
-
-                $sections[] = [
-                    'name' => $section['name'],
-                    'type' => $section['type'],
-                    'questions' => $allQuestions,
-                    'page' => $page,
-                    'document' => $section['document'],
-                    'instructions' => $section['instructions'],
-                ];
-
-
+                if (count($questions) < $section['count']) {
+                    throw new NotEnoughQuestionsException();
+                }
+                $topicQuestions = array_merge($topicQuestions, $questions);
             }
 
-            array_shift($sections);
+            $processedSections[] = [
+                'name' => $section['name'],
+                'type' => $section['type'],
+                'questions' => $useSubtopics ? $questionsWithSubtopics : $topicQuestions,
+                'page' => $section['page'] ?? null,
+                'document' => $section['document'] ?? null,
+                'instructions' => $section['instructions'],
+            ];
+        }
 
-            $examination = new Examination([
-                'title' => $heading['title'],
-                'heading' => $heading,
-                'sections' => $sections,
-            ]);
+        $examination = new Examination([
+            'title' => $heading['title'],
+            'heading' => $heading,
+            'sections' => $processedSections,
+        ]);
 
-            $examination->creator()->associate($creator);
-            $examination->team()->associate($team);
+        $examination->creator()->associate($creator);
+        $examination->team()->associate($team);
 
-            $academicSubject->examinations()->save($examination);
+        $academicSubject->examinations()->save($examination);
+    }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param AcademicSubject $academicSubject
+     * @param ExaminationRequest $request
+     * @return RedirectResponse
+     */
+    public function store(AcademicSubject $academicSubject, HttpRequest $request)
+    {
+
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
+        $heading = $request->heading;
+
+        GenerateExaminationJob::dispatch(
+            $academicSubject,
+            Team::query()->find($request->team_id),
+            User::query()->find($request->creator_id),
+            $heading,
+            $request->sections
+        );
+
+        return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
+            ->with('success', __('status.exam.generating', ['title' => $heading['title']]));
     }
 }

@@ -37,9 +37,9 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <x-form.rich-editor class="rich-editor" full name="question"/>
+                    <x-form.editor class="rich-editor" full name="question"/>
                     <div class="my-3">
-                        <x-form.rich-editor class="rich-editor" full name="answer"/>
+                        <x-form.editor class="rich-editor" full name="answer"/>
                     </div>
 
                     <div class="flex justify-end mt-4">

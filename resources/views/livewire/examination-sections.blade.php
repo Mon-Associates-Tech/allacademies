@@ -34,7 +34,7 @@
                 </div>
                 <div class="col-span-2">
                     <x-form.select wire:key="type-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.type"
-                                   name="sections[{{ $sectionIndex }}][type]" type="text" label="Type"
+                                   name="sections[{{ $sectionIndex }}][type]" type="text" label="Type" value="multiple_choice_questions"
                                    :options="$options"/>
                 </div>
 
@@ -65,9 +65,10 @@
                                                 wire:model="sections.{{ $sectionIndex }}.topics"
                                                 name="sections[{{ $sectionIndex }}][topics][]"
                                                 value="{{ $topic['id'] }}"
+                                                {{ $topic['questions_count'] < 1 ? 'disabled' : '' }}
                                                 type="checkbox"
                                                 class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                                @change="showSubtopics = $event.target.checked"
+                                                @change="showSubtopics = $event.target.checked && {{$subtopics}}"
                                             >
                                         </div>
                                         <div class="ml-3 leading-6">

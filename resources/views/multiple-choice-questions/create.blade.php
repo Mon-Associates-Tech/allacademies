@@ -1,4 +1,4 @@
-<x-auth title="New Multiple Choice Question">
+<x-auth title="New Multiple Choice Question" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),

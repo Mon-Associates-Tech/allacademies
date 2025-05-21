@@ -1,4 +1,4 @@
-<x-auth title="Quiz Summary">
+<x-auth title="Quiz Summary" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),

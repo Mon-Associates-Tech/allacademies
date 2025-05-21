@@ -28,33 +28,37 @@ class ExaminationHeading extends Component
         $this->compile();
     }
 
-    public function updated()
-    {
-        $this->compile();
-    }
-
-    public function render()
-    {
-        return view('livewire.examination-heading');
-    }
-
     private function compile()
     {
         if ('twig' === $this->template) {
+            // Validate metadata array keys
+            $levelLabel = $this->metadata['level_label'] ?? 'N/A';
+            $subjectCode = $this->metadata['subject_code'] ?? 'N/A';
+
+            // Escape HTML content
+            $title = htmlspecialchars($this->title ?: 'TITLE');
+            $instructions = $this->instructions ?: 'INSTRUCTIONS';
+
+            // Validate duration before conversion
+            $duration = $this->duration && is_numeric($this->duration)
+                ? convertMinutesToHoursMinutes($this->duration)
+                : 'DURATION';
+
             $this->down = sprintf(<<<'TWIG'
-            <div>
-                <div class="text-center">
-                    <h1 class="font-semibold uppercase">%s</h1>
-                    <h1 class="font-semibold uppercase">%s &#12539; %s</h1>
-                    <h1 class="font-semibold">Duration: %s</h1>
-                </div>
-                <div class="border-y border-black my-5 py-5">
-                    <h1 class="font-semibold uppercase">Instructions:</h1>
-                    <p class="font-semibold">%s</p>
-                </div>
-            </div>
-            TWIG, $this->title ?: 'TITLE', $this->metadata['level_label'], $this->metadata['subject_code'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', $this->instructions ?: 'INSTRUCTIONS');
+    <div>
+        <div class="text-center">
+            <h1 class="font-semibold uppercase">%s</h1>
+            <h1 class="font-semibold uppercase">%s &#12539; %s</h1>
+            <h1 class="font-semibold">Duration: %s</h1>
+        </div>
+        <div class="border-y border-black my-5 py-5">
+            <h1 class="font-semibold uppercase">Instructions:</h1>
+            <p class="font-semibold">%s</p>
+        </div>
+    </div>
+    TWIG, $title, $levelLabel, $subjectCode, $duration, $instructions);
         }
+
 
         if ('pug' === $this->template) {
             $this->down = sprintf(<<<'PUG'
@@ -146,8 +150,18 @@ class ExaminationHeading extends Component
             $details[] = $this->metadata['department'];
         }
 
-        $details = array_map(fn ($detail) => $template->replace('><', ">{$detail}<"), $details);
+        $details = array_map(fn($detail) => $template->replace('><', ">{$detail}<"), $details);
 
         return implode(PHP_EOL, $details);
+    }
+
+    public function updated()
+    {
+        $this->compile();
+    }
+
+    public function render()
+    {
+        return view('livewire.examination-heading');
     }
 }

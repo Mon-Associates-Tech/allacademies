@@ -32,10 +32,13 @@
                     <x-form.input name="score" type="number" :value="$essayQuestion->score"/>
                 </div>
 
-                <div class="sm:col-span-2 my-3">
-                    <x-form.input type="text" placeholder="Enter subtopic or leave blank"
-                                  :value="$essayQuestion->subtopic->name" Label="Sub Topic" name="subtopic"/>
-                </div>
+                @if(isset($essayQuestion->academicTopic->subtopic))
+                    <div class="sm:col-span-2 my-3">
+                        <x-form.input type="text" placeholder="Enter subtopic or leave blank"
+                                      :value="$essayQuestion->subtopic->name" Label="Sub Topic" name="subtopic"/>
+                    </div>
+                @endif
+
 
                 <div class="sm:col-span-2">
                     <div class="">
