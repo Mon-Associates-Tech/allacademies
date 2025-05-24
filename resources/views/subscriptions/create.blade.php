@@ -1,12 +1,12 @@
-<x-auth title="Create Subscription"  :has-action="false">
+<x-layouts.app title="Create Subscription"  :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Subscriptions' => route('subscriptions.index'),
         ]"/>
     </x-slot>
 
-    <section>
-        <div class="rounded-md bg-blue-50 p-4 mb-6">
+    <section class="max-w-4xl mx-auto bg-white p-4 rounded-md w-full relative min-h-screen h-full mb-8">
+        <div class="rounded-md max-w-4xl bg-blue-50 p-4 mb-6 mx-auto justify-center place-items-center">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -15,7 +15,7 @@
                               clip-rule="evenodd"/>
                     </svg>
                 </div>
-                <div class="ml-3 flex-1 md:flex md:justify-between">
+                <div class="ml-3 flex-1 md:flex  md:justify-between">
                     <p class="text-sm text-blue-700">This subscription will apply to
                         <strong>{{ $currentTeam->name }}</strong>. You can change the team if this not your intended
                         team.</p>
@@ -30,15 +30,18 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('subscriptions.store') }}">
-            @csrf
+        <div class="grid place-items-center mx-auto justify-center w-full">
 
-            @livewire('subscription-form', ['academicGroups' => $academicGroups, 'currentTeam' => $currentTeam])
+            <form method="POST" action="{{ route('subscriptions.store') }}">
+                @csrf
 
-            <div x-data="{hasSubjects: $numberOfSubjects >= 1}" class="flex max-w-[35rem]  justify-end mt-5">
-                <x-button.primary class="ml-2">Create Subscription</x-button.primary>
-            </div>
-        </form>
+                @livewire('subscription-form', ['academicGroups' => $academicGroups, 'currentTeam' => $currentTeam])
+
+                <div x-data="{hasSubjects: $numberOfSubjects >= 1}" class="flex max-w-[35rem]  justify-end mt-5">
+                    <x-button.primary class="ml-2">Create Subscription</x-button.primary>
+                </div>
+            </form>
+        </div>
     </section>
 
-</x-auth>
+</x-layouts.app>

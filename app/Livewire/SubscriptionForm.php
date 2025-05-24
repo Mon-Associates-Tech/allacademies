@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Enums\SubscriptionPackage;
 use App\Models\AcademicGroup;
 use App\Support\Pricer;
-use App\Support\SubscriptionAmount;
-use App\Support\SubscriptionCalculator;
 use Illuminate\Support\Arr;
 use Livewire\Component;
 

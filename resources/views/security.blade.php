@@ -1,4 +1,4 @@
-<x-auth title="Security">
+<x-layouts.app title="Security">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
@@ -27,4 +27,4 @@
             </div>
         </div>
     </div>
-</x-auth>
+</x-layouts.app>

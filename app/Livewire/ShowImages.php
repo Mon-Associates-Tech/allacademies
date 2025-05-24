@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Image;
+use Livewire\Component;
 
 class ShowImages extends Component
 {

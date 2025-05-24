@@ -1,4 +1,4 @@
-<x-auth title="New Team" :has-action="false" >
+<x-layouts.app title="New Team" :has-action="false" :title-align-center="true">
 
 
 <div class="max-w-xl mx-auto py-10 bg-white rounded-md sm:px-6 lg:px-8">
@@ -9,10 +9,10 @@
                 <x-form.input name="name" type="text" />
             </div>
         </div>
-        <div class=" mt-3 text-right">
+        <div class="mt-5 text-right">
             <x-button.primary class="ml-2">Create Team</x-button.primary>
         </div>
     </form>
 </div>
 
-</x-auth>
+</x-layouts.app>

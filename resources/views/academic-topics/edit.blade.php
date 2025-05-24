@@ -1,4 +1,4 @@
-<x-auth title="Edit Academic Topic" :main-only="true">
+<x-layouts.app title="Edit Academic Topic" :main-only="true">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -24,4 +24,4 @@
             </div>
         </form>
     </div>
-</x-auth>
+</x-layouts.app>

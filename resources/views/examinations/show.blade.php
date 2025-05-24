@@ -3,7 +3,7 @@
 @endphp
 
 
-<x-print title="Examination Details">
+<x-layouts.app title="Examination Details">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $examination->academicSubject]),
@@ -144,4 +144,4 @@
         }
 
     </script>
-</x-print>
+</x-layouts.app>

@@ -1,4 +1,4 @@
-<x-auth title="Create Quiz" :has-action="false" :main-only="true">
+<x-layouts.app title="Create Quiz" :has-action="false" :main-only="true">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),
@@ -7,7 +7,7 @@
 
     <div class="bg-white p-4 rounded-md border-slate-300 border w-full max-w-full  mx-auto
 ">
-        <form class="max-w-3xl mx-auto" method="POST" action="{{ route('academic-subjects.quizzes.store', ['academic_subject' => $academicSubject]) }}" class="w-full">
+        <form class="max-w-2xl mx-auto bg-gray-100 p-4 rounded-md" method="POST" action="{{ route('academic-subjects.quizzes.store', ['academic_subject' => $academicSubject]) }}" class="w-full">
             @csrf
 
             <input type="hidden" name="team_id" value="{{ auth()->user()->current_team_id }}">
@@ -37,4 +37,4 @@
             </div>
         </form>
     </div>
-</x-auth>
+</x-layouts.app>

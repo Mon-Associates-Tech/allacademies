@@ -1,4 +1,5 @@
-import Alpine from "alpinejs";
+import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+
 import { marked } from "marked";
 import katex from "katex";
 import axios from 'axios'
@@ -6,7 +7,7 @@ import axios from 'axios'
 
 
 
-// window._ = _;
+
 window.Alpine = Alpine
 window.marked = marked
 window.axios = axios
@@ -35,7 +36,7 @@ marked.use({
     }
 })
 
-Alpine.start()
+Livewire.start()
 
 
 /**

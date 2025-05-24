@@ -21,7 +21,7 @@
                 ]
 @endphp
 
-<div class="mt-5">
+<div class="mt-5 w-full max-w-full">
     <label class="block text-gray-800 font-bold">Sections</label>
 
     @foreach ($sections as $sectionIndex => $section)
@@ -29,24 +29,24 @@
         <div class="mt-3 bg-white border-x border-t border-gray-300 rounded-t-lg p-5 mb-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-x-3">
                 <div class="col-span-2">
-                    <x-form.input wire:key="name-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.name"
+                    <x-form.input wire:key="name-{{ $sectionIndex }}" wire:model.live="sections.{{ $sectionIndex }}.name"
                                   name="sections[{{ $sectionIndex }}][name]" type="text" label="Name"/>
                 </div>
                 <div class="col-span-2">
-                    <x-form.select wire:key="type-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.type"
+                    <x-form.select wire:key="type-{{ $sectionIndex }}" wire:model.live="sections.{{ $sectionIndex }}.type"
                                    name="sections[{{ $sectionIndex }}][type]" type="text" label="Type" value="multiple_choice_questions"
                                    :options="$options"/>
                 </div>
 
                 <div class="col-span-2 mt-3">
-                    <x-form.input wire:key="count-{{ $sectionIndex }}" wire:model="sections.{{ $sectionIndex }}.count"
+                    <x-form.input wire:key="count-{{ $sectionIndex }}" wire:model.live="sections.{{ $sectionIndex }}.count"
                                   name="sections[{{ $sectionIndex }}][count]" type="number" label="Number of Questions"/>
                 </div>
             </div>
 
             <div class="my-5">
                 <x-form.rich-editor class="rich-editor" wire:key="instructions-{{ $sectionIndex }}"
-                                    wire:model="sections.{{ $sectionIndex }}.instructions"
+                                    wire:model.live="sections.{{ $sectionIndex }}.instructions"
                                     name="sections[{{ $sectionIndex }}][instructions]" type="text" label="Instructions"/>
             </div>
 
@@ -62,13 +62,13 @@
                                         <div class="flex h-6 items-center">
                                             <input
                                                 wire:key="topic-{{ $sectionIndex }}-{{ $topic['id'] }}"
-                                                wire:model="sections.{{ $sectionIndex }}.topics"
+                                                wire:model.live="sections.{{ $sectionIndex }}.topics"
                                                 name="sections[{{ $sectionIndex }}][topics][]"
                                                 value="{{ $topic['id'] }}"
                                                 {{ $topic['questions_count'] < 1 ? 'disabled' : '' }}
                                                 type="checkbox"
                                                 class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                                @change="showSubtopics = $event.target.checked && {{$subtopics}}"
+                                                @change="showSubtopics = $event.target.checked"
                                             >
                                         </div>
                                         <div class="ml-3 leading-6">
@@ -105,7 +105,7 @@
                                                 <div class="flex h-6 items-center">
                                                     <input
                                                         wire:key="subtopic-{{ $sectionIndex }}-{{ $subtopic['id'] }}"
-                                                        wire:model="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
+                                                        wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
                                                         name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
                                                         value="{{ $subtopic['id'] }}"
                                                         type="checkbox"
@@ -136,7 +136,7 @@
                                                 :has-label="false"
                                                 class="max-w-[100px]"
                                                 name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
-                                                wire:model="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
+                                                wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
                                                 type="number"
                                                 value="0"
                                             />
@@ -157,7 +157,7 @@
                 <div class="flex py-4 px-4">
                     <input
                         wire:key="section-{{ $sectionIndex }}-page"
-                        wire:model="sections.{{ $sectionIndex }}.page"
+                        wire:model.live="sections.{{ $sectionIndex }}.page"
                         name="sections[{{ $sectionIndex }}][page]"
                         value="blank-page"
                         type="checkbox"
@@ -175,7 +175,7 @@
                     </div>
                     <input
                         wire:key="section-{{ $sectionIndex }}-document"
-                        wire:model="sections.{{ $sectionIndex }}.document"
+                        wire:model.live="sections.{{ $sectionIndex }}.document"
                         name="sections[{{ $sectionIndex }}][document]"
                         type="file"
                         id="section_document_id"

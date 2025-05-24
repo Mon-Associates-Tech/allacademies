@@ -1,4 +1,4 @@
-<x-auth title="Edit Multiple Choice Question">
+<x-layouts.app title="Edit Multiple Choice Question">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -64,4 +64,4 @@
                 <x-plugins />
             </div>
         </x-slot>
-</x-auth>
+</x-layouts.app>

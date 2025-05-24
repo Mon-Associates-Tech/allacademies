@@ -2,7 +2,7 @@
     $multiple = count($sections) > 1;
 @endphp
 
-<x-auth title="Examination Details" :has-action="false">
+<x-layouts.app title="Examination Details" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $examination->academicSubject]),
@@ -56,4 +56,4 @@
             <x-button.primary x-on:click="window.print()">Print</x-button.primary>
         </div>
     </div>
-</x-auth>
+</x-layouts.app>

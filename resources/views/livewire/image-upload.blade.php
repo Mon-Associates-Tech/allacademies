@@ -1,10 +1,10 @@
 <div class="space-y-2">
-  <x-form.file name="image" name="image" wire:model="image"/>
-  <x-form.textarea name="description" type="text" wire:model="description"/>
+  <x-form.file name="image" name="image" wire:model.live="image"/>
+  <x-form.textarea name="description" type="text" wire:model.live="description"/>
   <div class="relative">
     <div>
       <label for="tag" class="block text-sm tracking-wide font-medium text-gray-700">Tags</label>
-      <input name="tag" id="tag" type="text" class="border-gray-300 rounded-lg shadow-sm w-full leading-tight" wire:model="tag" wire:keydown.enter="addTag(@js($tag))">
+      <input name="tag" id="tag" type="text" class="border-gray-300 rounded-lg shadow-sm w-full leading-tight" wire:model.live="tag" wire:keydown.enter="addTag(@js($tag))">
       @error('tags') <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
     </div>
       @if ($suggestedTags)
