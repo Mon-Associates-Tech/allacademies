@@ -1,4 +1,4 @@
-<x-layouts.app title="Create Examination" :has-action="true" class="" action="Back" action-url="{{ route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]) }}">
+<x-layouts.app title="Create Examination" :has-action="false" class=""  action-url="{{ route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]) }}">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]),
