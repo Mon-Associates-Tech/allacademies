@@ -115,9 +115,10 @@ class TrueOrFalseQuestionController extends Controller
      * Update the specified resource in storage.
      *
      * @param TrueOrFalseQuestionRequest $request
+     * @param TrueOrFalseQuestion $true_or_false_question
      * @return RedirectResponse
      */
-    public function update(TrueOrFalseQuestionRequest $request)
+    public function update(TrueOrFalseQuestionRequest $request, TrueOrFalseQuestion $true_or_false_question)
     {
         $this->authorize('moderate');
 
