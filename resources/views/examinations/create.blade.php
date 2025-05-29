@@ -24,7 +24,7 @@
             </div>
 
             <div class="grid">
-            <div class="grid max-w-xl place-items-center">
+            <div class="grid max-w-xl place-items-center mx-auto">
                 <div class="sm:col-span-1"></div>
                 <div class="sm:col-span-6">
                     @livewire('examination-sections', ['topics' => $topics])

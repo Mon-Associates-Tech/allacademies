@@ -1,25 +1,5 @@
 <x-layouts.app title="Dashboard" :has-action="false">
 
-
-    <div class="grid grid-cols-12 gap-6">
-
-        <!-- Doughnut chart (Top Countries) -->
-        <x-dashboard.dashboard-card-06 />
-
-        <!-- Table (Top Channels) -->
-        <x-dashboard.dashboard-card-07 />
-
-        <!-- Card (Customers) -->
-        <x-dashboard.dashboard-card-10 />
-
-        <!-- Card (Recent Activity) -->
-        <x-dashboard.dashboard-card-12 />
-
-        <!-- Card (Income/Expenses) -->
-        <x-dashboard.dashboard-card-13 />
-
-    </div>
-
     @if ($academicSubjects->count())
     <section class="mt-10 max-w-6xl mx-auto">
 

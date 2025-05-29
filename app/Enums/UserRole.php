@@ -11,4 +11,12 @@ enum UserRole: string
     case MODERATOR = 'moderator';
 
     case SUBSCRIBER = 'subscriber';
+
+    case STUDENT = 'student';
+
+    case TEACHER = 'teacher';
+
+    case LIBRARIAN = 'librarian';
+
+    case AUTHOR = 'author';
 }

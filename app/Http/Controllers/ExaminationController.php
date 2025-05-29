@@ -62,16 +62,6 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-//        $topics = $academicSubject->academicTopics()->select(['id', 'name'])->with(
-//        ['multipleChoiceQuestions',
-//        'trueOrFalseQuestions',
-//        'essayQuestions',]
-//    )->withCount(
-//            'multipleChoiceQuestions',
-//            'trueOrFalseQuestions',
-//            'essayQuestions',
-//        )->get()->toArray();
-
 
         $metadata = data_get($currentTeam->meta, 'present', []);
 

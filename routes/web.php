@@ -130,4 +130,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('export.word');
 });
 
-require __DIR__.'/demo.php';

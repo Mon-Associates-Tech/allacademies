@@ -1,13 +1,13 @@
 @php
-    //    $multiple = isset($sections) && is_countable($sections) && count($sections) > 1;
+//    $multiple = isset($sections) && is_countable($sections) && count($sections) > 1;
 @endphp
 
 
-<x-layouts.app title="Examination Details">
+<x-print title="Examination Details">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $examination->academicSubject]),
-        ]"/>
+        ]" />
     </x-slot>
 
     <div x-data="{ format: 'lenticular' }"
@@ -101,12 +101,12 @@
                     </div>
                 @endif
 
-                @if (isset($section['extension']) && ($section['extension'] === 'txt' || $section['extension'] === 'docx'))
+                @if (isset($section['extension']) && ( $section['extension'] === 'txt' || $section['extension'] === 'docx'))
                     <div class="whitespace-pre-wrap bg-inherit p-4 rounded text-sm">
                         {{ $section['document'] }}
                     </div>
                 @elseif (isset($section['extension']) && $section['extension'] === 'pdf')
-                    {{--                    <iframe src="{{ asset('storage/' . $section['original_path']) }}" width="100%" height="500px"></iframe>--}}
+{{--                    <iframe src="{{ asset('storage/' . $section['original_path']) }}" width="100%" height="500px"></iframe>--}}
                     @if (!empty($section['pdf_images']))
                         @foreach ($section['pdf_images'] as $imagePath)
                             <img alt src="{{ asset('/storage/' . $imagePath) }}"
@@ -144,4 +144,4 @@
         }
 
     </script>
-</x-layouts.app>
+</x-print>
