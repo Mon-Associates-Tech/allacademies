@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Questions;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\TrueOrFalseQuestionRequest;
 use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
+use App\Models\TrueOrFalseQuestion;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use App\Models\AcademicTopic;
-use App\Models\TrueOrFalseQuestion;
-use App\Http\Requests\TrueOrFalseQuestionRequest;
 
 class TrueOrFalseQuestionController extends Controller
 {
@@ -26,7 +27,7 @@ class TrueOrFalseQuestionController extends Controller
 
         $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
-        return view('true-or-false-questions.index', [
+        return view('questions.true-or-false-questions.index', [
             'trueOrFalseQuestions' => $trueOrFalseQuestions,
             'academicTopic' => $academicTopic,
         ]);
@@ -51,6 +52,7 @@ class TrueOrFalseQuestionController extends Controller
             );
             $data['academic_subtopic_id'] = $subTopic->id;
         }
+        //dd($request->all());
 
         $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
 
@@ -69,7 +71,7 @@ class TrueOrFalseQuestionController extends Controller
 
         $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
-        return view('true-or-false-questions.create', [
+        return view('questions.true-or-false-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
     }
@@ -87,7 +89,7 @@ class TrueOrFalseQuestionController extends Controller
         $trueOrFalseQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
         $trueOrFalseQuestion->load('subtopic');
 
-        return view('true-or-false-questions.show', [
+        return view('questions.true-or-false-questions.show', [
             'trueOrFalseQuestion' => $trueOrFalseQuestion,
         ]);
     }
@@ -104,7 +106,7 @@ class TrueOrFalseQuestionController extends Controller
 
         $trueOrFalseQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
 
-        return view('true-or-false-questions.edit', [
+        return view('questions.true-or-false-questions.edit', [
             'trueOrFalseQuestion' => $trueOrFalseQuestion,
         ]);
     }
@@ -113,26 +115,25 @@ class TrueOrFalseQuestionController extends Controller
      * Update the specified resource in storage.
      *
      * @param TrueOrFalseQuestionRequest $request
-     * @param TrueOrFalseQuestion $trueOrFalseQuestion
      * @return RedirectResponse
      */
-    public function update(TrueOrFalseQuestionRequest $request, TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function update(TrueOrFalseQuestionRequest $request)
     {
         $this->authorize('moderate');
 
         $data = $request->validated();
-        if (isset($request->subtopic) && isset($trueOrFalseQuestion->subtopic->name)) {
+        if (isset($request->subtopic) && isset($true_or_false_question->subtopic->name)) {
             $subTopic = AcademicSubtopic::updateOrCreate(
-                ['name' => $trueOrFalseQuestion->subtopic->name],
-                ['name' => $request->subtopic, 'academic_topic_id' => $trueOrFalseQuestion->academic_topic_id]
+                ['name' => $true_or_false_question->subtopic->name],
+                ['name' => $request->subtopic, 'academic_topic_id' => $true_or_false_question->academic_topic_id]
             );
             $data['academic_subtopic_id'] = $subTopic->id;
         }
 
-        $trueOrFalseQuestion->update($data);
+        $true_or_false_question->update($data);
 
-        return to_route('true-or-false-questions.show', ['true_or_false_question' => $trueOrFalseQuestion])
-            ->with('success', __('status.resource.updated', ['name' => $trueOrFalseQuestion->question->summary]));
+        return to_route('true-or-false-questions.show', ['true_or_false_question' => $true_or_false_question])
+            ->with('success', __('status.resource.updated', ['name' => $true_or_false_question->question->summary]));
     }
 
     /**

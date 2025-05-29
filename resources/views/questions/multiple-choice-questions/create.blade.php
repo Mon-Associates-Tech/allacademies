@@ -31,14 +31,18 @@
                         <x-form.input name="score" type="number" label="Score (Marks)" value="1" />
                     </div>
                     <div class="sm:col-span-2">
-                        <div class="py-2">
-                            <x-form.editor class="rich-editor" full name="question" />
+
+                        <div class="pt-2">
+                            <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic" name="subtopic" ></x-form.input>
                         </div>
-                        <div class="py-2"><x-form.editor class="rich-editor" full name="option_a" label="Option A" /></div>
-                        <div class="py-2"><x-form.editor class="rich-editor" full name="option_b" label="Option B" /></div>
-                        <div class="py-2"> <x-form.editor class="rich-editor" full name="option_c" label="Option C" /></div>
-                        <div class="py-2"><x-form.editor class="rich-editor" full name="option_d" label="Option D" /></div>
-                        <div class="py-2"><x-form.editor class="rich-editor" full name="option_e" label="Option E" /></div>
+                        <div class="py-2">
+                            <x-form.rich-editor class="rich-editor" full name="question" />
+                        </div>
+                        <div class="py-2"><x-form.rich-editor class="rich-editor" full name="option_a" label="Option A" /></div>
+                        <div class="py-2"><x-form.rich-editor class="rich-editor" full name="option_b" label="Option B" /></div>
+                        <div class="py-2"> <x-form.rich-editor class="rich-editor" full name="option_c" label="Option C" /></div>
+                        <div class="py-2"><x-form.rich-editor class="rich-editor" full name="option_d" label="Option D" /></div>
+                        <div class="py-2"><x-form.rich-editor class="rich-editor" full name="option_e" label="Option E" /></div>
                         <div class="py-2">
                             <x-form.select class="mt-2" full name="answer" :options="[
                             'a' => 'Option A',
@@ -47,10 +51,6 @@
                             'd' => 'Option D',
                             'e' => 'Option E',
                         ]" />
-                        </div>
-
-                        <div class="pt-2">
-                            <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic" name="subtopic" ></x-form.input>
                         </div>
 
                         <div class="flex justify-end mt-3">
