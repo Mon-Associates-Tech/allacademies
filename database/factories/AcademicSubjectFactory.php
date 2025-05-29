@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\AcademicLevel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,9 @@ class AcademicSubjectFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'name' => $this->faker->unique()->word(),
+            'code' => $this->faker->unique()->word(),
+            'academic_level_id' => AcademicLevel::factory(1)->create()->id,
         ];
     }
 }

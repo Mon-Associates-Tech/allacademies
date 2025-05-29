@@ -1,7 +1,7 @@
+@import 'katex/dist/katex.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'katex/dist/katex.css';
 /*@import './additional-styles/utility-patterns.css';*/
 /*@import './additional-styles/flatpickr.css';*/
 /*@import 'quill/dist/quill.core.css';*/
@@ -208,3 +208,68 @@
     line-height: 1.2em;         /* Defines the line height */
     position:relative;
 }
+
+
+/* Add to your CSS */
+body.sidebar-expanded #sidebar {
+    width: 16rem !important; /* 64px */
+}
+
+body:not(.sidebar-expanded) #sidebar {
+    width: 5rem !important; /* 20px */
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    body.sidebar-expanded #sidebar {
+        width: 16rem !important;
+    }
+
+    body:not(.sidebar-expanded) #sidebar {
+        width: 5rem !important;
+    }
+}
+
+/* Add to your app.css */
+body.sidebar-expanded #sidebar .sidebar-text {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body:not(.sidebar-expanded) #sidebar .sidebar-text {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    body.sidebar-expanded #sidebar .sidebar-text {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    body:not(.sidebar-expanded) #sidebar .sidebar-text {
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+}
+
+.sidebar-expanded #sidebar .dark\:hidden,
+.sidebar-expanded #sidebar .dark\:block {
+    transition: opacity 0.3s ease;
+}
+
+html.dark .sidebar-expanded #sidebar .dark\:hidden {
+    display: none !important;
+}
+
+html.dark .sidebar-expanded #sidebar .dark\:block {
+    display: block !important;
+}
+
+html:not(.dark) .sidebar-expanded #sidebar .dark\:hidden {
+    display: block !important;
+}
+
+html:not(.dark) .sidebar-expanded #sidebar .dark\:block {
+    display: none !important;
+}
+

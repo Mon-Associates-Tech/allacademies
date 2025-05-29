@@ -1,7 +1,7 @@
 <x-layouts.app title="Dashboard" :has-action="false">
 
 
-    <div class="grid grid-cols-12 gap-6">
+    <div class="grid grid-cols-12 gap-6 hidden">
 
         <!-- Doughnut chart (Top Countries) -->
         <x-dashboard.dashboard-card-06 />
@@ -20,8 +20,21 @@
 
     </div>
 
+    @if(Auth::user()->role === 'student' )
+        @livewire('students.dashboard')
+        @endif()
+    @if(Auth::user()->role === 'teacher')
+        @livewire('teachers.dashboard')
+    @endif
+    @if(Auth::user()->role === 'librarian')
+        @livewire('librarians.dashboard')
+    @endif
+    @if(Auth::user()->role === 'admin')
+        @livewire('administrators.dashboard')
+    @endif
+
     @if ($academicSubjects->count())
-    <section class="mt-10 max-w-6xl mx-auto">
+    <section class="mt-10 bg-red-50 w-full mx-auto">
 
 
 

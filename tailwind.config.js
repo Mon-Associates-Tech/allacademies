@@ -26,6 +26,11 @@ module.exports = {
         panel: 'calc(100vh - 1rem)',
       },
     },
+      variants:{
+        extend: {
+            width: ['sidebar-expanded'],
+        }
+      }
   },
   plugins: [
     require('@tailwindcss/forms'),

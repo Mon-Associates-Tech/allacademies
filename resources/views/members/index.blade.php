@@ -1,11 +1,11 @@
-<x-auth :title="'Members of ' . $team->name">
+<x-layouts.app :title="'Members of ' . $team->name" >
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Teams' => route('teams.index'),
         ]" />
     </x-slot>
     <x-slot name="action">
-        @if ($team->owner->is($user) && !$team->is_personal)
+        @if ($team->owner->is($user) && $team->is_personal)
             <x-link.primary :to="route('teams.members.create', ['team' => $team])">New Member</x-link.primary>
         @endif
     </x-slot>
@@ -34,4 +34,4 @@
             </tr>
         @endforeach
     </x-table>
-</x-auth>
+</x-layouts.app>

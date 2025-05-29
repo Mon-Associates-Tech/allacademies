@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'role',
         'avatar',
+        'role_id'
     ];
 
     /**
@@ -44,7 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'role' => UserRole::class,
+//        'role' => UserRole::class,
+        'password' => 'hashed'
     ];
 
     public function subscriptions()
@@ -71,4 +73,22 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Worksheet::class);
     }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function hasRole($role)
+    {
+        if(!$this->role){
+            return true;
+        }
+        return true;
+    }
+
+    public function roles(){
+        return $this->belongsToMany(Role::class);
+    }
+
 }

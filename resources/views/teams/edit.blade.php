@@ -1,4 +1,4 @@
-<x-auth title="Edit Team" :has-action="false">
+<x-layouts.app title="Edit Team" :has-action="false" title-align-center="true">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Teams' => route('teams.index'),
@@ -94,4 +94,4 @@
         </form>
     </div>
 
-</x-auth>
+</x-layouts.app>

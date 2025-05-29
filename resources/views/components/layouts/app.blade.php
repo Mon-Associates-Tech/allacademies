@@ -21,7 +21,7 @@
     @livewireStyles
 
     <script>
-        if (localStorage.getItem('dark-mode') == 'false' || !('dark-mode' in localStorage)) {
+        if (localStorage.getItem('dark-mode') === 'false' || !('dark-mode' in localStorage)) {
             document.querySelector('html').classList.remove('dark');
             document.querySelector('html').style.colorScheme = 'light';
         } else {
@@ -55,23 +55,27 @@
 </head>
 <body
     class="font-inter antialiased bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400"
-    :class="{ 'sidebar-expanded': sidebarExpanded }"
-    x-data="{ sidebarOpen: false, sidebarExpanded: localStorage.getItem('sidebar-expanded') == 'true' }"
-    x-init="$watch('sidebarExpanded', value => localStorage.setItem('sidebar-expanded', value))"
+    :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
+    x-data="{}"
 >
 
+
 <script>
-    if (localStorage.getItem('sidebar-expanded') === 'true') {
-        document.querySelector('body').classList.add('sidebar-expanded');
+    // Set initial dark mode from localStorage
+    if (localStorage.getItem('dark-mode') === 'true') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = 'dark';
     } else {
-        document.querySelector('body').classList.remove('sidebar-expanded');
+        document.documentElement.classList.remove('dark');
+        document.documentElement.style.colorScheme = 'light';
     }
 </script>
+
 
 <!-- Page wrapper -->
 <div class="flex h-[100dvh] overflow-hidden">
 
-    <x-app.sidebar :variant="$attributes['sidebarVariant']" />
+    <x-app.sidebar :variant="$attributes['sidebarVariant']"  />
 
     <!-- Content area -->
     <div
@@ -86,8 +90,8 @@
                 <x-alert.success/>
                 <x-alert.danger/>
             </div>
-            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 text-lg font-bold py-3 flex" :class="{{$titleAlignCenter}} ? 'justify-center' : 'justify-between'">
-                <div class="text-lg md:text-2xl print:hidden font-bold w-full" :class="{{$titleAlignCenter}} ? 'text-center' : 'text-start'">{{$title}}</div>
+            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 text-lg font-bold py-3 flex" :class="@js($titleAlignCenter) ? 'justify-center' : 'justify-between'">
+                <div class="text-lg md:text-2xl print:hidden font-bold w-full" :class="@js($titleAlignCenter) ? 'text-center' : 'text-start'">{{$title}}</div>
                 <div class="text-sm text-opacity-50! print:hidden">
                     <div class="my-auto">
 
@@ -105,9 +109,19 @@
                     </div>
                 </div>
             </div>
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full mb-12">
-                {{ $slot }}
+            <div class="transition-all duration-300 px-4 sm:px-6 lg:px-8 mb-12 w-full overflow-x-hidden">
+                <div
+                    x-data="{}"
+                    :class="{
+            'max-w-5xl mx-auto': !$store.sidebar.collapsed && !$store.sidebar.hidden,
+            'max-w-6xl mx-auto': $store.sidebar.collapsed || $store.sidebar.hidden
+        }"
+                >
+                    {{ $slot }}
+                </div>
             </div>
+
+
 
         </main>
 
@@ -118,10 +132,29 @@
 {{--@livewireScripts--}}
 @livewireScriptConfig
 </body>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('sidebar', {
+            open: false,
+            expanded: localStorage.getItem('sidebar-expanded') === 'true',
+            toggleOpen() {
+                this.open = !this.open;
+                console.log('open up')
+            },
+            toggleExpanded() {
+                this.expanded = !this.expanded;
+                localStorage.setItem('sidebar-expanded', this.expanded);
+                console.log('expanded')
+            }
+        });
+    });
+</script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.store('darkMode', {
-            on: localStorage.getItem('dark-mode') === 'true',
+            // Initialize with the actual current state from DOM
+            on: document.documentElement.classList.contains('dark'),
             toggle() {
                 this.on = !this.on
                 localStorage.setItem('dark-mode', this.on)
@@ -139,4 +172,12 @@
         })
     })
 </script>
-</html>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.effect(() => {
+            // This will re-run anytime $store.darkMode.on changes
+            document.documentElement.classList.toggle('dark', Alpine.store('darkMode').on);
+            document.documentElement.style.colorScheme = Alpine.store('darkMode').on ? 'dark' : 'light';
+        })
+    })
+</script>

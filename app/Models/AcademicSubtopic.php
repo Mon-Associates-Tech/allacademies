@@ -34,4 +34,9 @@ class AcademicSubtopic extends Model
         return $this->hasMany(TrueOrFalseQuestion::class);
     }
 
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+
 }

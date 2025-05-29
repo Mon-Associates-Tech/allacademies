@@ -1,4 +1,4 @@
-<x-layouts.app title="Profile">
+<x-layouts.app title="Profile" title-align-center>
 
 
 

@@ -17,7 +17,8 @@ class AcademicTopicFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'name' => $this->faker->unique()->word(),
+            'academic_subject_id' => AcademicSubjectFactory::create()->id,
         ];
     }
 }

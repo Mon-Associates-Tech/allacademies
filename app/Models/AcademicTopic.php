@@ -47,4 +47,15 @@ class AcademicTopic extends Model
         return $this->hasMany(AcademicSubtopic::class, 'academic_topic_id');
     }
 
+    public function lessonNotes()
+    {
+        return $this->hasMany(LessonNote::class);
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+
+
 }
