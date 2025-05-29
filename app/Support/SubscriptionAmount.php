@@ -24,4 +24,8 @@ enum SubscriptionAmount
     public const  SENIOR_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE = 5;
     public const  SENIOR_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE = 10;
 
+    public const  BASIC_SCHOOL_ONE_OFF = 10;
+    public const  SENIOR_SCHOOL_ONE_OFF = 15;
+    public const  UNIVERSITY_ONE_OFF = 20;
+
 }

@@ -1,4 +1,4 @@
-<x-auth title="Multiple Choice Question Details">
+<x-layouts.app title="Multiple Choice Question Details" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -43,4 +43,4 @@
         </x-slot>
         @endcan
     </x-detail>
-</x-auth>
+</x-layouts.app>

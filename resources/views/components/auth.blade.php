@@ -236,6 +236,7 @@
             <div class="">
                 {{ $breadcrumb }}
             </div>
+{{--            <x-link.secondary :to="route('back')">Back</x-link.secondary>--}}
         </div>
 
         <x-alert.success/>
@@ -262,7 +263,7 @@
                 @if ($hasLeft && $hasRight)
                     <div class="col-span-3">
                         <div class="flex justify-between max-w7 py-2 print:hidden">
-                            <div class="font-bold pl-1">{{$title}}</div>
+                            <div class="font-medium pl-1">{{$title}}</div>
                         </div>
                         {{ $left }}
                     </div>
@@ -306,7 +307,7 @@
                     <div class="col-span-2"></div>
                     <div class="col-span-8">
                         <div class="flex justify-between my-auto py-3 print:hidden">
-                            <div class="font-bold my-auto mx-auto">{{$title}}</div>
+                            <div class="font-bold text-xl my-auto mx-auto">{{$title}}</div>
                             <div class="my-auto">
 
                                     @if(isset($hasAction) && $hasAction && !isset($action))
@@ -322,7 +323,9 @@
 
                             </div>
                         </div>
-                        {{$slot}}
+                        <div class="">
+                            {{$slot}}
+                        </div>
                     </div>
                     <div class="col-span-2"></div>
 
@@ -340,6 +343,7 @@
                     </div>
                 @endif
             </div>
+
             <div class="text-xs bg-gray-100 w-[95%] text-gray-600 mt-5 print:hidden">
                 <div class="flex justify-between items-center py-3">
                 <span>&copy;

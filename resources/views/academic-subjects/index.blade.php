@@ -1,4 +1,4 @@
-<x-auth title="Academic Subjects" page-name="Academic Subjects">
+<x-layouts.app title="Academic Subjects" page-name="Academic Subjects">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -46,4 +46,4 @@
     @else
     <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

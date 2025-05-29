@@ -21,6 +21,8 @@
         "vite": "^3.0.0"
     },
     "dependencies": {
+        "@alpinejs/persist": "^3.14.9",
+        "flatpickr": "^4.6.13",
         "gsap": "^3.12.5"
     }
 }

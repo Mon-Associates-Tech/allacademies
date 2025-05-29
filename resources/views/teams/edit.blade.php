@@ -1,4 +1,4 @@
-<x-auth title="Edit Team">
+<x-auth title="Edit Team" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Teams' => route('teams.index'),
@@ -66,29 +66,32 @@
         @endif
     @endif
 
-    <form method="POST" action="{{ route('teams.update', ['team' => $team]) }}" enctype="multipart/form-data">
-        @csrf
-        @method('PATCH')
-        <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-2">
-                <x-form.input name="name" type="text" :value="$team->name" />
-                @if (!$team->is_personal)
-                    <div class="pt-4">
-                        @livewire('institutional-information', ['team' => $team])
+    <div class="max-w-2xl mx-auto py-10 bg-white rounded-md sm:px-6 lg:px-8">
+        <form method="POST" action="{{ route('teams.update', ['team' => $team]) }}" enctype="multipart/form-data">
+            @csrf
+            @method('PATCH')
+            <div class="grid grid-col gap-4">
+                <div class="col-span-2">
+                    <x-form.input name="name" type="text" :value="$team->name" />
+                    @if (!$team->is_personal)
+                        <div class="pt-4">
+                            @livewire('institutional-information', ['team' => $team])
+                        </div>
+                    @endif
+                </div>
+                @isset ($team->meta['logo'])
+                    <div class="col-span-1">
+                        <div class="relative">
+                            <img class="inline-block h-auto w-1/2 rounded-md border border-gray-300 shadow-sm" src="{{ Storage::disk('s3')->url($team->meta['logo']) }}" alt="">
+                            <span class="absolute left-0 bottom-0 p-1 text-sm font-medium bg-white rounded-bl-md rounded-tr-md">Current Logo</span>
+                        </div>
                     </div>
                 @endif
             </div>
-            @isset ($team->meta['logo'])
-            <div class="col-span-1">
-                <div class="relative">
-                    <img class="inline-block h-auto w-1/2 rounded-md border border-gray-300 shadow-sm" src="{{ Storage::disk('s3')->url($team->meta['logo']) }}" alt="">
-                    <span class="absolute left-0 bottom-0 p-1 text-sm font-medium bg-white rounded-bl-md rounded-tr-md">Current Logo</span>
-                </div>
+            <div class="flex justify-end mt-5">
+                <x-button.primary class="ml-2">Update Team</x-button.primary>
             </div>
-            @endif
-        </div>
-        <div class="flex justify-end mt-3">
-            <x-button.primary class="ml-2">Update Team</x-button.primary>
-        </div>
-    </form>
+        </form>
+    </div>
+
 </x-auth>

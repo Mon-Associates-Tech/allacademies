@@ -1,4 +1,4 @@
-<x-auth title="Profile">
+<x-layouts.app title="Profile">
 
 
 
@@ -23,4 +23,4 @@
             </x-detail>
         </div>
     </div>
-</x-auth>
+</x-layouts.app>

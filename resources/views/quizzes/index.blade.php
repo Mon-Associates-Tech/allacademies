@@ -1,4 +1,4 @@
-<x-auth title="Quizzes">
+<x-layouts.app title="Quizzes" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
@@ -36,4 +36,4 @@
     @else
     <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

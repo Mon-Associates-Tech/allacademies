@@ -1,11 +1,11 @@
-<x-auth title="Edit Profile">
+<x-layouts.app title="Edit Profile">
 
 
     <form method="POST" action="{{ route('profile.update') }}" class="bg-white p-4 rounded-lg w-[70%] mx-auto">
 	@csrf
         @method('PATCH')
 	<div class="sm:grid sm:grid-cols-[38%_60%] gap-4 flex flex-col items-center">
-		<div class="p-4 bg-blue-500 border rounded-2xl h-28 w-28 sm:h-full sm:w-full">
+		<div class="p-4 my-auto bg-gray-200 border border-slate-400 rounded-2xl h-28 w-28 sm:h-full sm:w-full">
 			<img>
 		</div>
 		<div class="flex flex-col gap-4">
@@ -25,8 +25,8 @@
 		</div>
 
 	</div>
-	<div class="flex justify-center mt-3">
+	<div class="flex justify-end mt-3">
             <x-button.primary class="ml-2">Update Profile</x-button.primary>
         </div>
 </form>
-</x-auth>
+</x-layouts.app>

@@ -1,4 +1,4 @@
-<x-auth title="Essay Question Details">
+<x-layouts.app title="Essay Question Details">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -22,11 +22,13 @@
             </x-anchor>
         </x-detail.data>
 
-        <x-detail.data label="Sub Topic" disabled>
-            <x-anchor to="{{route('academic-topics.subtopics.index', ['academic_topic' => $essayQuestion->academicTopic])}}">
-                {{ $essayQuestion->subtopic->name }}
-            </x-anchor>
-        </x-detail.data>
+        @if (isset( $essayQuestion->academicTopic->subtopic))
+            <x-detail.data label="Sub Topic" disabled>
+                <x-anchor to="{{route('academic-topics.subtopics.index', ['academic_topic' => $essayQuestion->academicTopic])}}">
+                    {{ $essayQuestion->subtopic->name }}
+                </x-anchor>
+            </x-detail.data>
+        @endif
 
         @can('moderate')
         <x-slot name="action">
@@ -35,4 +37,4 @@
         </x-slot>
         @endcan
     </x-detail>
-</x-auth>
+</x-layouts.app>

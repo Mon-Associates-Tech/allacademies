@@ -1,4 +1,4 @@
-<x-auth title="Academic Groups" :main-only="true">
+<x-layouts.app title="Academic Groups" :main-only="true">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
@@ -39,4 +39,4 @@
     @else
     <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

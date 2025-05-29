@@ -18,13 +18,13 @@
     <div class="mt-3">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-x-3">
             <div class="col-span-2">
-                <x-form.input wire:key="name-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.name" name="sections[{{ $loop->index }}][name]" type="text" label="Name" />
+                <x-form.input wire:key="name-{{ $loop->index }}" wire:model.live="sections.{{ $loop->index }}.name" name="sections[{{ $loop->index }}][name]" type="text" label="Name" />
             </div>
             <div>
-                <x-form.select wire:key="type-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.type" name="sections[{{ $loop->index }}][type]" type="text" label="Type" :options="$options" />
+                <x-form.select wire:key="type-{{ $loop->index }}" wire:model.live="sections.{{ $loop->index }}.type" name="sections[{{ $loop->index }}][type]" type="text" label="Type" :options="$options" />
             </div>
             <div>
-                <x-form.input wire:key="count-{{ $loop->index }}" wire:model="sections.{{ $loop->index }}.count" name="sections[{{ $loop->index }}][count]" type="text" label="Count" />
+                <x-form.input wire:key="count-{{ $loop->index }}" wire:model.live="sections.{{ $loop->index }}.count" name="sections[{{ $loop->index }}][count]" type="text" label="Count" />
             </div>
         </div>
         <label class="block text-gray-800 font-medium text-sm mt-3">Available Questions</label>
@@ -37,7 +37,7 @@
                         <div class="flex items-center justify-between text-sm">
                             <div class="relative flex items-start">
                                 <div class="flex h-6 items-center">
-                                    <input wire:key="topic-{{ $loop->parent->index }}-{{ $loop->index }}" wire:model="sections.{{ $loop->parent->index }}.topics" name="sections[{{ $loop->parent->index }}][topics][]" value="{{ $topic['id'] }}" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                                    <input wire:key="topic-{{ $loop->parent->index }}-{{ $loop->index }}" wire:model.live="sections.{{ $loop->parent->index }}.topics" name="sections[{{ $loop->parent->index }}][topics][]" value="{{ $topic['id'] }}" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
                                 </div>
                                 <div class="ml-3  leading-6">
                                     <label class="font-medium text-gray-700">{{ $topic['name'] }}</label>

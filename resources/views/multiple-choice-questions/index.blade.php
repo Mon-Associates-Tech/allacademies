@@ -1,4 +1,4 @@
-<x-auth title="Multiple Choice Questions">
+<x-layouts.app title="Multiple Choice Questions">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -13,7 +13,7 @@
     </x-slot>
     @can('moderate')
     <x-slot name="action">
-        <x-link.primary :to="route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic])">New Multiple Choice Question</x-link.primary>
+        <x-link.primary class="text-nowrap" :to="route('academic-topics.multiple-choice-questions.create', ['academic_topic' => $academicTopic])">New Multiple Choice Question</x-link.primary>
     </x-slot>
     @endcan
 
@@ -52,4 +52,4 @@
     @else
     <x-blank text="Add Questions" />
     @endif
-</x-auth>
+</x-layouts.app>

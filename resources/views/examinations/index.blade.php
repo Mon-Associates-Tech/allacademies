@@ -1,4 +1,4 @@
-<x-auth title="Examinations" :has-action="true" a>
+<x-layouts.app title="Examinations" :has-action="true" a>
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
@@ -9,25 +9,26 @@
     @endcan
 
     @if ($examinations->count())
-        <x-table>
-            <x-slot name="head">
-                <tr>
-                    <x-table.th>Title</x-table.th>
-                    <x-table.th><span class="sr-only">Actions</span></x-table.th>
-                </tr>
-            </x-slot>
+        <div class="max-w-5xl mx-auto">
+            <x-table class="">
+                <x-slot name="head">
+                    <tr>
+                        <x-table.th>Title</x-table.th>
+                        <x-table.th><span class="sr-only">Actions</span></x-table.th>
+                    </tr>
+                </x-slot>
 
-            @foreach ($examinations as $examination)
-                <tr>
-                    <x-table.td bold>{{ $examination->title }}</x-table.td>
-                    <x-table.td action>
-                        <a class="text-primary-600 hover:text-primary-900"
-                            href="{{ route('examinations.show', ['examination' => $examination]) }}">Question Paper</a>
-                        <a class="text-primary-600 hover:text-primary-900"
-                            href="{{ route('examinations.answers', ['examination' => $examination]) }}">Answer Scheme</a>
+                @foreach ($examinations as $examination)
+                    <tr>
+                        <x-table.td bold>{{ $examination->title }}</x-table.td>
+                        <x-table.td action>
+                            <a class="text-primary-600 hover:text-primary-900"
+                               href="{{ route('examinations.show', ['examination' => $examination]) }}">Question Paper</a>
+                            <a class="text-primary-600 hover:text-primary-900"
+                               href="{{ route('examinations.answers', ['examination' => $examination]) }}">Answer Scheme</a>
 
 
-            <span x-data="{ format: 'none' }" class="inline-flex rounded-md">
+                            <span x-data="{ format: 'none' }" class="inline-flex rounded-md">
                 <span class="inline-flex items-center text-xs rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-xs sm:leading-6">
                     Export
                 </span>
@@ -39,10 +40,12 @@
                 </select>
             </span>
 
-                    </x-table.td>
-                </tr>
-            @endforeach
-        </x-table>
+                        </x-table.td>
+                    </tr>
+                @endforeach
+            </x-table>
+        </div>
+
 
         <div class="mt-3">
             {{ $examinations->links() }}
@@ -86,4 +89,4 @@
 
 
     </script>
-</x-auth>
+</x-layouts.app>

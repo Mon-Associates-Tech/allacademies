@@ -129,3 +129,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     })->name('export.word');
 });
+

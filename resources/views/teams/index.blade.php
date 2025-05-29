@@ -1,4 +1,4 @@
-<x-auth title="Teams">
+<x-layouts.app title="Teams">
 
 
     <x-table>
@@ -45,12 +45,14 @@
     </x-table>
 
     <x-slot name="action">
-        <x-link.primary :to="route('teams.create')">New Team</x-link.primary>
-        <x-link.secondary :to="route('teams.joining')" class="ml-6">
-            Join Team
-            <span class="ml-1" aria-hidden="true"> &rarr;</span>
-        </x-link.secondary>
+        <div class="flex">
+            <x-link.primary class="text-nowrap" :to="route('teams.create')">New Team</x-link.primary>
+            <x-link.secondary :to="route('teams.joining')" class="ml-6 text-nowrap">
+                Join Team
+                <span class="ml-1" aria-hidden="true"> &rarr;</span>
+            </x-link.secondary>
+        </div>
     </x-slot>
 
 
-</x-auth>
+</x-layouts.app>

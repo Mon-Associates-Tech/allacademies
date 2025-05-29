@@ -1,4 +1,4 @@
-<x-auth title="Essay Questions">
+<x-layouts.app title="Essay Questions">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -30,10 +30,10 @@
 
         @foreach ($essayQuestions as $essayQuestion)
             <tr>
-                <x-table.td bold>{{ $essayQuestion->question->summary }}</x-table.td>
+                <x-table.td class="truncate-four-lines" >{{ $essayQuestion->question->summary }}</x-table.td>
                 <x-table.td>{{ $essayQuestion->score }}</x-table.td>
                 <x-table.td>{{ $essayQuestion->difficulty_level }}</x-table.td>
-                <x-table.td action>
+                <x-table.td action class="text-nowrap">
                     <x-action name="view" :to="route('essay-questions.show', ['essay_question' => $essayQuestion])" />
                     @can('moderate')
                     <x-action name="edit" :to="route('essay-questions.edit', ['essay_question' => $essayQuestion])" />
@@ -52,4 +52,4 @@
     @else
     <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

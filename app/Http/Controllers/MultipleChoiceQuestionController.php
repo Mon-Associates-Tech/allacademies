@@ -35,6 +35,33 @@ class MultipleChoiceQuestionController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     *
+     * @param AcademicTopic $academicTopic
+     * @param MultipleChoiceQuestionRequest $request
+     * @return RedirectResponse
+     */
+    public function store(AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request)
+    {
+        $this->authorize('moderate');
+
+        $data = $request->validated();
+
+        if (isset($request->subtopic)) {
+            $subTopic = AcademicSubtopic::firstOrCreate(
+                ['name' => $request->subtopic],
+                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
+            );
+            $data['academic_subtopic_id'] = $subTopic->id;
+        }
+
+        $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($data);
+
+        return to_route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $academicTopic])
+            ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
+    }
+
+    /**
      * Show the form for creating a new resource.
      *
      * @return Application|Factory|View|\Illuminate\View\View
@@ -48,33 +75,6 @@ class MultipleChoiceQuestionController extends Controller
         return view('multiple-choice-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param AcademicTopic $academicTopic
-     * @param MultipleChoiceQuestionRequest $request
-     * @return RedirectResponse
-     */
-    public function store(AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request)
-    {
-        $this->authorize('moderate');
-
-        $data = $request->validated();
-
-        if(isset($request->subtopic)){
-            $subTopic = AcademicSubtopic::firstOrCreate(
-                ['name' => $request->subtopic],
-                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
-
-        $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($data);
-
-        return to_route('academic-topics.multiple-choice-questions.index', ['academic_topic' => $academicTopic])
-            ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 
     /**
@@ -123,16 +123,19 @@ class MultipleChoiceQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $subTopic = AcademicSubtopic::updateOrCreate(
-            ['name' => $multipleChoiceQuestion->subtopic->name],
-            ['name' => $request->subtopic, 'academic_topic_id' => $multipleChoiceQuestion->academic_topic_id]
-        );
         $data = $request->validated();
-        $data['academic_subtopic_id'] = $subTopic->id;
+
+        if (isset($request->subtopic) && isset($multipleChoiceQuestion->subtopic->name)) {
+            $subTopic = AcademicSubtopic::updateOrCreate(
+                ['name' => $multipleChoiceQuestion->subtopic->name],
+                ['name' => $request->subtopic, 'academic_topic_id' => $multipleChoiceQuestion->academic_topic_id]
+            );
+            $data['academic_subtopic_id'] = $subTopic->id;
+        }
 
         $multipleChoiceQuestion->update($data);
 
-        return to_route('multiple-choice-questions.show', ['multiple_choice_question' =>  $multipleChoiceQuestion])
+        return to_route('multiple-choice-questions.show', ['multiple_choice_question' => $multipleChoiceQuestion])
             ->with('success', __('status.resource.updated', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 

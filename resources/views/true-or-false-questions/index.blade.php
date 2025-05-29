@@ -1,4 +1,4 @@
-<x-auth title="True Or False Questions">
+<x-layouts.app title="True Or False Questions">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -13,7 +13,7 @@
     </x-slot>
     @can('moderate')
     <x-slot name="action">
-        <x-link.primary :to="route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic])">New True Or False Question</x-link.primary>
+        <x-link.primary class="text-nowrap" :to="route('academic-topics.true-or-false-questions.create', ['academic_topic' => $academicTopic])">Add Question</x-link.primary>
     </x-slot>
     @endcan
 
@@ -21,10 +21,10 @@
     <x-table>
         <x-slot name="head">
             <tr>
-                <x-table.th>Question</x-table.th>
+                <x-table.th class="font-black">Question</x-table.th>
                 <x-table.th>Score</x-table.th>
                 <x-table.th>Difficulty Level</x-table.th>
-                <x-table.th><span class="sr-only">Actions</span></x-table.th>
+                <x-table.th><span class="sr-only">Actions</span>Actions</x-table.th>
             </tr>
         </x-slot>
 
@@ -33,11 +33,11 @@
                 <x-table.td bold>{{ $trueOrFalseQuestion->question->summary }}</x-table.td>
                 <x-table.td>{{ $trueOrFalseQuestion->score }}</x-table.td>
                 <x-table.td>{{ $trueOrFalseQuestion->difficulty_level }}</x-table.td>
-                <x-table.td action>
+                <x-table.td action class="text-nowrap">
                     <x-action name="view" :to="route('true-or-false-questions.show', ['true_or_false_question' => $trueOrFalseQuestion])" />
                     @can('moderate')
                     <x-action name="edit" :to="route('true-or-false-questions.edit', ['true_or_false_question' => $trueOrFalseQuestion])" />
-                    <x-action name="delete" :to="route('true-or-false-questions.destroy', ['true_or_false_question' => $trueOrFalseQuestion])">
+                    <x-action class="text-red-500" name="delete" :to="route('true-or-false-questions.destroy', ['true_or_false_question' => $trueOrFalseQuestion])">
                         Are you sure you want to delete {{ $trueOrFalseQuestion->question->summary }}
                     </x-action>
                     @endcan
@@ -52,4 +52,4 @@
     @else
     <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

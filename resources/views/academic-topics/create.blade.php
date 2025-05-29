@@ -1,4 +1,4 @@
-<x-auth title="New Academic Topic">
+<x-layouts.app title="New Academic Topic">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -12,16 +12,19 @@
     </x-slot>
 
     <div class="mx-auto bg-white px-4 py-8 rounded-md">
-        <form method="POST" action="{{ route('academic-subjects.academic-topics.store', ['academic_subject' => $academicSubject]) }}">
-            @csrf
-            <div class="">
-                <div class="max-w-">
-                    <x-form.input  name="name" type="text"  />
+        <div class="max-w-xl mx-auto">
+            <form method="POST" action="{{ route('academic-subjects.academic-topics.store', ['academic_subject' => $academicSubject]) }}">
+                @csrf
+                <div class="">
+                    <div class="max-w-">
+                        <x-form.input  name="name" type="text"  />
+                    </div>
                 </div>
-            </div>
-            <div class="flex justify-end mt-3">
-                <x-button.primary class="ml-2">Create Academic Topic</x-button.primary>
-            </div>
-        </form>
+                <div class="flex justify-end mt-3">
+                    <x-button.primary class="ml-2">Create Academic Topic</x-button.primary>
+                </div>
+            </form>
+        </div>
+
     </div>
-</x-auth>
+</x-layouts.app>

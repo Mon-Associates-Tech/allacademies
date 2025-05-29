@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -74,7 +74,7 @@ class ExaminationSections extends Component
 
     public function __construct($id = null)
     {
-        parent::__construct($id);
+//        parent::__construct($id);
         $this->metafields[] = [
             'option' => null,
             'pages_count' => 1,
@@ -86,7 +86,7 @@ class ExaminationSections extends Component
 //    public function save()
 //    {
 //        foreach ($this->sections as $i => &$section) {
-//            if (isset($section['document']) && $section['document'] instanceof \Livewire\TemporaryUploadedFile) {
+//            if (isset($section['document']) && $section['document'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
 //                $section['document'] = $section['document']->store('documents', 'public');
 //            }
 //        }

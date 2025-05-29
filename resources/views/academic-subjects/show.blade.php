@@ -1,4 +1,4 @@
-<x-auth title="Academic Subject Details" page-name="Academic Subject Details"
+<x-layouts.app title="Academic Subject Details" page-name="Academic Subject Details"
 action-link-text="Add Subject Topic"
 action_link="{{route('academic-subjects.academic-topics.create', ['academic_subject' => $academicSubject])  }}"
 >
@@ -35,4 +35,4 @@ action_link="{{route('academic-subjects.academic-topics.create', ['academic_subj
         </x-slot>
         @endcan
     </x-detail>
-</x-auth>
+</x-layouts.app>

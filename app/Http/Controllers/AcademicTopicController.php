@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\AcademicTopic;
 use App\Models\AcademicSubject;
 use App\Http\Requests\AcademicTopicRequest;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class AcademicTopicController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|\Illuminate\View\View
      */
     public function index(AcademicSubject $academicSubject)
     {
@@ -30,11 +36,11 @@ class AcademicTopicController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function create(AcademicSubject $academicSubject)
     {
-        $this->authorize('administrate');
+//        $this->authorize('administrate');
 
         $academicSubject->load('academicLevel.academicGroup');
 
@@ -46,8 +52,9 @@ class AcademicTopicController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopicRequest $request
+     * @return RedirectResponse
      */
     public function store(AcademicSubject $academicSubject, AcademicTopicRequest $request)
     {
@@ -62,8 +69,8 @@ class AcademicTopicController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\AcademicTopic  $academicTopic
-     * @return \Illuminate\Http\Response
+     * @param AcademicTopic $academicTopic
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function show(AcademicTopic $academicTopic)
     {
@@ -80,8 +87,8 @@ class AcademicTopicController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\AcademicTopic  $academicTopic
-     * @return \Illuminate\Http\Response
+     * @param AcademicTopic $academicTopic
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function edit(AcademicTopic $academicTopic)
     {
@@ -97,9 +104,9 @@ class AcademicTopicController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AcademicTopic  $academicTopic
-     * @return \Illuminate\Http\Response
+     * @param AcademicTopicRequest $request
+     * @param AcademicTopic $academicTopic
+     * @return RedirectResponse
      */
     public function update(AcademicTopicRequest $request, AcademicTopic $academicTopic)
     {
@@ -114,8 +121,8 @@ class AcademicTopicController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\AcademicTopic  $academicTopic
-     * @return \Illuminate\Http\Response
+     * @param AcademicTopic $academicTopic
+     * @return RedirectResponse
      */
     public function destroy(AcademicTopic $academicTopic)
     {

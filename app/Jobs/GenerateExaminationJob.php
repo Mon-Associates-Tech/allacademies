@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\NotEnoughQuestionsException;
 use App\Models\AcademicSubject;
 use App\Models\Examination;
 use App\Models\Team;
@@ -26,11 +27,11 @@ class GenerateExaminationJob implements ShouldQueue
      * @return void
      */
     public function __construct(
-        private AcademicSubject $academicSubject,
-        private Team $team,
-        private User $creator,
-        private array $heading,
-        private array $sections
+        private readonly AcademicSubject $academicSubject,
+        private readonly Team            $team,
+        private readonly User            $creator,
+        private readonly array           $heading,
+        private readonly array           $sections
     )
     {
         //
@@ -44,43 +45,84 @@ class GenerateExaminationJob implements ShouldQueue
     public function handle(): void
     {
         $sections = [];
-        $multiple_choice_questions = [];
-        $true_or_false_questions = [];
-        $essay_questions = [];
-        $heading = [];
+        $usedQuestions = [
+            'multiple_choice_questions' => [],
+            'true_or_false_questions' => [],
+            'essay_questions' => []
+        ];
 
-    /*    try {
+        try {
             collect($this->sections)->each(function ($section) use (
                 &$sections,
-                &$multiple_choice_questions,
-                &$true_or_false_questions,
-                &$essay_questions
-                ) {
-                // TODO: validate that topics are under the right subject;
-                $questions = DB::table($section['type'])
-                    ->select('id')
-                    ->whereIn('academic_topic_id', $section['topics'])
-                    ->whereNotIn('id', ${$section['type']})
-                    ->inRandomOrder()
-                    ->take($section['count'])
-                    ->get()
-                    ->pluck('id')
-                    ->all();
+                &$usedQuestions
+            ) {
+                $table = $section['type'];
+                $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
+                $subtopics = $section['subtopics'] ?? [];
+                $sectionQuestions = [];
 
-
-                if (count($questions) < $section['count']) {
-                    throw new NotEnoughQuestionsException();
+                // Handle document upload if present
+                if (isset($section['document']) && $section['document'] instanceof UploadedFile) {
+                    $file = $section['document'];
+                    $path = $file->store('documents', 'public');
+                    $section['document'] = $path;
                 }
 
+                if (!empty($subtopics)) {
+                    // Handle questions with subtopics
+                    collect($subtopics)->each(function ($subtopic) use ($table, $topicIds, &$sectionQuestions, &$usedQuestions) {
+                        $count = (int)$subtopic['count'];
+
+                        $questions = DB::table($table)
+                            ->select($table . '.id')
+                            ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
+                            ->where('academic_subtopics.academic_topic_id', $subtopic['topic_id'])
+                            ->where('academic_subtopics.id', $subtopic['id'])
+                            ->whereNotIn($table . '.id', $usedQuestions[$table])
+                            ->inRandomOrder()
+                            ->take($count)
+                            ->get()
+                            ->pluck('id')
+                            ->all();
+
+                        if (count($questions) < $count) {
+                            throw new NotEnoughQuestionsException();
+                        }
+
+                        $sectionQuestions = array_merge($sectionQuestions, $questions);
+                    });
+                } else {
+                    // Handle questions without subtopics (topic-level questions)
+                    $questions = DB::table($table)
+                        ->select('id')
+                        ->whereIn('academic_topic_id', $topicIds)
+                        ->whereNull('academic_subtopic_id')
+                        ->whereNotIn('id', $usedQuestions[$table])
+                        ->inRandomOrder()
+                        ->take($section['count'])
+                        ->get()
+                        ->pluck('id')
+                        ->all();
+
+                    if (count($questions) < $section['count']) {
+                        throw new NotEnoughQuestionsException();
+                    }
+
+                    $sectionQuestions = $questions;
+                }
+
+                // Add questions to the tracking array for duplicate prevention
+                $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
+
+                // Build section
                 $sections[] = [
                     'name' => $section['name'],
-                    'type' => $section['type'],
-                    'questions' => $questions,
+                    'type' => $table,
+                    'questions' => $sectionQuestions,
+                    'page' => $section['page'] ?? null,
+                    'document' => $section['document'] ?? null,
                     'instructions' => $section['instructions'],
                 ];
-
-                ${$section['type']} = array_merge(${$section['type']}, $questions);
-
             });
 
             $examination = new Examination([
@@ -94,63 +136,6 @@ class GenerateExaminationJob implements ShouldQueue
 
             $this->academicSubject->examinations()->save($examination);
         } catch (Exception $exception) {
-            Log::info($exception->getMessage());
-        }*/
-
-        try{
-            $allQuestions = [];
-
-            foreach ($sections as $section) {
-                $topicIds = collect($section['topics'])->map(fn($id) => (int) $id)->all();
-                $subtopics = $section['subtopics'];
-                $table = $section['type'];
-
-                if ($section['document'] instanceof UploadedFile) {
-                    $file = $section['document'];
-                    $path = $file->store('documents', 'public');
-                    $section['document'] = $path;
-                }
-
-                foreach ($subtopics as $subtopic) {
-                    $count = (int) $subtopic['count'];
-
-                    $questions = DB::table($table)
-                        ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                        ->whereIn('academic_subtopics.academic_topic_id', $topicIds)
-                        ->inRandomOrder()
-                        ->select($table . '.id')
-                        ->take($count)
-                        ->get()
-                        ->pluck('id');
-
-                    $allQuestions = array_merge($allQuestions, $questions->all());
-                }
-
-                $sections[] = [
-                    'name' => $section['name'],
-                    'type' => $section['type'],
-                    'questions' => $allQuestions,
-                    'page' => $section['page'] ?? null,
-                    'document' => $section['document'],
-                    'instructions' => $section['instructions'],
-                ];
-
-
-            }
-
-            array_shift($sections);
-
-            $examination = new Examination([
-                'title' => $heading['title'],
-                'heading' => $heading,
-                'sections' => $sections,
-            ]);
-
-            $examination->creator()->associate($this->creator);
-            $examination->team()->associate($this->team);
-
-            $this->academicSubject->examinations()->save($examination);
-        }catch (Exception $exception){
             Log::info($exception->getMessage());
         }
     }

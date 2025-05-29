@@ -1,4 +1,4 @@
-<x-auth title="Subscriptions">
+<x-layouts.app title="Subscriptions">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>
@@ -75,4 +75,4 @@
     @else
         <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

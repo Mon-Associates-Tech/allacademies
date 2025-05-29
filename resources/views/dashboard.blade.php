@@ -1,41 +1,6 @@
-<x-auth title="Dashboard" :has-action="false">
+<x-layouts.app title="Dashboard" :has-action="false">
+
     @if ($academicSubjects->count())
-
-    <section class="w-full h-60 mb-8 grid grid-rows-2 gap-4 md:grid md:grid-cols-[30%_68%] md:h-40">
-        <div class="flex flex-col justify-between text-center items-center rounded-3xl bg-blue-300 p-4 md:h-40">
-            <h3 class="text-2xl font-semibold">{{greetUser(auth()->user()->name)}}</h3>
-            <p>Welcome to your Dashboard</p>
-            <div class="btn bg-range drop-shadow-2xl px-4 py-2 rounded-full w-1/2 text-sm text-white md:w-full">Explore more courses</div>
-        </div>
-        <div class="grid grid-cols-[30%_68%] gap-4 items-center text-center bg-blue-300  rounded-3xl p-4 md:h-40">
-            <div>
-                Notifications
-            </div>
-            <div class="flex flex-col md:gap-4 pb-1 items-center text-center bg-white rounded-2xl">
-
-                <h3>Toolbox</h3>
-                <div class="flex w-full justify-between">
-
-                    <div class="border-r w-full flex flex-col items-center">
-                        <img src="{{ asset('img/deadline.gif') }}" alt="animation" class='w-10 h-10 bg-inherit'>
-                        <p class="text-sm">Calendar</p>
-                    </div>
-                    <div class="border-r w-full flex flex-col items-center">
-                        <img src="{{ asset('img/bank.gif') }}" alt="animation" class='w-10 h-10 bg-inherit'>
-                        <p class="text-sm">Test Bank</p>
-                    </div>
-                    <div class=" w-full flex flex-col items-center">
-                        <img src="{{ asset('img/history.png') }}" alt="animation" class='w-10 h-10 bg-inherit'>
-                        <p class="text-sm">Recent</p>
-                    </div>
-                </div>
-            </div>
-
-
-        </div>
-
-    </section>
-
     <section class="mt-10 max-w-6xl mx-auto">
 
 
@@ -101,4 +66,4 @@
   @endif
 
   </section>
-</x-auth>
+</x-layouts.app>

@@ -1,4 +1,4 @@
-<x-auth title="{{$academicTopic->name}} Topic Details" action-link-text="Add Subtopic"
+<x-layouts.app title="{{$academicTopic->name}} Topic Details" action-link-text="Add Subtopic"
 :action_link="route('academic-topics.subtopics.create', ['academic_topic' => $academicTopic])"
 >
     <x-slot name="breadcrumb">
@@ -59,7 +59,7 @@
         @endcan
     </x-detail>
 
-</x-auth>
+</x-layouts.app>
 
 
 
