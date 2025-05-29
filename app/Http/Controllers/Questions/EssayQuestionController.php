@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Questions;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\EssayQuestionRequest;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
-use App\Http\Requests\EssayQuestionRequest;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Request;
 
 class EssayQuestionController extends Controller
 {
@@ -26,7 +26,7 @@ class EssayQuestionController extends Controller
         $essayQuestions = $academicTopic->essayQuestions()->with('academicTopic.academicSubject.academicLevel')->latest('id')->paginate();
         $essayQuestions->load('subtopic');
 
-        return view('essay-questions.index', [
+        return view('questions.essay-questions.index', [
             'essayQuestions' => $essayQuestions,
             'academicTopic' => $academicTopic,
         ]);
@@ -67,7 +67,7 @@ class EssayQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        return view('essay-questions.create', [
+        return view('questions.essay-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
     }
@@ -86,7 +86,7 @@ class EssayQuestionController extends Controller
         $essayQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
         $essayQuestion->load('subtopic');
 
-        return view('essay-questions.show', [
+        return view('questions.essay-questions.show', [
             'essayQuestion' => $essayQuestion,
         ]);
     }
@@ -105,7 +105,7 @@ class EssayQuestionController extends Controller
         $essayQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
         $essayQuestion->load('subtopic');
 
-        return view('essay-questions.edit', [
+        return view('questions.essay-questions.edit', [
             'essayQuestion' => $essayQuestion,
         ]);
     }

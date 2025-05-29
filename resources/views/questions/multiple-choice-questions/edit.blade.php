@@ -1,4 +1,4 @@
-<x-layouts.app title="Edit Multiple Choice Question">
+<x-layouts.app title="Edit Multiple Choice Question" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -31,12 +31,15 @@
                             <x-form.input name="score" type="number" :value="$multipleChoiceQuestion->score" />
                         </div>
                         <div class="sm:col-span-2">
-                            <div class="py-3"> <x-form.editor full name="question" :value="$multipleChoiceQuestion->question" /></div>
-                            <div class="py-3"><x-form.editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" /></div>
-                            <div class="py-3"><x-form.editor full name="option_b" label="Option B" :value="$multipleChoiceQuestion->option_b" /></div>
-                            <div class="py-3"><x-form.editor full name="option_c" label="Option C" :value="$multipleChoiceQuestion->option_c" /></div>
-                            <div class="py-3"><x-form.editor full name="option_d" label="Option D" :value="$multipleChoiceQuestion->option_d" /></div>
-                            <div class="py-3"><x-form.editor full name="option_e" label="Option E" :value="$multipleChoiceQuestion->option_e" /></div>
+                            <div class="mt-3">
+                                <x-form.input type="text" Label="Sub Topic" :value="$multipleChoiceQuestion?->subtopic?->name" name="subtopic" ></x-form.input>
+                            </div>
+                            <div class="py-3"> <x-form.rich-editor full name="question" :value="$multipleChoiceQuestion->question" /></div>
+                            <div class="py-3"><x-form.rich-editor full name="option_a" label="Option A" :value="$multipleChoiceQuestion->option_a" /></div>
+                            <div class="py-3"><x-form.rich-editor full name="option_b" label="Option B" :value="$multipleChoiceQuestion->option_b" /></div>
+                            <div class="py-3"><x-form.rich-editor full name="option_c" label="Option C" :value="$multipleChoiceQuestion->option_c" /></div>
+                            <div class="py-3"><x-form.rich-editor full name="option_d" label="Option D" :value="$multipleChoiceQuestion->option_d" /></div>
+                            <div class="py-3"><x-form.rich-editor full name="option_e" label="Option E" :value="$multipleChoiceQuestion->option_e" /></div>
                             <div class="py-3">
                                 <x-form.select full name="answer" :options="[
                             'a' => 'Option A',
@@ -45,11 +48,6 @@
                             'd' => 'Option D',
                             'e' => 'Option E',
                         ]" :value="$multipleChoiceQuestion->answer" />
-                            </div>
-
-                            <div class="mt-3">
-                                <x-form.input type="text" Label="Sub Topic" :value="$multipleChoiceQuestion?->subtopic?->name" name="subtopic" ></x-form.input>
-                                <hr class="my-6">
                             </div>
                             <div class="flex justify-end mt-3">
                                 <x-button.primary class="ml-2">Update Multiple Choice Question</x-button.primary>
