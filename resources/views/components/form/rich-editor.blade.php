@@ -27,7 +27,7 @@
             if (this.editor) return;
 
             tinymce.init({
-                selector: '#{{ $name }}_down',
+                selector: '.rich-editor',
                 height: {{ $height }},
                 menubar: false,
                 plugins: 'code lists table link image media paste markdown autoresize',
@@ -58,7 +58,8 @@
         },
         updatePreview() {
             this.up = marked.parse(this.down);
-        }
+        },
+
      }"
      x-init="initEditor(); updatePreview();"
      x-effect="updatePreview()"
@@ -89,7 +90,7 @@
 
         <!-- Editor Area -->
         <div x-show="!preview" class="bg-white">
-            <textarea id="{{ $name }}_down" name="{{ $name }}[down]" x-model="down" class="w-full"></textarea>
+            <textarea id="{{ $name }}_down" name="{{ $name }}[down]" x-model="down" class="rich-editor w-full"></textarea>
         </div>
 
         <!-- Preview Area -->

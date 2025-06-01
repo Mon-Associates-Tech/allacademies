@@ -13,10 +13,10 @@ class ImageUpload extends Component
 
     use WithFileUploads;
 
-    public $image;
-    public $description;
+    public $image = null;
+    public $description = '';
     public $tags = [];
-    public $tag;
+    public $tag = '';
 
     protected $rules = [
         'description' => 'required|string|min:5|max:255',
@@ -25,11 +25,20 @@ class ImageUpload extends Component
         'image' => 'required|image',
     ];
 
-    public function upload()
+
+    public function mount()
+    {
+        $this->image = null;
+        $this->description = '';
+        $this->tags = [];
+        $this->tag = '';
+    }
+
+    public function uploads()
     {
         $this->validate();
 
-        $path = $this->image->storePublicly('images', 's3');
+        $path = $this->image->storePublicly('images', 'public');
 
         if (false === $path) {
             throw ValidationException::withMessages(['image' => 'Image upload failed.']);
@@ -44,7 +53,6 @@ class ImageUpload extends Component
         $this->reset();
     }
 
-
     public function addTag($newTag)
     {
         $newTag = Str::studly($newTag);
@@ -56,13 +64,11 @@ class ImageUpload extends Component
         $this->reset('tag');
     }
 
-
     public function removeTag($index)
     {
         unset($this->tags[$index]);
         $this->tags = array_values($this->tags);
     }
-
 
     public function render()
     {

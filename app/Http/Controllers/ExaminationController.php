@@ -6,26 +6,20 @@ use App\Exceptions\NotEnoughQuestionsException;
 use App\Models\AcademicTopic;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\QuestionGenerator;
 use App\Support\Examiner;
 use App\Models\Examination;
 use App\Models\AcademicSubject;
 use App\Jobs\GenerateExaminationJob;
+use App\Templates\TemplateRenderer;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request as HttpRequest;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\ExaminationRequest;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Storage;
-use \Imagick;
 use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\Shared\Html;
 
 class ExaminationController extends Controller
 {
@@ -62,12 +56,14 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
+        session()->forget('examination_preview_data');
+
 
         $metadata = data_get($currentTeam->meta, 'present', []);
 
         $logo = data_get($currentTeam->meta, 'logo');
 
-        $metadata['logo'] = $logo ? Storage::disk('s3')->url($logo) : asset('img/logo.png');
+        $metadata['logo'] = $logo ? Storage::disk('local')->url($logo) : asset('img/logo.png');
 
         $metadata['subject_name'] = $academicSubject->name;
         $metadata['subject_code'] = $academicSubject->code;
@@ -136,6 +132,7 @@ class ExaminationController extends Controller
             'metadata' => $metadata,
         ]);
     }
+
 
     /**
      * Display the specified resource.
@@ -243,118 +240,101 @@ class ExaminationController extends Controller
     }
 
     /**
-     * @throws NotEnoughQuestionsException
+     * Generate a preview of the examination without saving to a database
      */
-    public function handle(
-        AcademicSubject $academicSubject,
-        Team            $team,
-        User            $creator,
-        array           $heading,
-        array           $sections,
-        bool            $useSubtopics = false,
-    ): void
+    public function generatePreview(HttpRequest $request, AcademicSubject $academicSubject)
     {
-        $topicQuestions = [];
-        $questionsWithSubtopics = [];
-        $processedSections = []; // New array for processed sections
-
-        foreach ($sections as $section) {
-            $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
-            $subtopics = $section['subtopics'] ?? [];
-            $table = $section['type'];
-
-            if (isset($section['document']) && $section['document'] instanceof UploadedFile) {
-                $file = $section['document'];
-                $path = $file->store('documents', 'public');
-                $section['document'] = $path;
-            }
-
-            if ($useSubtopics && count($subtopics)) {
-                foreach ($subtopics as $subtopic) {
-                    $count = (int)$subtopic['count'];
-
-                    $questions = DB::table($table)
-                        ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                        ->whereIn('academic_subtopics.academic_topic_id', $topicIds)
-                        ->whereNotIn('id', ${$section['type']})
-                        ->inRandomOrder()
-                        ->select($table . '.id')
-                        ->take($count)
-                        ->get()
-                        ->pluck('id');
-
-                    if (count($questionsWithSubtopics) < $section['count']) {
-                        throw new NotEnoughQuestionsException();
-                    }
-
-                    $questionsWithSubtopics = array_merge($questionsWithSubtopics, $questions->all());
-                }
-            } else {
-                // TODO: validate that topics are under the right subject;
-                $questions = DB::table($section['type'])
-                    ->select('id')
-                    ->whereIn('academic_topic_id', $section['topics'])
-                    ->whereNotIn('id', $topicIds)
-                    ->inRandomOrder()
-                    ->take($section['count'])
-                    ->get()
-                    ->pluck('id')
-                    ->all();
-
-                if (count($questions) < $section['count']) {
-                    throw new NotEnoughQuestionsException();
-                }
-                $topicQuestions = array_merge($topicQuestions, $questions);
-            }
-
-            $processedSections[] = [
-                'name' => $section['name'],
-                'type' => $section['type'],
-                'questions' => $useSubtopics ? $questionsWithSubtopics : $topicQuestions,
-                'page' => $section['page'] ?? null,
-                'document' => $section['document'] ?? null,
-                'instructions' => $section['instructions'],
-            ];
-        }
-
-        $examination = new Examination([
-            'title' => $heading['title'],
-            'heading' => $heading,
-            'sections' => $processedSections,
-        ]);
-
-        $examination->creator()->associate($creator);
-        $examination->team()->associate($team);
-
-        $academicSubject->examinations()->save($examination);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param AcademicSubject $academicSubject
-     * @param ExaminationRequest $request
-     * @return RedirectResponse
-     */
-    public function store(AcademicSubject $academicSubject, HttpRequest $request)
-    {
-
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        $heading = $request->heading;
+        $metadata = unserialize(base64_decode($request['metadata']));
 
-        GenerateExaminationJob::dispatch(
-            $academicSubject,
-            Team::query()->find($request->team_id),
-            User::query()->find($request->creator_id),
-            $heading,
-            $request->sections
-        );
+        $previewData = QuestionGenerator::generate($request['heading'], $request['sections']);;
+        $previewData['creator_id'] = auth()->user()->current_team_id;
+        $previewData['team_id'] = $currentTeam->id;
+        $previewData['metadata'] = $metadata;
 
-        return to_route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject])
-            ->with('success', __('status.exam.generating', ['title' => $heading['title']]));
+        session(['examination_preview' => $previewData]);
+
+
+        return redirect()->route('academic-subjects.examinations.preview', [
+            'academic_subject' => $academicSubject,
+            'heading' => $previewData['heading'],
+            'sections' => $previewData['sections'],
+            'title' => $previewData['title'],
+            'metadata' => $metadata,
+        ]);
+
+    }
+
+    /**
+     * Show the examination preview
+     */
+    public function preview(AcademicSubject $academicSubject, HttpRequest $request)
+    {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
+        $previewData = session('examination_preview');
+
+
+        if (!$previewData) {
+            return redirect()->route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])
+                ->withErrors(['general' => 'No preview data found. Please generate an examination first.']);
+        }
+
+
+        $previewData['creator_id'] = auth()->user()->current_team_id;
+        $previewData['team_id'] = $currentTeam->id;
+
+        return view('examinations.preview', [
+            'academicSubject' => $academicSubject,
+            'heading' => $previewData['heading'],
+            'sections' => $previewData['sections'],
+            'request' => $request,
+            'previewData' => $previewData,
+        ]);
+    }
+
+
+    /**
+     * Store the examination after preview confirmation
+     */
+    public function store(AcademicSubject $academicSubject, HttpRequest $request)
+    {
+        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+
+        $this->authorize('subscribed', $academicSubject);
+        $this->authorize('privileged', $currentTeam);
+
+        $validatedData = request()->all();
+        $team = Team::query()->findOrFail($request->team_id);
+        $creator = User::query()->findOrFail($request->creator_id);
+
+        try {
+            $examinationService = new QuestionGenerator();
+            $examination = $examinationService->createExamination(
+                $academicSubject,
+                $validatedData,
+                $team->id,
+                $creator->id
+            );
+
+            // Clear preview data from session
+            session()->forget('examination_preview_data');
+
+            return redirect()
+                ->route('academic-subjects.examinations.index', $academicSubject)
+                ->with('success', 'Examination is being generated! You will be notified when it\'s ready.');
+
+        } catch (Exception $e) {
+            return back()
+                ->withErrors(['general' => 'Failed to create examination. Please try again.'])
+                ->withInput();
+        }
     }
 }

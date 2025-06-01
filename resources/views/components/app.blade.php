@@ -21,6 +21,6 @@
 </head>
 <body {{ $attributes->merge(['class' => 'antialiased bg-gray-100']) }}>
     {{ $slot }}
-    @livewireScripts
+    @livewireScriptConfig
 </body>
 </html>

@@ -104,6 +104,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('users', UserController::class)->only(['index', 'show']);
 
+
+    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])
+        ->name('academic-subjects.examinations.preview');
+    Route::post('academic-subjects/{academic_subject}/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
+        ->name('academic-subjects.examinations.generate-preview');
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
@@ -129,4 +134,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     })->name('export.word');
 });
-

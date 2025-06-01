@@ -14,10 +14,10 @@
                     <select wire:model.live="template" id="heading_template" name="heading[template]" class="-ml-px border-0 rounded-r-md ring-1 ring-inset ring-gray-300 bg-gray-50 pl-2 pr-7 py-1 focus:ring-2 text-xs font-medium text-gray-600">
                         <option value="twig">Twig</option>
                         <option value="pug">Pug</option>
-
+                        @isset($metadata['institution'])
                         <option value="tera">Tera</option>
                         <option value="jinja">Jinja</option>
-
+                        @endisset
                     </select>
                 </span>
             </div>
@@ -38,7 +38,7 @@
         </div>
         <textarea x-model="down" id="heading_down" name="heading[down]" class="hidden"></textarea>
 
-        <div x-html="up" x-show="preview" class="font-serif block px-4 py-2 text-gray-700 focus:outline-none focus:border-gray-700 bg-white border border-gray-300 rounded-b-lg"></div>
+        <div x-html="up" x-show="preview" class="font-serif block px-4 py-2 w-full lg:min-w-[35rem] text-gray-700 focus:outline-none focus:border-gray-700 bg-white border border-gray-300 rounded-b-lg"></div>
         <textarea x-model="up" id="heading_up" name="heading[up]" class="hidden"></textarea>
     </div>
     @error('heading.up')

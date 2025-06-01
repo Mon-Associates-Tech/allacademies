@@ -3,12 +3,18 @@
 @endphp
 
 
-<x-print title="Examination Details">
+<x-print title="Examination Preview">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
-            'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $examination->academicSubject]),
+            'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]),
         ]" />
     </x-slot>
+
+    <x-slot:action>
+        <div class="text-right">
+            <x-link.secondary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])"> Go back</x-link.secondary>
+        </div>
+    </x-slot:action>
 
     <div x-data="{ format: 'lenticular' }"
          class="overflow-hidden rounded-lg bg-white shadow mx-auto print:shadow-none print:rounded-none max-w-[60rem] print:max-w-full">
@@ -27,7 +33,7 @@
         </div>
         <div class="font-serif px-4 py-5 sm:p-6 print:px-0 ">
             <div class="text-center">
-                {{ $examination->heading->html }}
+                {!!$heading['up'] !!}
             </div>
 
             @foreach ($sections as $section)
@@ -64,7 +70,7 @@
                     <ol class="list-decimal mb-12">
                         @foreach ($section['questions'] as $tf)
                             <li>
-                                {{ $tf->question->html }}
+                                {!!  json_decode($tf->question)->up !!}
                                 <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                      class="grid gap-x-5">
                                     @foreach (['a', 'b'] as $o)
@@ -122,9 +128,7 @@
 
             @endforeach
         </div>
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden">
-            <x-button.primary x-on:click="window.print()">Print</x-button.primary>
-        </div>
+            <livewire:examination-print-processor :team_id="$previewData['team_id']" :data="$previewData" :creator_id="$previewData['creator_id']" :academic-subject="$academicSubject" />
     </div>
 
     <script>
