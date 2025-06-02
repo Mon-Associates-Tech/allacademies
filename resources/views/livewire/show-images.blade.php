@@ -13,7 +13,7 @@
   <div class="overflow-hidden rounded-md border border-gray-300 bg-white">
     <ul role="list" class="divide-y divide-gray-300">
       @foreach ($images as $image)
-      <li x-data="{ url: @js(Storage::disk('local')->url($image->path)), description: @js($image->description) }" class="flex">
+      <li x-data="{ url: @js(asset($image->path)), description: @js($image->description) }" class="flex">
         <div class="flex-1 px-6 py-4 space-y-1 overflow-auto">
           <p class="truncate text-sm font-medium text-gray-900">{{ $image->description }}</p>
           <div class="flex items-center space-x-1">

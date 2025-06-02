@@ -47,7 +47,7 @@ class ImageUpload extends Component
         Image::create([
             'tags' => $this->tags,
             'description' => Str::headline($this->description),
-            'path' => $path,
+            'path' => 'storage/'.$path,
         ]);
 
         $this->reset();

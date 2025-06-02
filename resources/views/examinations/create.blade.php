@@ -33,7 +33,7 @@
             </div>
 
             <div class="grid sm:grid-cols-6 gap-4 place-items-center">
-                <x-form.input name="metadata" value="{{base64_encode(serialize($metadata))}}"  type="hidden" hidden />
+                <input name="metadata" value="{{base64_encode(serialize($metadata))}}"  type="hidden" hidden />
                 <div class="sm:col-span-5 text-start ms-auto">
                     <x-button.primary class="text-right">Preview Examination</x-button.primary>
                 </div>

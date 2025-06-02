@@ -33,7 +33,7 @@
         </div>
         <div class="font-serif px-4 py-5 sm:p-6 print:px-0 ">
             <div class="text-center">
-                {!!$heading['up'] !!}
+                {!!$heading['down'] !!}
             </div>
 
             @foreach ($sections as $section)

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\NotEnoughQuestionsException;
 use App\Models\AcademicTopic;
 use App\Models\Team;
 use App\Models\User;
@@ -10,8 +9,6 @@ use App\Services\QuestionGenerator;
 use App\Support\Examiner;
 use App\Models\Examination;
 use App\Models\AcademicSubject;
-use App\Jobs\GenerateExaminationJob;
-use App\Templates\TemplateRenderer;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -244,29 +241,34 @@ class ExaminationController extends Controller
      */
     public function generatePreview(HttpRequest $request, AcademicSubject $academicSubject)
     {
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        try {
+            $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
-        $this->authorize('subscribed', $academicSubject);
-        $this->authorize('privileged', $currentTeam);
+            $this->authorize('subscribed', $academicSubject);
+            $this->authorize('privileged', $currentTeam);
 
-        $metadata = unserialize(base64_decode($request['metadata']));
+            $metadata = unserialize(base64_decode($request['metadata']));
 
-        $previewData = QuestionGenerator::generate($request['heading'], $request['sections']);;
-        $previewData['creator_id'] = auth()->user()->current_team_id;
-        $previewData['team_id'] = $currentTeam->id;
-        $previewData['metadata'] = $metadata;
+            $previewData = QuestionGenerator::generate($request['heading'], $request['sections'], $metadata);
 
-        session(['examination_preview' => $previewData]);
+            $previewData['creator_id'] = auth()->user()->current_team_id;
+            $previewData['team_id'] = $currentTeam->id;
+            $previewData['metadata'] = $metadata;
 
+            session(['examination_preview' => $previewData]);
 
-        return redirect()->route('academic-subjects.examinations.preview', [
-            'academic_subject' => $academicSubject,
-            'heading' => $previewData['heading'],
-            'sections' => $previewData['sections'],
-            'title' => $previewData['title'],
-            'metadata' => $metadata,
-        ]);
+            return redirect()->route('academic-subjects.examinations.preview', [
+                'academic_subject' => $academicSubject,
+            ]);
 
+        } catch (\Exception $e) {
+            \Log::error('Preview generation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -296,6 +298,8 @@ class ExaminationController extends Controller
             'heading' => $previewData['heading'],
             'sections' => $previewData['sections'],
             'request' => $request,
+            'metadata' => $previewData['metadata'],
+            'title' => $previewData['title'],
             'previewData' => $previewData,
         ]);
     }

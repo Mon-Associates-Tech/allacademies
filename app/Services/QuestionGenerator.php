@@ -6,8 +6,6 @@ use App\Exceptions\NotEnoughQuestionsException;
 use App\Exceptions\NoTopicsException;
 use App\Models\AcademicSubject;
 use App\Models\Examination;
-use App\Models\Team;
-use App\Models\User;
 use App\Templates\TemplateRenderer;
 use Exception;
 use Illuminate\Http\UploadedFile;
@@ -19,6 +17,7 @@ class QuestionGenerator
     public static function generate(
         array           $heading,
         array           $sections,
+        array $metadata = []
     ): array
     {
         $usedQuestions = [
@@ -33,7 +32,7 @@ class QuestionGenerator
         ) {
             $table = $section['type'];
             if(empty($section['topics']) || $section['topics'][0] == 0){
-//                throw new NoTopicsException();
+                throw new NoTopicsException();
             }
             $topicIds =  collect($section['topics'])->map(fn($id) => (int)$id)->all();
             $subtopics = $section['subtopics'] ?? [];
@@ -102,9 +101,12 @@ class QuestionGenerator
         });
         $sections = array_slice($sections,1 );
 
-//        $heading['down'] = TemplateRenderer::renderTwig($heading['instructions'], $heading['duration'], $heading['title'], $metadata);
-//        $heading['up'] = TemplateRenderer::renderTwig($heading['instructions'], $heading['duration'], $heading['title'], $metadata);
-
+        if($heading['instructions']['up'] != null){
+            $heading['up'] =  TemplateRenderer::renderTwig($heading['instructions']['up'], $heading['duration'], $heading['title'], $metadata);
+        }
+        if($heading['instructions']['down'] != null){
+            $heading['down'] =  TemplateRenderer::renderTwig($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+        }
         return [
             'title' => $heading['title'],
             'heading' => $heading,
