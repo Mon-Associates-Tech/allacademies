@@ -90,7 +90,7 @@
             // First, convert with marked.js
             let htmlContent = marked.parse(markdownContent);
 
-htmlContent = htmlContent.replace(
+ htmlContent.replace(
     /<img([^>]+)>/gi,
     function(match, attributes) {
 {{--        return '<img' + attributes + ' style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';--}}
@@ -99,7 +99,7 @@ htmlContent = htmlContent.replace(
 );
 
 // Also handle plain URLs that might not be converted
-htmlContent = htmlContent.replace(
+ htmlContent.replace(
 /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|svg))/gi,
 `<img src='
      $1' alt='Image' style='max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>`

@@ -29,14 +29,14 @@
 
 
                             <span x-data="{ format: 'none' }" class="inline-flex rounded-md">
-                <span class="inline-flex items-center text-xs rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-xs sm:leading-6">
+                <span class="inline-flex opacity-50 items-center text-xs rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-xs sm:leading-6">
                     Export
                 </span>
                 <select x-model="format" id="format"
                         @change="fileExport(format, {{$examination->id}})" name="format" class="-ml-px text-xs block w-full rounded-l-none rounded-r-md border-0 bg-white py-1 pl-3 pr-9 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset sm:text-xs sm:leading-6">
                     <option class="text-xs" value="none">None</option>
                     <option class="text-xs" value="pdf">PDF</option>
-                    <option class="text-xs"  value="word">Word</option>
+                    <option class="text-xs" disabled  value="word">Word</option>
                 </select>
             </span>
 
