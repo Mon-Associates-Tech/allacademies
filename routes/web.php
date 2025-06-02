@@ -1,32 +1,32 @@
 <?php
 
-use App\Http\Controllers\SubtopicController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\QuizController;
-use App\Http\Controllers\TeamController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\MemberController;
-use App\Http\Controllers\SignInController;
-use App\Http\Controllers\SignUpController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SignOutController;
-use App\Http\Controllers\PasswordController;
-use App\Http\Controllers\SecurityController;
-use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\JoinTeamController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ExaminationController;
-use App\Http\Controllers\AuditTeamController;
-use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AcademicGroupController;
 use App\Http\Controllers\AcademicLevelController;
-use App\Http\Controllers\AcademicTopicController;
-use App\Http\Controllers\EssayQuestionController;
 use App\Http\Controllers\AcademicSubjectController;
+use App\Http\Controllers\AcademicTopicController;
+use App\Http\Controllers\AuditTeamController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
-use App\Http\Controllers\TrueOrFalseQuestionController;
-use App\Http\Controllers\MultipleChoiceQuestionController;
+use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\JoinTeamController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Questions\EssayQuestionController;
+use App\Http\Controllers\Questions\MultipleChoiceQuestionController;
+use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
+use App\Http\Controllers\QuizController;
+use App\Http\Controllers\SecurityController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SignInController;
+use App\Http\Controllers\SignOutController;
+use App\Http\Controllers\SignUpController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SubtopicController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StudentController;
@@ -124,6 +124,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('users', UserController::class)->only(['index', 'show']);
 
+
+    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])
+        ->name('academic-subjects.examinations.preview');
+    Route::post('academic-subjects/{academic_subject}/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
+        ->name('academic-subjects.examinations.generate-preview');
     Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
     Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
     Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
@@ -140,11 +145,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('academic-topics.subtopics', SubtopicController::class);
 
 
-    Route::post('export/pdf', function(Request $request){
+    Route::post('export/pdf', function(){
        return exportToPdf();
 
     })->name('export.pdf');
-    Route::post('export/word', function(Request $request){
+    Route::post('export/word', function(){
         return exportToWord();
 
     })->name('export.word');

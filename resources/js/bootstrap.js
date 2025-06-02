@@ -1,4 +1,4 @@
-import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+import { Livewire } from '../../vendor/livewire/livewire/dist/livewire.esm';
 
 import { marked } from "marked";
 import katex from "katex";
@@ -8,7 +8,7 @@ import axios from 'axios'
 
 
 
-window.Alpine = Alpine
+//window.Alpine = Alpine
 window.marked = marked
 window.axios = axios
 

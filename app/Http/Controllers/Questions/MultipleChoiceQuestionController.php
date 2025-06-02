@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Questions;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MultipleChoiceQuestionRequest;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
-use App\Http\Requests\MultipleChoiceQuestionRequest;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class MultipleChoiceQuestionController extends Controller
@@ -28,7 +28,7 @@ class MultipleChoiceQuestionController extends Controller
 
         $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
-        return view('multiple-choice-questions.index', [
+        return view('questions.multiple-choice-questions.index', [
             'multipleChoiceQuestions' => $multipleChoiceQuestions,
             'academicTopic' => $academicTopic,
         ]);
@@ -72,7 +72,7 @@ class MultipleChoiceQuestionController extends Controller
 
         $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
-        return view('multiple-choice-questions.create', [
+        return view('questions.multiple-choice-questions.create', [
             'academicTopic' => $academicTopic,
         ]);
     }
@@ -89,7 +89,7 @@ class MultipleChoiceQuestionController extends Controller
 
         $multipleChoiceQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
 
-        return view('multiple-choice-questions.show', [
+        return view('questions.multiple-choice-questions.show', [
             'multipleChoiceQuestion' => $multipleChoiceQuestion,
         ]);
     }
@@ -107,7 +107,7 @@ class MultipleChoiceQuestionController extends Controller
         $multipleChoiceQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
         $multipleChoiceQuestion->load('subtopic');
 
-        return view('multiple-choice-questions.edit', [
+        return view('questions.multiple-choice-questions.edit', [
             'multipleChoiceQuestion' => $multipleChoiceQuestion,
         ]);
     }
@@ -143,7 +143,7 @@ class MultipleChoiceQuestionController extends Controller
      * Remove the specified resource from storage.
      *
      * @param MultipleChoiceQuestion $multipleChoiceQuestion
-     * @return Response
+     * @return RedirectResponse
      */
     public function destroy(MultipleChoiceQuestion $multipleChoiceQuestion)
     {

@@ -1,4 +1,4 @@
-<x-layouts.app title="Essay Question">
+<x-layouts.app title="Essay Question" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -42,11 +42,11 @@
 
                     <div class="sm:col-span-2">
                         <div class="">
-                            <x-form.editor class="rich-editor" name="question" :value="$essayQuestion->question"/>
+                            <x-form.rich-editor class="rich-editor" name="question" :value="$essayQuestion->question"/>
                         </div>
 
                         <div class="">
-                            <x-form.editor class="rich-editor" name="answer" :value="$essayQuestion->answer"/>
+                            <x-form.rich-editor class="rich-editor" name="answer" :value="$essayQuestion->answer"/>
                         </div>
 
                         <div class="flex justify-end mt-3">

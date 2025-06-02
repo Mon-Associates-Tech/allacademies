@@ -64,8 +64,9 @@
                 {{--                {!!  $section['page'] !!}--}}
                 <div class="page-break"></div>
                 <div class="page-break"></div>
-                {!! File::get(storage_path('app/public/'.$section['document'])) !!}
-
+            @if(isset($section['document']))
+                    {!! File::get(storage_path('app/public/'.$section['document'])) !!}
+            @endif
             @endforeach
         </div>
     </div>

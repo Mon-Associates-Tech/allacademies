@@ -234,7 +234,7 @@
         <x-alert.success/>
         <x-alert.danger/>
         <main class="flex-grow">
-            <div class="flex justify-end py-2 print:hidden max-w-[20rem]">
+            <div class="flex mx-auto justify-between py-2 print:hidden max-w-[60rem]">
                 <div class="font-bold pl-1">{{$title}}</div>
                 <div class="">{{$action}}</div>
             </div>

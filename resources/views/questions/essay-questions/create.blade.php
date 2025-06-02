@@ -1,4 +1,4 @@
-<x-layouts.app title="New True Or False Question">
+<x-layouts.app title="New Essay Question" :main-only="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
@@ -9,16 +9,16 @@
             $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject]),
             'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject]),
             $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic]),
-            'True or False Questions' => route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic]),
+            'Essay Questions' => route('academic-topics.essay-questions.index', ['academic_topic' => $academicTopic]),
         ]"/>
     </x-slot>
 
     <div class="bg-white p-4 grid grid-cols-5 rounded-md border-slate-300 border">
-        <div class="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8 col-span-3">
+        <div class="max-w-4xl mt-1 pr-5 col-span-3">
             <form method="POST"
-                  action="{{ route('academic-topics.true-or-false-questions.store', ['academic_topic' => $academicTopic]) }}">
+                  action="{{ route('academic-topics.essay-questions.store', ['academic_topic' => $academicTopic]) }}">
                 @csrf
-                <div class="grid sm:grid-cols-2 gap-x-3 border border-slate-300 p-3 rounded-md bg-gray-100">
+                <div class="grid sm:grid-cols-2 gap-x-3 border border-slate-200 p-3 rounded-md bg-gray-100">
                     <div class="sm:col-span-1">
                         <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
                             'unspecified' => 'Unspecified',
@@ -28,7 +28,7 @@
                         ]"/>
                     </div>
                     <div class="sm:col-span-1">
-                        <x-form.input name="score" type="number" value="1"/>
+                        <x-form.input name="score" type="number" value="15"/>
                     </div>
 
                     <div class="sm:col-span-2 my-3">
@@ -37,21 +37,19 @@
                     </div>
 
                     <div class="sm:col-span-2">
-                        <div class="">
-                            <x-form.editor class="rich-editor" name="question"/>
+                        <x-form.rich-editor class="rich-editor" full name="question"/>
+                        <div class="my-3">
+                            <x-form.rich-editor class="rich-editor" full name="answer"/>
                         </div>
-                        <div class="my-4">
-                            <x-form.checkbox name="answer" description="Check if answer is true, Leave otherwise."/>
 
-                        </div>
-                        <div class="flex justify-end mt-3">
-                            <x-button.primary class="ml-2">Create True Or False Question</x-button.primary>
+                        <div class="flex justify-end mt-4">
+                            <x-button.primary class="ml-2">Create Essay Question</x-button.primary>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="mt-4 col-span-2 border border-slate-300 p-3 rounded-md bg-gray-100">
+        <div class="col-span-2 border mt-1 border-slate-200 p-3 rounded-md bg-gray-100">
             <x-plugins link="{{url()->current() . '/new'}}"/>
         </div>
     </div>

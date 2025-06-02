@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Templates\TemplateRenderer;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -31,111 +32,28 @@ class ExaminationHeading extends Component
     private function compile()
     {
         if ('twig' === $this->template) {
-            // Validate metadata array keys
-            $levelLabel = $this->metadata['level_label'] ?? 'N/A';
-            $subjectCode = $this->metadata['subject_code'] ?? 'N/A';
-
-            // Escape HTML content
-            $title = htmlspecialchars($this->title ?: 'TITLE');
-            $instructions = $this->instructions ?: 'INSTRUCTIONS';
-
-            // Validate duration before conversion
-            $duration = $this->duration && is_numeric($this->duration)
-                ? convertMinutesToHoursMinutes($this->duration)
-                : 'DURATION';
-
-            $this->down = sprintf(<<<'TWIG'
-    <div>
-        <div class="text-center">
-            <h1 class="font-semibold uppercase">%s</h1>
-            <h1 class="font-semibold uppercase">%s &#12539; %s</h1>
-            <h1 class="font-semibold">Duration: %s</h1>
-        </div>
-        <div class="border-y border-black my-5 py-5">
-            <h1 class="font-semibold uppercase">Instructions:</h1>
-            <p class="font-semibold">%s</p>
-        </div>
-    </div>
-    TWIG, $title, $levelLabel, $subjectCode, $duration, $instructions);
+          $this->down =   TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
         }
 
-
         if ('pug' === $this->template) {
-            $this->down = sprintf(<<<'PUG'
-            <div class="border border-black p-5 mb-5 space-y-5">
-                <div class="text-center">
-                    <h1 class="font-semibold uppercase">%s</h1>
-                </div>
-                <div class="text-center">
-                    <h1 class="font-semibold uppercase">%s</h1>
-                    <h1 class="font-semibold uppercase">%s</h1>
-                </div>
-                <div class="text-center">
-                    <h1 class="font-semibold uppercase">Time Allowed: %s</h1>
-                </div>
-                <div>
-                    <h1 class="font-semibold uppercase">Instructions:</h1>
-                    <p class="font-semibold">%s</p>
-                </div>
-            </div>
-            PUG, $this->title ?: 'TITLE', $this->metadata['level_name'], $this->metadata['subject_name'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', $this->instructions ?: 'INSTRUCTIONS');
+            $this->down = TemplateRenderer::renderPug($this->instructions, $this->duration, $this->title, $this->metadata);
+
         }
 
         if ('tera' === $this->template) {
-            $this->down = sprintf(<<<'TERA'
-            <div class="space-y-5 mb-5">
-                <div class="text-center">
-                    <img src="%s" alt="logo" class="w-20 mx-auto">
-                    %s
-                </div>
-                <div>
-                    <h1 class="font-semibold uppercase">%s</h1>
-                    <h1 class="font-semibold uppercase">%s %s</h1>
-                </div>
-                <div>
-                    <h1 class="font-semibold uppercase">INSTRUCTIONS:</h1>
-                    <p class="font-semibold uppercase">%s</p>
-                </div>
-                <div>
-                    <h1 class="font-semibold uppercase">Time Allowed: %s</h1>
-                </div>
-            </div>
-            TERA, $this->metadata['logo'], $this->generate('<h1 class="font-semibold uppercase"></h1>'), $this->title ?: 'TITLE', $this->metadata['subject_code'], $this->metadata['subject_name'], $this->instructions ?: 'INSTRUCTIONS', $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION');
+            $this->down = TemplateRenderer::renderTera($this->instructions, $this->duration, $this->title, $this->metadata, $this->generate($this->template));
+
         }
 
         if ('jinja' === $this->template) {
-            $this->down = sprintf(<<<'JINJA'
-            <div class="space-y-5 mb-5">
-                <div class="flex items-center space-x-5">
-                    <div class="flex-none border-4 border-black p-2 max-w-xs">
-                        <h1 class="font-semibold uppercase text-sm">%s</h1>
-                        <h1 class="font-semibold uppercase text-sm">%s</h1>
-                        <h1 class="font-semibold uppercase text-sm">%s</h1>
-                        <h1 class="font-semibold text-sm">%s</h1>
-                    </div>
-                    <div class="space-y-5 overflow-hidden">
-                        <p class="flex items-center space-x-2 font-semibold"><span class="flex-none">Name:</span><span class="">%s</span></p>
-                        <p class="flex items-center space-x-2 font-semibold"><span class="flex-none">Index Number:</span><span class="">%s</span></p>
-                    </div>
-                </div>
-                <div class="text-center">
-                    %s
-                </div>
-                <div class="flex items-center justify-between">
-                    <span>%s</span>
-                    <span class="uppercase">%s</span>
-                    <span>%s</span>
-                </div>
-                <p>Instructions: %s</p>
-            </div>
-            JINJA, $this->metadata['subject_code'], $this->title ?: 'TITLE', $this->metadata['subject_name'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', Str::repeat('.', 500), Str::repeat('.', 500), $this->generate('<h1 class="font-semibold uppercase"></h1>'), $this->metadata['level_label'], $this->metadata['subject_name'], $this->duration ? convertMinutesToHoursMinutes($this->duration) : 'DURATION', $this->instructions ?: 'INSTRUCTIONS');
+            $this->down = TemplateRenderer::renderJinja($this->instructions, $this->duration, $this->title, $this->metadata, $this->generate($this->template));
         }
     }
 
     private function generate(string $template): string
     {
         $template = Str::of($template);
-//        $details = [$this->metadata['institution']];
+        $details = [$this->metadata['institution']];
 
         if ('college' === $this->metadata['type']) {
             $details[] = $this->metadata['college'];
