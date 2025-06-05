@@ -38,7 +38,7 @@
 
         <div class="space-y-8">
 
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'owner')
                 @livewire('administrators.admin-navigation', [
     'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
 ])

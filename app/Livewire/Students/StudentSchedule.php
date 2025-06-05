@@ -5,8 +5,7 @@ namespace App\Livewire\Students;
 use Livewire\Component;
 use App\Models\Activity;
 use Carbon\Carbon;
-
-class Schedule extends Component
+class StudentSchedule extends Component
 {
     public $view = 'month'; // month, week, day
     public $currentDate;
@@ -20,13 +19,13 @@ class Schedule extends Component
         'quiz' => true,
         'exam' => true
     ];
-    
+
     public function mount()
     {
         $this->currentDate = Carbon::now();
         $this->updateCalendarDates();
     }
-    
+
     public function updateCalendarDates()
     {
         switch ($this->view) {
@@ -43,10 +42,10 @@ class Schedule extends Component
                 $this->calendarEndDate = $this->currentDate->copy()->endOfDay();
                 break;
         }
-        
+
         $this->loadActivities();
     }
-    
+
     public function loadActivities()
     {
         $types = collect($this->activityTypes)
@@ -55,7 +54,7 @@ class Schedule extends Component
                 })
                 ->keys()
                 ->toArray();
-                
+
         $this->activities = Activity::forStudent(auth()->id())
             ->whereIn('activity_type', $types)
             ->where(function($query) {
@@ -80,7 +79,7 @@ class Schedule extends Component
                 ];
             });
     }
-    
+
     private function getEventClassName($activity)
     {
         // Define color classes for different activity types
@@ -91,16 +90,16 @@ class Schedule extends Component
             'quiz' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
             'exam' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
         ];
-        
+
         return $colors[$activity->activity_type] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
-    
+
     public function changeView($view)
     {
         $this->view = $view;
         $this->updateCalendarDates();
     }
-    
+
     public function nextPeriod()
     {
         switch ($this->view) {
@@ -114,10 +113,10 @@ class Schedule extends Component
                 $this->currentDate = $this->currentDate->addDay();
                 break;
         }
-        
+
         $this->updateCalendarDates();
     }
-    
+
     public function previousPeriod()
     {
         switch ($this->view) {
@@ -131,20 +130,20 @@ class Schedule extends Component
                 $this->currentDate = $this->currentDate->subDay();
                 break;
         }
-        
+
         $this->updateCalendarDates();
     }
-    
+
     public function createActivity()
     {
         return redirect()->route('student.activities.create');
     }
-    
+
     public function viewActivity($id)
     {
         return redirect()->route('student.activities.show', $id);
     }
-    
+
     public function render()
     {
         return view('livewire.students.schedule');

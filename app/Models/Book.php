@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Book extends Model
 {
@@ -54,4 +55,14 @@ class Book extends Model
     public function approvals(){
         return $this->hasMany(BookApproval::class);
     }
+
+    /**
+     * The students that have access to this book.
+     */
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class)
+            ->withTimestamps();
+    }
+
 }

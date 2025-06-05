@@ -26,6 +26,8 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubtopicController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use App\Livewire\Teachers\EssayGrader;
+use App\Models\Assessment;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\RoleController;
@@ -281,6 +283,19 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', App\Livewire\Administrators\Dashboard::class)->name('admin.dashboard');
+});
+
+
+Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
+    Route::get('/essays', function () {
+        $assessments = Assessment::whereHas('responses', fn($q) =>
+        $q->whereJsonContains('data->needs_grading', true)
+        )->with('student.user')->get();
+
+        return view('livewire.teachers.essay-dashboard', compact('assessments'));
+    })->name('teacher.essays.index');
+
+    Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
 });
 
 

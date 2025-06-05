@@ -33,7 +33,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Roles</label>
-                    <div class="space-y-2">
+                    <div class="flex flex-wrap gap-4">
                         @foreach($roles as $role)
                             <label class="flex items-center">
                                 <input type="checkbox" wire:model="roleIds" value="{{ $role->id }}" class="mr-2">
@@ -43,6 +43,7 @@
                     </div>
                     @error('roleIds') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
+
             </div>
 
             <div class="mt-4 flex space-x-2">
@@ -65,8 +66,10 @@
             <h2 class="text-lg font-semibold">Users List</h2>
 
             <div>
-                <input type="text" wire:model.debounce.300ms="searchTerm" placeholder="Search users..."
-                    class="p-2 border rounded">
+                <form wire:submit.prevent>
+                    <input name="userSearchTerm" type="text" placeholder="Search users...." :has-label="false" class="p-2 border rounded" wire:input="$refresh" wire:model.debounce.300ms="userSearchTerm" />
+                </form>
+
             </div>
         </div>
 
@@ -81,7 +84,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($users as $user)
+                    @foreach($this->users as $user)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $user->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
@@ -104,7 +107,7 @@
         </div>
 
         <div class="mt-4">
-            {{ $users->links() }}
+            {{ $this->users->links() }}
         </div>
     </div>
 </div>

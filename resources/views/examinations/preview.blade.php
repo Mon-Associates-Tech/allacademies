@@ -51,7 +51,7 @@
                     <ol class="list-decimal mb-12">
                         @foreach ($section['questions'] as $mc)
                             <li>
-                                {{ $mc->question->html }}
+                                {!!  json_decode($mc->question)->up !!}
                                 <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                      class="grid gap-x-5">
                                     @foreach (['a', 'b', 'c', 'd', 'e'] as $o)
@@ -87,7 +87,7 @@
                     <ol class="list-decimal mb-12">
                         @foreach ($section['questions'] as $es)
                             <li class="mb-8">
-                                {{ $es->question->html }}
+                                {!!  json_decode($es->question)->up !!}
                                 <p class="text-sm text-right">[{{ $es->score }} {{ Str::plural('mark', $es->score) }}
                                     ]</p>
                             </li>

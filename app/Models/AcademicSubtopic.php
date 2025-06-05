@@ -15,6 +15,10 @@ class AcademicSubtopic extends Model
         return $this->belongsTo(AcademicTopic::class);
     }
 
+    public function topic(): BelongsTo {
+        return $this->belongsTo(AcademicTopic::class, 'academic_topic_id');
+    }
+
     protected $fillable = [
         'name',
         'academic_topic_id',

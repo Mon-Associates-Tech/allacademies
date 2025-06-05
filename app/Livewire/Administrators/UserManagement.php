@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Administrators;
 
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Log;
 
 class UserManagement extends Component
 {
@@ -16,10 +18,11 @@ class UserManagement extends Component
     public $email;
     public $password;
     public $roleIds = [];
-    public $searchTerm = '';
+    public $userSearchTerm = '';
     public $isEditing = false;
     public $editingUserId;
     public $roles;
+    public $testMessage;
 
     protected $rules = [
         'name' => 'required|min:3',
@@ -106,15 +109,32 @@ class UserManagement extends Component
         $this->resetValidation();
     }
 
-    public function render()
-    {
-        $users = User::where('name', 'like', '%'.$this->searchTerm.'%')
-            ->orWhere('email', 'like', '%'.$this->searchTerm.'%')
+    #[Computed]
+   public function getUsersProperty()
+{
+    Log::info('Fetching users for searchTerm: ' . $this->userSearchTerm);
+    return User::when($this->userSearchTerm, function ($query) {
+                return $query->where('name', 'like', '%' . $this->userSearchTerm . '%')
+                             ->orWhere('email', 'like', '%' . $this->userSearchTerm . '%');
+            })
             ->with('roles')
             ->paginate(10);
+}
 
-        return view('livewire.administrators.user-management', [
-            'users' => $users
-        ]);
+    public function updatedUserSearchTerm()
+    {
+        $this->resetPage();
+        $this->dispatch('$refresh');
+    }
+
+    public function getTestMessageProperty()
+    {
+        return "Computed Property Works!";
+    }
+    public function render()
+    {
+
+
+        return view('livewire.administrators.user-management');
     }
 }

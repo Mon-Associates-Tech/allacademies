@@ -1,28 +1,17 @@
-<x-app-layout :sidebarVariant="'v1'" :headerVariant="'v2'" title="{{ __('Student Dashboard') }}" pageName="Student Dashboard">
     <div>
-        <!-- Tab content based on activeTab -->
         @if($activeTab === 'dashboard')
-            @livewire('students.dashboard', [
-                'recentBooks' => $recentBooks,
-                'bookCount' => $bookCount,
-                'recentAssessments' => $recentAssessments,
-                'upcomingActivities' => $upcomingActivities,
-                'upcomingActivitiesCount' => $upcomingActivitiesCount,
-                'overallScore' => $overallScore,
-                'subjectPerformance' => $subjectPerformance
-            ])
+            @livewire('students.overview')
         @elseif($activeTab === 'self-assessment')
             @livewire('students.self-assessment')
         @elseif($activeTab === 'my-books')
             @livewire('students.books')
         @elseif($activeTab === 'schedule')
-            @livewire('students.schedule')
+            @livewire('students.student-schedule')
         @elseif($activeTab === 'performance')
-            @livewire('students.performance')
+            @livewire('students.performance-overview')
         @elseif($activeTab === 'profile')
-            @livewire('students.profile')
+            @livewire('students.student-profile')
         @elseif($activeTab === 'activity-log')
             @livewire('students.activity-logs')
         @endif
     </div>
-</x-app-layout>

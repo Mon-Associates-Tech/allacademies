@@ -31,14 +31,9 @@ class Teacher extends Model
         return $this->hasMany(Student::class);
     }
 
-    public function lessons()
+    public function assignedStudents()
     {
-        return $this->hasMany(Lesson::class);
-    }
-
-    public function lessonNotes()
-    {
-        return $this->hasMany(LessonNote::class);
+        return $this->belongsToMany(Student::class, 'teacher_student')->withTimestamps();
     }
 
     public function subjects(){

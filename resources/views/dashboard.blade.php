@@ -1,4 +1,4 @@
-<x-layouts.app title="Dashboard" :has-action="false">
+<x-layouts.app :has-action="false">
 
 
     <div class="grid grid-cols-12 gap-6 hidden">
@@ -29,12 +29,12 @@
     @if(Auth::user()->role === 'librarian')
         @livewire('librarians.dashboard')
     @endif
-    @if(Auth::user()->role === 'admin')
+    @if(Auth::user()->role === 'admin' ||  Auth::user()->role === 'owner')
         @livewire('administrators.dashboard')
     @endif
 
     @if ($academicSubjects->count())
-    <section class="mt-10 bg-red-50 w-full mx-auto">
+    <section class="mt-10 hidden w-full mx-auto">
 
 
 

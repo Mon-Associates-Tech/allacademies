@@ -1,5 +1,5 @@
 import { Livewire } from '../../vendor/livewire/livewire/dist/livewire.esm';
-
+import {Chart}   from 'chart.js'
 import { marked } from "marked";
 import katex from "katex";
 import axios from 'axios'
@@ -10,6 +10,7 @@ import axios from 'axios'
 
 //window.Alpine = Alpine
 window.marked = marked
+window.Chart = Chart
 window.axios = axios
 
 marked.use({

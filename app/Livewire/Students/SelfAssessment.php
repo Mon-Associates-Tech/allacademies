@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\EssayQuestion;
+use App\Models\MultipleChoiceQuestion;
+use App\Models\TrueOrFalseQuestion;
 use Livewire\Component;
 use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicTopic as Topic;
@@ -9,8 +12,6 @@ use App\Models\AcademicSubtopic as Subtopic;
 use App\Models\Question;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class SelfAssessment extends Component
 {
@@ -20,7 +21,7 @@ class SelfAssessment extends Component
     public $selectedSubject = null;
     public $selectedTopic = null;
     public $selectedSubtopic = null;
-    public $questionTypes = ['multiple_choice' => true, 'true_false' => true, 'essay' => false];
+    public $questionTypes = ['multiple_choice_question' => true, 'true_or_false_question' => true, 'essay_question' => false];
     public $questionCount = 10;
     public $difficulty = 'all'; // all, easy, medium, hard
 
@@ -43,7 +44,7 @@ class SelfAssessment extends Component
     public function updatedSelectedSubject()
     {
         if ($this->selectedSubject) {
-            $this->topics = Topic::where('subject_id', $this->selectedSubject)->get();
+            $this->topics = Topic::where('academic_subject_id', $this->selectedSubject)->get();
         } else {
             $this->topics = collect();
         }
@@ -54,7 +55,7 @@ class SelfAssessment extends Component
     public function updatedSelectedTopic()
     {
         if ($this->selectedTopic) {
-            $this->subtopics = Subtopic::where('topic_id', $this->selectedTopic)->get();
+            $this->subtopics = Subtopic::where('academic_topic_id', $this->selectedTopic)->get();
         } else {
             $this->subtopics = collect();
         }
@@ -63,6 +64,9 @@ class SelfAssessment extends Component
 
     public function startAssessment()
     {
+        $this->reset(['questions', 'responses', 'assessment']);
+
+
         // Validate setup selections
         $this->validate([
             'selectedSubject' => 'required',
@@ -70,70 +74,95 @@ class SelfAssessment extends Component
         ]);
 
         // Ensure at least one question type is selected
-        if (!$this->questionTypes['multiple_choice'] &&
-            !$this->questionTypes['true_false'] &&
-            !$this->questionTypes['essay']) {
+        if (!$this->questionTypes['multiple_choice_question'] &&
+            !$this->questionTypes['true_or_false_question'] &&
+            !$this->questionTypes['essay_question']) {
             session()->flash('error', 'Please select at least one question type');
             return;
         }
 
-        // Get applicable question types
-        $questionTypes = [];
-        if ($this->questionTypes['multiple_choice']) $questionTypes[] = 'multiple_choice';
-        if ($this->questionTypes['true_false']) $questionTypes[] = 'true_false';
-        if ($this->questionTypes['essay']) $questionTypes[] = 'essay';
+        // Build query per question type
+        $allQuestions = collect();
 
-        // Build question query
-        $query = Question::query()->whereIn('question_type', $questionTypes);
-
-        // Apply difficulty filter if specified
-        if ($this->difficulty !== 'all') {
-            $query->where('difficulty_level', $this->difficulty);
+        // Multiple Choice Questions
+        if ($this->questionTypes['multiple_choice_question']) {
+            $query = MultipleChoiceQuestion::query();
+            if ($this->difficulty !== 'all') {
+                $query->where('difficulty_level', $this->difficulty);
+            }
+            $this->applyContentFilters($query);
+            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'multiple_choice_question', 'model' => $q]));
         }
 
-        // Apply content filters (subject, topic, subtopic)
-        if ($this->selectedSubtopic) {
-            $query->where('subtopic_id', $this->selectedSubtopic);
-        } elseif ($this->selectedTopic) {
-            $query->whereHas('subtopic', function($q) {
-                $q->where('topic_id', $this->selectedTopic);
-            });
-        } elseif ($this->selectedSubject) {
-            $query->whereHas('subtopic.topic', function($q) {
-                $q->where('subject_id', $this->selectedSubject);
-            });
+        // True/False Questions
+        if ($this->questionTypes['true_or_false_question']) {
+            $query = TrueOrFalseQuestion::query();
+            if ($this->difficulty !== 'all') {
+                $query->where('difficulty_level', $this->difficulty);
+            }
+            $this->applyContentFilters($query);
+            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'true_or_false_question', 'model' => $q]));
         }
 
-        // Get questions
-        $this->questions = $query->inRandomOrder()->take($this->questionCount)->get();
+        // Essay Questions
+        if ($this->questionTypes['essay_question']) {
+            $query = EssayQuestion::query();
+            if ($this->difficulty !== 'all') {
+                $query->where('difficulty_level', $this->difficulty);
+            }
+            $this->applyContentFilters($query);
+            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'essay_question', 'model' => $q]));
+        }
 
-        if (count($this->questions) === 0) {
+        // Check if any questions were found
+        if ($allQuestions->isEmpty()) {
             session()->flash('error', 'No questions found matching your criteria');
             return;
         }
 
-        // Initialize responses array
+        // Shuffle and limit
+        $randomQuestions = $allQuestions->shuffle()->take($this->questionCount);
+
+        // Persist these questions into the `questions` table
+        $this->questions = [];
+
+        foreach ($randomQuestions as $item) {
+            $questionModel = $item['model'];
+            $question = Question::create([
+                'questionable_type' => get_class($questionModel),
+                'questionable_id' => $questionModel->id,
+                'subtopic_id' => $questionModel->subtopic_id,
+                'topic_id' => $questionModel->academic_topic_id,
+                'difficulty_level' => $questionModel->difficulty_level,
+                'points' => $questionModel->score,
+                'user_id' => auth()->user()->id,
+            ]);
+
+            $this->questions[] = $question;
+        }
+
+        // Initialize responses array using actual question IDs
         foreach ($this->questions as $index => $question) {
             $this->responses[$index] = [
                 'question_id' => $question->id,
-                'response' => $question->question_type === 'essay' ? '' : null,
+                'response' => $this->getTypeFromClassName(class_basename($question->questionable_type)) === 'essay_question' ? '' : null,
                 'is_answered' => false
             ];
         }
 
-        // Calculate time limit: 1 min for MC/TF, 5 min for essay
+        // Calculate time limit
         $this->timeLimitSeconds = 0;
         foreach ($this->questions as $question) {
-            if ($question->question_type === 'essay') {
-                $this->timeLimitSeconds += 5 * 60; // 5 minutes per essay
+            if ($this->getTypeFromClassName(class_basename($question->questionable_type)) === 'essay_question') {
+                $this->timeLimitSeconds += 5 * 60; // 5 minutes
             } else {
-                $this->timeLimitSeconds += 1 * 60; // 1 minute per MC/TF
+                $this->timeLimitSeconds += 1 * 60; // 1 minute
             }
         }
 
         // Create assessment record
         $this->assessment = Assessment::create([
-            'student_id' => auth()->id(),
+            'student_id' => auth()->user()->student->id,
             'subject_id' => $this->selectedSubject,
             'topic_id' => $this->selectedTopic,
             'subtopic_id' => $this->selectedSubtopic,
@@ -144,26 +173,44 @@ class SelfAssessment extends Component
 
         // Set timer
         $this->timeRemaining = $this->timeLimitSeconds;
-        $this->dispatchBrowserEvent('start-timer', ['seconds' => $this->timeRemaining]);
+        $this->dispatch('start-timer', ['seconds' => $this->timeRemaining]);
 
         $this->step = 'assessment';
     }
+
+
 
     public function saveResponse($index, $response)
     {
         $question = $this->questions[$index];
 
+
+        $questionType = $this->getTypeFromClassName(class_basename($question->questionable_type));
+        if (!$questionType) {
+            session()->flash('error', "Unknown question type.");
+            return;
+        }
+
         $this->responses[$index]['response'] = $response;
         $this->responses[$index]['is_answered'] = true;
 
-        // For immediate grading of multiple choice and true/false
-        if ($question->question_type !== 'essay') {
-            $isCorrect = $response === $question->correct_answer;
+        // Only calculate correctness for non-essay questions
+        if ($questionType !== 'essay_question') {
+            $isCorrect = false;
+
+            // Handle correct answer logic based on question model
+            if (isset($question->questionable?->answer)) {
+                $isCorrect = $response === $question->questionable->answer;
+            } elseif (isset($question->questionable?->answer)) {
+                $isCorrect = $response === $question->questionable->answer;
+            }
+
             $this->responses[$index]['is_correct'] = $isCorrect;
             $this->responses[$index]['score'] = $isCorrect ? $question->points : 0;
             $this->responses[$index]['max_score'] = $question->points;
         }
     }
+
 
     public function nextQuestion()
     {
@@ -204,65 +251,116 @@ class SelfAssessment extends Component
         $maxScore = 0;
         $needsGrading = false;
 
-        // Save responses and calculate score
-        foreach ($this->responses as $index => $responseData) {
-            $question = $this->questions[$index];
-            $response = null;
-            $score = 0;
-            $isCorrect = false;
+        // Score breakdown by question type
+        $scoreBreakdown = [
+            'multiple_choice' => ['score' => 0, 'max_score' => 0],
+            'true_false'      => ['score' => 0, 'max_score' => 0],
+            'essay'           => ['score' => 0, 'max_score' => 0],
+        ];
 
-            if ($question->question_type === 'essay') {
-                $response = $responseData['response'];
-                $needsGrading = true;
-                // Essay max score added to total, but actual score pending teacher grading
-                $maxScore += $question->points;
-            } else {
-                $response = $responseData['response'];
-                $isCorrect = $response === $question->correct_answer;
-                $score = $isCorrect ? $question->points : 0;
-                $totalScore += $score;
-                $maxScore += $question->points;
+        // Build full assessment data
+        $responseData = [
+            'assessment_id' => $this->assessment->id,
+            'started_at' => $this->assessment->start_time,
+            'ended_at' => now(),
+            'questions' => [],
+        ];
+
+        foreach ($this->responses as $index => $res) {
+            $question = $this->questions[$index];
+            $questionType = $this->getTypeFromClassName(class_basename($question->questionable_type));
+
+            $item = $this->buildQuestionResponseData($question, $res);
+            $responseData['questions'][] = $item;
+
+            // Map to breakdown key
+            $typeKey = match($questionType) {
+                'multiple_choice_question' => 'multiple_choice',
+                'true_or_false_question'   => 'true_false',
+                'essay_question'           => 'essay',
+                default => null,
+            };
+
+            if ($typeKey && isset($scoreBreakdown[$typeKey])) {
+                if ($questionType === 'essay_question') {
+                    $scoreBreakdown[$typeKey]['max_score'] += $question->points;
+                    $needsGrading = true;
+                } else {
+                    $scoreBreakdown[$typeKey]['score'] += $item['score'];
+                    $scoreBreakdown[$typeKey]['max_score'] += $item['max_score'];
+                }
             }
 
-            // Save response
-            AssessmentResponse::create([
-                'assessment_id' => $this->assessment->id,
-                'question_id' => $question->id,
-                'response' => $response,
-                'score' => $score,
-                'max_score' => $question->points,
-                'is_correct' => $question->question_type !== 'essay' ? $isCorrect : null,
-            ]);
+            // Aggregate total score and max score
+            if ($questionType !== 'essay_question') {
+                $totalScore += $item['score'];
+                $maxScore += $item['max_score'];
+            } else {
+                $maxScore += $question->points;
+            }
         }
 
-        // Update assessment
+        // Calculate percentages
+        foreach ($scoreBreakdown as $key => $data) {
+            $scoreBreakdown[$key]['percentage'] = $data['max_score'] > 0
+                ? round(($data['score'] / $data['max_score']) * 100)
+                : 0;
+        }
+
+        // Add breakdown to response
+        $responseData['byType'] = $scoreBreakdown;
+
+        // Calculate time spent in minutes
+        $startTime = \Carbon\Carbon::parse($this->assessment->start_time);
+        $endTime = \Carbon\Carbon::now();
+        $timeSpentSeconds = $endTime->diffInSeconds($startTime);
+
+        $responseData['time_spent'] = round($timeSpentSeconds / 60, 2); // in minutes
+
+
+        // Add totals
+        $responseData['total_score'] = $totalScore;
+        $responseData['max_score'] = $maxScore;
+        $responseData['percentage_score'] = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0;
+        $responseData['needs_grading'] = $needsGrading;
+
+        // Save to AssessmentResponse model
+
+
+        // Update assessment status
         $this->assessment->end_time = now();
         $this->assessment->total_score = $totalScore;
         $this->assessment->max_score = $maxScore;
-        $this->assessment->percentage_score = $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0;
+        $this->assessment->percentage_score = $responseData['percentage_score'];
         $this->assessment->status = $needsGrading ? 'needs_grading' : 'completed';
         $this->assessment->save();
 
-        // Prepare result data
-        $this->result = [
-            'totalScore' => $totalScore,
-            'maxScore' => $maxScore,
-            'percentageScore' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0,
-            'needsGrading' => $needsGrading,
-            'timeSpent' => Carbon::parse($this->assessment->start_time)->diffInMinutes($this->assessment->end_time),
-            'byType' => [
-                'multiple_choice' => $this->calculateScoreByType('multiple_choice'),
-                'true_false' => $this->calculateScoreByType('true_false'),
-                'essay' => $this->calculateScoreByType('essay'),
-            ]
-        ];
-
+        // Set result for UI
+        $this->result = $responseData;
         $this->step = 'results';
     }
 
+
+
     private function calculateScoreByType($type)
     {
-        $questions = $this->questions->where('question_type', $type);
+        // Map short type to full class name
+        $classMap = [
+            'multiple_choice_question' => 'MultipleChoiceQuestion',
+            'true_or_false_question' => 'TrueOrFalseQuestion',
+            'essay_question' => 'EssayQuestion',
+        ];
+
+        $className = $classMap[$type] ?? null;
+
+        if (!$className) {
+            return null;
+        }
+
+        // Filter questions by questionable_type class name
+        $questions = $this->questions->filter(fn($q) => $this->getQuestionType($q) === $className);
+
+
         if ($questions->isEmpty()) {
             return null;
         }
@@ -274,10 +372,7 @@ class SelfAssessment extends Component
             $response = $this->responses[$index];
             $maxScore += $question->points;
 
-            if ($type === 'essay') {
-                // Essays are pending grading
-                continue;
-            }
+            if ($type === 'essay_question') continue;
 
             if ($response['is_correct']) {
                 $totalScore += $question->points;
@@ -286,10 +381,27 @@ class SelfAssessment extends Component
 
         return [
             'score' => $totalScore,
-            'maxScore' => $maxScore,
+            'max_score' => $maxScore,
             'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0
         ];
     }
+    private function getQuestionType($question)
+    {
+        return strtolower(class_basename($question->questionable_type));
+    }
+
+    private function getTypeFromClassName($className)
+    {
+        $typeMap = [
+            'MultipleChoiceQuestion' => 'multiple_choice_question',
+            'TrueOrFalseQuestion' => 'true_false_question',
+            'EssayQuestion' => 'essay_question',
+        ];
+
+        return $typeMap[$className] ?? null;
+    }
+
+
 
     public function startNewAssessment()
     {
@@ -300,8 +412,95 @@ class SelfAssessment extends Component
         $this->step = 'setup';
     }
 
+    private function applyContentFilters($query)
+    {
+        if ($this->selectedSubtopic) {
+            // Only include questions with this specific subtopic
+            $query->where('academic_subtopic_id', $this->selectedSubtopic);
+        } elseif ($this->selectedTopic) {
+            // Include:
+            // 1. Questions linked via subtopic.topic_id = selectedTopic
+            // 2. Questions directly linked to topic_id = selectedTopic
+            $query->where(function ($q) {
+                $q->whereHas('subtopic', function ($s) {
+                    $s->where('academic_topic_id', $this->selectedTopic);
+                })->orWhere('academic_topic_id', $this->selectedTopic);
+            });
+        } elseif ($this->selectedSubject) {
+            // Include:
+            // 1. Questions linked via subtopic → topic → subject
+            // 2. Questions directly linked to topic → subject
+            $query->where(function ($q) {
+                $q->whereHas('subtopic.topic', function ($t) {
+                    $t->where('academic_subject_id', $this->selectedSubject);
+                })->orWhereHas('topic', function ($t) {
+                    $t->where('academic_subject_id', $this->selectedSubject);
+                });
+            });
+        }
+    }
+
+    public function getCurrentQuestion()
+    {
+        return $this->questions[$this->currentQuestionIndex] ?? null;
+    }
+
+    private function buildQuestionResponseData($question, $response)
+    {
+        $questionType = $this->getTypeFromClassName(class_basename($question->questionable_type));
+        $model = $question->questionable;
+        $correctAnswer = null;
+        $userAnswer = $response['response'];
+        $isCorrect = false;
+        $score = 0;
+        $maxScore = $question->points;
+
+        // Get correct answer based on type
+        if ($questionType === 'multiple_choice_question' || $questionType === 'true_false_question') {
+            $correctAnswer = $model->correct_answer ?? $model->answer ?? null;
+            $isCorrect = $userAnswer && $userAnswer === $correctAnswer;
+            $score = $isCorrect ? $maxScore : 0;
+        } elseif ($questionType === 'essay_question') {
+            $correctAnswer = null; // Not available yet
+            $score = 0;
+        }
+
+        // Build question text and options
+        $questionText = $model->question->down ?? '';
+        $options = [];
+
+        if ($questionType === 'multiple_choice_question') {
+            foreach (['a', 'b', 'c', 'd', 'e'] as $letter) {
+                $optionKey = 'option_' . $letter;
+                if (!empty($model->{$optionKey}?->down)) {
+                    $options[] = ['label' => strtoupper($letter), 'value' => $model->{$optionKey}->down];
+                }
+            }
+        }
+
+        return [
+            'question_id' => $question->id,
+            'question_type' => $questionType,
+            'difficulty_level' => $question->difficulty_level,
+            'question_text' => $questionText,
+            'options' => $options,
+            'user_answer' => $userAnswer,
+            'correct_answer' => $correctAnswer,
+            'score' => $score,
+            'max_score' => $maxScore,
+            'is_correct' => $isCorrect,
+        ];
+    }
+
+
     public function render()
     {
-        return view('livewire.students.self-assessment');
+        return view('livewire.students.self-assessment', [
+            'subjects' => Subject::all(),
+            'topics' => Topic::where('academic_subject_id', $this->selectedSubject)->get(),
+            'subtopics' => Subtopic::whereHas('topic', function ($q) {
+                $q->where('academic_subject_id', $this->selectedSubject);
+            })->get(),
+        ]);
     }
 }

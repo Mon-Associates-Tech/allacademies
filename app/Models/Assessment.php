@@ -32,49 +32,21 @@ class Assessment extends Model
 
     public function subject()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(AcademicSubject::class);
     }
 
     public function topic()
     {
-        return $this->belongsTo(Topic::class);
+        return $this->belongsTo(AcademicTopic::class);
     }
 
     public function subtopic()
     {
-        return $this->belongsTo(Subtopic::class);
+        return $this->belongsTo(AcademicSubtopic::class);
     }
 
     public function responses()
     {
         return $this->hasMany(AssessmentResponse::class);
-    }
-}
-
-class AssessmentResponse extends Model
-{
-    protected $fillable = [
-        'assessment_id',
-        'question_id',
-        'response',
-        'score',
-        'max_score',
-        'is_correct',
-        'feedback',
-    ];
-
-    protected $casts = [
-        'response' => 'array', // For multiple choice selections
-        'is_correct' => 'boolean',
-    ];
-
-    public function assessment()
-    {
-        return $this->belongsTo(Assessment::class);
-    }
-
-    public function question()
-    {
-        return $this->belongsTo(Question::class);
     }
 }

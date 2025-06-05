@@ -1,37 +1,37 @@
+
 @props(['action' => null,
 'titleAlignCenter' => false,
-'breadcrumb' => null, 'title' => null, 'hasAction' => false, 'pageName' => null, 'action_link' => '', 'actionLinkText' => ''])
+'breadcrumb' => null,
+'title' => null,
+'hasAction' => false,
+'pageName' => null,
+'action_link' => '',
+'actionLinkText' => ''])
 
-    <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" :class="{ 'dark': $store.darkMode.on }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name') }}  {{ $pageName ? ' - '.  $pageName : '' }}</title>
+
+    <title>{{ config('app.name') }}{{ $pageName ? ' - ' . $pageName : '' }}</title>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400..900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Scripts -->
+    <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
-    <!-- Styles -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @livewireStyles
 
     <script>
-        if (localStorage.getItem('dark-mode') === 'false' || !('dark-mode' in localStorage)) {
-            document.querySelector('html').classList.remove('dark');
-            document.querySelector('html').style.colorScheme = 'light';
-        } else {
-            document.querySelector('html').classList.add('dark');
-            document.querySelector('html').style.colorScheme = 'dark';
-        }
-    </script>
-
-    <script>
         document.addEventListener('alpine:initializing', () => {
+            // Define stores
+            // Delete confirmation store
             Alpine.store('deleteForm', {
                 open: false,
                 title: null,
@@ -39,145 +39,127 @@
                 action: null,
                 button: null,
                 show(title, content, action, button = 'Delete') {
-                    this.title = title
-                    this.content = content
-                    this.action = action
-                    this.button = button
-                    this.open = true
+                    this.title = title;
+                    this.content = content;
+                    this.action = action;
+                    this.button = button;
+                    this.open = true;
                 },
                 hide() {
-                    this.open = false
+                    this.open = false;
                 }
-            })
-        })
+            });
+
+            // Sidebar store
+            Alpine.store('sidebar', {
+                open: false,
+                expanded: localStorage.getItem('sidebar-expanded') === 'true',
+                toggleOpen() { this.open = !this.open; },
+                toggleExpanded() {
+                    this.expanded = !this.expanded;
+                    localStorage.setItem('sidebar-expanded', this.expanded);
+                }
+            });
+
+            // Dark mode store
+
+                // Set up global state
+                window.isDarkModeOn = localStorage.getItem('dark-mode') === 'true';
+
+                 window.toggleDarkMode = function () {
+                window.isDarkModeOn = !window.isDarkModeOn;
+                localStorage.setItem('dark-mode', window.isDarkModeOn);
+                updateDarkMode();
+            }
+
+                function updateDarkMode() {
+                document.documentElement.classList.toggle('dark', window.isDarkModeOn);
+                document.documentElement.style.colorScheme = window.isDarkModeOn ? 'dark' : 'light';
+            }
+
+                // Initialize on load
+                document.addEventListener('DOMContentLoaded', () => {
+                // Apply saved preference or system default
+                if (localStorage.getItem('dark-mode') === null) {
+                    window.isDarkModeOn = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+                updateDarkMode();
+            });
+
+    });
+
+
     </script>
 
 </head>
 <body
-    class="font-inter antialiased bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400"
+    class="font-sans antialiased bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400"
     :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
     x-data="{}"
 >
+    <!-- Page wrapper -->
+    <div class="flex h-screen overflow-hidden">
 
+        <!-- Sidebar -->
+        <x-app.sidebar :variant="$attributes['sidebarVariant']" />
 
-<script>
-    // Set initial dark mode from localStorage
-    if (localStorage.getItem('dark-mode') === 'true') {
-        document.documentElement.classList.add('dark');
-        document.documentElement.style.colorScheme = 'dark';
-    } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.style.colorScheme = 'light';
-    }
-</script>
+        <!-- Content area -->
+        <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
+            <!-- Header -->
+            <x-app.header :variant="$attributes['headerVariant']"/>
 
+            <!-- Main content -->
+            <main class="mt-5">
+                <!-- Breadcrumb -->
+                <div class="max-w-5xl mx-auto print:hidden">{{ $breadcrumb }}</div>
 
-<!-- Page wrapper -->
-<div class="flex h-[100dvh] overflow-hidden">
+                <!-- Alerts -->
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
+                    <x-alert.success/>
+                    <x-alert.danger/>
+                </div>
 
-    <x-app.sidebar :variant="$attributes['sidebarVariant']"  />
+                <!-- Page header -->
+                <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+                    <div class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
+                        <div class="text-lg md:text-2xl print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
+                            {{ $title }}
+                        </div>
 
-    <!-- Content area -->
-    <div
-        class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden @if($attributes['background']){{ $attributes['background'] }}@endif"
-        x-ref="contentarea">
-
-        <x-app.header :variant="$attributes['headerVariant']"/>
-
-        <main class="grow mt-4">
-            <div class="max-w-5xl mx-auto print:hidden">{{$breadcrumb}}</div>
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
-                <x-alert.success/>
-                <x-alert.danger/>
-            </div>
-            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 text-lg font-bold py-3 flex" :class="@js($titleAlignCenter) ? 'justify-center' : 'justify-between'">
-                <div class="text-lg md:text-2xl print:hidden font-bold w-full" :class="@js($titleAlignCenter) ? 'text-center' : 'text-start'">{{$title}}</div>
-                <div class="text-sm text-opacity-50! print:hidden">
-                    <div class="my-auto">
-
-                        @if(isset($hasAction) && $hasAction && !isset($action))
-                            @can('administrate')
-                                <x-link.primary class="text-nowrap whitespace-nowrap"
-                                                to="{{$action_link ?? request()->route()->path}}">
-                                    {{$actionLinkText ?? 'Add Action'}}
-                                </x-link.primary>
-                            @endcan
-                        @else
-                            {{$action}}
-                        @endif
-
+                        <div class="text-sm opacity-50 print:hidden">
+                            <div class="my-auto">
+                                @if(isset($hasAction) && $hasAction && !isset($action))
+                                    @can('administrate')
+                                        <x-link.primary class="whitespace-nowrap"
+                                                        to="{{ $action_link ?? request()->route()->path }}">
+                                            {{ $actionLinkText ?? 'Add Action' }}
+                                        </x-link.primary>
+                                    @endcan
+                                @else
+                                    {{ $action }}
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="transition-all duration-300 px-4 sm:px-6 lg:px-8 mb-12 w-full overflow-x-hidden">
-                <div
-                    x-data="{}"
-                    :class="{
-            'max-w-5xl mx-auto': !$store.sidebar.collapsed && !$store.sidebar.hidden,
-            'max-w-6xl mx-auto': $store.sidebar.collapsed || $store.sidebar.hidden
-        }"
-                >
-                    {{ $slot }}
+
+                <!-- Page content -->
+                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-x-hidden">
+                    <div
+                        x-data="{}"
+                        class="w-full px-4 sm:px-6 lg:px-8 "
+                    >
+                        <div class="" style="">
+                            {{ $slot }}
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-
-
-        </main>
-
+            </main>
+        </div>
     </div>
 
-</div>
-
-{{--@livewireScripts--}}
-@livewireScriptConfig
+    <!-- Scripts -->
+    @livewireScriptConfig
 </body>
-
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('sidebar', {
-            open: false,
-            expanded: localStorage.getItem('sidebar-expanded') === 'true',
-            toggleOpen() {
-                this.open = !this.open;
-                console.log('open up')
-            },
-            toggleExpanded() {
-                this.expanded = !this.expanded;
-                localStorage.setItem('sidebar-expanded', this.expanded);
-                console.log('expanded')
-            }
-        });
-    });
-</script>
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('darkMode', {
-            // Initialize with the actual current state from DOM
-            on: document.documentElement.classList.contains('dark'),
-            toggle() {
-                this.on = !this.on
-                localStorage.setItem('dark-mode', this.on)
-                this.updateDOM()
-            },
-            updateDOM() {
-                if (this.on) {
-                    document.documentElement.classList.add('dark')
-                    document.documentElement.style.colorScheme = 'dark'
-                } else {
-                    document.documentElement.classList.remove('dark')
-                    document.documentElement.style.colorScheme = 'light'
-                }
-            }
-        })
-    })
-</script>
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.effect(() => {
-            // This will re-run anytime $store.darkMode.on changes
-            document.documentElement.classList.toggle('dark', Alpine.store('darkMode').on);
-            document.documentElement.style.colorScheme = Alpine.store('darkMode').on ? 'dark' : 'light';
-        })
-    })
-</script>
+</html>

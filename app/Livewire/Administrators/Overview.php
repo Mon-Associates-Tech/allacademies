@@ -11,6 +11,8 @@ use App\Models\StudentGroup;
 use App\Models\BookBorrowing;
 use App\Models\BookSubscription;
 use App\Models\BookApproval;
+use App\Models\Librarian;
+use App\Models\Author;
 
 class Overview extends Component
 {
@@ -25,6 +27,9 @@ class Overview extends Component
             'pendingApprovals' => BookApproval::where('status', 'pending')->count(),
             'activeBorrowings' => BookBorrowing::where('status', 'borrowed')->count(),
             'activeSubscriptions' => BookSubscription::where('status', 'active')->count(),
+            // Adding new statistics for Librarians and Authors
+            'totalLibrarians' => Librarian::count(),
+            'totalAuthors' => Author::count(),
         ];
 
         $recentUsers = User::latest()->take(5)->get();

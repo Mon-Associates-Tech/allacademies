@@ -3,6 +3,7 @@
 namespace App\Livewire\Administrators;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Request;
 
 class AdminNavigation extends Component
 {
@@ -12,7 +13,8 @@ class AdminNavigation extends Component
 
     public function mount($activeTab = 'overview')
     {
-        $this->activeTab = $activeTab;
+        // Check if activeTab is set in the query parameters
+        $this->activeTab = Request::input('activeTab', $activeTab);
     }
 
     public function setActiveTab($tab)

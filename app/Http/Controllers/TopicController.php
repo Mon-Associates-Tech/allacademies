@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Topic;
+use App\Models\AcademicTopic as Topic;
 use Illuminate\Http\Request;
 use App\Http\Resources\TopicResource;
 use App\Http\Resources\TopicCollection;
@@ -18,11 +18,11 @@ class TopicController extends Controller
     public function index(Request $request)
     {
         $query = Topic::with('subject');
-        
+
         if ($request->has('subject_id')) {
             $query->where('subject_id', $request->subject_id);
         }
-        
+
         return new TopicCollection($query->paginate());
     }
 
@@ -63,12 +63,12 @@ class TopicController extends Controller
         if ($topic->lessonNotes()->exists()) {
             return response()->json(['message' => 'Cannot delete topic that has lesson notes assigned to it'], 422);
         }
-        
+
         $topic->delete();
 
         return response()->noContent();
     }
-    
+
     public function getLessonNotes(Topic $topic)
     {
         $notes = $topic->lessonNotes()->with('teacher', 'lesson', 'subject')->paginate();

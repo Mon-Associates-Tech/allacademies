@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AssessmentResultExport;
 use App\Models\Assessment;
+use App\Models\AssessmentResponse;
+use Barryvdh\DomPDF\PDF;
 use Illuminate\Http\Request;
 use App\Http\Resources\AssessmentResource;
 use App\Http\Resources\AssessmentCollection;
+use Maatwebsite\Excel\Excel;
 
 class AssessmentController extends Controller
 {
@@ -17,23 +21,23 @@ class AssessmentController extends Controller
     public function index(Request $request)
     {
         $query = Assessment::with('student', 'book');
-        
+
         if ($request->has('student_id')) {
             $query->where('student_id', $request->student_id);
         }
-        
+
         if ($request->has('book_id')) {
             $query->where('book_id', $request->book_id);
         }
-        
+
         if ($request->has('min_score')) {
             $query->where('score', '>=', $request->min_score);
         }
-        
+
         if ($request->has('max_score')) {
             $query->where('score', '<=', $request->max_score);
         }
-        
+
         return new AssessmentCollection($query->paginate());
     }
 
@@ -73,5 +77,25 @@ class AssessmentController extends Controller
         $assessment->delete();
 
         return response()->noContent();
+    }
+
+    public function export($id)
+    {
+        $response = AssessmentResponse::where('assessment_id', $id)->firstOrFail();
+
+        $data = collect($response->data['questions']);
+
+        if (request('format') === 'csv') {
+            return Excel::download(new AssessmentResultExport($data), "assessment_{$id}.csv");
+        }
+
+        $pdf = Pdf::loadView('exports.assessment-result-pdf', [
+            'questions' => $data,
+            'total' => $response->data['total_score'],
+            'max' => $response->data['max_score'],
+            'percent' => $response->data['percentage_score']
+        ]);
+
+        return $pdf->download("assessment_{$id}.pdf");
     }
 }
