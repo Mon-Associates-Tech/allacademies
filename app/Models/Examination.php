@@ -19,6 +19,9 @@ class Examination extends Model
         'title',
         'heading',
         'sections',
+        'academic_subject_id',
+        'creator_id',
+        'team_id'
     ];
 
     /**

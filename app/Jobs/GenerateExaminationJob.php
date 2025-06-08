@@ -7,6 +7,7 @@ use App\Models\AcademicSubject;
 use App\Models\Examination;
 use App\Models\Team;
 use App\Models\User;
+use App\Templates\TemplateRenderer;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,8 +31,9 @@ class GenerateExaminationJob implements ShouldQueue
         private readonly AcademicSubject $academicSubject,
         private readonly Team            $team,
         private readonly User            $creator,
-        private readonly array           $heading,
-        private readonly array           $sections
+        private  array           $heading,
+        private  array           $sections,
+        private array $metadata
     )
     {
         //
@@ -124,6 +126,11 @@ class GenerateExaminationJob implements ShouldQueue
                     'instructions' => $section['instructions'],
                 ];
             });
+
+            Log::info('section', $sections);
+
+            $this->heading['down'] = TemplateRenderer::renderTwig($this->heading['instructions']['down'], $this->heading['duration'], $this->heading['title'], $this->metadata);
+
 
             $examination = new Examination([
                 'title' => $this->heading['title'],

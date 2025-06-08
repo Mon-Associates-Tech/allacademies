@@ -1,5 +1,5 @@
 <div class="space-y-2">
-  <x-form.file name="image" name="image" wire:model.live="image"/>
+    <x-form.file name="image" wire:model.live="image"/>
   <x-form.textarea name="description" type="text" wire:model.live="description"/>
   <div class="relative">
     <div>
@@ -11,7 +11,7 @@
         <div class="absolute z-10 mt-1 w-full origin-top rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
           <div class="py-1" role="none">
             @foreach($suggestedTags as $tag)
-            <button type="button" wire:click="addTag(@js($tag) )" class="w-full text-left text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 hover:text-gray-900">{{ $tag }}</button>
+            <button type="button" wire:click="addTag(@js($tag))" class="w-full text-left text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 hover:text-gray-900">{{ $tag }}</button>
             @endforeach
           </div>
         </div>
@@ -32,7 +32,7 @@
     </div>
   </div>
   <div class="flex justify-end mt-5">
-    <x-button.primary class="ml-2" wire:click="upload">Upload Image</x-button.primary>
+    <x-button.primary class="ml-2" wire:click="uploads">Upload Image</x-button.primary>
   </div>
 </div>
 

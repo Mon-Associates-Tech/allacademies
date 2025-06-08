@@ -14,8 +14,8 @@ class Mark implements Castable
 
     public function __construct(public ?string $up, public ?string $down)
     {
-        $this->summary = is_string($up) ? Str::words(strip_tags($up), 20) : null;
-        $this->html = is_string($up) ? new HtmlString($up) : null;
+        $this->summary = is_string($down) ? Str::words(strip_tags($down), 20) : null;
+        $this->html = is_string($down) ? new HtmlString($down) : null;
     }
 
     public static function fromArray(array $array)

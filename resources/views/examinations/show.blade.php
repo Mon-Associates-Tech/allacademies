@@ -1,5 +1,5 @@
 @php
-//    $multiple = isset($sections) && is_countable($sections) && count($sections) > 1;
+    //    $multiple = isset($sections) && is_countable($sections) && count($sections) > 1;
 @endphp
 
 
@@ -26,15 +26,16 @@
             </span>
         </div>
         <div class="font-serif px-4 py-5 sm:p-6 print:px-0 ">
-            {{ $examination->heading->html }}
+            <div class="text-center">
+                {{ $examination->heading->html }}
+            </div>
 
             @foreach ($sections as $section)
                 <h2 @class(["font-medium uppercase text-sm text-center", "pt-5" => !$loop->first])>{{ $section['name'] }}</h2>
 
-
                 @if(isset($section['instructions']))
                     <div class="italic mb-4">
-                        <div x-data="{ instructions: @js($section['instructions']) }">
+                        <div x-data="{ instructions: @js($section['instructions']['down']) }">
                             <p x-html="marked.parse(instructions)"></p>
                         </div>
                     </div>
@@ -106,7 +107,7 @@
                         {{ $section['document'] }}
                     </div>
                 @elseif (isset($section['extension']) && $section['extension'] === 'pdf')
-{{--                    <iframe src="{{ asset('storage/' . $section['original_path']) }}" width="100%" height="500px"></iframe>--}}
+                    {{--                    <iframe src="{{ asset('storage/' . $section['original_path']) }}" width="100%" height="500px"></iframe>--}}
                     @if (!empty($section['pdf_images']))
                         @foreach ($section['pdf_images'] as $imagePath)
                             <img alt src="{{ asset('/storage/' . $imagePath) }}"
