@@ -54,7 +54,7 @@
                         @if(isset($section['questions']) &&  is_countable($section['questions']))
                             @foreach ($section['questions'] as $mc)
 
-                                <li>
+                                <li class="py-2">
                                     {!! is_string($mc->question) ? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $mc->question : ($mc->question->down ?? $mc->question->html ?? $mc->question->up ?? '') !!}
 
                                     <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
@@ -76,7 +76,7 @@
                     <ol class="list-decimal mb-12">
                         @if(isset($section['questions']) &&  is_countable($section['questions']))
                             @foreach ($section['questions'] as $tf)
-                                <li>
+                                <li class="py-2">
                                     {!! is_string($tf->question) ? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $tf->question : ($tf->question->down ?? $tf->question->html ?? $tf->question->up ?? '') !!}
                                     <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                          class="grid gap-x-5">
@@ -96,7 +96,7 @@
                         @if(isset($section['questions']) &&  is_countable($section['questions']))
                             @foreach ($section['questions'] as $es)
 
-                                <li class="mb-8">
+                                <li class="py-2">
                                     {!! is_string($es->question) ? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $es->question : ($es->question->down ?? $es->question->html ?? $es->question->up ?? '') !!}
                                     <p class="text-sm text-right">
                                         [{{ $es->score }} {{ Str::plural('mark', $es->score) }}]</p>
