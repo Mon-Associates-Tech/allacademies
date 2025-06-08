@@ -7,12 +7,14 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]),
-        ]" />
+        ]"/>
     </x-slot>
 
     <x-slot:action>
         <div class="text-right">
-            <x-link.secondary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])"> Go back</x-link.secondary>
+            <x-link.secondary
+                :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])"> Go back
+            </x-link.secondary>
         </div>
     </x-slot:action>
 
@@ -41,7 +43,7 @@
 
                 @if(isset($section['instructions']))
                     <div class="italic mb-4">
-                        <div x-data="{ instructions: @js($section['instructions']['down']) }">
+                        <div x-data="{ instructions: @js($section['instructions']['down'], JSON_THROW_ON_ERROR) }">
                             <p x-html="marked.parse(instructions)"></p>
                         </div>
                     </div>
@@ -49,49 +51,58 @@
 
                 @if ('multiple_choice_questions' === $section['type'])
                     <ol class="list-decimal mb-12">
-                        @foreach ($section['questions'] as $mc)
-                            <li>
-                                {!!  json_decode($mc->question)->up !!}
-                                <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
-                                     class="grid gap-x-5">
-                                    @foreach (['a', 'b', 'c', 'd', 'e'] as $o)
-                                        @if ($mc->{"option_$o"}->up)
-                                            <div class="flex space-x-2 items-baseline">
-                                                <div>({{ $o }})</div>
-                                                <div>{{ $mc->{"option_$o"}->html }}</div>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </li>
-                        @endforeach
+                        @if(isset($section['questions']) &&  is_countable($section['questions']))
+                            @foreach ($section['questions'] as $mc)
+
+                                <li>
+                                    {!! is_string($mc->question) ? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $mc->question : ($mc->question->down ?? $mc->question->html ?? $mc->question->up ?? '') !!}
+
+                                    <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
+                                         class="grid gap-x-5">
+                                        @foreach (['a', 'b', 'c', 'd', 'e'] as $o)
+                                            @if (is_string($mc->{"option_$o"}) ? json_decode($mc->{"option_$o"}, false, 512, JSON_THROW_ON_ERROR)->up : '')
+                                                <div class="flex space-x-2 items-baseline">
+                                                    <div>({{ $o }})</div>
+                                                    <div>{!! is_string($mc->{"option_$o"}) ? json_decode($mc->{"option_$o"}, false, 512, JSON_THROW_ON_ERROR)->up : '' !!}</div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </li>
+                            @endforeach
+                        @endif
                     </ol>
                 @elseif ('true_or_false_questions' === $section['type'])
                     <ol class="list-decimal mb-12">
-                        @foreach ($section['questions'] as $tf)
-                            <li>
-                                {!!  json_decode($tf->question)->up !!}
-                                <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
-                                     class="grid gap-x-5">
-                                    @foreach (['a', 'b'] as $o)
-                                        <div class="flex space-x-2 items-baseline">
-                                            <div>({{ $o }})</div>
-                                            <div>{{ 'a' === $o ? 'True' : 'False' }}</div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </li>
-                        @endforeach
+                        @if(isset($section['questions']) &&  is_countable($section['questions']))
+                            @foreach ($section['questions'] as $tf)
+                                <li>
+                                    {!! is_string($tf->question) ? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $tf->question : ($tf->question->down ?? $tf->question->html ?? $tf->question->up ?? '') !!}
+                                    <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
+                                         class="grid gap-x-5">
+                                        @foreach (['a', 'b'] as $o)
+                                            <div class="flex space-x-2 items-baseline">
+                                                <div>({{ $o }})</div>
+                                                <div>{{ 'a' === $o ? 'True' : 'False' }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </li>
+                            @endforeach
+                        @endif
                     </ol>
                 @elseif ('essay_questions' === $section['type'])
                     <ol class="list-decimal mb-12">
-                        @foreach ($section['questions'] as $es)
-                            <li class="mb-8">
-                                {!!  json_decode($es->question)->up !!}
-                                <p class="text-sm text-right">[{{ $es->score }} {{ Str::plural('mark', $es->score) }}
-                                    ]</p>
-                            </li>
-                        @endforeach
+                        @if(isset($section['questions']) &&  is_countable($section['questions']))
+                            @foreach ($section['questions'] as $es)
+
+                                <li class="mb-8">
+                                    {!! is_string($es->question) ? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $es->question : ($es->question->down ?? $es->question->html ?? $es->question->up ?? '') !!}
+                                    <p class="text-sm text-right">
+                                        [{{ $es->score }} {{ Str::plural('mark', $es->score) }}]</p>
+                                </li>
+                            @endforeach
+                        @endif
                     </ol>
                 @endif
 
@@ -128,7 +139,9 @@
 
             @endforeach
         </div>
-            <livewire:examination-print-processor :team_id="$previewData['team_id']" :data="$previewData" :creator_id="$previewData['creator_id']" :academic-subject="$academicSubject" />
+        <livewire:examination-print-processor :team_id="$previewData['team_id']" :data="$previewData"
+                                              :creator_id="$previewData['creator_id']"
+                                              :academic-subject="$academicSubject"/>
     </div>
 
     <script>
