@@ -17,6 +17,7 @@ use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\IOFactory;
+use RuntimeException;
 
 class ExaminationController extends Controller
 {
@@ -148,7 +149,7 @@ class ExaminationController extends Controller
 
         Gate::allowIf(fn($user) => $user->current_team_id === $examination->team_id);
 
-        $sections = Examiner::createSections($examination);
+        $sections = $examination->sections; // Examiner::createSections($examination);
 
         foreach ($sections as $index => $section) {
 
@@ -185,21 +186,44 @@ class ExaminationController extends Controller
                         mkdir($outputDir, 0755, true);
                     }
 
-                    $imagick = new \Imagick();
-                    $imagick->setResolution(300, 300);
-                    $imagick->readImage($pdfPath);
+                    try {
+                        if (!extension_loaded('imagick')) {
+                            throw new \RuntimeException('Imagick extension not available');
+                        }
 
-                    foreach ($imagick as $i => $page) {
-                        $page->setImageFormat('jpg');
-                        $filename = 'pdf_page_' . $i . '.jpg';
-                        $outputPath = $outputDir . '/' . $filename;
+                        $imagick = new \Imagick();
+                        $imagick->setResolution(300, 300);
+                        $imagick->readImage($pdfPath);
 
-                        $page->writeImage($outputPath);
+                        foreach ($imagick as $i => $page) {
+                            $page->setImageFormat('jpg');
+                            $page->setImageCompression(\Imagick::COMPRESSION_JPEG);
+                            $page->setImageCompressionQuality(90);
 
-                        $images[] = 'pdf_pages/' . $filename; // relative path for Blade
+                            // Use a unique identifier based on the original PDF name
+                            $pdfBaseName = pathinfo($section['document'], PATHINFO_FILENAME);
+                            $filename = sprintf('pdf_page_%s_%s.jpg', $pdfBaseName, $i);
+                            $outputPath = $outputDir . '/' . $filename;
+
+                            $page->writeImage($outputPath);
+                            $images[] = 'pdf_pages/' . $filename;
+                        }
+
+                        $sections[$index]['pdf_images'] = $images;
+
+                    } catch (\Exception $e) {
+                        \Log::error('PDF processing failed', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+
+                        $sections[$index]['pdf_error'] = 'Failed to process PDF: ' . $e->getMessage();
+                    } finally {
+                        if (isset($imagick)) {
+                            $imagick->clear();
+                            $imagick->destroy();
+                        }
                     }
-
-                    $sections[$index]['pdf_images'] = $images;
                 }
             }
 
@@ -209,6 +233,7 @@ class ExaminationController extends Controller
         return view('examinations.show', [
             'examination' => $examination,
             'sections' => $sections,
+            'heading' => $examination->heading,
         ]);
     }
 
@@ -251,6 +276,10 @@ class ExaminationController extends Controller
 
             $previewData = QuestionGenerator::generate($request['heading'], $request['sections'], $metadata);
 
+            $previewData['sections'] = array_filter($previewData['sections'], function($data){
+                return !array_key_exists('count', $data);
+            });
+
             $previewData['creator_id'] = auth()->user()->current_team_id;
             $previewData['team_id'] = $currentTeam->id;
             $previewData['metadata'] = $metadata;
@@ -283,12 +312,10 @@ class ExaminationController extends Controller
 
         $previewData = session('examination_preview');
 
-
         if (!$previewData) {
             return redirect()->route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])
                 ->withErrors(['general' => 'No preview data found. Please generate an examination first.']);
         }
-
 
         $previewData['creator_id'] = auth()->user()->current_team_id;
         $previewData['team_id'] = $currentTeam->id;
@@ -318,6 +345,7 @@ class ExaminationController extends Controller
         $validatedData = request()->all();
         $team = Team::query()->findOrFail($request->team_id);
         $creator = User::query()->findOrFail($request->creator_id);
+        dd($validatedData);
 
         try {
             $examinationService = new QuestionGenerator();

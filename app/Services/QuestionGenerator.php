@@ -96,16 +96,24 @@ class QuestionGenerator
                 'questions' => $sectionQuestions,
                 'page' => $section['page'] ?? null,
                 'document' => $section['document'] ?? null,
+                'pdf_images' => $section['pdf_images'] ?? [],
+                'extension' => $section['extension'] ?? null,
                 'instructions' => $section['instructions'],
             ];
         });
         $sections = array_slice($sections,1 );
 
-        if($heading['instructions']['up'] != null){
+        if(($heading['instructions']['up'] !== null) && isset($heading['template']) && $heading['template'] === 'twig') {
             $heading['up'] =  TemplateRenderer::renderTwig($heading['instructions']['up'], $heading['duration'], $heading['title'], $metadata);
         }
-        if($heading['instructions']['down'] != null){
-            $heading['down'] =  TemplateRenderer::renderTwig($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+
+        if($heading['instructions']['down'] !== null){
+            if(isset($heading['template']) && $heading['template'] === 'twig'){
+                $heading['down'] =  TemplateRenderer::renderTwig($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+            }
+            if(isset($heading['template']) && $heading['template'] === 'pug'){
+                $heading['down'] =  TemplateRenderer::renderPug($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+            }
         }
         return [
             'title' => $heading['title'],
@@ -128,8 +136,6 @@ class QuestionGenerator
         $heading['instructions'] = $heading['instructions']['down'] ?? null;
 
         try {
-//            $questions = QuestionGenerator::generate($heading, $validatedData['sections']);
-
             $examination = Examination::create([
                 'heading' => $validatedData['heading'],
                 'sections' => $validatedData['sections'],

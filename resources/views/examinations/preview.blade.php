@@ -34,7 +34,7 @@
             </span>
         </div>
         <div class="font-serif px-4 py-5 sm:p-6 print:px-0 ">
-            <div class="text-center">
+            <div class="">
                 {!!$heading['down'] !!}
             </div>
 
@@ -50,34 +50,37 @@
                 @endif
 
                 @if ('multiple_choice_questions' === $section['type'])
-                    <ol class="list-decimal mb-12">
-                        @if(isset($section['questions']) &&  is_countable($section['questions']))
+                    <ol class="list-decimal mb-12 px-4">
+                        @if(isset($section['questions']) && is_countable($section['questions']))
                             @foreach ($section['questions'] as $mc)
-
                                 <li class="py-2">
-                                    {!! is_string($mc->question) ? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($mc->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $mc->question : ($mc->question->down ?? $mc->question->html ?? $mc->question->up ?? '') !!}
-
-                                    <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
-                                         class="grid gap-x-5">
-                                        @foreach (['a', 'b', 'c', 'd', 'e'] as $o)
-                                            @if (is_string($mc->{"option_$o"}) ? json_decode($mc->{"option_$o"}, false, 512, JSON_THROW_ON_ERROR)->up : '')
-                                                <div class="flex space-x-2 items-baseline">
-                                                    <div>({{ $o }})</div>
-                                                    <div>{!! is_string($mc->{"option_$o"}) ? json_decode($mc->{"option_$o"}, false, 512, JSON_THROW_ON_ERROR)->up : '' !!}</div>
-                                                </div>
-                                            @endif
-                                        @endforeach
+                                    <div>
+                        <span class="font-medium">
+                            {!! json_decode($mc->question)->down !!}
+                        </span>
+                                        <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
+                                             class="grid gap-x-5">
+                                            @foreach (['a', 'b', 'c', 'd', 'e'] as $o)
+                                                @if ($mc->{"option_$o"})
+                                                    <div class="flex space-x-2 items-baseline">
+                                                        <div>({{ $o }})</div>
+                                                        <div>{!! json_decode($mc->{"option_$o"})->up !!}</div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </li>
                             @endforeach
                         @endif
                     </ol>
                 @elseif ('true_or_false_questions' === $section['type'])
-                    <ol class="list-decimal mb-12">
-                        @if(isset($section['questions']) &&  is_countable($section['questions']))
+                    <ol class="list-decimal mb-12 px-4">
+                        @if(isset($section['questions']) && is_countable($section['questions']))
                             @foreach ($section['questions'] as $tf)
-                                <li class="py-2">
-                                    {!! is_string($tf->question) ? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($tf->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $tf->question : ($tf->question->down ?? $tf->question->html ?? $tf->question->up ?? '') !!}
+                                <li class="py-2"
+                                    x-data="{ question: marked.parse(@js(json_decode($tf->question)->down)) }">
+                                    <span> {!! json_decode($tf->question)->down !!} </span>
                                     <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                          class="grid gap-x-5">
                                         @foreach (['a', 'b'] as $o)
@@ -92,14 +95,18 @@
                         @endif
                     </ol>
                 @elseif ('essay_questions' === $section['type'])
-                    <ol class="list-decimal mb-12">
-                        @if(isset($section['questions']) &&  is_countable($section['questions']))
+                    <ol class="list-decimal mb-12 px-4">
+                        @if(isset($section['questions']) && is_countable($section['questions']))
                             @foreach ($section['questions'] as $es)
-
                                 <li class="py-2">
-                                    {!! is_string($es->question) ? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->down ?? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->html ?? json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->up ?? $es->question : ($es->question->down ?? $es->question->html ?? $es->question->up ?? '') !!}
-                                    <p class="text-sm text-right">
-                                        [{{ $es->score }} {{ Str::plural('mark', $es->score) }}]</p>
+                                    <div>
+                                    <span
+                                        x-html="marked.parse(@js(json_decode($es->question, false, 512, JSON_THROW_ON_ERROR)->down, JSON_THROW_ON_ERROR))"
+                                        class="font-medium"></span>
+
+                                        <p class="text-sm text-right">
+                                            [{{ $es->score }} {{ Str::plural('mark', $es->score) }}]</p>
+                                    </div>
                                 </li>
                             @endforeach
                         @endif
