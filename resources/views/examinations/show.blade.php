@@ -7,7 +7,7 @@
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $examination->academicSubject]),
-        ]" />
+        ]"/>
     </x-slot>
 
     <div x-data="{ format: 'lenticular' }"
@@ -47,8 +47,8 @@
                             @foreach ($section['questions'] as $mc)
                                 <li class="py-2">
                                     <div>
-                        <span class="font-medium">
-                            {!! json_decode($mc['question'])->down !!}
+                        <span class="font-medium"
+                              x-html="marked.parse(@js($mc['question']['up'], JSON_THROW_ON_ERROR))">
                         </span>
                                         <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                              class="grid gap-x-5">
@@ -56,7 +56,7 @@
                                                 @if ($mc["option_$o"])
                                                     <div class="flex space-x-2 items-baseline">
                                                         <div>({{ $o }})</div>
-                                                        <div>{!! json_decode($mc["option_$o"])->up !!}</div>
+                                                        <div>{!! $mc["option_$o"]['up'] !!}</div>
                                                     </div>
                                                 @endif
                                             @endforeach
@@ -70,9 +70,8 @@
                     <ol class="list-decimal mb-12 px-4">
                         @if(isset($section['questions']) && is_countable($section['questions']))
                             @foreach ($section['questions'] as $tf)
-                                <li class="py-2"
-                                    x-data="{ question: marked.parse(@js(json_decode($tf['question'])->down)) }">
-                                    <span> {!! json_decode($tf['question'])->down !!} </span>
+                                <li class="py-2 my-auto">
+                                    <span x-html="marked.parse(@js($tf['question']['up']))" class="inline-flex"> </span>
                                     <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                          class="grid gap-x-5">
                                         @foreach (['a', 'b'] as $o)
@@ -93,7 +92,7 @@
                                 <li class="py-2">
                                     <div>
                                     <span
-                                        x-html="marked.parse(@js(json_decode($es['question'], false, 512, JSON_THROW_ON_ERROR)->down, JSON_THROW_ON_ERROR))"
+                                        x-html="marked.parse(@js($es['question']['up'], JSON_THROW_ON_ERROR))"
                                         class="font-medium"></span>
 
                                         <p class="text-sm text-right">
@@ -139,8 +138,8 @@
             @endforeach
         </div>
         <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden">
-           <x-button.primary x-on:click.prevent="window.print()">Print</x-button.primary>
-       </div>
+            <x-button.primary x-on:click.prevent="window.print()">Print</x-button.primary>
+        </div>
     </div>
 
     <script>

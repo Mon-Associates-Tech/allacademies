@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 class TemplateRenderer
 {
 
-    public function render($template = 'twig')
+    public function render($template = 'twig'): void
     {
 
     }

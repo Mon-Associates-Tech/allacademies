@@ -114,7 +114,19 @@
                 @endif
 
                 @if(isset($section['page']))
-                    <div class="page-break h-full">
+                    <style>
+                        @media print {
+                            .exam-page-break {
+                                page-break-before: always !important;
+                                page-break-after: always !important;
+                                break-before: page !important;
+                                break-after: page !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                        }
+                    </style>
+                    <div class="exam-page-break h-full">
                         <div
                             class="h-screen w-full flex items-center justify-center print:h-[100vh] print:w-full print:flex print:items-center print:justify-center">
                             <div class="text-center">
@@ -122,7 +134,6 @@
                                     told to do so</h2>
                             </div>
                         </div>
-
                     </div>
                 @endif
 
