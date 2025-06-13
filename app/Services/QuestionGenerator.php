@@ -403,8 +403,6 @@ class QuestionGenerator
             return [];
         }
 
-        \Illuminate\Log\log('modelClass', [$modelClass]);
-
         // Extract IDs from stdClass objects or use directly if they're already integers
         $ids = collect($questionIds)->map(function ($item) {
             if (is_object($item) && isset($item->id)) {
