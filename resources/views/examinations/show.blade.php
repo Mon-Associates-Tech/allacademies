@@ -35,9 +35,23 @@
 
                 @if(isset($section['instructions']))
                     <div class="italic mb-4">
-                        <div x-data="{ instructions: @js($section['instructions']['down'], JSON_THROW_ON_ERROR) }">
-                            <p x-html="marked.parse(instructions)"></p>
-                        </div>
+                        @if(is_string($section['instructions']))
+                            <div x-data="{ instructions: @js($section['instructions'], JSON_THROW_ON_ERROR) }">
+                                <p x-html="marked.parse(instructions)"></p>
+                            </div>
+                        @elseif(is_array($section['instructions']) && !empty($section['instructions']['up']))
+                            <div x-data="{ instructions: @js($section['instructions']['up'], JSON_THROW_ON_ERROR) }">
+                                <p x-html="marked.parse(instructions)"></p>
+                            </div>
+                        @elseif(is_array($section['instructions']) && !empty($section['instructions']['down']))
+                            <div x-data="{ instructions: @js($section['instructions']['down'], JSON_THROW_ON_ERROR) }">
+                                <p x-html="marked.parse(instructions)"></p>
+                            </div>
+                        @else
+                            <div x-data="{ instructions: @js($section['instructions'], JSON_THROW_ON_ERROR) }">
+                                <p x-html="marked.parse(instructions)"></p>
+                            </div>
+                        @endif
                     </div>
                 @endif
 
