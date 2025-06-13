@@ -113,19 +113,38 @@
                     </ol>
                 @endif
 
-                @if(isset($section['page']))
-                    <style>
-                        @media print {
-                            .exam-page-break {
-                                page-break-before: always !important;
-                                page-break-after: always !important;
-                                break-before: page !important;
-                                break-after: page !important;
-                                margin: 0 !important;
-                                padding: 0 !important;
-                            }
+            <div class="">
+                <style>
+                    @media print {
+                        .exam-page-break {
+                            page-break-before: always !important;
+                            page-break-after: always !important;
+                            break-before: page !important;
+                            break-after: page !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
                         }
-                    </style>
+
+                        .image-container {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                            display: block !important;
+                            margin-bottom: 1rem !important;
+                        }
+
+                        .image-container img {
+                            max-height: 85vh !important;
+                            max-width: 100% !important;
+                            object-fit: contain !important;
+                            display: block !important;
+                            margin: 0 auto !important;
+                        }
+                    }
+
+
+                </style>
+            </div>
+                @if(isset($section['page']))
                     <div class="exam-page-break h-full">
                         <div
                             class="h-screen w-full flex items-center justify-center print:h-[100vh] print:w-full print:flex print:items-center print:justify-center">
@@ -150,7 +169,9 @@
                         @endforeach
                     @endif
                 @elseif (isset($section['extension']) && in_array($section['extension'], ['jpg', 'jpeg', 'png']))
-                    <img src="{{ asset('storage/' . $section['original_path']) }}" alt="Image preview">
+                    <div class="image-container">
+                        <img src="{{ asset('storage/' . $section['original_path']) }}" alt="Image preview" class="w-full mb-4 print:max-h-[90vh] print:object-contain image-no-break">
+                    </div>
                 @else
                     <p class="text-red-500"></p>
                 @endif

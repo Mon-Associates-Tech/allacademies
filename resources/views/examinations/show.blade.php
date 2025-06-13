@@ -144,7 +144,7 @@
                         @endforeach
                     @endif
                 @elseif (isset($section['extension']) && in_array($section['extension'], ['jpg', 'jpeg', 'png']))
-                    <img src="{{ asset('storage/' . $section['original_path']) }}" alt="Image preview">
+                    <img src="{{ asset('storage/' . $section['original_path']) }}" alt="Image preview" class="w-full mb-4 print:break-inside-avoid">
                 @else
                     <p class="text-red-500"></p>
                 @endif

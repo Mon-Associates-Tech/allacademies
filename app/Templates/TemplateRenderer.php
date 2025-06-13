@@ -21,7 +21,6 @@ class TemplateRenderer
             $subjectCode = $metadata['subject_code'] ?? 'N/A';
 
             // Escape HTML content
-            $title = htmlspecialchars($title ?: 'TITLE');
             $instructions = $instructions ?? 'INSTRUCTIONS';
 
             // Validate duration before conversion
