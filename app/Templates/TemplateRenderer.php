@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 class TemplateRenderer
 {
 
-    public function render($template = 'twig')
+    public function render($template = 'twig'): void
     {
 
     }
@@ -21,7 +21,6 @@ class TemplateRenderer
             $subjectCode = $metadata['subject_code'] ?? 'N/A';
 
             // Escape HTML content
-            $title = htmlspecialchars($title ?: 'TITLE');
             $instructions = $instructions ?? 'INSTRUCTIONS';
 
             // Validate duration before conversion
@@ -36,9 +35,9 @@ class TemplateRenderer
             <h1 class="font-semibold uppercase">%s &#12539; %s</h1>
             <h1 class="font-semibold">Duration: %s</h1>
         </div>
-        <div class="border-y border-black my-5 py-5 text-center">
-            <h1 class="font-semibold uppercase">Instructions:</h1>
-            <p class="font-semibold">%s</p>
+        <div class="border-y border-black my-5 py-5">
+            <h1 class="font-semibold uppercase text-center">Instructions:</h1>
+            <p class="font-semibold text-start" style="text-align:start">%s</p>
         </div>
     </div>
     TWIG, $title, $levelLabel, $subjectCode, $duration, $instructions);

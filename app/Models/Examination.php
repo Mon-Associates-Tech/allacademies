@@ -21,7 +21,10 @@ class Examination extends Model
         'sections',
         'academic_subject_id',
         'creator_id',
-        'team_id'
+        'team_id',
+        'instructions',
+        'metadata',
+        'duration',
     ];
 
     /**
@@ -30,6 +33,7 @@ class Examination extends Model
     protected $casts = [
         'heading' => Mark::class,
         'sections' => 'array',
+        'metadata' => 'array',
     ];
 
     public function academicSubject()

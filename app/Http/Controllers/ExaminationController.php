@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
+use App\Models\Examination;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\QuestionGenerator;
 use App\Support\Examiner;
-use App\Models\Examination;
-use App\Models\AcademicSubject;
+use App\Support\Mark;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpWord\IOFactory;
+use Log;
 
 class ExaminationController extends Controller
 {
@@ -53,7 +55,7 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        session()->forget('examination_preview_data');
+        session()?->forget('examination_preview_data');
 
 
         $metadata = data_get($currentTeam->meta, 'present', []);
@@ -80,7 +82,7 @@ class ExaminationController extends Controller
                     $query->withCount([
                         'essayQuestions',
                         'multipleChoiceQuestions',
-                        'trueOrFalseQuestions'
+                        'trueOrFalseQuestions',
                     ]);
                 }
             ])
@@ -136,7 +138,6 @@ class ExaminationController extends Controller
      *
      * @param Examination $examination
      * @return Application|Factory|View|\Illuminate\View\View
-     * @throws \ImagickException
      */
     public function show(Examination $examination)
     {
@@ -146,71 +147,26 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $examination->academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        Gate::allowIf(fn($user) => $user->current_team_id === $examination->team_id);
+        Gate::allowIf(static fn($user) => $user->current_team_id === $examination->team_id);
 
-        $sections = Examiner::createSections($examination);
-
-        foreach ($sections as $index => $section) {
-
-            if (isset($section['document'])) {
-                $path = storage_path('app/public/' . $section['document']);
-                $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-                $sections[$index]['extension'] = $ext;
-                $sections[$index]['original_path'] = $section['document'];
-                $sections[$index]['pdf_images'] = [];
-
-                if (in_array($ext, ['doc', 'docx']) && file_exists($path)) {
-                    $phpWord = IOFactory::load($path, 'Word2007');
-                    $docxText = '';
-
-                    foreach ($phpWord->getSections() as $sec) {
-                        foreach ($sec->getElements() as $element) {
-                            if (method_exists($element, 'getText')) {
-                                $docxText .= $element->getText() . "\n";
-                            }
-                        }
-                    }
-
-                    $sections[$index]['document'] = $docxText;
-                }
-
-                $pdfPath = storage_path('app/public/' . $sections[$index]['original_path']);
-                $images = [];
-
-                if (file_exists($pdfPath)) {
-                    $outputDir = storage_path('app/public/pdf_pages');
-
-                    if (!file_exists($outputDir)) {
-                        mkdir($outputDir, 0755, true);
-                    }
-
-                    $imagick = new \Imagick();
-                    $imagick->setResolution(300, 300);
-                    $imagick->readImage($pdfPath);
-
-                    foreach ($imagick as $i => $page) {
-                        $page->setImageFormat('jpg');
-                        $filename = 'pdf_page_' . $i . '.jpg';
-                        $outputPath = $outputDir . '/' . $filename;
-
-                        $page->writeImage($outputPath);
-
-                        $images[] = 'pdf_pages/' . $filename; // relative path for Blade
-                    }
-
-                    $sections[$index]['pdf_images'] = $images;
-                }
-            }
-
-        }
+        $previewData = [
+            'team_id' => $examination->team_id,
+            'creator_id' => $examination->creator_id,
+            'academic_subject' => $examination->academicSubject,
+        ];
 
 
         return view('examinations.show', [
             'examination' => $examination,
-            'sections' => $sections,
+            'previewData' => $previewData,
+            'academicSubject' => $examination->academicSubject,
+            'sections' => $this->formatSection($examination->sections),
+            'heading' => $examination->heading instanceof Mark
+                ? $examination->heading->toArray()
+                : $examination->heading
         ]);
     }
+
 
     /**
      * Display the specified resource.
@@ -226,12 +182,13 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $examination->academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        Gate::allowIf(fn($user) => $user->current_team_id === $examination->team_id);
+        Gate::allowIf(static fn($user) => $user->current_team_id === $examination->team_id);
 
         $sections = Examiner::createSections($examination);
 
         return view('examinations.answer', [
             'examination' => $examination,
+            'heading' => $examination->heading->html,
             'sections' => $sections,
         ]);
     }
@@ -239,7 +196,7 @@ class ExaminationController extends Controller
     /**
      * Generate a preview of the examination without saving to a database
      */
-    public function generatePreview(HttpRequest $request, AcademicSubject $academicSubject)
+    public function generatePreview(HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
     {
         try {
             $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
@@ -247,9 +204,16 @@ class ExaminationController extends Controller
             $this->authorize('subscribed', $academicSubject);
             $this->authorize('privileged', $currentTeam);
 
-            $metadata = unserialize(base64_decode($request['metadata']));
+            $metadata = json_decode(base64_decode($request['metadata']), true, 512, JSON_THROW_ON_ERROR);
 
-            $previewData = QuestionGenerator::generate($request['heading'], $request['sections'], $metadata);
+            $preprocessedSections = QuestionGenerator::preprocessSections($request['sections']);
+
+//            $previewData = QuestionGenerator::generate($request['heading'], $request['sections'], $metadata);
+            $previewData = QuestionGenerator::generate($request['heading'], $preprocessedSections, $metadata);
+
+            $previewData['sections'] = array_filter($previewData['sections'], static function ($data) {
+                return !array_key_exists('count', $data);
+            });
 
             $previewData['creator_id'] = auth()->user()->current_team_id;
             $previewData['team_id'] = $currentTeam->id;
@@ -261,8 +225,8 @@ class ExaminationController extends Controller
                 'academic_subject' => $academicSubject,
             ]);
 
-        } catch (\Exception $e) {
-            \Log::error('Preview generation failed', [
+        } catch (Exception $e) {
+            Log::error('Preview generation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -283,15 +247,15 @@ class ExaminationController extends Controller
 
         $previewData = session('examination_preview');
 
-
         if (!$previewData) {
             return redirect()->route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])
                 ->withErrors(['general' => 'No preview data found. Please generate an examination first.']);
         }
 
-
         $previewData['creator_id'] = auth()->user()->current_team_id;
         $previewData['team_id'] = $currentTeam->id;
+
+        $previewData['sections'] = $this->formatSection($previewData['sections']);
 
         return view('examinations.preview', [
             'academicSubject' => $academicSubject,
@@ -304,11 +268,28 @@ class ExaminationController extends Controller
         ]);
     }
 
+    private function formatSection($sections): array
+    {
+        $questionGenerator = new QuestionGenerator();
+        $previewData = $questionGenerator->processSections($sections);
+        $previewData['sections'] = $questionGenerator->normalizeQuestionsToIds($sections);
+
+
+        return collect($previewData['sections'])->map(function ($section) use ($questionGenerator) {
+            if (!empty($section['questions'])) {
+                $questionType = str_replace('_questions', '', $section['type']);
+                $questionIds = $questionGenerator->getQuestionIdsOnly($section['questions']);
+                $section['questions'] = $questionGenerator->fetchCompleteQuestions($questionIds, $questionType);
+                $section['questions'] = $questionGenerator->formatExistingQuestions($section['questions']);
+            }
+            return $section;
+        })->toArray();
+    }
 
     /**
      * Store the examination after preview confirmation
      */
-    public function store(AcademicSubject $academicSubject, HttpRequest $request)
+    public function store(AcademicSubject $academicSubject, HttpRequest $request): ?RedirectResponse
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
@@ -321,15 +302,15 @@ class ExaminationController extends Controller
 
         try {
             $examinationService = new QuestionGenerator();
-            $examination = $examinationService->createExamination(
+            $examinationService->createExamination(
                 $academicSubject,
                 $validatedData,
                 $team->id,
                 $creator->id
             );
 
-            // Clear preview data from session
-            session()->forget('examination_preview_data');
+            // Clear preview data from the session
+            session()?->forget('examination_preview_data');
 
             return redirect()
                 ->route('academic-subjects.examinations.index', $academicSubject)
@@ -337,8 +318,14 @@ class ExaminationController extends Controller
 
         } catch (Exception $e) {
             return back()
-                ->withErrors(['general' => 'Failed to create examination. Please try again.'])
+                ->withErrors(['general' => 'Failed to create examination. Please try again.', 'error' => $e->getMessage()])
                 ->withInput();
         }
     }
+
+    /**
+     * @param mixed $sections
+     * @return mixed
+     */
+
 }

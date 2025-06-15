@@ -1,8 +1,9 @@
-<x-layouts.app title="Create Examination" :has-action="false" class=""  action-url="{{ route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]) }}">
+<x-layouts.app title="Create Examination" :has-action="false" class=""
+               action-url="{{ route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]) }}">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Examinations' => route('academic-subjects.examinations.index', ['academic_subject' => $academicSubject]),
-        ]" />
+        ]"/>
     </x-slot>
 
     <div class="bg-white shadow-sm rounded-lg ring-1 ring-slate-200 p-4">
@@ -33,7 +34,8 @@
             </div>
 
             <div class="grid sm:grid-cols-6 gap-4 place-items-center">
-                <input name="metadata" value="{{base64_encode(serialize($metadata))}}"  type="hidden" hidden />
+                <input name="metadata" value="{{base64_encode(json_encode($metadata, JSON_THROW_ON_ERROR))}}"
+                       type="hidden" hidden/>
                 <div class="sm:col-span-5 text-start ms-auto">
                     <x-button.primary class="text-right">Preview Examination</x-button.primary>
                 </div>
