@@ -9,6 +9,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Services\QuestionGenerator;
 use App\Support\Examiner;
+use App\Support\Mark;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -81,7 +82,7 @@ class ExaminationController extends Controller
                     $query->withCount([
                         'essayQuestions',
                         'multipleChoiceQuestions',
-                        'trueOrFalseQuestions'
+                        'trueOrFalseQuestions',
                     ]);
                 }
             ])
@@ -148,15 +149,21 @@ class ExaminationController extends Controller
 
         Gate::allowIf(static fn($user) => $user->current_team_id === $examination->team_id);
 
-        $sections = $examination->sections;
+        $previewData = [
+            'team_id' => $examination->team_id,
+            'creator_id' => $examination->creator_id,
+            'academic_subject' => $examination->academicSubject,
+        ];
 
-        // Process sections to fetch complete question objects if only IDs are present
-        $sections = (new QuestionGenerator())->processSections($sections);
 
         return view('examinations.show', [
             'examination' => $examination,
-            'sections' => $sections,
-            'heading' => $examination->heading,
+            'previewData' => $previewData,
+            'academicSubject' => $examination->academicSubject,
+            'sections' => $this->formatSection($examination->sections),
+            'heading' => $examination->heading instanceof Mark
+                ? $examination->heading->toArray()
+                : $examination->heading
         ]);
     }
 
@@ -248,6 +255,8 @@ class ExaminationController extends Controller
         $previewData['creator_id'] = auth()->user()->current_team_id;
         $previewData['team_id'] = $currentTeam->id;
 
+        $previewData['sections'] = $this->formatSection($previewData['sections']);
+
         return view('examinations.preview', [
             'academicSubject' => $academicSubject,
             'heading' => $previewData['heading'],
@@ -259,6 +268,23 @@ class ExaminationController extends Controller
         ]);
     }
 
+    private function formatSection($sections): array
+    {
+        $questionGenerator = new QuestionGenerator();
+        $previewData = $questionGenerator->processSections($sections);
+        $previewData['sections'] = $questionGenerator->normalizeQuestionsToIds($sections);
+
+
+        return collect($previewData['sections'])->map(function ($section) use ($questionGenerator) {
+            if (!empty($section['questions'])) {
+                $questionType = str_replace('_questions', '', $section['type']);
+                $questionIds = $questionGenerator->getQuestionIdsOnly($section['questions']);
+                $section['questions'] = $questionGenerator->fetchCompleteQuestions($questionIds, $questionType);
+                $section['questions'] = $questionGenerator->formatExistingQuestions($section['questions']);
+            }
+            return $section;
+        })->toArray();
+    }
 
     /**
      * Store the examination after preview confirmation

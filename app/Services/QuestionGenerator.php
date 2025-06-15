@@ -21,6 +21,57 @@ use RuntimeException;
 
 class QuestionGenerator
 {
+    /**
+     * Convert sections with question objects to sections with question IDs only
+     * This normalizes the data structure to always use IDs
+     */
+    public function normalizeQuestionsToIds(array $sections): array
+    {
+        foreach ($sections as &$section) {
+            if (isset($section['questions']) && is_array($section['questions'])) {
+                $section['questions'] = $this->extractQuestionIds($section['questions']);
+            }
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Extract question IDs from a mixed array of IDs and objects
+     * Returns an array of question IDs only
+     */
+    public function getQuestionIdsOnly(array $questions): array
+    {
+        return $this->extractQuestionIds($questions);
+    }
+
+    /**
+     * Extract question IDs from questions array, handling both ID arrays and object arrays
+     * This ensures we always work with IDs going forward
+     */
+    private function extractQuestionIds(array $questions): array
+    {
+        $questionIds = [];
+
+        foreach ($questions as $question) {
+            if (is_numeric($question)) {
+                // It's already an ID
+                $questionIds[] = (int)$question;
+            } elseif (is_array($question) && isset($question['id'])) {
+                // It's an array with an ID
+                $questionIds[] = (int)$question['id'];
+            } elseif (is_object($question) && isset($question->id)) {
+                // It's a model object with an ID
+                $questionIds[] = (int)$question->id;
+            } elseif (is_object($question) && method_exists($question, 'getKey')) {
+                // It's an Eloquent model
+                $questionIds[] = (int)$question->getKey();
+            }
+        }
+
+        return array_unique(array_filter($questionIds));
+    }
+
     public static function generate(
         array $heading,
         array $sections,
@@ -44,12 +95,13 @@ class QuestionGenerator
             &$usedQuestions
         ) {
             $table = $section['type'];
-            if (empty($section['topics']) || $section['topics'][0] === 0) {
+            if (empty($section['topics']) || !is_array($section['topics'])) {
                 throw new NoTopicsException();
             }
             $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
             $subtopics = $section['subtopics'] ?? [];
             $sectionQuestions = [];
+
 
             // Process document if present (a file should already be stored as a path)
             if (isset($section['document'])) {
@@ -70,7 +122,7 @@ class QuestionGenerator
                         ->whereNotIn($table . '.id', $usedQuestions[$table])
                         ->inRandomOrder()
                         ->take($count)
-                        ->get()
+                        ->pluck('' . $table . '.id')
                         ->all();
 
                     if (count($questions) < $count) {
@@ -87,7 +139,7 @@ class QuestionGenerator
                     ->whereNotIn('id', $usedQuestions[$table])
                     ->inRandomOrder()
                     ->take($section['count'])
-                    ->get()
+                    ->pluck('' . $table . '.id')
                     ->all();
 
                 if (count($questions) < $section['count']) {
@@ -127,6 +179,7 @@ class QuestionGenerator
                 $heading['down'] = TemplateRenderer::renderPug($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
             }
         }
+
         return [
             'title' => $heading['title'],
             'heading' => $heading,
@@ -143,53 +196,38 @@ class QuestionGenerator
         return collect($sections)->map(function ($section) {
             if (isset($section['document']) && $section['document'] instanceof UploadedFile) {
                 $fileInfo = (new static())->storeUploadedFile($section['document']);
-
-                // Merge file information into the section
                 $section = array_merge($section, $fileInfo);
-
-                // Remove the original UploadedFile object
-                unset($section['document']);
-
-                // Set document content if it was extracted (for txt/docx files)
-                if (isset($fileInfo['document'])) {
-                    $section['document'] = $fileInfo['document'];
-                }
             }
             return $section;
         })->toArray();
     }
 
-    /**
-     * Store uploaded file and return the path
-     */
-    private function storeUploadedFile(UploadedFile $file): array
+    private function processFileContent(string $filePath, string $storedPath, string $extension): array
     {
-        // Store the file
-        $storedPath = $file->store('documents', 'public');
-        $fullPath = storage_path('app/public/' . $storedPath);
-
-        // Get file extension
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        // Initialize a result array with basic info
         $result = [
-            'original_path' => $storedPath,
             'extension' => $extension,
-            'original_name' => $file->getClientOriginalName(),
+            'original_path' => $storedPath,
+            'document' => $storedPath,
+            'pdf_images' => [],
         ];
 
-        // Process different file types
+        if (!file_exists($filePath)) {
+            Log::warning('File does not exist for processing', ['path' => $filePath]);
+            return $result;
+        }
+
         switch ($extension) {
             case 'pdf':
-                $result['pdf_images'] = $this->generatePdfImages($fullPath, $storedPath);
+                $result['pdf_images'] = $this->generatePdfImages($filePath, $storedPath);
                 break;
 
+            case 'doc':
             case 'docx':
-                $result['document'] = $this->extractDocxText($fullPath);
+                $result['document'] = $this->extractDocxText($filePath);
                 break;
 
             case 'txt':
-                $result['document'] = file_get_contents($fullPath);
+                $result['document'] = file_get_contents($filePath);
                 break;
 
             case 'jpg':
@@ -198,16 +236,85 @@ class QuestionGenerator
             case 'gif':
             case 'webp':
                 // Images don't need additional processing, just the path
+                $result['document'] = $storedPath;
                 break;
 
             default:
-                Log::warning('Unsupported file type uploaded', [
+                Log::warning('Unsupported file type', [
                     'extension' => $extension,
-                    'filename' => $file->getClientOriginalName()
+                    'path' => $filePath
                 ]);
         }
 
         return $result;
+    }
+
+    private function storeUploadedFile(UploadedFile $file): array
+    {
+        $timestampedName = time() . '_' . $file->getClientOriginalName();
+
+        try {
+            // First, ensure the directory exists
+            $documentsPath = storage_path('app/public/documents');
+            if (!file_exists($documentsPath) && !mkdir($documentsPath, 0755, true) && !is_dir($documentsPath)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $documentsPath));
+            }
+
+            // Try the standard store method first
+            $storedPath = $file->store('documents', 'public');
+
+            if (!$storedPath) {
+                // If that fails, try storeAs with a clean filename
+                $cleanFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $timestampedName);
+                $storedPath = $file->storeAs('documents', $cleanFilename, 'public');
+            }
+
+            if (!$storedPath) {
+                // Last resort: manual file move
+                $storedPath = 'documents/' . $timestampedName;
+                $fullStoragePath = storage_path('app/public/' . $storedPath);
+
+                if (!move_uploaded_file($file->getRealPath(), $fullStoragePath)) {
+                    throw new RuntimeException('Failed to store file manually');
+                }
+            }
+
+            // Verify the file exists
+            if (!file_exists(storage_path('app/public/' . $storedPath))) {
+                throw new RuntimeException('File was not stored correctly');
+            }
+
+        } catch (Exception $e) {
+            Log::error('File storage failed', [
+                'error' => $e->getMessage(),
+                'filename' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType(),
+                'temp_path' => $file->getRealPath(),
+                'storage_path' => storage_path('app/public/documents'),
+                'storage_writable' => is_writable(storage_path('app/public')),
+            ]);
+
+            throw new RuntimeException('Failed to store uploaded file: ' . $e->getMessage());
+        }
+
+        $fullPath = storage_path('app/public/' . $storedPath);
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        // Use the shared processing method
+        return $this->processFileContent($fullPath, $storedPath, $extension);
+    }
+
+    private function processDocument(array $section, array $processedSection): array
+    {
+        $storedPath = $section['document'];
+        $fullPath = storage_path('app/public/' . $storedPath);
+        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+        // Use the shared processing method and merge with existing processed section
+        $fileResult = $this->processFileContent($fullPath, $storedPath, $extension);
+
+        return array_merge($processedSection, $fileResult);
     }
 
     private function generatePdfImages(string $pdfPath, string $originalPath): array
@@ -295,25 +402,6 @@ class QuestionGenerator
         }
     }
 
-    private function processDocument(array $section, array $processedSection): array
-    {
-        $path = storage_path('app/public/' . $section['document']);
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        $processedSection['extension'] = $ext;
-        $processedSection['original_path'] = $section['document'];
-        $processedSection['pdf_images'] = [];
-
-        if (in_array($ext, ['doc', 'docx']) && file_exists($path)) {
-            $processedSection['document'] = $this->extractDocxText($path);
-        }
-
-        if (file_exists($path)) {
-            $processedSection['pdf_images'] = $this->generatePdfImages($path, $section['document']);
-        }
-
-        return $processedSection;
-    }
 
     /**
      * @throws Exception
@@ -379,43 +467,121 @@ class QuestionGenerator
         return $sections;
     }
 
+    /**
+     * Process questions in a section - now simplified to only extract IDs and fetch complete questions
+     */
     private function processQuestions(array $section): array
     {
-        $firstQuestion = $section['questions'][0] ?? null;
-
-        if ($firstQuestion !== null && !is_array($firstQuestion)) {
-            return $this->fetchCompleteQuestions($section['questions'], $section['type']);
-        }
-
-        return $this->formatExistingQuestions($section['questions']);
-    }
-
-    private function fetchCompleteQuestions(array $questionIds, string $sectionType): array
-    {
-        $modelMap = [
-            'true_or_false_questions' => TrueOrFalseQuestion::class,
-            'multiple_choice_questions' => MultipleChoiceQuestion::class,
-            'essay_questions' => EssayQuestion::class,
-        ];
-
-        $modelClass = $modelMap[$sectionType] ?? null;
-        if (!$modelClass) {
+        if (empty($section['questions'])) {
             return [];
         }
 
-        // Extract IDs from stdClass objects or use directly if they're already integers
-        $ids = collect($questionIds)->map(function ($item) {
-            if (is_object($item) && isset($item->id)) {
-                return $item->id;
+        // Extract question IDs (supports both ID arrays and object arrays for backward compatibility)
+        $questionIds = $this->extractQuestionIds($section['questions']);
+
+        if (empty($questionIds)) {
+            return [];
+        }
+        return $questionIds;
+
+    }
+
+    /**
+     * Fetch complete question objects based on question type and IDs
+     * This is a public method that can be used anywhere to get formatted question data
+     */
+    public function fetchCompleteQuestions(array $questionIds, string $questionType): array
+    {
+        if (empty($questionIds)) {
+            return [];
+        }
+
+        $questions = collect();
+
+        try {
+            switch (strtolower($questionType)) {
+                case 'essay':
+                    $questions = \App\Models\EssayQuestion::whereIn('id', $questionIds)
+                        ->with(['subtopic.academicTopic'])
+                        ->get();
+                    break;
+
+                case 'multiple_choice':
+                    $questions = \App\Models\MultipleChoiceQuestion::whereIn('id', $questionIds)
+                        ->with(['subtopic.academicTopic'])
+                        ->get();
+                    break;
+
+                case 'true_or_false':
+                    $questions = \App\Models\TrueOrFalseQuestion::whereIn('id', $questionIds)
+                        ->with(['subtopic.academicTopic'])
+                        ->get();
+                    break;
+
+                default:
+                    Log::warning('Unknown question type', [
+                        'type' => $questionType,
+                        'ids' => $questionIds
+                    ]);
+                    return [];
             }
-            return $item;
-        })->toArray();
 
-        $questions = $modelClass::whereIn('id', $ids)->get();
+            // Format questions for consistent output
+            return $questions->map(function ($question) use ($questionType) {
+                return $this->formatQuestionForOutput($question, $questionType);
+            })->toArray();
 
-        return $questions->map(function ($question) {
-            return $this->convertQuestionToArray($question);
-        })->toArray();
+        } catch (Exception $e) {
+            Log::error('Failed to fetch questions', [
+                'type' => $questionType,
+                'ids' => $questionIds,
+                'error' => $e->getMessage()
+            ]);
+
+            return [];
+        }
+    }
+
+
+    /**
+     * Format question object for consistent output structure
+     */
+    private function formatQuestionForOutput($question, string $questionType): array
+    {
+        $baseFormat = [
+            'id' => $question->id,
+            'question' => $question->question,
+            'score' => $question->score ?? 0,
+            'difficulty_level' => $question->difficulty_level ?? 'medium',
+            'type' => $questionType,
+            'subtopic_id' => $question->academic_subtopic_id ?? null,
+            'subtopic_name' => $question->subtopic->name ?? null,
+            'topic_name' => $question->subtopic->academicTopic->name ?? null,
+        ];
+
+        // Add type-specific fields
+        switch (strtolower($questionType)) {
+            case 'essay':
+                $baseFormat['answer'] = $question->answer ?? '';
+                break;
+
+            case 'multiple_choice':
+                $baseFormat['options'] = [
+                    'a' => $question->option_a ?? '',
+                    'b' => $question->option_b ?? '',
+                    'c' => $question->option_c ?? '',
+                    'd' => $question->option_d ?? '',
+                    'e' => $question->option_e ?? '',
+                ];
+                $baseFormat['answer'] = $question->answer ?? '';
+                break;
+
+            case 'true_or_false':
+                $baseFormat['answer'] = $question->answer ?? false;
+                break;
+        }
+
+        return $baseFormat;
     }
 
     private function convertQuestionToArray($question): array
@@ -441,13 +607,14 @@ class QuestionGenerator
         return ['question', 'answer'];
     }
 
-    private function formatExistingQuestions(array $questions): array
+    public function formatExistingQuestions(array $questions): array
     {
         return collect($questions)->map(function ($question) {
             if (!is_array($question)) {
                 return $question;
             }
 
+            // Handle individual option fields (option_a, option_b, etc.)
             foreach (['question', 'answer', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'] as $key) {
                 if (!isset($question[$key])) {
                     continue;
@@ -459,6 +626,25 @@ class QuestionGenerator
                 } elseif (is_string($value) && $this->isJsonString($value)) {
                     $question[$key] = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
                 }
+            }
+
+            // Handle options array for multiple choice questions
+            if (isset($question['options']) && is_array($question['options'])) {
+                $question['options'] = collect($question['options'])->map(function ($option, $key) {
+                    if ($option instanceof Mark) {
+                        return $option->down;
+                    }
+
+                    if (is_array($option) && isset($option['up'])) {
+                        return $option['up'];
+                    }
+
+                    if (is_string($option) && $this->isJsonString($option)) {
+                        $decoded = json_decode($option, true, 512, JSON_THROW_ON_ERROR);
+                        return $decoded['up'] ?? $option;
+                    }
+                    return $option;
+                })->toArray();
             }
 
             return $question;
