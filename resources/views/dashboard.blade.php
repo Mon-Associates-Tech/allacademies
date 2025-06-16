@@ -35,7 +35,7 @@
     @endif
 
     @if ($academicSubjects->count())
-        <section class="mt-10 w-full hidden mx-auto">
+        <section class="mt-10 w-full mx-auto">
 
 
             <h3 class="font-semibold text-2xl pb-4">My Courses</h3>

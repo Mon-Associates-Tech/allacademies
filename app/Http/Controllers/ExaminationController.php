@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
-use App\Models\EssayQuestion;
+use App\Models\Examination;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\QuestionGenerator;
@@ -137,9 +138,11 @@ class ExaminationController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param Examination $examination
      * @return Application|Factory|View|\Illuminate\View\View
-     * @throws \ImagickException
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Examination $examination)
     {
@@ -315,7 +318,7 @@ class ExaminationController extends Controller
             session()?->forget('examination_preview_data');
 
             return redirect()
-                ->route('academic-subjects.examinations.index', $academicSubject)
+                ->route('examinations.index', $academicSubject)
                 ->with('success', 'Examination is being generated! You will be notified when it\'s ready.');
 
         } catch (Exception $e) {
@@ -324,10 +327,5 @@ class ExaminationController extends Controller
                 ->withInput();
         }
     }
-
-    /**
-     * @param mixed $sections
-     * @return mixed
-     */
 
 }
