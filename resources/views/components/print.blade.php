@@ -204,7 +204,7 @@
                                     <span class="ml-2">Security</span>
                                 </a>
                             </div>
-                            <form method="POST" action="{{ route('sign-out') }}" class="py-1">
+                            <form method="POST" action="{{ route('logout') }}" class="py-1">
                                 @csrf
                                 <button
                                     class="w-full flex items-center py-2 px-4 text-sm group text-gray-700 hover:text-gray-900 hover:bg-gray-100">
