@@ -3,6 +3,9 @@
 namespace App\Livewire;
 
 use App\Services\QuestionGenerator;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Livewire\Component;
 
 class ExaminationPrintProcessor extends Component
@@ -11,7 +14,7 @@ class ExaminationPrintProcessor extends Component
     public $data;
     public $team_id;
     public $creator_id;
-    public function render()
+    public function render(): View|Application|Factory|\Illuminate\View\View
     {
         return view('livewire.examination-print-processor', ['academicSubject' => $this->academicSubject]);
     }
@@ -23,7 +26,7 @@ class ExaminationPrintProcessor extends Component
     {
         (new QuestionGenerator())->createExamination($this->academicSubject, $this->data, $this->team_id, $this->creator_id,);
         $this->js('window.print()');
-        return $this->redirect(route('academic-subjects.examinations.index', ['academic_subject' => $this->academicSubject]));
+        return $this->redirect(route('examinations.index', ['academic_subject' => $this->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]));
     }
 
 }
