@@ -176,6 +176,9 @@ class ExaminationController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param Examination $examination
      * @return Application|Factory|\Illuminate\View\View|View
      */
