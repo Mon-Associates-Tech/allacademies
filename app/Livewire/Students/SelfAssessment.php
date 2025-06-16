@@ -4,7 +4,6 @@ namespace App\Livewire\Students;
 
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
-use App\Models\Student;
 use App\Models\TrueOrFalseQuestion;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
