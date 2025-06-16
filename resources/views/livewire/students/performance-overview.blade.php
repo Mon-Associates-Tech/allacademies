@@ -31,12 +31,10 @@
                         <option value="{{ $id }}">{{ $name }}</option>
                     @endforeach
                 </select>
-<div wire:loading wire:target="selectedSubject">Loading...</div>
 
             </div>
         </div>
     </div>
-    selectedSubject = {{ $selectedSubject }}
     <!-- Overall Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div

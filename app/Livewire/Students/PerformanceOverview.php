@@ -154,18 +154,21 @@ class PerformanceOverview extends Component
         ];
     }
 
-    private function calculateGrade($percentage)
+    private function calculateGrade($percentage): string
     {
-        if ($percentage >= 90) return 'A+';
-        if ($percentage >= 85) return 'A';
-        if ($percentage >= 80) return 'B+';
-        if ($percentage >= 75) return 'B';
-        if ($percentage >= 70) return 'C+';
-        if ($percentage >= 65) return 'C';
-        if ($percentage >= 60) return 'D+';
-        if ($percentage >= 55) return 'D';
-        return 'F';
-    }
+    return match (true) {
+        $percentage >= 90 => 'A+',
+        $percentage >= 85 => 'A',
+        $percentage >= 80 => 'B+',
+        $percentage >= 75 => 'B',
+        $percentage >= 70 => 'C+',
+        $percentage >= 65 => 'C',
+        $percentage >= 60 => 'D+',
+        $percentage >= 55 => 'D',
+        default => 'F',
+    };
+}
+
 
     private function calculateTrend($assessments)
     {

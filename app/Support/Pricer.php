@@ -17,7 +17,7 @@ class Pricer
      * @throws UnknownCurrencyException
      * @throws NumberFormatException
      */
-    public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries, ?string $tag)
+    public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries, ?string $tag): Money
     {
 //        $unit = static::getUnitPrice($package, $duration);
 

@@ -4,12 +4,9 @@ namespace App\Livewire\Students;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Activity;
-use App\Models\Assessment;
-use App\Models\BookBorrowing;
-use App\Models\BookSubscription;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogs extends Component
 {
@@ -19,6 +16,8 @@ class ActivityLogs extends Component
     public $dateTo;
     public $activityType = 'all';
     public $search = '';
+    public $selectedActivity = null;
+    public $showModal = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -53,219 +52,98 @@ class ActivityLogs extends Component
         $this->resetPage();
     }
 
+    public function viewActivityDetails($activityId)
+    {
+        $this->selectedActivity = Activity::find($activityId);
+        $this->showModal = true;
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->selectedActivity = null;
+    }
+
     public function getActivityLogsProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (!$student) return Activity::query()->where('id', 0)->paginate(15);
 
-        $logs = collect();
-
-        // Academic Activities
-        if (in_array($this->activityType, ['all', 'academic'])) {
-            $activities = Activity::forStudent($student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('start_time', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('start_time', '<=', $this->dateTo);
-                })
-                ->when($this->search, function($query) {
-                    $query->where(function($q) {
-                        $q->where('title', 'like', '%' . $this->search . '%')
-                          ->orWhere('description', 'like', '%' . $this->search . '%');
-                    });
-                })
-                ->with(['subject', 'group'])
-                ->get()
-                ->map(function($activity) {
-                    return [
-                        'id' => $activity->id,
-                        'type' => 'academic_activity',
-                        'title' => $activity->title,
-                        'description' => $activity->description,
-                        'date' => $activity->start_time,
-                        'status' => $activity->status,
-                        'metadata' => [
-                            'activity_type' => $activity->activity_type,
-                            'subject' => $activity->subject?->name,
-                            'group' => $activity->is_group_activity ? $activity->group?->name : null,
-                            'location' => $activity->location
-                        ]
-                    ];
+        $query = Activity::query()
+            ->where(function($q) use ($student) {
+                $q->where('subject_type', get_class($student))
+                  ->where('subject_id', $student->id)
+                  ->orWhere('causer_id', Auth::id());
+            })
+            ->when($this->dateFrom, function($query) {
+                $query->whereDate('created_at', '>=', $this->dateFrom);
+            })
+            ->when($this->dateTo, function($query) {
+                $query->whereDate('created_at', '<=', $this->dateTo);
+            })
+            ->when($this->search, function($query) {
+                $query->where(function($q) {
+                    $q->where('description', 'like', '%' . $this->search . '%')
+                      ->orWhere('log_name', 'like', '%' . $this->search . '%')
+                      ->orWhereRaw("JSON_EXTRACT(properties, '$.book_title') LIKE ?", ['%' . $this->search . '%'])
+                      ->orWhereRaw("JSON_EXTRACT(properties, '$.subject_name') LIKE ?", ['%' . $this->search . '%'])
+                      ->orWhereRaw("JSON_EXTRACT(properties, '$.assessment_title') LIKE ?", ['%' . $this->search . '%']);
                 });
+            })
+            ->when($this->activityType !== 'all', function($query) {
+                $query->whereRaw("JSON_EXTRACT(properties, '$.action') LIKE ?", ['%' . $this->activityType . '%']);
+            })
+            ->latest()
+            ->paginate(15);
 
-            $logs = $logs->merge($activities);
-        }
-
-        // Assessments
-        if (in_array($this->activityType, ['all', 'assessment'])) {
-            $assessments = Assessment::where('student_id', $student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('created_at', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('created_at', '<=', $this->dateTo);
-                })
-                ->with('activity.subject')
-                ->get()
-                ->map(function($assessment) {
-                    return [
-                        'id' => $assessment->id,
-                        'type' => 'assessment',
-                        'title' => 'Assessment: ' . ($assessment->activity?->title ?? 'Self Assessment'),
-                        'description' => "Score: {$assessment->score}/{$assessment->max_score}",
-                        'date' => $assessment->created_at,
-                        'status' => 'completed',
-                        'metadata' => [
-                            'score' => $assessment->score,
-                            'max_score' => $assessment->max_score,
-                            'percentage' => $assessment->max_score > 0 ? round(($assessment->score / $assessment->max_score) * 100, 2) : 0,
-                            'subject' => $assessment->activity?->subject?->name
-                        ]
-                    ];
-                });
-
-            $logs = $logs->merge($assessments);
-        }
-
-        // Book Borrowings
-        if (in_array($this->activityType, ['all', 'borrowing'])) {
-            $borrowings = BookBorrowing::where('student_id', $student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('borrowed_at', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('borrowed_at', '<=', $this->dateTo);
-                })
-                ->when($this->search, function($query) {
-                    $query->whereHas('book', function($q) {
-                        $q->where('title', 'like', '%' . $this->search . '%')
-                          ->orWhere('author', 'like', '%' . $this->search . '%');
-                    });
-                })
-                ->with('book')
-                ->get()
-                ->map(function($borrowing) {
-                    return [
-                        'id' => $borrowing->id,
-                        'type' => 'book_borrowing',
-                        'title' => 'Borrowed: ' . $borrowing->book->title,
-                        'description' => 'Author: ' . $borrowing->book->author,
-                        'date' => $borrowing->borrowed_at,
-                        'status' => $borrowing->status,
-                        'metadata' => [
-                            'book_title' => $borrowing->book->title,
-                            'author' => $borrowing->book->author,
-                            'due_date' => $borrowing->due_date,
-                            'returned_at' => $borrowing->returned_at
-                        ]
-                    ];
-                });
-
-            $logs = $logs->merge($borrowings);
-        }
-
-        // Book Subscriptions
-        if (in_array($this->activityType, ['all', 'subscription'])) {
-            $subscriptions = BookSubscription::where('student_id', $student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('subscribed_at', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('subscribed_at', '<=', $this->dateTo);
-                })
-                ->when($this->search, function($query) {
-                    $query->whereHas('book', function($q) {
-                        $q->where('title', 'like', '%' . $this->search . '%')
-                          ->orWhere('author', 'like', '%' . $this->search . '%');
-                    });
-                })
-                ->with('book')
-                ->get()
-                ->map(function($subscription) {
-                    return [
-                        'id' => $subscription->id,
-                        'type' => 'book_subscription',
-                        'title' => 'Subscribed: ' . $subscription->book->title,
-                        'description' => 'Author: ' . $subscription->book->author,
-                        'date' => $subscription->subscribed_at,
-                        'status' => $subscription->status,
-                        'metadata' => [
-                            'book_title' => $subscription->book->title,
-                            'author' => $subscription->book->author,
-                            'expires_at' => $subscription->expires_at
-                        ]
-                    ];
-                });
-
-            $logs = $logs->merge($subscriptions);
-        }
-
-        // Sort by date descending and paginate
-        return $logs->sortByDesc('date')
-                   ->forPage($this->getPage(), 15)
-                   ->values();
+        return $query;
     }
 
-    public function getTotalLogsProperty()
+    public function getActivityStatsProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return 0;
+        if (!$student) return [];
 
-        $count = 0;
+        $baseQuery = Activity::query()
+            ->where(function($q) use ($student) {
+                $q->where('subject_type', get_class($student))
+                  ->where('subject_id', $student->id)
+                  ->orWhere('causer_id', Auth::id());
+            })
+            ->when($this->dateFrom, function($query) {
+                $query->whereDate('created_at', '>=', $this->dateFrom);
+            })
+            ->when($this->dateTo, function($query) {
+                $query->whereDate('created_at', '<=', $this->dateTo);
+            });
 
-        if (in_array($this->activityType, ['all', 'academic'])) {
-            $count += Activity::forStudent($student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('start_time', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('start_time', '<=', $this->dateTo);
-                })
-                ->count();
-        }
+        return [
+            'total' => $baseQuery->count(),
+            'assessments' => (clone $baseQuery)->where('description', 'like', '%assessment%')->count(),
+            'books' => (clone $baseQuery)->where('description', 'like', '%book%')->count(),
+            'schedule' => (clone $baseQuery)->where('description', 'like', '%schedule%')->count(),
+            'today' => (clone $baseQuery)->whereDate('created_at', today())->count(),
+        ];
+    }
 
-        if (in_array($this->activityType, ['all', 'assessment'])) {
-            $count += Assessment::where('student_id', $student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('created_at', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('created_at', '<=', $this->dateTo);
-                })
-                ->count();
-        }
-
-        if (in_array($this->activityType, ['all', 'borrowing'])) {
-            $count += BookBorrowing::where('student_id', $student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('borrowed_at', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('borrowed_at', '<=', $this->dateTo);
-                })
-                ->count();
-        }
-
-        if (in_array($this->activityType, ['all', 'subscription'])) {
-            $count += BookSubscription::where('student_id', $student->id)
-                ->when($this->dateFrom, function($query) {
-                    $query->whereDate('subscribed_at', '>=', $this->dateFrom);
-                })
-                ->when($this->dateTo, function($query) {
-                    $query->whereDate('subscribed_at', '<=', $this->dateTo);
-                })
-                ->count();
-        }
-
-        return $count;
+    public function getActivityTypeOptions()
+    {
+        return [
+            'all' => 'All Activities',
+            'assessment' => 'Assessment Activities',
+            'book' => 'Book Activities',
+            'schedule' => 'Schedule Activities',
+            'reading' => 'Reading Activities',
+            'subscription' => 'Subscription Activities'
+        ];
     }
 
     public function render()
     {
         return view('livewire.students.activity-logs', [
             'activityLogs' => $this->activityLogs,
-            'totalLogs' => $this->totalLogs
+            'activityStats' => $this->activityStats,
+            'activityTypeOptions' => $this->getActivityTypeOptions()
         ]);
     }
 }

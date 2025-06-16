@@ -2,33 +2,59 @@
 
 namespace App\Livewire\Students;
 
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Foundation\Application;
+use Illuminate\View\View;
 use Livewire\Component;
-use App\Models\Activity;
+use App\Models\Assessment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+
 class StudentSchedule extends Component
 {
-    public $view = 'month'; // month, week, day
+    public $viewType = 'month'; // month, week, day
     public $currentDate;
     public $calendarStartDate;
     public $calendarEndDate;
-    public $activities = [];
-    public $activityTypes = [
-        'assessment' => true,
-        'book_reading' => true,
-        'group_meeting' => true,
-        'quiz' => true,
-        'exam' => true
-    ];
+    public $assessments = [];
+    public $selectedEvent = null;
+    public $selectedStatus = null;
+    public $hasQuestions = false;
+    public $selectedEventQuestions = [];
 
-    public function mount()
+    public function mount(): void
     {
-        $this->currentDate = Carbon::now();
+        $this->currentDate = Carbon::now()->addDays(-7);
         $this->updateCalendarDates();
+
+        // Log schedule page access
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'accessed_schedule_page',
+                'page' => 'schedule',
+                'view_type' => $this->viewType
+            ])
+            ->log('Student accessed schedule page');
     }
 
-    public function updateCalendarDates()
+    public function updatedSelectedStatus(): void
     {
-        switch ($this->view) {
+        $this->loadAssessments();
+
+        // Log status filter change
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'filtered_schedule_by_status',
+                'selected_status' => $this->selectedStatus
+            ])
+            ->log('Student filtered schedule by status');
+    }
+
+    public function updateCalendarDates(): void
+    {
+        switch ($this->viewType) {
             case 'month':
                 $this->calendarStartDate = $this->currentDate->copy()->startOfMonth()->startOfWeek();
                 $this->calendarEndDate = $this->currentDate->copy()->endOfMonth()->endOfWeek();
@@ -43,66 +69,112 @@ class StudentSchedule extends Component
                 break;
         }
 
-        $this->loadActivities();
+        $this->loadAssessments();
     }
 
-    public function loadActivities()
+    public function loadAssessments(): void
     {
-        $types = collect($this->activityTypes)
-                ->filter(function ($value) {
-                    return $value === true;
-                })
-                ->keys()
-                ->toArray();
+        $query = Assessment::where('student_id', Auth::user()->student->id)
+            ->whereBetween('created_at', [$this->calendarStartDate, $this->calendarEndDate]);
 
-        $this->activities = Activity::forStudent(auth()->id())
-            ->whereIn('activity_type', $types)
-            ->where(function($query) {
-                $query->whereBetween('start_time', [$this->calendarStartDate, $this->calendarEndDate])
-                      ->orWhereBetween('end_time', [$this->calendarStartDate, $this->calendarEndDate]);
-            })
-            ->with(['subject', 'group'])
+        if ($this->selectedStatus) {
+            $query->where('status', $this->selectedStatus);
+        }
+
+        $assessments = $query->with(['subject', 'topic', 'book', 'responses'])
             ->get()
-            ->map(function($activity) {
-                // Format for calendar display
-                return [
-                    'id' => $activity->id,
-                    'title' => $activity->title,
-                    'start' => $activity->start_time->format('Y-m-d H:i:s'),
-                    'end' => $activity->end_time->format('Y-m-d H:i:s'),
-                    'type' => $activity->activity_type,
-                    'groupName' => $activity->is_group_activity ? $activity->group->name : null,
-                    'subject' => $activity->subject ? $activity->subject->name : null,
-                    'location' => $activity->location,
-                    'status' => $activity->status,
-                    'className' => $this->getEventClassName($activity),
-                ];
-            });
+            ->map(fn($a) => $this->formatAssessment($a));
+
+        $this->assessments = $assessments->toArray();
     }
 
-    private function getEventClassName($activity)
+    /**
+     * @throws \JsonException
+     */
+    private function formatAssessment($assessment): array
     {
-        // Define color classes for different activity types
-        $colors = [
-            'assessment' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-            'book_reading' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-            'group_meeting' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-            'quiz' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-            'exam' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        $questions = [];
+
+        if ($assessment->responses->isNotEmpty()) {
+            $responseData = $assessment->responses->first()?->data ?? [];
+            $responseData = json_decode($responseData, false, 512, JSON_THROW_ON_ERROR);
+
+            foreach ($responseData->questions as $q) {
+                if(isset($q->question))
+                    $questions[] = [
+                        'question' => $q->question,
+                        'studentAnswer' => $q->user_answer ?? null,
+                        'correctAnswer' => $q->correct_answer ?? null,
+                        'isCorrect' => $q->is_correct ?? false
+                    ];
+            }
+        }
+        return [
+            'id' => "assessment_{$assessment->id}",
+            'title' => "Assessment: {$assessment->title}",
+            'start' => $assessment->created_at->toIso8601String(),
+            'end' => $assessment->updated_at?->toIso8601String(),
+            'type' => 'assessment',
+            'status' => $assessment->status,
+            'subject' => optional($assessment->subject)->name,
+            'book' => optional($assessment->book)->title,
+            'score' => $assessment->score,
+            'max_score' => $assessment->max_score,
+            'percentage' => $assessment->percentage_score ?? 0,
+            'className' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            'is_assessment' => true,
+            'questions' => $questions,
+            // Add formatted date strings
+            'formatted_date' => $assessment->created_at->isoFormat('Do MMMM, YYYY'),
+            'formatted_time' => $assessment->created_at->format('h:i A'),
+            'relative_date' => $assessment->created_at->diffForHumans()
         ];
-
-        return $colors[$activity->activity_type] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
 
-    public function changeView($view)
+    public function openEventDetails($event): void
     {
-        $this->view = $view;
+        $this->selectedEvent = $event;
+        $this->selectedEventQuestions = $event['questions'] ?? [];
+
+        // Set hasQuestions based on whether questions exist
+        $this->hasQuestions = !empty($event['questions']) && count($event['questions']) > 0;
+
+        // Log event details view
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'viewed_assessment_details',
+                'assessment_id' => str_replace('assessment_', '', $event['id']),
+                'assessment_title' => $event['title'],
+                'has_questions' => $this->hasQuestions
+            ])
+            ->log('Student viewed assessment details');
+    }
+
+    public function resetSelectedEvent(): void
+    {
+        $this->selectedEvent = null;
+    }
+
+    public function changeView($newView): void
+    {
+        $this->viewType = $newView;
         $this->updateCalendarDates();
+
+        // Log view change
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'changed_schedule_view',
+                'new_view' => $newView,
+                'previous_view' => $this->viewType
+            ])
+            ->log('Student changed schedule view');
     }
 
-    public function nextPeriod()
+    public function nextPeriod(): void
     {
-        switch ($this->view) {
+        switch ($this->viewType) {
             case 'month':
                 $this->currentDate = $this->currentDate->addMonth();
                 break;
@@ -115,11 +187,21 @@ class StudentSchedule extends Component
         }
 
         $this->updateCalendarDates();
+
+        // Log navigation
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'navigated_schedule_forward',
+                'view_type' => $this->viewType,
+                'new_date' => $this->currentDate->toDateString()
+            ])
+            ->log('Student navigated schedule forward');
     }
 
-    public function previousPeriod()
+    public function previousPeriod(): void
     {
-        switch ($this->view) {
+        switch ($this->viewType) {
             case 'month':
                 $this->currentDate = $this->currentDate->subMonth();
                 break;
@@ -132,19 +214,19 @@ class StudentSchedule extends Component
         }
 
         $this->updateCalendarDates();
+
+        // Log navigation
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'navigated_schedule_backward',
+                'view_type' => $this->viewType,
+                'new_date' => $this->currentDate->toDateString()
+            ])
+            ->log('Student navigated schedule backward');
     }
 
-    public function createActivity()
-    {
-        return redirect()->route('student.activities.create');
-    }
-
-    public function viewActivity($id)
-    {
-        return redirect()->route('student.activities.show', $id);
-    }
-
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View|Application|Factory|View
     {
         return view('livewire.students.schedule');
     }

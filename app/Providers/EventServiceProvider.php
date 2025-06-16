@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Events\SubscriptionUpdated;
 use App\Listeners\EvaluateSubscriptionListener;
+use App\Services\UserLoginService;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -32,7 +35,13 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Event::listen(Login::class, static function (Login $event) {
+            app(UserLoginService::class)->log($event->user, 'logged_in');
+        });
+
+        Event::listen(Logout::class, static function (Logout $event) {
+            app(UserLoginService::class)->log($event->user, 'logged_out');
+        });
     }
 
     /**

@@ -1,0 +1,2 @@
+<x-academic-groups.index />
+

@@ -4,7 +4,9 @@ namespace App\Livewire\Students;
 
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
+use App\Models\Student;
 use App\Models\TrueOrFalseQuestion;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicTopic as Topic;
@@ -35,37 +37,86 @@ class SelfAssessment extends Component
 
     // Results phase
     public $result = null;
+    public $subjects = [];
 
     public function mount()
     {
-        $this->subjects = Subject::all();
+        $this->subjects = Subject::whereHas('academicLevel', static function ($query) {
+            $query->whereHas('students', function ($subQuery) {
+                $subQuery->where('id', auth()->user()->student->id);
+            });
+        })->with('academicLevel')->get();
+
+        // Log student accessing self-assessment
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'accessed_self_assessment',
+                'page' => 'self-assessment'
+            ])
+            ->log('Student accessed self-assessment page');
+    }
+
+    public function getRecentAssessmentsProperty()
+    {
+       return Assessment::where('student_id', auth()->user()->student->id)
+            ->with(['subject', 'topic'])
+            ->latest()
+            ->paginate(10);
     }
 
     public function updatedSelectedSubject()
     {
-        if ($this->selectedSubject) {
-            $this->topics = Topic::where('academic_subject_id', $this->selectedSubject)->get();
-        } else {
-            $this->topics = collect();
-        }
+        $this->topics = $this->selectedSubject
+            ? Topic::where('academic_subject_id', $this->selectedSubject)->get()
+            : collect();
+
+        // Reset dependent fields
+        Log::info('Selected topic: ' . $this->selectedSubject);
         $this->selectedTopic = null;
         $this->selectedSubtopic = null;
+        $this->subtopics = collect();
+
+        // Log subject selection
+        if ($this->selectedSubject) {
+            $subject = Subject::find($this->selectedSubject);
+            activity()->performedOn(auth()->user()->student)
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'action' => 'selected_subject_for_assessment',
+                    'subject_id' => $this->selectedSubject,
+                    'subject_name' => $subject->name ?? 'Unknown'
+                ])
+                ->log('Student selected subject for self-assessment');
+        }
     }
 
     public function updatedSelectedTopic()
     {
-        if ($this->selectedTopic) {
-            $this->subtopics = Subtopic::where('academic_topic_id', $this->selectedTopic)->get();
-        } else {
-            $this->subtopics = collect();
-        }
+        $this->subtopics = $this->selectedTopic
+            ? Subtopic::where('academic_topic_id', $this->selectedTopic)->get()
+            : collect();
+
+        // Reset dependent field
         $this->selectedSubtopic = null;
+
+        // Log topic selection
+        if ($this->selectedTopic) {
+            $topic = Topic::find($this->selectedTopic);
+            activity()->performedOn(auth()->user()->student)
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'action' => 'selected_topic_for_assessment',
+                    'topic_id' => $this->selectedTopic,
+                    'topic_name' => $topic->name ?? 'Unknown'
+                ])
+                ->log('Student selected topic for self-assessment');
+        }
     }
 
     public function startAssessment()
     {
         $this->reset(['questions', 'responses', 'assessment']);
-
 
         // Validate setup selections
         $this->validate([
@@ -166,7 +217,7 @@ class SelfAssessment extends Component
             'subject_id' => $this->selectedSubject,
             'topic_id' => $this->selectedTopic,
             'subtopic_id' => $this->selectedSubtopic,
-            'title' => 'Self Assessment',
+            'title' => "Self-Assessment for {$this->selectedSubject} - {$this->selectedTopic}",
             'start_time' => now(),
             'status' => 'in_progress',
         ]);
@@ -174,6 +225,20 @@ class SelfAssessment extends Component
         // Set timer
         $this->timeRemaining = $this->timeLimitSeconds;
         $this->dispatch('start-timer', ['seconds' => $this->timeRemaining]);
+
+        // Log assessment start
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'started_self_assessment',
+                'question_count' => $this->questionCount,
+                'difficulty' => $this->difficulty,
+                'question_types' => array_keys(array_filter($this->questionTypes)),
+                'subject_id' => $this->selectedSubject,
+                'topic_id' => $this->selectedTopic,
+                'subtopic_id' => $this->selectedSubtopic
+            ])
+            ->log('Student started self-assessment');
 
         $this->step = 'assessment';
     }
@@ -245,7 +310,10 @@ class SelfAssessment extends Component
         return true;
     }
 
-    public function completeAssessment()
+    /**
+     * @throws \JsonException
+     */
+    public function completeAssessment(): void
     {
         $totalScore = 0;
         $maxScore = 0;
@@ -253,9 +321,9 @@ class SelfAssessment extends Component
 
         // Score breakdown by question type
         $scoreBreakdown = [
-            'multiple_choice' => ['score' => 0, 'max_score' => 0],
-            'true_false'      => ['score' => 0, 'max_score' => 0],
-            'essay'           => ['score' => 0, 'max_score' => 0],
+            'multiple_choice' => ['score' => 0, 'max_score' => 10],
+            'true_false'      => ['score' => 0, 'max_score' => 10],
+            'essay'           => ['score' => 0, 'max_score' => 10],
         ];
 
         // Build full assessment data
@@ -325,18 +393,35 @@ class SelfAssessment extends Component
         $responseData['needs_grading'] = $needsGrading;
 
         // Save to AssessmentResponse model
-
+        AssessmentResponse::create([
+            'assessment_id' => $this->assessment->id,
+            'data' => json_encode($responseData, JSON_THROW_ON_ERROR),
+        ]);
 
         // Update assessment status
         $this->assessment->end_time = now();
         $this->assessment->total_score = $totalScore;
-        $this->assessment->max_score = $maxScore;
+//        $this->assessment->max_score = $maxScore;
         $this->assessment->percentage_score = $responseData['percentage_score'];
         $this->assessment->status = $needsGrading ? 'needs_grading' : 'completed';
         $this->assessment->save();
 
         // Set result for UI
         $this->result = $responseData;
+
+        // Log assessment completion
+        activity()->performedOn($this->assessment)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'completed_self_assessment',
+                'assessment_id' => $this->assessment->id,
+                'score' => $this->assessment->total_score,
+                'max_score' => $maxScore,
+                'percentage' => $this->assessment->percentage_score,
+                'question_count' => count($this->questions)
+            ])
+            ->log('Student completed self-assessment');
+
         $this->step = 'results';
     }
 
@@ -445,7 +530,7 @@ class SelfAssessment extends Component
         return $this->questions[$this->currentQuestionIndex] ?? null;
     }
 
-    private function buildQuestionResponseData($question, $response)
+private function buildQuestionResponseData($question, $response)
     {
         $questionType = $this->getTypeFromClassName(class_basename($question->questionable_type));
         $model = $question->questionable;
@@ -455,14 +540,26 @@ class SelfAssessment extends Component
         $score = 0;
         $maxScore = $question->points;
 
-        // Get correct answer based on type
-        if ($questionType === 'multiple_choice_question' || $questionType === 'true_false_question') {
-            $correctAnswer = $model->correct_answer ?? $model->answer ?? null;
-            $isCorrect = $userAnswer && $userAnswer === $correctAnswer;
+        // Get correct answer and compare based on question type
+        if ($questionType === 'multiple_choice_question') {
+            // For multiple choice, compare the letter (A, B, C, D, E)
+            $correctAnswer = strtoupper($model->answer);
+            $userAnswer = strtoupper($userAnswer);
+            $isCorrect = $userAnswer === $correctAnswer;
             $score = $isCorrect ? $maxScore : 0;
-        } elseif ($questionType === 'essay_question') {
-            $correctAnswer = null; // Not available yet
-            $score = 0;
+        }
+        elseif ($questionType === 'true_or_false_question') {
+            // For true/false, normalize to boolean string comparison
+            $correctAnswer = strtolower($model->answer);
+            $userAnswer = strtolower($userAnswer);
+            $isCorrect = $userAnswer === $correctAnswer;
+            $score = $isCorrect ? $maxScore : 0;
+        }
+        elseif ($questionType === 'essay_question') {
+            // For essays, store response but don't grade
+            $correctAnswer = $model->answer?->down ?? null;
+            $score = null; // Pending manual grading
+            $isCorrect = null;
         }
 
         // Build question text and options
@@ -472,8 +569,12 @@ class SelfAssessment extends Component
         if ($questionType === 'multiple_choice_question') {
             foreach (['a', 'b', 'c', 'd', 'e'] as $letter) {
                 $optionKey = 'option_' . $letter;
-                if (!empty($model->{$optionKey}?->down)) {
-                    $options[] = ['label' => strtoupper($letter), 'value' => $model->{$optionKey}->down];
+                if ($model->{$optionKey}?->down) {
+                    $options[] = [
+                        'label' => strtoupper($letter),
+                        'value' => $model->{$optionKey}->down,
+                        'is_correct' => strtoupper($letter) === $correctAnswer
+                    ];
                 }
             }
         }
@@ -482,25 +583,27 @@ class SelfAssessment extends Component
             'question_id' => $question->id,
             'question_type' => $questionType,
             'difficulty_level' => $question->difficulty_level,
-            'question_text' => $questionText,
+            'question' => $questionText,
             'options' => $options,
             'user_answer' => $userAnswer,
             'correct_answer' => $correctAnswer,
             'score' => $score,
             'max_score' => $maxScore,
             'is_correct' => $isCorrect,
+            'needs_grading' => $questionType === 'essay_question'
         ];
     }
 
-
-    public function render()
-    {
-        return view('livewire.students.self-assessment', [
-            'subjects' => Subject::all(),
-            'topics' => Topic::where('academic_subject_id', $this->selectedSubject)->get(),
-            'subtopics' => Subtopic::whereHas('topic', function ($q) {
-                $q->where('academic_subject_id', $this->selectedSubject);
-            })->get(),
-        ]);
-    }
+public function render()
+{
+    return view('livewire.students.self-assessment', [
+        'subjects' => $this->subjects,
+        'topics' => $this->selectedSubject
+            ? Topic::where('academic_subject_id', $this->selectedSubject)->get()
+            : collect(),
+        'subtopics' => $this->selectedTopic
+            ? Subtopic::where('academic_topic_id', $this->selectedTopic)->get()
+            : collect(),
+    ]);
+}
 }

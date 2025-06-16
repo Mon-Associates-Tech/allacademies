@@ -1,4 +1,3 @@
-
 @props(['action' => null,
 'titleAlignCenter' => false,
 'breadcrumb' => null,
@@ -25,8 +24,93 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @livewireStyles
+</head>
+<body class="font-sans antialiased text-gray-600 dark:text-gray-400
+  bg-[radial-gradient(73%_147%,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
+  dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
+  bg-blend-screen"
+  :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
+  x-data="{}"
+>
+    <!-- Page wrapper -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside>
+            <x-app.sidebar :variant="$attributes['sidebarVariant']" />
+        </aside>
+
+        <!-- Content area -->
+        <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
+            <!-- Header -->
+            <x-app.header :variant="$attributes['headerVariant']"/>
+
+            <!-- Main content -->
+            <main class="mt-5 p-0">
+                <!-- Breadcrumb -->
+                <div class="max-w-7xl pl-4 mr-auto print:hidden">{{ $breadcrumb }}</div>
+
+                <!-- Alerts -->
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
+                    <x-alert.success/>
+                    <x-alert.danger/>
+                </div>
+
+                <!-- Page header -->
+                <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2">
+                    <div class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
+                        <div class="text-lg md:text-2xl hidden print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
+                            {{ $title }}
+                        </div>
+
+                        <div class="text-sm print:hidden">
+                            <div class="my-auto">
+                                @if(isset($hasAction) && $hasAction && !isset($action))
+                                    @can('administrate')
+                                        <x-link.primary class="whitespace-nowrap"
+                                                        to="{{ $action_link ?? request()->route()->path }}">
+                                            {{ $actionLinkText ?? 'Add Action' }}
+                                        </x-link.primary>
+                                    @endcan
+                                @else
+                                    {{ $action }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page content -->
+                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-x-hidden">
+                    <div
+                        x-data="{}"
+                        class="w-full  sm:px-6 lg:px-8 "
+                    >
+                        <x-loader />
+                            {{ $slot }}
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    @livewireScriptConfig
+
+    <script>
+        // Check for dark mode preference and apply immediately to prevent flash
+        if (localStorage.getItem('dark-mode') === 'true' ||
+            (localStorage.getItem('dark-mode') === null &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+        }
+    </script>
 
     <script>
         document.addEventListener('alpine:initializing', () => {
@@ -62,104 +146,35 @@
             });
 
             // Dark mode store
+            Alpine.store('darkMode', {
+                on: false,
 
-                // Set up global state
-                window.isDarkModeOn = localStorage.getItem('dark-mode') === 'true';
+                init() {
+                    this.on = localStorage.getItem('dark-mode') === 'true' ||
+                        (localStorage.getItem('dark-mode') === null &&
+                            window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-                 window.toggleDarkMode = function () {
-                window.isDarkModeOn = !window.isDarkModeOn;
-                localStorage.setItem('dark-mode', window.isDarkModeOn);
-                updateDarkMode();
-            }
+                    // Watch for system theme changes
+                    window.matchMedia('(prefers-color-scheme: dark)')
+                        .addEventListener('change', e => {
+                            if (localStorage.getItem('dark-mode') === null) {
+                                this.toggle(e.matches);
+                            }
+                        });
+                },
 
-                function updateDarkMode() {
-                document.documentElement.classList.toggle('dark', window.isDarkModeOn);
-                document.documentElement.style.colorScheme = window.isDarkModeOn ? 'dark' : 'light';
-            }
+                toggle(value = null) {
+                    this.on = value !== null ? value : !this.on;
+                    localStorage.setItem('dark-mode', this.on);
+                    this.updateDOM();
+                },
 
-                // Initialize on load
-                document.addEventListener('DOMContentLoaded', () => {
-                // Apply saved preference or system default
-                if (localStorage.getItem('dark-mode') === null) {
-                    window.isDarkModeOn = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-                updateDarkMode();
+                updateDOM() {
+                    document.documentElement.classList.toggle('dark', this.on);
+                    document.documentElement.style.colorScheme = this.on ? 'dark' : 'light';
+                }
             });
-
-    });
-
-
+        });
     </script>
-
-</head>
-<body
-    class="font-sans antialiased bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400"
-    :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
-    x-data="{}"
->
-    <!-- Page wrapper -->
-    <div class="flex h-screen overflow-hidden">
-
-        <!-- Sidebar -->
-        <x-app.sidebar :variant="$attributes['sidebarVariant']" />
-
-        <!-- Content area -->
-        <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
-            <!-- Header -->
-            <x-app.header :variant="$attributes['headerVariant']"/>
-
-            <!-- Main content -->
-            <main class="mt-5">
-                <!-- Breadcrumb -->
-                <div class="max-w-5xl mx-auto print:hidden">{{ $breadcrumb }}</div>
-
-                <!-- Alerts -->
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
-                    <x-alert.success/>
-                    <x-alert.danger/>
-                </div>
-
-                <!-- Page header -->
-                <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-                    <div class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
-                        <div class="text-lg md:text-2xl print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
-                            {{ $title }}
-                        </div>
-
-                        <div class="text-sm opacity-50 print:hidden">
-                            <div class="my-auto">
-                                @if(isset($hasAction) && $hasAction && !isset($action))
-                                    @can('administrate')
-                                        <x-link.primary class="whitespace-nowrap"
-                                                        to="{{ $action_link ?? request()->route()->path }}">
-                                            {{ $actionLinkText ?? 'Add Action' }}
-                                        </x-link.primary>
-                                    @endcan
-                                @else
-                                    {{ $action }}
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Page content -->
-                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-x-hidden">
-                    <div
-                        x-data="{}"
-                        class="w-full px-4 sm:px-6 lg:px-8 "
-                    >
-                        <div class="" style="">
-                            {{ $slot }}
-                        </div>
-                    </div>
-                </div>
-
-            </main>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    @livewireScriptConfig
 </body>
 </html>

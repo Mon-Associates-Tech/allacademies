@@ -5,6 +5,7 @@ namespace App\Livewire\Students;
 use App\Models\Activity;
 use App\Models\Assessment;
 use App\Models\Book;
+use App\Models\BookSubscription;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -32,9 +33,9 @@ class Overview extends Component
 
     public function render()
     {
-        $student = auth()->user();
+        $student = auth()->user()->student;
             // Get books the student has access to
-            $recentBooks = Book::whereHas('students', function($query) use ($student) {
+            $bookSubscriptions = BookSubscription::whereHas('student', function($query) use ($student) {
                 $query->where('student_id', $student->id);
             })->latest()->take(5)->get();
 
@@ -82,7 +83,7 @@ class Overview extends Component
                 });
 
             return view('livewire.students.overview', [
-                'recentBooks' => $recentBooks,
+                'bookSubscriptions' => $bookSubscriptions,
                 'bookCount' => $bookCount,
                 'recentAssessments' => $recentAssessments,
                 'upcomingActivities' => $upcomingActivities,

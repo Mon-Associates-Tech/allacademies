@@ -11,6 +11,7 @@
         "brick/money": "^0.7.0",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^12",
         "laravel/sanctum": "*",
         "laravel/telescope": "^5.7",
@@ -20,6 +21,7 @@
         "livewire/livewire": "^3.6",
         "maatwebsite/excel": "^3.1",
         "phpoffice/phpword": "^1.3",
+        "spatie/laravel-activitylog": "^4.10",
         "symfony/console": "^7.2.0",
         "symfony/mailgun-mailer": "^6.3",
         "tinymce/tinymce": "^7.8"

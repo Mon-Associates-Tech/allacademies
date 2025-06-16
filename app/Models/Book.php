@@ -19,17 +19,33 @@ class Book extends Model
         'pages',
         'has_hardcopy',
         'has_softcopy',
-        'additional_info'
+        'additional_info',
+        'cover_image',
+        'content_url',
+        'annual_subscription_fee',
+        'subscription_conditions'
     ];
 
     protected $casts = [
         'has_hardcopy' => 'boolean',
         'has_softcopy' => 'boolean',
+        'cover_image' => 'string',
+        'annual_subscription_fee' => 'decimal:2'
     ];
 
     public function author()
     {
         return $this->belongsTo(Author::class);
+    }
+
+    public function getCoverImageAttribute()
+    {
+        return asset('images/book-cover.jpg');
+    }
+
+    public function getContentUrlAttribute()
+    {
+        return asset('sample.pdf');
     }
 
     public function bookCategory()
@@ -52,17 +68,35 @@ class Book extends Model
         return $this->hasMany(GroupBookSubscription::class);
     }
 
-    public function approvals(){
+    public function approvals()
+    {
         return $this->hasMany(BookApproval::class);
     }
 
-    /**
-     * The students that have access to this book.
-     */
     public function students(): BelongsToMany
     {
         return $this->belongsToMany(Student::class)
             ->withTimestamps();
     }
 
+    public function teachers(): BelongsToMany
+    {
+        return $this->belongsToMany(Teacher::class)
+            ->withTimestamps();
+    }
+
+    public function getFormattedSubscriptionFeeAttribute()
+    {
+        return 'GHS ' . number_format($this->annual_subscription_fee, 2);
+    }
+
+    public function getSubscriptionConditionsAttribute()
+    {
+        return $this->attributes['subscription_conditions'] ??
+            "1. Subscription is valid for one year from payment date\n" .
+            "2. Book content is for reading only - no downloading, copying or printing allowed\n" .
+            "3. Access will be revoked upon subscription expiry\n" .
+            "4. Subscription is non-refundable\n" .
+            "5. Content is protected by copyright laws";
+    }
 }

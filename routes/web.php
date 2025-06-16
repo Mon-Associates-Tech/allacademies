@@ -70,7 +70,7 @@ Route::middleware('guest')->group(function () {
     Route::post('sign-up', [SignUpController::class, 'store']);
 });
 
-Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('sign-out');
+Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->prefix('verify/email')->name('verification.')->group(function () {
     Route::get('notice', [EmailVerificationController::class, 'notice'])->name('notice');
@@ -116,28 +116,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('academic-groups', AcademicGroupController::class);
-    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->shallow();
-    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->shallow();
-    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->shallow();
-    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->shallow();
-    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
-    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
+//    Route::resource('academic-groups', AcademicGroupController::class);
+//    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->shallow();
+//    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->shallow();
+//    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->shallow();
+//    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->shallow();
+//    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
+//    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
 
     Route::resource('users', UserController::class)->only(['index', 'show']);
 
 
-    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])
-        ->name('academic-subjects.examinations.preview');
-    Route::post('academic-subjects/{academic_subject}/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
-        ->name('academic-subjects.examinations.generate-preview');
-    Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
-    Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
-    Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
-    Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
-    Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    Route::get('quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
+//    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])
+//        ->name('academic-subjects.examinations.preview');
+//    Route::post('academic-subjects/{academic_subject}/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
+//        ->name('academic-subjects.examinations.generate-preview');
+//    Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
+//    Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
+//    Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
+//    Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
+//    Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
+//    Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
+//    Route::get('quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
 
     Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
@@ -269,16 +269,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('assessments', AssessmentController::class);
 
     // Book Borrowing routes
-    Route::resource('book-borrowings', BookBorrowingController::class)->except(['destroy']);
+//    Route::resource('book-borrowings', BookBorrowingController::class)->except(['destroy']);
 
     // Book Subscription routes
-    Route::resource('book-subscriptions', BookSubscriptionController::class)->except(['destroy']);
+//    Route::resource('book-subscriptions', BookSubscriptionController::class)->except(['destroy']);
 
     // Group Book Subscription routes
-    Route::resource('group-book-subscriptions', GroupBookSubscriptionController::class)->except(['destroy']);
+//    Route::resource('group-book-subscriptions', GroupBookSubscriptionController::class)->except(['destroy']);
 
     // Book Approval routes
-    Route::resource('book-approvals', BookApprovalController::class)->except(['destroy']);
+//    Route::resource('book-approvals', BookApprovalController::class)->except(['destroy']);
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -299,4 +299,52 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
 });
 
 
-require __DIR__.'/demo.php';
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
+    // Existing routes
+
+    // Hierarchical academic routes with full nesting
+    Route::resource('academic-groups', AcademicGroupController::class);
+
+    Route::prefix('academic-groups/{academic_group}')->group(function () {
+        Route::resource('academic-levels', AcademicLevelController::class);
+
+        Route::prefix('academic-levels/{academic_level}')->group(function () {
+            Route::resource('academic-subjects', AcademicSubjectController::class);
+
+            Route::prefix('academic-subjects/{academic_subject}')->group(function () {
+                Route::resource('academic-topics', AcademicTopicController::class);
+
+                Route::prefix('academic-topics/{academic_topic}')->group(function () {
+                    Route::resource('essay-questions', EssayQuestionController::class);
+                    Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class);
+                    Route::resource('multiple-choice-questions', MultipleChoiceQuestionController::class);
+
+                    // Keep subtopics route within the hierarchy
+                    Route::resource('subtopics', SubtopicController::class);
+                });
+
+                // Keep examinations and quizzes routes within the subject hierarchy
+                Route::get('/examinations/preview', [ExaminationController::class, 'preview'])
+                    ->name('examinations.preview');
+                Route::post('/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
+                    ->name('examinations.generate-preview');
+                Route::resource('examinations', ExaminationController::class)
+                    ->except(['edit', 'update', 'destroy']);
+                Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
+//                Route::get('/quizzes/start', [QuizController::class, 'start'])->name('quizzes.start');
+                Route::match(['GET', 'POST'], '/quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
+                Route::get('/quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
+                Route::resource('quizzes', QuizController::class)
+                    ->except(['edit', 'update', 'destroy']);
+                Route::get('/quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
+                Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
+            });
+        });
+    });
+
+    // Other existing routes
+});
+
+
+
+//require __DIR__.'/demo.php';

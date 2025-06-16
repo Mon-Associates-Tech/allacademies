@@ -4,12 +4,12 @@
     </x-slot>
     @can('privileged', $currentTeam)
         <x-slot name="action">
-            <x-link.primary :to="route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])">New Examination</x-link.primary>
+            <x-link.primary :to="route('examinations.create', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup])">New Examination</x-link.primary>
         </x-slot>
     @endcan
 
     @if ($examinations->count())
-        <div class="max-w-5xl mx-auto">
+        <div class="max mx-auto">
             <x-table class="">
                 <x-slot name="head">
                     <tr>
@@ -23,9 +23,9 @@
                         <x-table.td bold>{{ $examination->title }}</x-table.td>
                         <x-table.td action>
                             <a class="text-primary-600 hover:text-primary-900"
-                               href="{{ route('examinations.show', ['examination' => $examination]) }}">Question Paper</a>
+                               href="{{ route('examinations.show', ['examination' => $examination, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}">Question Paper</a>
                             <a class="text-primary-600 hover:text-primary-900"
-                               href="{{ route('examinations.answers', ['examination' => $examination]) }}">Answer Scheme</a>
+                               href="{{ route('examinations.answers', ['examination' => $examination, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level'=>getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}">Answer Scheme</a>
 
 
                             <span x-data="{ format: 'none' }" class="inline-flex rounded-md">

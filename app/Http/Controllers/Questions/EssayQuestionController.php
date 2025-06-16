@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Questions;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EssayQuestionRequest;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
+use App\Models\MultipleChoiceQuestion;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -19,7 +23,7 @@ class EssayQuestionController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function index(AcademicTopic $academicTopic)
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
 
@@ -35,11 +39,14 @@ class EssayQuestionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopic $academicTopic
      * @param EssayQuestionRequest $request
      * @return RedirectResponse
      */
-    public function store(AcademicTopic $academicTopic, EssayQuestionRequest $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestionRequest $request): RedirectResponse
     {
         $this->authorize('moderate');
         $data = $request->validated();
@@ -54,7 +61,7 @@ class EssayQuestionController extends Controller
 
         $essayQuestion = $academicTopic->essayQuestions()->create($data);
 
-        return to_route('academic-topics.essay-questions.index', ['academic_topic' => $academicTopic])
+        return to_route('essay-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.created', ['name' => $essayQuestion->question->summary]));
     }
 
@@ -63,7 +70,7 @@ class EssayQuestionController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function create(AcademicTopic $academicTopic)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
@@ -75,13 +82,17 @@ class EssayQuestionController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param EssayQuestion $essayQuestion
      * @return Application|Factory|View|\Illuminate\View\View
      */
     public
-    function show(EssayQuestion $essayQuestion)
+    function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
     {
-        $this->authorize('moderate');
+//        $this->authorize('moderate');
 
         $essayQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
         $essayQuestion->load('subtopic');
@@ -94,11 +105,15 @@ class EssayQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param EssayQuestion $essayQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public
-    function edit(EssayQuestion $essayQuestion)
+    function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
 
@@ -114,16 +129,20 @@ class EssayQuestionController extends Controller
      * Update the specified resource in storage.
      *
      * @param EssayQuestionRequest $request
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param EssayQuestion $essayQuestion
      * @return RedirectResponse
      */
     public
-    function update(EssayQuestionRequest $request, EssayQuestion $essayQuestion)
+    function update(EssayQuestionRequest $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion): RedirectResponse
     {
         $this->authorize('moderate');
 
         $data = $request->validated();
-        if (isset($request->subtopic) && isset($essayQuestion->subtopic->name)) {
+        if (isset($request->subtopic, $essayQuestion->subtopic->name)) {
             $subTopic = AcademicSubtopic::updateOrCreate(
                 ['name' => $essayQuestion->subtopic->name],
                 ['name' => $request->subtopic, 'academic_topic_id' => $essayQuestion->academic_topic_id]
@@ -133,24 +152,28 @@ class EssayQuestionController extends Controller
 
         $essayQuestion->update($data);
 
-        return to_route('essay-questions.show', ['essay_question' => $essayQuestion])
+        return to_route('essay-questions.show', ['essay_question' => $essayQuestion, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_topic' => getRouteParameter('academic_topic'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.updated', ['name' => $essayQuestion->question->summary]));
     }
 
     /**
      * Remove the specified resource from storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param EssayQuestion $essayQuestion
      * @return RedirectResponse
      */
     public
-    function destroy(EssayQuestion $essayQuestion)
+    function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion): RedirectResponse
     {
         $this->authorize('moderate');
 
         $essayQuestion->load('academicTopic')->delete();
 
-        return to_route('academic-topics.essay-questions.index', ['academic_topic' => $essayQuestion->academicTopic])
+        return to_route('essay-questions.index', ['essay_question' => $essayQuestion, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_topic' => getRouteParameter('academic_topic'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.deleted', ['name' => $essayQuestion->question->summary]));
     }
 }

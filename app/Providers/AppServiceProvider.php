@@ -17,6 +17,7 @@ use App\Models\Examination;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\Payment;
 use App\Models\Role;
+use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\Subscription;
 use App\Models\Teacher;
@@ -55,8 +56,7 @@ class AppServiceProvider extends ServiceProvider
 //        Livewire::component('sidebar-toggle', SidebarToggle::class);
 
 
-
-Relation::enforceMorphMap([
+        Relation::enforceMorphMap([
             'academic_group' => AcademicGroup::class,
             'academic_level' => AcademicLevel::class,
             'academic_subject' => AcademicSubject::class,
@@ -70,11 +70,15 @@ Relation::enforceMorphMap([
             'true_or_false_question' => TrueOrFalseQuestion::class,
             'user' => User::class,
             'book' => Book::class,
+            'student' => Student::class,
             'role' => Role::class,
             'StudentGroup' => StudentGroup::class,
             'Teacher' => Teacher::class,
             'Author' => Author::class,
             'BookCategory' => BookCategory::class,
+            'book_subscription' => \App\Models\BookSubscription::class,
+            'assessment' => \App\Models\Assessment::class,
+            'book_borrowing' => \App\Models\BookBorrowing::class,
         ]);
     }
 }

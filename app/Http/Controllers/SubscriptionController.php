@@ -11,7 +11,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
@@ -19,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class SubscriptionController extends Controller
 {
@@ -59,12 +59,12 @@ class SubscriptionController extends Controller
      *
      * @param SubscriptionRequest $request
      * @return RedirectResponse
-     * @throws \Throwable
+     * @throws Throwable
      */
-    public function store(SubscriptionRequest $request)
+    public function store(SubscriptionRequest $request): RedirectResponse
     {
         $money = Pricer::calculate(
-            $package = SubscriptionPackage::from($package = $request->input('package')),
+            $package = SubscriptionPackage::from($request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
             $beneficiaries =  $request->integer('beneficiaries'),
@@ -76,22 +76,22 @@ class SubscriptionController extends Controller
         $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
-            'reference' => uniqid(),
+            'reference' => uniqid('', true),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
             'expires_at' => Carbon::now()->addMonths($durationInMonths),
         ]);
 
         if (
-            $user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package
-            || !$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package
+            ($user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package)
+            || (!$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package)
         ) {
             throw ValidationException::withMessages([
                 'package' => 'You can not subscribe to this package for the current team',
             ]);
         }
 
-        DB::transaction(function () use ($subscription, $user, $subjects) {
+        DB::transaction(static function () use ($subscription, $user, $subjects) {
             $subscription->team()->associate($user->currentTeam);
 
             $subscription = $user->subscriptions()->save($subscription);
@@ -106,15 +106,16 @@ class SubscriptionController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Subscription  $subscription
-     * @return Response
+     * @param Subscription $subscription
+     * @return RedirectResponse
+     * @throws Throwable
      */
-    public function destroy(Subscription $subscription)
+    public function destroy(Subscription $subscription): RedirectResponse
     {
-        Gate::allowIf(fn ($user) => $user->current_team_id === $subscription->team_id);
+        Gate::allowIf(static fn ($user) => $user->current_team_id === $subscription->team_id);
         Gate::allowIf(SubscriptionStatus::UNPAID === $subscription->status);
 
-        DB::transaction(function () use ($subscription) {
+        DB::transaction(static function () use ($subscription) {
             $subscription->academicSubjects()->detach();
 
             $subscription->delete();

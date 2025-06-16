@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
 use App\Models\AcademicTopic;
 use App\Models\AcademicSubject;
 use App\Http\Requests\AcademicTopicRequest;
@@ -19,10 +21,9 @@ class AcademicTopicController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function index(AcademicSubject $academicSubject)
-    {
-        $this->authorize('moderate');
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
 
+    {
         $academicTopics = $academicSubject->academicTopics()->latest('id')->paginate();
 
         $academicSubject->load('academicLevel.academicGroup');
@@ -38,9 +39,9 @@ class AcademicTopicController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function create(AcademicSubject $academicSubject)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
-//        $this->authorize('administrate');
+        $this->authorize('administrate');
 
         $academicSubject->load('academicLevel.academicGroup');
 
@@ -52,29 +53,35 @@ class AcademicTopicController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
      * @param AcademicSubject $academicSubject
      * @param AcademicTopicRequest $request
      * @return RedirectResponse
      */
-    public function store(AcademicSubject $academicSubject, AcademicTopicRequest $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopicRequest $request): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicTopic = $academicSubject->academicTopics()->create($request->validated());
 
-        return to_route('academic-subjects.academic-topics.index', ['academic_subject' => $academicSubject])
+        return to_route('academic-topics.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.created', ['name' => $academicTopic->name]));
     }
 
     /**
      * Display the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopic $academicTopic
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function show(AcademicTopic $academicTopic)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
+
 
         $academicTopic->load('academicSubject.academicLevel.academicGroup')
             ->loadCount('multipleChoiceQuestions', 'trueOrFalseQuestions', 'essayQuestions');
@@ -87,10 +94,13 @@ class AcademicTopicController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopic $academicTopic
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function edit(AcademicTopic $academicTopic)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic)
     {
         $this->authorize('administrate');
 
@@ -104,33 +114,39 @@ class AcademicTopicController extends Controller
     /**
      * Update the specified resource in storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopicRequest $request
      * @param AcademicTopic $academicTopic
      * @return RedirectResponse
      */
-    public function update(AcademicTopicRequest $request, AcademicTopic $academicTopic)
+    public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopicRequest $request, AcademicTopic $academicTopic): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicTopic->update($request->validated());
 
-        return to_route('academic-topics.show', ['academic_topic' =>  $academicTopic])
+        return to_route('academic-topics.show', ['academic_topic' =>  $academicTopic, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.updated', ['name' => $academicTopic->name]));
     }
 
     /**
      * Remove the specified resource from storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopic $academicTopic
      * @return RedirectResponse
      */
-    public function destroy(AcademicTopic $academicTopic)
+    public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicTopic->load('academicSubject')->delete();
 
-        return to_route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject])
+        return to_route('academic-topics.index', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.deleted', ['name' => $academicTopic->name]));
     }
 }

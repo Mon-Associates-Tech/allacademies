@@ -2,18 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Http\Requests\AcademicSubjectRequest;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
+
 
 class AcademicSubjectController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
-    public function index(AcademicLevel $academicLevel)
+    public function index(AcademicGroup $academicGroup,  AcademicLevel $academicLevel, AcademicSubject $academicSubject)
+
     {
         $this->authorize('moderate');
 
@@ -30,9 +37,9 @@ class AcademicSubjectController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Factory|View|Application|\Illuminate\View\View|object
      */
-    public function create(AcademicLevel $academicLevel)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $this->authorize('administrate');
 
@@ -46,29 +53,32 @@ class AcademicSubjectController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubjectRequest $request
+     * @return RedirectResponse
      */
-    public function store(AcademicLevel $academicLevel, AcademicSubjectRequest $request)
+    public function store(AcademicLevel $academicLevel, AcademicSubjectRequest $request): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicSubject = $academicLevel->academicSubjects()->create($request->validated());
 
-        return to_route('academic-levels.academic-subjects.index', ['academic_level' => $academicLevel])
+        return to_route('academic-subjects.index', ['academic_level' => $academicLevel])
             ->with('success', __('status.resource.created', ['name' => $academicSubject->name]));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\AcademicSubject  $academicSubject
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
-    public function show(AcademicSubject $academicSubject)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
+
     {
         $this->authorize('moderate');
-
         $academicSubject->load('academicLevel.academicGroup')->loadCount('academicTopics');
 
         return view('academic-subjects.show', [
@@ -79,10 +89,12 @@ class AcademicSubjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\AcademicSubject  $academicSubject
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
-    public function edit(AcademicSubject $academicSubject)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $this->authorize('administrate');
 
@@ -96,11 +108,13 @@ class AcademicSubjectController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AcademicSubject  $academicSubject
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubjectRequest $request
+     * @param AcademicSubject $academicSubject
+     * @return RedirectResponse
      */
-    public function update(AcademicSubjectRequest $request, AcademicSubject $academicSubject)
+    public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubjectRequest $request, AcademicSubject $academicSubject): RedirectResponse
     {
         $this->authorize('administrate');
 
@@ -113,16 +127,18 @@ class AcademicSubjectController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\AcademicSubject  $academicSubject
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @return RedirectResponse
      */
-    public function destroy(AcademicSubject $academicSubject)
+    public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicSubject->load('academicLevel')->delete();
 
-        return to_route('academic-levels.academic-subjects.index', ['academic_level' => $academicSubject->academicLevel])
+        return to_route('academic-subjects.index', ['academic_level' => $academicSubject->academicLevel])
             ->with('success', __('status.resource.deleted', ['name' => $academicSubject->name]));
     }
 }

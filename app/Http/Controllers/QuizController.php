@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicTopic;
+use App\Models\EssayQuestion;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\Quiz;
@@ -20,7 +24,7 @@ class QuizController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(AcademicSubject $academicSubject)
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $this->authorize('subscribed', $academicSubject);
 
@@ -40,7 +44,7 @@ class QuizController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(AcademicSubject $academicSubject)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
@@ -63,9 +67,9 @@ class QuizController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(AcademicSubject $academicSubject, QuizRequest $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, QuizRequest $request)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
@@ -83,7 +87,7 @@ class QuizController extends Controller
             $request->validated('sections')
         ));
 
-        return to_route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject])
+        return to_route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group') ])
             ->with('success', __('status.quiz.generating'));
     }
 
@@ -93,11 +97,11 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function start(Quiz $quiz)
+    public function start(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
-        $quiz->load('academicSubject');
 
-        $this->authorize('subscribed', $quiz->academicSubject);
+
+        $this->authorize('subscribed', [$quiz->academicSubject]);
 
         Gate::allowIf(fn ($user) => $user->current_team_id === $quiz->team_id);
 
@@ -119,7 +123,7 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function take(Quiz $quiz, Request $request)
+    public function take(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz, Request $request)
     {
         $quiz->load('academicSubject');
 
@@ -146,7 +150,7 @@ class QuizController extends Controller
         }
 
         if ($worksheet->ended_at) {
-            return to_route('quizzes.stop', ['quiz' => $quiz]);
+            return to_route('quizzes.stop', ['quiz' => $quiz, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group'), 'academic_subject'=>getRouteParameter('academic_subject')]);
         }
 
         $question = Quizzer::askQuestion($quiz, $worksheet);
@@ -163,7 +167,7 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function stop(Quiz $quiz)
+    public function stop(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
         $quiz->load('academicSubject');
 
@@ -188,7 +192,7 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function scores(Quiz $quiz)
+    public function scores(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
         $quiz->load('academicSubject');
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
@@ -219,7 +223,7 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function show(Quiz $quiz)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
         $quiz->load('academicSubject');
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicGroup extends Model
@@ -20,8 +21,13 @@ class AcademicGroup extends Model
         'name',
     ];
 
-    public function academicLevels()
+    public function academicLevels(): AcademicGroup|HasMany
     {
         return $this->hasMany(AcademicLevel::class);
+    }
+
+    public function teachers(): AcademicGroup|HasMany
+    {
+        return $this->hasMany(Teacher::class);
     }
 }

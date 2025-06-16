@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GroupBookSubscription extends Model
 {
@@ -24,7 +25,7 @@ class GroupBookSubscription extends Model
         'end_date' => 'datetime',
     ];
 
-    public function studentGroup()
+    public function studentGroup(): BelongsTo
     {
         return $this->belongsTo(StudentGroup::class);
     }

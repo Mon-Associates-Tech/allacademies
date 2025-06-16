@@ -89,7 +89,7 @@
                     </div>
                 @endif
                 <div class="mt-4">
-                    <button wire:click="$set('activeTab', 'schedule')" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                    <button wire:click="$dispatch('studentTabChanged', {tab: 'schedule'})" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
                         View full schedule →
                     </button>
                 </div>
@@ -119,8 +119,8 @@
                         <p class="text-gray-500 dark:text-gray-400">No assessment data available</p>
                     </div>
                 @endif
-                <div class="mt-4">
-                    <button wire:click="$set('activeTab', 'performance')" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                <div class="mt-4 text-right">
+                    <button wire:click="dispatch('studentTabChanged', {tab: 'performance'})" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
                         View detailed performance →
                     </button>
                 </div>
@@ -134,13 +134,14 @@
             <h3 class="text-lg font-semibold">My Recent Books</h3>
         </div>
         <div class="p-4">
-            @if(count($recentBooks) > 0)
+            @if(count($bookSubscriptions) > 0)
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    @foreach($recentBooks as $book)
+                    @foreach($bookSubscriptions as  $subscription)
                         <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex flex-col">
                             <div class="h-40 bg-gray-200 dark:bg-gray-600 rounded-lg mb-3 overflow-hidden">
-                                @if($book->cover_image)
-                                    <img src="{{ $book->cover_image }}" alt="{{ $book->title }}" class="w-full h-full object-cover">
+                                @if($subscription->book->cover_image)
+                                    <img src="{{ $subscription->book->cover_image }}" alt="{{ $subscription->book->title }}" class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
                                         <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
@@ -149,21 +150,21 @@
                                     </div>
                                 @endif
                             </div>
-                            <h4 class="font-medium mb-1 line-clamp-1">{{ $book->title }}</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 line-clamp-1">{{ $book->author->name }}</p>
+                            <h4 class="font-medium mb-1 line-clamp-1">{{ $subscription->book->title }}</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 line-clamp-1">{{ $subscription->book->author->name }}</p>
                             <div class="mt-auto">
                                 <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mb-2">
-                                    <div class="bg-indigo-600 h-1.5 rounded-full" style="width: {{ $book->pivot->progress }}%"></div>
+                                    <div class="bg-indigo-600 h-1.5 rounded-full" style="width: {{ $subscription->book->progress }}%"></div>
                                 </div>
-                                <a href="{{ route('student.book.read', $book->id) }}" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                                <a href="{{ route('dashboard', $subscription->book->id) }}" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
                                     Continue Reading
                                 </a>
                             </div>
                         </div>
                     @endforeach
                 </div>
-                <div class="mt-4">
-                    <button wire:click="$set('activeTab', 'my-books')" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                <div class="mt-4 text-right">
+                    <button wire:click="$dispatch('studentTabChanged', {tab: 'my-books'})" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
                         View all books →
                     </button>
                 </div>
@@ -175,7 +176,7 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No books yet</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by browsing available books.</p>
                     <div class="mt-6">
-                        <button wire:click="$set('activeTab', 'my-books')" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button wire:click="$dispatch('studentTabChanged', {tab: 'my-books'})" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>
@@ -191,62 +192,81 @@
     <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <h3 class="text-lg font-semibold">Recent Assessments</h3>
-            <button wire:click="$set('activeTab', 'self-assessment')" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-md">
+            <button wire:click="$dispatch('studentTabChanged', {tab: 'self-assessment'})" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-md">
                 Take New Assessment
             </button>
         </div>
         <div class="p-4">
             @if(count($recentAssessments) > 0)
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subject</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Topic</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Score</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                        </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($recentAssessments as $assessment)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    {{ $assessment->subject->name }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    {{ $assessment->topic ? $assessment->topic->name : 'All Topics' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $assessment->created_at->format('M d, Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    @if($assessment->status === 'completed')
-                                        <span class="font-semibold {{ $assessment->percentage_score >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                    <div class="min-w-full inline-block align-middle">
+                        <div class="overflow-hidden border-b border-gray-200 dark:border-gray-700 shadow-sm sm:rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Subject
+                                    </th>
+                                    <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Topic
+                                    </th>
+                                    <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Score
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                @foreach($recentAssessments as $assessment)
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                {{ $assessment->subject->name }}
+                                            </div>
+                                            <div class="md:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {{ $assessment->created_at->format('M d, Y') }}
+                                            </div>
+                                        </td>
+                                        <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            {{ $assessment->topic ? $assessment->topic->name : 'All Topics' }}
+                                        </td>
+                                        <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                            {{ $assessment->created_at->format('M d, Y') }}
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                            @if($assessment->status === 'completed')
+                                                <span class="font-semibold {{ $assessment->percentage_score >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                                                 {{ round($assessment->percentage_score, 1) }}%
                                             </span>
-                                    @elseif($assessment->status === 'needs_grading')
-                                        <span class="text-yellow-600 dark:text-yellow-400">Pending</span>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            @elseif($assessment->status === 'needs_grading')
+                                                <span class="text-yellow-600 dark:text-yellow-400">Pending</span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                                             @if($assessment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                                             @elseif($assessment->status === 'in_progress') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
                                             @elseif($assessment->status === 'needs_grading') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
                                             @endif">
                                             {{ ucfirst(str_replace('_', ' ', $assessment->status)) }}
                                         </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="mt-4">
-                    <button wire:click="$set('activeTab', 'performance')" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
+                <div class="mt-4 text-right">
+                    <button wire:click="$dispatch('studentTabChanged', {tab: 'performance'})" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium">
                         View all assessments →
                     </button>
                 </div>
@@ -258,7 +278,7 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No assessments completed</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Take a self-assessment to track your progress.</p>
                     <div class="mt-6">
-                        <button wire:click="$set('activeTab', 'self-assessment')" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button wire:click="$dispatch('studentTabChanged', {tab: 'self-assessment'})" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>

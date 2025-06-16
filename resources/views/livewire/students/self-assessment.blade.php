@@ -1,93 +1,142 @@
 <div>
     @if($step === 'setup')
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 class="text-xl font-bold mb-6">Create Self-Assessment</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-6">Create Self Assessment</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Subject Selection -->
-                <div>
-                    <label class="block text-sm font-medium mb-2" for="subject">Subject</label>
-                    <select id="subject" wire:model="selectedSubject"
-                            class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                        <option value="">Select a subject</option>
-                        @foreach($subjects as $subject)
-                            <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+  <div class="grid gap-8">
+      <!-- Main Options -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Subject Selection -->
+          <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="subject">
+                  Subject <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                  <select id="subject" wire:model.live="selectedSubject"
+                          class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700/50 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
+                      <option value="">Choose a subject</option>
+                      @foreach($subjects as $subject)
+                          <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                      @endforeach
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                  </div>
+              </div>
+          </div>
 
-                <!-- Topic Selection (if subject selected) -->
-                @if($selectedSubject)
-                    <div>
-                        <label class="block text-sm font-medium mb-2" for="topic">Topic (Optional)</label>
-                        <select id="topic" wire:model="selectedTopic"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                            <option value="">All Topics</option>
-                            @foreach($topics as $topic)
-                                <option value="{{ $topic->id }}">{{ $topic->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
+<!-- Topic Selection -->
+<div class="space-y-2" x-data>
+    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="topic">
+        Topic <span class="text-sm font-normal text-gray-500">(Optional)</span>
+    </label>
+    <div class="relative" :class="{ 'opacity-50': !$wire.selectedSubject }">
+        <select id="topic"
+                wire:model.live="selectedTopic"
+                :disabled="!$wire.selectedSubject"
+                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700/50 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
+            <option value="">All Topics</option>
+            @foreach($topics as $topic)
+                <option value="{{ $topic->id }}">{{ $topic->name }}</option>
+            @endforeach
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </div>
+    </div>
+</div>
 
-                <!-- Subtopic Selection (if topic selected) -->
-                @if($selectedTopic)
-                    <div>
-                        <label class="block text-sm font-medium mb-2" for="subtopic">Subtopic (Optional)</label>
-                        <select id="subtopic" wire:model="selectedSubtopic"
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                            <option value="">All Subtopics</option>
-                            @foreach($subtopics as $subtopic)
-                                <option value="{{ $subtopic->id }}">{{ $subtopic->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
+<!-- Subtopic Selection -->
+<div class="space-y-2" x-data>
+    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="subtopic">
+        Subtopic <span class="text-sm font-normal text-gray-500">(Optional)</span>
+    </label>
+    <div class="relative" :class="{ 'opacity-50': !$wire.selectedTopic }">
+        <select id="subtopic"
+                wire:model.live="selectedSubtopic"
+                :disabled="!$wire.selectedTopic"
+                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700/50 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
+            <option value="">All Subtopics</option>
+            @foreach($subtopics as $subtopic)
+                <option value="{{ $subtopic->id }}">{{ $subtopic->name }}</option>
+            @endforeach
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </div>
+    </div>
+</div>
+      </div>
 
-                <!-- Question Count -->
-                <div>
-                    <label class="block text-sm font-medium mb-2" for="count">Number of Questions</label>
-                    <input type="number" id="count" wire:model="questionCount" min="1" max="50"
-                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                </div>
+      <!-- Additional Options -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Question Count -->
+          <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="count">
+                  Number of Questions <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                  <input type="number" id="count" wire:model="questionCount" min="1" max="50"
+                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700/50 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50"
+                         placeholder="Enter number (1-50)">
+              </div>
+          </div>
 
-                <!-- Difficulty Level -->
-                <div>
-                    <label class="block text-sm font-medium mb-2" for="difficulty">Difficulty</label>
-                    <select id="difficulty" wire:model="difficulty"
-                            class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                        <option value="all">All Levels</option>
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
-                </div>
-            </div>
+          <!-- Difficulty Level -->
+          <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="difficulty">
+                  Difficulty Level
+              </label>
+              <div class="relative">
+                  <select id="difficulty" wire:model="difficulty"
+                          class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700/50 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
+                      <option value="all">All Levels</option>
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                  </div>
+              </div>
+          </div>
+      </div>
 
-            <!-- Question Types -->
-            <div class="mt-6">
-                <label class="block text-sm font-medium mb-2">Question Types</label>
-                <div class="flex flex-wrap gap-4">
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" wire:model="questionTypes.multiple_choice_question"
-                               class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                        <span class="ml-2">Multiple Choice</span>
-                    </label>
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" wire:model="questionTypes.true_or_false_question"
-                               class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                        <span class="ml-2">True/False</span>
-                    </label>
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" wire:model="questionTypes.essay_question"
-                               class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50">
-                        <span class="ml-2">Essay</span>
-                    </label>
-                </div>
-                @error('questionTypes')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
+      <!-- Question Types -->
+      <div class="space-y-3">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Question Types <span class="text-red-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <label class="relative flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 cursor-pointer group">
+                  <input type="checkbox" wire:model="questionTypes.multiple_choice_question"
+                         class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                  <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-500">Multiple Choice</span>
+              </label>
+              <label class="relative flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 cursor-pointer group">
+                  <input type="checkbox" wire:model="questionTypes.true_or_false_question"
+                         class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                  <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-500">True/False</span>
+              </label>
+              <label class="relative flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 cursor-pointer group">
+                  <input type="checkbox" wire:model="questionTypes.essay_question"
+                         class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                  <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-500">Essay</span>
+              </label>
+          </div>
+          @error('questionTypes')
+              <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+          @enderror
+      </div>
+  </div>
 
             @if(session('error'))
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-6">
@@ -109,9 +158,10 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                 <h3 class="text-lg font-semibold">Self Assessment</h3>
-                <div class="text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 px-3 py-1 rounded-full"
-                     x-data="{ time: {{ $timeRemaining }}, intervalId: null }"
-                     x-init="
+                <div
+                    class="text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 px-3 py-1 rounded-full"
+                    x-data="{ time: {{ $timeRemaining }}, intervalId: null }"
+                    x-init="
         if (time > 0) {
             intervalId = setInterval(() => {
                 if (time > 0) {
@@ -131,9 +181,9 @@
             }
         });
     "
-                     x-on:mouseleave="if(time > 0) clearInterval(intervalId)"
-                     x-text="Math.floor(time / 60) + ':' + ((time % 60).toString().padStart(2, '0'))"
-                     >
+                    x-on:mouseleave="if(time > 0) clearInterval(intervalId)"
+                    x-text="Math.floor(time / 60) + ':' + ((time % 60).toString().padStart(2, '0'))"
+                >
                 </div>
 
             </div>
@@ -201,10 +251,12 @@
                                                name="response_{{ $currentQuestionIndex }}"
                                                value="{{ $option['label'] }}"
                                                wire:click="saveResponse({{ $currentQuestionIndex }}, '{{ $option['label'] }}')"
-                                               @if ($responses[$currentQuestionIndex]['response'] === $option['label']) checked @endif
+                                               @if ($responses[$currentQuestionIndex]['response'] === $option['label']) checked
+                                               @endif
                                                class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:bg-gray-700 dark:border-gray-600"
                                         >
-                                        <label for="option-{{ $loop->index }}-{{ $currentQuestionIndex }}" class="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-300">
+                                        <label for="option-{{ $loop->index }}-{{ $currentQuestionIndex }}"
+                                               class="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-300">
                                             {{ $option['label'] }}. {{ $option['value']->down }}
                                         </label>
                                     </div>
@@ -220,10 +272,12 @@
                                                name="response_{{ $currentQuestionIndex }}"
                                                value="true"
                                                wire:click="saveResponse({{ $currentQuestionIndex }}, 'true')"
-                                               @if ($responses[$currentQuestionIndex]['response'] === 'true') checked @endif
+                                               @if ($responses[$currentQuestionIndex]['response'] === 'true') checked
+                                               @endif
                                                class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:bg-gray-700 dark:border-gray-600"
                                         >
-                                        <label for="true" class="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-300">True</label>
+                                        <label for="true"
+                                               class="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-300">True</label>
                                     </div>
 
                                     <div class="flex items-center">
@@ -232,10 +286,12 @@
                                                name="response"
                                                value="false"
                                                wire:click="saveResponse({{ $currentQuestionIndex }}, 'false')"
-                                               @if ($responses[$currentQuestionIndex]['response'] === 'false') checked @endif
+                                               @if ($responses[$currentQuestionIndex]['response'] === 'false') checked
+                                               @endif
                                                class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:bg-gray-700 dark:border-gray-600"
                                         >
-                                        <label for="false" class="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-300">False</label>
+                                        <label for="false"
+                                               class="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-300">False</label>
                                     </div>
                                 </div>
 
@@ -249,7 +305,7 @@
                                 >{{ $responses[$currentQuestionIndex]['response'] }}</textarea>
                             @endif
                         </div>
-                        </div>
+                    </div>
                 @endif
                 <!-- Navigation Buttons -->
                 <div class="mt-6 flex justify-between">
@@ -380,4 +436,112 @@
             </div>
         </div>
     @endif
+
+    <div class="mt-4">
+        <div class="py-4"><h4>Recent Assessments</h4></div>
+        @if(count($this->recentAssessments) > 0)
+        <div class="overflow-x-auto">
+          <div class="min-w-full inline-block align-middle">
+            <div class="overflow-hidden border-b border-gray-200 dark:border-gray-700 shadow-sm sm:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <!-- Subject - Always visible -->
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Subject
+                    </th>
+                    <!-- Topic - Hidden on mobile -->
+                    <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Topic
+                    </th>
+                    <!-- Date - Hidden on mobile -->
+                    <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <!-- Score - Always visible -->
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Score
+                    </th>
+                    <!-- Status - Always visible -->
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  @foreach($this->recentAssessments as $assessment)
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <!-- Subject + Mobile Date -->
+                      <td class="px-4 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {{ $assessment->subject->name }}
+                        </div>
+                        <div class="md:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {{ $assessment->created_at->format('M d, Y') }}
+                        </div>
+                      </td>
+                      <!-- Topic -->
+                      <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {{ $assessment->topic ? $assessment->topic->name : 'All Topics' }}
+                      </td>
+                      <!-- Date -->
+                      <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {{ $assessment->created_at->format('M d, Y') }}
+                      </td>
+                      <!-- Score -->
+                      <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        @if($assessment->status === 'completed')
+                          <span class="font-semibold {{ $assessment->percentage_score >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                            {{ round($assessment->percentage_score, 1) }}%
+                          </span>
+                        @elseif($assessment->status === 'needs_grading')
+                          <span class="text-yellow-600 dark:text-yellow-400">Pending</span>
+                        @else
+                          <span class="text-gray-400">-</span>
+                        @endif
+                      </td>
+                      <!-- Status -->
+                      <td class="px-4 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                          @if($assessment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                          @elseif($assessment->status === 'in_progress') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                          @elseif($assessment->status === 'needs_grading') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                          @endif">
+                          {{ ucfirst(str_replace('_', ' ', $assessment->status)) }}
+                        </span>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+            <div class="mt-4">
+                {{$this->recentAssessments->links()}}
+            </div>
+        @else
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No assessments completed</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Take a self-assessment to track your
+                    progress.</p>
+                <div class="mt-6">
+                    <button wire:click="$dispatch('studentTabChanged', {tab: 'self-assessment'})"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                             fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                        Start Assessment
+                    </button>
+                </div>
+            </div>
+        @endif
+    </div>
 </div>

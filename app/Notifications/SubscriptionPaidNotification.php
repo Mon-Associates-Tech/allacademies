@@ -18,7 +18,7 @@ class SubscriptionPaidNotification extends Notification
      * @return void
      */
     public function __construct(
-        private Subscription $subscription
+        private readonly Subscription $subscription
     ) { }
 
     /**

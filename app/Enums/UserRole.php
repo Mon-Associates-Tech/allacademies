@@ -4,16 +4,16 @@ namespace App\Enums;
 
 enum UserRole: string
 {
-    case OWNER = 'owner';
+    public const OWNER = 'owner';
 
-    case ADMIN = 'admin';
+    public const ADMIN = 'admin';
 
-    case MODERATOR = 'moderator';
+    public const MODERATOR = 'moderator';
 
-    case SUBSCRIBER = 'subscriber';
-    case TEACHER = 'teacher';
-    case STUDENT = 'student';
-    case LIBRARIAN = 'librarian';
-    case AUTHOR = 'author';
-    case PARENT = 'parent';
+    public const SUBSCRIBER = 'subscriber';
+    public const TEACHER = 'teacher';
+    public const STUDENT = 'student';
+    public const LIBRARIAN = 'librarian';
+    public const AUTHOR = 'author';
+    public const PARENT = 'parent';
 }

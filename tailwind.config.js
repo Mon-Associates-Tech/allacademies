@@ -10,6 +10,7 @@ module.exports = {
     "./app/Http/Livewire/ExaminationHeading.php",
     "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
   ],
+    darkMode: 'class',
   theme: {
     extend: {
       colors: {

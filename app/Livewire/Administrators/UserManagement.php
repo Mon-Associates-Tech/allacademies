@@ -22,7 +22,6 @@ class UserManagement extends Component
     public $isEditing = false;
     public $editingUserId;
     public $roles;
-    public $testMessage;
 
     protected $rules = [
         'name' => 'required|min:3',
@@ -112,7 +111,7 @@ class UserManagement extends Component
     #[Computed]
    public function getUsersProperty()
 {
-    Log::info('Fetching users for searchTerm: ' . $this->userSearchTerm);
+
     return User::when($this->userSearchTerm, function ($query) {
                 return $query->where('name', 'like', '%' . $this->userSearchTerm . '%')
                              ->orWhere('email', 'like', '%' . $this->userSearchTerm . '%');
@@ -127,10 +126,6 @@ class UserManagement extends Component
         $this->dispatch('$refresh');
     }
 
-    public function getTestMessageProperty()
-    {
-        return "Computed Property Works!";
-    }
     public function render()
     {
 

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcademicSubject;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
 use App\Models\AcademicTopic;
-use App\Models\Examination;
+use App\Models\EssayQuestion;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\QuestionGenerator;
@@ -27,7 +28,7 @@ class ExaminationController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function index(AcademicSubject $academicSubject)
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
@@ -48,7 +49,7 @@ class ExaminationController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function create(AcademicSubject $academicSubject)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
@@ -138,8 +139,9 @@ class ExaminationController extends Controller
      *
      * @param Examination $examination
      * @return Application|Factory|View|\Illuminate\View\View
+     * @throws \ImagickException
      */
-    public function show(Examination $examination)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Examination $examination)
     {
         $examination->load('academicSubject');
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
@@ -174,7 +176,7 @@ class ExaminationController extends Controller
      * @param Examination $examination
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function answers(Examination $examination)
+    public function answers(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Examination $examination)
     {
         $examination->load('academicSubject');
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
@@ -221,7 +223,7 @@ class ExaminationController extends Controller
 
             session(['examination_preview' => $previewData]);
 
-            return redirect()->route('academic-subjects.examinations.preview', [
+            return redirect()->route('examinations.preview', [
                 'academic_subject' => $academicSubject,
             ]);
 
@@ -248,7 +250,7 @@ class ExaminationController extends Controller
         $previewData = session('examination_preview');
 
         if (!$previewData) {
-            return redirect()->route('academic-subjects.examinations.create', ['academic_subject' => $academicSubject])
+            return redirect()->route('examinations.create', ['academic_subject' => $academicSubject])
                 ->withErrors(['general' => 'No preview data found. Please generate an examination first.']);
         }
 
