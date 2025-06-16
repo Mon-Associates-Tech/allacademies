@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('examinations', static function (Blueprint $table) {
             $table->longText('instructions')->nullable()->after('heading');
-            $table->unsignedBigInteger('duration')->default(0)->after('instruction');
+            $table->unsignedBigInteger('duration')->default(0)->after('instructions');
             $table->json('metadata')->nullable()->after('duration');
         });
     }
