@@ -30,7 +30,7 @@
     @if(Auth::user()->role === 'librarian')
         @livewire('librarians.dashboard')
     @endif
-    @if(Auth::user()->role === 'admin' ||  Auth::user()->role === 'owner')
+    @if(Auth::user()->role === 'admin' ||  Auth::user()->role === 'owner' || Auth::user()->role === 'moderator')
         @livewire('administrators.dashboard')
     @endif
 
