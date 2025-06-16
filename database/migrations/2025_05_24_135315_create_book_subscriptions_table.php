@@ -12,9 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
-            $table->timestamp('start_date');
-            $table->timestamp('end_date');
-            $table->string('status'); // active, expired, cancelled
+            $table->timestamp('start_date')->nullable();
+            $table->timestamp('end_date')->nullable();
+            $table->string('status')->nullable(); // active, expired, cancelled
             $table->timestamps();
         });
     }
