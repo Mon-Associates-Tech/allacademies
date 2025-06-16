@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
             $table->foreignId('librarian_id')->constrained()->onDelete('cascade');
-            $table->string('status'); // approved, rejected, pending
+            $table->string('status')->nullable(); // approved, rejected, pending
             $table->text('comments')->nullable();
             $table->timestamps();
         });

@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_group_id')->constrained()->onDelete('cascade');
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
-            $table->timestamp('start_date');
-            $table->timestamp('end_date');
-            $table->string('status'); // active, expired, cancelled
-            $table->string('subscribed_by_type');
-            $table->unsignedBigInteger('subscribed_by_id');
+            $table->timestamp('start_date')->nullable();
+            $table->timestamp('end_date')->nullable();
+            $table->string('status')->nullable(); // active, expired, cancelled
+            $table->string('subscribed_by_type')->nullable();
+            $table->unsignedBigInteger('subscribed_by_id')->nullable();
             $table->timestamps();
 
             $table->index(['subscribed_by_type']);
