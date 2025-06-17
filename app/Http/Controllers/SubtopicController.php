@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use Illuminate\Contracts\Foundation\Application;
@@ -17,17 +20,18 @@ class SubtopicController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function index(AcademicTopic $academic_topic)
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
-        $subtopics = $academic_topic->subtopics()->latest('id')->paginate();
+        $subtopics = $academicTopic->subtopics()->latest('id')->paginate();
 
-        $academic_topic->load('academicSubject.academicLevel.academicGroup');
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
         return view('academic-subtopics.index', [
             'subtopics' => $subtopics,
-            'academic_topic' => $academic_topic,
+            'academic_topic' => $academicTopic,
+            'academicSubject' => $academicSubject,
         ]);
     }
 
@@ -36,50 +40,58 @@ class SubtopicController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function create(AcademicTopic $academic_topic)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('administrate');
 
-//        $academic_topic->load('academic_subtopics');
+        $academicTopic->load('subtopics');
 
         return view('academic-subtopics.create', [
-            'academic_topic' => $academic_topic,
-            'academicSubject' => $academic_topic->academicSubject,
+            'academic_topic' => $academicTopic,
+            'academicSubject' => $academicTopic->academicSubject,
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
+     * @param Request $request
      * @return RedirectResponse
      */
-    public function store(AcademicTopic $academic_topic, Request $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, Request $request): RedirectResponse
     {
 
         $this->authorize('administrate');
 
-        $subtopic = $academic_topic->subtopics()->create($request->all());
+        $subtopic = $academicTopic->subtopics()->create($request->all());
 
-        return to_route('academic-topics.subtopics.index', ['academic_topic' => $academic_topic])
-            ->with('success', __('status.resource.created', ['name' => $academic_topic->name]));
+        return to_route('subtopics.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group') ])
+            ->with('success', __('status.resource.created', ['name' => $academicTopic->name]));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param AcademicSubtopic $academic_subtopic
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
+     * @param AcademicSubtopic $subtopic
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function show(AcademicTopic $academic_topic, AcademicSubtopic $subtopic)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic)
     {
         $this->authorize('moderate');
 
-        $academic_topic->load('academicTopic.academicSubject.academicLevel.academicGroup');
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
 
         return view('academic-subtopics.show', [
             'academic_subtopic' => $subtopic,
-            'academic_topic' => $academic_topic,
+            'academicTopic' => $academicTopic,
         ]);
     }
 
@@ -97,7 +109,7 @@ class SubtopicController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */

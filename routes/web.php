@@ -144,7 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'reason'])->name('audit-teams.reason');
     Route::resource('audit-teams', AuditTeamController::class)->only(['index', 'show']);
 
-    Route::resource('academic-topics.subtopics', SubtopicController::class);
+//    Route::resource('academic-topics.subtopics', SubtopicController::class);
 
 
     Route::post('export/pdf', function(){
@@ -319,7 +319,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
                     Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class);
                     Route::resource('multiple-choice-questions', MultipleChoiceQuestionController::class);
 
-                    // Keep subtopics route within the hierarchy
+                    // Keep the subtopic route within the hierarchy
                     Route::resource('subtopics', SubtopicController::class);
                 });
 

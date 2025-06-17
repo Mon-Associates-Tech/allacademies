@@ -10,10 +10,15 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\Quiz;
 use App\Support\Quizzer;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Jobs\GenerateQuizJob;
 use App\Models\AcademicSubject;
 use App\Http\Requests\QuizRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +27,7 @@ class QuizController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Factory|View|Application|\Illuminate\View\View|object
      */
     public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
@@ -42,7 +47,7 @@ class QuizController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
@@ -66,10 +71,13 @@ class QuizController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param QuizRequest $request
+     * @return RedirectResponse
      */
-    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, QuizRequest $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, QuizRequest $request): RedirectResponse
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
@@ -94,8 +102,11 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param Quiz $quiz
+     * @return Application|Factory|\Illuminate\View\View|object|RedirectResponse|View
      */
     public function start(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
@@ -108,7 +119,8 @@ class QuizController extends Controller
         $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
 
         if ($worksheet) {
-            return to_route('quizzes.take', ['quiz' => $quiz]);
+            return to_route('quizzes.take', ['quiz' => $quiz, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
+                ->with('info', __('status.quiz.already_started'));
         }
 
         return view('quizzes.start', [
@@ -120,8 +132,12 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param Quiz $quiz
+     * @param Request $request
+     * @return Application|Factory|\Illuminate\View\View|object|RedirectResponse|View
      */
     public function take(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz, Request $request)
     {
@@ -150,7 +166,7 @@ class QuizController extends Controller
         }
 
         if ($worksheet->ended_at) {
-            return to_route('quizzes.stop', ['quiz' => $quiz, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group'), 'academic_subject'=>getRouteParameter('academic_subject')]);
+            return to_route('quizzes.stop', ['quiz' => $quiz, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]);
         }
 
         $question = Quizzer::askQuestion($quiz, $worksheet);
@@ -164,8 +180,11 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param Quiz $quiz
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function stop(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
@@ -189,8 +208,11 @@ class QuizController extends Controller
     /**
      * get results for a quiz
      *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param Quiz $quiz
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function scores(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
@@ -220,8 +242,11 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Quiz  $quiz
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param Quiz $quiz
+     * @return Application|Factory|\Illuminate\View\View|object|RedirectResponse|View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
