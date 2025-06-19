@@ -204,7 +204,7 @@ class ExaminationController extends Controller
     /**
      * Generate a preview of the examination without saving to a database
      */
-    public function generatePreview(HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
+    public function generatePreview(AcademicGroup $academicGroup, AcademicLevel $academicLevel, HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
     {
         try {
             $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
