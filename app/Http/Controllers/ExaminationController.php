@@ -246,7 +246,7 @@ class ExaminationController extends Controller
     /**
      * Show the examination preview
      */
-    public function preview(AcademicSubject $academicSubject, HttpRequest $request)
+    public function preview(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, HttpRequest $request)
     {
         $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
 
