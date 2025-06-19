@@ -27,6 +27,10 @@ class Quiz extends Model
         'sections' => 'array',
     ];
 
+    protected $with = [
+        'academicSubject'
+    ];
+
     public function academicSubject()
     {
         return $this->belongsTo(AcademicSubject::class);

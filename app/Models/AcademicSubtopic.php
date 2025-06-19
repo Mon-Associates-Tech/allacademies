@@ -15,6 +15,10 @@ class AcademicSubtopic extends Model
         return $this->belongsTo(AcademicTopic::class);
     }
 
+    public function topic(): BelongsTo {
+        return $this->belongsTo(AcademicTopic::class, 'academic_topic_id');
+    }
+
     protected $fillable = [
         'name',
         'academic_topic_id',
@@ -32,6 +36,11 @@ class AcademicSubtopic extends Model
     public function trueOrFalseQuestions()
     {
         return $this->hasMany(TrueOrFalseQuestion::class);
+    }
+
+    public function questions()
+    {
+        return $this->morphMany(Question::class, 'questionable');
     }
 
 }

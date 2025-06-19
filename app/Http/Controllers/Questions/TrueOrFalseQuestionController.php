@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Questions;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TrueOrFalseQuestionRequest;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\TrueOrFalseQuestion;
@@ -19,7 +22,7 @@ class TrueOrFalseQuestionController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function index(AcademicTopic $academicTopic)
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
@@ -36,11 +39,14 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopic $academicTopic
      * @param TrueOrFalseQuestionRequest $request
      * @return RedirectResponse
      */
-    public function store(AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request)
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request): RedirectResponse
     {
         $this->authorize('moderate');
 
@@ -52,11 +58,10 @@ class TrueOrFalseQuestionController extends Controller
             );
             $data['academic_subtopic_id'] = $subTopic->id;
         }
-        //dd($request->all());
 
         $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
 
-        return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $academicTopic])
+        return to_route('true-or-false-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.created', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 
@@ -65,7 +70,7 @@ class TrueOrFalseQuestionController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function create(AcademicTopic $academicTopic)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
@@ -79,10 +84,14 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param TrueOrFalseQuestion $trueOrFalseQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function show(TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic,TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
 
@@ -97,10 +106,14 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param TrueOrFalseQuestion $trueOrFalseQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function edit(TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
 
@@ -115,15 +128,19 @@ class TrueOrFalseQuestionController extends Controller
      * Update the specified resource in storage.
      *
      * @param TrueOrFalseQuestionRequest $request
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param TrueOrFalseQuestion $true_or_false_question
      * @return RedirectResponse
      */
-    public function update(TrueOrFalseQuestionRequest $request, TrueOrFalseQuestion $true_or_false_question)
+    public function update(TrueOrFalseQuestionRequest $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $true_or_false_question): RedirectResponse
     {
         $this->authorize('moderate');
 
         $data = $request->validated();
-        if (isset($request->subtopic) && isset($true_or_false_question->subtopic->name)) {
+        if (isset($request->subtopic, $true_or_false_question->subtopic->name)) {
             $subTopic = AcademicSubtopic::updateOrCreate(
                 ['name' => $true_or_false_question->subtopic->name],
                 ['name' => $request->subtopic, 'academic_topic_id' => $true_or_false_question->academic_topic_id]
@@ -133,23 +150,27 @@ class TrueOrFalseQuestionController extends Controller
 
         $true_or_false_question->update($data);
 
-        return to_route('true-or-false-questions.show', ['true_or_false_question' => $true_or_false_question])
+        return to_route('true-or-false-questions.show', ['true_or_false_question' => $true_or_false_question, 'academic_topic' => $true_or_false_question->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.updated', ['name' => $true_or_false_question->question->summary]));
     }
 
     /**
      * Remove the specified resource from storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
      * @param TrueOrFalseQuestion $trueOrFalseQuestion
      * @return RedirectResponse
      */
-    public function destroy(TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $trueOrFalseQuestion): RedirectResponse
     {
         $this->authorize('moderate');
 
         $trueOrFalseQuestion->load('academicTopic')->delete();
 
-        return to_route('academic-topics.true-or-false-questions.index', ['academic_topic' => $trueOrFalseQuestion->academicTopic])
+        return to_route('true-or-false-questions.index', ['academic_topic' => $trueOrFalseQuestion->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.deleted', ['name' => $trueOrFalseQuestion->question->summary]));
     }
 }

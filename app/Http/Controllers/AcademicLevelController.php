@@ -5,6 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AcademicLevelRequest;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class AcademicLevelController extends Controller
 {
@@ -17,7 +23,11 @@ class AcademicLevelController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicLevels = $academicGroup->academicLevels()->latest('id')->paginate();
+        // Load academic levels with additional counts for better display
+        $academicLevels = $academicGroup->academicLevels()
+            ->withCount('academicSubjects')
+            ->latest('id')
+            ->paginate(15);
 
         return view('academic-levels.index', [
             'academicGroup' => $academicGroup,
@@ -42,7 +52,7 @@ class AcademicLevelController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(AcademicGroup $academicGroup, AcademicLevelRequest $request)
@@ -58,14 +68,18 @@ class AcademicLevelController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\AcademicLevel  $academicLevel
+     * @param AcademicLevel $academic_level
      * @return \Illuminate\Http\Response
      */
-    public function show(AcademicLevel $academicLevel)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel)
     {
         $this->authorize('moderate');
 
-        $academicLevel->load('academicGroup')->loadCount('academicSubjects');
+        $academicLevel->load('academicGroup')->loadCount([
+            'academicSubjects',
+            'students', // if relationship exists
+            'teachers'  // if relationship exists
+        ]);
 
         return view('academic-levels.show', [
             'academicLevel' => $academicLevel,
@@ -75,10 +89,10 @@ class AcademicLevelController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\AcademicLevel  $academicLevel
-     * @return \Illuminate\Http\Response
+     * @param AcademicLevel $academicLevel
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
-    public function edit(AcademicLevel $academicLevel)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel)
     {
         $this->authorize('administrate');
 
@@ -92,11 +106,12 @@ class AcademicLevelController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AcademicLevel  $academicLevel
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevelRequest $request
+     * @param AcademicLevel $academicLevel
+     * @return RedirectResponse
      */
-    public function update(AcademicLevelRequest $request, AcademicLevel $academicLevel)
+    public function update(AcademicGroup $academicGroup, AcademicLevelRequest $request, AcademicLevel $academicLevel): RedirectResponse
     {
         $this->authorize('administrate');
 
@@ -109,16 +124,17 @@ class AcademicLevelController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\AcademicLevel  $academicLevel
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @return RedirectResponse
      */
-    public function destroy(AcademicLevel $academicLevel)
+    public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicLevel->load('academicGroup')->delete();
 
-        return to_route('academic-groups.academic-levels.index', ['academic_group' => $academicLevel->academicGroup])
+        return to_route('academic-levels.index', ['academic_group' => $academicLevel->academicGroup])
             ->with('success', __('status.resource.deleted', ['name' => $academicLevel->name]));
     }
 }

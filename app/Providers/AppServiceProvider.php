@@ -2,21 +2,32 @@
 
 namespace App\Providers;
 
+use App\Livewire\Students\Dashboard;
+use App\Livewire\SidebarToggle;
+use App\Livewire\ThemeController;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\BookCategory;
 use App\Models\EssayQuestion;
 use App\Models\Examination;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\Payment;
+use App\Models\Role;
+use App\Models\Student;
+use App\Models\StudentGroup;
 use App\Models\Subscription;
+use App\Models\Teacher;
 use App\Models\Team;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +52,10 @@ class AppServiceProvider extends ServiceProvider
             'create' => 'new',
         ]);
 
+//        Livewire::component('theme-controller', ThemeController::class);
+//        Livewire::component('sidebar-toggle', SidebarToggle::class);
+
+
         Relation::enforceMorphMap([
             'academic_group' => AcademicGroup::class,
             'academic_level' => AcademicLevel::class,
@@ -54,6 +69,16 @@ class AppServiceProvider extends ServiceProvider
             'team' => Team::class,
             'true_or_false_question' => TrueOrFalseQuestion::class,
             'user' => User::class,
+            'book' => Book::class,
+            'student' => Student::class,
+            'role' => Role::class,
+            'StudentGroup' => StudentGroup::class,
+            'Teacher' => Teacher::class,
+            'Author' => Author::class,
+            'BookCategory' => BookCategory::class,
+            'book_subscription' => \App\Models\BookSubscription::class,
+            'assessment' => \App\Models\Assessment::class,
+            'book_borrowing' => \App\Models\BookBorrowing::class,
         ]);
     }
 }

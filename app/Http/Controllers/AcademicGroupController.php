@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Http\Requests\AcademicGroupRequest;
 use App\Models\AcademicGroup;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Response;
 
 class AcademicGroupController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Factory|View|Application|\Illuminate\View\View|object
      */
     public function index()
     {
@@ -26,7 +31,7 @@ class AcademicGroupController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function create()
     {
@@ -39,7 +44,7 @@ class AcademicGroupController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function store(AcademicGroupRequest $request)
     {
@@ -55,13 +60,22 @@ class AcademicGroupController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function show(AcademicGroup $academicGroup)
     {
         $this->authorize('moderate');
 
-        $academicGroup->loadCount('academicLevels');
+        // Load additional relationships and counts for better data display
+        $academicGroup->loadCount([
+            'academicLevels',
+            'teachers'
+        ]);
+
+        // You can also load recent academic levels if needed
+        // $academicGroup->load(['academicLevels' => function($query) {
+        //     $query->latest()->limit(5);
+        // }]);
 
         return view('academic-groups.show', [
             'academicGroup' => $academicGroup,
@@ -72,7 +86,7 @@ class AcademicGroupController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function edit(AcademicGroup $academicGroup)
     {
@@ -88,7 +102,7 @@ class AcademicGroupController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function update(AcademicGroupRequest $request, AcademicGroup $academicGroup)
     {
@@ -104,7 +118,7 @@ class AcademicGroupController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function destroy(AcademicGroup $academicGroup)
     {

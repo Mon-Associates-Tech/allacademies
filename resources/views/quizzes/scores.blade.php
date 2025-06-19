@@ -1,7 +1,7 @@
-<x-auth title="Quiz Results" :has-action="false">
+<x-layouts.app title="Quiz Results" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
-            'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),
+            'Quizzes' => route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
         ]" />
     </x-slot>
 
@@ -42,4 +42,4 @@
     @else
     <x-blank />
     @endif
-</x-auth>
+</x-layouts.app>

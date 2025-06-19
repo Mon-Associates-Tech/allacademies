@@ -104,10 +104,25 @@ function greetUser($name): string
 /**
  * @throws CommonMarkException
  */
-function parsedMarkdown($markdown): RenderedContentInterface
+function parsedMarkdown($markdown): string
 {
-    $converter = new CommonMarkConverter();
-    return $converter->convert($markdown);
+    $config = [
+        'html_input' => 'strip',
+        'allow_unsafe_links' => false,
+        'max_nesting_level' => 100,
+        'renderer' => [
+            'block_separator' => "\n",
+            'inner_separator' => "\n",
+            'soft_break' => "\n",
+        ],
+    ];
+
+    $converter = new CommonMarkConverter($config);
+    try {
+        return $converter->convertToHtml($markdown);
+    } catch (CommonMarkException $e) {
+        return htmlspecialchars($markdown);
+    }
 }
 
 use PhpOffice\PhpWord\PhpWord;
@@ -152,3 +167,7 @@ function exportToWord(): BinaryFileResponse
     return $pdf->download($examination->title.'.pdf');
 }
 
+function getRouteParameter($name = 'id'): object|string|null
+{
+    return Route::getCurrentRoute()?->parameter($name);
+}

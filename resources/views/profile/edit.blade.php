@@ -1,4 +1,4 @@
-<x-layouts.app title="Edit Profile">
+<x-layouts.app title="Edit Profile" title-align-center>
 
 
     <form method="POST" action="{{ route('profile.update') }}" class="bg-white p-4 rounded-lg w-[70%] mx-auto">

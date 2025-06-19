@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('subscription:expired')->dailyAt('09:00');
+        $schedule->command('app:update-user-online-status')->everyMinute();
     }
 
     /**

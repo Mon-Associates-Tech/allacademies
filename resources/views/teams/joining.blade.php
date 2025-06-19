@@ -1,4 +1,4 @@
-<x-auth title="Join Team" :has-action="false">
+<x-layouts.app title="Join Team" :has-action="false" title-align-center="true">
 
 
     <div class="max-w-xl mx-auto py-10 bg-white rounded-md sm:px-6 lg:px-8">
@@ -16,4 +16,4 @@
         </form>
     </div>
 
-</x-auth>
+</x-layouts.app>

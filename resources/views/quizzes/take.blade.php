@@ -1,11 +1,11 @@
-<x-auth title="Quizzing" :has-action="false">
+<x-layouts.app title="Quizzing" :has-action="false">
     {{-- <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Quizzes' => route('academic-subjects.quizzes.index', ['academic_subject' => $academicSubject]),
         ]" />
     </x-slot> --}}
 
-    <form method="POST" action="{{ route('quizzes.take', ['quiz' => $quiz]) }}">
+    <form method="POST" action="{{ route('quizzes.take', ['quiz' => $quiz, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}">
         @csrf
         <x-detail>
             <x-detail.data expand label="Question">{!! $question->question->up !!}</x-detail.data>
@@ -41,4 +41,4 @@
             </x-slot>
         </x-detail>
     </form>
-</x-auth>
+</x-layouts.app>

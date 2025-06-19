@@ -1,0 +1,43 @@
+/* FullCalendar Custom Styles */
+.fc {
+    --fc-border-color: theme('colors.gray.200');
+    --fc-button-bg-color: theme('colors.white');
+    --fc-button-border-color: theme('colors.gray.300');
+    --fc-button-text-color: theme('colors.gray.700');
+    --fc-button-hover-bg-color: theme('colors.gray.50');
+    --fc-button-hover-border-color: theme('colors.gray.400');
+    --fc-button-active-bg-color: theme('colors.indigo.600');
+    --fc-button-active-border-color: theme('colors.indigo.700');
+    --fc-button-active-text-color: theme('colors.white');
+    --fc-today-bg-color: theme('colors.indigo.50');
+}
+
+.fc .fc-button {
+    @apply font-medium text-sm rounded-md shadow-sm transition-colors duration-200;
+    padding: 0.5rem 1rem;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    @apply bg-indigo-600 border-indigo-700 text-white;
+}
+
+.fc .fc-toolbar-title {
+    @apply text-xl font-semibold text-gray-900;
+}
+
+.fc .fc-view {
+    @apply border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.fc .fc-day-today {
+    @apply bg-indigo-50/50;
+}
+
+.fc .fc-daygrid-day-number {
+    @apply text-sm text-gray-600;
+}
+
+.fc .fc-event {
+    @apply cursor-pointer;
+}

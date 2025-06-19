@@ -1,74 +1,158 @@
-<x-layouts.app title="Essay Question" :has-action="false">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb :paths="[
-            'Academic Groups' => route('academic-groups.index'),
-            $essayQuestion->academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $essayQuestion->academicTopic->academicSubject->academicLevel->academicGroup]),
-            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $essayQuestion->academicTopic->academicSubject->academicLevel->academicGroup]),
-            $essayQuestion->academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $essayQuestion->academicTopic->academicSubject->academicLevel]),
-            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $essayQuestion->academicTopic->academicSubject->academicLevel]),
-            $essayQuestion->academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $essayQuestion->academicTopic->academicSubject]),
-            'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $essayQuestion->academicTopic->academicSubject]),
-            $essayQuestion->academicTopic->name => route('academic-topics.show', ['academic_topic' => $essayQuestion->academicTopic]),
-            'Essay Questions' => route('academic-topics.essay-questions.index', ['academic_topic' => $essayQuestion->academicTopic]),
-        ]"/>
-    </x-slot>
+<x-layouts.app title="Edit Essay Question" :has-action="false">
+        <x-slot name="breadcrumb">
+            <x-breadcrumb :paths="[
+                'Academic Groups' => route('academic-groups.index'),
+                $essayQuestion->academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $essayQuestion->academicTopic->academicSubject->academicLevel->academicGroup]),
+                'Academic Levels' => route('academic-levels.index', ['academic_group' => $essayQuestion->academicTopic->academicSubject->academicLevel->academicGroup]),
+                $essayQuestion->academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $essayQuestion->academicTopic->academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]),
+                'Academic Subjects' => route('academic-subjects.index', ['academic_level' => $essayQuestion->academicTopic->academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]),
+                $essayQuestion->academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $essayQuestion->academicTopic->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+                'Academic Topics' => route('academic-topics.index', ['academic_subject' => $essayQuestion->academicTopic->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+                $essayQuestion->academicTopic->name => route('academic-topics.show', ['academic_topic' => $essayQuestion->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+                'Essay Questions' => route('essay-questions.index', ['academic_topic' => $essayQuestion->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+                'Edit' => null,
+            ]"/>
+        </x-slot>
 
-    <div class="bg-white p-4 grid grid-cols-5 rounded-md border-slate-300 border">
-        <div class="max-w-4xl mt-1 pr-5 col-span-3">
-            <form method="POST" action="{{ route('essay-questions.update', ['essay_question' => $essayQuestion]) }}">
-                @csrf
-                @method('PATCH')
-                <div class="grid sm:grid-cols-2 gap-x-3">
-                    <div class="sm:col-span-1">
-                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
-                            'unspecified' => 'Unspecified',
-                            'easy' => 'Easy',
-                            'medium' => 'Medium',
-                            'difficult' => 'Difficult',
-                        ]"
-                                       :value="$essayQuestion->difficulty_level"/>
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- Header Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center space-x-4">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
                     </div>
-                    <div class="sm:col-span-1">
-                        <x-form.input name="score" type="number" :value="$essayQuestion->score"/>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Edit Essay Question</h1>
+                        <p class="text-gray-600">Topic: {{ $essayQuestion->academicTopic->name }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Main Form Section -->
+                <div class="col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Question Details</h2>
                     </div>
 
-                    @if(isset($essayQuestion->academicTopic->subtopic))
-                        <div class="sm:col-span-2 my-3">
-                            <x-form.input type="text" placeholder="Enter subtopic or leave blank"
-                                          :value="$essayQuestion->subtopic->name" Label="Sub Topic" name="subtopic"/>
+                    <form method="POST" action="{{ route('essay-questions.update', ['essay_question' => $essayQuestion, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_topic' => getRouteParameter('academic_topic'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}" class="p-6 space-y-6">
+                        @csrf
+                        @method('PATCH')
+
+                        <!-- Configuration Fields -->
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <x-form.select
+                                    name="difficulty_level"
+                                    label="Difficulty Level"
+                                    :options="[
+                                        'unspecified' => 'Unspecified',
+                                        'easy' => 'Easy',
+                                        'medium' => 'Medium',
+                                        'difficult' => 'Difficult',
+                                    ]"
+                                    :value="$essayQuestion->difficulty_level"
+                                />
+                                @error('difficulty_level')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="score" class="block text-sm font-medium text-gray-700">Maximum Score</label>
+                                <x-form.input
+                                    name="score"
+                                    type="number"
+                                    :value="$essayQuestion->score"
+                                    placeholder="Enter maximum score"
+                                    min="0"
+                                />
+                                @error('score')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
-                    @endif
 
+                        <!-- Subtopic Field (if applicable) -->
+                        @if(isset($essayQuestion->academicTopic->subtopic))
+                            <div>
+                                <label for="subtopic" class="block text-sm font-medium text-gray-700">Subtopic</label>
+                                <x-form.input
+                                    type="text"
+                                    name="subtopic"
+                                    :value="$essayQuestion->subtopic->name"
+                                    placeholder="Enter subtopic or leave blank"
+                                />
+                                <p class="mt-1 text-sm text-gray-500">Optional: Specify a subtopic for better organization</p>
+                            </div>
+                        @endif
 
-                    <div class="sm:col-span-2">
-                        <div class="">
-                            <x-form.rich-editor class="rich-editor" name="question" :value="$essayQuestion->question"/>
+                        <!-- Question Content -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="question" class="block text-sm font-medium text-gray-700">Question</label>
+                                <x-form.rich-editor
+                                    class="rich-editor mt-1"
+                                    name="question"
+                                    :value="$essayQuestion->question"
+                                />
+                                @error('question')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="answer" class="block text-sm font-medium text-gray-700">Model Answer</label>
+                                <x-form.rich-editor
+                                    class="rich-editor mt-1"
+                                    name="answer"
+                                    :value="$essayQuestion->answer"
+                                />
+                                @error('answer')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
 
-                        <div class="">
-                            <x-form.rich-editor class="rich-editor" name="answer" :value="$essayQuestion->answer"/>
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                            <x-link.secondary :to="route('essay-questions.index', ['essay_question' => $essayQuestion, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_topic' => getRouteParameter('academic_topic'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
+                                Cancel
+                            </x-link.secondary>
+                            <x-button.primary type="submit">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Update Question
+                            </x-button.primary>
                         </div>
+                    </form>
+                </div>
 
-                        <div class="flex justify-end mt-3">
-                            <x-button.primary class="ml-2">Update Essay Question</x-button.primary>
+                <!-- Sidebar -->
+                <div class="col-span-1">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">Plugins & Tools</h2>
+                        </div>
+                        <div class="p-6">
+                            <x-plugins :link="url()->current() . '/new'" />
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
-        <div class="col-span-2 border mt-1 border-slate-200 p-3 rounded-md bg-gray-100">
-            <x-plugins link="{{url()->current() . '/new'}}"/>
-        </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const editor = document.getElementById('question-editor');
-            if (editor && window.marked) {
-                const rawMarkdown = editor.value;
-                const html = marked.parse(rawMarkdown);
-                editor.value = html;
-            }
-        });
-    </script>
-</x-layouts.app>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const editor = document.getElementById('question-editor');
+                if (editor && window.marked) {
+                    const rawMarkdown = editor.value;
+                    const html = marked.parse(rawMarkdown);
+                    editor.value = html;
+                }
+            });
+        </script>
+    </x-layouts.app>

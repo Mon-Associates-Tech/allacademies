@@ -50,8 +50,18 @@ class MultipleChoiceQuestion extends Model
         return $this->belongsTo(AcademicTopic::class);
     }
 
+    public function topic()
+    {
+        return $this->belongsTo(AcademicTopic::class, 'academic_topic_id');
+    }
+
     public function subtopic(): BelongsTo
     {
         return $this->belongsTo(AcademicSubtopic::class, 'academic_subtopic_id');
+    }
+
+    public function question()
+    {
+        return $this->morphOne(Question::class, 'questionable');
     }
 }

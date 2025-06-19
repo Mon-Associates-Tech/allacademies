@@ -3,55 +3,114 @@
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),
             $academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-            'Academic Levels' => route('academic-groups.academic-levels.index', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-            $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel]),
-            'Academic Subjects' => route('academic-levels.academic-subjects.index', ['academic_level' => $academicTopic->academicSubject->academicLevel]),
-            $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject]),
-            'Academic Topics' => route('academic-subjects.academic-topics.index', ['academic_subject' => $academicTopic->academicSubject]),
-            $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic]),
-            'Essay Questions' => route('academic-topics.essay-questions.index', ['academic_topic' => $academicTopic]),
+            'Academic Levels' => route('academic-levels.index', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
+            $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]),
+            'Academic Subjects' => route('academic-subjects.index', ['academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]),
+            $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+            'Academic Topics' => route('academic-topics.index', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+            $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
+            'Essay Questions' => route('essay-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
         ]"/>
     </x-slot>
 
-    <div class="bg-white p-4 grid grid-cols-5 rounded-md border-slate-300 border">
-        <div class="max-w-4xl mt-1 pr-5 col-span-3">
-            <form method="POST"
-                  action="{{ route('academic-topics.essay-questions.store', ['academic_topic' => $academicTopic]) }}">
-                @csrf
-                <div class="grid sm:grid-cols-2 gap-x-3 border border-slate-200 p-3 rounded-md bg-gray-100">
-                    <div class="sm:col-span-1">
-                        <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
-                            'unspecified' => 'Unspecified',
-                            'easy' => 'Easy',
-                            'medium' => 'Medium',
-                            'difficult' => 'Difficult',
-                        ]"/>
-                    </div>
-                    <div class="sm:col-span-1">
-                        <x-form.input name="score" type="number" value="15"/>
-                    </div>
-
-                    <div class="sm:col-span-2 my-3">
-                        <x-form.input type="text" placeholder="Enter subtopic or leave blank" Label="Sub Topic"
-                                      name="subtopic"/>
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <x-form.rich-editor class="rich-editor" full name="question"/>
-                        <div class="my-3">
-                            <x-form.rich-editor class="rich-editor" full name="answer"/>
-                        </div>
-
-                        <div class="flex justify-end mt-4">
-                            <x-button.primary class="ml-2">Create Essay Question</x-button.primary>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="col-span-2 border mt-1 border-slate-200 p-3 rounded-md bg-gray-100">
-            <x-plugins link="{{url()->current() . '/new'}}"/>
+    <!-- Add header section -->
+    <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center space-x-4">
+            <div class="p-3 bg-indigo-100 rounded-full">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Create Essay Question</h1>
+                <p class="text-gray-600">Add a new essay question to {{ $academicTopic->name }}</p>
+            </div>
         </div>
     </div>
 
+    <!-- Main content -->
+    <div class="grid grid-cols-5 gap-6">
+        <div class="col-span-3">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Question Details</h2>
+                    <p class="text-sm text-gray-600 mt-1">Fill in the details for your essay question.</p>
+                </div>
+
+                <form method="POST" action="{{ route('essay-questions.store', [
+                                        'academic_topic' => $academicTopic,
+                                        'academic_subject' => getRouteParameter('academic_subject'),
+                                        'academic_level' => getRouteParameter('academic_level'),
+                                        'academic_group' => getRouteParameter('academic_group')
+                                    ]) }}" class="p-6 space-y-6">
+                    @csrf
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <x-form.select
+                                name="difficulty_level"
+                                label="Difficulty Level"
+                                :options="[
+                                                        'unspecified' => 'Unspecified',
+                                                        'easy' => 'Easy',
+                                                        'medium' => 'Medium',
+                                                        'difficult' => 'Difficult',
+                                                    ]"
+                            />
+                        </div>
+                        <div>
+                            <x-form.input
+                                name="score"
+                                type="number"
+                                value="15"
+                                label="Maximum Score"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <x-form.input
+                            type="text"
+                            placeholder="Enter subtopic or leave blank"
+                            label="Sub Topic"
+                            name="subtopic"
+                        />
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Question Content</label>
+                            <x-form.rich-editor class="rich-editor" full name="question"/>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Model Answer</label>
+                            <x-form.rich-editor class="rich-editor" full name="answer"/>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end pt-6 border-t border-gray-200">
+                        <x-button.secondary type="button" onclick="history.back()">
+                            Cancel
+                        </x-button.secondary>
+                        <x-button.primary class="ml-4">
+                            Create Question
+                        </x-button.primary>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-span-2">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Helpful Tools</h2>
+                </div>
+                <div class="p-6">
+                    <x-plugins link="{{ url()->current() . '/new' }}"/>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-layouts.app>

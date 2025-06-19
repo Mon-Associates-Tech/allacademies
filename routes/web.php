@@ -26,7 +26,29 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubtopicController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use App\Livewire\Teachers\EssayGrader;
+use App\Models\Assessment;
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\LibrarianController;
+use App\Http\Controllers\AdministratorController;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookCategoryController;
+use App\Http\Controllers\StudentGroupController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\TopicController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\LessonNoteController;
+use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\BookBorrowingController;
+use App\Http\Controllers\BookSubscriptionController;
+use App\Http\Controllers\GroupBookSubscriptionController;
+use App\Http\Controllers\BookApprovalController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +70,7 @@ Route::middleware('guest')->group(function () {
     Route::post('sign-up', [SignUpController::class, 'store']);
 });
 
-Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('sign-out');
+Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->prefix('verify/email')->name('verification.')->group(function () {
     Route::get('notice', [EmailVerificationController::class, 'notice'])->name('notice');
@@ -94,35 +116,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('academic-groups', AcademicGroupController::class);
-    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->shallow();
-    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->shallow();
-    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->shallow();
-    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->shallow();
-    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
-    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
+//    Route::resource('academic-groups', AcademicGroupController::class);
+//    Route::resource('academic-groups.academic-levels', AcademicLevelController::class)->shallow();
+//    Route::resource('academic-levels.academic-subjects', AcademicSubjectController::class)->shallow();
+//    Route::resource('academic-subjects.academic-topics', AcademicTopicController::class)->shallow();
+//    Route::resource('academic-topics.multiple-choice-questions', MultipleChoiceQuestionController::class)->shallow();
+//    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
+//    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
 
     Route::resource('users', UserController::class)->only(['index', 'show']);
 
 
-    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])
-        ->name('academic-subjects.examinations.preview');
-    Route::post('academic-subjects/{academic_subject}/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
-        ->name('academic-subjects.examinations.generate-preview');
-    Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
-    Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
-    Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
-    Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
-    Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
-    Route::get('quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
+//    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])
+//        ->name('academic-subjects.examinations.preview');
+//    Route::post('academic-subjects/{academic_subject}/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
+//        ->name('academic-subjects.examinations.generate-preview');
+//    Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
+//    Route::resource('academic-subjects.examinations', ExaminationController::class)->shallow()->except(['edit', 'update', 'destroy']);
+//    Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
+//    Route::match(['GET', 'POST'], 'quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
+//    Route::get('quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
+//    Route::resource('academic-subjects.quizzes', QuizController::class)->shallow()->except(['edit', 'update', 'destroy']);
+//    Route::get('quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
 
     Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
     Route::get('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'reason'])->name('audit-teams.reason');
     Route::resource('audit-teams', AuditTeamController::class)->only(['index', 'show']);
 
-    Route::resource('academic-topics.subtopics', SubtopicController::class);
+//    Route::resource('academic-topics.subtopics', SubtopicController::class);
 
 
     Route::post('export/pdf', function(){
@@ -134,3 +156,195 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     })->name('export.word');
 });
+
+
+Route::middleware(['auth'])->group(function () {
+
+    // Role routes
+    Route::resource('roles', RoleController::class);
+
+    // Student routes
+    Route::resource('students', StudentController::class);
+    Route::prefix('students/{student}')->group(function () {
+        Route::get('/borrow', [StudentController::class, 'showBorrowForm'])->name('students.borrow.form');
+        Route::post('/borrow', [StudentController::class, 'borrowBook'])->name('students.borrow');
+        Route::get('/return/{borrowing}', [StudentController::class, 'showReturnForm'])->name('students.return.form');
+        Route::post('/return/{borrowing}', [StudentController::class, 'returnBook'])->name('students.return');
+        Route::get('/subscribe', [StudentController::class, 'showSubscribeForm'])->name('students.subscribe.form');
+        Route::post('/subscribe', [StudentController::class, 'subscribeToBook'])->name('students.subscribe');
+        Route::get('/subscriptions/{subscription}/cancel', [StudentController::class, 'showCancelSubscriptionForm'])->name('students.subscription.cancel.form');
+        Route::post('/subscriptions/{subscription}/cancel', [StudentController::class, 'cancelSubscription'])->name('students.subscription.cancel');
+        Route::get('/assessments/create', [StudentController::class, 'showAssessmentForm'])->name('students.assessment.form');
+        Route::post('/assessments', [StudentController::class, 'createAssessment'])->name('students.assessment.create');
+        Route::get('/borrowed-books', [StudentController::class, 'getBorrowedBooks'])->name('students.borrowed-books');
+        Route::get('/subscriptions', [StudentController::class, 'getSubscriptions'])->name('students.subscriptions');
+        Route::get('/assessments', [StudentController::class, 'getAssessments'])->name('students.assessments');
+    });
+
+    // Teacher routes
+    Route::resource('teachers', TeacherController::class);
+    Route::prefix('teachers/{teacher}')->group(function () {
+        Route::get('/student-groups/create', [TeacherController::class, 'showStudentGroupForm'])->name('teachers.student-groups.form');
+        Route::post('/student-groups', [TeacherController::class, 'createStudentGroup'])->name('teachers.student-groups.create');
+        Route::get('/student-groups', [TeacherController::class, 'getStudentGroups'])->name('teachers.student-groups');
+        Route::get('/lessons/create', [TeacherController::class, 'showLessonForm'])->name('teachers.lessons.form');
+        Route::post('/lessons', [TeacherController::class, 'createLesson'])->name('teachers.lessons.create');
+        Route::get('/lesson-notes/create', [TeacherController::class, 'showLessonNoteForm'])->name('teachers.lesson-notes.form');
+        Route::post('/lesson-notes', [TeacherController::class, 'uploadLessonNote'])->name('teachers.lesson-notes.create');
+        Route::get('/group-subscriptions/create', [TeacherController::class, 'showGroupSubscriptionForm'])->name('teachers.group-subscriptions.form');
+        Route::post('/group-subscriptions', [TeacherController::class, 'subscribeGroupToBook'])->name('teachers.group-subscriptions.create');
+        Route::get('/lessons', [TeacherController::class, 'getLessons'])->name('teachers.lessons');
+        Route::get('/lesson-notes', [TeacherController::class, 'getLessonNotes'])->name('teachers.lesson-notes');
+        Route::get('/group-subscriptions', [TeacherController::class, 'getGroupSubscriptions'])->name('teachers.group-subscriptions');
+    });
+
+    // Librarian routes
+    Route::resource('librarians', LibrarianController::class);
+    Route::prefix('librarians/{librarian}')->group(function () {
+        Route::get('/book-approvals/create', [LibrarianController::class, 'showBookApprovalForm'])->name('librarians.book-approvals.form');
+        Route::post('/book-approvals', [LibrarianController::class, 'approveBook'])->name('librarians.book-approvals.create');
+        Route::get('/book-lendings/create', [LibrarianController::class, 'showBookLendingForm'])->name('librarians.book-lendings.form');
+        Route::post('/book-lendings', [LibrarianController::class, 'lendBook'])->name('librarians.book-lendings.create');
+        Route::get('/book-returns/create', [LibrarianController::class, 'showBookReturnForm'])->name('librarians.book-returns.form');
+        Route::post('/book-returns', [LibrarianController::class, 'processBookReturn'])->name('librarians.book-returns.create');
+        Route::get('/group-subscriptions/create', [LibrarianController::class, 'showGroupSubscriptionForm'])->name('librarians.group-subscriptions.form');
+        Route::post('/group-subscriptions', [LibrarianController::class, 'subscribeGroupToBook'])->name('librarians.group-subscriptions.create');
+        Route::get('/book-approvals', [LibrarianController::class, 'getBookApprovals'])->name('librarians.book-approvals');
+        Route::get('/book-lendings', [LibrarianController::class, 'getBookLendings'])->name('librarians.book-lendings');
+        Route::get('/group-subscriptions', [LibrarianController::class, 'getGroupSubscriptions'])->name('librarians.group-subscriptions');
+    });
+
+    // Administrator routes
+    Route::resource('administrators', AdministratorController::class);
+    Route::prefix('administrators/{administrator}')->group(function () {
+        Route::get('/group-subscriptions/create', [AdministratorController::class, 'showGroupSubscriptionForm'])->name('administrators.group-subscriptions.form');
+        Route::post('/group-subscriptions', [AdministratorController::class, 'subscribeGroupToBook'])->name('administrators.group-subscriptions.create');
+        Route::get('/group-subscriptions', [AdministratorController::class, 'getGroupSubscriptions'])->name('administrators.group-subscriptions');
+    });
+
+    // Author routes
+    Route::resource('authors', AuthorController::class);
+    Route::prefix('authors/{author}')->group(function () {
+        Route::get('/books/create', [AuthorController::class, 'showCreateBookForm'])->name('authors.books.create.form');
+        Route::post('/books', [AuthorController::class, 'createBook'])->name('authors.books.create');
+        Route::get('/books/{book}/edit', [AuthorController::class, 'showUpdateBookForm'])->name('authors.books.edit.form');
+        Route::put('/books/{book}', [AuthorController::class, 'updateBook'])->name('authors.books.update');
+        Route::delete('/books/{book}', [AuthorController::class, 'deleteBook'])->name('authors.books.delete');
+        Route::get('/books', [AuthorController::class, 'getBooks'])->name('authors.books');
+    });
+
+    // Book routes
+    Route::resource('books', BookController::class);
+
+    // Book Category routes
+    Route::resource('book-categories', BookCategoryController::class);
+    Route::get('book-categories/{bookCategory}/books', [BookCategoryController::class, 'getBooks'])->name('book-categories.books');
+
+    // Student Group routes
+    Route::resource('student-groups', StudentGroupController::class);
+    Route::prefix('student-groups/{studentGroup}')->group(function () {
+        Route::get('/students/add', [StudentGroupController::class, 'showAddStudentForm'])->name('student-groups.students.add.form');
+        Route::post('/students', [StudentGroupController::class, 'addStudent'])->name('student-groups.students.add');
+        Route::get('/students/remove', [StudentGroupController::class, 'showRemoveStudentForm'])->name('student-groups.students.remove.form');
+        Route::delete('/students', [StudentGroupController::class, 'removeStudent'])->name('student-groups.students.remove');
+        Route::get('/students', [StudentGroupController::class, 'getStudents'])->name('student-groups.students');
+    });
+
+    // Subject routes
+    Route::resource('subjects', SubjectController::class);
+    Route::get('subjects/{subject}/topics', [SubjectController::class, 'getTopics'])->name('subjects.topics');
+
+    // Topic routes
+    Route::resource('topics', TopicController::class);
+    Route::get('topics/{topic}/lesson-notes', [TopicController::class, 'getLessonNotes'])->name('topics.lesson-notes');
+
+    // Lesson routes
+    Route::resource('lessons', LessonController::class);
+    Route::get('lessons/{lesson}/notes', [LessonController::class, 'getNotes'])->name('lessons.notes');
+
+    // Lesson Note routes
+    Route::resource('lesson-notes', LessonNoteController::class);
+
+    // Assessment routes
+    Route::resource('assessments', AssessmentController::class);
+
+    // Book Borrowing routes
+//    Route::resource('book-borrowings', BookBorrowingController::class)->except(['destroy']);
+
+    // Book Subscription routes
+//    Route::resource('book-subscriptions', BookSubscriptionController::class)->except(['destroy']);
+
+    // Group Book Subscription routes
+//    Route::resource('group-book-subscriptions', GroupBookSubscriptionController::class)->except(['destroy']);
+
+    // Book Approval routes
+//    Route::resource('book-approvals', BookApprovalController::class)->except(['destroy']);
+});
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', App\Livewire\Administrators\Dashboard::class)->name('admin.dashboard');
+});
+
+
+Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
+    Route::get('/essays', function () {
+        $assessments = Assessment::whereHas('responses', fn($q) =>
+        $q->whereJsonContains('data->needs_grading', true)
+        )->with('student.user')->get();
+
+        return view('livewire.teachers.essay-dashboard', compact('assessments'));
+    })->name('teacher.essays.index');
+
+    Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
+});
+
+
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
+    // Existing routes
+
+    // Hierarchical academic routes with full nesting
+    Route::resource('academic-groups', AcademicGroupController::class);
+
+    Route::prefix('academic-groups/{academic_group}')->group(function () {
+        Route::resource('academic-levels', AcademicLevelController::class);
+
+        Route::prefix('academic-levels/{academic_level}')->group(function () {
+            Route::resource('academic-subjects', AcademicSubjectController::class);
+
+            Route::prefix('academic-subjects/{academic_subject}')->group(function () {
+                Route::resource('academic-topics', AcademicTopicController::class);
+
+                Route::prefix('academic-topics/{academic_topic}')->group(function () {
+                    Route::resource('essay-questions', EssayQuestionController::class);
+                    Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class);
+                    Route::resource('multiple-choice-questions', MultipleChoiceQuestionController::class);
+
+                    // Keep the subtopic route within the hierarchy
+                    Route::resource('subtopics', SubtopicController::class);
+                });
+
+                // Keep examinations and quizzes routes within the subject hierarchy
+                Route::get('/examinations/preview', [ExaminationController::class, 'preview'])
+                    ->name('examinations.preview');
+                Route::post('/examinations/generate-preview', [ExaminationController::class, 'generatePreview'])
+                    ->name('examinations.generate-preview');
+                Route::resource('examinations', ExaminationController::class)
+                    ->except(['edit', 'update', 'destroy']);
+                Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
+//                Route::get('/quizzes/start', [QuizController::class, 'start'])->name('quizzes.start');
+                Route::match(['GET', 'POST'], '/quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
+                Route::get('/quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
+                Route::resource('quizzes', QuizController::class)
+                    ->except(['edit', 'update', 'destroy']);
+                Route::get('/quizzes/{quiz}/scores', [QuizController::class, 'scores'])->name('quizzes.scores');
+                Route::get('quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
+            });
+        });
+    });
+
+    // Other existing routes
+});
+
+
+
+//require __DIR__.'/demo.php';

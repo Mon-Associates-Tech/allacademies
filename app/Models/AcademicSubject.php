@@ -98,4 +98,23 @@ class AcademicSubject extends Model
         });
     }
 
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class);
+    }
+
+    public function lessonNotes()
+    {
+        return $this->hasMany(LessonNote::class);
+    }
+
+    public function teachers()
+    {
+        return $this->belongsToMany(Teacher::class)
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes');
+    }
+    public function questions(){
+        return $this->hasMany(Question::class);
+    }
 }
