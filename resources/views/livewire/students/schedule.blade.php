@@ -1,343 +1,283 @@
 <div x-data="{
-    currentView: 'calendar'
-}">
-    <!-- File: resources/views/livewire/students/schedule.blade.php -->
+    currentView: 'calendar',
+    showDetailsModal: false,
+    selectedAssessment: null,
+    showFilters: false
+}" class="max-w-7xl mx-auto space-y-6">
 
-    <div class="mb-4 flex justify-between items-center">
-        <div>
-            <label for="statusFilter" class="block text-sm font-medium text-gray-700">Filter by Status</label>
-            <select id="statusFilter" wire:model.live="selectedStatus"
-                    wire:change="$refresh"
-                    class="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                <option value="">All</option>
-                <option value="completed">Completed</option>
-                <option value="in_progress">In Progress</option>
-                <option value="needs_grading">Needs Grading</option>
-            </select>
+    <!-- Enhanced Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 rounded-xl p-6 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold">Academic Schedule</h1>
+                    <p class="text-blue-100 mt-1">Track your assessments, deadlines, and academic progress</p>
+                </div>
+            </div>
+
+            <!-- Enhanced Assessment Stats -->
+            <div class="hidden lg:grid grid-cols-3 gap-4">
+                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div class="text-2xl font-bold text-white">{{ count($assessments) }}</div>
+                    <div class="text-sm text-blue-200">Total</div>
+                    <div class="text-xs text-blue-300 mt-1">Assessments</div>
+                </div>
+                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-300">{{ collect($assessments)->where('status', 'completed')->count() }}</div>
+                    <div class="text-sm text-blue-200">Completed</div>
+                    <div class="text-xs text-blue-300 mt-1">✓ Done</div>
+                </div>
+                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div class="text-2xl font-bold text-yellow-300">{{ collect($assessments)->where('status', 'in_progress')->count() }}</div>
+                    <div class="text-sm text-blue-200">In Progress</div>
+                    <div class="text-xs text-blue-300 mt-1">⏳ Active</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Optional: Date Navigation -->
-        <div class="flex space-x-2">
-            <button @click="$wire.previousPeriod()" class="bg-gray-200 px-3 py-2 rounded">Previous</button>
-            <button @click="$wire.nextPeriod()" class="bg-gray-200 px-3 py-2 rounded">Next</button>
-        </div>
-    </div>
-    <!-- Tabs -->
-    <div class="mb-4 border-b border-gray-200">
-        <ul class="flex space-x-6" role="tablist">
-            <li role="presentation">
-                <button type="button"
-                        @click="currentView = 'calendar'; $wire.set('selectedEvent', null)"
-                        class="py-4 px-1 font-medium text-sm border-b-2"
-                        :class="{
-                            'border-indigo-500 text-indigo-600': currentView === 'calendar',
-                            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentView !== 'calendar'
-                        }">
-                    Calendar View
-                </button>
-            </li>
-            <li role="presentation">
-                <button type="button"
-                        @click="currentView = 'list'; $wire.set('selectedEvent', null)"
-                        class="py-4 px-1 font-medium text-sm border-b-2"
-                        :class="{
-                            'border-indigo-500 text-indigo-600': currentView === 'list',
-                            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentView !== 'list'
-                        }">
-                    List View
-                </button>
-            </li>
-            <li role="presentation">
-                <button type="button"
-                        @click="currentView = 'grid'; $wire.set('selectedEvent', null)"
-                        class="py-4 px-1 font-medium text-sm border-b-2"
-                        :class="{
-                            'border-indigo-500 text-indigo-600': currentView === 'grid',
-                            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentView !== 'grid'
-                        }">
-                    Grid View
-                </button>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Calendar View -->
-    <div x-show="currentView === 'calendar'" class="mt-4 bg-white p-4 rounded-lg shadow">
-        <div id="calendar"></div>
-    </div>
-
-<!-- List View -->
-<div x-show="currentView === 'list'" class="mt-4">
-    <div class="overflow-x-auto">
-        <div class="min-w-full inline-block align-middle">
-            <div class="overflow-hidden border-b border-gray-200 dark:border-gray-700 shadow-sm sm:rounded-lg">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Assessment
-                            </th>
-                            <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Date & Time
-                            </th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Score
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <template x-for="event in {{ json_encode($assessments) }}" :key="event.id">
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer" @click="$wire.openEventDetails(event)">
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="event.title"></div>
-                                    <div class="md:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        <span x-text="event.formatted_date"></span>
-                                        <span x-text="event.formatted_time"></span>
-                                    </div>
-                                </td>
-                                <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-gray-100" x-text="event.formatted_date"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="event.formatted_time"></div>
-                                    <div class="text-xs text-gray-400" x-text="event.relative_date"></div>
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                        :class="{
-                                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': event.status === 'completed',
-                                            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': event.status === 'in_progress',
-                                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': event.status === 'needs_grading',
-                                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': !event.status
-                                        }"
-                                        x-text="event.status ? event.status.replace('_', ' ') : 'pending'">
-                                    </span>
-                                </td>
-                                <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap text-sm">
-                                    <span x-show="event.status === 'completed'"
-                                        :class="{'text-green-600 dark:text-green-400': event.score >= 70, 'text-red-600 dark:text-red-400': event.score < 70}"
-                                        x-text="event.score + '%'">
-                                    </span>
-                                    <span x-show="event.status === 'needs_grading'" class="text-yellow-600 dark:text-yellow-400">
-                                        Pending
-                                    </span>
-                                    <span x-show="event.status === 'in_progress'" class="text-gray-400">
-                                        -
-                                    </span>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
+        <!-- Mobile Stats -->
+        <div class="lg:hidden mt-6 grid grid-cols-3 gap-3">
+            <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                <div class="text-lg font-bold">{{ count($assessments) }}</div>
+                <div class="text-xs text-blue-200">Total</div>
+            </div>
+            <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                <div class="text-lg font-bold text-green-300">{{ collect($assessments)->where('status', 'completed')->count() }}</div>
+                <div class="text-xs text-blue-200">Completed</div>
+            </div>
+            <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                <div class="text-lg font-bold text-yellow-300">{{ collect($assessments)->where('status', 'in_progress')->count() }}</div>
+                <div class="text-xs text-blue-200">In Progress</div>
             </div>
         </div>
     </div>
-</div>
 
-    <!-- Grid View -->
-    <div x-show="currentView === 'grid'" class="mt-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <template x-for="event in {{ json_encode($assessments) }}" :key="event.id">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer group"
-                     @click="$wire.openEventDetails(event)">
-                    <div class="p-4">
-                        <!-- Title with subject icon -->
-                        <div class="flex items-start space-x-3 mb-3">
-                            <div class="rounded-full p-2 bg-indigo-100 dark:bg-indigo-900/50">
-                                <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <h4 x-text="event.title" class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></h4>
+    <!-- Enhanced Filter and Navigation Controls -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <!-- Header with toggle -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                </svg>
+                Filters & Navigation
+            </h3>
+            <button @click="showFilters = !showFilters"
+                    class="lg:hidden inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <span x-text="showFilters ? 'Hide' : 'Show'"></span>
+                <svg class="ml-2 h-4 w-4 transition-transform" :class="{'rotate-180': showFilters}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-6" :class="{'hidden lg:block': !showFilters}">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <!-- Status Filter -->
+                <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
+                        </svg>
+                        <label for="statusFilter" class="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</label>
+                    </div>
+                    <select id="statusFilter" wire:model.live="selectedStatus"
+                            class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm min-w-48">
+                        <option value="">🔍 All Statuses</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="in_progress">🔄 In Progress</option>
+                        <option value="needs_grading">📝 Needs Grading</option>
+                        <option value="pending">⏳ Pending</option>
+                    </select>
+                </div>
+
+                <!-- Date Navigation -->
+                <div class="flex items-center justify-center space-x-2">
+                    <button wire:click="previousPeriod"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Previous
+                    </button>
+
+                    <div class="px-6 py-2 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg">
+                        <div class="text-sm font-medium text-indigo-900 dark:text-indigo-100">
+                            {{ $currentDate->format('F Y') }}
                         </div>
-
-                        <!-- Status and Score -->
-                        <div class="flex items-center justify-between mb-3">
-                        <span x-text="event.status"
-                              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                              :class="{
-                                  'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': event.status === 'completed',
-                                  'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': event.status === 'in_progress',
-                                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': event.status === 'needs_grading'
-                              }">
-                        </span>
-                            <span x-show="event.status === 'completed'"
-                                  x-text="event.percentage_score + '%'"
-                                  :class="{
-                                  'text-green-600 dark:text-green-400': event.percentage_score >= 70,
-                                  'text-red-600 dark:text-red-400': event.percentage_score < 70
-                              }"
-                                  class="text-sm font-semibold">
-                        </span>
-                        </div>
-
-                        <!-- Date and Time -->
-                        <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center space-x-2">
-                            <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <div>
-                                <span x-text="event.formatted_date"></span>
-                                <span x-text="event.formatted_time"></span>
-                                <span class="text-xs opacity-75" x-text="'(' + event.relative_date + ')'"></span>
-                            </div>
+                        <div class="text-xs text-indigo-600 dark:text-indigo-300">
+                            {{ $currentDate->format('l, jS') }}
                         </div>
                     </div>
-                </div>
-            </template>
-        </div>
-    </div>
 
-    <!-- Modal -->
-    <!-- Modal -->
-    <div x-show="$wire.selectedEvent !== null"
-         x-cloak
-         class="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-75 flex items-center justify-center"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
-
-        <div class="bg-white w-full max-w-2xl mx-auto rounded-xl ring-slate-600 inset-3 ring-4 shadow-lg z-50 overflow-y-auto"
-             x-data="{ questions: [] }"
-             x-init="questions = $wire.selectedEvent && $wire.selectedEvent.questions ? $wire.selectedEvent.questions : []">
-
-            <!-- Modal content wrapper with transition -->
-            <div class="bg-white w-full max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto"
-                 x-show="$wire.selectedEvent !== null"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="transform opacity-0 scale-95"
-                 x-transition:enter-end="transform opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-300"
-                 x-transition:leave-start="transform opacity-100 scale-100"
-                 x-transition:leave-end="transform opacity-0 scale-95">
-
-                <header class="px-4 py-4 border-b border-b-gray-300 flex justify-between items-center">
-                    <h2 class="text-lg font-bold" x-text="$wire.selectedEvent?.title"></h2>
-                    <p class="text-sm text-gray-500">
-                        <span x-text="$wire.selectedEvent?.formatted_date"></span>,
-                        <span x-text="$wire.selectedEvent?.formatted_time"></span>
-                        (<span x-text="$wire.selectedEvent?.relative_date"></span>)
-                    </p>
-
-                    <button @click="$wire.set('selectedEvent', null)"
-                            class="text-gray-500 rounded-lg bg-white border border-gray-200 p-1 hover:text-gray-800"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 transform scale-90"
-                            x-transition:enter-end="opacity-100 transform scale-100">
-                        <svg class="w-6 h-6 opacity-75" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <button wire:click="nextPeriod"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+                        Next
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </button>
-                </header>
-            <main class="p-4">
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <p><strong>Subject:</strong> <span x-text="$wire.selectedEvent?.subject || 'N/A'"></span></p>
-                        <p><strong>Book:</strong> <span x-text="$wire.selectedEvent?.book || 'N/A'"></span></p>
-                    </div>
-                    <div class="flex justify-between">
-                        <p><strong>Status:</strong>
-                            <span :class="{
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800': $wire.selectedEvent?.status === 'completed',
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800': $wire.selectedEvent?.status === 'in_progress',
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800': $wire.selectedEvent?.status === 'needs_grading',
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800': !$wire.selectedEvent?.status || $wire.selectedEvent?.status === 'N/A'
-    }">
-        <span x-text="{
-            'completed': 'Completed',
-            'in_progress': 'In Progress',
-            'needs_grading': 'Needs Grading',
-            'N/A': 'N/A'
-        }[$wire.selectedEvent?.status || 'N/A']"></span>
-    </span>
-                        </p>
-
-                        <p><strong>Score:</strong>
-                            <span x-text="$wire.selectedEvent?.score + '/' + $wire.selectedEvent?.max_score"
-                                  :class="{
-                                      'text-green-600': $wire.selectedEvent?.percentage >= 70,
-                                      'text-yellow-600': $wire.selectedEvent?.percentage < 70 && $wire.selectedEvent?.percentage >= 50,
-                                      'text-red-600': $wire.selectedEvent?.percentage < 50
-                                  }"></span>
-                        </p>
-                    </div>
-                    <hr class="opacity-50">
-                    <h4 class="font-semibold">Questions & Answers</h4>
-                    <template x-if="$wire.selectedEventQuestions.length > 0 && $wire.selectedEventQuestions">
-                        <ul class="space-y-4">
-                            <template x-for="question in $wire.selectedEventQuestions" key="question.id">
-                                <li class="border border-gray-200 p-3 rounded-md bg-gray-50">
-                                    <p x-text="question.question"></p>
-                                    <div class="mt-2 pl-4 border-l-2"
-                                         :class="{
-                                             'border-green-500': question.isCorrect,
-                                             'border-red-500': !question.isCorrect
-                                         }">
-                                        <p><strong>Your Answer:</strong> <span x-text="question.studentAnswer || 'Not answered'"></span></p>
-                                        <p><strong>Correct Answer:</strong> <span x-text="question.correctAnswer || 'N/A'"></span></p>
-                                        <div class="flex items-center mt-1">
-                                            <template x-if="question.isCorrect">
-                                                <!-- Green checkmark SVG -->
-                                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                            </template>
-                                            <template x-if="!question.isCorrect && question.studentAnswer">
-                                                <!-- Red cross SVG -->
-                                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                </svg>
-                                            </template>
-                                        </div>
-
-                                    </div>
-                                </li>
-                            </template>
-                        </ul>
-                    </template>
-
-                    <template x-if="$wire.selectedEventQuestions.length === 0">
-                        <p class="text-gray-500 italic">No questions or results available.</p>
-                    </template>
                 </div>
-            </main>
-            <footer class="px-4 py-2 border-t border-t-gray-400 flex justify-end">
-                <button @click="$wire.set('selectedEvent', null)" class="bg-indigo-600 text-white px-4 py-2 rounded">Close</button>
-            </footer>
+
+                <!-- Quick Actions -->
+                <div class="flex items-center space-x-2">
+                    <button wire:click="refreshCalendar"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                    <button onclick="document.querySelector('[x-data]').__x.$data.activeTab = 'self-assessment'"
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New Assessment
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var calendarEl = document.getElementById('calendar');
-        var events = @json($assessments);
+    <!-- Calendar Container -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-6">
+            <div wire:ignore>
+                <div id="calendar" class="w-full"></div>
+            </div>
+        </div>
+    </div>
 
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: events.map(event => ({
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                extendedProps: event
-            })),
-            eventClick: function(info) {
-                @this.call('openEventDetails', info.event.extendedProps);
-            }
+    <!-- Assessment Details Modal -->
+    <div x-show="showDetailsModal"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="showDetailsModal"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 transition-opacity"
+                 @click="showDetailsModal = false">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <div x-show="showDetailsModal"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" x-text="selectedAssessment?.title || 'Assessment Details'"></h3>
+                        <div class="mt-4 space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span x-text="selectedAssessment?.start ? new Date(selectedAssessment.start).toLocaleString() : 'No date specified'"></span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span x-text="selectedAssessment?.status || 'Unknown'"></span>
+                            </div>
+                            <div x-show="selectedAssessment?.subject" class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <span x-text="selectedAssessment?.subject"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button @click="showDetailsModal = false"
+                            type="button"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('schedule', () => ({
+                calendar: null,
+
+                init() {
+                    this.initCalendar();
+                },
+
+                initCalendar() {
+                    // FullCalendar initialization logic
+                }
+            }));
+                            }
+                        },
+                        eventDidMount: function(info) {
+                            // Add custom styling based on status
+                            const event = info.event;
+                            const el = info.el;
+
+                            // Add custom classes for better styling
+                            el.classList.add('assessment-event');
+                            el.style.borderRadius = '6px';
+                            el.style.border = 'none';
+                            el.style.fontSize = '12px';
+                            el.style.fontWeight = '500';
+                        }
+                    });
+
+                    calendar.render();
+                }
+
+                // Listen for assessment updates
+                Livewire.on('assessmentsUpdated', () => {
+                    if (calendar) {
+                        calendar.refetchEvents();
+                    }
+                });
+
+                // Listen for custom event to show assessment details
+                window.addEventListener('show-assessment-details', (event) => {
+                    // Use Alpine.js to set the data and show modal
+                    Alpine.store('assessmentModal', {
+                        selectedAssessment: event.detail,
+                        showDetailsModal: true
+                    });
+                });
+
+                // Initialize calendar
+                initializeCalendar();
         });
-
-        calendar.render();
-    });
-</script>
-@endpush
+    </script>
+    @endpush
+</div>

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\AcademicSubject;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,16 +10,17 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AcademicTopicFactory extends Factory
 {
+    protected $model = \App\Models\AcademicTopic::class;
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->unique()->word(),
-            'academic_subject_id' => AcademicSubjectFactory::create()->id,
+            'academic_subject_id' => AcademicSubject::factory(),
         ];
     }
 }

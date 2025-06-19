@@ -1,11 +1,12 @@
 @import 'katex/dist/katex.css';
+@import './additional-styles/fullcalender.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 /*@import './additional-styles/utility-patterns.css';*/
 /*@import './additional-styles/flatpickr.css';*/
 /*@import 'quill/dist/quill.core.css';*/
-
 
 
 [x-cloak] { display: none !important; }

@@ -1,10 +1,13 @@
-import { Calendar } from '@fullcalendar/core';
+import {Calendar} from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-// Make FullCalendar available globally
 window.FullCalendar = {
     Calendar: Calendar,
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin]
+    plugins: {
+        dayGrid: dayGridPlugin,
+        timeGrid: timeGridPlugin,
+        interaction: interactionPlugin
+    }
 };

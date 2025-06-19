@@ -377,80 +377,106 @@ class Books extends AppComponent
         session()->flash('success', 'Reading progress saved!');
     }
 
-    public function subscribeToBook($bookId)
-    {
-        $this->startLoading();
-        $student = Auth::user()->student;
+public function subscribeToBook($bookId)
+{
+    $book = Book::findOrFail($bookId);
+    $student = Auth::user()->student;
 
-        if (!$student) {
-            session()->flash('error', 'Student profile not found.');
-            $this->endLoading();
+    // Check if already subscribed
+    $existingSubscription = BookSubscription::where('student_id', $student->id)
+        ->where('book_id', $bookId)
+        ->first();
+
+    if ($existingSubscription) {
+        if ($existingSubscription->status === 'active') {
+            session()->flash('error', 'You are already subscribed to this book.');
+            return;
+        } elseif ($existingSubscription->status === 'pending_payment') {
+            session()->flash('error', 'You have a pending subscription for this book. Please complete payment or cancel the existing subscription.');
             return;
         }
+    }
 
-        $book = Book::findOrFail($bookId);
+    // Check if book is free
+    $isFree = $book->annual_subscription_fee == 0 || is_null($book->annual_subscription_fee);
 
-        if (!$book->has_softcopy) {
-            session()->flash('error', 'This book is not available for subscription.');
-            $this->endLoading();
-            return;
-        }
-
-        $existingSubscription = BookSubscription::where('student_id', $student->id)
-            ->where('book_id', $bookId)
-            ->whereIn('status', ['active', 'pending_payment'])
-            ->first();
-
-        if ($existingSubscription) {
-            if ($existingSubscription->status === 'active') {
-                session()->flash('error', 'You are already subscribed to this book.');
-            } else {
-                session()->flash('error', 'You have a pending subscription for this book. Please complete payment.');
-            }
-            $this->endLoading();
-            return;
-        }
-
-        // Create subscription with pending payment status
-        $reference = 'BS' . time() . $student->id . $bookId;
-
+    if ($isFree) {
+        // For free books, create active subscription immediately
         $subscription = BookSubscription::create([
             'student_id' => $student->id,
             'book_id' => $bookId,
+            'annual_fee' => 0,
+            'status' => 'active',
             'start_date' => now(),
             'end_date' => now()->addYear(),
-            'status' => 'pending_payment',
-            'reference' => $reference,
-            'annual_fee' => $book->annual_subscription_fee ?? 50.00,
+            'reference' => 'FREE-' . strtoupper(uniqid()),
         ]);
 
-        // Set subscription data for modal
-        $this->subscriptionData = [
-            'book_title' => $book->title,
-            'amount' => $subscription->annual_fee,
-            'reference' => $reference,
-            'subscription_id' => $subscription->id
-        ];
+        session()->flash('success', 'Free book added to your subscriptions successfully!');
 
-        // Log book subscription
+        // Log the free subscription
         activity()
-            ->performedOn($subscription)
+            ->performedOn($book)
             ->causedBy(auth()->user())
             ->withProperties([
-                'action' => 'initiated_book_subscription',
+                'action' => 'free_book_subscribed',
+                'book_id' => $bookId,
+                'subscription_id' => $subscription->id,
+            ])
+            ->log('Student subscribed to free book');
+
+    } else {
+        // For paid books, prepare subscription data for modal
+        $subscriptionData = [
+            'book_id' => $bookId,
+            'book_title' => $book->title,
+            'amount' => $book->annual_subscription_fee,
+            'author' => $book->author ?? null,
+        ];
+
+        // Log the subscription attempt
+        activity()
+            ->performedOn($book)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'subscription_modal_opened',
                 'book_id' => $bookId,
                 'book_title' => $book->title,
-                'subscription_duration' => '1 year',
-                'annual_fee' => $subscription->annual_fee,
-                'reference' => $reference,
-                'status' => 'pending_payment'
+                'amount' => $book->annual_subscription_fee,
             ])
-            ->log('Student initiated book subscription');
+            ->log('Student opened subscription modal');
 
-        $this->endLoading();
-        $this->dispatch('showSubscriptionModal', $this->subscriptionData);
-        session()->flash('success', 'Subscription initiated! Please proceed with payment to activate your access.');
+        // Emit event to show subscription modal
+        $this->dispatch('showSubscriptionModal', $subscriptionData);
     }
+}
+
+public function confirmSubscription($bookId)
+{
+    $book = Book::findOrFail($bookId);
+    $student = Auth::user()->student;
+
+    // Check if book is free
+    $isFree = $book->annual_subscription_fee == 0 || is_null($book->annual_subscription_fee);
+
+    if ($isFree) {
+        // For free books, subscribe immediately
+        $this->subscribeToBook($bookId);
+    } else {
+        // For paid books, show the confirmation and conditions
+        $subscriptionData = [
+            'book_id' => $bookId,
+            'book_title' => $book->title,
+            'amount' => $book->annual_subscription_fee,
+            'author' => $book->author->user->name ?? 'Unknown',
+            'description' => $book->description,
+        ];
+
+        // You can emit to show a confirmation modal first, then call subscribeToBook
+        $this->subscriptionData = $subscriptionData;
+        $this->showSubscriptionModal = true;
+    }
+}
 
     public function showSubscriptionDetails($subscriptionId)
     {
@@ -622,6 +648,8 @@ class Books extends AppComponent
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('title', 'like', '%' . $this->search . '%')
+                        ->orWhere('isbn', 'like', '%' . $this->search . '%')
+                        ->orWhere('description', 'like', '%' . $this->search . '%')
                         ->orWhereHas('author', function ($authorQuery) {
                             $authorQuery->where('name', 'like', '%' . $this->search . '%');
                         })
@@ -639,18 +667,43 @@ class Books extends AppComponent
                 } elseif ($this->selectedFormat === 'softcopy') {
                     $query->where('has_softcopy', true);
                 }
-            });
+            })
+            ->when($this->selectedPrice, function ($query) {
+                switch ($this->selectedPrice) {
+                    case 'free':
+                        $query->where(function ($q) {
+                            $q->whereNull('annual_subscription_fee')
+                              ->orWhere('annual_subscription_fee', 0);
+                        });
+                        break;
+                    case 'paid':
+                        $query->where('annual_subscription_fee', '>', 0);
+                        break;
+                    case 'low':
+                        $query->whereBetween('annual_subscription_fee', [1, 25]);
+                        break;
+                    case 'medium':
+                        $query->whereBetween('annual_subscription_fee', [26, 75]);
+                        break;
+                    case 'high':
+                        $query->where('annual_subscription_fee', '>', 75);
+                        break;
+                }
+            })
+            ->orderBy('title');
 
-        return $query->paginate(12);
+        return $query->paginate(15); // Increased from 12 for better grid layout
     }
 
     public function getSubscribedBooksProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (!$student) return collect()->paginate(15);
 
-        return Book::query()
-            ->with(['author', 'bookCategory'])
+        $query = Book::query()
+            ->with(['author', 'bookCategory', 'subscriptions' => function ($query) use ($student) {
+                $query->where('student_id', $student->id)->where('status', 'active');
+            }])
             ->whereHas('subscriptions', function ($query) use ($student) {
                 $query->where('student_id', $student->id)
                     ->where('status', 'active');
@@ -658,21 +711,26 @@ class Books extends AppComponent
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('title', 'like', '%' . $this->search . '%')
+                        ->orWhere('isbn', 'like', '%' . $this->search . '%')
                         ->orWhereHas('author', function ($authorQuery) {
                             $authorQuery->where('name', 'like', '%' . $this->search . '%');
                         });
                 });
             })
-            ->paginate(12);
+            ->orderBy('title');
+
+        return $query->paginate(15);
     }
 
     public function getBorrowedBooksProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (!$student) return collect()->paginate(15);
 
-        return Book::query()
-            ->with(['author', 'bookCategory'])
+        $query = Book::query()
+            ->with(['author', 'bookCategory', 'borrowings' => function ($query) use ($student) {
+                $query->where('student_id', $student->id)->where('status', 'borrowed');
+            }])
             ->whereHas('borrowings', function ($query) use ($student) {
                 $query->where('student_id', $student->id)
                     ->where('status', 'borrowed');
@@ -680,31 +738,36 @@ class Books extends AppComponent
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('title', 'like', '%' . $this->search . '%')
+                        ->orWhere('isbn', 'like', '%' . $this->search . '%')
                         ->orWhereHas('author', function ($authorQuery) {
                             $authorQuery->where('name', 'like', '%' . $this->search . '%');
                         });
                 });
             })
-            ->paginate(12);
+            ->orderBy('title');
+
+        return $query->paginate(15);
     }
 
     public function getReadingProgressProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (!$student) return collect()->paginate(15);
 
-        return BookReadingProgress::where('student_id', $student->id)
-            ->with(['book', 'book.author'])
+        $query = BookReadingProgress::where('student_id', $student->id)
+            ->with(['book', 'book.author', 'book.bookCategory'])
             ->latest('last_read_at')
             ->when($this->search, function ($query) {
                 $query->whereHas('book', function ($bookQuery) {
                     $bookQuery->where('title', 'like', '%' . $this->search . '%')
+                        ->orWhere('isbn', 'like', '%' . $this->search . '%')
                         ->orWhereHas('author', function ($authorQuery) {
                             $authorQuery->where('name', 'like', '%' . $this->search . '%');
                         });
                 });
-            })
-            ->paginate(12);
+            });
+
+        return $query->paginate(15);
     }
 
     public function getFormatOptions()
@@ -716,18 +779,178 @@ class Books extends AppComponent
         ];
     }
 
+    public function getPriceOptions()
+    {
+        return [
+            '' => 'All Prices',
+            'free' => 'Free Books',
+            'paid' => 'Paid Books',
+            'low' => 'Low Price (≤$25)',
+            'medium' => 'Medium Price ($26-$75)',
+            'high' => 'High Price (>$75)'
+        ];
+    }
+
+    // Add method to get pagination info
+    public function getPaginationInfo($books)
+    {
+        if (!$books instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            return null;
+        }
+
+        return [
+            'current_page' => $books->currentPage(),
+            'last_page' => $books->lastPage(),
+            'per_page' => $books->perPage(),
+            'total' => $books->total(),
+            'from' => $books->firstItem(),
+            'to' => $books->lastItem(),
+        ];
+    }
+
+    // Add method for better performance tracking
+    public function updatingBookTab()
+    {
+        $this->resetPage();
+
+        // Clear any cached data when switching tabs
+        $this->reset(['search', 'selectedCategory', 'selectedFormat', 'selectedPrice']);
+    }
+
     public function render()
     {
-        $books = match ($this->bookTab) {
-            'subscribed' => $this->subscribedBooks,
-            'borrowed' => $this->borrowedBooks,
-            'progress' => $this->readingProgress,
-            default => $this->availableBooks,
-        };
+        $student = Auth::user()->student;
+
+        // Calculate statistics
+        $totalBooks = Book::where('status', 'approved')->count();
+
+        // Calculate subscribed books count (individual + group subscriptions)
+        $individualSubscriptions = BookSubscription::where('student_id', $student->id)
+            ->where('status', 'active')
+            ->count();
+
+        $groupSubscriptions = 0;
+        if ($student->studentGroup) {
+            $groupSubscriptions = $student->studentGroup->subscriptions()
+                ->where('status', 'active')
+                ->count();
+        }
+
+        $subscribedCount = $individualSubscriptions + $groupSubscriptions;
+
+        // Calculate borrowed books count (only currently borrowed books)
+        $borrowedCount = BookBorrowing::where('student_id', $student->id)
+            ->where('status', 'borrowed')
+            ->count();
+
+        // Calculate available count for the tab badge
+        $availableCount = $totalBooks;
+
+        // Get books based on current tab
+        $books = $this->getBooks();
 
         return view('livewire.students.books', [
             'books' => $books,
+            'totalBooks' => $totalBooks,
+            'subscribedCount' => $subscribedCount,
+            'borrowedCount' => $borrowedCount,
+            'availableCount' => $availableCount,
+            'paginationInfo' => $this->getPaginationInfo($books),
             'formatOptions' => $this->getFormatOptions(),
+            'priceOptions' => $this->getPriceOptions(),
+            'readingProgress' => $this->getReadingProgressProperty(),
+            'categories' => $this->categories,
+
+
         ]);
+    }
+
+    private function getBooks()
+    {
+        $student = Auth::user()->student;
+
+        switch ($this->bookTab) {
+            case 'available':
+                return $this->getAvailableBooks();
+            case 'subscribed':
+                return $this->getSubscribedBooks($student);
+            case 'borrowed':
+                return $this->getBorrowedBooks($student);
+            default:
+                return collect();
+        }
+    }
+
+    private function getAvailableBooks()
+    {
+        $query = Book::with(['author.user', 'bookCategory']);
+//            ->where('status', 'approved');
+
+        // Apply filters
+        if ($this->search) {
+            $query->where(function($q) {
+                $q->where('title', 'like', '%' . $this->search . '%')
+                  ->orWhere('description', 'like', '%' . $this->search . '%')
+                  ->orWhereHas('author.user', function($authorQuery) {
+                      $authorQuery->where('name', 'like', '%' . $this->search . '%');
+                  });
+            });
+        }
+
+        if ($this->selectedCategory) {
+            $query->where('book_category_id', $this->selectedCategory);
+        }
+
+        if ($this->selectedFormat) {
+            $query->where('format', $this->selectedFormat);
+        }
+
+        if ($this->selectedPrice) {
+            switch ($this->selectedPrice) {
+                case 'free':
+                    $query->where(function($q) {
+                        $q->whereNull('annual_subscription_fee')
+                          ->orWhere('annual_subscription_fee', 0);
+                    });
+                    break;
+                case 'paid':
+                    $query->where('annual_subscription_fee', '>', 0);
+                    break;
+            }
+        }
+
+        return $query->paginate(12);
+    }
+
+    private function getSubscribedBooks($student)
+    {
+        // Get individually subscribed books
+        $individualBooks = Book::whereHas('subscriptions', function($query) use ($student) {
+            $query->where('student_id', $student->id)
+                  ->where('status', 'active');
+        })->with(['author.user', 'bookCategory']);
+
+        // Get group subscribed books
+        $groupBooks = collect();
+        if ($student->studentGroup) {
+            $groupBooks = Book::whereHas('groupSubscriptions', function($query) use ($student) {
+                $query->where('student_group_id', $student->studentGroup->id)
+                      ->where('status', 'active');
+            })->with(['author.user', 'bookCategory']);
+        }
+
+        // Combine and paginate
+        $allSubscribedBooks = $individualBooks->union($groupBooks->toBase());
+
+        return $allSubscribedBooks->paginate(12);
+    }
+
+    private function getBorrowedBooks($student)
+    {
+        return Book::whereHas('borrowings', function($query) use ($student) {
+            $query->where('student_id', $student->id)
+                  ->where('status', 'borrowed');
+        })->with(['author.user', 'bookCategory'])
+          ->paginate(12);
     }
 }

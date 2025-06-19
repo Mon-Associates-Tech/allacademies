@@ -72,8 +72,9 @@ class StudentSchedule extends Component
         $this->loadAssessments();
     }
 
-    public function loadAssessments(): void
-    {
+public function loadAssessments(): void
+{
+    try {
         $query = Assessment::where('student_id', Auth::user()->student->id)
             ->whereBetween('created_at', [$this->calendarStartDate, $this->calendarEndDate]);
 
@@ -81,55 +82,168 @@ class StudentSchedule extends Component
             $query->where('status', $this->selectedStatus);
         }
 
-        $assessments = $query->with(['subject', 'topic', 'book', 'responses'])
+        $assessments = $query->with(['subject', 'topic', 'book', 'responses', 'questions.questionable'])
             ->get()
-            ->map(fn($a) => $this->formatAssessment($a));
+            ->map(function($assessment) {
+                try {
+                    $formatted = $this->formatAssessment($assessment);
+
+                    // Ensure proper date formatting for FullCalendar
+                    $formatted['start'] = $assessment->created_at->format('Y-m-d\TH:i:s');
+                    $formatted['end'] = $assessment->updated_at
+                        ? $assessment->updated_at->format('Y-m-d\TH:i:s')
+                        : $assessment->created_at->addHour()->format('Y-m-d\TH:i:s');
+
+                    return $formatted;
+                } catch (\Exception $e) {
+                    \Log::warning('Error formatting individual assessment', [
+                        'assessment_id' => $assessment->id,
+                        'error' => $e->getMessage()
+                    ]);
+
+                    // Return minimal assessment data on error
+                    return [
+                        'id' => "assessment_{$assessment->id}",
+                        'title' => "Assessment #{$assessment->id}",
+                        'start' => $assessment->created_at->format('Y-m-d\TH:i:s'),
+                        'end' => $assessment->created_at->addHour()->format('Y-m-d\TH:i:s'),
+                        'type' => 'assessment',
+                        'status' => $assessment->status ?? 'unknown',
+                        'className' => 'bg-gray-100 text-gray-800',
+                        'is_assessment' => true,
+                        'questions' => [],
+                        'error' => true
+                    ];
+                }
+            });
 
         $this->assessments = $assessments->toArray();
+
+        // Emit event to trigger calendar refresh
+        $this->dispatch('assessmentsUpdated');
+
+    } catch (\Exception $e) {
+        \Log::error('Error loading assessments', [
+            'student_id' => Auth::user()->student->id,
+            'error' => $e->getMessage()
+        ]);
+
+        $this->assessments = [];
+        session()->flash('error', 'Unable to load assessments. Please try again.');
     }
+}
 
     /**
      * @throws \JsonException
      */
-    private function formatAssessment($assessment): array
-    {
-        $questions = [];
 
-        if ($assessment->responses->isNotEmpty()) {
-            $responseData = $assessment->responses->first()?->data ?? [];
-            $responseData = json_decode($responseData, false, 512, JSON_THROW_ON_ERROR);
 
-            foreach ($responseData->questions as $q) {
-                if(isset($q->question))
-                    $questions[] = [
-                        'question' => $q->question,
-                        'studentAnswer' => $q->user_answer ?? null,
-                        'correctAnswer' => $q->correct_answer ?? null,
-                        'isCorrect' => $q->is_correct ?? false
-                    ];
+private function formatAssessment($assessment): array
+{
+    $questions = [];
+
+    try {
+        // Check if assessment has responses
+        if ($assessment->responses && $assessment->responses->isNotEmpty()) {
+            foreach ($assessment->responses as $response) {
+                // Handle different response data structures
+                $responseData = null;
+
+                if (is_string($response->response)) {
+                    // Try to decode JSON response
+                    $decoded = json_decode($response->response, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $responseData = $decoded;
+                    }
+                } elseif ($response->data) {
+                    // Handle data field if it exists
+                    if (is_string($response->data)) {
+                        $responseData = json_decode($response->data, true);
+                    } else {
+                        $responseData = $response->data;
+                    }
+                }
+
+                // Process questions from response data
+                if ($responseData && isset($responseData['questions'])) {
+                    foreach ($responseData['questions'] as $q) {
+                        if (isset($q['question']) || isset($q->question)) {
+                            // Handle both array and object formats
+                            $question = is_array($q) ? $q['question'] : $q->question;
+                            $userAnswer = is_array($q) ? ($q['user_answer'] ?? null) : ($q->user_answer ?? null);
+                            $correctAnswer = is_array($q) ? ($q['correct_answer'] ?? null) : ($q->correct_answer ?? null);
+                            $isCorrect = is_array($q) ? ($q['is_correct'] ?? false) : ($q->is_correct ?? false);
+
+                            $questions[] = [
+                                'question' => $question,
+                                'studentAnswer' => $userAnswer,
+                                'correctAnswer' => $correctAnswer,
+                                'isCorrect' => $isCorrect
+                            ];
+                        }
+                    }
+                }
             }
         }
-        return [
-            'id' => "assessment_{$assessment->id}",
-            'title' => "Assessment: {$assessment->title}",
-            'start' => $assessment->created_at->toIso8601String(),
-            'end' => $assessment->updated_at?->toIso8601String(),
-            'type' => 'assessment',
-            'status' => $assessment->status,
-            'subject' => optional($assessment->subject)->name,
-            'book' => optional($assessment->book)->title,
-            'score' => $assessment->score,
-            'max_score' => $assessment->max_score,
-            'percentage' => $assessment->percentage_score ?? 0,
-            'className' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-            'is_assessment' => true,
-            'questions' => $questions,
-            // Add formatted date strings
-            'formatted_date' => $assessment->created_at->isoFormat('Do MMMM, YYYY'),
-            'formatted_time' => $assessment->created_at->format('h:i A'),
-            'relative_date' => $assessment->created_at->diffForHumans()
-        ];
+
+        // If no questions found in responses, try to get from assessment questions relationship
+        if (empty($questions) && $assessment->questions) {
+            foreach ($assessment->questions as $question) {
+                $questions[] = [
+                    'question' => $question->questionable->question ?? 'Question not available',
+                    'studentAnswer' => null,
+                    'correctAnswer' => $question->questionable->answer ?? null,
+                    'isCorrect' => false
+                ];
+            }
+        }
+
+    } catch (\Exception $e) {
+        // Log error but don't break the formatting
+        \Log::warning('Error formatting assessment questions', [
+            'assessment_id' => $assessment->id,
+            'error' => $e->getMessage()
+        ]);
     }
+
+    return [
+        'id' => "assessment_{$assessment->id}",
+        'title' => $assessment->title ?? "Assessment #{$assessment->id}",
+        'start' => $assessment->created_at->toIso8601String(),
+        'end' => $assessment->updated_at?->toIso8601String() ?? $assessment->created_at->addHour()->toIso8601String(),
+        'type' => 'assessment',
+        'status' => $assessment->status ?? 'unknown',
+        'subject' => $assessment->subject?->name ?? 'No Subject',
+        'topic' => $assessment->topic?->name ?? null,
+        'book' => $assessment->book?->title ?? null,
+        'score' => $assessment->total_score ?? $assessment->score ?? 0,
+        'max_score' => $assessment->max_score ?? 0,
+        'percentage' => $assessment->percentage_score ?? 0,
+        'className' => $this->getAssessmentClassName($assessment->status ?? 'unknown'),
+        'is_assessment' => true,
+        'questions' => $questions,
+        'questions_count' => count($questions),
+        // Add formatted date strings with null checks
+        'formatted_date' => $assessment->created_at->isoFormat('Do MMMM, YYYY'),
+        'formatted_time' => $assessment->created_at->format('h:i A'),
+        'relative_date' => $assessment->created_at->diffForHumans(),
+        // Add duration if available
+        'duration' => $assessment->end_time && $assessment->start_time
+            ? $assessment->start_time->diffInMinutes($assessment->end_time) . ' minutes'
+            : null
+    ];
+}
+
+private function getAssessmentClassName($status): string
+{
+    return match($status) {
+        'completed' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        'in_progress' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        'pending' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        'failed' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    };
+}
 
     public function openEventDetails($event): void
     {

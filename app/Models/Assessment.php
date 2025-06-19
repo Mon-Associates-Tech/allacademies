@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Assessment extends Model
 {
     use LogsActivity;
+    use HasFactory;
 
     protected $fillable = [
         'student_id',
@@ -70,5 +72,15 @@ class Assessment extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function questionable()
+    {
+        return $this->morphTo();
+    }
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class, 'questionable_id')
+            ->where('questionable_type', self::class);
     }
 }

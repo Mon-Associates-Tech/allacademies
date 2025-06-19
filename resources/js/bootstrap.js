@@ -9,12 +9,14 @@ import {
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  RadialLinearScale
 } from 'chart.js';
 import { marked } from "marked";
 import katex from "katex";
 import axios from 'axios';
 import './fullcalendar'
+import './ChartDataHelper'; // Import chart data helper
 
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?url';
@@ -25,8 +27,8 @@ GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 
 
-// Register Chart.js components
-Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend);
+// Register Chart.js components (added RadialLinearScale for radar charts)
+Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale);
 
 // Expose to window for global access
 window.Alpine = Alpine;

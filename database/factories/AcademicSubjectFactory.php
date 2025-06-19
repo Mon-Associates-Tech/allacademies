@@ -20,7 +20,7 @@ class AcademicSubjectFactory extends Factory
         return [
             'name' => $this->faker->unique()->word(),
             'code' => $this->faker->unique()->word(),
-            'academic_level_id' => AcademicLevel::factory(1)->create()->id,
+            'academic_level_id' => AcademicLevel::factory(),
         ];
     }
 }
