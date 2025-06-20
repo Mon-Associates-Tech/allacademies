@@ -1,5 +1,5 @@
 <div x-data="{ format: 'lenticular' }"
-     class="overflow-hidden rounded-lg bg-white shadow mx-auto print:shadow-none print:rounded-none max-w-[60rem] print:max-w-full">
+     class="overflow-y-visible rounded-lg bg-white shadow mx-auto print:shadow-none  print:rounded-none max-w-[60rem] print:max-w-full">
     <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden">
             <span class="inline-flex rounded-md shadow-sm">
                 <span
@@ -172,7 +172,7 @@
 
         @endforeach
     </div>
-    <livewire:examination-print-processor :team_id="$previewData['team_id']" :data="$previewData"
+    <livewire:examination-print-processor :is-preview="$isPreview ?? false" :team_id="$previewData['team_id']" :data="$previewData"
                                           :creator_id="$previewData['creator_id']"
                                           :academic-subject="$academicSubject"/>
 </div>

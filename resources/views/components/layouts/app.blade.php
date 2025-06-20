@@ -37,14 +37,14 @@
     <div class="flex h-screen overflow-hidden">
 
         <!-- Sidebar -->
-        <aside>
+        <aside class="print:hidden">
             <x-app.sidebar :variant="$attributes['sidebarVariant']" />
         </aside>
 
         <!-- Content area -->
         <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
             <!-- Header -->
-            <x-app.header :variant="$attributes['headerVariant']"/>
+            <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"/>
 
             <!-- Main content -->
             <main class="mt-5 p-0">
@@ -58,7 +58,7 @@
                 </div>
 
                 <!-- Page header -->
-                <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2">
+                <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
                     <div class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
                         <div class="text-lg md:text-2xl hidden print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
                             {{ $title }}
@@ -82,10 +82,10 @@
                 </div>
 
                 <!-- Page content -->
-                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-x-hidden">
+                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible overflow-x-hidden">
                     <div
                         x-data="{}"
-                        class="w-full  sm:px-6 lg:px-8 "
+                        class="w-full overflow-y-visible  sm:px-6 lg:px-8 "
                     >
                         <x-loader />
                             {{ $slot }}

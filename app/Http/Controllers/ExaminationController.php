@@ -231,6 +231,8 @@ class ExaminationController extends Controller
 
             return redirect()->route('examinations.preview', [
                 'academic_subject' => $academicSubject,
+                'academic_level' => getRouteParameter('academic_level'),
+                'academic_group' => getRouteParameter('academic_group'),
             ]);
 
         } catch (Exception $e) {
@@ -256,7 +258,11 @@ class ExaminationController extends Controller
         $previewData = session('examination_preview');
 
         if (!$previewData) {
-            return redirect()->route('examinations.create', ['academic_subject' => $academicSubject])
+            return redirect()->route('examinations.create', [
+                'academic_subject' => $academicSubject,
+                'academic_level' => getRouteParameter('academic_level'),
+                'academic_group' => getRouteParameter('academic_group'),
+            ])
                 ->withErrors(['general' => 'No preview data found. Please generate an examination first.']);
         }
 

@@ -1,6 +1,6 @@
 @props(['title' => null, 'action' => null, 'breadcrumb' => null])
 <x-layouts.app>
-    <div class="w-full min-h-screen flex flex-col h-full mx-auto max-w-7xl px-2 lg:px-0">
+    <div class="w-full min-h-screen flex flex-col h-full mx-auto overflow-y-visible max-w-7xl px-2 lg:px-0">
         <div class="print:hidden">
             <div class="">
                 {{ $breadcrumb }}
