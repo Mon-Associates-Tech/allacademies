@@ -143,15 +143,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
     Route::get('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'reason'])->name('audit-teams.reason');
     Route::resource('audit-teams', AuditTeamController::class)->only(['index', 'show']);
-
+    Route::post('audit-teams/bulk-approve', [AuditTeamController::class, 'bulkApprove'])->name('audit-teams.bulk-approve');
 //    Route::resource('academic-topics.subtopics', SubtopicController::class);
 
 
-    Route::post('export/pdf', function(){
+    Route::post('export/pdf', static function(){
        return exportToPdf();
 
     })->name('export.pdf');
-    Route::post('export/word', function(){
+    Route::post('export/word', static function(){
         return exportToWord();
 
     })->name('export.word');
@@ -345,6 +345,3 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     // Other existing routes
 });
 
-
-
-//require __DIR__.'/demo.php';

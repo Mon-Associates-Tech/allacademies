@@ -40,10 +40,36 @@ class TeamController extends Controller
 
         $user->load('currentTeam');
 
-        $ownedTeams = $user->ownedTeams()->withCount('subscriptions')->get();
+        // Get base query for owned teams
+        $ownedTeamsQuery = $user->ownedTeams()->withCount('subscriptions', 'members');
+
+        // Get base query for joined teams
+        $joinedTeamsQuery = $user->joinedTeams()->with('owner')->withCount('subscriptions', 'members');
+
+        // Apply search filter
+        if (request('search')) {
+            $search = request('search');
+            $ownedTeamsQuery->where('name', 'like', "%{$search}%");
+            $joinedTeamsQuery->where('name', 'like', "%{$search}%");
+        }
+
+        // Apply specific filters
+        if (request('owned')) {
+            $joinedTeamsQuery = $joinedTeamsQuery->whereRaw('1 = 0'); // Return no joined teams
+        } elseif (request('joined')) {
+            $ownedTeamsQuery = $ownedTeamsQuery->whereRaw('1 = 0'); // Return no owned teams
+        }
+
+        // Apply personal filter
+        if (request('personal')) {
+            $ownedTeamsQuery->where('is_personal', true);
+            $joinedTeamsQuery->whereRaw('1 = 0'); // Personal teams can't be joined
+        }
+
+        $ownedTeams = $ownedTeamsQuery->get();
         $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
 
-        $joinedTeams = $user->joinedTeams()->with('owner')->withCount('subscriptions')->get();
+        $joinedTeams = $joinedTeamsQuery->get();
 
         $teams = $ownedTeams->merge($joinedTeams);
         unset($ownedTeams, $joinedTeams);
@@ -71,18 +97,70 @@ class TeamController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(TeamRequest $request)
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+public function store(Request $request)
+{
+    $request->validate([
+        'name' => ['required', 'string', 'min:2', 'max:100'],
+        'description' => ['nullable', 'string', 'max:500'],
+        'type' => ['required', 'in:academic,professional,personal'],
+        'privacy' => ['required', 'in:private,public'],
+        'generate_code' => ['boolean'],
+        'auto_activate' => ['boolean'],
+    ], [
+        'name.required' => 'Team name is required.',
+        'name.min' => 'Team name must be at least 2 characters.',
+        'name.max' => 'Team name cannot exceed 100 characters.',
+        'description.max' => 'Description cannot exceed 500 characters.',
+        'type.required' => 'Please select a team type.',
+        'type.in' => 'Invalid team type selected.',
+        'privacy.required' => 'Please select privacy settings.',
+        'privacy.in' => 'Invalid privacy setting selected.',
+    ]);
 
-        $team = new Team($request->validated());
-        $team->owner()->associate($user);
-        $team->save();
+    try {
+        DB::beginTransaction();
 
-        return to_route('teams.index')
-            ->with('success', __('status.resource.created', ['name' => $team->name]));
+        $team = Team::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'type' => $request->type,
+            'privacy' => $request->privacy,
+            'owner_id' => auth()->id(),
+            'is_active' => $request->boolean('auto_activate', true),
+            'joining_code' => $request->boolean('generate_code', true) ? Str::random(8) : null,
+            'created_at' => now(),
+        ]);
+
+        // Log team creation
+        Log::info('Team created', [
+            'team_id' => $team->id,
+            'owner_id' => auth()->id(),
+            'team_name' => $team->name,
+            'type' => $team->type,
+        ]);
+
+        DB::commit();
+
+        $message = __('status.resource.created', ['name' => $team->name]);
+
+        if ($team->joining_code) {
+            $message .= ' ' . __('Your team code is: :code', ['code' => $team->joining_code]);
+        }
+
+        return redirect()->route('teams.index')->with('success', $message);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error creating team', [
+            'error' => $e->getMessage(),
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()
+            ->withInput()
+            ->withErrors(['error' => 'An error occurred while creating the team. Please try again.']);
     }
+}
 
     /**
      * Show the form for editing the specified resource.
