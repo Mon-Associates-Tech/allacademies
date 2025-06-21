@@ -18,6 +18,20 @@ class ExaminationHeading extends Component
 
     public $metadata;
 
+    protected $rules = [
+        'title' => 'required|string|min:1',
+        'duration' => 'required|string|min:1',
+        'template' => 'required|in:twig,pug,tera,jinja',
+        'instructions' => 'nullable|string',
+    ];
+
+    protected $messages = [
+        'title.required' => 'The title field is required.',
+        'duration.required' => 'The duration field is required.',
+        'template.required' => 'The template field is required.',
+        'template.in' => 'The selected template is invalid.',
+    ];
+
     public function mount($metadata)
     {
         $this->metadata = $metadata;
@@ -73,8 +87,9 @@ class ExaminationHeading extends Component
         return implode(PHP_EOL, $details);
     }
 
-    public function updated()
+    public function updated($propertyName)
     {
+        $this->validateOnly($propertyName);
         $this->compile();
     }
 
