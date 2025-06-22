@@ -72,11 +72,10 @@ Route::middleware('guest')->group(function () {
 
 Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('logout');
 
-Route::middleware('auth')->prefix('verify/email')->name('verification.')->group(function () {
-    Route::get('notice', [EmailVerificationController::class, 'notice'])->name('notice');
-    Route::post('send', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('send');
-    Route::get('{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verify');
-});
+// Email verification routes - these should be outside auth middleware
+Route::get('verify/email/notice', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+Route::post('verify/email/send', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('verification.send');
+Route::get('verify/email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
 
 Route::prefix('password')->name('password.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -345,3 +344,18 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     // Other existing routes
 });
 
+Route::get('/mail', static function () {
+    \Illuminate\Support\Facades\Mail::raw('This is a test email', static function ($message) {
+        $message->to('me@example.com')
+            ->subject('Test Email');
+    });
+})->name('mail.test');
+
+// routes/web.php
+Route::get('2fa/verify', [SignInController::class, 'show2faForm'])->name('2fa.verify');
+Route::post('2fa/verify', [SignInController::class, 'verify2fa']);
+Route::post('/2fa/resend', [SignInController::class, 'resend2fa'])->name('2fa.resend');
+Route::post('/ping', static function () {
+    // Just touch the session
+    return response()->noContent();
+})->middleware('auth');

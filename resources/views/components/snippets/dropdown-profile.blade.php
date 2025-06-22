@@ -49,6 +49,8 @@
                                 </svg>
                                 <span class="ml-2">Dashboard</span>
                             </a>
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+
                             <a href="{{ route('subscriptions.index') }}"
                                class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                                 <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
@@ -59,6 +61,8 @@
                                 </svg>
                                 <span class="ml-2">Subscriptions</span>
                             </a>
+                            @endif
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
 
                                 <a href="{{ route('academic-groups.index') }}"
                                    class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
@@ -70,8 +74,10 @@
                                     </svg>
                                     <span class="ml-2">Academic Groups</span>
                                 </a>
+                            @endif
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
 
-                                <a href="{{ route('users.index') }}"
+                            <a href="{{ route('users.index') }}"
                                    class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                          stroke-width="1.5" stroke="currentColor"
@@ -81,7 +87,10 @@
                                     </svg>
                                     <span class="ml-2">Users</span>
                                 </a>
-                                <a href="{{ route('payments.index') }}"
+                            @endif
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+
+                            <a href="{{ route('payments.index') }}"
                                    class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
 
                                     <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
@@ -92,8 +101,10 @@
                                     </svg>
                                     <span class="ml-2">Payments</span>
                                 </a>
+                            @endif
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
 
-                                <a href="{{ route('settings.index') }}"
+                            <a href="{{ route('settings.index') }}"
                                    class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                                     <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
                                          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -103,7 +114,7 @@
                                     </svg>
                                     <span class="ml-2">Settings</span>
                                 </a>
-
+                            @endif
                         </div>
                         <div class="py-1">
                             <a href="{{ route('profile.show') }}"
@@ -116,6 +127,8 @@
                                 </svg>
                                 <span class="ml-2">Profile</span>
                             </a>
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+
                             <a href="{{ route('teams.index') }}"
                                class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                                 <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
@@ -138,7 +151,7 @@
                                     </svg>
                                     <span class="ml-2">Audit Teams</span>
                                 </a>
-
+                            @endif
                             <a href="{{ route('security') }}"
                                class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                                 <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
@@ -164,23 +177,6 @@
                             </button>
                         </form>
                     </div>
-            </li>
-            <li>
-                <a class="font-medium text-sm text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 flex items-center py-1 px-3" href="{{ route('profile.show') }}" @click="open = false" @focus="open = true" @focusout="open = false">Settings</a>
-            </li>
-            <li>
-                <form method="POST" action="{{ route('logout') }}" x-data>
-                    @csrf
-
-                    <a class="font-medium text-sm text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 flex items-center py-1 px-3"
-                        href="{{ route('logout') }}"
-                        @click.prevent="$root.submit();"
-                        @focus="open = true"
-                        @focusout="open = false"
-                    >
-                        {{ __('Sign Out') }}
-                    </a>
-                </form>
             </li>
         </ul>
     </div>

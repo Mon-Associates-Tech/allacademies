@@ -39,16 +39,19 @@
 
         <div class="space-y-8">
 
-            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'owner')
-                @livewire('administrators.admin-navigation', [
-    'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-])
-            @endif
-                @if(auth()->user()->role === 'student')
-                    @livewire('students.student-navigation', [
-        'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-    ])
+            @auth
+                @if(auth()->user()->hasAnyRole(['admin', 'owner']))
+                    @livewire('administrators.admin-navigation', [
+                        'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
                 @endif
+
+                @if(auth()->user()->hasRole('student'))
+                    @livewire('students.student-navigation', [
+                        'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @endif
+            @endauth
         </div>
 
         <!-- Expand / collapse button -->

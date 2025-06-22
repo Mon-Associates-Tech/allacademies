@@ -210,4 +210,6 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
 
+    'enable_otp' => env('ENABLE_OTP', false),
+
 ];

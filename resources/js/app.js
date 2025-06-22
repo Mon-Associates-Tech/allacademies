@@ -1,7 +1,6 @@
 import './bootstrap';
 
 import {gsap} from 'gsap';
-import 'chart.js';
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 

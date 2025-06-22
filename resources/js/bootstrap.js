@@ -17,6 +17,7 @@ import katex from "katex";
 import axios from 'axios';
 import './fullcalendar'
 import './ChartDataHelper'; // Import chart data helper
+import './activity'; // Import activity tracking
 
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?url';
