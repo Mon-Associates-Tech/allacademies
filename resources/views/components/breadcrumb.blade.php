@@ -34,11 +34,11 @@
             <div
                 x-ref="scrollContainer"
                 @scroll="checkScroll"
-                class="overflow-x-auto whitespace-nowrap no-scrollbar px-6"
+                class="overflow-x-auto whitespace-nowrap no-scrollbar"
             >
-                <ol class="inline-flex items-center space-x-4">
+                <ol class="inline-flex items-center space-x-1">
                     <li>
-                        <a href="{{ route('dashboard') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700">
+                        <a href="{{ route('dashboard') }}" class="text-xs my-auto font-medium text-gray-500 hover:text-gray-700">
                             Dashboard
                         </a>
                     </li>
@@ -52,7 +52,7 @@
                                           d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                 </svg>
                                 <a href="{{ $to }}"
-                                   class="ml-4 text-xs font-medium text-gray-500 hover:text-gray-700">
+                                   class="ml-1 mr-1 text-xs font-medium text-gray-500 hover:text-gray-700">
                                     {{ $name }}
                                 </a>
                             </div>

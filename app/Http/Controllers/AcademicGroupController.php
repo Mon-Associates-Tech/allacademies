@@ -8,6 +8,8 @@ use App\Models\AcademicGroup;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class AcademicGroupController extends Controller
@@ -43,10 +45,10 @@ class AcademicGroupController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return Response
+     * @param AcademicGroupRequest $request
+     * @return RedirectResponse
      */
-    public function store(AcademicGroupRequest $request)
+    public function store(AcademicGroupRequest $request): RedirectResponse
     {
         $this->authorize('administrate');
 
@@ -59,8 +61,8 @@ class AcademicGroupController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return Response
+     * @param AcademicGroup $academicGroup
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function show(AcademicGroup $academicGroup)
     {
@@ -85,8 +87,8 @@ class AcademicGroupController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return Response
+     * @param AcademicGroup $academicGroup
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function edit(AcademicGroup $academicGroup)
     {
@@ -100,11 +102,11 @@ class AcademicGroupController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return Response
+     * @param AcademicGroupRequest $request
+     * @param AcademicGroup $academicGroup
+     * @return RedirectResponse
      */
-    public function update(AcademicGroupRequest $request, AcademicGroup $academicGroup)
+    public function update(AcademicGroupRequest $request, AcademicGroup $academicGroup): RedirectResponse
     {
         $this->authorize('administrate');
 
@@ -117,10 +119,10 @@ class AcademicGroupController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\AcademicGroup  $academicGroup
-     * @return Response
+     * @param AcademicGroup $academicGroup
+     * @return RedirectResponse
      */
-    public function destroy(AcademicGroup $academicGroup)
+    public function destroy(AcademicGroup $academicGroup): RedirectResponse
     {
         $this->authorize('administrate');
 

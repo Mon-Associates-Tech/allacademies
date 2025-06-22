@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
+use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -21,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use Notifiable;
     use HasAvatar;
     use Trackable;
+    use Impersonate;
 
     /**
      * @var array<int, string>
@@ -36,6 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_seen_at',
         'two_factor_code',
         'two_factor_expires_at',
+        'is_active',
     ];
 
     /**
@@ -55,7 +59,28 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_online' => 'boolean',
         'last_seen_at' => 'datetime',
         'two_factor_expires_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
+
+    /**
+     * Check if the user can impersonate other users
+     */
+    public function canImpersonate(): bool
+    {
+        // Only admins can impersonate other users
+        return $this->hasRole('admin') || $this->hasRole('administrator');
+    }
+
+    /**
+     * Check if the user can be impersonated
+     */
+    public function canBeImpersonated(): bool
+    {
+        // Don't allow impersonating other admins or inactive users
+        return !$this->hasRole('admin') &&
+               !$this->hasRole('administrator') &&
+               ($this->is_active ?? true);
+    }
 
     public function subscriptions(): User|HasMany
     {
@@ -237,4 +262,26 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(Student::class);
     }
+
+public function impersonateUser($userId)
+{
+    $user = User::findOrFail($userId);
+
+    // Check if current user can impersonate
+    if (!Auth::user()->canImpersonate()) {
+        session()->flash('error', 'You do not have permission to impersonate users.');
+        return;
+    }
+
+    // Check if target user can be impersonated
+    if (!$user->canBeImpersonated()) {
+        session()->flash('error', 'This user cannot be impersonated.');
+        return;
+    }
+
+    // Store the current user ID before impersonation
+    session()->put('impersonate_redirect_to', route('dashboard'));
+
+    return redirect()->route('impersonate', $userId);
+}
 }

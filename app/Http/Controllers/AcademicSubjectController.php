@@ -67,23 +67,15 @@ class AcademicSubjectController extends Controller
             ->with('success', __('status.resource.created', ['name' => $academicSubject->name]));
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @return Application|Factory|\Illuminate\View\View|object|View
-     */
-    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
-
+    // In your AcademicSubjectController show method
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel,  AcademicSubject $academicSubject)
     {
-        $this->authorize('moderate');
-        $academicSubject->load('academicLevel.academicGroup')->loadCount('academicTopics');
+        // Get paginated topics with subtopics count
+        $topics = $academicSubject->academicTopics()
+            ->withCount('subtopics')
+            ->paginate(10); // 10 topics per page, adjust as needed
 
-        return view('academic-subjects.show', [
-            'academicSubject' => $academicSubject,
-        ]);
+        return view('academic-subjects.show', compact('academicSubject', 'topics'));
     }
 
     /**

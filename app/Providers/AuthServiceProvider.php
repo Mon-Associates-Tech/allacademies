@@ -50,15 +50,15 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::define('own', static function (User $user) {
-            return UserRole::OWNER === $user->role;
+            return UserRole::OWNER->value === $user->role;
         });
 
         Gate::define('administrate', static function (User $user) {
-            return in_array($user->role, [UserRole::OWNER, UserRole::ADMIN], true);
+            return in_array($user->role, [UserRole::OWNER->value, UserRole::ADMIN->value], true);
         });
 
         Gate::define('moderate', static function (User $user) {
-            return in_array($user->role, [UserRole::OWNER, UserRole::ADMIN, UserRole::MODERATOR], true);
+            return in_array($user->role, [UserRole::OWNER->value, UserRole::ADMIN->value, UserRole::MODERATOR->value], true);
         });
 
         Gate::define('subscribed', static function (User $user, AcademicSubject $academicSubject) {

@@ -12,6 +12,7 @@
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
         "jenssegers/agent": "^2.6",
+        "lab404/laravel-impersonate": "^1.7",
         "laravel/framework": "^12",
         "laravel/sanctum": "*",
         "laravel/telescope": "^5.7",
@@ -28,6 +29,7 @@
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
+        "barryvdh/laravel-ide-helper": "^3.5",
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.0.1",

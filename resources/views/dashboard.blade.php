@@ -2,7 +2,7 @@
 <x-layouts.app :has-action="false" page-name="Dashboard">
 
 
-    <div class="grid grid-cols-12 gap-6 hidden">
+    <div class="grid-cols-12 gap-6 hidden">
 
         <!-- Doughnut chart (Top Countries) -->
         <x-dashboard.dashboard-card-06/>

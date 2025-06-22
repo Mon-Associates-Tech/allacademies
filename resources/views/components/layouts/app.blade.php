@@ -49,10 +49,10 @@
             <!-- Main content -->
             <main class="mt-5 p-0">
                 <!-- Breadcrumb -->
-                <div class="max-w-7xl pl-4 mr-auto print:hidden">{{ $breadcrumb }}</div>
+                <div class="max-w-5xl  mx-auto print:hidden">{{ $breadcrumb }}</div>
 
                 <!-- Alerts -->
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
+                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
                     <x-alert.success/>
                     <x-alert.danger/>
                 </div>

@@ -27,7 +27,7 @@
                     </div>
                 </div>
                 @can('administrate')
-                <div class="flex space-x-3">
+                <div class="flex space-x-3 my-auto">
                     <x-button.secondary type="button" x-data="{}"
                         x-on:click="$store.deleteForm.show('Danger', 'Are you sure you want to delete {{ $academicTopic->name }}?', '{{ route('academic-topics.destroy', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}')">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

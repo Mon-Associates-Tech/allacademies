@@ -359,3 +359,31 @@ Route::post('/ping', static function () {
     // Just touch the session
     return response()->noContent();
 })->middleware('auth');
+
+Route::impersonate();
+Route::middleware([])->prefix('admin')->group(function () {
+    Route::get('/dashboard', App\Livewire\Administrators\Dashboard::class)->name('admin.dashboard');
+
+    // Add this route for logging out all users
+    Route::get('/logout-all-users', function () {
+        $currentUserId = auth()->id();
+
+        // Clear all sessions except current user
+        $deletedSessions = DB::table('sessions')
+            ->where('user_id', '!=', $currentUserId)
+            ->delete();
+
+        // Clear cache
+        Cache::flush();
+
+        // Update remember tokens except current user
+        DB::table('users')
+            ->where('id', '!=', $currentUserId)
+            ->update(['remember_token' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "All users logged out successfully. Cleared {$deletedSessions} sessions.",
+        ]);
+    })->name('admin.logout-all-users');
+});

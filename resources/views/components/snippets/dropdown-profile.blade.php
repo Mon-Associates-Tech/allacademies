@@ -33,9 +33,38 @@
         <div class="pt-0.5 pb-2 px-3 mb-1 border-b border-gray-200 dark:border-gray-700/60">
             <div class="font-medium text-gray-800 dark:text-gray-100">{{ Auth::user()->name }}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 italic">{{Auth::user()->role}}</div>
+            @if(session()->has('impersonated_by'))
+                @php
+                    $impersonatorId = session('impersonated_by');
+                    $impersonator = App\Models\User::find($impersonatorId);
+                @endphp
+                @if($impersonator)
+                    <div class="text-xs text-orange-600 dark:text-orange-400 font-medium mt-1">
+                        Acting as {{ $impersonator->name }}
+                    </div>
+                @endif
+            @endif
+
         </div>
 
         <ul>
+            @if(session()->has('impersonated_by'))
+                <li>
+                    <div class="py-1 border-b border-gray-200 dark:border-gray-700/60 mb-1">
+                        <a href="{{ route('impersonate.leave') }}"
+                           class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-orange-700 hover:text-orange-900 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-900/20">
+                            <svg class="w-5 h-5 text-orange-500 group-hover:text-orange-600 dark:text-orange-400"
+                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+                            </svg>
+                            <span class="ml-2">Leave Acting As</span>
+                        </a>
+                    </div>
+                </li>
+            @endif
+
             <li>
                     <div class="divide-y">
                         <div class="py-1">
