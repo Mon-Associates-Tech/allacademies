@@ -52,4 +52,14 @@ class Subscription extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function bookSubscriptions()
+    {
+        return $this->hasMany(BookSubscription::class);
+    }
+
+     public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

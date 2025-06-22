@@ -33,4 +33,13 @@ class Payment extends Model
     {
         return $this->belongsTo(Subscription::class);
     }
+
+    public function bookSubscription()
+    {
+        return $this->belongsTo(BookSubscription::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

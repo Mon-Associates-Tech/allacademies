@@ -17,13 +17,53 @@ class MemberController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Team $team)
+    public function index(Team $team, Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $team->load(['members', 'owner']);
-        $team->members->add($team->owner);
-        $team->members = $team->members->sort();
+
+        // Load team relationships
+        $team->load(['members' => function ($query) use ($request) {
+            // Apply search filter
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Apply role filter
+            if ($request->filled('role') && $request->input('role') !== 'owner') {
+                $query->where('team_user.role', $request->input('role'));
+            }
+        }, 'owner']);
+
+        // Create members collection including owner
+        $members = collect([$team->owner])->merge($team->members);
+
+        // Apply owner filter if specified
+        if ($request->filled('role') && $request->input('role') === 'owner') {
+            $members = collect([$team->owner]);
+        } elseif ($request->filled('role') && $request->input('role') !== 'owner') {
+            $members = $team->members;
+        }
+
+        // Apply search filter to owner if needed
+        if ($request->filled('search') && $members->contains($team->owner)) {
+            $search = strtolower($request->input('search'));
+            if (!(str_contains(strtolower($team->owner->name), $search) ||
+                  str_contains(strtolower($team->owner->email), $search))) {
+                $members = $members->reject(function ($member) use ($team) {
+                    return $member->is($team->owner);
+                });
+            }
+        }
+
+        // Sort members: owner first, then by name
+        $members = $members->sortBy(function ($member) use ($team) {
+            return $team->owner->is($member) ? '0' . $member->name : '1' . $member->name;
+        });
 
         return view('members.index', [
             'team' => $team,
@@ -38,6 +78,8 @@ class MemberController extends Controller
      */
     public function create(Team $team)
     {
+        Gate::allowIf($team->owner_id === auth()->id() && !$team->is_personal);
+
         return view('members.create', [
             'team' => $team,
         ]);
@@ -73,9 +115,13 @@ class MemberController extends Controller
             ]);
         }
 
-        $team->members()->attach($user);
+        $team->members()->attach($user, [
+            'role' => 'member',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        return to_route('teams.index')
+        return to_route('teams.members.index', ['team' => $team])
             ->with('success', __('status.member.added', [
                 'member' => $user->name,
                 'team' => $team->name,
@@ -91,54 +137,80 @@ class MemberController extends Controller
      */
     public function destroy(Team $team, User $member)
     {
+        Gate::allowIf($team->owner_id === auth()->id());
+
+        if ($team->owner->is($member)) {
+            throw ValidationException::withMessages([
+                'member' => 'Cannot remove team owner',
+            ]);
+        }
+
         $member->load('currentTeam');
 
-        if ($member->currentTeam->is($team)) {
-            $member->currentTeam()->associate($member->ownedTeams()->where('is_personal', true)->first())->save();
+        if ($member->currentTeam && $member->currentTeam->is($team)) {
+            $personalTeam = $member->ownedTeams()->where('is_personal', true)->first();
+            if ($personalTeam) {
+                $member->currentTeam()->associate($personalTeam)->save();
+            }
         }
 
         $team->members()->detach($member);
 
-        return to_route('teams.index')->with('success', __('status.member.removed', ['member' => $member->name, 'team' => $team->name]));
+        return to_route('teams.members.index', ['team' => $team])
+            ->with('success', __('status.member.removed', [
+                'member' => $member->name,
+                'team' => $team->name
+            ]));
     }
 
     /**
      * Show the form for editing the specified resource.
      * @param  \App\Models\Team  $team
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $member
      * @return \Illuminate\Http\Response
      */
     public function edit(Team $team, User $member)
     {
         Gate::allowIf($team->owner_id === auth()->id());
-        $member = $team->members()->where('user_id', $member->id)->firstOrFail();
+
+        $memberData = $team->members()->where('user_id', $member->id)->firstOrFail();
 
         return view('members.edit', [
             'team' => $team,
-            'member' => $member,
+            'member' => $memberData,
         ]);
     }
 
     /**
      * Change team member role from member to admin and the vice versa
      * @param  Team  $team
-     * @param  User  $member 
+     * @param  User  $member
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Team $team, User $member)
     {
+        Gate::allowIf($team->owner_id === auth()->id());
+
         $request->validate([
             'role' => 'required|in:member,admin',
         ]);
 
+        if ($team->owner->is($member)) {
+            throw ValidationException::withMessages([
+                'role' => 'Cannot change owner role',
+            ]);
+        }
+
         $team->members()->updateExistingPivot($member->id, [
             'role' => $request->role,
+            'updated_at' => now(),
         ]);
 
-        return to_route('teams.members.index', ['team' => $team])->with('success', __('status.member.role_changed', [
-            'member' => $member->name,
-            'new_role' => $request->role,
-            'team' => $team->name,
-        ]));
+        return to_route('teams.members.index', ['team' => $team])
+            ->with('success', __('status.member.role_changed', [
+                'member' => $member->name,
+                'new_role' => $request->role,
+                'team' => $team->name,
+            ]));
     }
 }

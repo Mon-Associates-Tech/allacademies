@@ -75,7 +75,13 @@ class AcademicLevelController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicLevel->load('academicGroup')->loadCount([
+        $academicLevel->load([
+            'academicGroup',
+            'academicSubjects' => function($query) {
+                $query->withCount('topics') // if topics relationship exists
+                      ->orderBy('name');
+            }
+        ])->loadCount([
             'academicSubjects',
             'students', // if relationship exists
             'teachers'  // if relationship exists

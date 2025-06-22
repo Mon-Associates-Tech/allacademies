@@ -6,10 +6,12 @@ use App\Exports\AssessmentResultExport;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
 use Barryvdh\DomPDF\PDF;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use App\Http\Resources\AssessmentResource;
 use App\Http\Resources\AssessmentCollection;
 use Maatwebsite\Excel\Excel;
+use PhpOffice\PhpSpreadsheet\Exception;
 
 class AssessmentController extends Controller
 {
@@ -18,8 +20,9 @@ class AssessmentController extends Controller
         $this->authorizeResource(Assessment::class, 'assessment');
     }
 
-    public function index(Request $request)
+    public function index(Request $request): AssessmentCollection
     {
+        /* @var Assessment|Builder $query; */
         $query = Assessment::with('student', 'book');
 
         if ($request->has('student_id')) {
@@ -41,7 +44,7 @@ class AssessmentController extends Controller
         return new AssessmentCollection($query->paginate());
     }
 
-    public function store(Request $request)
+    public function store(Request $request): AssessmentResource
     {
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
@@ -79,6 +82,10 @@ class AssessmentController extends Controller
         return response()->noContent();
     }
 
+    /**
+     * @throws Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
     public function export($id)
     {
         $response = AssessmentResponse::where('assessment_id', $id)->firstOrFail();
