@@ -29,6 +29,14 @@
                 display: flex!important;
                 flex-direction: column!important;
             }
+            .exam-heading div:nth-child(3){
+                text-align: start!important;
+                justify-content: start!important;
+                align-items: start!important;
+                justify-items: start!important;
+                display: flex!important;
+                flex-direction: column!important;
+            }
         </style>
         <div class="exam-heading">
             {!!$heading['down']  !!}
