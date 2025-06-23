@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -11,7 +14,7 @@ class UserController extends Controller
     /**
      * Display a listing of the resource(user).
      *
-     * @return Response
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function index(Request $request)
     {
@@ -56,7 +59,7 @@ class UserController extends Controller
      * Display the specified resource(user).
      *
      * @param User $user
-     * @return Response
+     * @return Factory|View|Application|\Illuminate\View\View|object
      */
     public function show(User $user)
     {
@@ -69,7 +72,7 @@ class UserController extends Controller
             'joinedTeams',
             'worksheets'
         ])->load([
-            'role',
+            'primaryRole',
             'currentTeam',
             'student',
             'subscriptions' => function ($query) {
