@@ -39,9 +39,29 @@ class SubscriptionForm extends Component
     public function updatedAcademicGroupId($value): void
     {
         $this->academicSubjects = [];
-        $this->academicLevels = Arr::first($this->academicGroups, static function ($group) use ($value) {
-            return $group['id'] === $value;
-        })['academic_levels'];
+
+        // Load academic levels with their subjects directly from the database
+        $academicGroup = AcademicGroup::with('academicLevels.academicSubjects')
+            ->find($value);
+
+        if ($academicGroup && $academicGroup->academicLevels->isNotEmpty()) {
+            $this->academicLevels = $academicGroup->academicLevels->map(function ($level) {
+                return [
+                    'id' => $level->id,
+                    'name' => $level->name,
+                    'academic_subjects' => $level->academicSubjects->map(function ($subject) {
+                        return [
+                            'id' => $subject->id,
+                            'name' => $subject->name,
+                            'code' => $subject->code ?? '',
+                            // Add any other subject properties your blade template needs
+                        ];
+                    })->toArray()
+                ];
+            })->toArray();
+        } else {
+            $this->academicLevels = [];
+        }
 
         // Emit event to update button state
         $this->dispatch('subjectsUpdated', count($this->academicSubjects));
@@ -65,7 +85,7 @@ class SubscriptionForm extends Component
             SubscriptionPackage::tryFrom($this->package) ?? SubscriptionPackage::INDIVIDUAL_FULL,
             $this->getDurationInMonthsProperty(),
             max(count($this->academicSubjects), 1),
-            (int) empty($this->beneficiaries) ? '1' : $this->beneficiaries,
+            max((int) ($this->beneficiaries ?: 1), 1), // Ensure minimum of 1 beneficiary
             $this->getAcademicGroupTagProperty() ?? 'basic'
         );
 
@@ -82,8 +102,10 @@ class SubscriptionForm extends Component
         return view('livewire.subscription-form');
     }
 
-    public function getAcademicGroupTagProperty(){
-        return AcademicGroup::find($this->academicGroupId)->tag;
+    public function getAcademicGroupTagProperty()
+    {
+        $academicGroup = AcademicGroup::find($this->academicGroupId);
+        return $academicGroup->tag ?? null;
     }
 
     /**

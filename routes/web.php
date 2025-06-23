@@ -387,3 +387,4 @@ Route::middleware([])->prefix('admin')->group(function () {
         ]);
     })->name('admin.logout-all-users');
 });
+Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');

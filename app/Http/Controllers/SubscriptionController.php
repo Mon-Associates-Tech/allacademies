@@ -46,7 +46,29 @@ class SubscriptionController extends Controller
         /** @var User $user */
         $user = auth()->user();
         $user->load('currentTeam');
-        $academicGroups = AcademicGroup::query()->with('academicLevels.academicSubjects')->get()->toArray();
+        // Make sure academic groups are loaded with their levels and subjects
+        $academicGroups = AcademicGroup::with([
+            'academicLevels.academicSubjects' // or 'academicLevels.subjects' based on your relationship
+        ])->get()->map(function ($group) {
+            return [
+                'id' => $group->id,
+                'name' => $group->name,
+                'academic_levels' => $group->academicLevels->map(function ($level) {
+                    return [
+                        'id' => $level->id,
+                        'name' => $level->name,
+                        'academic_subjects' => $level->academicSubjects->map(function ($subject) {
+                            return [
+                                'id' => $subject->id,
+                                'name' => $subject->name,
+                                'code' => $subject->code,
+                                // add other subject properties as needed
+                            ];
+                        })->toArray()
+                    ];
+                })->toArray()
+            ];
+        })->toArray();
 
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,
@@ -67,7 +89,7 @@ class SubscriptionController extends Controller
             $package = SubscriptionPackage::from($request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
-            $beneficiaries =  $request->integer('beneficiaries'),
+            $beneficiaries = max($request->integer('beneficiaries') ?: 1, 1), // Ensure minimum of 1
             AcademicGroupTag::BASIC
         );
 
@@ -76,7 +98,7 @@ class SubscriptionController extends Controller
         $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
-            'reference' => uniqid('', true),
+            'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
             'expires_at' => Carbon::now()->addMonths($durationInMonths),
@@ -101,6 +123,27 @@ class SubscriptionController extends Controller
 
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param Subscription $subscription
+     * @return Application|Factory|View|\Illuminate\View\View
+     */
+    public function show(Subscription $subscription)
+    {
+        Gate::allowIf(static fn ($user) => $user->current_team_id === $subscription->team_id);
+
+        $subscription->load([
+            'academicSubjects.academicLevel.academicGroup',
+            'team',
+            'subscriber'
+        ]);
+
+        return view('subscriptions.show', [
+            'subscription' => $subscription,
+        ]);
     }
 
     /**

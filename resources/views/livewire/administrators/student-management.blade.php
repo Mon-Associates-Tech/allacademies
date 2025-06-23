@@ -83,7 +83,7 @@
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $student->user->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $student->user->email }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $student->studentGroup->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ $student->studentGroup?->name ?? 'Not Assigned' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button wire:click="edit({{ $student->id }})" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
                                 <button wire:click="delete({{ $student->id }})" class="text-red-600 hover:text-red-900"

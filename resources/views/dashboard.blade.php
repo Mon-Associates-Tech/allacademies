@@ -21,7 +21,7 @@
 
     </div>
 
-    @if(Auth::user()->role === 'student' )
+    @if(Auth::user()->role === 'student')
         @livewire('students.dashboard')
     @endif()
     @if(Auth::user()->role === 'teacher')

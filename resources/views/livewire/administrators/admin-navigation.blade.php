@@ -35,7 +35,7 @@
 
 
         <!-- User Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'users' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('users')">
@@ -49,7 +49,7 @@
         </li>
 
         <!-- Student Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'students' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('students')">
@@ -64,7 +64,7 @@
         </li>
 
         <!-- Student Groups -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'groups' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('groups')">
@@ -78,7 +78,7 @@
         </li>
 
         <!-- Teacher Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'teachers' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('teachers')">
@@ -92,7 +92,7 @@
         </li>
 
         <!-- Librarian Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'librarians' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('librarians')">
@@ -106,7 +106,7 @@
         </li>
 
         <!-- Author Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'authors' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('authors')">
@@ -120,7 +120,7 @@
         </li>
 
         <!-- Book Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'books' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('books')">
@@ -134,7 +134,7 @@
         </li>
 
         <!-- Book Approvals -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'book-approvals' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('book-approvals')">
@@ -149,7 +149,7 @@
         </li>
 
         <!-- Subject Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'subjects' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('subjects')">
@@ -164,7 +164,7 @@
         </li>
 
         <!-- Reports -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 pointer-events-none">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'reports' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('reports')">

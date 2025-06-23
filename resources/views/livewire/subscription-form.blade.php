@@ -2,7 +2,7 @@
     <!-- Main Form Container -->
     <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
         <!-- Header Section -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-6">
             <h2 class="text-2xl font-bold text-white mb-2">Create Your Subscription</h2>
             <p class="text-blue-100">Select your preferred duration, subjects, and customize your learning experience</p>
         </div>
@@ -14,8 +14,8 @@
 
                     <!-- Duration Selection -->
                     <div class="bg-gray-50 rounded-xl p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                             Subscription Duration
@@ -33,8 +33,8 @@
                     <!-- Beneficiaries Section -->
                     @if('institution:full' === $package)
                         <div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 text-amber-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                                <svg class="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
                                 Number of Students
@@ -48,8 +48,8 @@
                     <!-- Subject Selection -->
                     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
                         <div class="bg-gray-50 p-6 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                 </svg>
                                 Select Your Subjects
@@ -57,7 +57,7 @@
 
                             <!-- Subject Counter and Filter -->
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div class="inline-flex items-center gap-x-2 rounded-lg py-2 px-4 text-sm font-medium text-gray-900 ring-1 ring-inset ring-gray-300 bg-white shadow-sm">
+                                <div class="inline-flex items-center gap-x-2 rounded-lg py-2 px-4 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 bg-white shadow-sm">
                                     <div class="flex h-2 w-2">
                                         <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full {{ $this->subjects_count ? 'bg-green-400' : 'bg-red-400' }} opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-2 w-2 {{ $this->subjects_count ? 'bg-green-500' : 'bg-red-500' }}"></span>
@@ -68,14 +68,14 @@
 
                                 <!-- Academic Group Filter -->
                                 <div class="inline-flex rounded-lg overflow-hidden shadow-sm">
-                                    <span class="inline-flex items-center rounded-l-lg ring-1 ring-inset ring-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
+                                    <span class="inline-flex items-center rounded-l-lg ring-1 ring-inset ring-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                                         </svg>
                                         Academic Level
                                     </span>
                                     <select wire:model.live="academicGroupId" id="academic_group"
-                                            class="-ml-px border-0 rounded-r-lg ring-1 ring-inset ring-gray-300 bg-white pl-3 pr-8 py-2 focus:ring-2 focus:ring-blue-500 text-sm font-medium text-gray-700">
+                                            class="-ml-px border-0 rounded-r-lg ring-1 ring-inset ring-gray-300 bg-white pl-3 pr-8 py-2 focus:ring-2 focus:ring-blue-500 text-sm font-medium text-gray-600">
                                         @foreach ($academicGroups as $academicGroup)
                                             <option value="{{ $academicGroup['id'] }}">{{ $academicGroup['name'] }}</option>
                                         @endforeach
@@ -95,12 +95,12 @@
                                          class="flex items-center justify-between cursor-pointer p-6 group">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                                                 </svg>
                                             </div>
                                             <div class="ml-4">
-                                                <h4 class="text-base font-semibold text-gray-900">{{ $academicLevel['name'] }}</h4>
+                                                <h4 class="text-base font-semibold text-gray-700">{{ $academicLevel['name'] }}</h4>
                                                 <p class="text-sm text-gray-500">{{ count($academicLevel['academic_subjects']) }} subjects available</p>
                                             </div>
                                         </div>
@@ -131,16 +131,16 @@
                                                                type="checkbox"
                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 focus:ring-offset-0">
                                                         <div class="ml-3 flex-1 min-w-0">
-                                                            <div class="text-sm font-medium text-gray-900 group-hover:text-blue-900 transition-colors">
+                                                            <div class="text-sm font-medium text-gray-700 group-hover:text-blue-700 transition-colors">
                                                                 {{ $academicSubject['name'] }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 group-hover:text-blue-600 transition-colors">
+                                                            <div class="text-xs text-gray-500 group-hover:text-blue-500 transition-colors">
                                                                 {{ $academicSubject['code'] }}
                                                             </div>
                                                         </div>
                                                         <!-- Selection indicator -->
                                                         <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                                             </svg>
                                                         </div>
@@ -163,7 +163,7 @@
                     <div class="sticky top-4">
                         <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 shadow-lg">
                             <div class="text-center">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Subscription Total</h3>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Subscription Total</h3>
                                 <div class="text-4xl font-bold text-blue-600 mb-4">
                                     GHC {{ number_format($this->amount, 2) }}
                                 </div>
@@ -195,10 +195,10 @@
                                 <!-- Value Proposition -->
                                 <div class="mt-6 p-4 bg-white rounded-xl border border-blue-100">
                                     <div class="flex items-center justify-center mb-2">
-                                        <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
-                                        <span class="text-sm font-medium text-gray-900">What's Included</span>
+                                        <span class="text-sm font-medium text-gray-700">What's Included</span>
                                     </div>
                                     <ul class="text-xs text-gray-600 space-y-1">
                                         <li>• Unlimited practice quizzes</li>
