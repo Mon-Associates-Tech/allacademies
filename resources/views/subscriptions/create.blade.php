@@ -1,4 +1,4 @@
-<x-layouts.app title="Create Subscription"  :has-action="false">
+<x-layouts.app page-name="Create Subscription"  :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Subscriptions' => route('subscriptions.index'),

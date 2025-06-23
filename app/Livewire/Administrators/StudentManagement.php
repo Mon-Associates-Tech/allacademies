@@ -73,7 +73,7 @@ class StudentManagement extends Component
         'removedSubjects.*' => 'exists:academic_subjects,id',
     ];
 
-    public function mount()
+    public function mount(): void
     {
         $this->studentGroups = StudentGroup::all();
         $this->academicGroups = AcademicGroup::all();
@@ -82,8 +82,6 @@ class StudentManagement extends Component
 
     public function updatedAcademicGroupId()
     {
-        logger('Academic Group ID updated to: ' . $this->academicGroupId);
-
         // Reset dependent fields
         $this->academicLevelId = '';
         $this->primaryTeacherId = '';
