@@ -63,21 +63,6 @@
                         <div class="text-lg md:text-2xl hidden print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
                             {{ $title }}
                         </div>
-
-                        <div class="text-sm print:hidden">
-                            <div class="my-auto">
-                                @if(isset($hasAction) && $hasAction && !isset($action))
-                                    @can('administrate')
-                                        <x-link.primary class="whitespace-nowrap"
-                                                        to="{{ $action_link ?? request()->route()->path }}">
-                                            {{ $actionLinkText ?? 'Add Action' }}
-                                        </x-link.primary>
-                                    @endcan
-                                @else
-                                    {{ $action }}
-                                @endif
-                            </div>
-                        </div>
                     </div>
                 </div>
 

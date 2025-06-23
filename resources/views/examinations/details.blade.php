@@ -21,6 +21,9 @@
             .exam-heading p{
                text-align: start!important;
             }
+            .exam-heading div:nth-child(2){
+                text-align: start!important;
+            }
         </style>
         <div class="exam-heading">
             {!!$heading['down']  !!}

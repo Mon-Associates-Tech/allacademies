@@ -1,8 +1,4 @@
 <x-layouts.app title="Users">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb />
-    </x-slot>
-
     <!-- Add search and filter controls -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex-1 max-w-md">
