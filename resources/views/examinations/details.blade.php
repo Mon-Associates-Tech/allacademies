@@ -23,6 +23,11 @@
             }
             .exam-heading div:nth-child(2){
                 text-align: start!important;
+                justify-content: start!important;
+                align-items: start!important;
+                justify-items: start!important;
+                display: flex!important;
+                flex-direction: column!important;
             }
         </style>
         <div class="exam-heading">

@@ -36,7 +36,7 @@ class TemplateRenderer
             <h1 class="font-semibold">Duration: %s</h1>
         </div>
         <div class="border-y border-black my-5 py-5">
-            <h1 class="font-semibold uppercase text-start" style="text-align:start!important;">Instructions:</h1>
+            <h1 class="font-semibold uppercase text-start" style="text-align:start!important;">Instructions</h1>
             <p class="font-semibold text-start" style="text-align:start">%s</p>
         </div>
     </div>
