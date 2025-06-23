@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicLevel extends Model
@@ -38,9 +39,17 @@ class AcademicLevel extends Model
         return $this->hasMany(Student::class);
     }
 
-    public function teachers(): AcademicLevel|HasMany
+    // Update the existing teachers relationship to use the pivot table
+    public function teachers(): BelongsToMany
     {
-        return $this->hasMany(Teacher::class);
+        return $this->belongsToMany(Teacher::class, 'academic_level_teacher', 'academic_level_id', 'teacher_id')
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes');
+    }
+
+    public function primaryTeachers(): BelongsToMany
+    {
+        return $this->teachers()->wherePivot('is_primary', true);
     }
 
     public function subjects(): AcademicLevel|HasMany

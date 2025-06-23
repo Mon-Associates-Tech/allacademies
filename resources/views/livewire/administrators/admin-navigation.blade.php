@@ -49,7 +49,7 @@
         </li>
 
         <!-- Student Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'students' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('students')">
