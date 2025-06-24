@@ -223,7 +223,7 @@
 
                                     <div class="min-w-0 flex-1">
                                         <p class="font-medium text-gray-900 truncate">{{ $user->name }}</p>
-                                        <p class="text-sm text-gray-500 truncate">{{ $user->email }}</p>
+                                        <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
                                     </div>
                                 @else
                                     <span class="text-gray-500 italic">Unknown user</span>
