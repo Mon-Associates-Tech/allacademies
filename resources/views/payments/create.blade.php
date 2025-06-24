@@ -80,7 +80,6 @@
                         <x-form.input
                             name="amount"
                             type="number"
-                            step="0.01"
                             min="0"
                             label="Amount"
                             placeholder="0.00"
