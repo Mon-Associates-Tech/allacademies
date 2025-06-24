@@ -190,7 +190,7 @@
 
         @endforeach
     </div>
-    <livewire:examination-print-processor :is-preview="$isPreview ?? false" :team_id="$previewData['team_id']" :data="$previewData"
+    <livewire:examination-print-processor :should-create="$shouldCreate" :is-preview="$isPreview ?? false" :team_id="$previewData['team_id']" :data="$previewData"
                                           :creator_id="$previewData['creator_id']"
                                           :academic-subject="$academicSubject"/>
 </div>

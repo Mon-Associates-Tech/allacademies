@@ -17,6 +17,7 @@
          'sections' => $sections,
          'heading' => $heading,
          'isPreview' => true,
+         'shouldCreate' => true,
      ])
 
     <style>

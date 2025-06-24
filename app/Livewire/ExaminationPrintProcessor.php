@@ -18,9 +18,10 @@ class ExaminationPrintProcessor extends Component
     public $team_id;
     public $creator_id;
     public $isPreview = false;
+    public $shouldCreate = false;
     public function render(): View|Application|Factory|\Illuminate\View\View
     {
-        return view('livewire.examination-print-processor', ['academicSubject' => $this->academicSubject]);
+        return view('livewire.examination-print-processor', ['academicSubject' => $this->academicSubject, 'shouldCreate' => $this->shouldCreate]);
     }
 
     /**
