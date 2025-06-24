@@ -73,10 +73,12 @@
                                     <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                          class="grid gap-x-5">
                                         @foreach ($mc['options'] as $key => $o)
+                                            @if(!empty($o))
                                             <div class="flex space-x-2 items-baseline">
                                                 <div>({{ $key }})</div>
                                                 <div>{!! $o !!}</div>
                                             </div>
+                                            @endif
                                         @endforeach
                                     </div>
                                 </div>
