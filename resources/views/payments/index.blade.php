@@ -1,16 +1,12 @@
 <x-layouts.app title="Payments">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb />
-    </x-slot>
-
     @can('administrate')
-        <x-slot name="action">
+        <div class="flex justify-end mb-2">
             <x-link.primary :to="route('payments.create')">New Payment</x-link.primary>
-        </x-slot>
-    @endcan
+        </div>
 
+    @endcan
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-4">
         <!-- Total Payments -->
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
