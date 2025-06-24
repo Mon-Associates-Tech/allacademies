@@ -232,6 +232,26 @@
                     </div>
                 </form>
             </div>
+            <!-- Help Section -->
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <div class="text-center">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Need Help?</h3>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
+                        <a href="#" class="text-primary-600 hover:text-primary-500">
+                            Team Management Guide
+                        </a>
+                        <a href="#" class="text-primary-600 hover:text-primary-500">
+                            Collaboration Best Practices
+                        </a>
+                        <a href="{{ route('teams.joining') }}" class="text-primary-600 hover:text-primary-500">
+                            Join Existing Team
+                        </a>
+                        <a href="#" class="text-primary-600 hover:text-primary-500">
+                            Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
