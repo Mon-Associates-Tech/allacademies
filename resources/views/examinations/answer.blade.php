@@ -2,16 +2,22 @@
     $multiple = count($sections) > 1;
 @endphp
 
-<x-layouts.app title="Examination Details" :has-action="false">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb :paths="[
-            'Examinations' => route('examinations.index', ['academic_subject' => $examination->academicSubject, 'academic_level'=>getRouteParameter('academic_level'), 'academic_group'=>getRouteParameter('academic_group')]),
-        ]"/>
-    </x-slot>
+<x-print title="Examination Details" :has-action="false">
 
     <div x-data="{ format: 'lenticular' }"
-         class="overflow-hidden rounded-lg bg-white shadow print:shadow-none print:rounded-none">
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden">
+         class="overflow-hidden rounded-lg bg-white shadow print:shadow-none print:rounded-none max-w-4xl mx-auto">
+        <div class="text-center py-3 text-xl font-bold uppercase">{{$examination->title}}</div>
+
+        <div class="bg-gray-50 px-4 py-4 border-b border-t border-gray-200 sm:px-6 flex items-center justify-between print:hidden">
+            <div>
+                <x-link.white :to="route('examinations.index', ['academic_subject' => $examination->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
+                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                    Back to Exams
+                </x-link.white>
+            </div>
+
             <span class="inline-flex rounded-md shadow-sm">
                 <span
                     class="inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-sm sm:leading-6">
@@ -77,4 +83,4 @@
             <x-button.primary x-on:click="window.print()">Print</x-button.primary>
         </div>
     </div>
-</x-layouts.app>
+</x-print>
