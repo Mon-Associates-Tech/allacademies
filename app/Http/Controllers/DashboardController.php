@@ -12,7 +12,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $user = auth()->user();
+
+        // Check if user has a current team
+        if (!$user->current_team_id) {
+            // Redirect to team creation or show appropriate message
+            return redirect()->route('teams.create')->with('message', 'Please create or join a team first.');
+        }
+
+        $currentTeam = Team::query()->findOrFail($user->current_team_id);
 
         $academicSubjects = AcademicSubject::query()->with('academicLevel.academicGroup')->whereHas('subscriptions', function (Builder $query) {
             $query->where('status', SubscriptionStatus::PAID)

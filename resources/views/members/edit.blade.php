@@ -93,7 +93,7 @@
                                     </svg>
                                 </div>
                                 <input type="text"
-                                       value="{{ $member->pivot->created_at->format('M j, Y \a\t g:i A') }}"
+                                       value="{{ $member->pivot->created_at?->format('M j, Y \a\t g:i A') }}"
                                        readonly
                                        class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm focus:outline-none cursor-not-allowed">
                             </div>
