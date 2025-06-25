@@ -17,7 +17,7 @@
 </style>
 
 <div>
-    <nav class="hidden pb-2 sm:block" aria-label="Breadcrumb" x-data="breadcrumbScroll">
+    <nav class="hidden sm:block" aria-label="Breadcrumb" x-data="breadcrumbScroll">
         <div class="relative">
             <!-- Left Scroll Button -->
             <button

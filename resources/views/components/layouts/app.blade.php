@@ -47,9 +47,9 @@
             <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"/>
 
             <!-- Main content -->
-            <main class="mt-2 p-0">
+            <main class="mt-0 p-0">
                 <!-- Breadcrumb -->
-                <div class="max-w-5xl  mx-auto print:hidden">{{ $breadcrumb }}</div>
+                <div class="max-w-5xl py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
 
                 <!-- Alerts -->
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">

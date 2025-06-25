@@ -4,7 +4,7 @@
     <div class="px-4 sm:px-6 lg:px-8"
     style=""
     >
-        <div class="flex items-center justify-between h-16 {{ $variant === 'v2' || $variant === 'v3' ? '' : 'lg:border-b border-gray-200 dark:border-gray-700/60' }}">
+        <div class="flex items-center justify-between h-12 {{ $variant === 'v2' || $variant === 'v3' ? '' : 'lg:border-b border-gray-200 dark:border-gray-700/60' }}">
 
             <!-- Header: Left side -->
             <div class="flex">

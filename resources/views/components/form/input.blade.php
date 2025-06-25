@@ -2,7 +2,7 @@
 
 <div class="space-y-1">
     @if ($hasLabel ?? false)
-        <label for="{{ $name }}" class="block text-sm tracking-wide font-medium text-gray-700">
+        <label for="{{ $name }}" class="block text-sm tracking-tighter font-medium text-gray-700">
             {{ $label ?? ucfirst($name) }}
         </label>
     @endif

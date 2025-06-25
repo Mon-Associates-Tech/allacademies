@@ -16,7 +16,9 @@
     @include('examinations.details', [
          'sections' => $sections,
          'heading' => $heading,
+         'examination' => $title,
          'isPreview' => true,
+         'shouldCreate' => true,
      ])
 
     <style>

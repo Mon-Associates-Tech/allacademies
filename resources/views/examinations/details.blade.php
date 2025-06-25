@@ -1,6 +1,18 @@
 <div x-data="{ format: 'lenticular' }"
      class="overflow-y-visible rounded-lg bg-white shadow mx-auto print:shadow-none  print:rounded-none max-w-[60rem] print:max-w-full">
-    <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden">
+
+    <div class="text-center print:hidden py-3 text-xl font-bold uppercase">{{$examination->title ?? $examination}}</div>
+
+    <div class="bg-gray-50 px-4 py-4 border-b border-t border-gray-200 sm:px-6 flex items-center justify-between print:hidden">
+        <div>
+            <x-link.white :to="route('examinations.index', ['academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                Back to Exams
+            </x-link.white>
+        </div>
+
             <span class="inline-flex rounded-md shadow-sm">
                 <span
                     class="inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-sm sm:leading-6">
@@ -19,7 +31,7 @@
                 text-align: center;
             }
             .exam-heading p{
-               text-align: start!important;
+                text-align: start!important;
             }
             .exam-heading div:nth-child(2){
                 text-align: start!important;
@@ -42,11 +54,14 @@
             {!!$heading['down']  !!}
         </div>
 
+        @php
+            $essayCounter = 0; // Counter for essay questions (continues across sections)
+        @endphp
+
         @foreach ($sections as $section)
             <h2 @class(["font-bold uppercase text-sm text-center", "pt-5" => !$loop->first])>{{ $section['name'] }}</h2>
 
             @if(isset($section['instructions']))
-
                 <div class="italic mb-4">
                     @if(isset($section['instructions']['down']))
                         <div x-data="{ instructions: @js($section['instructions']['down'], JSON_THROW_ON_ERROR) }">
@@ -57,72 +72,81 @@
                             <p x-html="marked.parse(instructions)"></p>
                         </div>
                     @endif
-
                 </div>
             @endif
 
             @if ('multiple_choice_questions' === $section['type'])
-                <ol class="list-decimal mb-12 px-4">
+                <div class="mb-12 px-4 print:px-0">
                     @if(isset($section['questions']) && is_countable($section['questions']))
                         @foreach ($section['questions'] as $mc)
-                            <li class="py-2">
-                                <div>
-                        <span class="font-medium">
-                            {!! $mc['question']['up'] !!}
-                        </span>
-                                    <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
-                                         class="grid gap-x-5">
-                                        @foreach ($mc['options'] as $key => $o)
-                                            @if(!empty($o))
-                                            <div class="flex space-x-2 items-baseline">
-                                                <div>({{ $key }})</div>
-                                                <div>{!! $o !!}</div>
-                                            </div>
-                                            @endif
-                                        @endforeach
+                            <div class="py-2 flex">
+                                <div class="mr-2 font-medium">{{ $loop->iteration }}.</div>
+                                <div class="flex-1">
+                                    <div>
+                                        <span class="font-medium">
+                                            {!! $mc['question']['up'] !!}
+                                        </span>
+                                        <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
+                                             class="grid gap-x-5">
+                                            @foreach ($mc['options'] as $key => $o)
+                                                @if(!empty($o))
+                                                    <div class="flex space-x-2 items-baseline">
+                                                        <div>({{ $key }})</div>
+                                                        <div>{!! $o !!}</div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
-                            </li>
+                            </div>
                         @endforeach
                     @endif
-                </ol>
+                </div>
             @elseif ('true_or_false_questions' === $section['type'])
-                <ol class="list-decimal mb-12 px-4">
+                <div class="mb-12 px-4 print:px-0">
                     @if(isset($section['questions']) && is_countable($section['questions']))
                         @foreach ($section['questions'] as $tf)
-                            <li class="py-2"
-                                x-data="{ question: marked.parse(@js($tf['question']['down'])) }">
-                                <span> {!! $tf['question']['down'] !!} </span>
-                                <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
-                                     class="grid gap-x-5">
-                                    @foreach (['a', 'b'] as $o)
-                                        <div class="flex space-x-2 items-baseline">
-                                            <div>({{ $o }})</div>
-                                            <div>{{ 'a' === $o ? 'True' : 'False' }}</div>
+                            <div class="py-2 flex">
+                                <div class="mr-2 font-medium">{{ $loop->iteration }}.</div>
+                                <div class="flex-1">
+                                    <div x-data="{ question: marked.parse(@js($tf['question']['down'])) }">
+                                        <span> {!! $tf['question']['down'] !!} </span>
+                                        <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
+                                             class="grid gap-x-5">
+                                            @foreach (['a', 'b'] as $o)
+                                                <div class="flex space-x-2 items-baseline">
+                                                    <div>({{ $o }})</div>
+                                                    <div>{{ 'a' === $o ? 'True' : 'False' }}</div>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                    @endforeach
+                                    </div>
                                 </div>
-                            </li>
+                            </div>
                         @endforeach
                     @endif
-                </ol>
+                </div>
             @elseif ('essay_questions' === $section['type'])
-                <ol class="list-decimal mb-12 px-4">
+                <div class="mb-12 px-4 print:px-0">
                     @if(isset($section['questions']) && is_countable($section['questions']))
                         @foreach ($section['questions'] as $es)
-                            <li class="py-2">
-                                <div>
-                                    <span
-                                        x-html="marked.parse(@js($es['question']['down'], JSON_THROW_ON_ERROR))"
-                                        class="font-medium"></span>
-
-                                    <p class="text-sm text-right">
-                                        [{{ $es['score'] }} {{ Str::plural('mark', $es['score']) }}]</p>
+                            @php $essayCounter++; @endphp
+                            <div class="py-2 flex">
+                                <div class="mr-2 font-medium">{{ $essayCounter }}.</div>
+                                <div class="flex-1">
+                                    <div>
+                                        <span
+                                            x-html="marked.parse(@js($es['question']['down'], JSON_THROW_ON_ERROR))"
+                                            class="font-medium"></span>
+                                        <p class="text-sm text-right">
+                                            [{{ $es['score'] }} {{ Str::plural('mark', $es['score']) }}]</p>
+                                    </div>
                                 </div>
-                            </li>
+                            </div>
                         @endforeach
                     @endif
-                </ol>
+                </div>
             @endif
 
             <div class="">
@@ -152,8 +176,6 @@
                             margin: 0 auto !important;
                         }
                     }
-
-
                 </style>
             </div>
             @if(isset($section['page']))
@@ -190,7 +212,7 @@
 
         @endforeach
     </div>
-    <livewire:examination-print-processor :is-preview="$isPreview ?? false" :team_id="$previewData['team_id']" :data="$previewData"
+    <livewire:examination-print-processor :should-create="$shouldCreate" :is-preview="$isPreview ?? false" :team_id="$previewData['team_id']" :data="$previewData"
                                           :creator_id="$previewData['creator_id']"
                                           :academic-subject="$academicSubject"/>
 </div>
@@ -211,5 +233,4 @@
             return 'unknown';
         }
     }
-
 </script>
