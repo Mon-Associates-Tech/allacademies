@@ -117,7 +117,7 @@ class QuestionGenerator
 
                     $questions = DB::table($table)
                         ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                        ->where('academic_subtopics.academic_topic_id', $subtopic['topic_id'])
+                        ->where('academic_subtopics.academic_topic_id', $subtopic['topic_id']?? $subtopic['academic_topic_id'])
                         ->where('academic_subtopics.id', $subtopic['id'])
                         ->whereNotIn($table . '.id', $usedQuestions[$table])
                         ->inRandomOrder()
