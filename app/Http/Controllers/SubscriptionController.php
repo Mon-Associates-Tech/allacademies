@@ -85,6 +85,7 @@ class SubscriptionController extends Controller
      */
     public function store(SubscriptionRequest $request): RedirectResponse
     {
+
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
@@ -92,7 +93,6 @@ class SubscriptionController extends Controller
             $beneficiaries = max($request->integer('beneficiaries') ?: 1, 1), // Ensure minimum of 1
             AcademicGroupTag::BASIC
         );
-
         /** @var User $user */
         $user = auth()->user();
         $user->load('currentTeam');
@@ -101,7 +101,7 @@ class SubscriptionController extends Controller
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
-            'expires_at' => Carbon::now()->addMonths($durationInMonths),
+            'expires_at' => now()->addMonths($durationInMonths),
         ]);
 
         if (
