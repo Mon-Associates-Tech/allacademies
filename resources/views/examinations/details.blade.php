@@ -76,7 +76,7 @@
             @endif
 
             @if ('multiple_choice_questions' === $section['type'])
-                <div class="mb-12 px-4 print:px-0">
+                <div class="mb-12 px-4 print:px-0 text-lg">
                     @if(isset($section['questions']) && is_countable($section['questions']))
                         @foreach ($section['questions'] as $mc)
                             <div class="py-2 flex">
@@ -104,7 +104,7 @@
                     @endif
                 </div>
             @elseif ('true_or_false_questions' === $section['type'])
-                <div class="mb-12 px-4 print:px-0">
+                <div class="mb-12 px-4 print:px-0 text-lg">
                     @if(isset($section['questions']) && is_countable($section['questions']))
                         @foreach ($section['questions'] as $tf)
                             <div class="py-2 flex">
@@ -128,7 +128,7 @@
                     @endif
                 </div>
             @elseif ('essay_questions' === $section['type'])
-                <div class="mb-12 px-4 print:px-0">
+                <div class="mb-12 px-4 print:px-0 text-lg">
                     @if(isset($section['questions']) && is_countable($section['questions']))
                         @foreach ($section['questions'] as $es)
                             @php $essayCounter++; @endphp
@@ -212,9 +212,13 @@
 
         @endforeach
     </div>
-    <livewire:examination-print-processor :should-create="$shouldCreate" :is-preview="$isPreview ?? false" :team_id="$previewData['team_id']" :data="$previewData"
+    <livewire:examination-print-processor :should-create="$shouldCreate"
+                                          :is-preview="$isPreview ?? false"
+                                          :team_id="$previewData['team_id']"
+                                          :data="$previewData"
                                           :creator_id="$previewData['creator_id']"
-                                          :academic-subject="$academicSubject"/>
+                                          :academic-subject="$academicSubject"
+    />
 </div>
 
 <script>

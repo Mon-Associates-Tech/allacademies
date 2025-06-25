@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SubscriptionStatus;
 use App\Http\Requests\PaymentRequest;
 use App\Models\Payment;
 use App\Models\Subscription;
@@ -105,6 +106,8 @@ class PaymentController extends Controller
             }
         }
 
+
+
         // Regular subscription payment logic
         /** @var \App\Models\Subscription $subscription */
         $subscription = Subscription::query()->where('reference', $reference)->firstOr(callback: function () {
@@ -129,6 +132,21 @@ class PaymentController extends Controller
 
             // Only trigger subscription update if payment succeeded
             if ($status === 'succeeded') {
+                // Calculate total paid amount
+                $totalPaid = $subscription->payments()->where('status', PaymentStatus::SUCCEEDED)->sum('amount');
+                $subscriptionAmount = $subscription->amount;
+
+                // Update subscription status
+                if ($totalPaid >= $subscriptionAmount) {
+                    $subscription->status = SubscriptionStatus::PAID;
+                } elseif ($totalPaid > 0) {
+                    $subscription->status = SubscriptionStatus::PART_PAID;
+                } else {
+                    $subscription->status = SubscriptionStatus::UNPAID;
+                }
+
+                $subscription->save();
+
                 event(new SubscriptionUpdated($subscription));
             }
 

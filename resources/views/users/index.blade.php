@@ -168,21 +168,39 @@
 
                                     <div x-show="open"
                                          @click.away="open = false"
-                                         x-transition
-                                         class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                        <div class="py-1">
-                                            @if(!$user->email_verified_at)
-                                                <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                    Send Verification Email
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="transform opacity-0 scale-95"
+                                         x-transition:enter-end="transform opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="transform opacity-100 scale-100"
+                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                         class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+
+                                        @can('own')
+                                            @if($user->role !== 'owner')
+                                                <button
+                                                    @click="$store.changeRole.show('{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', {{ $user->id }}); open = false"
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    <div class="flex items-center">
+                                                        <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        Change Role
+                                                    </div>
                                                 </button>
                                             @endif
-                                            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                Reset Password
-                                            </button>
-                                            <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                                Suspend User
-                                            </button>
-                                        </div>
+                                        @endcan
+
+                                        <a href="{{ route('users.show', ['user' => $user]) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <div class="flex items-center">
+                                                <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                                View Details
+                                            </div>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -192,33 +210,126 @@
             </x-table>
         </div>
 
-        <!-- Enhanced pagination with info -->
-        <div class="mt-6 flex items-center justify-between">
-            <div class="text-sm text-gray-700">
-                Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} users
-            </div>
+        <!-- Pagination -->
+        <div class="mt-6">
             {{ $users->links() }}
         </div>
+
+        <!-- Change Role Modal -->
+        <div x-show="$store.changeRole.open"
+             x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto"
+             aria-labelledby="modal-title"
+             role="dialog"
+             aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <!-- Background overlay -->
+                <div x-show="$store.changeRole.open"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                     @click="$store.changeRole.hide()"></div>
+
+                <!-- Center the modal -->
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <!-- Modal panel -->
+                <div x-show="$store.changeRole.open"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                    <form method="POST" action="{{ route('users.change-role') }}" id="changeRoleForm">
+                        @csrf
+                        <input type="hidden" name="user_id" x-model="$store.changeRole.userId">
+
+                        <div>
+                            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-5">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Change User Role
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">
+                                        You are about to change the role for the following user:
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">User Name</label>
+                                <input type="text"
+                                       x-model="$store.changeRole.userName"
+                                       readonly
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email"
+                                       name="email"
+                                       x-model="$store.changeRole.userEmail"
+                                       readonly
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500">
+                            </div>
+
+                            <div>
+                                <label for="role" class="block text-sm font-medium text-gray-700">New Role</label>
+                                <select name="role"
+                                        id="role"
+                                        x-model="$store.changeRole.selectedRole"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="subscriber">Subscriber</option>
+                                    <option value="student">Student</option>
+                                    <option value="teacher">Teacher</option>
+                                    <option value="librarian">Librarian</option>
+                                    <option value="author">Author</option>
+                                    <option value="parent">Parent</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit"
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+                                Change Role
+                            </button>
+                            <button type="button"
+                                    @click="$store.changeRole.hide()"
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     @else
+        <!-- Empty state -->
         <div class="text-center py-12">
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
             </svg>
-            <h3 class="mt-4 text-lg font-medium text-gray-900">No users found</h3>
-            <p class="mt-2 text-sm text-gray-500">
-                @if(request()->hasAny(['search', 'verified', 'unverified', 'role', 'online']))
-                    Try adjusting your search or filter criteria.
-                @else
-                    Get started by inviting users to your application.
-                @endif
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+            <p class="mt-1 text-sm text-gray-500">
+                Try adjusting your search or filters to find what you're looking for.
             </p>
-            @if(request()->hasAny(['search', 'verified', 'unverified', 'role', 'online']))
-                <div class="mt-4">
-                    <a href="{{ route('users.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
-                        Clear all filters
-                    </a>
-                </div>
-            @endif
         </div>
     @endif
 </x-layouts.app>

@@ -14,7 +14,7 @@
                         <div class="mt-2 max-w-xl text-sm text-gray-500">
                             <p>
                                 All users are subscribers by default. Do you want to change their role to a moderator or admin?
-                                Simple change their role to give them more previlege.
+                                Simple change their role to give them more privilege.
                             </p>
                         </div>
                     </div>
