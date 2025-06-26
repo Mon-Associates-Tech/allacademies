@@ -128,6 +128,7 @@ class UserController extends Controller
         $oldRole = $user->role;
         $user->role = UserRole::from($request->role);
         $user->save();
+        $user->assignRole($request->role);
 
         return redirect()->route('users.index')->with('success',
             "Successfully changed {$user->name}'s role from {$oldRole} to {$user->role->value}."
