@@ -207,7 +207,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user has all of the given roles
+     * Check if a user has all the given roles
      */
     public function hasAllRoles(array $roleNames): bool
     {

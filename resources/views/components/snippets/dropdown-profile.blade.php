@@ -78,7 +78,7 @@
                                 </svg>
                                 <span class="ml-2">Dashboard</span>
                             </a>
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner','moderator']))
 
                             <a href="{{ route('subscriptions.index') }}"
                                class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
@@ -91,7 +91,7 @@
                                 <span class="ml-2">Subscriptions</span>
                             </a>
                             @endif
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator']))
 
                                 <a href="{{ route('academic-groups.index') }}"
                                    class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
@@ -134,7 +134,7 @@
                             @if(Auth::user()->hasAnyRole(['admin', 'owner']))
 
                             <a href="{{ route('settings.index') }}"
-                                   class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
+                                   class="flex items-center disabled py-2 px-4 pointer-events-none group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                                     <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
                                          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                          stroke-width="1.5" stroke="currentColor">
@@ -156,7 +156,7 @@
                                 </svg>
                                 <span class="ml-2">Profile</span>
                             </a>
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                            @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator']))
 
                             <a href="{{ route('teams.index') }}"
                                class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
@@ -168,7 +168,9 @@
                                 </svg>
                                 <span class="ml-2">Team</span>
                             </a>
+                            @endif
 
+                                @if(Auth::user()->hasAnyRole(['admin', 'owner']))
                                 <a href="{{ route('audit-teams.index') }}"
                                    class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
 
