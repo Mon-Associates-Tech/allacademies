@@ -101,7 +101,7 @@ class SubscriptionController extends Controller
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
-            'expires_at' => now()->addMonths($durationInMonths),
+            'expires_at' => now()->addMonths($durationInMonths)->toDateTimeString(),
         ]);
 
         if (
