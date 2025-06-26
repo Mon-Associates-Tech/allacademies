@@ -120,7 +120,7 @@
                     <h3 class="text-xl font-semibold text-gray-900 mb-2">No Essay Questions Yet</h3>
                     <p class="text-gray-600 mb-6">Get started by creating your first essay question for this topic.</p>
                     @can('moderate')
-                        <x-link.primary :to="route('essay-questions.create', ['academic_topic' => $academicTopic])">
+                        <x-link.primary :to="route('essay-questions.create', ['academic_topic' => getRouteParameter('academic_topic'), 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>

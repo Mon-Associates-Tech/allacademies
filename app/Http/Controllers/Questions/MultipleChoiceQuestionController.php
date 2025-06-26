@@ -40,11 +40,14 @@ class MultipleChoiceQuestionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
      * @param AcademicTopic $academicTopic
      * @param MultipleChoiceQuestionRequest $request
      * @return RedirectResponse
      */
-    public function store(AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request): RedirectResponse
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request): RedirectResponse
     {
         $this->authorize('moderate');
 
