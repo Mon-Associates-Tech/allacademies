@@ -10,10 +10,12 @@ use App\Models\BookSubscription;
 use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
 use Brick\Money\Money;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -101,133 +103,92 @@ class PaymentController extends Controller
                 return $this->processBookSubscriptionPayment($request, $bookSubscription);
             } else {
                 throw ValidationException::withMessages([
-                    'reference' => 'No book subscription found for this reference.',
+                    'reference' => 'The provided reference is invalid.',
                 ]);
             }
         }
 
+        // Handle regular subscription payment
+        $subscription = Subscription::where('reference', $reference)->first();
 
-
-        // Regular subscription payment logic
-        /** @var \App\Models\Subscription $subscription */
-        $subscription = Subscription::query()->where('reference', $reference)->firstOr(callback: function () {
+        if ($subscription) {
+            return $this->processSubscriptionPayment($request, $subscription);
+        } else {
             throw ValidationException::withMessages([
-                'reference' => 'No subscriptions found for payment reference.',
+                'reference' => 'The provided reference is invalid.',
             ]);
-        });
+        }
+    }
 
-        try {
-            $currency = $request->validated('currency', 'GHS');
-            $amount = Money::of($request->validated('amount'), $currency);
-            $status = $request->validated('status', 'succeeded');
-
-            $payment = $subscription->payments()->create([
-                'reference' => $reference,
-                'amount' => (string) $amount->getAmount(),
-                'currency' => $currency,
-                'status' => PaymentStatus::from($status),
-                'gateway_reference' => $request->validated('gateway_reference'),
-                'notes' => $request->validated('notes'),
-            ])->refresh();
-
-            // Only trigger subscription update if payment succeeded
-            if ($status === 'succeeded') {
-                // Calculate total paid amount
-                $totalPaid = $subscription->payments()->where('status', PaymentStatus::SUCCEEDED)->sum('amount');
-                $subscriptionAmount = $subscription->amount;
-
-                // Update subscription status
-                if ($totalPaid >= $subscriptionAmount) {
-                    $subscription->status = SubscriptionStatus::PAID;
-                } elseif ($totalPaid > 0) {
-                    $subscription->status = SubscriptionStatus::PART_PAID;
-                } else {
-                    $subscription->status = SubscriptionStatus::UNPAID;
-                }
-
-                $subscription->save();
-
-                event(new SubscriptionUpdated($subscription));
-            }
-
-            // Log the payment creation
-            activity()
-                ->performedOn($payment)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'action' => 'payment_created',
-                    'subscription_id' => $subscription->id,
-                    'amount' => $amount->getAmount()->toFloat(),
-                    'currency' => $currency,
-                    'status' => $status,
-                ])
-                ->log('Payment created manually');
-
-        } catch (Exception $e) {
+    /**
+     * Process the payment for a regular subscription.
+     *
+     * @param PaymentRequest $request
+     * @param Subscription $subscription
+     * @return RedirectResponse
+     * @throws ValidationException|\Throwable
+     */
+    private function processSubscriptionPayment(PaymentRequest $request, Subscription $subscription)
+    {
+        if ($subscription->status === SubscriptionStatus::PAID
+        ) {
             throw ValidationException::withMessages([
-                'amount' => 'Invalid payment amount: ' . $e->getMessage(),
+                'reference' => 'This subscription has already been paid for.',
             ]);
         }
 
-        return to_route('payments.index')
-            ->with('success', "Payment created successfully. Reference: {$payment->reference}, Amount: {$payment->currency} {$payment->amount}");
+        try {
+            DB::transaction(function () use ($request, $subscription) {
+                $amount = Money::of($request->validated('amount'), 'GHS');
+                $payment = new Payment([
+                    'reference' => $request->validated('reference'),
+                    'amount' => (string) $amount->getAmount(),
+                    'status' => PaymentStatus::SUCCEEDED,
+                    'currency' => 'GHS',
+                ]);
+                $payment->subscription()->associate($subscription);
+                $payment->save();
+
+                $subscription->status = SubscriptionStatus::PAID;
+                $subscription->save();
+
+                // Dispatch the SubscriptionUpdated event
+                SubscriptionUpdated::dispatch($subscription);
+            });
+        } catch (Exception $e) {
+            return back()->with('error', 'An error occurred while processing the payment. Please try again.');
+        }
+
+        return to_route('payments.index')->with('success', 'Payment for subscription has been manually recorded.');
     }
 
+    /**
+     * Process the payment for a book subscription.
+     *
+     * @param PaymentRequest $request
+     * @param BookSubscription $bookSubscription
+     * @return RedirectResponse
+     */
     private function processBookSubscriptionPayment(PaymentRequest $request, BookSubscription $bookSubscription)
     {
         try {
-            $currency = $request->validated('currency', 'GHS');
-            $amount = Money::of($request->validated('amount'), $currency);
-            $status = $request->validated('status', 'succeeded');
-
-            // Verify amount matches subscription fee for succeeded payments
-            if ($status === 'succeeded' && $amount->getAmount()->toFloat() != $bookSubscription->annual_fee) {
-                throw ValidationException::withMessages([
-                    'amount' => 'Payment amount does not match the book subscription fee of ' . $bookSubscription->annual_fee,
+            DB::transaction(function () use ($request, $bookSubscription) {
+                $payment = new Payment([
+                    'reference' => $request->validated('reference'),
+                    'amount' => Money::ofMinor($bookSubscription->price, 'NGN')->getAmount(),
+                    'status' => PaymentStatus::SUCCESS,
+                    'currency' => 'NGN',
+                    'book_subscription_id' => $bookSubscription->id,
                 ]);
-            }
+                $payment->save();
 
-            // Create payment record
-            $payment = $bookSubscription->payments()->create([
-                'reference' => $bookSubscription->reference,
-                'amount' => (string) $amount->getAmount(),
-                'currency' => $currency,
-                'status' => PaymentStatus::from($status),
-                'gateway_reference' => $request->validated('gateway_reference'),
-                'notes' => $request->validated('notes'),
-            ]);
-
-            // Only update subscription status if payment succeeded
-            if ($status === 'succeeded') {
-                $bookSubscription->update([
-                    'status' => 'active',
-                    'payment_completed_at' => now(),
-                    'start_date' => now(),
-                    'end_date' => now()->addYear(),
-                ]);
-            }
-
-            // Log the payment completion
-            activity()
-                ->performedOn($bookSubscription)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'action' => 'book_subscription_payment_created',
-                    'book_id' => $bookSubscription->book_id,
-                    'amount' => $amount->getAmount()->toFloat(),
-                    'currency' => $currency,
-                    'status' => $status,
-                    'reference' => $bookSubscription->reference,
-                ])
-                ->log('Book subscription payment created manually');
-
+                $bookSubscription->status = SubscriptionStatus::PAID;
+                $bookSubscription->save();
+            });
         } catch (Exception $e) {
-            throw ValidationException::withMessages([
-                'amount' => 'Invalid payment amount: ' . $e->getMessage(),
-            ]);
+            return back()->with('error', 'An error occurred while processing the payment. Please try again.');
         }
 
-        return to_route('payments.index')
-            ->with('success', "Book subscription payment created successfully. Reference: {$bookSubscription->reference}, Status: {$status}");
+        return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
     }
 }

@@ -19,7 +19,8 @@ class SubscriptionRequest extends FormRequest
             'beneficiaries' => ['required_if:package,institution:full'],
             'academic_subject_ids' => ['required', 'array'],
             'academic_subjects_ids.*' => ['required', 'numeric', 'exists:academic_subjects,id'],
-            'notes' => ['string']
+            'notes' => ['string'],
+//            'academic_group_tag.*' => ['array'],
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Events\SubscriptionUpdated;
+use App\Events\UpdateSubscription;
 use App\Listeners\EvaluateSubscriptionListener;
 use App\Services\UserLoginService;
 use Illuminate\Auth\Events\Login;
@@ -25,6 +26,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         SubscriptionUpdated::class => [
             EvaluateSubscriptionListener::class,
+            UpdateSubscription::class,
         ],
     ];
 
