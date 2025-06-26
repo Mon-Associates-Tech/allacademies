@@ -151,7 +151,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mb-1">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-500 mb-1">
                                             {{ ucfirst(str_replace([':', '_'], [' ', ' '], $subscription->package)) }}
                                         </span>
                                     </div>

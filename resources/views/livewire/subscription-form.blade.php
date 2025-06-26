@@ -210,6 +210,7 @@
                                         @endif
                                     </ul>
                                 </div>
+                                <input type="hidden" name="academic_group_tag[]" wire:model="academicGroupTag" wire:key="academic_group_tag" />
                             </div>
                         </div>
                     </div>

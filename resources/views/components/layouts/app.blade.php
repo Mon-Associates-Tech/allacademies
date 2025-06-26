@@ -119,6 +119,31 @@
                 }
             });
 
+
+            // Change Role store
+            Alpine.store('changeRole', {
+                open: false,
+                userName: '',
+                userEmail: '',
+                userId: null,
+                selectedRole: '',
+                show(name, email, currentRole, userId) {
+                    this.userName = name;
+                    this.userEmail = email;
+                    this.userId = userId;
+                    this.selectedRole = currentRole;
+                    this.open = true;
+                },
+                hide() {
+                    this.open = false;
+                    this.userName = '';
+                    this.userEmail = '';
+                    this.userId = null;
+                    this.selectedRole = '';
+                }
+            });
+
+
             // Sidebar store
             Alpine.store('sidebar', {
                 open: false,

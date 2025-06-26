@@ -17,6 +17,7 @@ class Subscription extends Model
      */
     protected $fillable = [
         'package',
+        'duration_in_months',
         'amount',
         'currency',
         'reference',

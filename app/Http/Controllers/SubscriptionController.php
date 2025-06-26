@@ -7,10 +7,15 @@ use App\Support\AcademicGroupTag;
 use App\Support\Pricer;
 use App\Models\Subscription;
 use App\Models\AcademicGroup;
+use Brick\Math\Exception\MathException;
+use Brick\Math\Exception\NumberFormatException;
+use Brick\Math\Exception\RoundingNecessaryException;
+use Brick\Money\Exception\UnknownCurrencyException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
@@ -82,9 +87,14 @@ class SubscriptionController extends Controller
      * @param SubscriptionRequest $request
      * @return RedirectResponse
      * @throws Throwable
+     * @throws MathException
+     * @throws NumberFormatException
+     * @throws RoundingNecessaryException
+     * @throws UnknownCurrencyException
      */
     public function store(SubscriptionRequest $request): RedirectResponse
     {
+
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
@@ -92,7 +102,6 @@ class SubscriptionController extends Controller
             $beneficiaries = max($request->integer('beneficiaries') ?: 1, 1), // Ensure minimum of 1
             AcademicGroupTag::BASIC
         );
-
         /** @var User $user */
         $user = auth()->user();
         $user->load('currentTeam');
@@ -101,7 +110,8 @@ class SubscriptionController extends Controller
             'reference' => uniqid(),
             'amount' => (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
-            'expires_at' => Carbon::now()->addMonths($durationInMonths),
+            'duration_in_months' => $durationInMonths,
+            'expires_at' => null, // now()->addMonths($durationInMonths)->toDateTimeString(),
         ]);
 
         if (

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -89,5 +91,46 @@ class UserController extends Controller
         return view('users.show', [
             'user' => $user,
         ]);
+    }
+
+    /**
+     * Change the role of a user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function changeRole(Request $request)
+    {
+        $this->authorize('own');
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'email' => 'required|email|exists:users,email',
+            'role' => 'required|in:subscriber,student,teacher,librarian,author,parent,moderator,admin'
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        // Additional validation: make sure the email matches the user
+        if ($user->email !== $request->email) {
+            throw ValidationException::withMessages([
+                'email' => 'The provided email does not match the selected user.'
+            ]);
+        }
+
+        // Prevent changing owner role
+        if (UserRole::OWNER === $user->role) {
+            throw ValidationException::withMessages([
+                'role' => "You cannot change this user's role."
+            ]);
+        }
+
+        $oldRole = $user->role;
+        $user->role = UserRole::from($request->role);
+        $user->save();
+
+        return redirect()->route('users.index')->with('success',
+            "Successfully changed {$user->name}'s role from {$oldRole} to {$user->role->value}."
+        );
     }
 }

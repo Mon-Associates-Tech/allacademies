@@ -213,11 +213,7 @@
                                                  src="{{ $user->avatar }}"
                                                  alt="{{ $user->name }}">
                                         @else
-                                            <div class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                                                <span class="text-white font-medium text-xs">
-                                                    {{ strtoupper(substr($user->name, 0, 2)) }}
-                                                </span>
-                                            </div>
+                                           <x-avatar class="w-8 h-8" :name="$user->name" />
                                         @endif
                                     </div>
 
