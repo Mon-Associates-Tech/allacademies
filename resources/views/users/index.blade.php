@@ -44,6 +44,9 @@
                 <option value="teacher" {{ request('role') === 'teacher' ? 'selected' : '' }}>Teacher</option>
                 <option value="student" {{ request('role') === 'student' ? 'selected' : '' }}>Student</option>
                 <option value="librarian" {{ request('role') === 'librarian' ? 'selected' : '' }}>Librarian</option>
+                <option value="moderator" {{ request('role') === 'moderator' ? 'selected' : '' }}>Moderator</option>
+                <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner</option>
+                <option value="author" {{ request('role') === 'author' ? 'selected' : '' }}>Author</option>
             </select>
 
             <!-- Online status toggle -->
@@ -83,11 +86,7 @@
                                              src="{{ $user->avatar }}"
                                              alt="{{ $user->name }}">
                                     @else
-                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                                            <span class="text-white font-medium text-sm">
-                                                {{ strtoupper(substr($user->name, 0, 2)) }}
-                                            </span>
-                                        </div>
+                                        <x-avatar class="h-10 w-10" name="{{ $user->name }}" />
                                     @endif
 
                                     <!-- Online indicator -->
