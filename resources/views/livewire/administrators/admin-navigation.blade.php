@@ -183,10 +183,24 @@
                href="#"
                wire:click.prevent="setActiveTab('user-logins')">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ $activeTab === 'reports' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                    <svg class="shrink-0 fill-current {{ $activeTab === 'user-logins' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z"/>
                     </svg>
                     <span class="text-sm ml-4 sidebar-text duration-200">User Login Activity</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- User Logins -->
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'teacher-delegate' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="#"
+               wire:click.prevent="setActiveTab('teacher-delegate')">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ $activeTab === 'teacher-delegate' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z"/>
+                    </svg>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Teacher Delegation</span>
                 </div>
             </a>
         </li>

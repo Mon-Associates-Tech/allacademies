@@ -21,22 +21,22 @@
 
         <!-- Self Assessment -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'self-assessment' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'assessments' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
-               wire:click.prevent="setActiveTab('self-assessment')">
+               wire:click.prevent="setActiveTab('assessments')">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ $activeTab === 'self-assessment' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                    <svg class="shrink-0 fill-current {{ $activeTab === 'assessments' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
                         <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
                     </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Self Assessment</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Assessments</span>
                 </div>
             </a>
         </li>
 
         <!-- My Books -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'my-books' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'books' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('books')">
                 <div class="flex items-center">
@@ -50,14 +50,14 @@
 
         <!-- Schedule -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'schedule' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'schedules' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
-               wire:click.prevent="setActiveTab('schedule')">
+               wire:click.prevent="setActiveTab('schedules')">
                 <div class="flex items-center">
                     <svg class="shrink-0 fill-current {{ $activeTab === 'schedule' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
                     </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Schedule</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Schedules</span>
                 </div>
             </a>
         </li>
@@ -93,15 +93,15 @@
 
         <!-- Activity Log -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'activity-log' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'activities' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
-               wire:click.prevent="setActiveTab('activity-log')">
+               wire:click.prevent="setActiveTab('activities')">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ $activeTab === 'activity-log' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                    <svg class="shrink-0 fill-current {{ $activeTab === 'activities' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
                         <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
                     </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Activity Log</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Activities</span>
                 </div>
             </a>
         </li>

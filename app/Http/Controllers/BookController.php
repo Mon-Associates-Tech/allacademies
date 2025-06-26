@@ -3,114 +3,220 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\BookSubscription;
+use App\Models\BookBorrowing;
 use App\Models\BookCategory;
 use Illuminate\Http\Request;
-use App\Http\Resources\BookResource;
-use App\Http\Resources\BookCollection;
+use Illuminate\Support\Facades\Auth;
 
 class BookController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Book::class, 'book');
-    }
-
     public function index(Request $request)
     {
-        $query = Book::with('author', 'category');
+        $user = Auth::user();
+        $student = $user->student;
 
-        // Filter by category
-        if ($request->has('category_id')) {
-            $query->where('book_category_id', $request->category_id);
+        $query = Book::with(['author', 'bookCategory']);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('author', function($q) use ($request) {
+                      $q->where('name', 'like', '%' . $request->search . '%');
+                  });
         }
 
-        // Filter by format
-        if ($request->has('format')) {
-            if ($request->format === 'hardcopy') {
-                $query->where('has_hardcopy', true);
-            } elseif ($request->format === 'softcopy') {
-                $query->where('has_softcopy', true);
-            } elseif ($request->format === 'both') {
-                $query->where('has_hardcopy', true)->where('has_softcopy', true);
+        if ($request->filled('category')) {
+            $query->where('book_category_id', $request->category);
+        }
+
+        if ($request->filled('format')) {
+            switch ($request->format) {
+                case 'hardcopy':
+                    $query->where('has_hardcopy', true);
+                    break;
+                case 'softcopy':
+                    $query->where('has_softcopy', true);
+                    break;
+                case 'both':
+                    $query->where('has_hardcopy', true)->where('has_softcopy', true);
+                    break;
             }
         }
 
-        // Search by title
-        if ($request->has('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+        if ($request->filled('price')) {
+            if ($request->price === 'free') {
+                $query->whereNull('annual_subscription_fee')->orWhere('annual_subscription_fee', 0);
+            } else {
+                $query->where('annual_subscription_fee', '>', 0);
+            }
         }
 
-        return view('books.index', ['books' => $query->paginate(10)]);
-        return new BookCollection($query->paginate());
-    }
+        $books = $query->paginate(12);
+        $categories = BookCategory::all();
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'author_id' => 'required|exists:authors,id',
-            'book_category_id' => 'required|exists:book_categories,id',
-            'edition' => 'nullable|string|max:50',
-            'publisher' => 'nullable|string|max:255',
-            'pages' => 'nullable|integer|min:1',
-            'has_hardcopy' => 'boolean',
-            'has_softcopy' => 'boolean',
-            'additional_info' => 'nullable|string',
-        ]);
+        // Get user's subscriptions and borrowings for status checking
+        $subscribedBookIds = $student ? $student->bookSubscriptions()
+            ->where('status', 'active')
+            ->pluck('book_id')->toArray() : [];
 
-        if (!$validated['has_hardcopy'] && !$validated['has_softcopy']) {
-            return response()->json(['message' => 'Book must have at least one format (hardcopy or softcopy)'], 422);
-        }
+        $borrowedBookIds = $student ? $student->borrowedBooks()
+            ->where('status', 'borrowed')
+            ->pluck('book_id')->toArray() : [];
 
-        $book = Book::create($validated);
-
-        return new BookResource($book->load('author', 'category'));
+        return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds'));
     }
 
     public function show(Book $book)
     {
-        return new BookResource($book->load('author', 'category', 'borrowings', 'subscriptions', 'groupSubscriptions'));
+        $book->load(['author', 'bookCategory']);
+
+        $user = Auth::user();
+        $student = $user->student ?? null;
+
+        $isSubscribed = false;
+        $isBorrowed = false;
+        $subscription = null;
+        $borrowing = null;
+
+        if ($student) {
+            $subscription = $student->bookSubscriptions()
+                ->where('book_id', $book->id)
+                ->where('status', 'active')
+                ->first();
+            $isSubscribed = (bool) $subscription;
+
+            $borrowing = $student->borrowedBooks()
+                ->where('book_id', $book->id)
+                ->where('status', 'borrowed')
+                ->first();
+            $isBorrowed = (bool) $borrowing;
+        }
+
+        return view('books.show', compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing'));
     }
 
-    public function update(Request $request, Book $book)
+    public function subscribe(Request $request, Book $book)
     {
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'author_id' => 'sometimes|required|exists:authors,id',
-            'book_category_id' => 'sometimes|required|exists:book_categories,id',
-            'edition' => 'nullable|string|max:50',
-            'publisher' => 'nullable|string|max:255',
-            'pages' => 'nullable|integer|min:1',
-            'has_hardcopy' => 'boolean',
-            'has_softcopy' => 'boolean',
-            'additional_info' => 'nullable|string',
+        $user = Auth::user();
+        $student = $user->student;
+
+        if (!$student) {
+            return response()->json(['error' => 'Student profile required'], 403);
+        }
+
+        // Check if already subscribed
+        $existingSubscription = $student->bookSubscriptions()
+            ->where('book_id', $book->id)
+            ->where('status', 'active')
+            ->first();
+
+        if ($existingSubscription) {
+            return response()->json(['error' => 'Already subscribed to this book'], 400);
+        }
+
+        // Free book - direct subscription
+        if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
+            $subscription = BookSubscription::create([
+                'student_id' => $student->id,
+                'book_id' => $book->id,
+                'start_date' => now(),
+                'end_date' => now()->addYear(),
+                'status' => 'active',
+                'annual_fee' => 0,
+                'reference' => 'FREE_' . uniqid(),
+                'payment_completed_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully added to your library!',
+                'subscription' => $subscription
+            ]);
+        }
+
+        // Paid book - create pending subscription
+        $subscription = BookSubscription::create([
+            'student_id' => $student->id,
+            'book_id' => $book->id,
+            'start_date' => now(),
+            'end_date' => now()->addYear(),
+            'status' => 'pending_payment',
+            'annual_fee' => $book->annual_subscription_fee,
+            'reference' => 'SUB_' . uniqid()
         ]);
 
-        if (isset($validated['has_hardcopy']) && isset($validated['has_softcopy']) &&
-            !$validated['has_hardcopy'] && !$validated['has_softcopy']) {
-            return response()->json(['message' => 'Book must have at least one format (hardcopy or softcopy)'], 422);
-        }
-
-        $book->update($validated);
-
-        return new BookResource($book->load('author', 'category'));
+        return response()->json([
+            'success' => true,
+            'message' => 'Subscription created. Please complete payment.',
+            'subscription' => $subscription,
+            'requires_payment' => true
+        ]);
     }
 
-    public function destroy(Book $book)
+    public function requestBorrow(Request $request, Book $book)
     {
-        // Check if book has active borrowings or subscriptions
-        $hasBorrowings = $book->borrowings()->where('status', 'borrowed')->exists();
-        $hasSubscriptions = $book->subscriptions()->where('status', 'active')->exists();
-        $hasGroupSubscriptions = $book->groupSubscriptions()->where('status', 'active')->exists();
+        $user = Auth::user();
+        $student = $user->student;
 
-        if ($hasBorrowings || $hasSubscriptions || $hasGroupSubscriptions) {
-            return response()->json([
-                'message' => 'Cannot delete book with active borrowings or subscriptions'
-            ], 422);
+        if (!$student) {
+            return response()->json(['error' => 'Student profile required'], 403);
         }
 
-        $book->delete();
+        if (!$book->has_hardcopy) {
+            return response()->json(['error' => 'This book is not available in hardcopy format'], 400);
+        }
 
-        return response()->noContent();
+        // Check if already borrowed
+        $existingBorrowing = $student->bookBorrowings()
+            ->where('book_id', $book->id)
+            ->whereIn('status', ['borrowed', 'pending_approval'])
+            ->first();
+
+        if ($existingBorrowing) {
+            return response()->json(['error' => 'Book already borrowed or request pending'], 400);
+        }
+
+        $borrowing = BookBorrowing::create([
+            'student_id' => $student->id,
+            'book_id' => $book->id,
+            'request_date' => now(),
+            'status' => 'pending_approval',
+            'notes' => $request->notes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Borrow request submitted successfully!',
+            'borrowing' => $borrowing
+        ]);
+    }
+
+    public function read(Book $book)
+    {
+        $user = Auth::user();
+        $student = $user->student;
+
+        if (!$student) {
+            return redirect()->route('books.show', $book)->with('error', 'Student profile required');
+        }
+
+        if (!$book->has_softcopy) {
+            return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
+        }
+
+        // Check subscription for paid books
+        if ($book->annual_subscription_fee > 0) {
+            $subscription = $student->bookSubscriptions()
+                ->where('book_id', $book->id)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$subscription) {
+                return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
+            }
+        }
+
+        return view('books.read', compact('book'));
     }
 }
