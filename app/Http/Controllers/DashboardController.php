@@ -12,7 +12,10 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $currentTeam = Team::query()->findOrFail(auth()->user()->current_team_id);
+        $currentTeam = Team::query()->find(auth()->user()->current_team_id);
+        if(!$currentTeam){
+            $currentTeam = Team::query()->where('owner_id', auth()->id())->first();
+        }
 
         $academicSubjects = AcademicSubject::query()->with('academicLevel.academicGroup')->whereHas('subscriptions', function (Builder $query) {
             $query->where('status', SubscriptionStatus::PAID)

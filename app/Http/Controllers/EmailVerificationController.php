@@ -51,7 +51,9 @@ class EmailVerificationController extends Controller
 
         // Clear the verification email from session if it exists
         $request->session()->forget('verification_email');
-
+        $user->ownedTeams()->create([
+            'name' => $user->name . '\'s Team' ,
+        ]);
         // Redirect to sign-in with success message
         return redirect()->route('sign-in')->with('success', 'Your email has been verified successfully! You can now sign in.');
     }

@@ -155,6 +155,7 @@ class Overview extends Component
                 $query->where('name', 'like', '%' . $this->search . '%')
                       ->orWhere('email', 'like', '%' . $this->search . '%');
             })
+            ->whereNotNull('email_verified_at')
             ->latest();
 
         $recentUsers = $this->showAllUsers
