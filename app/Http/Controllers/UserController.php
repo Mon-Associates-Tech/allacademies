@@ -130,6 +130,19 @@ class UserController extends Controller
         $user->save();
         $user->assignRole($request->role);
 
+        // Create student record if role is changed to student
+        if ($request->role === 'student' && !$user->student) {
+            \App\Models\Student::create([
+                'user_id' => $user->id,
+                'student_group_id' => null, // You might want to assign to a default group
+            ]);
+        }
+
+        // Optionally, remove student record if role is changed away from student
+        if ($oldRole === 'student' && $request->role !== 'student' && $user->student) {
+            $user->student->delete();
+        }
+
         return redirect()->route('users.index')->with('success',
             "Successfully changed {$user->name}'s role from {$oldRole} to {$user->role->value}."
         );

@@ -1,7 +1,9 @@
-    <div>
+<div>
+@if(Auth::user()->hasRole('student'))
+    @if(Auth::user()->student)
         @if($activeTab === 'dashboard')
             @livewire('students.overview')
-        @elseif($activeTab === 'self-assessment')
+        @elseif($activeTab === 'assessments')
             @livewire('students.self-assessment')
         @elseif($activeTab === 'books')
             @livewire('students.books')
@@ -11,7 +13,16 @@
             @livewire('students.performance-overview')
         @elseif($activeTab === 'profile')
             @livewire('students.student-profile')
-        @elseif($activeTab === 'activity-log')
+        @elseif($activeTab === 'activities')
             @livewire('students.activity-logs')
         @endif
-    </div>
+    @else
+        <div class="alert alert-warning">
+            Your student profile is being set up. Please contact an administrator if this message persists.
+        </div>
+    @endif
+@else
+    <div>Student Account not active</div>
+    @endif
+</div>
+

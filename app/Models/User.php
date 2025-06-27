@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -258,7 +259,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return true;
     }
 
-    public function student(): HasOne|User
+    public function student()
     {
         return $this->hasOne(Student::class);
     }
@@ -284,4 +285,22 @@ public function impersonateUser($userId)
 
     return redirect()->route('impersonate', $userId);
 }
+    protected static function booted()
+    {
+        static::updated(function ($user) {
+            // Check if role was changed to student
+            if ($user->isDirty('role') && $user->hasRole('student') && !$user->student) {
+                Student::create([
+                    'user_id' => $user->id,
+                    'student_group_id' => null,
+                ]);
+            }
+
+            // Optionally remove student record if role changed away from student
+            if ($user->isDirty('role') && !$user->hasRole('student') && $user->student) {
+               // $user->student->delete();
+                Log::info('student deletion [mocked]');;
+            }
+        });
+    }
 }

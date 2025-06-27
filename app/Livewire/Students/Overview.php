@@ -205,6 +205,7 @@ class Overview extends Component
     public function render()
     {
         $student = auth()->user()->student;
+        if(!$student) return;
 
         // Existing data
         $bookSubscriptions = BookSubscription::whereHas('student', function($query) use ($student) {
