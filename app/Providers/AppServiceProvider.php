@@ -8,6 +8,7 @@ use App\Livewire\ThemeController;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
+use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\Author;
 use App\Models\Book;
@@ -61,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
             'academic_level' => AcademicLevel::class,
             'academic_subject' => AcademicSubject::class,
             'academic_topic' => AcademicTopic::class,
+            'academic_subtopic' => AcademicSubtopic::class,
             'essay_question' => EssayQuestion::class,
             'examinations' => Examination::class,
             'multiple_choice_question' => MultipleChoiceQuestion::class,

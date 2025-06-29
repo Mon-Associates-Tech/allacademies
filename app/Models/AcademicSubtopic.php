@@ -22,6 +22,8 @@ class AcademicSubtopic extends Model
     protected $fillable = [
         'name',
         'academic_topic_id',
+        'slug',
+        'description',
     ];
 
     public function essayQuestions(): HasMany {
@@ -43,4 +45,7 @@ class AcademicSubtopic extends Model
         return $this->morphMany(Question::class, 'questionable');
     }
 
+    public function subject(){
+
+    }
 }
