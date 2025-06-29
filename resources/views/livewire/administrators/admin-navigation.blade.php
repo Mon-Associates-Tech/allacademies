@@ -7,8 +7,7 @@
         <!-- Dashboard Overview -->
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'overview' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="#"
-               wire:click.prevent="setActiveTab('overview')">
+               href="{{route('dashboard')}}">
                 <div class="flex items-center">
                     <svg class="shrink-0 fill-current {{ $activeTab === 'overview' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M5.936.278A7.983 7.983 0 0 1 8 0a8 8 0 1 1-8 8c0-.722.104-1.413.278-2.064a1 1 0 1 1 1.932.516A5.99 5.99 0 0 0 2 8a6 6 0 1 0 6-6c-.53 0-1.045.076-1.548.21A1 1 0 1 1 5.936.278Z" />
@@ -20,9 +19,8 @@
         </li>
 
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'academic-management' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="#"
-               wire:click.prevent="setActiveTab('academic-management')">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-groups.index')? 'bg-violet-500 text-white my-1 font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('academic-groups.index')}}">
                 <div class="flex items-center">
                     <svg class="shrink-0 fill-current {{ $activeTab === 'academic-management' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M5.936.278A7.983 7.983 0 0 1 8 0a8 8 0 1 1-8 8c0-.722.104-1.413.278-2.064a1 1 0 1 1 1.932.516A5.99 5.99 0 0 0 2 8a6 6 0 1 0 6-6c-.53 0-1.045.076-1.548.21A1 1 0 1 1 5.936.278Z" />
@@ -35,12 +33,11 @@
 
 
         <!-- User Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'users' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="#"
-               wire:click.prevent="setActiveTab('users')">
+        <li class="mb-0.5 last:mb-0 ">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('users.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('users.index')}}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ $activeTab === 'users' ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                    <svg class="shrink-0 fill-current {{ Route::is('users.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
                     </svg>
                     <span class="text-sm ml-4 sidebar-text duration-200">User Management</span>
@@ -49,7 +46,7 @@
         </li>
 
         <!-- Student Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'students' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('students')">
@@ -64,7 +61,7 @@
         </li>
 
         <!-- Student Groups -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'groups' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('groups')">
@@ -78,7 +75,7 @@
         </li>
 
         <!-- Teacher Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'teachers' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('teachers')">
@@ -92,7 +89,7 @@
         </li>
 
         <!-- Librarian Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'librarians' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('librarians')">
@@ -106,7 +103,7 @@
         </li>
 
         <!-- Author Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'authors' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('authors')">
@@ -120,7 +117,7 @@
         </li>
 
         <!-- Book Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'books' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('books')">
@@ -134,7 +131,7 @@
         </li>
 
         <!-- Book Approvals -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'book-approvals' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('book-approvals')">
@@ -149,7 +146,7 @@
         </li>
 
         <!-- Subject Management -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 ">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'subjects' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('subjects')">
@@ -164,7 +161,7 @@
         </li>
 
         <!-- Reports -->
-        <li class="mb-0.5 last:mb-0 pointer-events-none">
+        <li class="mb-0.5 last:mb-0 hidden">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'reports' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('reports')">
@@ -192,7 +189,7 @@
         </li>
 
         <!-- User Logins -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 hidden">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'teacher-delegate' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="#"
                wire:click.prevent="setActiveTab('teacher-delegate')">

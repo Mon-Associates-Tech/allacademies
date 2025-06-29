@@ -303,4 +303,9 @@ public function impersonateUser($userId)
             }
         });
     }
+
+    public function teacher(): HasOne
+    {
+        return $this->hasOne(Teacher::class, 'user_id');
+    }
 }

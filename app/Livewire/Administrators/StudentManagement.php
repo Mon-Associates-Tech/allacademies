@@ -434,12 +434,12 @@ class StudentManagement extends Component
         }
 
         // Set selected teachers and primary teacher
-        $this->selectedTeachers = $student->teachers->pluck('id')->toArray();
+        $this->selectedTeachers = $student->teachers()->pluck('teachers.id')->toArray();
         $primaryTeacher = $student->teachers->where('pivot.is_primary', true)->first();
         $this->primaryTeacherId = $primaryTeacher ? $primaryTeacher->id : '';
 
         // Set individual subject assignments
-        $levelSubjectIds = $this->levelSubjects->pluck('id')->toArray();
+        $levelSubjectIds = collect($this->levelSubjects)->pluck('id')->toArray();
 
         $this->additionalSubjects = $student->individualSubjects()
             ->wherePivot('is_active', true)

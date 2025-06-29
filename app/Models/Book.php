@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Book extends Model
 {
@@ -12,6 +14,7 @@ class Book extends Model
 
     protected $fillable = [
         'title',
+        'slug',
         'author_id',
         'book_category_id',
         'edition',
@@ -21,7 +24,9 @@ class Book extends Model
         'has_softcopy',
         'additional_info',
         'cover_image',
+        'cover_image_path',
         'content_url',
+        'pdf_file_path',
         'annual_subscription_fee',
         'subscription_conditions'
     ];
@@ -33,42 +38,48 @@ class Book extends Model
         'annual_subscription_fee' => 'decimal:2'
     ];
 
-    public function author()
+    public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
     }
 
     public function getCoverImageAttribute()
     {
+        if ($this->cover_image_path) {
+            return asset('storage/' . $this->cover_image_path);
+        }
         return asset('images/book-cover.jpg');
     }
 
     public function getContentUrlAttribute()
     {
+        if ($this->pdf_file_path) {
+            return asset('storage/' . $this->pdf_file_path);
+        }
         return asset('sample.pdf');
     }
 
-    public function bookCategory()
+    public function bookCategory(): BelongsTo
     {
         return $this->belongsTo(BookCategory::class, 'book_category_id');
     }
 
-    public function borrowings()
+    public function borrowings(): HasMany
     {
         return $this->hasMany(BookBorrowing::class);
     }
 
-    public function subscriptions()
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(BookSubscription::class);
     }
 
-    public function groupSubscriptions()
+    public function groupSubscriptions(): HasMany
     {
         return $this->hasMany(GroupBookSubscription::class);
     }
 
-    public function approvals()
+    public function approvals(): HasMany
     {
         return $this->hasMany(BookApproval::class);
     }
@@ -98,5 +109,20 @@ class Book extends Model
             "3. Access will be revoked upon subscription expiry\n" .
             "4. Subscription is non-refundable\n" .
             "5. Content is protected by copyright laws";
+    }
+
+    public function getIsFreeAttribute(): bool
+    {
+        return !$this->annual_subscription_fee || $this->annual_subscription_fee == 0;
+    }
+
+    public function scopeFree($query)
+    {
+        return $query->whereNull('annual_subscription_fee')->orWhere('annual_subscription_fee', 0);
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('annual_subscription_fee', '>', 0);
     }
 }

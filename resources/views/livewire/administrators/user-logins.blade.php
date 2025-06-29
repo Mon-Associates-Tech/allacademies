@@ -147,12 +147,12 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <div>{{ $activity->login_at->format('M d, Y') }}</div>
-                                <div class="text-xs text-gray-400">{{ $activity->login_at->format('H:i:s') }}</div>
+                                <div>{{ $activity->login_at?->format('M d, Y') }}</div>
+                                <div class="text-xs text-gray-400">{{ $activity->login_at?->format('H:i:s') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if($activity->logout_at)
-                                    <div>{{ $activity->logout_at->format('M d, Y') }}</div>
+                                    <div>{{ $activity->logout_at?->format('M d, Y') }}</div>
                                     <div class="text-xs text-gray-400">{{ $activity->logout_at->format('H:i:s') }}</div>
                                     @if($activity->logout_type)
                                         <div class="text-xs text-gray-400">({{ $activity->logout_type_display }})</div>

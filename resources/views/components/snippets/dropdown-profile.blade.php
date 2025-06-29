@@ -4,211 +4,228 @@
 
 <div class="relative inline-flex" x-data="{ open: false }">
     <button
-        class="inline-flex justify-center items-center group"
+        class="inline-flex justify-center items-center group transition-all duration-200 ease-in-out hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl p-2"
         aria-haspopup="true"
         @click.prevent="open = !open"
         :aria-expanded="open"
     >
-        <img class="w-8 h-8 rounded-full" src="{{ Auth::user()->profile_photo_url ?? asset('/img/logo.png') }}" width="32" height="32" alt="{{ Auth::user()->name }}" />
+        <img class="w-9 h-9 rounded-full border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-500"
+             src="{{ Auth::user()->profile_photo_url ?? asset('/img/logo.png') }}"
+             width="36" height="36" alt="{{ Auth::user()->name }}" />
         <div class="flex items-center truncate">
-            <span class="truncate ml-2 text-sm font-medium text-gray-600 dark:text-gray-100 group-hover:text-gray-800 dark:group-hover:text-white">{{ Auth::user()->name }}</span>
-            <svg class="w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500" viewBox="0 0 12 12">
+            <span class="truncate ml-3 text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">{{ Auth::user()->name }}</span>
+            <svg class="w-4 h-4 shrink-0 ml-2 fill-current text-gray-400 dark:text-gray-500 transition-transform duration-200"
+                 :class="open ? 'rotate-180' : ''" viewBox="0 0 12 12">
                 <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
             </svg>
         </div>
     </button>
-    <div
-        class="origin-top-right z-10 absolute top-full min-w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/60 py-1.5 rounded-lg shadow-lg overflow-hidden mt-1 {{$align === 'right' ? 'right-0' : 'left-0'}}"
-        @click.outside="open = false"
-        @keydown.escape.window="open = false"
-        x-show="open"
-        x-transition:enter="transition ease-out duration-200 transform"
-        x-transition:enter-start="opacity-0 -translate-y-2"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-out duration-200"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        x-cloak
-    >
-        <div class="pt-0.5 pb-2 px-3 mb-1 border-b border-gray-200 dark:border-gray-700/60">
-            <div class="font-medium text-gray-800 dark:text-gray-100">{{ Auth::user()->name }}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 italic">{{Auth::user()->role}}</div>
+
+    <div class="origin-top-right z-50 absolute top-full min-w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden mt-2 {{$align === 'right' ? 'right-0' : 'left-0'}}"
+         @click.outside="open = false"
+         @keydown.escape.window="open = false"
+         x-show="open"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         x-cloak>
+
+        <!-- User Info Header (Fixed) -->
+        <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-100 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+                <img class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-600 shadow-sm"
+                     src="{{ Auth::user()->profile_photo_url ?? asset('/img/logo.png') }}"
+                     alt="{{ Auth::user()->name }}" />
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ Auth::user()->name }}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ Auth::user()->email }}</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mt-1">
+                        {{ Auth::user()->role }}
+                    </span>
+                </div>
+            </div>
+
             @if(session()->has('impersonated_by'))
                 @php
                     $impersonatorId = session('impersonated_by');
                     $impersonator = App\Models\User::find($impersonatorId);
                 @endphp
                 @if($impersonator)
-                    <div class="text-xs text-orange-600 dark:text-orange-400 font-medium mt-1">
-                        Acting as {{ $impersonator->name }}
+                    <div class="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-orange-800 dark:text-orange-200">Acting as</p>
+                                <p class="text-xs text-orange-600 dark:text-orange-300">{{ $impersonator->name }}</p>
+                            </div>
+                        </div>
                     </div>
                 @endif
             @endif
-
         </div>
 
-        <ul>
-            @if(session()->has('impersonated_by'))
-                <li>
-                    <div class="py-1 border-b border-gray-200 dark:border-gray-700/60 mb-1">
+        <!-- Scrollable Menu Items Container -->
+        <div class="max-h-96 overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+            <div class="py-2">
+                @if(session()->has('impersonated_by'))
+                    <div class="px-2 mb-2">
                         <a href="{{ route('impersonate.leave') }}"
-                           class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-orange-700 hover:text-orange-900 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-900/20">
-                            <svg class="w-5 h-5 text-orange-500 group-hover:text-orange-600 dark:text-orange-400"
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                            </svg>
-                            <span class="ml-2">Leave Acting As</span>
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-orange-700 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-100 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg mr-3 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                            </div>
+                            <span>Leave Acting As</span>
                         </a>
                     </div>
-                </li>
-            @endif
+                    <div class="border-t border-gray-100 dark:border-gray-700 mx-2 mb-2"></div>
+                @endif
 
-            <li>
-                    <div class="divide-y">
-                        <div class="py-1">
-                            <a href="{{ route('dashboard') }}"
-                               class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
-                                </svg>
-                                <span class="ml-2">Dashboard</span>
-                            </a>
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner','moderator', 'teacher', 'student', 'author', 'librarian']))
-
-                            <a href="{{ route('subscriptions.index') }}"
-                               class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
-                                </svg>
-                                <span class="ml-2">Subscriptions</span>
-                            </a>
-                            @endif
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
-
-                                <a href="{{ route('academic-groups.index') }}"
-                                   class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                    <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M7.875 14.25l1.214 1.942a2.25 2.25 0 001.908 1.058h2.006c.776 0 1.497-.4 1.908-1.058l1.214-1.942M2.41 9h4.636a2.25 2.25 0 011.872 1.002l.164.246a2.25 2.25 0 001.872 1.002h2.092a2.25 2.25 0 001.872-1.002l.164-.246A2.25 2.25 0 0116.954 9h4.636M2.41 9a2.25 2.25 0 00-.16.832V12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 12V9.832c0-.287-.055-.57-.16-.832M2.41 9a2.25 2.25 0 01.382-.632l3.285-3.832a2.25 2.25 0 011.708-.786h8.43c.657 0 1.281.287 1.709.786l3.284 3.832c.163.19.291.404.382.632M4.5 20.25h15A2.25 2.25 0 0021.75 18v-2.625c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125V18a2.25 2.25 0 002.25 2.25z"/>
-                                    </svg>
-                                    <span class="ml-2">Academic Groups</span>
-                                </a>
-                            @endif
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
-
-                            <a href="{{ route('users.index') }}"
-                                   class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor"
-                                         class="w-5 h-5 text-gray-500 group-hover:text-gray-600">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
-                                    </svg>
-                                    <span class="ml-2">Users</span>
-                                </a>
-                            @endif
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
-
-                            <a href="{{ route('payments.index') }}"
-                                   class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-
-                                    <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/>
-                                    </svg>
-                                    <span class="ml-2">Payments</span>
-                                </a>
-                            @endif
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner']))
-
-                            <a href="{{ route('settings.index') }}"
-                                   class="flex items-center disabled py-2 px-4 pointer-events-none group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                    <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L12 12m6.894 5.785l-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864l-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495"/>
-                                    </svg>
-                                    <span class="ml-2">Settings</span>
-                                </a>
-                            @endif
+                <!-- Main Navigation -->
+                <div class="px-2 space-y-1">
+                    <a href="{{ route('dashboard') }}"
+                       class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                        <div class="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors duration-200">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
                         </div>
-                        <div class="py-1">
-                            <a href="{{ route('profile.show') }}"
-                               class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-                                </svg>
-                                <span class="ml-2">Profile</span>
-                            </a>
-                            @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
+                        <span>Dashboard</span>
+                    </a>
 
-                            <a href="{{ route('teams.index') }}"
-                               class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                    @if(Auth::user()->hasAnyRole(['admin', 'owner','moderator', 'teacher', 'student', 'author', 'librarian']))
+                        <a href="{{ route('subscriptions.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                                 </svg>
-                                <span class="ml-2">Team</span>
-                            </a>
-                            @endif
+                            </div>
+                            <span>Subscriptions</span>
+                        </a>
+                    @endif
 
-                                @if(Auth::user()->hasAnyRole(['admin', 'owner']))
-                                <a href="{{ route('audit-teams.index') }}"
-                                   class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-
-                                    <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
-                                    </svg>
-                                    <span class="ml-2">Audit Teams</span>
-                                </a>
-                            @endif
-                            <a href="{{ route('security') }}"
-                               class="flex items-center py-2 px-4 group cursor-pointer text-sm tracking-wide text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-600"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                    @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
+                        <a href="{{ route('academic-groups.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg mr-3 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
-                                <span class="ml-2">Security</span>
-                            </a>
+                            </div>
+                            <span>Academic Groups</span>
+                        </a>
+                    @endif
+
+                    @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                        <a href="{{ route('users.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg mr-3 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                                </svg>
+                            </div>
+                            <span>Users</span>
+                        </a>
+
+                        <a href="{{ route('payments.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg mr-3 group-hover:bg-yellow-200 dark:group-hover:bg-yellow-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <span>Payments</span>
+                        </a>
+
+                        <a href="{{ route('settings.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed rounded-xl opacity-50">
+                            <div class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg mr-3">
+                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <span>Settings</span>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-100 dark:border-gray-700 mx-2 my-3"></div>
+
+                <!-- Account Section -->
+                <div class="px-2 space-y-1">
+                    <a href="{{ route('profile.show') }}"
+                       class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                        <div class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg mr-3 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors duration-200">
+                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}" class="py-1">
-                            @csrf
-                            <button
-                                class="w-full flex items-center py-2 px-4 text-sm group text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-red-500 group-hover:text-red-600"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"/>
+                        <span>Profile</span>
+                    </a>
+
+                    @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
+                        <a href="{{ route('teams.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-3 group-hover:bg-teal-200 dark:group-hover:bg-teal-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
-                                <span class="ml-2">Sign Out</span>
-                            </button>
-                        </form>
-                    </div>
-            </li>
-        </ul>
+                            </div>
+                            <span>Team</span>
+                        </a>
+                    @endif
+
+                    @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                        <a href="{{ route('audit-teams.index') }}"
+                           class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg mr-3 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                            </div>
+                            <span>Audit Teams</span>
+                        </a>
+                    @endif
+
+                    <a href="{{ route('security') }}"
+                       class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
+                        <div class="flex items-center justify-center w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg mr-3 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors duration-200">
+                            <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <span>Security</span>
+                    </a>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-100 dark:border-gray-700 mx-2 my-3"></div>
+
+                <!-- Sign Out -->
+                <div class="px-2 pb-2">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                                class="flex items-center w-full px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200 group">
+                            <div class="flex items-center justify-center w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg mr-3 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors duration-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                            </div>
+                            <span>Sign Out</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

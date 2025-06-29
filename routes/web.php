@@ -123,7 +123,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //    Route::resource('academic-topics.essay-questions', EssayQuestionController::class)->shallow();
 //    Route::resource('academic-topics.true-or-false-questions', TrueOrFalseQuestionController::class)->shallow();
 
-    Route::resource('users', UserController::class)->only(['index', 'show']);
+    Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
 
 
 //    Route::get('academic-subjects/{academic_subject}/examinations/preview', [ExaminationController::class, 'preview'])

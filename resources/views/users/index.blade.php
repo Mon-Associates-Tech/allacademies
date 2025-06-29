@@ -54,10 +54,111 @@
                class="px-3 py-2 text-sm font-medium rounded-md {{ request('online') ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:text-gray-900' }}">
                 {{ request('online') ? 'Show All' : 'Online Only' }}
             </a>
+
+            <!-- Add New User Button -->
+            <button type="button"
+                    onclick="document.getElementById('addUserModal').classList.remove('hidden')"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add  User
+            </button>
+
         </div>
     </div>
 
-    @if ($users->count())
+    <div id="addUserModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Add New User</h3>
+                    <button type="button"
+                            onclick="document.getElementById('addUserModal').classList.add('hidden')"
+                            class="text-gray-400 hover:text-gray-600">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Form -->
+                <form method="POST" action="{{ route('users.store') }}">
+                    @csrf
+
+                    <!-- Name Field -->
+                    <div class="mb-4">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter user's full name">
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter user's email address">
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter a secure password">
+                    </div>
+
+                    <!-- Role Field -->
+                    <div class="mb-6">
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                        <select id="role"
+                                name="role"
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select a role</option>
+                            <option value="admin">Admin</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="student">Student</option>
+                            <option value="librarian">Librarian</option>
+                            <option value="moderator">Moderator</option>
+                            <option value="author">Author</option>
+                            <option value="parent">Parent</option>
+                            <option value="subscriber">Subscriber</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button"
+                                onclick="document.getElementById('addUserModal').classList.add('hidden')"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+@if ($users->count())
         <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg overflow-hidden">
             <x-table>
                 <x-slot name="head">

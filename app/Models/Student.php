@@ -120,7 +120,7 @@ class Student extends Model
     // Get subjects from academic level (as relationship)
     public function levelSubjects()
     {
-        return $this->hasOneThrough(
+        return $this->hasManyThrough(
             AcademicSubject::class,
             AcademicLevel::class,
             'id', // Foreign key on AcademicLevel table

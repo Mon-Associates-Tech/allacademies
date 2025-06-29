@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -55,6 +58,79 @@ class UserController extends Controller
         return view('users.index', [
             'users' => $users,
         ]);
+    }
+
+    /**
+     * Store a newly created user in storage.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function store(Request $request)
+    {
+        $this->authorize('administrate');
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'role' => 'required|in:admin,teacher,student,librarian,moderator,author,parent,subscriber'
+        ]);
+
+        // Create the user
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'is_active' => true,
+        ]);
+
+        // Assign role via many-to-many relationship
+        $user->assignRole($request->role);
+
+        // Create associated model based on role
+        $this->createRoleSpecificAccount($user, $request->role);
+
+        return redirect()->route('users.index')->with('success',
+            "User '{$user->name}' has been created successfully with the role of {$request->role}."
+        );
+    }
+
+    /**
+     * Create role-specific account when user is created
+     *
+     * @param User $user
+     * @param string $role
+     * @return void
+     */
+    private function createRoleSpecificAccount(User $user, string $role): void
+    {
+        switch ($role) {
+            case 'student':
+                if (!$user->student) {
+                    Student::create([
+                        'user_id' => $user->id,
+                        'student_group_id' => null,
+                    ]);
+                }
+                break;
+
+            case 'teacher':
+                if (!$user->teacher) {
+                    Teacher::create([
+                        'user_id' => $user->id,
+                        'department_id' => null,
+                        'hire_date' => now(),
+                    ]);
+                }
+                break;
+
+            // Add other role-specific account creation here as needed
+            // case 'librarian':
+            //     Librarian::create(['user_id' => $user->id]);
+            //     break;
+        }
     }
 
     /**
