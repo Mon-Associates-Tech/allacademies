@@ -351,7 +351,7 @@ Route::get('/mail', static function () {
     });
 })->name('mail.test');
 
-// routes/web.php
+
 Route::get('2fa/verify', [SignInController::class, 'show2faForm'])->name('2fa.verify');
 Route::post('2fa/verify', [SignInController::class, 'verify2fa']);
 Route::post('/2fa/resend', [SignInController::class, 'resend2fa'])->name('2fa.resend');
@@ -388,5 +388,14 @@ Route::middleware([])->prefix('admin')->group(function () {
     })->name('admin.logout-all-users');
 });
 Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
+// Book routes for students
+Route::middleware(['auth'])->group(function () {
+    Route::get('/books', [BookController::class, 'index'])->name('books.index');
+    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
+    Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
+    Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
+    Route::get('/books/{book}/read', [BookController::class, 'read'])->name('books.read');
+    Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
+});
 
 Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');

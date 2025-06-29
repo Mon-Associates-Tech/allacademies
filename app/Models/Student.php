@@ -14,7 +14,7 @@ class Student extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['user_id', 'student_group_id'];
+    protected $fillable = ['user_id', 'student_group_id', 'academic_level_id', 'academic_group_id', 'school_id'];
 
     /**
      * @return LogOptions
@@ -49,7 +49,26 @@ class Student extends Model
 
     public function teachers(): BelongsToMany
     {
-        return $this->belongsToMany(Teacher::class, 'teacher_student')->withTimestamps();
+        return $this->belongsToMany(Teacher::class, 'teacher_student')
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes');
+    }
+
+    public function primaryTeacher()
+    {
+        return $this->belongsToMany(Teacher::class, 'teacher_student')
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes')
+            ->wherePivot('is_primary', true)
+            ->first();
+    }
+
+    public function secondaryTeachers()
+    {
+        return $this->belongsToMany(Teacher::class, 'teacher_student')
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes')
+            ->wherePivot('is_primary', false);
     }
 
     public function enrollments()
@@ -82,6 +101,103 @@ class Student extends Model
         return $this->belongsTo(AcademicGroup::class);
     }
 
+    // Individual subject assignments (overrides/additions to academic level subjects)
+    public function individualSubjects(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicSubject::class, 'student_subject')
+            ->withTimestamps()
+            ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
+    }
+
+    // Main relationship for academic subjects (for eager loading compatibility)
+    public function academicSubjects(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicSubject::class, 'student_subject')
+            ->withTimestamps()
+            ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
+    }
+
+    // Get subjects from academic level (as relationship)
+    public function levelSubjects()
+    {
+        return $this->hasOneThrough(
+            AcademicSubject::class,
+            AcademicLevel::class,
+            'id', // Foreign key on AcademicLevel table
+            'academic_level_id', // Foreign key on AcademicSubject table
+            'academic_level_id', // Local key on Student table
+            'id' // Local key on AcademicLevel table
+        );
+    }
+
+    // Alternative approach - get level subjects via academic level relationship
+    public function subjectsFromLevel()
+    {
+        return $this->academicLevel()->with('academicSubjects');
+    }
+
+    // Helper methods that return collections (not relationships)
+    public function getAllAccessibleSubjects()
+    {
+        $levelSubjects = collect();
+        $individualSubjects = $this->individualSubjects;
+
+        // Get subjects from academic level
+        if ($this->academicLevel) {
+            $levelSubjects = $this->academicLevel->academicSubjects;
+        }
+
+        // Merge with individual assignments, removing duplicates and respecting is_active status
+        $allSubjects = $levelSubjects->keyBy('id');
+
+        foreach ($individualSubjects as $subject) {
+            if ($subject->pivot->is_active) {
+                // Add or keep the subject
+                $allSubjects[$subject->id] = $subject;
+            } else {
+                // Remove the subject if it's marked as inactive (override from level)
+                $allSubjects->forget($subject->id);
+            }
+        }
+
+        return $allSubjects->values();
+    }
+
+    public function getIndividuallyAssignedSubjects()
+    {
+        return $this->individualSubjects()
+            ->wherePivot('is_active', true)
+            ->whereNotIn('academic_subjects.id', function($query) {
+                if ($this->academicLevel) {
+                    $query->select('id')
+                        ->from('academic_subjects')
+                        ->where('academic_level_id', $this->academicLevel->id);
+            } else {
+                $query->selectRaw('NULL')->whereRaw('1=0');
+            }
+        })
+        ->get();
+    }
+
+    public function getRemovedLevelSubjects()
+    {
+        return $this->individualSubjects()
+            ->wherePivot('is_active', false)
+            ->get();
+    }
+
+    // Accessor for getting all accessible subjects as an attribute
+    public function getAccessibleSubjectsAttribute()
+    {
+        return $this->getAllAccessibleSubjects();
+    }
+
+    // Legacy method for backward compatibility - now returns all accessible subjects
+    public function academicSdubjects()
+    {
+        return $this->getAllAccessibleSubjects();
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
@@ -90,5 +206,43 @@ class Student extends Model
     public function bookSubscriptions(): Student|HasMany
     {
         return $this->hasMany(BookSubscription::class);
+    }
+
+    // Add this method to get detailed subject information
+    public function getSubjectDetails()
+    {
+        $details = [
+            'level_subjects' => collect(),
+            'individual_active' => collect(),
+            'individual_removed' => collect(),
+            'total_accessible' => collect()
+        ];
+
+        // Get subjects from academic level
+        if ($this->academicLevel) {
+            $details['level_subjects'] = $this->academicLevel->academicSubjects;
+        }
+
+        // Get individual assignments
+        $individualSubjects = $this->individualSubjects;
+        $details['individual_active'] = $individualSubjects->where('pivot.is_active', true);
+        $details['individual_removed'] = $individualSubjects->where('pivot.is_active', false);
+
+        // Calculate total accessible subjects
+        $allSubjects = $details['level_subjects']->keyBy('id');
+
+        // Add individual active subjects
+        foreach ($details['individual_active'] as $subject) {
+            $allSubjects[$subject->id] = $subject;
+        }
+
+        // Remove individual removed subjects
+        foreach ($details['individual_removed'] as $subject) {
+            $allSubjects->forget($subject->id);
+        }
+
+        $details['total_accessible'] = $allSubjects->values();
+
+        return $details;
     }
 }

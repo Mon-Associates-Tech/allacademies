@@ -6,6 +6,7 @@ use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class AcademicSubject extends Model
 {
@@ -116,5 +117,33 @@ class AcademicSubject extends Model
     }
     public function questions(){
         return $this->hasMany(Question::class);
+    }
+
+    public function studentsWithIndividualAccess(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'student_subject')
+            ->withTimestamps()
+            ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
+    }
+
+    public function studentsWithAccess()
+    {
+        // Get students who have access through academic level OR individual assignment
+        return Student::where(function($query) {
+            $query->whereHas('academicLevel', function($levelQuery) {
+                $levelQuery->whereHas('academicSubjects', function($subjectQuery) {
+                    $subjectQuery->where('academic_subjects.id', $this->id);
+                });
+            })
+            ->orWhereHas('individualSubjects', function($individualQuery) {
+                $individualQuery->where('academic_subjects.id', $this->id)
+                    ->wherePivot('is_active', true);
+            });
+        })
+        // Exclude students who have this subject individually marked as inactive
+        ->whereDoesntHave('individualSubjects', function($query) {
+            $query->where('academic_subjects.id', $this->id)
+                ->wherePivot('is_active', false);
+        });
     }
 }

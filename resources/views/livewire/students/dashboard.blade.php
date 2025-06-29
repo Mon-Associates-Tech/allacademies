@@ -7,7 +7,7 @@
             @livewire('students.self-assessment')
         @elseif($activeTab === 'books')
             @livewire('students.books')
-        @elseif($activeTab === 'schedule')
+        @elseif($activeTab === 'schedules')
             @livewire('students.student-schedule')
         @elseif($activeTab === 'performance')
             @livewire('students.performance-overview')

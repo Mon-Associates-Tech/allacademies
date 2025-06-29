@@ -17,6 +17,22 @@
 
         <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
             <div class="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
+                <!-- General Error Message -->
+                @if($errors->has('error'))
+                    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-red-800">{{ $errors->first('error') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('teams.store') }}" class="space-y-6" id="team-creation-form">
                     @csrf
 
@@ -30,9 +46,12 @@
                             type="text"
                             placeholder="Enter your team name"
                             required
-                            class="team-name-input"
+                            class="team-name-input {{ $errors->has('name') ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : '' }}"
                             maxlength="100"
                         />
+                        @error('name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <p class="mt-1 text-xs text-gray-500">
                             Choose a unique and descriptive name for your team (2-100 characters)
                         </p>
@@ -50,10 +69,13 @@
                             name="description"
                             id="description"
                             rows="4"
-                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm {{ $errors->has('description') ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : '' }}"
                             placeholder="Describe your team's purpose, goals, or focus areas..."
                             maxlength="500"
                         >{{ old('description') }}</textarea>
+                        @error('description')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <p class="mt-1 text-xs text-gray-500">
                             Optional: Help team members understand what this team is about
                         </p>
@@ -65,11 +87,14 @@
                     <!-- Team Type -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Team Type
+                            Team Type <span class="text-red-500">*</span>
                         </label>
+                        @error('type')
+                            <p class="mb-3 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50">
-                                <input type="radio" name="type" value="academic" class="sr-only" checked>
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50 {{ $errors->has('type') ? 'border-red-300' : '' }}">
+                                <input type="radio" name="type" value="academic" class="sr-only" {{ old('type', 'academic') === 'academic' ? 'checked' : '' }}>
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="flex items-center">
@@ -86,8 +111,8 @@
                                 <span class="radio-indicator"></span>
                             </label>
 
-                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50">
-                                <input type="radio" name="type" value="professional" class="sr-only">
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50 {{ $errors->has('type') ? 'border-red-300' : '' }}">
+                                <input type="radio" name="type" value="professional" class="sr-only" {{ old('type') === 'professional' ? 'checked' : '' }}>
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="flex items-center">
@@ -104,8 +129,8 @@
                                 <span class="radio-indicator"></span>
                             </label>
 
-                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50">
-                                <input type="radio" name="type" value="personal" class="sr-only">
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50 {{ $errors->has('type') ? 'border-red-300' : '' }}">
+                                <input type="radio" name="type" value="personal" class="sr-only" {{ old('type') === 'personal' ? 'checked' : '' }}>
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="flex items-center">
@@ -127,11 +152,14 @@
                     <!-- Privacy Settings -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Privacy Settings
+                            Privacy Settings <span class="text-red-500">*</span>
                         </label>
+                        @error('privacy')
+                            <p class="mb-3 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <div class="space-y-3">
-                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50">
-                                <input type="radio" name="privacy" value="private" class="sr-only" checked>
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50 {{ $errors->has('privacy') ? 'border-red-300' : '' }}">
+                                <input type="radio" name="privacy" value="private" class="sr-only" {{ old('privacy', 'private') === 'private' ? 'checked' : '' }}>
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="flex items-center">
@@ -148,8 +176,8 @@
                                 <span class="radio-indicator"></span>
                             </label>
 
-                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50">
-                                <input type="radio" name="privacy" value="public" class="sr-only">
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none hover:bg-gray-50 {{ $errors->has('privacy') ? 'border-red-300' : '' }}">
+                                <input type="radio" name="privacy" value="public" class="sr-only" {{ old('privacy') === 'public' ? 'checked' : '' }}>
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="flex items-center">
@@ -159,7 +187,7 @@
                                             <span class="block text-sm font-medium text-gray-900">Public Team</span>
                                         </span>
                                         <span class="mt-1 flex items-center text-xs text-gray-500">
-                                            Team is discoverable and anyone can request to join.
+                                            Team is discoverable. Anyone can request to join.
                                         </span>
                                     </span>
                                 </span>
@@ -168,197 +196,110 @@
                         </div>
                     </div>
 
-                    <!-- Initial Settings -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Initial Settings
-                        </label>
-                        <div class="space-y-3">
+                    <!-- Additional Options -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <div class="space-y-4">
                             <div class="flex items-center">
-                                <input
-                                    id="generate_code"
-                                    name="generate_code"
-                                    type="checkbox"
-                                    checked
-                                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                >
-                                <label for="generate_code" class="ml-3 block text-sm text-gray-700">
-                                    Generate joining code immediately
-                                    <span class="block text-xs text-gray-500">Members can join using an 8-character code</span>
+                                <input id="generate_code" name="generate_code" type="checkbox" value="1" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" {{ old('generate_code', true) ? 'checked' : '' }}>
+                                <label for="generate_code" class="ml-2 block text-sm text-gray-900">
+                                    Generate joining code
                                 </label>
                             </div>
+                            <p class="text-xs text-gray-500 ml-6">
+                                Creates a unique code that others can use to join your team
+                            </p>
 
                             <div class="flex items-center">
-                                <input
-                                    id="auto_activate"
-                                    name="auto_activate"
-                                    type="checkbox"
-                                    checked
-                                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                >
-                                <label for="auto_activate" class="ml-3 block text-sm text-gray-700">
-                                    Activate team immediately
-                                    <span class="block text-xs text-gray-500">Team becomes active and ready for collaboration</span>
+                                <input id="auto_activate" name="auto_activate" type="checkbox" value="1" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" {{ old('auto_activate', true) ? 'checked' : '' }}>
+                                <label for="auto_activate" class="ml-2 block text-sm text-gray-900">
+                                    Set as active team
                                 </label>
                             </div>
+                            <p class="text-xs text-gray-500 ml-6">
+                                Automatically switch to this team after creation
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Submit Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-3 pt-6">
-                        <x-button.primary type="submit" class="flex-1 justify-center">
-                            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Submit Button -->
+                    <div class="pt-6">
+                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             Create Team
-                        </x-button.primary>
-
-                        <a href="{{ route('teams.index') }}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                            Cancel
-                        </a>
+                        </button>
                     </div>
                 </form>
-
-                <!-- Help Section -->
-                <div class="mt-8 border-t border-gray-200 pt-6">
-                    <div class="text-center">
-                        <h3 class="text-sm font-medium text-gray-700 mb-3">Need Help?</h3>
-                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
-                            <a href="#" class="text-primary-600 hover:text-primary-500">
-                                Team Management Guide
-                            </a>
-                            <a href="#" class="text-primary-600 hover:text-primary-500">
-                                Collaboration Best Practices
-                            </a>
-                            <a href="{{ route('teams.joining') }}" class="text-primary-600 hover:text-primary-500">
-                                Join Existing Team
-                            </a>
-                            <a href="#" class="text-primary-600 hover:text-primary-500">
-                                Contact Support
-                            </a>
-                        </div>
+            </div>
+            <!-- Help Section -->
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <div class="text-center">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Need Help?</h3>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
+                        <a href="#" class="text-primary-600 hover:text-primary-500">
+                            Team Management Guide
+                        </a>
+                        <a href="#" class="text-primary-600 hover:text-primary-500">
+                            Collaboration Best Practices
+                        </a>
+                        <a href="{{ route('teams.joining') }}" class="text-primary-600 hover:text-primary-500">
+                            Join Existing Team
+                        </a>
+                        <a href="#" class="text-primary-600 hover:text-primary-500">
+                            Contact Support
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Enhanced JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Character counters
             const nameInput = document.querySelector('input[name="name"]');
-            const descriptionInput = document.querySelector('textarea[name="description"]');
             const nameCounter = document.getElementById('name-counter');
+            const descriptionInput = document.getElementById('description');
             const descriptionCounter = document.getElementById('description-counter');
 
-            function updateCounter(input, counter) {
-                const length = input.value.length;
-                counter.textContent = length;
-
-                // Update color based on length
-                if (length > input.maxLength * 0.9) {
-                    counter.classList.add('text-red-500');
-                    counter.classList.remove('text-gray-400', 'text-yellow-500');
-                } else if (length > input.maxLength * 0.7) {
-                    counter.classList.add('text-yellow-500');
-                    counter.classList.remove('text-gray-400', 'text-red-500');
-                } else {
-                    counter.classList.add('text-gray-400');
-                    counter.classList.remove('text-red-500', 'text-yellow-500');
-                }
-            }
-
             if (nameInput && nameCounter) {
-                nameInput.addEventListener('input', () => updateCounter(nameInput, nameCounter));
-                updateCounter(nameInput, nameCounter); // Initialize
+                nameInput.addEventListener('input', function() {
+                    nameCounter.textContent = this.value.length;
+                });
+                // Initialize counter
+                nameCounter.textContent = nameInput.value.length;
             }
 
             if (descriptionInput && descriptionCounter) {
-                descriptionInput.addEventListener('input', () => updateCounter(descriptionInput, descriptionCounter));
-                updateCounter(descriptionInput, descriptionCounter); // Initialize
+                descriptionInput.addEventListener('input', function() {
+                    descriptionCounter.textContent = this.value.length;
+                });
+                // Initialize counter
+                descriptionCounter.textContent = descriptionInput.value.length;
             }
 
             // Radio button styling
             const radioInputs = document.querySelectorAll('input[type="radio"]');
-            radioInputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    // Remove selected state from all radio groups with same name
-                    const groupInputs = document.querySelectorAll(`input[name="${this.name}"]`);
-                    groupInputs.forEach(groupInput => {
-                        const label = groupInput.closest('label');
-                        if (groupInput.checked) {
-                            label.classList.add('border-primary-500', 'ring-2', 'ring-primary-500');
-                            label.classList.remove('border-gray-300');
-                        } else {
-                            label.classList.remove('border-primary-500', 'ring-2', 'ring-primary-500');
-                            label.classList.add('border-gray-300');
-                        }
+            radioInputs.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    // Remove selected state from all radio groups with the same name
+                    const sameNameRadios = document.querySelectorAll(`input[name="${this.name}"]`);
+                    sameNameRadios.forEach(function(r) {
+                        r.closest('label').classList.remove('ring-2', 'ring-primary-500', 'border-primary-500');
                     });
+
+                    // Add selected state to the checked radio
+                    if (this.checked) {
+                        this.closest('label').classList.add('ring-2', 'ring-primary-500', 'border-primary-500');
+                    }
                 });
-            });
 
-            // Initialize radio button styling
-            radioInputs.forEach(input => {
-                if (input.checked) {
-                    input.dispatchEvent(new Event('change'));
+                // Initialize selected state
+                if (radio.checked) {
+                    radio.closest('label').classList.add('ring-2', 'ring-primary-500', 'border-primary-500');
                 }
             });
-
-            // Form validation
-            const form = document.getElementById('team-creation-form');
-            form.addEventListener('submit', function(e) {
-                const teamName = nameInput.value.trim();
-
-                if (teamName.length < 2) {
-                    e.preventDefault();
-                    alert('Team name must be at least 2 characters long.');
-                    nameInput.focus();
-                    return false;
-                }
-
-                if (teamName.length > 100) {
-                    e.preventDefault();
-                    alert('Team name cannot exceed 100 characters.');
-                    nameInput.focus();
-                    return false;
-                }
-            });
-
-            // Auto-focus on name input
-            if (nameInput) {
-                nameInput.focus();
-            }
         });
     </script>
-
-    <!-- Custom CSS for radio indicators -->
-    <style>
-        .radio-indicator {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #d1d5db;
-            border-radius: 50%;
-            background: white;
-        }
-
-        input[type="radio"]:checked + span + .radio-indicator {
-            border-color: #3b82f6;
-            background-color: #3b82f6;
-        }
-
-        input[type="radio"]:checked + span + .radio-indicator::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: white;
-        }
-    </style>
 </x-layouts.app>

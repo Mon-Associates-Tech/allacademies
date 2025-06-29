@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Teacher extends Model
 {
@@ -33,7 +34,25 @@ class Teacher extends Model
 
     public function assignedStudents()
     {
-        return $this->belongsToMany(Student::class, 'teacher_student')->withTimestamps();
+        return $this->belongsToMany(Student::class, 'teacher_student')
+        ->withTimestamps()
+        ->withPivot('is_primary', 'notes');
+    }
+
+    public function primaryStudents()
+    {
+        return $this->belongsToMany(Student::class, 'teacher_student')
+        ->withTimestamps()
+        ->withPivot('is_primary', 'notes')
+        ->wherePivot('is_primary', true);
+    }
+
+    public function secondaryStudents()
+    {
+        return $this->belongsToMany(Student::class, 'teacher_student')
+        ->withTimestamps()
+        ->withPivot('is_primary', 'notes')
+        ->wherePivot('is_primary', false);
     }
 
     public function subjects(){
@@ -52,18 +71,34 @@ class Teacher extends Model
         return $this->belongsTo(School::class);
     }
 
-    public function academicLevels(){
-        return $this->belongsToMany(AcademicLevel::class, 'teacher_academic_level', 'teacher_id', 'academic_level_id');
+    public function academicLevels(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicLevel::class, 'academic_level_teacher', 'teacher_id', 'academic_level_id')
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes');
     }
 
-    public function academicGroups()
+    public function academicGroups(): BelongsToMany
     {
-        return $this->belongsToMany(AcademicGroup::class, 'teacher_academic_group', 'teacher_id', 'academic_group_id');
+        return $this->belongsToMany(AcademicGroup::class, 'academic_group_teacher', 'teacher_id', 'academic_group_id')
+            ->withTimestamps()
+            ->withPivot('is_primary', 'notes');
+    }
+
+    // Helper methods for primary relationships
+    public function primaryAcademicLevels(): BelongsToMany
+    {
+        return $this->academicLevels()->wherePivot('is_primary', true);
+    }
+
+    public function primaryAcademicGroups(): BelongsToMany
+    {
+        return $this->academicGroups()->wherePivot('is_primary', true);
     }
 
     public function academicSubjects()
     {
-        return $this->belongsToMany(AcademicSubject::class, 'teacher_academic_subject', 'teacher_id', 'academic_subject_id');
+        return $this->belongsToMany(AcademicSubject::class, 'subject_teacher', 'teacher_id', 'subject_id');
     }
 
     public function assignments(){

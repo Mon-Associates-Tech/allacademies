@@ -4,19 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use App\Enums\TeamStatus;
+use App\Models\User;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class TeamController extends Controller
 {
     public function activate(Team $team)
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $team->load('members', 'owner');
@@ -31,11 +39,11 @@ class TeamController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function index()
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $user->load('currentTeam');
@@ -84,7 +92,7 @@ class TeamController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Factory|View|Application|\Illuminate\View\View|object
      */
     public function create()
     {
@@ -94,10 +102,11 @@ class TeamController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return RedirectResponse|null
+     * @throws \Throwable
      */
-public function store(Request $request)
+public function store(Request $request): ?RedirectResponse
 {
     $request->validate([
         'name' => ['required', 'string', 'min:2', 'max:100'],
