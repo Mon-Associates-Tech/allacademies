@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('academic_subject_id')->constrained()->onDelete('cascade');
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
             $table->integer('duration_in_minutes');
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('ends_at')->nullable();;
             $table->boolean('is_randomized')->default(false);
             $table->enum('status', ['draft', 'published', 'completed'])->default('draft');
             $table->text('instructions')->nullable();
