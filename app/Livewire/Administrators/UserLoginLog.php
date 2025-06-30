@@ -4,6 +4,7 @@ namespace App\Livewire\Administrators;
 
 use App\Models\UserLogin;
 use App\Services\UserLoginService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -88,7 +89,7 @@ class UserLoginLog extends Component
             switch ($sessionDriver) {
                 case 'database':
                     // Delete from sessions table
-                    DB::table('sessions')
+                        DB::table('sessions')
                         ->where('id', $sessionId)
                         ->orWhere('user_id', $userId)
                         ->delete();
