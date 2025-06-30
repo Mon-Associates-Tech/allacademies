@@ -155,7 +155,7 @@ class StudentProfile extends Component
             ->whereMonth('created_at', Carbon::now()->month)
             ->count();
 
-        $memberSince = $this->student->created_at->diffForHumans();
+        $memberSince = $this->student->created_at?->diffForHumans();
 
         return [
             'total_assessments' => $totalAssessments,
