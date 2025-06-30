@@ -40,11 +40,11 @@
         <div class="space-y-8">
 
             @auth
-                @if(auth()->user()->hasAnyRole(['admin', 'owner']) && auth()->user()->mainRole() === 'admin' )
+                @if(in_array(auth()->user()->role, ['admin', 'owner', 'moderator']))
                     @livewire('administrators.admin-navigation', [
                         'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
-                @elseif(auth()->user()->hasRole('student') )
+                @elseif(auth()->user()->role === 'student' )
                     @livewire('students.student-navigation', [
                         'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
