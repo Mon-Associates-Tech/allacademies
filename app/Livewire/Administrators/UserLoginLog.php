@@ -23,6 +23,7 @@ class UserLoginLog extends Component
     public $sortDirection = 'desc';
     public $viewMode = 'sessions'; // sessions, activities
     public $showFilters = false;
+    public $page = 1;
 
     protected $queryString = [
         'searchTerm' => ['except' => ''],
