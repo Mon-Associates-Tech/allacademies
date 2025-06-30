@@ -1,343 +1,439 @@
-<div x-data="{
-    currentView: 'calendar'
-}">
-    <!-- File: resources/views/livewire/students/schedule.blade.php -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Schedule & Activities</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Track all your academic activities, assessments, and progress
+                    </p>
+                </div>
 
-    <div class="mb-4 flex justify-between items-center">
-        <div>
-            <label for="statusFilter" class="block text-sm font-medium text-gray-700">Filter by Status</label>
-            <select id="statusFilter" wire:model.live="selectedStatus"
-                    wire:change="$refresh"
-                    class="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                <option value="">All</option>
-                <option value="completed">Completed</option>
-                <option value="in_progress">In Progress</option>
-                <option value="needs_grading">Needs Grading</option>
-            </select>
+                <!-- View Mode Toggle -->
+                <div class="flex space-x-2">
+                    <button wire:click="setViewMode('calendar')"
+                            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ $viewMode === 'calendar' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                        <i class="fas fa-calendar mr-2"></i>Calendar
+                    </button>
+                    <button wire:click="setViewMode('list')"
+                            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ $viewMode === 'list' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                        <i class="fas fa-list mr-2"></i>List
+                    </button>
+                    <button wire:click="setViewMode('week')"
+                            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ $viewMode === 'week' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                        <i class="fas fa-calendar-week mr-2"></i>Week
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Optional: Date Navigation -->
-        <div class="flex space-x-2">
-            <button @click="$wire.previousPeriod()" class="bg-gray-200 px-3 py-2 rounded">Previous</button>
-            <button @click="$wire.nextPeriod()" class="bg-gray-200 px-3 py-2 rounded">Next</button>
-        </div>
-    </div>
-    <!-- Tabs -->
-    <div class="mb-4 border-b border-gray-200">
-        <ul class="flex space-x-6" role="tablist">
-            <li role="presentation">
-                <button type="button"
-                        @click="currentView = 'calendar'; $wire.set('selectedEvent', null)"
-                        class="py-4 px-1 font-medium text-sm border-b-2"
-                        :class="{
-                            'border-indigo-500 text-indigo-600': currentView === 'calendar',
-                            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentView !== 'calendar'
-                        }">
-                    Calendar View
-                </button>
-            </li>
-            <li role="presentation">
-                <button type="button"
-                        @click="currentView = 'list'; $wire.set('selectedEvent', null)"
-                        class="py-4 px-1 font-medium text-sm border-b-2"
-                        :class="{
-                            'border-indigo-500 text-indigo-600': currentView === 'list',
-                            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentView !== 'list'
-                        }">
-                    List View
-                </button>
-            </li>
-            <li role="presentation">
-                <button type="button"
-                        @click="currentView = 'grid'; $wire.set('selectedEvent', null)"
-                        class="py-4 px-1 font-medium text-sm border-b-2"
-                        :class="{
-                            'border-indigo-500 text-indigo-600': currentView === 'grid',
-                            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentView !== 'grid'
-                        }">
-                    Grid View
-                </button>
-            </li>
-        </ul>
-    </div>
+        <!-- Filter Section -->
+        <div class="px-6 py-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by:</label>
 
-    <!-- Calendar View -->
-    <div x-show="currentView === 'calendar'" class="mt-4 bg-white p-4 rounded-lg shadow">
-        <div id="calendar"></div>
-    </div>
+                <button wire:click="setFilterType('all')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 {{ $filterType === 'all' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                    All Activities
+                </button>
 
-<!-- List View -->
-<div x-show="currentView === 'list'" class="mt-4">
-    <div class="overflow-x-auto">
-        <div class="min-w-full inline-block align-middle">
-            <div class="overflow-hidden border-b border-gray-200 dark:border-gray-700 shadow-sm sm:rounded-lg">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Assessment
-                            </th>
-                            <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Date & Time
-                            </th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col" class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Score
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <template x-for="event in {{ json_encode($assessments) }}" :key="event.id">
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer" @click="$wire.openEventDetails(event)">
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="event.title"></div>
-                                    <div class="md:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        <span x-text="event.formatted_date"></span>
-                                        <span x-text="event.formatted_time"></span>
-                                    </div>
-                                </td>
-                                <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-gray-100" x-text="event.formatted_date"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="event.formatted_time"></div>
-                                    <div class="text-xs text-gray-400" x-text="event.relative_date"></div>
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                        :class="{
-                                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': event.status === 'completed',
-                                            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': event.status === 'in_progress',
-                                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': event.status === 'needs_grading',
-                                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': !event.status
-                                        }"
-                                        x-text="event.status ? event.status.replace('_', ' ') : 'pending'">
-                                    </span>
-                                </td>
-                                <td class="hidden md:table-cell px-4 py-4 whitespace-nowrap text-sm">
-                                    <span x-show="event.status === 'completed'"
-                                        :class="{'text-green-600 dark:text-green-400': event.score >= 70, 'text-red-600 dark:text-red-400': event.score < 70}"
-                                        x-text="event.score + '%'">
-                                    </span>
-                                    <span x-show="event.status === 'needs_grading'" class="text-yellow-600 dark:text-yellow-400">
-                                        Pending
-                                    </span>
-                                    <span x-show="event.status === 'in_progress'" class="text-gray-400">
-                                        -
-                                    </span>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
+                <button wire:click="setFilterType('assessments')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 {{ $filterType === 'assessments' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                    <i class="fas fa-clipboard-check mr-1"></i>Assessments
+                </button>
+
+                <button wire:click="setFilterType('assignments')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 {{ $filterType === 'assignments' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                    <i class="fas fa-tasks mr-1"></i>Assignments
+                </button>
+
+                <button wire:click="setFilterType('reading')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 {{ $filterType === 'reading' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                    <i class="fas fa-book-open mr-1"></i>Reading
+                </button>
+
+                <button wire:click="setFilterType('lessons')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 {{ $filterType === 'lessons' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                    <i class="fas fa-chalkboard-teacher mr-1"></i>Lessons
+                </button>
             </div>
         </div>
     </div>
-</div>
 
-    <!-- Grid View -->
-    <div x-show="currentView === 'grid'" class="mt-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <template x-for="event in {{ json_encode($assessments) }}" :key="event.id">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer group"
-                     @click="$wire.openEventDetails(event)">
-                    <div class="p-4">
-                        <!-- Title with subject icon -->
-                        <div class="flex items-start space-x-3 mb-3">
-                            <div class="rounded-full p-2 bg-indigo-100 dark:bg-indigo-900/50">
-                                <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <h4 x-text="event.title" class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></h4>
-                        </div>
+    <!-- Statistics Cards -->
+    @php
+        $weeklyStats = $this->getWeeklyStats();
+        $monthlyStats = $this->getMonthlyStats();
+    @endphp
 
-                        <!-- Status and Score -->
-                        <div class="flex items-center justify-between mb-3">
-                        <span x-text="event.status"
-                              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                              :class="{
-                                  'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': event.status === 'completed',
-                                  'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': event.status === 'in_progress',
-                                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': event.status === 'needs_grading'
-                              }">
-                        </span>
-                            <span x-show="event.status === 'completed'"
-                                  x-text="event.percentage_score + '%'"
-                                  :class="{
-                                  'text-green-600 dark:text-green-400': event.percentage_score >= 70,
-                                  'text-red-600 dark:text-red-400': event.percentage_score < 70
-                              }"
-                                  class="text-sm font-semibold">
-                        </span>
-                        </div>
-
-                        <!-- Date and Time -->
-                        <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center space-x-2">
-                            <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <div>
-                                <span x-text="event.formatted_date"></span>
-                                <span x-text="event.formatted_time"></span>
-                                <span class="text-xs opacity-75" x-text="'(' + event.relative_date + ')'"></span>
-                            </div>
-                        </div>
-                    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                    <i class="fas fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
                 </div>
-            </template>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">This Week</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $weeklyStats['assessments_completed'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">Assessments completed</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                    <i class="fas fa-percentage text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Average Score</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($weeklyStats['average_score'] ?? 0, 1) }}%</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">This week</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                    <i class="fas fa-book text-purple-600 dark:text-purple-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Reading Progress</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($weeklyStats['books_progress'] ?? 0, 1) }}%</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">Average this week</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                    <i class="fas fa-calendar-check text-orange-600 dark:text-orange-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $monthlyStats['total_activities'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">Total activities</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modal -->
-    <!-- Modal -->
-    <div x-show="$wire.selectedEvent !== null"
-         x-cloak
-         class="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-75 flex items-center justify-center"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
-
-        <div class="bg-white w-full max-w-2xl mx-auto rounded-xl ring-slate-600 inset-3 ring-4 shadow-lg z-50 overflow-y-auto"
-             x-data="{ questions: [] }"
-             x-init="questions = $wire.selectedEvent && $wire.selectedEvent.questions ? $wire.selectedEvent.questions : []">
-
-            <!-- Modal content wrapper with transition -->
-            <div class="bg-white w-full max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto"
-                 x-show="$wire.selectedEvent !== null"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="transform opacity-0 scale-95"
-                 x-transition:enter-end="transform opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-300"
-                 x-transition:leave-start="transform opacity-100 scale-100"
-                 x-transition:leave-end="transform opacity-0 scale-95">
-
-                <header class="px-4 py-4 border-b border-b-gray-300 flex justify-between items-center">
-                    <h2 class="text-lg font-bold" x-text="$wire.selectedEvent?.title"></h2>
-                    <p class="text-sm text-gray-500">
-                        <span x-text="$wire.selectedEvent?.formatted_date"></span>,
-                        <span x-text="$wire.selectedEvent?.formatted_time"></span>
-                        (<span x-text="$wire.selectedEvent?.relative_date"></span>)
-                    </p>
-
-                    <button @click="$wire.set('selectedEvent', null)"
-                            class="text-gray-500 rounded-lg bg-white border border-gray-200 p-1 hover:text-gray-800"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 transform scale-90"
-                            x-transition:enter-end="opacity-100 transform scale-100">
-                        <svg class="w-6 h-6 opacity-75" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                </header>
-            <main class="p-4">
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <p><strong>Subject:</strong> <span x-text="$wire.selectedEvent?.subject || 'N/A'"></span></p>
-                        <p><strong>Book:</strong> <span x-text="$wire.selectedEvent?.book || 'N/A'"></span></p>
+    <!-- Main Content -->
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        @if($viewMode === 'calendar')
+            <!-- Calendar View -->
+            <div class="p-6">
+                <!-- Calendar Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $monthName }}</h2>
+                    <div class="flex space-x-2">
+                        <button wire:click="changeMonth('prev')"
+                                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button wire:click="changeMonth('next')"
+                                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
-                    <div class="flex justify-between">
-                        <p><strong>Status:</strong>
-                            <span :class="{
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800': $wire.selectedEvent?.status === 'completed',
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800': $wire.selectedEvent?.status === 'in_progress',
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800': $wire.selectedEvent?.status === 'needs_grading',
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800': !$wire.selectedEvent?.status || $wire.selectedEvent?.status === 'N/A'
-    }">
-        <span x-text="{
-            'completed': 'Completed',
-            'in_progress': 'In Progress',
-            'needs_grading': 'Needs Grading',
-            'N/A': 'N/A'
-        }[$wire.selectedEvent?.status || 'N/A']"></span>
-    </span>
-                        </p>
+                </div>
 
-                        <p><strong>Score:</strong>
-                            <span x-text="$wire.selectedEvent?.score + '/' + $wire.selectedEvent?.max_score"
-                                  :class="{
-                                      'text-green-600': $wire.selectedEvent?.percentage >= 70,
-                                      'text-yellow-600': $wire.selectedEvent?.percentage < 70 && $wire.selectedEvent?.percentage >= 50,
-                                      'text-red-600': $wire.selectedEvent?.percentage < 50
-                                  }"></span>
-                        </p>
-                    </div>
-                    <hr class="opacity-50">
-                    <h4 class="font-semibold">Questions & Answers</h4>
-                    <template x-if="$wire.selectedEventQuestions.length > 0 && $wire.selectedEventQuestions">
-                        <ul class="space-y-4">
-                            <template x-for="question in $wire.selectedEventQuestions" key="question.id">
-                                <li class="border border-gray-200 p-3 rounded-md bg-gray-50">
-                                    <p x-text="question.question"></p>
-                                    <div class="mt-2 pl-4 border-l-2"
-                                         :class="{
-                                             'border-green-500': question.isCorrect,
-                                             'border-red-500': !question.isCorrect
-                                         }">
-                                        <p><strong>Your Answer:</strong> <span x-text="question.studentAnswer || 'Not answered'"></span></p>
-                                        <p><strong>Correct Answer:</strong> <span x-text="question.correctAnswer || 'N/A'"></span></p>
-                                        <div class="flex items-center mt-1">
-                                            <template x-if="question.isCorrect">
-                                                <!-- Green checkmark SVG -->
-                                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                            </template>
-                                            <template x-if="!question.isCorrect && question.studentAnswer">
-                                                <!-- Red cross SVG -->
-                                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                </svg>
-                                            </template>
+                <!-- Calendar Grid -->
+                <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                    <!-- Week Day Headers -->
+                    @foreach($weekDays as $day)
+                        <div class="bg-gray-50 dark:bg-gray-800 p-3 text-center">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $day }}</span>
+                        </div>
+                    @endforeach
+
+                    <!-- Calendar Days -->
+                    @foreach($calendarData as $week)
+                        @foreach($week as $day)
+                            <div class="bg-white dark:bg-gray-900 min-h-[120px] p-2 {{ !$day['isCurrentMonth'] ? 'opacity-50' : '' }}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <button wire:click="selectDate('{{ $day['date']->format('Y-m-d') }}')"
+                                            class="text-sm font-medium {{ $day['isToday'] ? 'bg-blue-600 text-white' : ($day['isCurrentMonth'] ? 'text-gray-900 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-900' : 'text-gray-400') }} w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-200">
+                                        {{ $day['date']->day }}
+                                    </button>
+                                    @if($day['activityCount'] > 0)
+                                        <span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs px-2 py-1 rounded-full">
+                                            {{ $day['activityCount'] }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Activity indicators -->
+                                <div class="space-y-1">
+                                    @foreach($day['activities']->take(3) as $activity)
+                                        <div class="text-xs p-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 truncate cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors duration-200"
+                                             wire:click="showActivityDetails({{ $activity->id }}, 'assessment')">
+                                            {{ Str::limit($activity->title, 20) }}
                                         </div>
-
-                                    </div>
-                                </li>
-                            </template>
-                        </ul>
-                    </template>
-
-                    <template x-if="$wire.selectedEventQuestions.length === 0">
-                        <p class="text-gray-500 italic">No questions or results available.</p>
-                    </template>
+                                    @endforeach
+                                    @if($day['activityCount'] > 3)
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                            +{{ $day['activityCount'] - 3 }} more
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @endforeach
                 </div>
-            </main>
-            <footer class="px-4 py-2 border-t border-t-gray-400 flex justify-end">
-                <button @click="$wire.set('selectedEvent', null)" class="bg-indigo-600 text-white px-4 py-2 rounded">Close</button>
-            </footer>
-        </div>
+            </div>
+
+        @elseif($viewMode === 'list')
+            <!-- List View -->
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                    Activities for {{ $selectedDate->format('F j, Y') }}
+                </h2>
+
+                @if($activities->isEmpty())
+                    <div class="text-center py-12">
+                        <div class="w-24 h-24 mx-auto mb-4">
+                            <i class="fas fa-calendar-day text-gray-300 dark:text-gray-600 text-6xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No activities found</h3>
+                        <p class="text-gray-500 dark:text-gray-400">There are no activities for the selected date and filter.</p>
+                    </div>
+                @else
+                    <div class="space-y-4">
+                        @foreach($activities as $activity)
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                                 wire:click="showActivityDetails({{ $activity['id'] }}, '{{ $activity['type'] }}')">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start space-x-4">
+                                        <div class="p-2 rounded-lg bg-{{ $activity['color'] }}-100 text-{{ $activity['color'] }}-600 dark:bg-{{ $activity['color'] }}-900/30 dark:text-{{ $activity['color'] }}-400">
+                                            <i class="{{ $activity['icon'] }} text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ $activity['title'] }}</h3>
+                                            @if(isset($activity['subject']))
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $activity['subject'] }}</p>
+                                            @endif
+                                            @if(isset($activity['topic']))
+                                                <p class="text-xs text-gray-500 dark:text-gray-500">{{ $activity['topic'] }}</p>
+                                            @endif
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                {{ $activity['date']->format('M j, Y \a\t g:i A') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        @if($activity['type'] === 'assessment' && isset($activity['percentage']))
+                                            <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                                {{ number_format($activity['percentage'], 1) }}%
+                                            </div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $activity['score'] }}/{{ $activity['max_score'] }}
+                                            </div>
+                                        @elseif($activity['type'] === 'reading' && isset($activity['progress']))
+                                            <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                                {{ number_format($activity['progress'], 1) }}%
+                                            </div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $activity['pages_read'] ?? 0 }}/{{ $activity['total_pages'] ?? 0 }} pages
+                                            </div>
+                                        @endif
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $activity['color'] }}-100 text-{{ $activity['color'] }}-800 dark:bg-{{ $activity['color'] }}-900 dark:text-{{ $activity['color'] }}-200 mt-2">
+                                            {{ ucfirst(str_replace('_', ' ', $activity['status'])) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="mt-6">
+                        {{ $activities->links() }}
+                    </div>
+                @endif
+            </div>
+
+        @elseif($viewMode === 'week')
+            <!-- Week View -->
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                    Week of {{ $selectedDate->startOfWeek()->format('M j') }} - {{ $selectedDate->endOfWeek()->format('M j, Y') }}
+                </h2>
+
+                <div class="grid grid-cols-7 gap-4">
+                    @php
+                        $weekStart = $selectedDate->copy()->startOfWeek();
+                    @endphp
+                    @for($i = 0; $i < 7; $i++)
+                        @php
+                            $currentDay = $weekStart->copy()->addDays($i);
+                            $dayActivities = $activities->filter(function($activity) use ($currentDay) {
+                                return $activity['date']->isSameDay($currentDay);
+                            });
+                        @endphp
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-h-[200px]">
+                            <div class="text-center mb-3">
+                                <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    {{ $currentDay->format('D') }}
+                                </div>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white {{ $currentDay->isToday() ? 'bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto' : '' }}">
+                                    {{ $currentDay->day }}
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                @foreach($dayActivities->take(5) as $activity)
+                                    <div class="text-xs p-2 rounded bg-{{ $activity['color'] }}-100 text-{{ $activity['color'] }}-800 dark:bg-{{ $activity['color'] }}-900 dark:text-{{ $activity['color'] }}-200 cursor-pointer hover:bg-{{ $activity['color'] }}-200 dark:hover:bg-{{ $activity['color'] }}-800 transition-colors duration-200"
+                                         wire:click="showActivityDetails({{ $activity['id'] }}, '{{ $activity['type'] }}')">
+                                        <div class="font-medium truncate">{{ Str::limit($activity['title'], 15) }}</div>
+                                        @if(isset($activity['percentage']))
+                                            <div class="text-xs opacity-75">{{ number_format($activity['percentage'], 0) }}%</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                                @if($dayActivities->count() > 5)
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                        +{{ $dayActivities->count() - 5 }} more
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+        @endif
     </div>
+
+    <!-- Activity Detail Modal -->
+    @if($showActivityModal && $selectedActivity)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeActivityModal"></div>
+
+                <div class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white dark:bg-gray-900 px-6 pt-6 pb-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-3 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                    @if($selectedActivity instanceof \App\Models\Assessment)
+                                        <i class="fas fa-clipboard-check text-xl"></i>
+                                    @elseif($selectedActivity instanceof \App\Models\BookReadingProgress)
+                                        <i class="fas fa-book-open text-xl"></i>
+                                    @else
+                                        <i class="fas fa-tasks text-xl"></i>
+                                    @endif
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                        @if($selectedActivity instanceof \App\Models\Assessment)
+                                            {{ $selectedActivity->title }}
+                                        @elseif($selectedActivity instanceof \App\Models\BookReadingProgress)
+                                            Reading: {{ $selectedActivity->book->title }}
+                                        @endif
+                                    </h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        @if($selectedActivity instanceof \App\Models\Assessment)
+                                            {{ $selectedActivity->subject?->name }}
+                                        @elseif($selectedActivity instanceof \App\Models\BookReadingProgress)
+                                            {{ $selectedActivity->book->subject?->name }}
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <button wire:click="closeActivityModal"
+                                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-800 px-6 py-4 space-y-4">
+                        @if($selectedActivity instanceof \App\Models\Assessment)
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Score</label>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                        {{ $selectedActivity->score ?? 'N/A' }}/{{ $selectedActivity->max_score ?? 'N/A' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Percentage</label>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                        {{ $selectedActivity->percentage_score ? number_format($selectedActivity->percentage_score, 1) . '%' : 'N/A' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if($selectedActivity->start_time && $selectedActivity->end_time)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label>
+                                    <p class="text-sm text-gray-900 dark:text-white">
+                                        {{ $selectedActivity->start_time->format('M j, Y g:i A') }} -
+                                        {{ $selectedActivity->end_time->format('g:i A') }}
+                                    </p>
+                                </div>
+                            @endif
+
+                        @elseif($selectedActivity instanceof \App\Models\BookReadingProgress)
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Progress</label>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                        {{ number_format($selectedActivity->progress_percentage ?? 0, 1) }}%
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pages</label>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                        {{ $selectedActivity->current_page ?? 0 }}/{{ $selectedActivity->book->total_pages ?? 0 }}
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                {{ ucfirst(str_replace('_', ' ', $selectedActivity->status ?? 'Unknown')) }}
+                            </span>
+                        </div>
+
+                        @if($selectedActivity instanceof \App\Models\Assessment && $selectedActivity->topic)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Topic</label>
+                                <p class="text-sm text-gray-900 dark:text-white">{{ $selectedActivity->topic->name }}</p>
+                                @if($selectedActivity->subtopic)
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ $selectedActivity->subtopic->name }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-800 px-6 py-3">
+                        <button wire:click="closeActivityModal"
+                                class="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var calendarEl = document.getElementById('calendar');
-        var events = @json($assessments);
-
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: events.map(event => ({
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                extendedProps: event
-            })),
-            eventClick: function(info) {
-                @this.call('openEventDetails', info.event.extendedProps);
-            }
-        });
-
-        calendar.render();
-    });
-</script>
+@push('styles')
+    <style>
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+            background-color: rgb(209 213 219);
+            border-radius: 3px;
+        }
+        .scrollbar-track-transparent::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+    </style>
 @endpush

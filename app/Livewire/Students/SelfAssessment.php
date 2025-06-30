@@ -46,14 +46,52 @@ class SelfAssessment extends Component
 
     public function mount()
     {
-        $this->subjects = Subject::whereHas('academicLevel', static function ($query) {
-            $query->whereHas('students', function ($subQuery) {
-                $subQuery->where('id', auth()->user()->student->id);
-            });
-        })->with('academicLevel')->get();
+        $student = auth()->user()->student;
+
+        if (!$student) {
+            $this->subjects = collect();
+            return;
+        }
+
+        // Get subjects that the student has access to
+        $this->subjects = collect();
+
+        // Get subjects from student's academic level
+        if ($student->academicLevel) {
+            $levelSubjects = $student->academicLevel->academicSubjects()
+                ->with('academicLevel')
+                ->get();
+            $this->subjects = $this->subjects->merge($levelSubjects);
+        }
+
+        // Get individual subjects assigned to the student
+        $individualSubjects = $student->individualSubjects()
+            ->wherePivot('is_active', true)
+            ->with('academicLevel')
+            ->get();
+
+        // Merge individual subjects, removing duplicates
+        foreach ($individualSubjects as $subject) {
+            if (!$this->subjects->contains('id', $subject->id)) {
+                $this->subjects->push($subject);
+            }
+        }
+
+        // Remove subjects that are individually marked as inactive
+        $removedSubjects = $student->individualSubjects()
+            ->wherePivot('is_active', false)
+            ->pluck('academic_subjects.id');
+
+        $this->subjects = $this->subjects->reject(function ($subject) use ($removedSubjects) {
+            return $removedSubjects->contains($subject->id);
+        });
+
+        if(count($this->subjects) === 0) {
+           $this->subjects = Subject::get();
+        }
 
         // Log student accessing self-assessment
-        activity()->performedOn(auth()->user()->student)
+        activity()->performedOn($student)
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'accessed_self_assessment',

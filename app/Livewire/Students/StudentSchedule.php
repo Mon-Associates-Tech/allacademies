@@ -2,232 +2,351 @@
 
 namespace App\Livewire\Students;
 
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Foundation\Application;
-use Illuminate\View\View;
-use Livewire\Component;
+use App\Models\Student;
 use App\Models\Assessment;
+use App\Models\Assignment;
+use App\Models\BookReadingProgress;
+use App\Models\Lesson;
+use App\Models\Quiz;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class StudentSchedule extends Component
 {
-    public $viewType = 'month'; // month, week, day
-    public $currentDate;
-    public $calendarStartDate;
-    public $calendarEndDate;
-    public $assessments = [];
-    public $selectedEvent = null;
-    public $selectedStatus = null;
-    public $hasQuestions = false;
-    public $selectedEventQuestions = [];
+    use WithPagination;
 
-    public function mount(): void
+    public Student $student;
+    public $selectedDate;
+    public $viewMode = 'calendar'; // 'calendar', 'list', 'week'
+    public $filterType = 'all'; // 'all', 'assessments', 'assignments', 'reading', 'lessons'
+    public $currentMonth;
+    public $currentYear;
+    public $selectedActivity = null;
+    public $showActivityModal = false;
+
+    protected $paginationTheme = 'bootstrap';
+
+    public function mount(Student $student, $date = null)
     {
-        $this->currentDate = Carbon::now()->addDays(-7);
-        $this->updateCalendarDates();
-
-        // Log schedule page access
-        activity()->performedOn(auth()->user()->student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'accessed_schedule_page',
-                'page' => 'schedule',
-                'view_type' => $this->viewType
-            ])
-            ->log('Student accessed schedule page');
+        $this->student = $student;
+        $this->selectedDate = $date ? Carbon::parse($date) : now();
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
     }
 
-    public function updatedSelectedStatus(): void
+    public function render()
     {
-        $this->loadAssessments();
+        $activities = $this->getActivitiesForPeriod();
+        $calendarData = $this->getCalendarData();
 
-        // Log status filter change
-        activity()->performedOn(auth()->user()->student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'filtered_schedule_by_status',
-                'selected_status' => $this->selectedStatus
-            ])
-            ->log('Student filtered schedule by status');
+        return view('livewire.students.schedule', [
+            'activities' => $activities,
+            'calendarData' => $calendarData,
+            'monthName' => Carbon::create($this->currentYear, $this->currentMonth)->format('F Y'),
+            'weekDays' => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        ]);
     }
 
-    public function updateCalendarDates(): void
+    public function getActivitiesForPeriod()
     {
-        switch ($this->viewType) {
-            case 'month':
-                $this->calendarStartDate = $this->currentDate->copy()->startOfMonth()->startOfWeek();
-                $this->calendarEndDate = $this->currentDate->copy()->endOfMonth()->endOfWeek();
-                break;
-            case 'week':
-                $this->calendarStartDate = $this->currentDate->copy()->startOfWeek();
-                $this->calendarEndDate = $this->currentDate->copy()->endOfWeek();
-                break;
-            case 'day':
-                $this->calendarStartDate = $this->currentDate->copy()->startOfDay();
-                $this->calendarEndDate = $this->currentDate->copy()->endOfDay();
-                break;
-        }
+        $startDate = $this->getStartDate();
+        $endDate = $this->getEndDate();
 
-        $this->loadAssessments();
-    }
+        $activities = collect();
 
-    public function loadAssessments(): void
-    {
-        $query = Assessment::where('student_id', Auth::user()->student->id)
-            ->whereBetween('created_at', [$this->calendarStartDate, $this->calendarEndDate]);
-
-        if ($this->selectedStatus) {
-            $query->where('status', $this->selectedStatus);
-        }
-
-        $assessments = $query->with(['subject', 'topic', 'book', 'responses'])
-            ->get()
-            ->map(fn($a) => $this->formatAssessment($a));
-
-        $this->assessments = $assessments->toArray();
-    }
-
-    /**
-     * @throws \JsonException
-     */
-    private function formatAssessment($assessment): array
-    {
-        $questions = [];
-
-        if ($assessment->responses->isNotEmpty()) {
-            $responseData = $assessment->responses->first()?->data ?? [];
-            $responseData = json_decode($responseData, false, 512, JSON_THROW_ON_ERROR);
-
-            foreach ($responseData->questions as $q) {
-                if(isset($q->question))
-                    $questions[] = [
-                        'question' => $q->question,
-                        'studentAnswer' => $q->user_answer ?? null,
-                        'correctAnswer' => $q->correct_answer ?? null,
-                        'isCorrect' => $q->is_correct ?? false
+        // Get assessments
+        if ($this->filterType === 'all' || $this->filterType === 'assessments') {
+            $assessments = $this->student->assessments()
+                ->with(['subject', 'topic', 'subtopic', 'book'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+                ->map(function ($assessment) {
+                    return [
+                        'id' => $assessment->id,
+                        'type' => 'assessment',
+                        'title' => $assessment->title,
+                        'subject' => $assessment->subject?->name,
+                        'topic' => $assessment->topic?->name,
+                        'date' => $assessment->start_time ?? $assessment->created_at,
+                        'status' => $assessment->status,
+                        'score' => $assessment->score,
+                        'max_score' => $assessment->max_score,
+                        'percentage' => $assessment->percentage_score,
+                        'duration' => $this->calculateDuration($assessment->start_time, $assessment->end_time),
+                        'model' => $assessment,
+                        'icon' => 'fas fa-clipboard-check',
+                        'color' => $this->getStatusColor($assessment->status, 'assessment'),
                     ];
+                });
+            $activities = $activities->merge($assessments);
+        }
+
+        // Get assignments (if Assignment model exists)
+        if (class_exists('App\Models\Assignment') && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
+            $assignments = Assignment::whereHas('students', function ($query) {
+                $query->where('student_id', $this->student->id);
+            })
+                ->with(['subject', 'submissions' => function ($query) {
+                    $query->where('student_id', $this->student->id);
+                }])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+                ->map(function ($assignment) {
+                    $submission = $assignment->submissions->first();
+                    return [
+                        'id' => $assignment->id,
+                        'type' => 'assignment',
+                        'title' => $assignment->title,
+                        'subject' => $assignment->subject?->name,
+                        'date' => $assignment->due_date ?? $assignment->created_at,
+                        'status' => $submission ? $submission->status : 'not_submitted',
+                        'submitted_at' => $submission?->submitted_at,
+                        'grade' => $submission?->grade,
+                        'model' => $assignment,
+                        'submission' => $submission,
+                        'icon' => 'fas fa-tasks',
+                        'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
+                    ];
+                });
+            $activities = $activities->merge($assignments);
+        }
+
+        // Get reading progress
+        if ($this->filterType === 'all' || $this->filterType === 'reading') {
+            $readingProgress = BookReadingProgress::where('student_id', $this->student->id)
+                ->with(['book', 'book.subject'])
+                ->whereBetween('updated_at', [$startDate, $endDate])
+                ->get()
+                ->map(function ($progress) {
+                    return [
+                        'id' => $progress->id,
+                        'type' => 'reading',
+                        'title' => "Reading: " . $progress->book->title,
+                        'subject' => $progress->book->subject?->name,
+                        'date' => $progress->updated_at,
+                        'status' => $progress->status,
+                        'progress' => $progress->progress_percentage,
+                        'pages_read' => $progress->current_page,
+                        'total_pages' => $progress->book->total_pages,
+                        'model' => $progress,
+                        'icon' => 'fas fa-book-open',
+                        'color' => $this->getProgressColor($progress->progress_percentage),
+                    ];
+                });
+            $activities = $activities->merge($readingProgress);
+        }
+
+        // Get lessons (if applicable)
+        if (class_exists('App\Models\Lesson') && ($this->filterType === 'all' || $this->filterType === 'lessons')) {
+            // This would depend on how lessons are structured in your app
+            // Assuming lessons are connected to students through subjects or groups
+        }
+
+        return $activities->sortByDesc('date');
+    }
+
+    public function getCalendarData()
+    {
+        $startOfMonth = Carbon::create($this->currentYear, $this->currentMonth, 1);
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        // Get all activities for the month
+        $activities = $this->student->assessments()
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->groupBy(function ($assessment) {
+                return $assessment->created_at->format('Y-m-d');
+            });
+
+        // Add other activity types here...
+
+        $calendar = [];
+        $currentDate = $startOfMonth->copy()->startOfWeek();
+
+        for ($week = 0; $week < 6; $week++) {
+            for ($day = 0; $day < 7; $day++) {
+                $dateKey = $currentDate->format('Y-m-d');
+                $calendar[$week][$day] = [
+                    'date' => $currentDate->copy(),
+                    'isCurrentMonth' => $currentDate->month === $this->currentMonth,
+                    'isToday' => $currentDate->isToday(),
+                    'activities' => $activities->get($dateKey, collect()),
+                    'activityCount' => $activities->get($dateKey, collect())->count(),
+                ];
+                $currentDate->addDay();
             }
         }
+
+        return $calendar;
+    }
+
+    public function selectDate($date)
+    {
+        $this->selectedDate = Carbon::parse($date);
+        $this->viewMode = 'list';
+    }
+
+    public function changeMonth($direction)
+    {
+        if ($direction === 'next') {
+            $this->currentMonth++;
+            if ($this->currentMonth > 12) {
+                $this->currentMonth = 1;
+                $this->currentYear++;
+            }
+        } else {
+            $this->currentMonth--;
+            if ($this->currentMonth < 1) {
+                $this->currentMonth = 12;
+                $this->currentYear--;
+            }
+        }
+    }
+
+    public function setViewMode($mode)
+    {
+        $this->viewMode = $mode;
+    }
+
+    public function setFilterType($type)
+    {
+        $this->filterType = $type;
+        $this->resetPage();
+    }
+
+    public function showActivityDetails($activityId, $activityType)
+    {
+        $this->selectedActivity = $this->getActivityById($activityId, $activityType);
+        $this->showActivityModal = true;
+    }
+
+    public function closeActivityModal()
+    {
+        $this->showActivityModal = false;
+        $this->selectedActivity = null;
+    }
+
+    private function getActivityById($id, $type)
+    {
+        switch ($type) {
+            case 'assessment':
+                return Assessment::with(['subject', 'topic', 'subtopic', 'book', 'responses'])
+                    ->find($id);
+            case 'assignment':
+                if (class_exists('App\Models\Assignment')) {
+                    return Assignment::with(['subject', 'submissions' => function ($query) {
+                        $query->where('student_id', $this->student->id);
+                    }])->find($id);
+                }
+                break;
+            case 'reading':
+                return BookReadingProgress::with(['book', 'book.subject'])->find($id);
+        }
+        return null;
+    }
+
+    private function getStartDate()
+    {
+        switch ($this->viewMode) {
+            case 'week':
+                return $this->selectedDate->copy()->startOfWeek();
+            case 'calendar':
+                return Carbon::create($this->currentYear, $this->currentMonth, 1);
+            default:
+                return $this->selectedDate->copy()->startOfDay();
+        }
+    }
+
+    private function getEndDate()
+    {
+        switch ($this->viewMode) {
+            case 'week':
+                return $this->selectedDate->copy()->endOfWeek();
+            case 'calendar':
+                return Carbon::create($this->currentYear, $this->currentMonth, 1)->endOfMonth();
+            default:
+                return $this->selectedDate->copy()->endOfDay();
+        }
+    }
+
+    private function calculateDuration($startTime, $endTime)
+    {
+        if (!$startTime || !$endTime) {
+            return null;
+        }
+        return Carbon::parse($startTime)->diffForHumans(Carbon::parse($endTime), true);
+    }
+
+    private function getStatusColor($status, $type)
+    {
+        $colors = [
+            'assessment' => [
+                'completed' => 'green',
+                'in_progress' => 'yellow',
+                'graded' => 'blue',
+                'default' => 'gray',
+            ],
+            'assignment' => [
+                'submitted' => 'green',
+                'graded' => 'blue',
+                'late' => 'red',
+                'not_submitted' => 'gray',
+                'default' => 'gray',
+            ],
+        ];
+
+        return $colors[$type][$status] ?? $colors[$type]['default'];
+    }
+
+    private function getProgressColor($percentage)
+    {
+        if ($percentage >= 80) return 'green';
+        if ($percentage >= 60) return 'blue';
+        if ($percentage >= 40) return 'yellow';
+        return 'red';
+    }
+
+    // Statistics methods
+    public function getWeeklyStats()
+    {
+        $startOfWeek = now()->startOfWeek();
+        $endOfWeek = now()->endOfWeek();
+
         return [
-            'id' => "assessment_{$assessment->id}",
-            'title' => "Assessment: {$assessment->title}",
-            'start' => $assessment->created_at->toIso8601String(),
-            'end' => $assessment->updated_at?->toIso8601String(),
-            'type' => 'assessment',
-            'status' => $assessment->status,
-            'subject' => optional($assessment->subject)->name,
-            'book' => optional($assessment->book)->title,
-            'score' => $assessment->score,
-            'max_score' => $assessment->max_score,
-            'percentage' => $assessment->percentage_score ?? 0,
-            'className' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-            'is_assessment' => true,
-            'questions' => $questions,
-            // Add formatted date strings
-            'formatted_date' => $assessment->created_at->isoFormat('Do MMMM, YYYY'),
-            'formatted_time' => $assessment->created_at->format('h:i A'),
-            'relative_date' => $assessment->created_at->diffForHumans()
+            'assessments_completed' => $this->student->assessments()
+                ->where('status', 'completed')
+                ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                ->count(),
+            'assignments_submitted' => 0, // Will depend on Assignment model structure
+            'books_progress' => BookReadingProgress::where('student_id', $this->student->id)
+                ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
+                ->avg('progress_percentage'),
+            'average_score' => $this->student->assessments()
+                ->where('status', 'completed')
+                ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                ->avg('percentage_score'),
         ];
     }
 
-    public function openEventDetails($event): void
+    public function getMonthlyStats()
     {
-        $this->selectedEvent = $event;
-        $this->selectedEventQuestions = $event['questions'] ?? [];
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
 
-        // Set hasQuestions based on whether questions exist
-        $this->hasQuestions = !empty($event['questions']) && count($event['questions']) > 0;
-
-        // Log event details view
-        activity()->performedOn(auth()->user()->student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'viewed_assessment_details',
-                'assessment_id' => str_replace('assessment_', '', $event['id']),
-                'assessment_title' => $event['title'],
-                'has_questions' => $this->hasQuestions
-            ])
-            ->log('Student viewed assessment details');
-    }
-
-    public function resetSelectedEvent(): void
-    {
-        $this->selectedEvent = null;
-    }
-
-    public function changeView($newView): void
-    {
-        $this->viewType = $newView;
-        $this->updateCalendarDates();
-
-        // Log view change
-        activity()->performedOn(auth()->user()->student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'changed_schedule_view',
-                'new_view' => $newView,
-                'previous_view' => $this->viewType
-            ])
-            ->log('Student changed schedule view');
-    }
-
-    public function nextPeriod(): void
-    {
-        switch ($this->viewType) {
-            case 'month':
-                $this->currentDate = $this->currentDate->addMonth();
-                break;
-            case 'week':
-                $this->currentDate = $this->currentDate->addWeek();
-                break;
-            case 'day':
-                $this->currentDate = $this->currentDate->addDay();
-                break;
-        }
-
-        $this->updateCalendarDates();
-
-        // Log navigation
-        activity()->performedOn(auth()->user()->student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'navigated_schedule_forward',
-                'view_type' => $this->viewType,
-                'new_date' => $this->currentDate->toDateString()
-            ])
-            ->log('Student navigated schedule forward');
-    }
-
-    public function previousPeriod(): void
-    {
-        switch ($this->viewType) {
-            case 'month':
-                $this->currentDate = $this->currentDate->subMonth();
-                break;
-            case 'week':
-                $this->currentDate = $this->currentDate->subWeek();
-                break;
-            case 'day':
-                $this->currentDate = $this->currentDate->subDay();
-                break;
-        }
-
-        $this->updateCalendarDates();
-
-        // Log navigation
-        activity()->performedOn(auth()->user()->student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'navigated_schedule_backward',
-                'view_type' => $this->viewType,
-                'new_date' => $this->currentDate->toDateString()
-            ])
-            ->log('Student navigated schedule backward');
-    }
-
-    public function render(): \Illuminate\Contracts\View\View|Application|Factory|View
-    {
-        return view('livewire.students.schedule');
+        return [
+            'total_activities' => $this->getActivitiesForPeriod()->count(),
+            'assessments_count' => $this->student->assessments()
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->count(),
+            'average_score' => $this->student->assessments()
+                ->where('status', 'completed')
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->avg('percentage_score'),
+            'subjects_engaged' => $this->student->assessments()
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->distinct('subject_id')
+                ->count(),
+        ];
     }
 }
