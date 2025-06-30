@@ -99,7 +99,7 @@
                         <span>Dashboard</span>
                     </a>
 
-                    @if(Auth::user()->hasAnyRole(['admin', 'owner','moderator', 'teacher', 'student', 'author', 'librarian']))
+                    @if(in_array(Auth::user()->role, ['admin', 'owner','moderator', 'teacher', 'student', 'author', 'librarian', 'student']))
                         <a href="{{ route('subscriptions.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors duration-200">
@@ -111,7 +111,7 @@
                         </a>
                     @endif
 
-                    @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
+                    @if(in_array(Auth::user()->role, ['admin', 'owner', 'moderator', 'teacher', 'subscriber']))
                         <a href="{{ route('academic-groups.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div class="flex items-center justify-center w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg mr-3 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors duration-200">
@@ -123,7 +123,7 @@
                         </a>
                     @endif
 
-                    @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                    @if(in_array(Auth::user()->role, ['admin', 'owner']))
                         <a href="{{ route('users.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div class="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg mr-3 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition-colors duration-200">
@@ -172,7 +172,7 @@
                         <span>Profile</span>
                     </a>
 
-                    @if(Auth::user()->hasAnyRole(['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
+                    @if(in_array(Auth::user()->role, ['admin', 'owner', 'moderator', 'subscriber', 'teacher']))
                         <a href="{{ route('teams.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div class="flex items-center justify-center w-8 h-8 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-3 group-hover:bg-teal-200 dark:group-hover:bg-teal-900/50 transition-colors duration-200">
@@ -184,7 +184,7 @@
                         </a>
                     @endif
 
-                    @if(Auth::user()->hasAnyRole(['admin', 'owner']))
+                    @if(in_array(Auth::user()->role, ['admin', 'owner']))
                         <a href="{{ route('audit-teams.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div class="flex items-center justify-center w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg mr-3 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 transition-colors duration-200">

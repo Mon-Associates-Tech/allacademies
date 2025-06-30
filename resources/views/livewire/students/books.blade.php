@@ -1,197 +1,306 @@
+@php use App\Models\BookSubscription; @endphp
 <div class="space-y-6">
-    @php use App\Models\BookSubscription; @endphp
-    <!-- Enhanced Header with Statistics -->
-    <div class="bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 rounded-xl p-6 text-white shadow-lg">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <div class="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-3xl font-bold">My Library</h1>
-                    <p class="text-emerald-100 mt-1">Explore, subscribe, and manage your digital book collection</p>
-                </div>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="hidden lg:flex items-center space-x-6">
-                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div class="text-2xl font-bold">{{ $totalBooks ?? 0 }}</div>
-                    <div class="text-sm text-emerald-200">Available</div>
-                </div>
-                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div class="text-2xl font-bold">{{ $subscribedCount ?? 0 }}</div>
-                    <div class="text-sm text-emerald-200">Subscribed</div>
-                </div>
-                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div class="text-2xl font-bold">{{ $borrowedCount ?? 0 }}</div>
-                    <div class="text-sm text-emerald-200">Borrowed</div>
-                </div>
-            </div>
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">My Books</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your book subscriptions and borrowings</p>
         </div>
     </div>
 
-    <!-- Flash Messages with Better Design -->
+    <!-- Flash Messages -->
     @if (session()->has('success'))
-        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg shadow-sm dark:bg-green-900/20 dark:border-green-400" role="alert">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span class="font-medium text-green-700 dark:text-green-200">{{ session('success') }}</span>
-            </div>
+        <div
+            class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative dark:bg-green-900 dark:border-green-700 dark:text-green-200"
+            role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg shadow-sm dark:bg-red-900/20 dark:border-red-400" role="alert">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        <div
+            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative dark:bg-red-900 dark:border-red-700 dark:text-red-200"
+            role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <button wire:click="changeTab('available')"
+                    class="@if($bookTab === 'available') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                Available Books
+            </button>
+            <button wire:click="changeTab('subscribed')"
+                    class="@if($bookTab === 'subscribed') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                Subscribed Books
+            </button>
+            <button wire:click="changeTab('borrowed')"
+                    class="@if($bookTab === 'borrowed') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                Borrowed Books
+            </button>
+        </nav>
+    </div>
+
+    <!-- Filters -->
+    <!-- Filters -->
+    @if($bookTab === 'available')
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="search"
+                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                    <input wire:model.debounce.300ms="search"
+                           type="text"
+                           id="search"
+                           wire:change="$refresh"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                           placeholder="Search books..."
+                           wire:loading.class="opacity-50"
+                           wire:loading.attr="disabled">
+                </div>
+                <div>
+                    <label for="category"
+                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                    <select wire:model.live="selectedCategory"
+                            id="category"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                            wire:loading.class="opacity-50"
+                            wire:loading.attr="disabled">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="format"
+                           class="block text-sm font-medium text-gray-700 dark:text-gray-300">Format</label>
+                    <select wire:model.live="selectedFormat"
+                            id="format"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                            wire:loading.class="opacity-50"
+                            wire:loading.attr="disabled">
+                        <option value="">All Formats</option>
+                        <option value="softcopy">Softcopy</option>
+                        <option value="hardcopy">Hardcopy</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Price</label>
+                    <select wire:model.live="selectedPrice"
+                            id="price"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                            wire:loading.class="opacity-50"
+                            wire:loading.attr="disabled">
+                        <option value="">All Prices</option>
+                        <option value="free">Free</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div wire:loading class="flex justify-center">
+            <div class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm text-indigo-500">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
+                     viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="font-medium text-red-700 dark:text-red-200">{{ session('error') }}</span>
+                Loading...
             </div>
         </div>
     @endif
 
-    <!-- Enhanced Tab Navigation -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="flex space-x-8 px-6" aria-label="Tabs">
-                <button wire:click="changeTab('available')"
-                        class="@if($bookTab === 'available') border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif flex items-center space-x-2 whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                    <span>Available Books</span>
-                    @if(isset($availableCount))
-                        <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 text-xs font-medium px-2 py-1 rounded-full">{{ $availableCount }}</span>
+    <!-- Books Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" wire:key="books-grid">
+        @forelse($books as $book)
+            @php
+//                $book = $bookTab === 'available' ? $item : $item->book;
+            @endphp
+                <!-- Add this in your book card template, typically near the top of each book card -->
+            @foreach($books as $book)
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <!-- Book Status Badge -->
+                    @php
+                        $bookStatus = $this->getBookStatus($book->id);
+                    @endphp
+
+                    @if($bookStatus)
+                        <div class="absolute top-2 right-2 z-10">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $bookStatus['class'] }}">
+            @if($bookStatus['type'] === 'free')
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+            @elseif($bookStatus['type'] === 'subscribed')
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+            @elseif($bookStatus['type'] === 'group_subscribed')
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                </svg>
+            @elseif($bookStatus['type'] === 'pending')
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                </svg>
+            @endif
+            {{ $bookStatus['label'] }}
+        </span>
+                        </div>
                     @endif
-                </button>
-                <button wire:click="changeTab('subscribed')"
-                        class="@if($bookTab === 'subscribed') border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif flex items-center space-x-2 whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>My Subscriptions</span>
-                    @if(isset($subscribedCount))
-                        <span class="bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200 text-xs font-medium px-2 py-1 rounded-full">{{ $subscribedCount }}</span>
-                    @endif
-                </button>
-                <button wire:click="changeTab('borrowed')"
-                        class="@if($bookTab === 'borrowed') border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif flex items-center space-x-2 whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414A1 1 0 0120 8.414V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
-                    </svg>
-                    <span>Borrowed Books</span>
-                    @if(isset($borrowedCount))
-                        <span class="bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200 text-xs font-medium px-2 py-1 rounded-full">{{ $borrowedCount }}</span>
-                    @endif
-                </button>
-            </nav>
-        </div>
 
-        <!-- Enhanced Filters Section -->
-        @if($bookTab === 'available')
-            <div class="p-6 bg-gray-50 dark:bg-gray-800/50">
-                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-                    <!-- Search and Filters -->
-                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="relative">
-                            <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Books</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                    </svg>
-                                </div>
-                                <input wire:model.debounce.300ms="search"
-                                       type="text"
-                                       id="search"
-                                       class="pl-10 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm transition-colors"
-                                       placeholder="Search by title, author..."
-                                       wire:loading.class="opacity-50"
-                                       wire:loading.attr="disabled">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                            <select wire:model.live="selectedCategory"
-                                    id="category"
-                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm transition-colors"
-                                    wire:loading.class="opacity-50"
-                                    wire:loading.attr="disabled">
-                                <option value="">All Categories</option>
-                                @foreach($categories as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="format" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
-                            <select wire:model.live="selectedFormat"
-                                    id="format"
-                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm transition-colors"
-                                    wire:loading.class="opacity-50"
-                                    wire:loading.attr="disabled">
-                                <option value="">All Formats</option>
-                                <option value="softcopy">📱 Digital</option>
-                                <option value="hardcopy">📚 Physical</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Price</label>
-                            <select wire:model.live="selectedPrice"
-                                    id="price"
-                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm transition-colors"
-                                    wire:loading.class="opacity-50"
-                                    wire:loading.attr="disabled">
-                                <option value="">All Prices</option>
-                                <option value="free">🆓 Free</option>
-                                <option value="paid">💰 Paid</option>
-                            </select>
-                        </div>
+                    <!-- Book Cover Image -->
+                    <div class="relative">
+                        <img src="{{ $book->cover_image }}" alt="{{ $book->title }}" class="w-full h-48 object-cover">
                     </div>
 
-                    <!-- Clear Filters Button -->
-                    <div>
-                        <button wire:click="clearFilters"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                            Clear Filters
-                        </button>
+                    <!-- Book Content -->
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ $book->title }}</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">by {{ $book->author->name ?? 'Unknown Author' }}</p>
+
+                        <!-- Category and Format badges -->
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            @if($book->bookCategory)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                {{ $book->bookCategory->name }}
+            </span>
+                            @endif
+
+                            @if($book->has_hardcopy)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                Hardcopy
+            </span>
+                            @endif
+
+                            @if($book->has_softcopy)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                Softcopy
+            </span>
+                            @endif
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-2">
+                            @if($book->has_softcopy)
+                                @php
+                                    $bookStatus = $this->getBookStatus($book->id);
+                                    $hasAccess = $this->hasBookAccess($book->id);
+                                @endphp
+
+                                @if($hasAccess)
+                                    <!-- User has access - show Read button -->
+                                    <button wire:click="openPdfReader({{ $book->id }})"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.02]">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                        Read Now
+                                    </button>
+                                @else
+                                    @php
+                                        $subscription = BookSubscription::where('student_id', auth()->user()->student->id ?? null)
+                                            ->where('book_id', $book->id)
+                                            ->where('status', 'pending_payment')
+                                            ->first();
+                                    @endphp
+
+                                    @if($subscription)
+                                        <!-- Pending payment - show complete payment button -->
+                                        <button wire:click="showSubscriptionDetails({{ $subscription->id }})"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 transform hover:scale-[1.02]">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                            </svg>
+                                            Complete Payment
+                                        </button>
+                                    @else
+                                        <!-- No access - show subscribe button -->
+                                        @if($this->isBookFree($book->id))
+                                            <button wire:click="subscribeToBook({{ $book->id }})"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.02]">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                </svg>
+                                                Add to Library - Free
+                                            </button>
+                                        @else
+                                            <button wire:click="subscribeToBook({{ $book->id }})"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-[1.02]">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                Subscribe - GHS {{ number_format($book->annual_subscription_fee ?? 50.00, 2) }}/year
+                                            </button>
+                                        @endif
+                                    @endif
+                                @endif
+                            @endif
+
+                            <!-- Hardcopy borrowing section -->
+                            @if($book->has_hardcopy)
+                                @if($this->isBookBorrowed($book->id))
+                                    <button wire:click="returnBook({{ $book->id }})"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 transform hover:scale-[1.02]">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                        </svg>
+                                        Return Book
+                                    </button>
+                                @else
+                                    <button wire:click="borrowBook({{ $book->id }})"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-[1.02]">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2v0a2 2 0 01-2-2v-1"></path>
+                                        </svg>
+                                        Borrow Book
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
                     </div>
                 </div>
+            @endforeach
+        @empty
+            <div class="col-span-full">
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No books found</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        @if($bookTab === 'available')
+                            Try adjusting your search or filters.
+                        @else
+                            You haven't {{ $bookTab === 'subscribed' ? 'subscribed to' : 'borrowed' }} any books yet.
+                        @endif
+                    </p>
+                </div>
             </div>
-        @endif
+        @endforelse
     </div>
 
-    <!-- Loading State -->
-    <div wire:loading class="text-center py-8">
-        <div class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-emerald-500 hover:bg-emerald-400 transition ease-in-out duration-150 cursor-not-allowed">
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Loading books...
+
+    <!-- Pagination -->
+    @if($books->hasPages())
+        <div class="mt-6">
+            {{ $books->appends(request()->query())->links() }}
+
         </div>
-    </div>
+    @endif
+    {{--    <x-pdf-reader-modal/>--}}
+    {{--    @include('components.book-subscription-modal', [--}}
+    {{--    'showSubscriptionModal' => $showSubscriptionModal,--}}
+    {{--    'subscriptionData' => $subscriptionData--}}
+    {{--])--}}
 
-    <!-- Content based on active tab -->
-{{--    <div wire:loading.remove class="space-y-6">--}}
-        @if($bookTab === 'available')
-            @include('livewire.students.partials.available-books', ['availableBooks' => $this->availableBooks])
-        @elseif($bookTab === 'subscribed')
-            @include('livewire.students.partials.subscribed-books', ['subscribedBooks' => $this->subscribedBooks])
-        @elseif($bookTab === 'borrowed')
-            @include('livewire.students.partials.borrowed-books', ['borrowedBooks' => $this->borrowedBooks])
-        @endif
     @livewire('students.book-subscription-modal')
-    </div>
+</div>

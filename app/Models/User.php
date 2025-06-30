@@ -308,4 +308,7 @@ public function impersonateUser($userId)
     {
         return $this->hasOne(Teacher::class, 'user_id');
     }
+    public function mainRole(){
+        return $this->attributes['role'] ?? 'subscriber';
+    }
 }
