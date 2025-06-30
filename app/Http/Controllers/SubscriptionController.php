@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BookSubscription;
 use App\Models\User;
 use App\Support\AcademicGroupTag;
 use App\Support\Pricer;
@@ -34,12 +35,88 @@ class SubscriptionController extends Controller
      */
     public function index()
     {
-        $subscriptions = Subscription::query()->where('team_id', auth()->user()->current_team_id)->latest('id')->paginate();
+        // Get regular subscriptions
+        $regularSubscriptions = Subscription::query()
+            ->where('team_id', auth()->user()->current_team_id)
+            ->with(['academicSubjects', 'team', 'subscriber'])
+            ->latest('id')
+            ->get()
+            ->map(function ($subscription) {
+                return [
+                    'id' => $subscription->id,
+                    'type' => 'regular',
+                    'reference' => $subscription->reference,
+                    'package' => $subscription->package,
+                    'amount' => $subscription->amount,
+                    'currency' => $subscription->currency ?? 'GHS',
+                    'status' => $subscription->status,
+                    'duration_in_months' => $subscription->duration_in_months,
+                    'beneficiaries' => $subscription->beneficiaries,
+                    'expires_at' => $subscription->expires_at,
+                    'created_at' => $subscription->created_at,
+                    'updated_at' => $subscription->updated_at,
+                    'subjects' => $subscription->academicSubjects->pluck('name')->join(', '),
+                    'subject_count' => $subscription->academicSubjects->count(),
+                    'model' => $subscription,
+                ];
+            });
+
+        // Get book subscriptions for current user's student
+        $bookSubscriptions = collect();
+        if (auth()->user()->student) {
+            $bookSubscriptions = BookSubscription::query()
+                ->where('student_id', auth()->user()->student->id)
+                ->with(['book', 'book.author', 'book.bookCategory', 'student'])
+                ->latest('id')
+                ->get()
+                ->map(function ($subscription) {
+                    return [
+                        'id' => $subscription->id,
+                        'type' => 'book',
+                        'reference' => $subscription->reference,
+                        'package' => 'Book Subscription',
+                        'amount' => $subscription->annual_fee,
+                        'currency' => 'GHS',
+                        'status' => $subscription->status,
+                        'duration_in_months' => 12, // Book subscriptions are typically annual
+                        'beneficiaries' => 1,
+                        'expires_at' => $subscription->end_date,
+                        'created_at' => $subscription->created_at,
+                        'updated_at' => $subscription->updated_at,
+                        'book_title' => $subscription->book->title,
+                        'book_author' => $subscription->book->author->user->name ?? 'Unknown Author',
+                        'book_category' => $subscription->book->bookCategory->name ?? 'Uncategorized',
+                        'start_date' => $subscription->start_date,
+                        'end_date' => $subscription->end_date,
+                        'payment_completed_at' => $subscription->payment_completed_at,
+                        'model' => $subscription,
+                    ];
+                });
+        }
+
+        // Combine both types of subscriptions
+        $allSubscriptions = $regularSubscriptions->merge($bookSubscriptions)
+            ->sortByDesc('created_at');
+
+        // Paginate the combined results
+        $currentPage = request()->get('page', 1);
+        $perPage = 15;
+        $paginatedSubscriptions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allSubscriptions->forPage($currentPage, $perPage),
+            $allSubscriptions->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
 
         return view('subscriptions.index', [
-            'subscriptions' => $subscriptions,
+            'subscriptions' => $paginatedSubscriptions,
+            'totalSubscriptions' => $allSubscriptions->count(),
+            'regularSubscriptions' => $regularSubscriptions,
+            'bookSubscriptions' => $bookSubscriptions,
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.

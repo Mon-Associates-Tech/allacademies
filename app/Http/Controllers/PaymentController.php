@@ -173,11 +173,12 @@ class PaymentController extends Controller
     {
         try {
             DB::transaction(function () use ($request, $bookSubscription) {
+                $amount = Money::of($request->validated('amount'), 'GHS');
                 $payment = new Payment([
                     'reference' => $request->validated('reference'),
-                    'amount' => Money::ofMinor($bookSubscription->price, 'NGN')->getAmount(),
-                    'status' => PaymentStatus::SUCCESS,
-                    'currency' => 'NGN',
+                    'amount' => (string) $amount->getAmount(),
+                    'status' => PaymentStatus::SUCCEEDED,
+                    'currency' => 'GHS',
                     'book_subscription_id' => $bookSubscription->id,
                 ]);
                 $payment->save();
