@@ -33,7 +33,7 @@
                 <x-snippets.modal-search />
 
                 <!-- Notifications button -->
-                <x-snippets.dropdown-notifications align="right" />
+                <livewire:notifications-dropdown align="right" />
 
                 <!-- Info button -->
                 <x-snippets.dropdown-help align="right" />

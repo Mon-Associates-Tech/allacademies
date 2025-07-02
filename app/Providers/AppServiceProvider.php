@@ -81,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
             'book_subscription' => \App\Models\BookSubscription::class,
             'assessment' => \App\Models\Assessment::class,
             'book_borrowing' => \App\Models\BookBorrowing::class,
+            'assignment' => \App\Models\Assignment::class,
         ]);
     }
 }

@@ -6,35 +6,28 @@ use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicSubtopic as Subtopic;
 use App\Models\AcademicTopic as Topic;
 use App\Models\Assessment;
-use App\Models\Assignment;
 use App\Models\AssessmentResponse;
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\Question;
 use App\Models\TrueOrFalseQuestion;
-use App\Traits\StartsAssessment;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
-class SelfAssessment extends Component
+class SelfAssessmentBackup extends Component
 {
-    use StartsAssessment;
-
     public $step = 'setup'; // setup, assessment, results
-    public $assessmentMode = 'self'; // 'self' or 'assignment'
 
     // Setup phase
     public $selectedSubject = null;
     public $selectedTopic = null;
     public $selectedSubtopic = null;
-    public $selectedAssignment = null;
     public $questionTypes = ['multiple_choice_question' => true, 'true_or_false_question' => true, 'essay_question' => false];
     public $questionCount = 10;
     public $difficulty = 'all'; // all, easy, medium, hard
-    public $timeLimitMinutes = null;
 
     // Assessment phase
     public $currentQuestionIndex = 0;
@@ -49,7 +42,7 @@ class SelfAssessment extends Component
     public $subjects = [];
     public $topics = [];
     public $subtopics = [];
-    public $availableAssignments = [];
+
 
     public function mount()
     {
@@ -60,21 +53,7 @@ class SelfAssessment extends Component
             return;
         }
 
-        $this->loadStudentSubjects($student);
-        $this->loadAvailableAssignments();
-
-        // Log student accessing self-assessment
-        activity()->performedOn($student)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'accessed_self_assessment',
-                'page' => 'self-assessment'
-            ])
-            ->log('Student accessed self-assessment page');
-    }
-
-    private function loadStudentSubjects($student): void
-    {
+        // Get subjects that the student has access to
         $this->subjects = collect();
 
         // Get subjects from student's academic level
@@ -110,139 +89,15 @@ class SelfAssessment extends Component
         if(count($this->subjects) === 0) {
            $this->subjects = Subject::get();
         }
-    }
 
-    private function loadAvailableAssignments(): void
-    {
-        $this->availableAssignments = $this->getAvailableAssignments();
-    }
-
-    public function switchAssessmentMode($mode): void
-    {
-        $this->assessmentMode = $mode;
-        $this->reset(['selectedAssignment', 'selectedSubject', 'selectedTopic', 'selectedSubtopic']);
-    }
-
-    public function startAssessment(): void
-    {
-        if ($this->assessmentMode === 'assignment') {
-            $this->startFromAssignment();
-        } else {
-            $this->startFromConfiguration();
-        }
-    }
-
-    private function startFromAssignment(): void
-    {
-        if (!$this->selectedAssignment) {
-            session()->flash('error', 'Please select an assignment.');
-            return;
-        }
-
-        $assignment = Assignment::find($this->selectedAssignment);
-        if (!$assignment) {
-            session()->flash('error', 'Assignment not found.');
-            return;
-        }
-
-        // Check if student can start this assignment
-        if (!$this->canStartAssignment($assignment)) {
-            session()->flash('error', 'You are not eligible to start this assignment or it is not available.');
-            return;
-        }
-
-        try {
-            // Reset assessment state
-            $this->reset(['questions', 'responses', 'assessment']);
-
-            // Create assessment record
-            $this->assessment = Assessment::create([
-                'student_id' => auth()->user()->student->id,
-                'subject_id' => $assignment->academic_subject_id,
-                'title' => "Assignment Practice: {$assignment->title}",
-                'start_time' => now(),
-                'status' => 'in_progress',
-                'assignment_id' => $assignment->id,
-            ]);
-
-            // Set time limit from assignment
-            if ($assignment->duration_in_minutes) {
-                $this->timeLimitSeconds = $assignment->duration_in_minutes * 60;
-                $this->timeRemaining = $this->timeLimitSeconds;
-            } else {
-                $this->timeLimitSeconds = 0;
-                $this->timeRemaining = null;
-            }
-
-            // Generate questions from assignment sections
-            $this->generateQuestionsFromAssignment($assignment);
-
-            // Initialize responses array
-            $this->responses = [];
-            foreach ($this->questions as $index => $questionData) {
-                $this->responses[$index] = [
-                    'question_id' => $questionData['id'],
-                    'response' => null,
-                    'is_answered' => false
-                ];
-            }
-
-            $this->currentQuestionIndex = 0;
-            $this->step = 'assessment';
-
-            // Log assignment start
-            activity()->performedOn(auth()->user()->student)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'action' => 'started_assignment_practice',
-                    'assignment_id' => $assignment->id,
-                    'assignment_title' => $assignment->title,
-                    'question_count' => count($this->questions)
-                ])
-                ->log('Student started assignment practice');
-
-            session()->flash('success', 'Assignment practice started successfully!');
-
-        } catch (\Exception $e) {
-            Log::error('Failed to start assignment practice', [
-                'assignment_id' => $assignment->id,
-                'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
-            ]);
-
-            session()->flash('error', 'Failed to start assignment practice. Please try again.');
-        }
-    }
-
-    private function startFromConfiguration(): void
-    {
-        // Validate setup selections
-        $this->validate([
-            'selectedSubject' => 'required',
-            'questionCount' => 'required|integer|min:1|max:50',
-        ]);
-
-        // Ensure at least one question type is selected
-        if (!$this->questionTypes['multiple_choice_question'] &&
-            !$this->questionTypes['true_or_false_question'] &&
-            !$this->questionTypes['essay_question']) {
-            session()->flash('error', 'Please select at least one question type');
-            return;
-        }
-
-        $config = [
-            'subject_id' => $this->selectedSubject,
-            'topic_id' => $this->selectedTopic,
-            'subtopic_id' => $this->selectedSubtopic,
-            'question_types' => $this->questionTypes,
-            'question_count' => $this->questionCount,
-            'difficulty' => $this->difficulty,
-            'time_limit_minutes' => $this->timeLimitMinutes,
-            'marks_per_question' => 1,
-            'title' => 'Self Assessment - ' . Subject::find($this->selectedSubject)?->name,
-        ];
-
-        $this->startSelfAssessment($config);
+        // Log student accessing self-assessment
+        activity()->performedOn($student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'accessed_self_assessment',
+                'page' => 'self-assessment'
+            ])
+            ->log('Student accessed self-assessment page');
     }
 
     public function getRecentAssessmentsProperty()
@@ -260,10 +115,12 @@ class SelfAssessment extends Component
             : collect();
 
         // Reset dependent fields
+        Log::info('Selected topic: ' . $this->selectedSubject);
         $this->selectedTopic = null;
         $this->selectedSubtopic = null;
         $this->subtopics = collect();
 
+        // Log subject selection
         if ($this->selectedSubject) {
             $subject = Subject::find($this->selectedSubject);
             activity()->performedOn(auth()->user()->student)
@@ -277,14 +134,16 @@ class SelfAssessment extends Component
         }
     }
 
-    public function updatedSelectedTopic(): void
+    public function updatedSelectedTopic()
     {
         $this->subtopics = $this->selectedTopic
             ? Subtopic::where('academic_topic_id', $this->selectedTopic)->get()
             : collect();
 
+        // Reset dependent field
         $this->selectedSubtopic = null;
 
+        // Log topic selection
         if ($this->selectedTopic) {
             $topic = Topic::find($this->selectedTopic);
             activity()->performedOn(auth()->user()->student)
@@ -298,6 +157,169 @@ class SelfAssessment extends Component
         }
     }
 
+    public function startAssessment(): void
+    {
+        Log::info('Starting self-assessment with parameters:', [
+            'subject' => $this->selectedSubject,
+            'topic' => $this->selectedTopic,
+            'subtopic' => $this->selectedSubtopic,
+            'question_count' => $this->questionCount,
+            'difficulty' => $this->difficulty,
+            'question_types' => $this->questionTypes
+        ]);
+        $this->reset(['questions', 'responses', 'assessment']);
+
+        // Validate setup selections
+        $this->validate([
+            'selectedSubject' => 'required',
+            'questionCount' => 'required|integer|min:1|max:50',
+        ]);
+
+        Log::info('Debug: After validation');
+
+        // Ensure at least one question type is selected
+        if (!$this->questionTypes['multiple_choice_question'] &&
+            !$this->questionTypes['true_or_false_question'] &&
+            !$this->questionTypes['essay_question']) {
+            session()->flash('error', 'Please select at least one question type');
+            return;
+        }
+
+        Log::info('Debug: Question types validated');
+
+        // Build query per question type
+        $allQuestions = collect();
+
+        // Multiple Choice Questions
+        if ($this->questionTypes['multiple_choice_question']) {
+            $query = MultipleChoiceQuestion::query();
+            if ($this->difficulty !== 'all') {
+                $query->where('difficulty_level', $this->difficulty);
+            }
+            $this->applyContentFilters($query);
+            Log::info('Debug: Multiple choice questions found: ' . $query->get()->count());
+
+            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'multiple_choice_question', 'model' => $q]));
+        }
+
+        // True/False Questions
+        if ($this->questionTypes['true_or_false_question']) {
+            $query = TrueOrFalseQuestion::query();
+            if ($this->difficulty !== 'all') {
+                $query->where('difficulty_level', $this->difficulty);
+            }
+            $this->applyContentFilters($query);
+            Log::info('Debug: True/False questions found: ' . $query->get()->count());
+
+            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'true_or_false_question', 'model' => $q]));
+        }
+
+        // Essay Questions
+        if ($this->questionTypes['essay_question']) {
+            $query = EssayQuestion::query();
+            if ($this->difficulty !== 'all') {
+                $query->where('difficulty_level', $this->difficulty);
+            }
+            $this->applyContentFilters($query);
+            Log::info('Debug: Essay questions found: ' . $query->get()->count());
+            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'essay_question', 'model' => $q]));
+        }
+        Log::info('Debug: Total questions found: ' . $allQuestions->count());
+
+        // Check if any questions were found
+        if ($allQuestions->isEmpty()) {
+            Log::info('No questions found matching the criteria');
+            session()->flash('error', 'No questions found matching your criteria');
+            return;
+        }
+        Log::info('Debug: Questions collected, proceeding to shuffle and limit');
+
+        // Shuffle and limit
+        $randomQuestions = $allQuestions->shuffle()->take($this->questionCount);
+
+        // Store questions with their type and model information
+        $this->questions = [];
+
+        foreach ($randomQuestions as $item) {
+            $questionModel = $item['model'];
+            $question = Question::create([
+                'questionable_type' => get_class($questionModel),
+                'questionable_id' => $questionModel->id,
+                'subtopic_id' => $questionModel->subtopic_id,
+                'topic_id' => $questionModel->academic_topic_id,
+                'difficulty_level' => $questionModel->difficulty_level,
+                'points' => $questionModel->score,
+                'user_id' => auth()->user()->id,
+            ]);
+
+            // Store the question with type and model information for the Blade template
+            $this->questions[] = [
+                'id' => $question->id,
+                'type' => $item['type'],
+                'model' => $questionModel,
+                'question_record' => $question, // Store the Question record for later use
+                'points' => $question->points,
+                'difficulty_level' => $question->difficulty_level
+            ];
+        }
+
+        Log::info('Debug: Questions persisted, initializing responses');
+
+        // Initialize responses array using actual question IDs
+        foreach ($this->questions as $index => $questionData) {
+            $this->responses[$index] = [
+                'question_id' => $questionData['id'],
+                'response' => $questionData['type'] === 'essay_question' ? '' : null,
+                'is_answered' => false
+            ];
+        }
+
+        // Calculate time limit
+        $this->timeLimitSeconds = 0;
+        foreach ($this->questions as $questionData) {
+            if ($questionData['type'] === 'essay_question') {
+                $this->timeLimitSeconds += 5 * 60; // 5 minutes
+            } else {
+                $this->timeLimitSeconds += 1 * 60; // 1 minute
+            }
+        }
+
+        Log::info('Debug: Time limit set to ' . $this->timeLimitSeconds . ' seconds');
+
+        // Create assessment record
+        $this->assessment = Assessment::create([
+            'student_id' => auth()->user()->student->id,
+            'subject_id' => $this->selectedSubject,
+            'topic_id' => $this->selectedTopic,
+            'subtopic_id' => $this->selectedSubtopic,
+            'title' => "Self-Assessment for {$this->selectedSubject} - {$this->selectedTopic}",
+            'start_time' => now(),
+            'status' => 'in_progress',
+        ]);
+
+        Log::info('Debug: Assessment created with ID ' . $this->assessment->id);
+
+        // Set timer
+        $this->timeRemaining = $this->timeLimitSeconds;
+        $this->dispatch('start-timer', ['seconds' => $this->timeRemaining]);
+
+        // Log assessment start
+        activity()->performedOn(auth()->user()->student)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'action' => 'started_self_assessment',
+                'question_count' => $this->questionCount,
+                'difficulty' => $this->difficulty,
+                'question_types' => array_keys(array_filter($this->questionTypes)),
+                'subject_id' => $this->selectedSubject,
+                'topic_id' => $this->selectedTopic,
+                'subtopic_id' => $this->selectedSubtopic
+            ])
+            ->log('Student started self-assessment');
+
+        $this->step = 'assessment';
+        Log::info('Step after: ' . $this->step);
+    }
 
     private function applyContentFilters($query): void
     {
@@ -772,126 +794,4 @@ class SelfAssessment extends Component
             $this->completeAssessment();
         }
     }
-
-    /**
-     * Generate questions from assignment sections
-     */
-    private function generateQuestionsFromAssignment(Assignment $assignment): void
-    {
-        $this->questions = [];
-
-        foreach ($assignment->assignmentSections as $section) {
-            // Get questions based on section configuration
-            $sectionQuestions = $this->getQuestionsForSection($section);
-
-            foreach ($sectionQuestions as $questionModel) {
-                // Create Question record
-                $question = Question::create([
-                    'questionable_type' => get_class($questionModel),
-                    'questionable_id' => $questionModel->id,
-                    'subtopic_id' => $questionModel->academic_subtopic_id ?? null,
-                    'topic_id' => $questionModel->academic_topic_id ?? null,
-                    'difficulty_level' => $questionModel->difficulty_level,
-                    'points' => $section->marks_per_question ?? 1,
-                    'user_id' => auth()->user()->id,
-                ]);
-
-                // Store question data
-                $this->questions[] = [
-                    'id' => $question->id,
-                    'type' => $this->getTypeFromClassName(class_basename(get_class($questionModel))),
-                    'model' => $questionModel,
-                    'question_record' => $question,
-                    'points' => $question->points,
-                    'difficulty_level' => $question->difficulty_level,
-                    'section_id' => $section->id
-                ];
-            }
-        }
-    }
-
-    /**
-     * Get questions for a specific assignment section
-     */
-    private function getQuestionsForSection($section)
-    {
-        $questions = collect();
-
-        // Determine question types for this section
-        $questionTypes = [];
-        if ($section->include_multiple_choice) {
-            $questionTypes[] = MultipleChoiceQuestion::class;
-        }
-        if ($section->include_true_false) {
-            $questionTypes[] = TrueOrFalseQuestion::class;
-        }
-        if ($section->include_essay) {
-            $questionTypes[] = EssayQuestion::class;
-        }
-
-        foreach ($questionTypes as $questionType) {
-            $query = $questionType::query();
-
-            // Apply section filters
-            if ($section->academic_subtopic_id) {
-                $query->where('academic_subtopic_id', $section->academic_subtopic_id);
-            } elseif ($section->academic_topic_id) {
-                $query->where(function ($q) use ($section) {
-                    $q->whereHas('subtopic', function ($s) use ($section) {
-                        $s->where('academic_topic_id', $section->academic_topic_id);
-                    })->orWhere('academic_topic_id', $section->academic_topic_id);
-                });
-            }
-
-            // Apply difficulty filter
-            if ($section->difficulty_level && $section->difficulty_level !== 'all') {
-                $query->where('difficulty_level', $section->difficulty_level);
-            }
-
-            // Get questions for this type
-            $typeQuestions = $query->inRandomOrder()
-                ->limit($section->question_count_per_type ?? 5)
-                ->get();
-
-            $questions = $questions->merge($typeQuestions);
-        }
-
-        // Shuffle and limit to section's total question count
-        return $questions->shuffle()->take($section->total_questions ?? 10);
-    }
-
-    /**
-     * Check if student can start assignment
-     */
-    private function canStartAssignment(Assignment $assignment): bool
-    {
-        $student = auth()->user()->student;
-
-        // Check if assignment is published and active
-        if ($assignment->status !== 'published') {
-            return false;
-        }
-
-        // Check time constraints
-        if ($assignment->starts_at > now() || $assignment->ends_at < now()) {
-            return false;
-        }
-
-        // Check if student is in eligible groups
-        $studentGroupIds = $student->academicGroups->pluck('id');
-        $assignmentGroupIds = $assignment->academicGroups->pluck('id');
-
-        if ($assignmentGroupIds->isNotEmpty() && $studentGroupIds->intersect($assignmentGroupIds)->isEmpty()) {
-            // Check if student is in eligible academic level
-            if ($assignment->academicLevels->pluck('id')->doesntContain($student->academic_level_id)) {
-                // Check if student is directly assigned
-                if (!$assignment->students->contains('id', $student->id)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-
 }
