@@ -235,7 +235,7 @@ class CreateAssignment extends Component
 
             session()->flash('success', 'Assignment created successfully and notifications sent!');
 
-            return redirect()->route('teachers.dashboard');
+            return redirect()->route('teacher.assignments.index');
 
         } catch (\Exception $e) {
             DB::rollBack();

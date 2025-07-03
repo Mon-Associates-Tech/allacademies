@@ -1,7 +1,4 @@
 <?php
-// File: app/Livewire/Teachers/Dashboard.php
-// Location: app/Livewire/Teachers/Dashboard.php
-
 namespace App\Livewire\Teachers;
 
 use App\Models\Teacher;

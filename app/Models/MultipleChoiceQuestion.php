@@ -60,6 +60,11 @@ class MultipleChoiceQuestion extends Model
         return $this->belongsTo(AcademicSubtopic::class, 'academic_subtopic_id');
     }
 
+    public function academicSubject(): HasOneThrough
+    {
+        return $this->hasOneThrough(AcademicSubject::class, AcademicTopic::class, 'id', 'id', 'academic_topic_id', 'academic_subject_id');
+    }
+
     public function question()
     {
         return $this->morphOne(Question::class, 'questionable');

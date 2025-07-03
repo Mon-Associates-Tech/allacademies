@@ -101,7 +101,7 @@ class AcademicSubject extends Model
 
     public function lessons()
     {
-        return $this->hasMany(Lesson::class);
+        return $this->hasMany(Lesson::class, 'subject_id');
     }
 
     public function lessonNotes()
@@ -111,7 +111,7 @@ class AcademicSubject extends Model
 
     public function teachers()
     {
-        return $this->belongsToMany(Teacher::class)
+        return $this->belongsToMany(Teacher::class, 'subject_teacher', 'subject_id', 'teacher_id')
             ->withTimestamps()
             ->withPivot('is_primary', 'notes');
     }

@@ -49,7 +49,10 @@
                     @livewire('students.student-navigation', [
                         'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
+                    @elseif(auth()->user()->role === 'teacher')
+                    @include('livewire.navigations.teacher-navigation')
                 @endif
+
             @endauth
         </div>
 
