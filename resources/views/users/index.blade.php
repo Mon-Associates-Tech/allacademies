@@ -47,6 +47,7 @@
                 <option value="moderator" {{ request('role') === 'moderator' ? 'selected' : '' }}>Moderator</option>
                 <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner</option>
                 <option value="author" {{ request('role') === 'author' ? 'selected' : '' }}>Author</option>
+                <option value="subscriber" {{ request('role') === 'subscriber' ? 'selected' : '' }}>Subscriber</option>
             </select>
 
             <!-- Online status toggle -->
@@ -182,14 +183,7 @@
                             <div class="flex items-center space-x-3">
                                 <!-- Avatar -->
                                 <div class="relative">
-                                    @if($user->avatar)
-                                        <img class="h-10 w-10 rounded-full object-cover"
-                                             src="{{ $user->avatar }}"
-                                             alt="{{ $user->name }}">
-                                    @else
-                                        <x-avatar class="h-10 w-10" name="{{ $user->name }}" />
-                                    @endif
-
+                                        <x-avatar avatar="{{$user->avatar}}" class="h-10 w-10" name="{{ $user->name }}" />
                                     <!-- Online indicator -->
                                     @if($user->is_online)
                                         <div class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-400 border-2 border-white"></div>

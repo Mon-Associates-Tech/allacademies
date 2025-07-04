@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Traits\HasAvatar;
 use App\Traits\Trackable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -157,45 +158,49 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all role names for this user
      */
-    public function getRoleNames(): array
-    {
-        if (!$this->relationLoaded('roles')) {
-            $this->load('roles');
-        }
-
-        $roleNames = $this->roles->pluck('name')->toArray();
-
-        // Also include primary role if it exists and isn't already in the list
-        $primaryRoleName = null;
-        if ($this->role_id) {
-            if (!$this->relationLoaded('primaryRole')) {
-                $this->load('primaryRole');
-            }
-
-            if ($this->primaryRole) {
-                $primaryRoleName = $this->primaryRole->name;
-            }
-        }
-
-        // Add string role as fallback
-        $stringRole = $this->attributes['role'] ?? null;
-
-        // Combine all roles and remove duplicates
-        $allRoles = array_filter(array_unique(array_merge(
-            $roleNames,
-            $primaryRoleName ? [$primaryRoleName] : [],
-            $stringRole ? [$stringRole] : []
-        )));
-
-        return array_values($allRoles);
+public function getRoleNames(): array
+{
+    if (!$this->relationLoaded('roles')) {
+        $this->load('roles');
     }
+
+    $roleNames = $this->roles->pluck('name')->toArray();
+
+    // Also include a primary role if it exists and isn't already in the list
+    $primaryRoleName = null;
+    if ($this->role_id) {
+        if (!$this->relationLoaded('primaryRole')) {
+            $this->load('primaryRole');
+        }
+
+        if ($this->primaryRole) {
+            $primaryRoleName = $this->primaryRole->name;
+        }
+    }
+
+    // Add string role as fallback, handling enum value
+    $stringRole = null;
+    if (isset($this->attributes['role'])) {
+        $stringRole = $this->attributes['role'] instanceof UserRole
+            ? $this->attributes['role']->value
+            : $this->attributes['role'];
+    }
+
+    $allRoles = array_filter(array_unique(array_merge(
+        $roleNames,
+        $primaryRoleName ? [$primaryRoleName] : [],
+        $stringRole->value  ? [$stringRole->value] :  [$stringRole]
+    )));
+
+    return array_values($allRoles);
+}
 
     /**
      * Check if user has a specific role (checks all possible role sources)
      */
     public function hasRole(string $roleName): bool
     {
-        return in_array($roleName, $this->getRoleNames());
+        return in_array($roleName, $this->getRoleNames(), true);
     }
 
     /**
@@ -266,7 +271,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
 public function impersonateUser($userId)
 {
-    $user = User::findOrFail($userId);
+    $user = self::findOrFail($userId);
 
     // Check if current user can impersonate
     if (!Auth::user()->canImpersonate()) {
@@ -299,7 +304,7 @@ public function impersonateUser($userId)
             // Optionally remove student record if role changed away from student
             if ($user->isDirty('role') && !$user->hasRole('student') && $user->student) {
                // $user->student->delete();
-                Log::info('student deletion [mocked]');;
+                Log::info('student deletion [mocked]');
             }
         });
     }

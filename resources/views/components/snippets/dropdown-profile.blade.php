@@ -9,14 +9,12 @@
         @click.prevent="open = !open"
         :aria-expanded="open"
     >
-        <img class="w-9 h-9 rounded-full border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-500"
-             src="{{ Auth::user()->profile_photo_url ?? asset('/img/logo.png') }}"
-             width="36" height="36" alt="{{ Auth::user()->name }}" />
+        <x-avatar :name="auth()->user()->name" avatar="{{ Auth::user()->avatar }}" class="w-6 h-6 rounded-full mx-auto"/>
         <div class="flex items-center truncate">
-            <span class="truncate ml-3 text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">{{ Auth::user()->name }}</span>
+            <span class="truncate hidden sm:inline whitespace-nowrap text-nowrap ml-2 text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">{{ Auth::user()->name }}</span>
             <svg class="w-4 h-4 shrink-0 ml-2 fill-current text-gray-400 dark:text-gray-500 transition-transform duration-200"
-                 :class="open ? 'rotate-180' : ''" viewBox="0 0 12 12">
-                <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
+                 :class="open ? 'rotate-180' : ''" viewBox="0 0 12 8">
+                <path d="M1.41.59 6 5.17 10.59.59 12 2 6 8 0 2z"/>
             </svg>
         </div>
     </button>

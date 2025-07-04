@@ -1,4 +1,4 @@
-@props(['name' => ''])
+@props(['name' => '', 'avatar' => ''])
 
 @php
     // --- Initials Generation ---
@@ -38,5 +38,11 @@
 
 <div {{ $attributes->merge(['class' => 'flex items-center justify-center rounded-full text-white font-bold']) }}
      style="{{ $backgroundStyle }}">
-    {{ $initials }}
+    @if($avatar)
+        <img class="w-full h-full rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+             src="{{ Storage::url($avatar) }}"
+             alt="{{ $name }}">
+    @else
+        {{ $initials }}
+    @endif
 </div>
