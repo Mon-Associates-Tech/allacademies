@@ -80,8 +80,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Don't allow impersonating other admins or inactive users
         return !$this->hasRole('admin') &&
-               !$this->hasRole('administrator') &&
-               ($this->is_active ?? true);
+            !$this->hasRole('administrator') &&
+            ($this->is_active ?? true);
     }
 
     public function subscriptions(): User|HasMany
@@ -158,42 +158,42 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all role names for this user
      */
-public function getRoleNames(): array
-{
-    if (!$this->relationLoaded('roles')) {
-        $this->load('roles');
-    }
-
-    $roleNames = $this->roles->pluck('name')->toArray();
-
-    // Also include a primary role if it exists and isn't already in the list
-    $primaryRoleName = null;
-    if ($this->role_id) {
-        if (!$this->relationLoaded('primaryRole')) {
-            $this->load('primaryRole');
+    public function getRoleNames(): array
+    {
+        if (!$this->relationLoaded('roles')) {
+            $this->load('roles');
         }
 
-        if ($this->primaryRole) {
-            $primaryRoleName = $this->primaryRole->name;
+        $roleNames = $this->roles->pluck('name')->toArray();
+
+        // Also include a primary role if it exists and isn't already in the list
+        $primaryRoleName = null;
+        if ($this->role_id) {
+            if (!$this->relationLoaded('primaryRole')) {
+                $this->load('primaryRole');
+            }
+
+            if ($this->primaryRole) {
+                $primaryRoleName = $this->primaryRole->name;
+            }
         }
+
+        // Add string role as fallback, handling enum value
+        $stringRole = null;
+        if (isset($this->attributes['role'])) {
+            $stringRole = $this->attributes['role'] instanceof UserRole
+                ? $this->attributes['role']->value
+                : $this->attributes['role'];
+        }
+
+        $allRoles = array_filter(array_unique(array_merge(
+            $roleNames,
+            $primaryRoleName ? [$primaryRoleName] : [],
+            $stringRole ? [$stringRole] : $stringRole
+        )));
+
+        return array_values($allRoles);
     }
-
-    // Add string role as fallback, handling enum value
-    $stringRole = null;
-    if (isset($this->attributes['role'])) {
-        $stringRole = $this->attributes['role'] instanceof UserRole
-            ? $this->attributes['role']->value
-            : $this->attributes['role'];
-    }
-
-    $allRoles = array_filter(array_unique(array_merge(
-        $roleNames,
-        $primaryRoleName ? [$primaryRoleName] : [],
-        $stringRole  ? [$stringRole] :  $stringRole
-    )));
-
-    return array_values($allRoles);
-}
 
     /**
      * Check if user has a specific role (checks all possible role sources)
@@ -269,42 +269,74 @@ public function getRoleNames(): array
         return $this->hasOne(Student::class);
     }
 
-public function impersonateUser($userId)
-{
-    $user = self::findOrFail($userId);
+    public function impersonateUser($userId)
+    {
+        $user = self::findOrFail($userId);
 
-    // Check if current user can impersonate
-    if (!Auth::user()->canImpersonate()) {
-        session()->flash('error', 'You do not have permission to impersonate users.');
-        return;
+        // Check if current user can impersonate
+        if (!Auth::user()->canImpersonate()) {
+            session()->flash('error', 'You do not have permission to impersonate users.');
+            return;
+        }
+
+        // Check if target user can be impersonated
+        if (!$user->canBeImpersonated()) {
+            session()->flash('error', 'This user cannot be impersonated.');
+            return;
+        }
+
+        // Store the current user ID before impersonation
+        session()->put('impersonate_redirect_to', route('dashboard'));
+
+        return redirect()->route('impersonate', $userId);
     }
 
-    // Check if target user can be impersonated
-    if (!$user->canBeImpersonated()) {
-        session()->flash('error', 'This user cannot be impersonated.');
-        return;
-    }
-
-    // Store the current user ID before impersonation
-    session()->put('impersonate_redirect_to', route('dashboard'));
-
-    return redirect()->route('impersonate', $userId);
-}
     protected static function booted()
     {
-        static::updated(function ($user) {
-            // Check if role was changed to student
-            if ($user->isDirty('role') && $user->hasRole('student') && !$user->student) {
-                Student::create([
-                    'user_id' => $user->id,
-                    'student_group_id' => null,
-                ]);
-            }
+        static::updated(static function ($user) {
+            if ($user->isDirty('role')) {
+                // Handle student role
+                if ($user->hasRole('student')) {
+                    Student::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['student_group_id' => null]
+                    );
+                }
 
-            // Optionally remove student record if role changed away from student
-            if ($user->isDirty('role') && !$user->hasRole('student') && $user->student) {
-               // $user->student->delete();
-                Log::info('student deletion [mocked]');
+                // Handle teacher role
+                if ($user->hasRole('teacher')) {
+                    Teacher::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [/* default teacher fields */]
+                    );
+                }
+
+                // Handle author role
+                if ($user->hasRole('author')) {
+                    Author::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [/* default author fields */]
+                    );
+                }
+
+                // Handle librarian role
+                if ($user->hasRole('librarian')) {
+                    Librarian::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [/* default librarian fields */]
+                    );
+                }
+
+                // Handle parent role
+                if ($user->hasRole('parent')) {
+                    StudentParent::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'relationship' => null,
+                            'student_id' => null,
+                        ]
+                    );
+                }
             }
         });
     }
@@ -313,12 +345,24 @@ public function impersonateUser($userId)
     {
         return $this->hasOne(Teacher::class, 'user_id');
     }
-    public function mainRole(){
+
+    public function mainRole()
+    {
         return $this->attributes['role'] ?? 'subscriber';
     }
 
     public function author(): HasOne
     {
         return $this->hasOne(Author::class, 'user_id');
+    }
+
+    public function librarian(): HasOne
+    {
+        return $this->hasOne(Librarian::class, 'user_id');
+    }
+
+    public function parent(): HasOne
+    {
+        return $this->hasOne(StudentParent::class, 'user_id');
     }
 }

@@ -48,6 +48,7 @@
                 <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner</option>
                 <option value="author" {{ request('role') === 'author' ? 'selected' : '' }}>Author</option>
                 <option value="subscriber" {{ request('role') === 'subscriber' ? 'selected' : '' }}>Subscriber</option>
+                <option value="parent" {{ request('role') === 'parent' ? 'selected' : '' }}>Parent</option>
             </select>
 
             <!-- Online status toggle -->

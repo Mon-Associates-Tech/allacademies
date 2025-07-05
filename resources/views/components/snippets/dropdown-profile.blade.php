@@ -34,9 +34,7 @@
         <!-- User Info Header (Fixed) -->
         <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-100 dark:border-gray-700">
             <div class="flex items-center space-x-3">
-                <img class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-600 shadow-sm"
-                     src="{{ Auth::user()->profile_photo_url ?? asset('/img/logo.png') }}"
-                     alt="{{ Auth::user()->name }}" />
+                <x-avatar  :name="auth()->user()->name" avatar="{{ Auth::user()->avatar }}" class="w-12 h-12 rounded-full mx-auto" />
                 <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ Auth::user()->name }}</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ Auth::user()->email }}</p>
