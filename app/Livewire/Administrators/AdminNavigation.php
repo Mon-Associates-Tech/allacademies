@@ -30,6 +30,6 @@ class AdminNavigation extends Component
 
     public function render()
     {
-        return view('livewire.administrators.admin-navigation');
+        return view('livewire.navigations.admin-navigation');
     }
 }

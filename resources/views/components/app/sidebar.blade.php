@@ -30,7 +30,7 @@
             </button>
         </div>
         <div class="">
-            <x-avatar :name="auth()->user()->name" class="w-12 h-12 mx-auto mb-2"/>
+            <x-avatar :name="auth()->user()->name" avatar="{{ auth()->user()->avatar }}" class="w-12 h-12 rounded-full mx-auto mb-2"/>
             <div x-show="$store.sidebar.expanded" class="sidebar-text">
                 <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>
                 <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">{{ auth()->user()->email }}</h2>
@@ -51,6 +51,16 @@
                     ])
                     @elseif(auth()->user()->role === 'teacher')
                     @include('livewire.navigations.teacher-navigation')
+                    @elseif(auth()->user()->role === 'parent')
+                    @include('livewire.navigations.parent-navigation')
+                    @elseif(auth()->user()->role === 'librarian')
+                    @include('livewire.navigations.librarian-navigation', [
+                        'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                    @elseif(auth()->user()->role === 'author')
+                    @include('livewire.navigations.author-navigation', [
+                        'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
                 @endif
 
             @endauth

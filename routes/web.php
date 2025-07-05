@@ -118,7 +118,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('teams/{team}/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
     Route::post('teams/{team}/members/{member}', [MemberController::class, 'update'])->name('members.update');
 
-    Route::resource('subscriptions', SubscriptionController::class)->except(['show', 'edit', 'update']);
+    Route::resource('subscriptions', SubscriptionController::class);
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -244,7 +244,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Book routes
-    Route::resource('books', BookController::class);
+//    Route::resource('books', BookController::class);
 
     // Book Category routes
     Route::resource('book-categories', BookCategoryController::class);
@@ -401,7 +401,7 @@ Route::middleware([])->prefix('admin')->group(function () {
 Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
 // Book routes for students
 Route::middleware(['auth'])->group(function () {
-    Route::get('/books', [BookController::class, 'index'])->name('books.index');
+//    Route::get('/books', [BookController::class, 'index'])->name('books.index');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
     Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
@@ -446,3 +446,7 @@ Route::middleware(['auth'])->group(function () {
 
 include 'student.php';
 include 'teacher.php';
+include 'author.php';
+include 'librarian.php';
+include 'parent.php';
+include 'administrator.php';

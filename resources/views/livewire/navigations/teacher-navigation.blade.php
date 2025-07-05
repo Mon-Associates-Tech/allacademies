@@ -19,10 +19,10 @@
 
         <!-- My Courses -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('teacher.courses*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('teacher.subjects.index*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('teacher.subjects.index')}}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('teacher.courses*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                    <svg class="shrink-0 fill-current {{ Route::is('teacher.subjects.index*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
                         <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
                     </svg>
                     <span class="text-sm ml-4 sidebar-text duration-200">My Courses</span>

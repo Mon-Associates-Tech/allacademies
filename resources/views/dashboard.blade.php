@@ -34,6 +34,10 @@
         @livewire('administrators.dashboard')
     @endif
 
+    @if(Auth::user()->role === 'author')
+        @livewire('authors.dashboard')
+    @endif
+
     @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>
             @if ($academicSubjects->count())

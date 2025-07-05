@@ -189,7 +189,7 @@ public function getRoleNames(): array
     $allRoles = array_filter(array_unique(array_merge(
         $roleNames,
         $primaryRoleName ? [$primaryRoleName] : [],
-        $stringRole->value  ? [$stringRole->value] :  [$stringRole]
+        $stringRole  ? [$stringRole] :  $stringRole
     )));
 
     return array_values($allRoles);
@@ -315,5 +315,10 @@ public function impersonateUser($userId)
     }
     public function mainRole(){
         return $this->attributes['role'] ?? 'subscriber';
+    }
+
+    public function author(): HasOne
+    {
+        return $this->hasOne(Author::class, 'user_id');
     }
 }

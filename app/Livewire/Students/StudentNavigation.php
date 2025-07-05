@@ -34,6 +34,6 @@ class StudentNavigation extends Component
 
     public function render()
     {
-        return view('livewire.students.student-navigation');
+        return view('livewire.navigations.student-navigation');
     }
 }

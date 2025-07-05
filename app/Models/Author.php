@@ -9,7 +9,19 @@ class Author extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id'];
+    protected $fillable = [
+        'user_id',
+        'name',
+        'biography',
+        'website',
+        'social_links',
+        'writing_experience',
+        'education',
+        'awards',
+        'author_statement',
+        'pen_name'
+
+    ];
 
     public function user()
     {

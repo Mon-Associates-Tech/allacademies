@@ -3,12 +3,13 @@
 use App\Livewire\Students\ActivityLogs;
 use App\Livewire\Students\Books;
 use App\Livewire\Students\Courses;
+use App\Livewire\Students\Notifications;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\SelfAssessment;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
 
-Route::middleware(['auth'])->name('student.')->group(function () {
+Route::middleware(['auth'])->prefix('dashboard')->name('student.')->group(function () {
 
 Route::get('assessments', SelfAssessment::class )->name('assessments');
 Route::get('performance', PerformanceOverview::class)->name('performance');
@@ -17,4 +18,5 @@ Route::get('activities', ActivityLogs::class)->name('activities');
 Route::get('schedules', StudentSchedule::class)->name('schedules');
 Route::get('courses', Courses::class)->name('courses');
 Route::get('books', Books::class)->name('books');
+Route::get('notifications', Notifications::class)->name('notifications.index');
 });
