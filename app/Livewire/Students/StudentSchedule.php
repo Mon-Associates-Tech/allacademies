@@ -83,7 +83,7 @@ class StudentSchedule extends Component
         }
 
         // Get assignments (if Assignment model exists)
-        if (class_exists('App\Models\Assignment') && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
+        if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
             $assignments = Assignment::whereHas('students', function ($query) {
                 $query->where('student_id', $this->student->id);
             })
@@ -138,7 +138,7 @@ class StudentSchedule extends Component
         }
 
         // Get lessons (if applicable)
-        if (class_exists('App\Models\Lesson') && ($this->filterType === 'all' || $this->filterType === 'lessons')) {
+        if (class_exists(Lesson::class) && ($this->filterType === 'all' || $this->filterType === 'lessons')) {
             // This would depend on how lessons are structured in your app
             // Assuming lessons are connected to students through subjects or groups
         }
@@ -162,7 +162,8 @@ class StudentSchedule extends Component
         // Add other activity types here...
 
         $calendar = [];
-        $currentDate = $startOfMonth->copy()->startOfWeek();
+        $currentDate = $startOfMonth->copy()->startOfWeek(Carbon::SUNDAY);
+
 
         for ($week = 0; $week < 6; $week++) {
             for ($day = 0; $day < 7; $day++) {

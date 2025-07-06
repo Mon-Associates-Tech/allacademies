@@ -465,26 +465,6 @@
                 </div>
             </div>
 
-            <!-- Question Navigation -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Question Navigation</h3>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($questions as $index => $question)
-                        <button wire:click="jumpToQuestion({{ $index }})"
-                                class="w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all transform hover:scale-105
-                                @if($currentQuestionIndex === $index)
-                                    bg-indigo-600 text-white shadow-lg
-                                @elseif(isset($responses[$index]) && $responses[$index] !== null && $responses[$index] !== '')
-                                    bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-200
-                                @else
-                                    bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600
-                                @endif">
-                            {{ $index + 1 }}
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-
             <!-- Current Question -->
             @if(isset($questions[$currentQuestionIndex]))
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -506,9 +486,24 @@
                                 </span>
                             @endif
                         </div>
+                        <div class="flex mb-3 flex-wrap gap-2">
+                            @foreach($questions as $index => $question)
+                                <button wire:click="jumpToQuestion({{ $index }})"
+                                        class="w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all transform hover:scale-105
+                                @if($currentQuestionIndex === $index)
+                                    bg-indigo-600 text-white shadow-lg
+                                @elseif(isset($responses[$index]) && $responses[$index] !== null && $responses[$index] !== '')
+                                    bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-200
+                                @else
+                                    bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600
+                                @endif">
+                                    {{ $index + 1 }}
+                                </button>
+                            @endforeach
+                        </div>
 
                         <h4 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                            {!! $questions[$currentQuestionIndex]['question_record']['questionable']->question !!}
+                            {!! $questions[$currentQuestionIndex]['question_record']['questionable']->question->down !!}
                         </h4>
 
                         @php
@@ -521,7 +516,7 @@
                                 @php
                                     $options = [];
                                     foreach(['a', 'b', 'c', 'd', 'e'] as $letter) {
-                                        if (!is_null($currentQuestion->{'option_'.$letter})) {
+                                        if (!empty($currentQuestion->{'option_'.$letter})) {
                                             $options[] = ['label' => strtoupper($letter), 'value' => $currentQuestion->{'option_'.$letter}];
                                         }
                                     }
@@ -533,12 +528,13 @@
                                         <input type="radio"
                                                name="response_{{ $currentQuestionIndex }}"
                                                value="{{ $option['label'] }}"
+                                               wire:key="response_{{ $currentQuestionIndex }}_{{ $option['label'] }}"
                                                wire:click="saveResponse({{ $currentQuestionIndex }}, '{{ $option['label'] }}')"
                                                @if (isset($responses[$currentQuestionIndex]) && $responses[$currentQuestionIndex] === $option['label']) checked @endif
                                                class="mt-1 mr-4 text-indigo-600 focus:ring-indigo-500">
                                         <div class="flex-1">
                                             <span class="font-medium text-gray-900 dark:text-gray-100">{{ $option['label'] }}.</span>
-                                            <span class="ml-2 text-gray-700 dark:text-gray-300">{{ $option['value'] }}</span>
+                                            <span class="ml-2 text-gray-700 dark:text-gray-300">{{ $option['value']->down }}</span>
                                         </div>
                                     </label>
                                 @endforeach
@@ -550,6 +546,7 @@
                                         <input type="radio"
                                                name="response_{{ $currentQuestionIndex }}"
                                                value="true"
+                                               wire:key="response_{{ $currentQuestionIndex }}_true"
                                                wire:click="saveResponse({{ $currentQuestionIndex }}, 'true')"
                                                @if (isset($responses[$currentQuestionIndex]) && $responses[$currentQuestionIndex] === 'true') checked @endif
                                                class="mr-4 text-indigo-600 focus:ring-indigo-500">
@@ -561,6 +558,7 @@
                                         <input type="radio"
                                                name="response_{{ $currentQuestionIndex }}"
                                                value="false"
+                                               wire:key="response_{{ $currentQuestionIndex }}_false"
                                                wire:click="saveResponse({{ $currentQuestionIndex }}, 'false')"
                                                @if (isset($responses[$currentQuestionIndex]) && $responses[$currentQuestionIndex] === 'false') checked @endif
                                                class="mr-4 text-indigo-600 focus:ring-indigo-500">
@@ -574,6 +572,7 @@
                                         wire:model.lazy="responses.{{ $currentQuestionIndex }}"
                                         class="w-full h-40 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 bg-gray-50 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-600 focus:ring-opacity-50 transition-all duration-200 resize-none"
                                         placeholder="Write your detailed answer here..."
+                                        wire:key="response_{{ $currentQuestionIndex }}_essay"
                                         rows="8">{{ $responses[$currentQuestionIndex] ?? '' }}</textarea>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">
                                         💡 Take your time to provide a comprehensive answer. This will be manually reviewed.
@@ -644,7 +643,7 @@
                     <div class="text-center mb-8">
                         <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Your Results</h2>
                         <div class="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full text-white text-3xl font-bold mb-4">
-                            {{ $result['percentage'] }}%
+                            {{ $result['percentage_score'] }}%
                         </div>
                         <p class="text-xl text-gray-600 dark:text-gray-400">
                             You scored {{ $result['score'] }} out of {{ $result['total_score'] }} points

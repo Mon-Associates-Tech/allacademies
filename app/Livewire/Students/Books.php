@@ -653,7 +653,8 @@ class Books extends AppComponent
             ->with(['author', 'bookCategory'])
             ->whereHas('subscriptions', function ($query) use ($student) {
                 $query->where('student_id', $student->id)
-                    ->where('status', 'active');
+                    ->where('status', 'active')
+                    ->orWhere('status', 'pending_payment');
             })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {

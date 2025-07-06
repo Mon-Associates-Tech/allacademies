@@ -610,7 +610,7 @@ class SelfAssessment extends Component
             ->withProperties([
                 'action' => 'retake_assessment_requested',
                 'previous_assessment_id' => $this->assessment?->id,
-                'previous_score' => $this->result['percentage'] ?? null
+                'previous_score' => $this->result['percentage_score'] ?? null
             ])
             ->log('Student requested to retake assessment');
 
@@ -746,7 +746,7 @@ class SelfAssessment extends Component
         return [
             'score' => $totalScore,
             'max_score' => $maxScore,
-            'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0
+            'percentage_score' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0
         ];
     }
 
