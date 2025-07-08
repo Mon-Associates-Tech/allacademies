@@ -112,7 +112,7 @@ class AcademicGroupController extends Controller
 
         $academicGroup->update($request->validated());
 
-        return to_route('academic-groups.show', ['academic_group' =>  $academicGroup])
+        return to_route('academic-groups.show', ['academic_group' => $academicGroup])
             ->with('success', __('status.resource.updated', ['name' => $academicGroup->name]));
     }
 
@@ -122,13 +122,13 @@ class AcademicGroupController extends Controller
      * @param AcademicGroup $academicGroup
      * @return RedirectResponse
      */
-    public function destroy(AcademicGroup $academicGroup): RedirectResponse
+    public function destroy(Request $request, AcademicGroup $academicGroup): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicGroup->delete();
 
-        return to_route('academic-groups.index')
+        return to_route('academic-groups.index', ['page' => $request->input('page')])
             ->with('success', __('status.resource.deleted', ['name' => $academicGroup->name]));
     }
 }
