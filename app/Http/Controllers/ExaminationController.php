@@ -266,7 +266,7 @@ class ExaminationController extends Controller
                 ->withErrors(['general' => 'No preview data found. Please generate an examination first.']);
         }
 
-        $previewData['creator_id'] = auth()->user()->current_team_id;
+        $previewData['creator_id'] = auth()->user()->id;
         $previewData['team_id'] = $currentTeam->id;
 
         $previewData['sections'] = $this->formatSection($previewData['sections']);

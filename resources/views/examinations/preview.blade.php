@@ -19,6 +19,8 @@
          'examination' => $title,
          'isPreview' => true,
          'shouldCreate' => true,
+         'team_id' => $previewData['team_id'],
+         'creator_id' => $previewData['creator_id'],
      ])
 
     <style>

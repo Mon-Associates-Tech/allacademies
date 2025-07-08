@@ -83,16 +83,16 @@
                                 <div class="mr-2 font-medium">{{ $loop->iteration }}.</div>
                                 <div class="flex-1">
                                     <div>
-                                        <span class="font-medium">
-                                            {!! $mc['question']['up'] !!}
-                                        </span>
+                                        <p class="font-medium" x-html="marked.parse(@js($mc['question']['up']))" />
                                         <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                              class="grid gap-x-5">
                                             @foreach ($mc['options'] as $key => $o)
                                                 @if(!empty($o))
                                                     <div class="flex space-x-2 items-baseline">
                                                         <div>({{ $key }})</div>
-                                                        <div>{!! $o !!}</div>
+                                                        <div>
+                                                            <p x-html="marked.parse(@js($o))" />
+                                                        </div>
                                                     </div>
                                                 @endif
                                             @endforeach
@@ -111,7 +111,7 @@
                                 <div class="mr-2 font-medium">{{ $loop->iteration }}.</div>
                                 <div class="flex-1">
                                     <div x-data="{ question: marked.parse(@js($tf['question']['down'])) }">
-                                        <span> {!! $tf['question']['down'] !!} </span>
+                                        <p x-html="question"/>
                                         <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                              class="grid gap-x-5">
                                             @foreach (['a', 'b'] as $o)
@@ -136,9 +136,9 @@
                                 <div class="mr-2 font-medium">{{ $essayCounter }}.</div>
                                 <div class="flex-1">
                                     <div>
-                                        <span
+                                        <p
                                             x-html="marked.parse(@js($es['question']['down'], JSON_THROW_ON_ERROR))"
-                                            class="font-medium"></span>
+                                            class="font-medium"></p>
                                         <p class="text-sm text-right">
                                             [{{ $es['score'] }} {{ Str::plural('mark', $es['score']) }}]</p>
                                     </div>
