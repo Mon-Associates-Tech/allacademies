@@ -11,7 +11,7 @@ use App\Livewire\Teachers\TeacherProfile;
 use App\Livewire\Teachers\ViewAssignment;
 use App\Livewire\Teachers\VirtualClassroom;
 
-Route::middleware(['auth'])->name('teacher.')->group(function () {
+Route::middleware(['auth'])->prefix('dashboard/teacher')->name('teacher.')->group(function () {
     Route::get('assignments', Assignments::class)->name('assignments.index');
     Route::get('assignments/{assignment}', ViewAssignment::class)->name('assignments.show');
     Route::get('students', Students::class)->name('students.index');

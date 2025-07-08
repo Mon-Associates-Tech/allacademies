@@ -7,8 +7,13 @@ use Livewire\WithPagination;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\AcademicSubject as Subject;
+use App\Models\AcademicSubject;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\Student;
+use App\Enums\UserRole;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class TeacherManagement extends Component
@@ -20,24 +25,34 @@ class TeacherManagement extends Component
     public $password;
     public $specialization;
     public $biography;
-    public $subjectIds = [];
+    public $academicGroupId;
+    public $academicLevelId;
+    public $selectedSubjects = [];
     public $searchTerm = '';
     public $isEditing = false;
     public $editingTeacherId;
-    public $subjects;
     public $showTeacherModal = false;
     public $showDeleteModal = false;
     public $selectedTeacher;
     public $teacherToDelete;
+    public $existingUser = null;
+    public $userExists = false;
+
+    // Collections
+    public $academicGroups;
+    public $academicLevels = [];
+    public $availableSubjects = [];
 
     protected $rules = [
         'name' => 'required|string|min:3|max:255',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:8',
+        'email' => 'required|email',
+        'password' => 'nullable|string|min:8',
         'specialization' => 'nullable|string|max:255',
         'biography' => 'nullable|string|max:1000',
-        'subjectIds' => 'nullable|array',
-        'subjectIds.*' => 'exists:academic_subjects,id',
+        'academicGroupId' => 'required|exists:academic_groups,id',
+        'academicLevelId' => 'required|exists:academic_levels,id',
+        'selectedSubjects' => 'nullable|array',
+        'selectedSubjects.*' => 'exists:academic_subjects,id',
     ];
 
     protected $messages = [
@@ -46,17 +61,17 @@ class TeacherManagement extends Component
         'name.max' => 'Teacher name cannot exceed 255 characters.',
         'email.required' => 'Email address is required.',
         'email.email' => 'Please enter a valid email address.',
-        'email.unique' => 'This email address is already registered.',
-        'password.required' => 'Password is required for new teachers.',
         'password.min' => 'Password must be at least 8 characters.',
         'specialization.max' => 'Specialization cannot exceed 255 characters.',
         'biography.max' => 'Biography cannot exceed 1000 characters.',
-        'subjectIds.*.exists' => 'One or more selected subjects are invalid.',
+        'academicGroupId.required' => 'Please select an academic group.',
+        'academicLevelId.required' => 'Please select an academic level.',
+        'selectedSubjects.*.exists' => 'One or more selected subjects are invalid.',
     ];
 
     public function mount()
     {
-        $this->subjects = Subject::orderBy('name')->get();
+        $this->academicGroups = AcademicGroup::orderBy('name')->get();
     }
 
     public function updatedSearchTerm()
@@ -64,41 +79,178 @@ class TeacherManagement extends Component
         $this->resetPage();
     }
 
+    public function updatedEmail()
+    {
+        $this->checkExistingUser();
+    }
+
+    public function updatedAcademicGroupId()
+    {
+        $this->academicLevelId = null;
+        $this->selectedSubjects = [];
+        $this->availableSubjects = [];
+        $this->loadAcademicLevels();
+    }
+
+    public function updatedAcademicLevelId()
+    {
+        $this->selectedSubjects = [];
+        $this->loadAvailableSubjects();
+    }
+
+    public function checkExistingUser()
+    {
+        if (empty($this->email)) {
+            $this->existingUser = null;
+            $this->userExists = false;
+            return;
+        }
+
+        $user = User::where('email', $this->email)->first();
+
+        if ($user) {
+            $this->existingUser = $user;
+            $this->userExists = true;
+            $this->name = $user->name;
+
+            // Check if user already has teacher role
+            $hasTeacherRole = $user->roles()->where('name', 'teacher')->exists();
+            if ($hasTeacherRole) {
+                $this->addError('email', 'This user already has a teacher account.');
+            }
+        } else {
+            $this->existingUser = null;
+            $this->userExists = false;
+        }
+    }
+
+    public function loadAcademicLevels()
+    {
+        if ($this->academicGroupId) {
+            $this->academicLevels = AcademicLevel::where('academic_group_id', $this->academicGroupId)
+                ->orderBy('name')
+                ->get();
+        } else {
+            $this->academicLevels = [];
+        }
+    }
+
+    public function loadAvailableSubjects()
+    {
+        if ($this->academicLevelId) {
+            $this->availableSubjects = AcademicSubject::where('academic_level_id', $this->academicLevelId)
+                ->orderBy('name')
+                ->get();
+        } else {
+            $this->availableSubjects = [];
+        }
+    }
+
     public function create()
     {
-        $this->validate();
+        // Dynamic validation rules
+        $rules = $this->rules;
+
+        if (!$this->userExists) {
+            $rules['email'] = 'required|email|unique:users,email';
+            $rules['password'] = 'required|string|min:8';
+        } else {
+            $rules['password'] = 'nullable|string|min:8';
+        }
+
+        $this->validate($rules);
 
         try {
-            // Create user
-            $user = User::create([
-                'name' => $this->name,
-                'email' => $this->email,
-                'password' => Hash::make($this->password),
-                'email_verified_at' => now(),
-            ]);
+            DB::transaction(function () {
+                // Step 1: Create or get user
+                if ($this->userExists && $this->existingUser) {
+                    $user = $this->existingUser;
 
-            // Assign teacher role
-            $teacherRole = Role::where('name', 'teacher')->first();
-            if ($teacherRole) {
-                $user->roles()->attach($teacherRole);
-            }
+                    // Update name if different
+                    if ($user->name !== $this->name) {
+                        $user->update(['name' => $this->name]);
+                    }
+                } else {
+                    // Create new user with role field
+                    $user = User::create([
+                        'name' => $this->name,
+                        'email' => $this->email,
+                        'password' => Hash::make($this->password),
+                        'role' => UserRole::TEACHER->value, // Add the role field
+                        'email_verified_at' => now(),
+                    ]);
+                }
 
-            // Create teacher record
-            $teacher = Teacher::create([
-                'user_id' => $user->id,
-                'specialization' => $this->specialization,
-                'biography' => $this->biography,
-            ]);
+                // Step 2: Assign teacher role
+                $teacherRole = Role::where('name', 'teacher')->first();
+                if ($teacherRole && !$user->roles()->where('name', 'teacher')->exists()) {
+                    $user->roles()->attach($teacherRole);
+                }
 
-            // Associate with subjects
-            if (!empty($this->subjectIds)) {
-                $teacher->subjects()->attach($this->subjectIds);
-            }
+                // Step 3: Create teacher record
+                $teacher = Teacher::create([
+                    'user_id' => $user->id,
+                    'specialization' => $this->specialization,
+                ]);
+
+                // Step 4: Associate with academic group
+                if ($this->academicGroupId) {
+                    $teacher->academicGroups()->attach($this->academicGroupId, [
+                        'is_primary' => true,
+                        'notes' => 'Primary group assigned during teacher creation',
+                    ]);
+                }
+
+                // Step 5: Associate with academic level
+                if ($this->academicLevelId) {
+                    $teacher->academicLevels()->attach($this->academicLevelId, [
+                        'is_primary' => true,
+                        'notes' => 'Primary level assigned during teacher creation',
+                    ]);
+                }
+
+                // Step 6: Associate with selected subjects
+                if (!empty($this->selectedSubjects)) {
+                    $subjectData = [];
+                    foreach ($this->selectedSubjects as $subjectId) {
+                        $subjectData[$subjectId] = [
+                            'is_primary' => true,
+                            'notes' => 'Assigned during teacher creation',
+                        ];
+                    }
+                    $teacher->subjects()->attach($subjectData);
+                }
+
+                // Step 7: Auto-assign all students at the same level
+                $this->autoAssignStudents($teacher);
+            });
 
             $this->resetForm();
-            session()->flash('message', 'Teacher "' . $this->name . '" created successfully!');
+            session()->flash('message', 'Teacher "' . $this->name . '" created successfully with automatic student assignments!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to create teacher. Please try again.');
+            session()->flash('error', 'Failed to create teacher: ' . $e->getMessage());
+        }
+    }
+
+    private function autoAssignStudents($teacher)
+    {
+        if (!$this->academicLevelId) {
+            return;
+        }
+
+        // Get all students at the same academic level
+        $students = Student::where('academic_level_id', $this->academicLevelId)->get();
+
+        if ($students->isNotEmpty()) {
+            $studentData = [];
+            foreach ($students as $student) {
+                $studentData[$student->id] = [
+                    'is_primary' => false, // Set to false since there might be a primary teacher already
+                    'notes' => 'Auto-assigned based on academic level during teacher creation',
+                ];
+            }
+
+            $teacher->assignedStudents()->attach($studentData);
         }
     }
 
@@ -107,15 +259,35 @@ class TeacherManagement extends Component
         $this->isEditing = true;
         $this->editingTeacherId = $teacherId;
 
-        $teacher = Teacher::with('user', 'subjects')->findOrFail($teacherId);
+        $teacher = Teacher::with([
+            'user',
+            'subjects',
+            'academicGroups',
+            'academicLevels'
+        ])->findOrFail($teacherId);
+
         $this->name = $teacher->user->name;
         $this->email = $teacher->user->email;
         $this->password = '';
         $this->specialization = $teacher->specialization;
-        $this->biography = $teacher->biography;
-        $this->subjectIds = $teacher->subjects->pluck('id')->toArray();
+        $this->biography = $teacher->biography ?? '';
 
-        // Scroll to form
+        // Load academic group and level
+        $primaryGroup = $teacher->academicGroups()->wherePivot('is_primary', true)->first();
+        $primaryLevel = $teacher->academicLevels()->wherePivot('is_primary', true)->first();
+
+        if ($primaryGroup) {
+            $this->academicGroupId = $primaryGroup->id;
+            $this->loadAcademicLevels();
+        }
+
+        if ($primaryLevel) {
+            $this->academicLevelId = $primaryLevel->id;
+            $this->loadAvailableSubjects();
+        }
+
+        $this->selectedSubjects = $teacher->subjects->pluck('id')->toArray();
+
         $this->dispatch('scroll-to-form');
     }
 
@@ -123,152 +295,138 @@ class TeacherManagement extends Component
     {
         $teacher = Teacher::with('user')->findOrFail($this->editingTeacherId);
 
-        $this->validate([
-            'name' => 'required|string|min:3|max:255',
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)],
-            'password' => 'nullable|string|min:8',
-            'specialization' => 'nullable|string|max:255',
-            'biography' => 'nullable|string|max:1000',
-            'subjectIds' => 'nullable|array',
-            'subjectIds.*' => 'exists:academic_subjects,id',
-        ]);
+        $rules = $this->rules;
+        $rules['email'] = ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)];
+        $rules['password'] = 'nullable|string|min:8';
+
+        $this->validate($rules);
 
         try {
-            // Update user
-            $userData = [
-                'name' => $this->name,
-                'email' => $this->email,
-            ];
+            DB::transaction(function () use ($teacher) {
+                // Update user
+                $userData = [
+                    'name' => $this->name,
+                    'email' => $this->email,
+                ];
 
-            if ($this->password) {
-                $userData['password'] = Hash::make($this->password);
-            }
+                if (!empty($this->password)) {
+                    $userData['password'] = Hash::make($this->password);
+                }
 
-            $teacher->user->update($userData);
+                $teacher->user->update($userData);
 
-            // Update teacher
-            $teacher->update([
-                'specialization' => $this->specialization,
-                'biography' => $this->biography,
-            ]);
+                // Update teacher
+                $teacher->update([
+                    'specialization' => $this->specialization,
+                ]);
 
-            // Update subjects
-            $teacher->subjects()->sync($this->subjectIds);
+                // Update academic group association
+                $teacher->academicGroups()->detach();
+                if ($this->academicGroupId) {
+                    $teacher->academicGroups()->attach($this->academicGroupId, [
+                        'is_primary' => true,
+                        'notes' => 'Updated primary group',
+                    ]);
+                }
+
+                // Update academic level association
+                $teacher->academicLevels()->detach();
+                if ($this->academicLevelId) {
+                    $teacher->academicLevels()->attach($this->academicLevelId, [
+                        'is_primary' => true,
+                        'notes' => 'Updated primary level',
+                    ]);
+                }
+
+                // Update subject associations
+                $teacher->subjects()->detach();
+                if (!empty($this->selectedSubjects)) {
+                    $subjectData = [];
+                    foreach ($this->selectedSubjects as $subjectId) {
+                        $subjectData[$subjectId] = [
+                            'is_primary' => true,
+                            'notes' => 'Updated during teacher edit',
+                        ];
+                    }
+                    $teacher->subjects()->attach($subjectData);
+                }
+
+                // Re-assign students based on new level
+                $teacher->assignedStudents()->detach();
+                $this->autoAssignStudents($teacher);
+            });
 
             $this->resetForm();
             session()->flash('message', 'Teacher "' . $this->name . '" updated successfully!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update teacher. Please try again.');
+            session()->flash('error', 'Failed to update teacher: ' . $e->getMessage());
         }
     }
 
     public function confirmDelete($teacherId)
     {
-        $this->teacherToDelete = $teacherId;
+        $this->teacherToDelete = Teacher::with('user')->findOrFail($teacherId);
         $this->showDeleteModal = true;
     }
 
-    public function deleteTeacher()
+    public function delete()
     {
         try {
-            $teacher = Teacher::with('user')->findOrFail($this->teacherToDelete);
-            $teacherName = $teacher->user->name;
+            DB::transaction(function () {
+                // Detach all relationships
+                $this->teacherToDelete->subjects()->detach();
+                $this->teacherToDelete->academicGroups()->detach();
+                $this->teacherToDelete->academicLevels()->detach();
+                $this->teacherToDelete->assignedStudents()->detach();
 
-            // Check if teacher has student groups
-            if ($teacher->studentGroups()->count() > 0) {
-                session()->flash('error', 'Cannot delete teacher "' . $teacherName . '" because they have assigned student groups. Please reassign the groups first.');
-                $this->closeDeleteModal();
-                return;
-            }
+                // Delete teacher record
+                $this->teacherToDelete->delete();
 
-            // Check if teacher has assignments
-            if (method_exists($teacher, 'assignments') && $teacher->assignments()->count() > 0) {
-                session()->flash('error', 'Cannot delete teacher "' . $teacherName . '" because they have assignments. Please reassign or delete the assignments first.');
-                $this->closeDeleteModal();
-                return;
-            }
+                // Optionally delete user if they have no other roles
+                $user = $this->teacherToDelete->user;
+                if ($user && $user->roles()->count() <= 1) {
+                    $user->delete();
+                }
+            });
 
-            $userId = $teacher->user_id;
-
-            // Delete teacher record and relationships
-            $teacher->subjects()->detach();
-            $teacher->delete();
-
-            // Delete user
-            User::destroy($userId);
-
-            session()->flash('message', 'Teacher "' . $teacherName . '" deleted successfully!');
-            $this->closeDeleteModal();
+            $this->showDeleteModal = false;
+            $this->teacherToDelete = null;
+            session()->flash('message', 'Teacher deleted successfully!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to delete teacher. Please try again.');
-            $this->closeDeleteModal();
+            session()->flash('error', 'Failed to delete teacher: ' . $e->getMessage());
         }
     }
 
-    public function showTeacherDetails($teacherId)
+    public function cancelEdit()
     {
-        $this->selectedTeacher = Teacher::with([
-            'user',
-            'subjects',
-            'studentGroups.students',
-            'studentsFromGroups'
-        ])->findOrFail($teacherId);
-        $this->showTeacherModal = true;
-    }
-
-    public function closeTeacherModal()
-    {
-        $this->showTeacherModal = false;
-        $this->selectedTeacher = null;
-    }
-
-    public function closeDeleteModal()
-    {
-        $this->showDeleteModal = false;
-        $this->teacherToDelete = null;
+        $this->resetForm();
     }
 
     public function resetForm()
     {
-        $this->name = '';
-        $this->email = '';
-        $this->password = '';
-        $this->specialization = '';
-        $this->biography = '';
-        $this->subjectIds = [];
-        $this->isEditing = false;
-        $this->editingTeacherId = null;
-        $this->resetValidation();
+        $this->reset([
+            'name', 'email', 'password', 'specialization', 'biography',
+            'academicGroupId', 'academicLevelId', 'selectedSubjects',
+            'isEditing', 'editingTeacherId', 'existingUser', 'userExists'
+        ]);
+        $this->academicLevels = [];
+        $this->availableSubjects = [];
     }
 
     public function render()
     {
-        $query = Teacher::query();
-
-        if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->whereHas('user', function($userQuery) {
-                    $userQuery->where('name', 'like', '%' . $this->searchTerm . '%')
+        $teachers = Teacher::with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents'])
+            ->when($this->searchTerm, function ($query) {
+                $query->whereHas('user', function ($q) {
+                    $q->where('name', 'like', '%' . $this->searchTerm . '%')
                         ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
-                })
-                    ->orWhere('specialization', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('subjects', function($subjectQuery) {
-                        $subjectQuery->where('name', 'like', '%' . $this->searchTerm . '%');
-                    });
-            });
-        }
-
-        $teachers = $query->with([
-            'user',
-            'subjects',
-            'studentGroups',
-            'studentsFromGroups'
-        ])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+                });
+            })
+            ->latest()
+            ->paginate(10);
 
         return view('livewire.administrators.teacher-management', [
-            'teachers' => $teachers
+            'teachers' => $teachers,
         ]);
     }
 }
