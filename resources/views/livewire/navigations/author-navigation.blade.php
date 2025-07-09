@@ -31,7 +31,7 @@
         </li>
 
         <!-- Book Management -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 hidden">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.books.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.books.create')}}">
                 <div class="flex items-center">
@@ -57,7 +57,7 @@
         </li>
 
         <!-- Book Borrowings -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 hidden">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.borrowings*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.borrowings.index')}}">
                 <div class="flex items-center">
@@ -109,7 +109,7 @@
         </li>
 
         <!-- Book Categories -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 hidden">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.categories*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.categories.index')}}">
                 <div class="flex items-center">
@@ -122,7 +122,7 @@
         </li>
 
         <!-- Publishing Status -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 hidden">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.publishing*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.publishing.index')}}">
                 <div class="flex items-center">

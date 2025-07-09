@@ -2,91 +2,106 @@
 
 namespace App\Livewire\Teachers;
 
-use Livewire\Component;
 use App\Models\Assessment;
-use App\Models\AssessmentResponse;
+use App\Services\AssessmentService;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class EssayGrader extends Component
 {
-    public $assessmentId;
-    public $essays = [];
-    public $scores = [];
-    public $correctAnswers = [];
+    use WithPagination;
 
-    public function mount($id)
+    public $selectedAssessment = null;
+    public $essayQuestions = [];
+    public $currentQuestionIndex = 0;
+    public $points = null;
+    public $feedback = '';
+
+    protected $rules = [
+        'points' => 'required|numeric|min:0',
+        'feedback' => 'nullable|string|max:1000',
+    ];
+
+    public function selectAssessment($assessmentId)
     {
-        $this->assessmentId = $id;
+        $this->selectedAssessment = Assessment::with(['student.user', 'subject', 'assessmentResponse'])
+            ->findOrFail($assessmentId);
 
-        $response = AssessmentResponse::where('assessment_id', $id)->first();
+        if ($this->selectedAssessment->assessmentResponse) {
+            $this->essayQuestions = $this->selectedAssessment->assessmentResponse->getEssayQuestionsForGrading();
+            $this->currentQuestionIndex = 0;
 
-        if (!$response || !$response->data) return;
-
-        // Get essay questions from data blob
-        $this->essays = collect($response->data['questions'])->filter(fn($q) => $q['question_type'] === 'essay_question')->values()->toArray();
-
-        // Pre-fill scores and answers
-        foreach ($this->essays as $e) {
-            $this->scores[$e['question_id']] = $e['score'];
-            $this->correctAnswers[$e['question_id']] = $e['correct_answer'] ?? '';
-        }
-    }
-
-    public function saveGrades($questionId)
-    {
-        $responseData = AssessmentResponse::where('assessment_id', $this->assessmentId)->first();
-        if (!$responseData) return;
-
-        $data = $responseData->data;
-
-        foreach ($data['questions'] as &$q) {
-            if ($q['question_id'] == $questionId) {
-                $q['score'] = $this->scores[$questionId] ?? 0;
-                $q['correct_answer'] = $this->correctAnswers[$questionId];
-                $q['is_correct'] = true; // always true for essays
+            if (!empty($this->essayQuestions)) {
+                $this->points = $this->essayQuestions[0]['points_possible'];
             }
         }
-
-        // Recalculate total
-        $data['total_score'] = array_sum(array_column($data['questions'], 'score'));
-        $data['percentage_score'] = round(($data['total_score'] / $data['max_score']) * 100, 1);
-
-        // Mark as completed if no more essays pending
-        $pending = collect($data['questions'])->filter(fn($q) =>
-            $q['question_type'] === 'essay_question' && !isset($q['score'])
-        )->count();
-
-        $data['needs_grading'] = $pending > 0;
-
-        $responseData->data = $data;
-        $responseData->save();
-
-        session()->flash('success', 'Score saved successfully.');
     }
 
-    public function submitAllScores()
+    public function gradeCurrentQuestion()
     {
-        foreach ($this->essays as $e) {
-            $this->saveGrades($e['question_id']);
+        $this->validate();
+
+        if (!empty($this->essayQuestions) && isset($this->essayQuestions[$this->currentQuestionIndex])) {
+            $questionData = $this->essayQuestions[$this->currentQuestionIndex];
+
+            $assessmentService = app(AssessmentService::class);
+            $assessmentService->gradeEssayQuestion(
+                $this->selectedAssessment->assessmentResponse,
+                $questionData['index'],
+                $this->points,
+                $this->feedback,
+                auth()->user()->teacher
+            );
+
+            session()->flash('success', 'Question graded successfully!');
+
+            // Remove graded question from array
+            unset($this->essayQuestions[$this->currentQuestionIndex]);
+            $this->essayQuestions = array_values($this->essayQuestions);
+
+            // Reset form
+            $this->feedback = '';
+
+            // Set up next question or finish
+            if (!empty($this->essayQuestions)) {
+                $this->points = $this->essayQuestions[0]['points_possible'];
+            } else {
+                $this->selectedAssessment = null;
+                $this->currentQuestionIndex = 0;
+                $this->points = null;
+            }
         }
+    }
 
-        // Update assessment status
-        $assessment = Assessment::find($this->assessmentId);
-        $assessment->status = 'completed';
-        $assessment->save();
+    public function nextQuestion()
+    {
+        if ($this->currentQuestionIndex < count($this->essayQuestions) - 1) {
+            $this->currentQuestionIndex++;
+            $this->points = $this->essayQuestions[$this->currentQuestionIndex]['points_possible'];
+            $this->feedback = '';
+        }
+    }
 
-        // Notify student
-        $this->dispatch('notify-student', [
-            'message' => "Your essay has been graded.",
-            'link' => route('student.assessment.results', ['id' => $this->assessmentId])
-        ]);
-
-        session()->flash('success', 'All scores submitted and student notified.');
+    public function previousQuestion()
+    {
+        if ($this->currentQuestionIndex > 0) {
+            $this->currentQuestionIndex--;
+            $this->points = $this->essayQuestions[$this->currentQuestionIndex]['points_possible'];
+            $this->feedback = '';
+        }
     }
 
     public function render()
     {
-        return view('livewire.teachers.essay-grader');
+        $pendingAssessments = Assessment::with(['student.user', 'subject', 'assessmentResponse'])
+            ->where('status', Assessment::STATUS_PENDING_REVIEW)
+            ->whereHas('student.teachers', function ($query) {
+                $query->where('teacher_id', auth()->user()->teacher->id);
+            })
+            ->paginate(10);
+
+        return view('livewire.teachers.essay-grader', [
+            'pendingAssessments' => $pendingAssessments,
+        ]);
     }
 }
-
-
