@@ -181,25 +181,24 @@
     </div>
 
     <!-- Charts Section -->
-    <div x-show="showCharts" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Performance Chart Placeholder -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Trend</h3>
-                <div class="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <p class="text-gray-500 dark:text-gray-400">Chart.js integration needed for performance visualization</p>
-                </div>
+    <div x-show="showCharts" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Performance by Subject Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Performance by Subject</h3>
+                <canvas id="performanceChart" style="max-width: 100%; max-height: 400px;"></canvas>
             </div>
+        </div>
 
-            <!-- Subject Distribution Chart Placeholder -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subject Distribution</h3>
-                <div class="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <p class="text-gray-500 dark:text-gray-400">Chart.js integration needed for subject distribution</p>
-                </div>
+        <!-- Trend Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Performance Trend</h3>
+                <canvas id="trendChart" style="max-width: 100%; max-height: 400px;"></canvas>
             </div>
         </div>
     </div>
+
 
     <!-- Enhanced Subject Performance Table -->
     @if(!empty($performanceData))
@@ -396,4 +395,99 @@
             </div>
         </div>
     @endif
+
+        <!-- Make sure Chart.js loads first -->
+{{--        <script src="{{ asset('js/ChartDataHelper.js') }}"></script>--}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Debug: Check if Chart.js is loaded
+                console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+                console.log('ChartDataHelper loaded:', typeof ChartDataHelper !== 'undefined');
+
+                // Wait for Chart.js to be fully available
+                function waitForChart() {
+                    return new Promise((resolve) => {
+                        if (typeof Chart !== 'undefined' && Chart.registry) {
+                            resolve();
+                        } else {
+                            setTimeout(() => waitForChart().then(resolve), 100);
+                        }
+                    });
+                }
+
+                waitForChart().then(() => {
+                    let performanceChart = null;
+                    let trendChart = null;
+
+                    function initializeCharts() {
+                        const performanceData = @json($performanceData);
+                        const trendData = @json($trendData);
+
+                        // Destroy existing charts
+                        if (performanceChart) {
+                            ChartDataHelper.destroyChart(performanceChart);
+                        }
+                        if (trendChart) {
+                            ChartDataHelper.destroyChart(trendChart);
+                        }
+
+                        // Performance Chart using ChartDataHelper
+                        const performanceCtx = document.getElementById('performanceChart');
+                        if (performanceCtx && performanceData.length > 0) {
+                            const chartConfig = ChartDataHelper.generateBarChartData(
+                                performanceData.map(item => item.subject),
+                                [{
+                                    label: 'Average Score (%)',
+                                    data: performanceData.map(item => item.percentage),
+                                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                                    borderColor: 'rgba(59, 130, 246, 1)'
+                                }],
+                                {
+                                    scales: {
+                                        y: {
+                                            max: 100
+                                        }
+                                    }
+                                }
+                            );
+
+                            performanceChart = ChartDataHelper.createAnimatedChart(performanceCtx, chartConfig);
+                        }
+
+                        // Trend Chart
+                        const trendCtx = document.getElementById('trendChart');
+                        if (trendCtx && trendData.length > 0) {
+                            const trendConfig = ChartDataHelper.generateLineChartData(
+                                trendData.map(item => item.period),
+                                [{
+                                    label: 'Average Score (%)',
+                                    data: trendData.map(item => item.score),
+                                    borderColor: 'rgba(34, 197, 94, 1)',
+                                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                    fill: true,
+                                    tension: 0.4
+                                }],
+                                {
+                                    scales: {
+                                        y: {
+                                            max: 100
+                                        }
+                                    }
+                                }
+                            );
+
+                            trendChart = ChartDataHelper.createAnimatedChart(trendCtx, trendConfig);
+                        }
+                    }
+
+                    // Initialize charts
+                    initializeCharts();
+
+                    // Event listeners for data changes
+                    Livewire.on('periodChanged', () => setTimeout(initializeCharts, 100));
+                    Livewire.on('subjectChanged', () => setTimeout(initializeCharts, 100));
+                });
+            });
+        </script>
+
 </div>

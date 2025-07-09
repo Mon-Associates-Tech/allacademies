@@ -1,10 +1,10 @@
 <div class="space-y-6">
     <!-- Enhanced Welcome Section -->
-    <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg">
+    <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-xl p-4 text-white shadow-lg">
         <div class="flex items-center justify-between">
             <div class="flex-1">
                 <h2 class="text-3xl font-bold mb-2">{{ $greeting }}, {{ auth()->user()->name }}! 👋</h2>
-                <p class="text-blue-100 mb-4">Ready to continue your learning journey? Let's make today count!</p>
+                <p class="text-blue-100 text-sm tracking-tight mb-4">Ready to continue your learning journey? Let's make today count!</p>
 
                 <!-- Achievements Section -->
                 @if(count($achievements) > 0)
@@ -32,7 +32,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
              onclick="document.querySelector('[x-data]').__x.$data.activeTab = 'performance'">
             <div class="flex items-center justify-between">
-                <div class="flex items-center">
+                <div class="flex items-center my-auto">
                     <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-3">
                         <svg class="w-6 h-6 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
@@ -68,7 +68,7 @@
                 <div class="ml-4">
                     <h3 class="text-lg font-semibold">My Books</h3>
                     <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $bookCount }}</p>
-                    <p class="text-sm text-gray-500">Available resources</p>
+                    <p class="text-xs text-gray-500">Available resources</p>
                 </div>
             </div>
         </div>
@@ -82,9 +82,9 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-lg font-semibold">Today's Activity</h3>
+                    <h3 class="text-lg font-semibold text-nowrap">Today's Activity</h3>
                     <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ $quickStats['today_assessments'] }}</p>
-                    <p class="text-sm text-gray-500">Assessments completed</p>
+                    <p class="text-xs text-gray-500">Assessments completed</p>
                 </div>
             </div>
         </div>
@@ -101,7 +101,7 @@
                 <div class="ml-4">
                     <h3 class="text-lg font-semibold">Upcoming</h3>
                     <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ $upcomingActivitiesCount }}</p>
-                    <p class="text-sm text-gray-500">Activities pending</p>
+                    <p class="text-xs text-gray-500">Activities pending</p>
                 </div>
             </div>
         </div>

@@ -11,12 +11,12 @@ import {
   Tooltip,
   Legend,
   RadialLinearScale
-} from 'chart.js';
+} from 'chart.js/auto';
 import { marked } from "marked";
 import katex from "katex";
 import axios from 'axios';
 import './fullcalendar'
-import './ChartDataHelper'; // Import chart data helper
+// Import chart data helper
 import './activity'; // Import activity tracking
 
 import * as pdfjsLib from 'pdfjs-dist';
@@ -39,7 +39,7 @@ window.axios = axios;
 window.pdfjsLib = pdfjsLib;
 
 import './pdf-reader';
-
+import './ChartDataHelper';
 // Configure axios
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 

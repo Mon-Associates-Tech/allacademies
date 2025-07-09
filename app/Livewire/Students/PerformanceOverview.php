@@ -42,24 +42,31 @@ class PerformanceOverview extends Component
         $this->dispatch('subjectChanged', $this->selectedSubject);
     }
 
-    public function loadSubjects()
-    {
-        $student = Auth::user()->student;
-        if (!$student) return;
-
-        // Cache subjects for better performance
-        $cacheKey = "student_subjects_{$student->id}";
-
-        $this->subjects = Cache::remember($cacheKey, 300, function () use ($student) {
-            return Subject::whereIn('id', function ($query) use ($student) {
-                $query->select('subject_id')
-                    ->from('assessments')
-                    ->where('student_id', $student->id)
-                    ->whereNotNull('subject_id')
-                    ->distinct();
-            })->orderBy('name')->pluck('name', 'id')->toArray();
-        });
+public function loadSubjects()
+{
+    $student = Auth::user()->student;
+    if (!$student) {
+        $this->subjects = [];
+        return;
     }
+
+    // Get subjects that have assessments for this student
+    $subjectsWithAssessments = Assessment::where('student_id', $student->id)
+        ->whereNotNull('subject_id')
+        ->distinct()
+        ->pluck('subject_id')
+        ->toArray();
+
+    if (empty($subjectsWithAssessments)) {
+        $this->subjects = [];
+        return;
+    }
+
+    $this->subjects = Subject::whereIn('id', $subjectsWithAssessments)
+        ->orderBy('name')
+        ->pluck('name', 'id')
+        ->toArray();
+}
 
     public function loadPerformanceData()
     {
@@ -100,90 +107,134 @@ class PerformanceOverview extends Component
         };
     }
 
-    private function calculatePerformanceMetrics($assessments)
-    {
-        $this->performanceData = $assessments
-            ->groupBy(fn($a) => $a->subject?->name ?? 'Unknown')
-            ->map(function ($group, $subjectName) {
-                $scores = $group->pluck('score')->filter();
-                $maxScores = $group->pluck('max_score')->filter();
+private function calculatePerformanceMetrics($assessments)
+{
+    if ($assessments->isEmpty()) {
+        $this->performanceData = [];
+        return;
+    }
 
-                $totalScore = $scores->sum();
-                $totalMaxScore = $maxScores->sum();
-                $averagePercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
+    $this->performanceData = $assessments
+        ->groupBy('subject_id')
+        ->map(function ($group, $subjectId) {
+            $subject = $group->first()->subject;
+            $subjectName = $subject ? $subject->name : 'Unknown Subject';
 
-                // Calculate trend (compare last 3 assessments with previous 3)
-                $recentScores = $group->take(3)->pluck('score')->avg() ?? 0;
-                $previousScores = $group->skip(3)->take(3)->pluck('score')->avg() ?? 0;
-                $trend = $recentScores > $previousScores ? 'up' : ($recentScores < $previousScores ? 'down' : 'stable');
+            // Filter out assessments with null scores
+            $validAssessments = $group->filter(function($assessment) {
+                return $assessment->score !== null && $assessment->max_score !== null && $assessment->max_score > 0;
+            });
 
+            if ($validAssessments->isEmpty()) {
                 return [
                     'subject' => $subjectName,
                     'total_assessments' => $group->count(),
-                    'average_score' => round($scores->avg() ?? 0, 2),
-                    'highest_score' => $scores->max() ?? 0,
-                    'lowest_score' => $scores->min() ?? 0,
-                    'percentage' => round($averagePercentage, 2),
-                    'grade' => $this->calculateGrade($averagePercentage),
-                    'trend' => $trend,
-                    'recent_performance' => round($recentScores, 2),
-                    'improvement' => round($recentScores - $previousScores, 2),
+                    'average_score' => 0,
+                    'highest_score' => 0,
+                    'lowest_score' => 0,
+                    'percentage' => 0,
+                    'grade' => 'N/A',
+                    'trend' => 'stable',
+                    'recent_performance' => 0,
+                    'improvement' => 0,
                 ];
-            })
-            ->when($this->selectedSubject, function ($collection) {
-                return $collection->filter(fn($item) => $item['subject'] === ($this->subjects[$this->selectedSubject] ?? null));
-            })
-            ->sortByDesc('percentage')
-            ->values()
-            ->toArray();
-    }
+            }
+
+            $scores = $validAssessments->pluck('score');
+            $maxScores = $validAssessments->pluck('max_score');
+
+            $totalScore = $scores->sum();
+            $totalMaxScore = $maxScores->sum();
+            $averagePercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
+
+            // Calculate trend (compare last 3 assessments with previous 3)
+            $sortedAssessments = $validAssessments->sortByDesc('created_at');
+            $recent = $sortedAssessments->take(3);
+            $previous = $sortedAssessments->skip(3)->take(3);
+
+            $recentAvg = $recent->count() > 0 ? $recent->avg(function($a) {
+                return $a->max_score > 0 ? ($a->score / $a->max_score) * 100 : 0;
+            }) : 0;
+
+            $previousAvg = $previous->count() > 0 ? $previous->avg(function($a) {
+                return $a->max_score > 0 ? ($a->score / $a->max_score) * 100 : 0;
+            }) : 0;
+
+            $trend = $recentAvg > $previousAvg ? 'up' : ($recentAvg < $previousAvg ? 'down' : 'stable');
+
+            return [
+                'subject' => $subjectName,
+                'total_assessments' => $group->count(),
+                'average_score' => round($scores->avg(), 2),
+                'highest_score' => $scores->max(),
+                'lowest_score' => $scores->min(),
+                'percentage' => round($averagePercentage, 2),
+                'grade' => $this->calculateGrade($averagePercentage),
+                'trend' => $trend,
+                'recent_performance' => round($recentAvg, 2),
+                'improvement' => round($recentAvg - $previousAvg, 2),
+            ];
+        })
+        ->sortByDesc('percentage')
+        ->values()
+        ->toArray();
+}
 
     private function calculateOverallStats($assessments)
     {
+        $student = Auth::user()->student;
+        if (!$student) {
+            $this->overallStats = $this->getEmptyStats();
+            return;
+        }
+
+        // Get all assessments for this student (not just completed ones for totals)
+        $allAssessmentsQuery = Assessment::where('student_id', $student->id);
+
+        if ($this->selectedPeriod !== 'all') {
+            $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
+            $allAssessmentsQuery->where('created_at', '>=', $startDate);
+        }
+
+        if ($this->selectedSubject) {
+            $allAssessmentsQuery->where('subject_id', $this->selectedSubject);
+        }
+
+        $totalAssessments = $allAssessmentsQuery->count();
+        $completedAssessments = $assessments->count();
+        $pendingAssessments = $allAssessmentsQuery->whereIn('status', ['pending', 'in_progress'])->count();
+
         if ($assessments->isEmpty()) {
             $this->overallStats = [
-                'total_assessments' => 0,
+                'total_assessments' => $totalAssessments,
                 'average_percentage' => 0,
                 'overall_grade' => 'N/A',
-                'completed_assessments' => 0,
-                'pending_assessments' => 0,
-                'completion_rate' => 0,
-                'study_streak' => 0,
+                'completed_assessments' => $completedAssessments,
+                'pending_assessments' => $pendingAssessments,
+                'completion_rate' => $totalAssessments > 0 ? round(($completedAssessments / $totalAssessments) * 100, 2) : 0,
+                'study_streak' => $this->calculateStudyStreak($student),
+                'total_subjects' => 0,
             ];
             return;
         }
 
-        $scores = $assessments->pluck('score')->filter();
-        $maxScores = $assessments->pluck('max_score')->filter();
+        // Calculate scores only from completed assessments
+        $scores = $assessments->filter(function($assessment) {
+            return $assessment->score !== null && $assessment->max_score !== null && $assessment->max_score > 0;
+        });
 
-        $totalScore = $scores->sum();
-        $totalMaxScore = $maxScores->sum();
+        $totalScore = $scores->sum('score');
+        $totalMaxScore = $scores->sum('max_score');
         $overallPercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
 
-        // Count completed vs pending assessments (including all statuses)
-        $student = Auth::user()->student;
-        $allAssessments = Assessment::where('student_id', $student->id);
-
-        if ($this->selectedPeriod !== 'all') {
-            $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
-            $allAssessments->where('created_at', '>=', $startDate);
-        }
-
-        $totalAll = $allAssessments->count();
-        $completed = $assessments->count();
-        $pending = $totalAll - $completed;
-
-        // Calculate study streak
-        $streak = $this->calculateStudyStreak($student);
-
         $this->overallStats = [
-            'total_assessments' => $totalAll,
+            'total_assessments' => $totalAssessments,
             'average_percentage' => round($overallPercentage, 2),
             'overall_grade' => $this->calculateGrade($overallPercentage),
-            'completed_assessments' => $completed,
-            'pending_assessments' => $pending,
-            'completion_rate' => $totalAll > 0 ? round(($completed / $totalAll) * 100, 2) : 0,
-            'study_streak' => $streak,
+            'completed_assessments' => $completedAssessments,
+            'pending_assessments' => $pendingAssessments,
+            'completion_rate' => $totalAssessments > 0 ? round(($completedAssessments / $totalAssessments) * 100, 2) : 0,
+            'study_streak' => $this->calculateStudyStreak($student),
             'total_subjects' => $assessments->pluck('subject_id')->unique()->count(),
         ];
     }
@@ -208,27 +259,26 @@ class PerformanceOverview extends Component
         $this->trendData = $weeklyData->toArray();
     }
 
-    private function calculateStudyStreak($student)
-    {
-        $streak = 0;
-        $currentDate = Carbon::today();
+private function calculateStudyStreak($student)
+{
+    $consecutiveDays = 0;
+    $currentDate = Carbon::now()->startOfDay();
 
-        // Look back up to 30 days
-        for ($i = 0; $i < 30; $i++) {
-            $hasActivity = Assessment::where('student_id', $student->id)
-                ->whereDate('created_at', $currentDate)
-                ->exists();
+    while ($currentDate->greaterThan(Carbon::now()->subDays(365))) {
+        $hasAssessment = Assessment::where('student_id', $student->id)
+            ->whereDate('created_at', $currentDate)
+            ->exists();
 
-            if ($hasActivity) {
-                $streak++;
-                $currentDate->subDay();
-            } else {
-                break;
-            }
+        if ($hasAssessment) {
+            $consecutiveDays++;
+            $currentDate->subDay();
+        } else {
+            break;
         }
-
-        return $streak;
     }
+
+    return $consecutiveDays;
+}
 
     private function generateInsights()
     {
@@ -330,4 +380,18 @@ class PerformanceOverview extends Component
     {
         return view('livewire.students.performance-overview');
     }
+
+private function getEmptyStats(): array
+{
+    return [
+        'total_assessments' => 0,
+        'average_percentage' => 0,
+        'overall_grade' => 'N/A',
+        'completed_assessments' => 0,
+        'pending_assessments' => 0,
+        'completion_rate' => 0,
+        'study_streak' => 0,
+        'total_subjects' => 0,
+    ];
+}
 }

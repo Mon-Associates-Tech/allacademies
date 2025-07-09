@@ -46,7 +46,7 @@ class Subscription extends Model
 
     public function academicSubjects()
     {
-        return $this->belongsToMany(AcademicSubject::class);
+        return $this->hasMany(AcademicSubject::class);
     }
 
     public function payments()

@@ -39,7 +39,7 @@ class AcademicSubject extends Model
 
     public function subscriptions()
     {
-        return $this->belongsToMany(Subscription::class);
+        return $this->belongsToMany(Subscription::class, 'academic_subject_subscription');
     }
 
     public function quizzes()

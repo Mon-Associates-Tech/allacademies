@@ -64,7 +64,7 @@
                             <span class="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">All Academies</span>
                         </div>
 
-                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
                             Welcome back!
                         </h1>
                         <p class="text-gray-600 dark:text-gray-300 transition-colors duration-300">
@@ -78,7 +78,7 @@
 
                         <!-- Email field -->
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 transition-colors duration-300">Email address</label>
+                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 transition-colors duration-300">Email address</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +102,7 @@
 
                         <!-- Password field -->
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 transition-colors duration-300">Password</label>
+                            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 transition-colors duration-300">Password</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +176,7 @@
                                 <div class="w-full border-t border-gray-300 dark:border-gray-600 transition-colors duration-300" />
                             </div>
                             <div class="relative flex justify-center text-sm">
-                                <span class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg transition-colors duration-300">New to All Academies?</span>
+                                <span class="px-4 py-2 bg-white dark:bg-gray-800 text-nowrap text-gray-500 dark:text-gray-400 rounded-lg transition-colors duration-300">New to All Academies?</span>
                             </div>
                         </div>
                     </div>
