@@ -90,7 +90,7 @@ class Courses extends Component
         });
 
         // Load relationships for display
-        $academicSubjects->load([
+        $academicSubjects?->load([
             'academicLevel.academicGroup',
             'quizzes',
             'examinations'
