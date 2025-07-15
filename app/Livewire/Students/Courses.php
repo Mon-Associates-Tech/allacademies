@@ -89,12 +89,17 @@ class Courses extends Component
                 ->exists();
         });
 
-        // Load relationships for display
-        $academicSubjects?->load([
-            'academicLevel.academicGroup',
-            'quizzes',
-            'examinations'
-        ]);
+        if(!empty($academicSubjects) && $academicSubjects->count()) {
+            // Load relationships for display
+            $academicSubjects?->load([
+                'academicLevel.academicGroup',
+                'quizzes',
+                'examinations'
+            ]);
+        } else {
+            session()->flash('message', 'You don\'t have any active academic subjects.');
+        }
+
 
         return view('livewire.students.courses', [
             'academicSubjects' => $academicSubjects,
