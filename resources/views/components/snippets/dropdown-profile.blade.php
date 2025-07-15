@@ -9,7 +9,7 @@
         @click.prevent="open = !open"
         :aria-expanded="open"
     >
-        <x-avatar :name="auth()->user()->name" avatar="{{ Auth::user()->avatar }}" class="w-6 h-6 rounded-full mx-auto"/>
+        <x-avatar text-size="text-xs" :name="auth()->user()->name" avatar="{{ Auth::user()->avatar }}" class="w-6 h-6 rounded-full mx-auto"/>
         <div class="flex items-center truncate">
             <span class="truncate hidden sm:inline whitespace-nowrap text-nowrap ml-2 text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">{{ Auth::user()->name }}</span>
             <svg class="w-4 h-4 shrink-0 ml-2 fill-current text-gray-400 dark:text-gray-500 transition-transform duration-200"

@@ -1,4 +1,4 @@
-@props(['name' => '', 'avatar' => ''])
+@props(['name' => '', 'avatar' => '', 'textSize' => ''])
 
 @php
     // --- Initials Generation ---
@@ -43,6 +43,6 @@
              src="{{ Storage::url($avatar) }}"
              alt="{{ $name }}">
     @else
-        {{ $initials }}
+        <span class="{{$textSize}}">{{ $initials }}</span>
     @endif
 </div>
