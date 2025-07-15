@@ -45,16 +45,16 @@ class Book extends Model
 
     public function getCoverImageAttribute()
     {
-        if ($this->cover_image_path) {
-            return asset('storage/' . $this->cover_image_path);
+        if ($this->attributes['cover_image']) {
+            return asset('storage/' . $this->attributes['cover_image']);
         }
         return asset('images/book-cover.jpg');
     }
 
     public function getContentUrlAttribute()
     {
-        if ($this->pdf_file_path) {
-            return asset('storage/' . $this->pdf_file_path);
+        if ($this->attributes['content_url']) {
+            return asset('storage/' . $this->attributes['content_url']);
         }
         return asset('sample.pdf');
     }

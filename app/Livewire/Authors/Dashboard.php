@@ -26,7 +26,7 @@ class Dashboard extends Component
     public $title = '';
     public $edition = '';
     public $publisher = '';
-    public $pages = '';
+    public $pages = 1;
     public $has_hardcopy = false;
     public $has_softcopy = false;
     public $additional_info = '';
@@ -34,7 +34,7 @@ class Dashboard extends Component
     public $annual_subscription_fee = '';
     public $subscription_conditions = '';
     public $cover_image = null;
-    public $pdf_file = null;
+    public $content_url = null;
 
     // Filters and search
     public $search = '';
@@ -49,6 +49,8 @@ class Dashboard extends Component
     public $draftBooks = 0;
     public $totalSubscriptions = 0;
     public $totalRevenue = 0;
+
+    public AuthorBookAction $authorBookAction;
 
     protected $rules = [
         'title' => 'required|string|max:255',
@@ -67,6 +69,7 @@ class Dashboard extends Component
 
     public function mount()
     {
+
         $this->loadStats();
     }
 
@@ -150,7 +153,7 @@ class Dashboard extends Component
         $this->annual_subscription_fee = '';
         $this->subscription_conditions = '';
         $this->cover_image = null;
-        $this->pdf_file = null;
+        $this->content_url = null;
         $this->resetValidation();
     }
 
@@ -166,11 +169,11 @@ class Dashboard extends Component
 
         $bookData = [
             'title' => $this->title,
-            'slug' => Str::slug($this->title),
+//            'slug' => Str::slug($this->title),
             'author_id' => $author->id,
             'edition' => $this->edition,
             'publisher' => $this->publisher,
-            'pages' => $this->pages,
+            'pages' => (int) $this->pages,
             'has_hardcopy' => $this->has_hardcopy,
             'has_softcopy' => $this->has_softcopy,
             'additional_info' => $this->additional_info,
@@ -186,9 +189,9 @@ class Dashboard extends Component
         }
 
         // Handle PDF file upload
-        if ($this->pdf_file) {
-            $pdfPath = $this->pdf_file->store('book-pdfs', 'public');
-            $bookData['pdf_file_path'] = $pdfPath;
+        if ($this->content_url) {
+            $pdfPath = $this->content_url->store('book-pdfs', 'public');
+            $bookData['content_url'] = $pdfPath;
         }
 
         if ($this->editingBook) {

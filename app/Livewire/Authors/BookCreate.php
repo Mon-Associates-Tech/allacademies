@@ -84,7 +84,7 @@ class BookCreate extends Component
         $book = Book::create($bookData);
 
         session()->flash('success', 'Book created successfully!');
-        
+
         return redirect()->route('author.books.index');
     }
 
