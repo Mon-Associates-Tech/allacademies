@@ -83,7 +83,6 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'is_active' => true,
         ]);
 
         // Assign role via many-to-many relationship
@@ -216,7 +215,7 @@ class UserController extends Controller
 
         // Optionally, remove student record if role is changed away from student
         if ($oldRole === 'student' && $request->role !== 'student' && $user->student) {
-            $user->student->delete();
+          //  $user->student->delete();
         }
 
         return redirect()->route('users.index')->with('success',
