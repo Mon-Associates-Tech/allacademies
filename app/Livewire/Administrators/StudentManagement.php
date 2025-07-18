@@ -384,7 +384,7 @@ class StudentManagement extends Component
                 $teacherData = [];
                 foreach ($this->selectedTeachers as $teacherId) {
                     $teacherData[$teacherId] = [
-                        'is_primary' => $teacherId == $this->primaryTeacherId,
+                        'is_primary' => $teacherId === $this->primaryTeacherId,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

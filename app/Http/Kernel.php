@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\EnsureUserIsParent;
 use App\Http\Middleware\TrackUserLoginActivity;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -66,5 +67,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'parent' => EnsureUserIsParent::class,
     ];
 }

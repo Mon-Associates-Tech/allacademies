@@ -157,17 +157,56 @@ function exportToWord(): BinaryFileResponse
 }
 
 
- function exportToPdf(): \Illuminate\Http\Response
- {
+function exportToPdf(): \Illuminate\Http\Response
+{
     $examination = Examination::find(request()->examination_id);
-     $sections = Examiner::createSections($examination);
+    $sections = Examiner::createSections($examination);
 
     $pdf = Pdf::loadView('exports.examination', ['examination' => $examination, 'sections' => $sections]);
 
-    return $pdf->download($examination->title.'.pdf');
+    return $pdf->download($examination->title . '.pdf');
 }
 
 function getRouteParameter($name = 'id'): object|string|null
 {
     return Route::getCurrentRoute()?->parameter($name);
+}
+
+
+function logInfo(string $message, array $context = []): void
+{
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+    $context = array_merge([
+        'class' => $trace['class'],
+        'method' => $trace['function'],
+    ], $context);
+
+    Log::info($message, $context);
+}
+
+function logError(string $message, array $context = []): void
+{
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+    $context = array_merge([
+        'class' => $trace['class'],
+        'method' => $trace['function'],
+    ], $context);
+
+    Log::error($message, $context);
+}
+
+use App\Models\SchoolSetting;
+
+if (!function_exists('school_setting')) {
+    function school_setting($key, $default = null)
+    {
+        return SchoolSetting::get($key, $default);
+    }
+}
+
+if (!function_exists('set_school_setting')) {
+    function set_school_setting($key, $value)
+    {
+        return SchoolSetting::set($key, $value);
+    }
 }

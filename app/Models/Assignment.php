@@ -35,6 +35,46 @@ class Assignment extends Model
         'questions' => 'array',
     ];
 
+    public function structure(){
+        return [
+        'question' => [
+            'up' => '<p>Question text</p>',
+            'down' => 'Question text',
+            'summary' => 'Question summary',
+        ],
+            'answer' => [
+                'up' => '<p>Answer text</p>',
+                'down' => 'Answer text',
+                'summary' => 'Answer summary',
+            ],
+            'option_a' => [
+                'up' => '<p>Option A text</p>',
+                'down' => 'Option A text',
+                'summary' => 'Option A summary',
+            ],
+            'option_b' => [
+                'up' => '<p>Option B text</p>',
+                'down' => 'Option B text',
+                'summary' => 'Option B summary',
+            ],
+            'option_c' => [
+                'up' => '<p>Option C text</p>',
+                'down' => 'Option C text',
+                'summary' => 'Option C summary',
+            ],
+            'option_d' => [
+                'up' => '<p>Option D text</p>',
+                'down' => 'Option D text',
+                'summary' => 'Option D summary',
+            ],
+            'option_e' => [
+                'up' => '<p>Option E text</p>',
+                'down' => 'Option E text',
+                'summary' => 'Option E summary',
+            ],
+            ];
+    }
+
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);

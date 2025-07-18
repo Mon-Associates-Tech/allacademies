@@ -61,6 +61,10 @@
                     @include('livewire.navigations.author-navigation', [
                         'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
+                @elseif(auth()->user()->role === 'subscriber')
+                    @include('livewire.navigations.subscriber-navigation', [
+                        'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
                 @endif
 
             @endauth

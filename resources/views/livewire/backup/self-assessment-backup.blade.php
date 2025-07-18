@@ -477,7 +477,6 @@
                 </div>
             </div>--}}
     @endif
-
     <!-- Assessment view continues here... -->
 
     @if($step === 'results')

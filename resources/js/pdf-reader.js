@@ -1,319 +1,192 @@
+// Use a more compatible approach with PDF.js 3.x
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?url';
 
-// Configure worker for PDF.js v4
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// It's recommended to host the worker yourself, but for simplicity, CDN is fine.
+// Make sure the version matches the library version (e.g., 3.11.174)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 document.addEventListener('alpine:init', () => {
+    console.log('Alpine.js initialized, setting up PDF reader data');
+
     Alpine.data('pdfReader', () => ({
         show: false,
         pdfDoc: null,
         pageNum: 1,
         pageCount: 0,
-        canvas: null,
-        ctx: null,
         scale: 1.5,
-        loadingTask: null,
         title: 'PDF Document',
         isLoading: false,
+        error: null,
 
+        // Alpine.js will automatically call this when the component is initialized
         init() {
-            console.log('PDF Reader initialized');
+            console.log('PDF Reader Alpine component initialized');
 
-            // Listen for Livewire events
-            Livewire.on('openPdfReader', async (data) => {
-                console.log('Received openPdfReader event:', data);
-                await this.handleOpenPdfReader(data);
-            });
-
-            // Listen for pdf-reader-open event (from PdfReader component)
-            Livewire.on('pdf-reader-open', async (data) => {
-                console.log('Received pdf-reader-open event:', data);
-                await this.handleOpenPdfReader(data);
-            });
+            // Listen for Livewire events to open the reader
+            if (window.Livewire) {
+                Livewire.on('openPdfReader', (data) => this.open(data));
+                // Optional: For backward compatibility with your old event name
+                Livewire.on('pdf-reader-open', (data) => this.open(data));
+            }
         },
 
-        async handleOpenPdfReader(data) {
-            console.log('handleOpenPdfReader called with:', data);
+        // This method handles opening the PDF viewer
+        async open(data) {
+            console.log('Received open request with data:', data);
 
-            // Prevent multiple simultaneous loads
             if (this.isLoading) {
-                console.log('Already loading, ignoring request');
+                console.warn('Already loading a PDF, request ignored.');
                 return;
             }
+
+            // Reset previous state
+            this.error = null;
+            this.isLoading = true;
 
             let pdfUrl, currentPage, title;
 
-            // Handle different data structures
-            if (Array.isArray(data)) {
-                console.log('Processing array data:', data);
-                if (data.length > 0) {
-                    if (typeof data[0] === 'object' && data[0].pdfUrl) {
-                        console.log('Array contains object with pdfUrl:', data[0]);
-                        pdfUrl = data[0].pdfUrl;
-                        title = data[0].title || 'PDF Document';
-                        currentPage = data[0].currentPage || 1;
-                    } else {
-                        pdfUrl = data[0];
-                        title = data[1] || 'PDF Document';
-                        currentPage = data[2] || 1;
-                    }
-                }
-            } else if (data && typeof data === 'object') {
-                console.log('Processing object data:', data);
-                if (data.pdfUrl) {
-                    pdfUrl = data.pdfUrl;
-                    title = data.title || 'PDF Document';
-                    currentPage = data.currentPage || 1;
-                } else {
-                    pdfUrl = data.url;
-                    title = data.title || 'PDF Document';
-                    currentPage = data.currentPage || 1;
-                }
-            } else if (typeof data === 'string') {
-                console.log('Processing string data:', data);
+            // --- Simplified Data Handling ---
+            if (typeof data === 'string') {
                 pdfUrl = data;
-                title = 'PDF Document';
-                currentPage = 1;
+            } else if (typeof data === 'object' && data !== null) {
+                pdfUrl = data.pdfUrl || data.url;
+                title = data.title;
+                currentPage = data.currentPage;
             }
 
-            console.log('Extracted data:', { pdfUrl, title, currentPage });
-
-            if (!pdfUrl || typeof pdfUrl !== 'string' || pdfUrl.trim() === '') {
-                console.error('Invalid PDF URL:', pdfUrl);
-                alert('Error: Invalid PDF URL provided');
+            if (!pdfUrl) {
+                this.error = 'No PDF URL provided.';
+                this.isLoading = false;
+                this.show = true;
                 return;
             }
 
-            pdfUrl = pdfUrl.trim().replace(/^['"]|['"]$/g, '');
-
-            this.title = title;
-            this.pageNum = currentPage;
+            this.title = title || 'PDF Document';
+            this.pageNum = parseInt(currentPage, 10) || 1;
             this.show = true;
 
-            // Wait for DOM to update
+            // Wait for Alpine to render the modal and the canvas element
             await this.$nextTick();
 
-            setTimeout(async () => {
-                if (this.initializeCanvas()) {
-                    await this.loadPDF(pdfUrl);
-                }
-            }, 100);
+            // Now that the DOM is updated, load the PDF
+            this.loadPDF(pdfUrl);
         },
 
-        initializeCanvas() {
-            console.log('Initializing canvas...');
-
-            let attempts = 0;
-            const maxAttempts = 20;
-
-            const tryInitialize = () => {
-                this.canvas = document.getElementById('pdf-canvas');
-                if (this.canvas) {
-                    this.ctx = this.canvas.getContext('2d');
-                    if (this.ctx) {
-                        console.log('Canvas initialized successfully');
-                        return true;
-                    }
-                }
-
-                attempts++;
-                if (attempts < maxAttempts) {
-                    setTimeout(tryInitialize, 50);
-                    return false;
-                } else {
-                    console.error('Canvas initialization failed');
-                    return false;
-                }
-            };
-
-            return tryInitialize();
-        },
-
+        // This method loads the PDF document
         async loadPDF(url) {
-            console.log('Loading PDF from URL:', url);
+            console.log('Loading PDF from:', url);
 
-            if (this.isLoading) {
-                console.log('Already loading PDF, aborting');
+            // Ensure canvas is available via x-ref
+            const canvas = this.$refs.pdfCanvas;
+            if (!canvas) {
+                this.error = 'Canvas element reference (`x-ref="pdfCanvas"`) not found.';
+                this.isLoading = false;
                 return;
             }
 
-            this.isLoading = true;
+            // --- Simplified PDF.js Configuration ---
+            const loadingTask = pdfjsLib.getDocument({
+                url: url,
+                cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+                cMapPacked: true,
+            });
 
             try {
-                // Clean up any existing resources first
-                await this.cleanup();
-
-                console.log('Creating new PDF loading task...');
-
-                // Create loading task with proper error handling
-                this.loadingTask = pdfjsLib.getDocument({
-                    url: url,
-                    withCredentials: false,
-                    isEvalSupported: false,
-                    disableAutoFetch: true,
-                    disableStream: true
-                });
-
-                console.log('Awaiting PDF document...');
-                this.pdfDoc = await this.loadingTask.promise;
-
-                if (!this.pdfDoc) {
-                    throw new Error('PDF document is null');
-                }
-
+                this.pdfDoc = await loadingTask.promise;
                 this.pageCount = this.pdfDoc.numPages;
-                console.log('PDF loaded successfully, pages:', this.pageCount);
-
-                // Validate page number
-                if (this.pageNum < 1 || this.pageNum > this.pageCount) {
-                    this.pageNum = 1;
-                }
-
-                // Show canvas and render first page
-                if (this.canvas) {
-                    this.canvas.style.display = 'block';
-                }
-
+                console.log(`PDF loaded with ${this.pageCount} pages.`);
                 await this.renderPage();
-                this.savePage();
-
-            } catch (error) {
-                console.error('Error loading PDF:', error);
-
-                if (error.name === 'AbortException') {
-                    console.log('PDF loading was aborted - this is normal during cleanup');
-                } else {
-                    console.error('PDF loading failed:', error.message);
-                    alert('Error loading PDF: ' + error.message + '\n\nPlease check if the PDF file exists and is accessible.');
-                    this.closeReader();
+            } catch (err) {
+                console.error('Error loading PDF:', err);
+                this.error = `Failed to load PDF. ${err.message}`;
+                // Hide the canvas on error
+                if(this.$refs.pdfCanvas) {
+                    this.$refs.pdfCanvas.style.display = 'none';
                 }
             } finally {
                 this.isLoading = false;
             }
         },
 
+        // This method renders the current page onto the canvas
         async renderPage() {
-            if (!this.pdfDoc || !this.canvas || !this.ctx) {
-                console.error('PDF document or canvas not ready');
-                return;
-            }
+            if (!this.pdfDoc) return;
+
+            this.isLoading = true;
 
             try {
-                console.log('Rendering page:', this.pageNum);
-
-                // Validate page number
-                if (this.pageNum < 1 || this.pageNum > this.pageCount) {
-                    this.pageNum = Math.max(1, Math.min(this.pageNum, this.pageCount));
-                }
-
                 const page = await this.pdfDoc.getPage(this.pageNum);
                 const viewport = page.getViewport({ scale: this.scale });
 
-                this.canvas.height = viewport.height;
-                this.canvas.width = viewport.width;
+                const canvas = this.$refs.pdfCanvas;
+                const context = canvas.getContext('2d');
 
-                // Clear canvas
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                // Make canvas visible if it was hidden
+                canvas.style.display = 'block';
 
-                // Render page
                 const renderContext = {
-                    canvasContext: this.ctx,
+                    canvasContext: context,
                     viewport: viewport
                 };
 
                 await page.render(renderContext).promise;
-                console.log('Page rendered successfully');
-
-            } catch (error) {
-                console.error('Error rendering page:', error);
-                if (error.name !== 'AbortException') {
-                    alert('Error rendering page: ' + error.message);
-                }
+                console.log(`Page ${this.pageNum} rendered.`);
+            } catch (err) {
+                console.error(`Error rendering page ${this.pageNum}:`, err);
+                this.error = `Failed to render page ${this.pageNum}.`;
+            } finally {
+                this.isLoading = false;
             }
         },
 
-        async nextPage() {
-            if (this.pageNum >= this.pageCount || this.isLoading) return;
+        // --- Navigation ---
+        nextPage() {
+            if (this.pageNum >= this.pageCount) return;
             this.pageNum++;
-            await this.renderPage();
-            this.savePage();
+            this.renderPage();
         },
 
-        async prevPage() {
-            if (this.pageNum <= 1 || this.isLoading) return;
+        prevPage() {
+            if (this.pageNum <= 1) return;
             this.pageNum--;
-            await this.renderPage();
-            this.savePage();
+            this.renderPage();
         },
 
-        savePage() {
-            if (!this.pageCount || !this.pageNum) return;
+        // --- Cleanup and Close ---
+        close() {
+            console.log('Closing PDF reader.');
+            this.show = false;
+            this.error = null;
+            this.isLoading = false;
 
-            try {
-                Livewire.dispatch('saveReadingProgress', {
-                    page: this.pageNum,
-                    totalPages: this.pageCount
-                });
-            } catch (error) {
-                console.warn('Failed to save progress:', error);
-            }
-        },
-
-        async cleanup() {
-            console.log('Cleaning up PDF resources...');
-
-            // Cancel loading task if it exists
-            if (this.loadingTask) {
-                try {
-                    await this.loadingTask.destroy();
-                    console.log('Loading task destroyed');
-                } catch (error) {
-                    console.warn('Error destroying loading task:', error);
-                }
-                this.loadingTask = null;
-            }
-
-            // Destroy PDF document if it exists
+            // Cleanup PDF.js resources
             if (this.pdfDoc) {
-                try {
-                    await this.pdfDoc.destroy();
-                    console.log('PDF document destroyed');
-                } catch (error) {
-                    console.warn('Error destroying PDF document:', error);
-                }
+                this.pdfDoc.destroy();
                 this.pdfDoc = null;
             }
 
-            this.pageCount = 0;
-        },
-
-        async closeReader() {
-            console.log('Closing PDF reader...');
-
-            this.show = false;
-            this.savePage();
-
-            // Clean up all resources
-            await this.cleanup();
-
-            // Reset state
-            if (this.canvas) {
-                this.canvas.style.display = 'none';
-            }
-
-            this.canvas = null;
-            this.ctx = null;
-            this.pageNum = 1;
-            this.title = 'PDF Document';
-            this.isLoading = false;
-
-            // Notify Livewire
-            try {
-                Livewire.dispatch('closePdfReader');
-            } catch (error) {
-                console.warn('Failed to dispatch close event:', error);
+            // Notify Livewire if needed
+            if (window.Livewire) {
+                Livewire.dispatch('pdfReaderClosed');
             }
         }
     }));
 });
+
+// Optional: Global test function for debugging without Livewire
+window.testPdfReader = (url) => {
+    window.dispatchEvent(new CustomEvent('alpine:init', {
+        detail: {
+            pdfUrl: url,
+            title: 'Test PDF'
+        }
+    }));
+    // A bit of a hack for testing, direct dispatch is better.
+    // A better way is to get the component and call open()
+    const readerEl = document.querySelector('[x-data^="pdfReader"]');
+    if (readerEl && readerEl.__x) {
+        readerEl.__x.dataStack[0].open({ pdfUrl: url, title: 'Test PDF' });
+    }
+};

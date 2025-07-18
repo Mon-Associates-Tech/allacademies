@@ -20,23 +20,58 @@
         <x-dashboard.dashboard-card-13/>
 
     </div>
+    @php
+        $user = Auth::user();
+        $primaryRole = $user->role; // This is the main role from the role field
+        $isImpersonating = session()->has('impersonated_by');
+    @endphp
 
-    @if(Auth::user()->role === 'student' || Auth::user()->hasRole('student'))
+
+    @if(config('app.debug'))
+        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+            <strong>Debug:</strong>
+            Primary Role: {{ $primaryRole }} |
+            All Roles: {{ implode(', ', $user->getRoleNames()) }} |
+            Is Impersonating: {{ $isImpersonating ? 'Yes' : 'No' }}
+        </div>
+    @endif
+
+    @if($primaryRole === 'student')
         @livewire('students.dashboard')
-    @endif()
-    @if(Auth::user()->role === 'teacher')
+
+    @elseif($primaryRole === 'teacher')
         @livewire('teachers.dashboard')
-    @endif
-    @if(Auth::user()->role === 'librarian')
-        @livewire('librarians.dashboard')
-    @endif
-    @if(in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']))
+
+    @elseif($primaryRole === 'librarian')
+        @livewire('librarians.library-dashboard')
+
+    @elseif(in_array($primaryRole, ['admin', 'owner', 'moderator']))
         @livewire('administrators.dashboard')
+
+    @elseif($primaryRole === 'author')
+        @livewire('authors.dashboard')
+
+    @elseif($primaryRole === 'parent')
+        @livewire('parent.dashboard')
+
+    @elseif($primaryRole === 'subscriber')
+        @livewire('subscribers.subscriber-dashboard')
+
+    @else
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong>Error:</strong> No dashboard found for role: {{ $primaryRole }}
+        </div>
+    @endif
+    @if(auth()->user()->canImpersonate())
+        <section class="mt-10">
+            <div class="mb-6">
+                <h3 class="text-2xl font-semibold text-gray-900">User Impersonation</h3>
+                <p class="text-gray-600 mt-1">Impersonate users to help troubleshoot issues or provide support</p>
+            </div>
+            @livewire('administrators.user-impersonation')
+        </section>
     @endif
 
-    @if(Auth::user()->role === 'author')
-        @livewire('authors.dashboard')
-    @endif
 
     @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>

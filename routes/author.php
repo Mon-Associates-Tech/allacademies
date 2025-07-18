@@ -21,7 +21,7 @@ use App\Livewire\Authors\Settings;
 use App\Livewire\Authors\Subscriptions;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'role:author'])->prefix('dashboard/author')->name('author.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('author.')->group(function () {
 
     // Dashboard
 //    Route::get('/dashboard', Dashboard::class)->name('dashboard');

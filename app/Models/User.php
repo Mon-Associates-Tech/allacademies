@@ -70,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canImpersonate(): bool
     {
         // Only admins can impersonate other users
-        return $this->hasRole('admin') || $this->hasRole('administrator');
+        return in_array($this->attributes['role'], ['owner', 'admin', 'administrator']);
     }
 
     /**
@@ -79,8 +79,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canBeImpersonated(): bool
     {
         // Don't allow impersonating other admins or inactive users
-        return !$this->hasRole('admin') &&
-            !$this->hasRole('administrator') &&
+        return !in_array($this->attributes['role'], ['owner', 'admin', 'administrator']) &&
             ($this->is_active ?? true);
     }
 

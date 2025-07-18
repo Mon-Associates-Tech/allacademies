@@ -14,7 +14,6 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        dd($user);
         $student = $user->student;
 
         $query = Book::with(['author', 'bookCategory']);

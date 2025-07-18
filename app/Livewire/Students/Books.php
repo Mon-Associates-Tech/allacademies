@@ -322,10 +322,13 @@ class Books extends AppComponent
             ])
             ->log('Student opened book reader');
 
-        $this->dispatch('openPdfReader', [
-            'pdfUrl' => $book->content_url,
+        // Dispatch event to trigger PDF reader with consistent structure
+        $this->dispatch('pdf-reader-open', [
+            'pdfUrl' => $this->book->content_url,
+            'title' => $this->book->title,
             'currentPage' => $this->currentPage
         ]);
+
     }
 
     public function closePdfReader()

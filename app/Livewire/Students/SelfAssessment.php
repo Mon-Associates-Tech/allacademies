@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Students;
 
+use App\Livewire\Common\HasGlobalMessages;
+use App\Livewire\Student\StartsAssessment;
 use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicSubtopic as Subtopic;
 use App\Models\AcademicTopic as Topic;
@@ -12,13 +14,12 @@ use App\Models\MultipleChoiceQuestion;
 use App\Models\Question;
 use App\Models\TrueOrFalseQuestion;
 use App\Services\AssessmentService;
-use App\Traits\StartsAssessment;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class SelfAssessment extends Component
 {
-    use StartsAssessment;
+    use StartsAssessment, HasGlobalMessages;
 
     public $step = 'setup'; // setup, assessment, results
     public $assessmentMode = 'self'; // 'self' or 'assignment'
@@ -115,7 +116,7 @@ class SelfAssessment extends Component
         });
 
         if(count($this->subjects) === 0) {
-           $this->subjects = Subject::get();
+            $this->subjects = Subject::get();
         }
     }
 
@@ -174,6 +175,12 @@ class SelfAssessment extends Component
     private function startFromConfiguration(): void
     {
         $this->validate();
+        $student = auth()->user()->student;
+        $this->loadStudentSubjects(auth()->user()->student);
+        if (!$student){
+           $this->showError('Student not found');
+            return;
+        }
 
         // Validate question type combinations
         if (!$this->validateQuestionTypeCombinations()) {
@@ -183,6 +190,7 @@ class SelfAssessment extends Component
         try {
             $this->initializeAssessmentFromConfiguration();
         } catch (\Exception $e) {
+            $this->showError($e->getMessage());
             Log::error('Failed to start self-assessment', [
                 'config' => $this->getConfigurationArray(),
                 'error' => $e->getMessage(),
@@ -238,9 +246,36 @@ class SelfAssessment extends Component
     {
         $config = $this->getConfigurationArray();
 
+
+        $student = auth()->user()->student;
+        $this->showError(json_encode($student));
+        if(!$student){
+            $this->showError('Student not found');
+            return;
+        }
+
+        // Ensure subject exists
+        $subject = Subject::find($config['subject_id']);
+        if (!$subject) {
+            $this->showError('Subject not found.');
+            return;
+        }
+
+        $topic = $config['topic_id'] ? Topic::find($config['topic_id']) : null;
+        if ($config['topic_id'] && !$topic) {
+            $this->showError('Topic not found.');
+            return;
+        }
+
+        $subtopic = $config['subtopic_id'] ? Subtopic::find($config['subtopic_id']) : null;
+        if ($config['subtopic_id'] && !$subtopic) {
+            $this->showError('Subtopic not found.');
+            return;
+        }
+
         // Create assessment record
         $this->assessment = Assessment::create([
-            'student_id' => auth()->user()->student->id,
+            'student_id' => $student->id,
             'subject_id' => $config['subject_id'],
             'topic_id' => $config['topic_id'],
             'subtopic_id' => $config['subtopic_id'],
@@ -251,7 +286,7 @@ class SelfAssessment extends Component
             'status' => Assessment::STATUS_IN_PROGRESS,
             'time_limit_minutes' => $config['time_limit_minutes'],
         ]);
-
+        $this->showError(json_encode($this->assessment), false);
         // Set time limit
         $this->setupTimeLimit($config['time_limit_minutes']);
 
@@ -500,6 +535,7 @@ class SelfAssessment extends Component
 
     private function getConfigurationArray(): array
     {
+        $subjectName = Subject::find($this->selectedSubject)?->name ?? 'Unknown';
         return [
             'subject_id' => $this->selectedSubject,
             'topic_id' => $this->selectedTopic,
@@ -508,7 +544,7 @@ class SelfAssessment extends Component
             'question_count' => $this->questionCount,
             'difficulty' => $this->difficulty,
             'time_limit_minutes' => $this->timeLimitMinutes,
-            'title' => 'Self Assessment - ' . Subject::find($this->selectedSubject)?->name,
+            'title' => 'Self Assessment - ' . $subjectName,
         ];
     }
 

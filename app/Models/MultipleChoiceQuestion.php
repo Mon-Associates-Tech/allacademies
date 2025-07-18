@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Mark;
+use App\Traits\HasQuestionAndAnswer;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ class MultipleChoiceQuestion extends Model
     use HasFactory;
     use SoftDeletes;
     use Trackable;
+    use HasQuestionAndAnswer;
 
     /**
      * @var array<int, string>
@@ -68,5 +70,10 @@ class MultipleChoiceQuestion extends Model
     public function question()
     {
         return $this->morphOne(Question::class, 'questionable');
+    }
+
+    public function getQuestion(): array
+    {
+        return $this->processQuestionModel($this);
     }
 }

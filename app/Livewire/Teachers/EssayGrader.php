@@ -3,7 +3,7 @@
 namespace App\Livewire\Teachers;
 
 use App\Models\Assessment;
-use App\Services\AssessmentService;
+use App\Livewire\Assessment\AssessmentService;
 use Livewire\Component;
 use Livewire\WithPagination;
 

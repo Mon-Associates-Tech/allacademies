@@ -100,7 +100,7 @@
         <!-- Books Grid -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             @if($books->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                     @foreach($books as $book)
                         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300 group">
                             <!-- Book Cover -->
@@ -158,7 +158,7 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex flex-col gap-2">
-                                    <a href="{{ route('books.show', $book) }}"
+                                    <a href="{{ route('author.books.show', $book) }}"
                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium text-center transition-colors">
                                         📋 View Details
                                     </a>

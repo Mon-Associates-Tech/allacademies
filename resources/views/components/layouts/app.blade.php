@@ -33,6 +33,7 @@
   :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
   x-data="{}"
 >
+<x-alert.impersonation-banner />
     <!-- Page wrapper -->
     <div class="flex h-screen overflow-hidden">
 
@@ -76,6 +77,7 @@
                             {{ $slot }}
                     </div>
                 </div>
+                <livewire:common.global-message  />
 
             </main>
         </div>

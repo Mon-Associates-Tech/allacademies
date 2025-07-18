@@ -14,14 +14,14 @@ class Assessment extends Model
     use LogsActivity;
     use HasFactory;
 
-    const STATUS_NOT_STARTED = 'not_started';
-    const STATUS_IN_PROGRESS = 'in_progress';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_PENDING_REVIEW = 'pending_review';
-    const STATUS_GRADED = 'graded';
+    public const STATUS_NOT_STARTED = 'not_started';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_PENDING_REVIEW = 'pending_review';
+    public const STATUS_GRADED = 'graded';
 
-    const TYPE_SELF = 'self';
-    const TYPE_ASSIGNMENT = 'assignment';
+    public const TYPE_SELF = 'self';
+    public const TYPE_ASSIGNMENT = 'assignment';
 
     protected $fillable = [
         'student_id',
@@ -45,6 +45,7 @@ class Assessment extends Model
         'graded_by',
         'graded_at',
         'teacher_feedback',
+        'questions_data'
     ];
 
     protected $casts = [
@@ -56,6 +57,7 @@ class Assessment extends Model
         'score' => 'decimal:2',
         'max_score' => 'decimal:2',
         'percentage_score' => 'decimal:2',
+        'questions_data' => 'array',
     ];
 
     public function student(): BelongsTo
@@ -163,4 +165,15 @@ class Assessment extends Model
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
+
+    public function getQuestionsData(): array
+    {
+        return $this->questions_data ?? [];
+    }
+
+    public function setQuestionsData(array $questionsData): void
+    {
+        $this->update(['questions_data' => $questionsData]);
+    }
+
 }

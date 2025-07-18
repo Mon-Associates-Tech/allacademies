@@ -18,6 +18,7 @@ use App\Http\Controllers\Questions\EssayQuestionController;
 use App\Http\Controllers\Questions\MultipleChoiceQuestionController;
 use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\SchoolSettingsController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignInController;
@@ -442,6 +443,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{type}/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
+});
+
+Route::get('books', [BookController::class, 'index'])->name('books.index');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
 });
 
 include 'student.php';

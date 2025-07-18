@@ -148,9 +148,9 @@ class AssessmentResponse extends Model
     public static function createQuestionData(array $questionData): array
     {
         return [
-            'question_id' => $questionData['question_id'],
+//            'question_id' => $questionData['question_id'],
             'type' => $questionData['type'], // 'multiple_choice_question', 'true_or_false_question', 'essay_question'
-            'question_text' => $questionData['question_text'],
+            'question' => $questionData['question'],
             'options' => $questionData['options'] ?? null, // For multiple choice
             'student_answer' => $questionData['student_answer'],
             'correct_answer' => $questionData['correct_answer'] ?? null, // Not applicable for essays

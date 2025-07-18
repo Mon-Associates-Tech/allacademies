@@ -1,5 +1,5 @@
 <div>
-@if(Auth::user()->hasRole('student'))
+@if(Auth::user()->role === 'student')
     @if(Auth::user()->student)
         @if($activeTab === 'dashboard')
             @livewire('students.overview')

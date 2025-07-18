@@ -25,7 +25,19 @@
                             <svg class="shrink-0 fill-current {{ Route::is('student.assessments') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                             </svg>
-                            <span class="text-sm ml-4 sidebar-text duration-200">Assessments</span>
+                            <span class="text-sm ml-4 sidebar-text duration-200">Learning Center</span>
+                        </div>
+                    </a>
+                </li>
+
+                <li class="mb-0.5 last:mb-0">
+                    <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.assignments') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                       href="{{route('student.assignments')}}">
+                        <div class="flex items-center">
+                            <svg class="shrink-0 fill-current {{ Route::is('student.assignments') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span class="text-sm ml-4 sidebar-text duration-200">Assignments</span>
                         </div>
                     </a>
                 </li>

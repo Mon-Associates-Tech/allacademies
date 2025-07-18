@@ -8,6 +8,7 @@ use App\Models\Question;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Notifications\EssayAssessmentSubmitted;
+use App\Notifications\EssayAssessmentSubmittedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -88,6 +89,10 @@ class AssessmentService
         $isCorrect = false;
         $pointsEarned = 0;
 
+        logInfo('Auto-grading question',
+            $questionData,
+        );
+
         switch ($questionData['type']) {
             case 'multiple_choice_question':
                 $isCorrect = $questionData['student_answer'] === $questionData['correct_answer'];
@@ -127,7 +132,7 @@ class AssessmentService
 
         if ($teacher) {
             try {
-                Notification::send($teacher, new EssayAssessmentSubmitted($assessment));
+                Notification::send($teacher, new EssayAssessmentSubmittedNotification($assessment));
 
                 Log::info('Essay assessment notification sent', [
                     'assessment_id' => $assessment->id,

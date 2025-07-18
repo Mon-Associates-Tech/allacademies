@@ -43,6 +43,15 @@ class Book extends Model
         return $this->belongsTo(Author::class);
     }
 
+    public function publisher(): BelongsTo
+    {
+        return $this->belongsTo(Publisher::class);
+    }
+
+    public function copies(): HasMany
+    {
+        return $this->hasMany(BookInventory::class);
+    }
     public function getCoverImageAttribute()
     {
         if ($this->attributes['cover_image']) {

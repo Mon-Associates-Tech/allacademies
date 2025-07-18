@@ -13,4 +13,5 @@ enum UserRole: string
     case LIBRARIAN = 'librarian';
     case AUTHOR = 'author';
     case PARENT = 'parent';
+    case ACCOUNTANT = 'accountant';
 }

@@ -2,15 +2,15 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Models\Question;
-use App\Models\AcademicTopic;
 use App\Models\AcademicSubject;
-use App\Models\User;
-use App\Models\Student;
+use App\Models\AcademicTopic;
 use App\Models\Assessment;
 use App\Models\MultipleChoiceQuestion;
+use App\Models\Question;
+use App\Models\Student;
 use App\Models\TrueOrFalseQuestion;
+use App\Models\User;
+use Tests\TestCase;
 
 class SelfAssessmentTest extends TestCase
 {
@@ -44,7 +44,7 @@ class SelfAssessmentTest extends TestCase
 
 
 
-        $component = new \App\Livewire\Students\SelfAssessment();
+        $component = new \App\Livewire\Assessment\SelfAssessment();
         $component->questions = [$question];
         $component->responses = [
             0 => [
@@ -79,7 +79,7 @@ class SelfAssessmentTest extends TestCase
 
 
 
-        $component = new \App\Livewire\Students\SelfAssessment();
+        $component = new \App\Livewire\Assessment\SelfAssessment();
         $component->questions = [$question];
         $component->responses = [
             0 => [
@@ -112,7 +112,7 @@ class SelfAssessmentTest extends TestCase
             ]),
         ];
 
-        $component = new \App\Livewire\Students\SelfAssessment();
+        $component = new \App\Livewire\Assessment\SelfAssessment();
         $component->questions = $questions;
         $component->responses = [
             0 => [

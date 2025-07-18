@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Students;
+namespace App\Livewire\Student;
 
 use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicSubtopic as Subtopic;

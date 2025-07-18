@@ -3,8 +3,13 @@
     currentPage: 1,
     isLoading: false,
     showImageModal: false,
-    imageModalSrc: ''
-}" class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    imageModalSrc: '',
+    showSubscriptionModal: false,
+    subscriptionData: null
+}" class="min-h-screen rounded-lg bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+
+    <!-- Listen for subscription modal events -->
+    <div x-on:show-subscription-modal.window="showSubscriptionModal = true; subscriptionData = $event.detail[0]"></div>
 
     <!-- Animated Background Elements -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
@@ -13,7 +18,7 @@
     </div>
 
     <!-- Header Section -->
-    <div class="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-xl border-b border-gray-200/50 dark:border-gray-700/50">
+    <div class="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-sm rounded-lg border-b border-gray-200/50 dark:border-gray-700/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
@@ -29,51 +34,56 @@
                         <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
                             Book Details
                         </h1>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Comprehensive overview and management</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Comprehensive overview and access</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <a disabled="" href="{{ route('author.books.edit', $book) }}"
-                       class="inline-flex pointer-events-none items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Edit Book
-                    </a>
-                    <div class="relative z-50" x-data="{ open: false }">
-                        <button @click="open = !open"
-                                class="inline-flex items-center  px-4 py-3 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 rounded-xl shadow-lg transition-all duration-200">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-                            </svg>
-                            Actions
-                        </button>
-                        <div x-show="open" @click.away="open = false"
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100"
-                             style="z-index:100000!important"
-                             class="absolute right-0 mt-2 w-56  bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl shadow-2xl z-50 border border-gray-200/50 dark:border-gray-700/50">
-                            <div class="p-2 z-10">
-                                <a href="{{ route('author.analytics.book', $book) }}"
-                                   class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
-                                    <span class="text-lg mr-3">📊</span>
-                                    <span>View Analytics</span>
-                                </a>
-                                <a href="{{ route('author.revenue.index', $book) }}"
-                                   class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors">
-                                    <span class="text-lg mr-3">💰</span>
-                                    <span>Revenue Details</span>
-                                </a>
-                                <a href="{{ route('author.reviews.index', $book) }}"
-                                   class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors">
-                                    <span class="text-lg mr-3">⭐</span>
-                                    <span>Reviews</span>
-                                </a>
+
+                @auth
+                    @if(auth()->user()->hasRole('author'))
+                        <div class="flex items-center space-x-3">
+                            <a href="{{ route('author.books.edit', $book) }}"
+                               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit Book
+                            </a>
+                            <div class="relative z-50" x-data="{ open: false }">
+                                <button @click="open = !open"
+                                        class="inline-flex items-center px-4 py-3 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 rounded-xl shadow-lg transition-all duration-200">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                    </svg>
+                                    Actions
+                                </button>
+                                <div x-show="open" @click.away="open = false"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 transform scale-95"
+                                     x-transition:enter-end="opacity-100 transform scale-100"
+                                     style="z-index:100000!important"
+                                     class="absolute right-0 mt-2 w-56 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl shadow-2xl z-50 border border-gray-200/50 dark:border-gray-700/50">
+                                    <div class="p-2 z-10">
+                                        <a href="{{ route('author.analytics.book', $book) }}"
+                                           class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
+                                            <span class="text-lg mr-3">📊</span>
+                                            <span>View Analytics</span>
+                                        </a>
+                                        <a href="{{ route('author.revenue.index', $book) }}"
+                                           class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors">
+                                            <span class="text-lg mr-3">💰</span>
+                                            <span>Revenue Details</span>
+                                        </a>
+                                        <a href="{{ route('author.reviews.index', $book) }}"
+                                           class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors">
+                                            <span class="text-lg mr-3">⭐</span>
+                                            <span>Reviews</span>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    @endif
+                @endauth
             </div>
         </div>
     </div>
@@ -86,7 +96,7 @@
                 <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-gray-200/50 dark:border-gray-700/50">
                     <!-- Book Cover -->
                     <div class="relative group mb-8">
-                        <div class="aspect-[3/2] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 shadow-2xl">
+                        <div class="aspect-[3/2] max-h-96 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 shadow-2xl">
                             <img src="{{ $book->cover_image }}"
                                  alt="{{ $book->title }}"
                                  class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300 cursor-pointer"
@@ -97,13 +107,12 @@
                         <!-- PDF Reader Button -->
                         @if($book->content_url)
                             <button wire:click="openPdfReader"
-                                    class="absolute bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transform hover:scale-110 transition-all duration-200">
+                                    class="absolute bottom-4 right-4 {{ $canRead ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-500 cursor-not-allowed' }} text-white p-3 rounded-full shadow-lg {{ $canRead ? 'transform hover:scale-110 transition-all duration-200' : '' }}"
+                                {{ $canRead ? '' : 'disabled' }}>
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                 </svg>
                             </button>
-
-
                         @endif
                     </div>
 
@@ -123,6 +132,112 @@
                         </div>
                     </div>
 
+                    <!-- Subscription Status & Actions -->
+                    @auth
+                        @if(auth()->user()->student)
+                            <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-8">
+                                @if($userSubscription)
+                                    @if($userSubscription->status === 'active')
+                                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 mb-6">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center">
+                                                    <svg class="w-8 h-8 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <div>
+                                                        <p class="text-lg font-semibold text-green-800 dark:text-green-200">Active Subscription</p>
+                                                        <p class="text-sm text-green-600 dark:text-green-400">Valid until {{ $userSubscription->end_date->format('M d, Y') }}</p>
+                                                    </div>
+                                                </div>
+                                                <button wire:click="openPdfReader"
+                                                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                                    Start Reading
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @elseif($userSubscription->status === 'pending_payment')
+                                        <div class="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-6 mb-6">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center">
+                                                    <svg class="w-8 h-8 text-yellow-600 dark:text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                    </svg>
+                                                    <div>
+                                                        <p class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">Pending Payment</p>
+                                                        <p class="text-sm text-yellow-600 dark:text-yellow-400">Complete payment to start reading</p>
+                                                    </div>
+                                                </div>
+                                                <button wire:click="showSubscriptionModal = true; subscriptionData = { book_title: '{{ $book->title }}', amount: {{ $userSubscription->annual_fee }}, reference: '{{ $userSubscription->reference }}', subscription_id: {{ $userSubscription->id }} }"
+                                                        class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                                    Pay Now
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 mb-6">
+                                        <div class="text-center">
+                                            <svg class="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                            </svg>
+                                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Subscribe to Read</h3>
+                                            <p class="text-gray-600 dark:text-gray-400 mb-4">Get unlimited access to this book with an annual subscription</p>
+
+                                            <div class="text-center mb-6">
+                                                @if($book->is_free)
+                                                    <span class="text-3xl font-bold text-green-600 dark:text-green-400">FREE</span>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">No payment required</p>
+                                                @else
+                                                    <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ $book->formatted_subscription_fee }}</span>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Annual subscription</p>
+                                                @endif
+                                            </div>
+
+                                            <button wire:click="subscribeToBook"
+                                                    wire:loading.attr="disabled"
+                                                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <span wire:loading.remove wire:target="subscribeToBook">
+                                                    @if($book->is_free)
+                                                        Subscribe Free
+                                                    @else
+                                                        Subscribe & Pay
+                                                    @endif
+                                                </span>
+                                                <span wire:loading wire:target="subscribeToBook" class="flex items-center justify-center">
+                                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Processing...
+                                                </span>
+                                            </button>
+
+                                            <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                                                <p>• Access for full year from subscription date</p>
+                                                <p>• {{ $book->is_free ? 'Instant access' : 'Access after payment confirmation' }}</p>
+                                                <p>• Read online anytime, anywhere</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    @else
+                        <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-8">
+                            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 text-center">
+                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Login Required</h3>
+                                <p class="text-gray-600 dark:text-gray-400 mb-4">Please log in to subscribe and read this book</p>
+                                <a href="{{ route('sign-in') }}"
+                                   class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                                    Log In
+                                </a>
+                            </div>
+                        </div>
+                    @endauth
+
                     <!-- Pricing Info -->
                     <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-8">
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 mb-6">
@@ -138,6 +253,7 @@
                             </div>
                         </div>
 
+                        <!-- Rest of the existing content... -->
                         <!-- Availability -->
                         <div class="space-y-4">
                             <div class="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-700/50 rounded-xl">
@@ -149,42 +265,44 @@
                                 </div>
                                 <span class="text-sm">
                                     @if($book->has_hardcopy)
-                                        <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
-                                            ✓ Available
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            Available
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full text-xs font-medium">
-                                            ✗ Not Available
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                            Not Available
                                         </span>
                                     @endif
                                 </span>
                             </div>
+
                             <div class="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-700/50 rounded-xl">
                                 <div class="flex items-center">
                                     <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                     </svg>
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Soft Copy</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Digital Copy</span>
                                 </div>
                                 <span class="text-sm">
                                     @if($book->has_softcopy)
-                                        <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
-                                            ✓ Available
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            Available
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full text-xs font-medium">
-                                            ✗ Not Available
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                            Not Available
                                         </span>
                                     @endif
                                 </span>
                             </div>
                         </div>
                     </div>
-
                 </div>
-
             </div>
-            <div class="d grid-codls-1 gap-6 space-y-6 mb-8">
+
+
+            <div class="d grid-codls-1 gap-6 space-y-6 mb-8" >
+                @if(in_array(auth()->user()->role, ['owner', 'author'] ))
                 <div class="bg-gradient-to-br max-h-48 from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
                     <div class="flex items-center justify-between">
                         <div>
@@ -231,6 +349,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                 <!-- Book Information -->
                 <div class="">
                     <div class="flex items-center mb-6">
@@ -330,24 +449,6 @@
             <!-- Book Details & Statistics -->
             <div class="lg:col-span-2">
 
-
-                <!-- Additional Information -->
-                @if($book->additional_info)
-                    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
-                        <div class="flex items-center mb-6">
-                            <div class="p-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl mr-4">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Additional Information</h3>
-                        </div>
-                        <div class="prose prose-lg dark:prose-invert max-w-none">
-                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ $book->additional_info }}</p>
-                        </div>
-                    </div>
-                @endif
-
                 <!-- Subscription Conditions -->
                 <div class="bg-white/80 hidden dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-gray-200/50 dark:border-gray-700/50">
                     <div class="flex items-center mb-6">
@@ -377,6 +478,7 @@
         </div>
 
         <!-- Recent Activity -->
+        @if(in_array(auth()->user()->role, ['admin', 'owner']))
         <div class="mt-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-gray-200/50 dark:border-gray-700/50">
             <div class="flex items-center mb-6">
                 <div class="p-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl mr-4">
@@ -420,6 +522,7 @@
                 @endforelse
             </div>
         </div>
+            @endif
     </div>
 
     <!-- Image Modal -->
@@ -479,11 +582,13 @@
                 </div>
 
                 <!-- PDF Reader Content -->
-                <div class="flex-1 p-4 overflow-hidden">
-                    <div id="pdfContainer" class="w-full h-full bg-gray-100 dark:bg-gray-900 rounded-lg overflow-y-auto">
-                        <div id="pdf-pages" class="flex flex-col items-center gap-4 p-4"></div>
-                    </div>
-                </div>
+{{--                <div class="flex-1 p-4 overflow-hidden">--}}
+{{--                    <div id="pdfContainer" class="w-full h-full bg-gray-100 dark:bg-gray-900 rounded-lg overflow-y-auto">--}}
+{{--                        <div id="pdf-pages" class="flex flex-col items-center gap-4 p-4"></div>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
+
+{{--                <livewire:common.pdf-reader />--}}
 
                 <!-- PDF Controls -->
                 <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 rounded-b-2xl">

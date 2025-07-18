@@ -151,12 +151,12 @@ class Student extends Model
         $allSubjects = $levelSubjects->keyBy('id');
 
         foreach ($individualSubjects as $subject) {
-            if ($subject->pivot->is_active) {
+            if ($subject->pivot->is_active === false) {
                 // Add or keep the subject
                 $allSubjects[$subject->id] = $subject;
             } else {
                 // Remove the subject if it's marked as inactive (override from level)
-                $allSubjects->forget($subject->id);
+//                $allSubjects->forget($subject->id);
             }
         }
 
@@ -245,4 +245,26 @@ class Student extends Model
 
         return $details;
     }
+
+    public function libraryCard()
+    {
+        return $this->hasOne(LibraryCard::class);
+    }
+
+    public function libraryCards()
+    {
+        return $this->hasMany(LibraryCard::class);
+    }
+
+    public function activeLibraryCard()
+    {
+        return $this->hasOne(LibraryCard::class)->where('status', 'active');
+    }
+
+    public function getCanBorrowBooksAttribute()
+    {
+        $activeCard = $this->activeLibraryCard;
+        return $activeCard && $activeCard->can_borrow;
+    }
+
 }

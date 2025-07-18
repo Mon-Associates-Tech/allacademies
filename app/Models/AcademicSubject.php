@@ -146,4 +146,8 @@ class AcademicSubject extends Model
                 ->wherePivot('is_active', false);
         });
     }
+
+    public function assessments(){
+        return $this->hasMany(Assessment::class, 'subject_id');
+    }
 }
