@@ -9,7 +9,7 @@ use App\Models\AcademicTopic;
 use App\Models\Examination;
 use App\Models\Team;
 use App\Models\User;
-use App\Livewire\Assessment\QuestionGenerator;
+use App\Services\QuestionGenerator;
 use App\Support\Examiner;
 use App\Support\Mark;
 use Exception;

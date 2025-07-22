@@ -25,19 +25,20 @@ class GlobalMessage extends Component
         $this->checkFlashMessages();
     }
 
-    public function checkFlashMessages()
+    public function checkFlashMessages(): void
     {
         $flashTypes = ['success', 'error', 'warning', 'info'];
 
         foreach ($flashTypes as $type) {
-            if (session()->has($type)) {
-                $this->addMessage(session($type), $type);
+            $flashMessage = session($type);
+            if ($flashMessage && is_string($flashMessage)) {
+                $this->addMessage($flashMessage, $type);
                 session()->forget($type);
             }
         }
     }
 
-    public function addMessage($message, $type = 'info', $autoHide = null)
+    public function addMessage($message, $type = 'info', $autoHide = null): void
     {
         $id = uniqid();
         $autoHide = $autoHide ?? $this->autoHide;
@@ -58,21 +59,25 @@ class GlobalMessage extends Component
 
     public function addSuccessMessage($message, $autoHide = null)
     {
+        if (!$message) return;
         $this->addMessage($message, 'success', $autoHide);
     }
 
     public function addErrorMessage($message, $autoHide = null)
     {
+        if (!$message) return;
         $this->addMessage($message, 'error', $autoHide);
     }
 
     public function addWarningMessage($message, $autoHide = null)
     {
+        if (!$message) return;
         $this->addMessage($message, 'warning', $autoHide);
     }
 
     public function addInfoMessage($message, $autoHide = null)
     {
+        if (!$message) return;
         $this->addMessage($message, 'info', $autoHide);
     }
 

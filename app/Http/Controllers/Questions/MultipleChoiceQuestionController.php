@@ -63,7 +63,7 @@ class MultipleChoiceQuestionController extends Controller
 
         $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($data);
 
-        return to_route('multiple-choice-questions.index', ['academic_topic' => $academicTopic])
+        return to_route('multiple-choice-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => $academicSubject , 'academic_level' => $academicLevel, 'academic_group' => $academicGroup])
             ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 
