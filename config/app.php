@@ -193,7 +193,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\TelescopeServiceProvider::class,
         \Lab404\Impersonate\ImpersonateServiceProvider::class,
-        App\Providers\MessageServiceProvider::class,
+//        App\Providers\MessageServiceProvider::class,
 
     ],
 
@@ -210,7 +210,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'ExampleClass' => App\Example\ExampleClass::class,
-        'Message' => \App\Facades\MessageFacade::class,
+//        'Message' => \App\Facades\MessageFacade::class,
     ])->toArray(),
 
     'enable_otp' => env('ENABLE_OTP', false),

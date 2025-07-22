@@ -77,7 +77,7 @@
                             {{ $slot }}
                     </div>
                 </div>
-                <livewire:common.global-message  />
+{{--                <livewire:common.global-message   />--}}
 
             </main>
         </div>
