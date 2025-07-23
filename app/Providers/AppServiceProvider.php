@@ -78,7 +78,8 @@ class AppServiceProvider extends ServiceProvider
             'book_borrowing' => \App\Models\BookBorrowing::class,
             'assignment' => \App\Models\Assignment::class,
             'school_setting' => \App\Models\SchoolSetting::class,
-            'notification' => DatabaseNotification::class
+            'notification' => DatabaseNotification::class,
+            'book_reading_progress' => \App\Models\BookReadingProgress::class,
         ]);
     }
 }

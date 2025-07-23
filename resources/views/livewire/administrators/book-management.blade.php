@@ -53,6 +53,7 @@
         @endif
         <!-- Enhanced Book Form -->
         @if($showForm)
+{{--            <livewire:common.book-form />--}}
             <div class="mb-8 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
                 <!-- Form Header with Progress -->
                 <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">

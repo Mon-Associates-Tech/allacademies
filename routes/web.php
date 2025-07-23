@@ -446,6 +446,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::get('books', [BookController::class, 'index'])->name('books.index');
+Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');

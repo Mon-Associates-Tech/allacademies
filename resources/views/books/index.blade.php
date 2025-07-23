@@ -158,7 +158,7 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex flex-col gap-2">
-                                    <a href="{{ route('author.books.show', $book) }}"
+                                    <a href="{{ route('books.show', $book) }}"
                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium text-center transition-colors">
                                         📋 View Details
                                     </a>

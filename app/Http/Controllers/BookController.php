@@ -92,8 +92,9 @@ class BookController extends Controller
                 ->first();
             $isBorrowed = (bool) $borrowing;
         }
+        $canRead = $isSubscribed || !$book->has_softcopy;
 
-        return view('books.show', compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing'));
+        return view('books.show', compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead'));
     }
 
     public function subscribe(Request $request, Book $book)

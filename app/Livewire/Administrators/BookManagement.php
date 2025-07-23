@@ -49,6 +49,7 @@ class BookManagement extends Component
 
     public $authors;
     public $bookCategories;
+    public $isAdmin = true;
 
     protected $rules = [
         'title' => 'required|min:3|max:255',
@@ -66,7 +67,7 @@ class BookManagement extends Component
         'pdfFile' => 'nullable|mimes:pdf|max:10240', // 10MB Max
     ];
 
-    protected $listeners = ['refreshBooks' => '$refresh'];
+    protected $listeners = ['refreshBooks' => '$refresh', 'bookSaved' => '$refresh'];
 
     public function mount()
     {

@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\ActivityLog\Traits\LogsActivity;
-use Spatie\ActivityLog\LogOptions;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class BookReadingProgress extends Model
 {
@@ -13,7 +13,7 @@ class BookReadingProgress extends Model
 
     protected $fillable = [
         'book_id',
-        'student_id',
+        'user_id',
         'current_page',
         'total_pages',
         'last_read_at'
@@ -31,9 +31,9 @@ class BookReadingProgress extends Model
             ->dontSubmitEmptyLogs();
     }
 
-    public function student(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(User::class);
     }
 
     public function book(): BelongsTo

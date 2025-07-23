@@ -19,13 +19,6 @@ import './fullcalendar'
 // Import chart data helper
 import './activity'; // Import activity tracking
 
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?url';
-import {GlobalWorkerOptions} from "pdfjs-dist";
-
-// Configure PDF.js worker
-GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
 
 
 // Register Chart.js components (added RadialLinearScale for radar charts)
@@ -36,9 +29,8 @@ window.Alpine = Alpine;
 window.marked = marked;
 window.Chart = Chart;
 window.axios = axios;
-window.pdfjsLib = pdfjsLib;
 
-import './pdf-reader';
+
 import './ChartDataHelper';
 // Configure axios
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
