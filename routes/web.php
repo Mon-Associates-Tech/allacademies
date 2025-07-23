@@ -406,7 +406,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
     Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
-    Route::get('/books/{book}/read', [BookController::class, 'read'])->name('books.read');
+//    Route::get('/books/{book}/read', [BookController::class, 'read'])->name('books.read');
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
 });
 

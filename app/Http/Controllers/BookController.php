@@ -198,12 +198,9 @@ class BookController extends Controller
         $user = Auth::user();
         $student = $user->student;
 
-        if (!$student) {
-            return redirect()->route('books.show', $book)->with('error', 'Student profile required');
-        }
-
         if (!$book->has_softcopy) {
-            return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
+            // todo: uncomment
+           // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
         }
 
         // Check subscription for paid books
@@ -214,7 +211,7 @@ class BookController extends Controller
                 ->first();
 
             if (!$subscription) {
-                return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
+                // return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
             }
         }
 
