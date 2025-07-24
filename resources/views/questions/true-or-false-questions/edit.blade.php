@@ -46,10 +46,7 @@
                             <!-- Configuration Fields -->
                             <div class="grid grid-cols-2 gap-6">
                                 <div class="space-y-2">
-                                    <label for="difficulty_level" class="block text-sm font-medium text-gray-700">
-                                        Difficulty Level
-                                    </label>
-                                    <x-form.select name="difficulty_level" :options="[
+                                    <x-form.select name="difficulty_level" label="Difficulty Level" :options="[
                                         'unspecified' => 'Unspecified',
                                         'easy' => 'Easy',
                                         'medium' => 'Medium',
@@ -58,31 +55,67 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <label for="score" class="block text-sm font-medium text-gray-700">
-                                        Score Points <span class="text-red-500">*</span>
-                                    </label>
                                     <x-form.input name="score" type="number" :value="$trueOrFalseQuestion->score" required />
                                 </div>
                             </div>
 
                             <!-- Subtopic Field -->
-                            <div class="space-y-2">
-                                <label for="subtopic" class="block text-sm font-medium text-gray-700">
+                            <div class="space-y-2" x-data="{ showCustomInput: false, selectedValue: '{{ $trueOrFalseQuestion?->subtopic?->name ?? '' }}' }">
+                                <label for="subtopic_select" class="block text-sm font-medium text-gray-700">
                                     Subtopic (Optional)
                                 </label>
-                                <x-form.input
-                                    type="text"
-                                    name="subtopic"
-                                    :value="$trueOrFalseQuestion?->subtopic?->name"
-                                    placeholder="Enter subtopic or leave blank"
-                                />
+
+                                @if($trueOrFalseQuestion->academicTopic->subtopics->count() > 0)
+                                    <select
+                                        id="subtopic_select"
+                                        x-model="selectedValue"
+                                        @change="showCustomInput = (selectedValue === 'new')"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Enter subtopic or leave blank</option>
+                                        @foreach($trueOrFalseQuestion->academicTopic->subtopics as $subtopic)
+                                            <option value="{{ $subtopic->name }}"
+                                                {{ (old('subtopic', $trueOrFalseQuestion?->subtopic?->name) == $subtopic->name) ? 'selected' : '' }}>
+                                                {{ $subtopic->name }}
+                                            </option>
+                                        @endforeach
+                                        <option value="new">+ Create New Subtopic</option>
+                                    </select>
+
+                                    <!-- Hidden input for existing subtopic selection -->
+                                    <input
+                                        type="hidden"
+                                        name="subtopic"
+                                        :value="selectedValue !== 'new' ? selectedValue : ''"
+                                        x-show="!showCustomInput"
+                                    />
+
+                                    <!-- Custom input for new subtopic -->
+                                    <div x-show="showCustomInput" x-transition class="mt-2">
+                                        <x-form.input
+                                            type="text"
+                                            name="subtopic"
+                                            label="New Subtopic Name"
+                                            placeholder="Enter new subtopic name"
+                                        />
+                                    </div>
+                                @else
+                                    {{-- Fallback: Simple text input if no subtopics exist --}}
+                                    <x-form.input
+                                        type="text"
+                                        name="subtopic"
+                                        :value="$trueOrFalseQuestion?->subtopic?->name"
+                                        placeholder="Enter subtopic or leave blank"
+                                    />
+                                    <p class="text-xs text-gray-500 mt-1">No existing subtopics found. Enter a new one above.</p>
+                                @endif
                             </div>
 
                             <!-- Question Content -->
                             <div class="space-y-2">
-                                <label for="question" class="block text-sm font-medium text-gray-700">
-                                    Question Content <span class="text-red-500">*</span>
-                                </label>
+{{--                                <label for="question" class="block text-sm font-medium text-gray-700">--}}
+{{--                                    Question Content <span class="text-red-500">*</span>--}}
+{{--                                </label>--}}
                                 <x-form.rich-editor name="question" :value="$trueOrFalseQuestion->question" />
                             </div>
 

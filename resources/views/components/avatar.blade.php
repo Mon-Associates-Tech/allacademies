@@ -1,16 +1,24 @@
-@props(['name' => '', 'avatar' => '', 'textSize' => ''])
+@props(['name' => '', 'avatar' => '', 'textSize' => '', 'maxInitials' => 2])
 
 @php
     // --- Initials Generation ---
     $words = array_values(array_filter(explode(' ', trim($name))));
     $initials = '';
 
+    // Validate maxInitials prop (between 1 and 3)
+    $maxInitials = max(1, min(3, (int) $maxInitials));
+
     if (count($words) >= 2) {
-        // Use the first letter of the first and last words for names with multiple words.
-        $initials = strtoupper(substr($words[0], 0, 1) . substr(end($words), 0, 1));
+        if ($maxInitials === 3 && count($words) >= 3) {
+            // Use first letter of first three words for 3-character display
+            $initials = strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1) . substr($words[2], 0, 1));
+        } else {
+            // Use the first letter of the first and last words for names with multiple words.
+            $initials = strtoupper(substr($words[0], 0, 1) . substr(end($words), 0, 1));
+        }
     } elseif (count($words) === 1) {
-        // Use the first two letters for single-word names.
-        $initials = strtoupper(substr($words[0], 0, 2));
+        // Use the specified number of letters for single-word names.
+        $initials = strtoupper(substr($words[0], 0, $maxInitials));
     }
 
     // --- Background Gradient Generation ---

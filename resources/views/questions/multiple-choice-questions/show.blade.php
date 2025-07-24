@@ -61,7 +61,7 @@
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Question</h2>
                 <div class="prose dark:prose-invert max-w-none">
-                    <span x-html="marked.parse(@js($multipleChoiceQuestion->question->summary))"></span>
+                    <span x-html="marked.parse(@js($multipleChoiceQuestion->question->down))"></span>
                 </div>
             </div>
 
@@ -93,11 +93,11 @@
                                     @endif
                                 </div>
                                 @php
-                                    $optText = $multipleChoiceQuestion->{"option_$option"}->html;
+                                    $optText = $multipleChoiceQuestion->{"option_$option"}->down;
 
                                 @endphp
                                 <div class="prose dark:prose-invert max-w-none">
-                                    <p>{!! $optText !!}</p>
+                                    <span  x-html="marked.parse(@js($optText))"></span>
                                 </div>
                             </div>
                         </div>

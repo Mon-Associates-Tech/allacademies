@@ -75,24 +75,64 @@
                             </div>
                         </div>
 
-                        <!-- Subtopic Field (if applicable) -->
-                        @if(isset($essayQuestion->academicTopic->subtopic))
-                            <div>
-                                <label for="subtopic" class="block text-sm font-medium text-gray-700">Subtopic</label>
+                        <!-- Subtopic Field -->
+                        <div x-data="{ showCustomInput: false, selectedValue: '{{ $essayQuestion->subtopic?->name ?? '' }}' }">
+                            <label for="subtopic_select" class="block text-sm font-medium text-gray-700 mb-1">
+                                Sub Topic
+                            </label>
+
+                            @if($essayQuestion->academicTopic->subtopics->count() > 0)
+                                <select
+                                    id="subtopic_select"
+                                    x-model="selectedValue"
+                                    @change="showCustomInput = (selectedValue === 'new')"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="">Enter subtopic or leave blank</option>
+                                    @foreach($essayQuestion->academicTopic->subtopics as $subtopic)
+                                        <option value="{{ $subtopic->name }}"
+                                            {{ (old('subtopic', $essayQuestion->subtopic?->name) == $subtopic->name) ? 'selected' : '' }}>
+                                            {{ $subtopic->name }}
+                                        </option>
+                                    @endforeach
+                                    <option value="new">+ Create New Subtopic</option>
+                                </select>
+
+                                <!-- Hidden input for existing subtopic selection -->
+                                <input
+                                    type="hidden"
+                                    name="subtopic"
+                                    :value="selectedValue !== 'new' ? selectedValue : ''"
+                                    x-show="!showCustomInput"
+                                />
+
+                                <!-- Custom input for new subtopic -->
+                                <div x-show="showCustomInput" x-transition class="mt-2">
+                                    <x-form.input
+                                        type="text"
+                                        name="subtopic"
+                                        label="New Subtopic Name"
+                                        placeholder="Enter new subtopic name"
+                                    />
+                                </div>
+                            @else
+                                {{-- Fallback: Simple text input if no subtopics exist --}}
                                 <x-form.input
                                     type="text"
                                     name="subtopic"
-                                    :value="$essayQuestion->subtopic->name"
+                                    :value="$essayQuestion->subtopic?->name"
                                     placeholder="Enter subtopic or leave blank"
                                 />
-                                <p class="mt-1 text-sm text-gray-500">Optional: Specify a subtopic for better organization</p>
-                            </div>
-                        @endif
+                                <p class="text-xs text-gray-500 mt-1">No existing subtopics found. Enter a new one above.</p>
+                            @endif
+
+                            <p class="mt-1 text-sm text-gray-500">Optional: Specify a subtopic for better organization</p>
+                        </div>
 
                         <!-- Question Content -->
                         <div class="space-y-4">
                             <div>
-                                <label for="question" class="block text-sm font-medium text-gray-700">Question</label>
+{{--                                <label for="question" class="block text-sm font-medium text-gray-700">Question</label>--}}
                                 <x-form.rich-editor
                                     class="rich-editor mt-1"
                                     name="question"
@@ -104,7 +144,7 @@
                             </div>
 
                             <div>
-                                <label for="answer" class="block text-sm font-medium text-gray-700">Model Answer</label>
+{{--                                <label for="answer" class="block text-sm font-medium text-gray-700">Model Answer</label>--}}
                                 <x-form.rich-editor
                                     class="rich-editor mt-1"
                                     name="answer"

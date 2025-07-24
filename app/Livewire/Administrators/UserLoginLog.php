@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Administrators;
 
-use App\Models\UserLogin;
+use App\Models\LoginActivity;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,7 +15,7 @@ class UserLoginLog extends Component
 
     public function render()
     {
-        $activities = UserLogin::with('user')
+        $activities = LoginActivity::with('user')
             ->when($this->searchTerm, function($query) {
                 $query->whereHas('user', function($q) {
                     $q->where('name', 'like', '%' . $this->searchTerm . '%');

@@ -69,13 +69,54 @@
                         </div>
                     </div>
 
-                    <div>
-                        <x-form.input
-                            type="text"
-                            placeholder="Enter subtopic or leave blank"
-                            label="Sub Topic"
-                            name="subtopic"
-                        />
+                    <div x-data="{ showCustomInput: false, selectedValue: '' }">
+                        <label for="subtopic_select" class="block text-sm font-medium text-gray-700 mb-1">
+                            Sub Topic
+                        </label>
+
+                        @if($academicTopic->subtopics->count() > 0)
+                            <select
+                                id="subtopic_select"
+                                x-model="selectedValue"
+                                @change="showCustomInput = (selectedValue === 'new')"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Enter subtopic or leave blank</option>
+                                @foreach($academicTopic->subtopics as $subtopic)
+                                    <option value="{{ $subtopic->name }}" {{ old('subtopic') == $subtopic->name ? 'selected' : '' }}>
+                                        {{ $subtopic->name }}
+                                    </option>
+                                @endforeach
+                                <option value="new">+ Create New Subtopic</option>
+                            </select>
+
+                            <!-- Hidden input for existing subtopic selection -->
+                            <input
+                                type="hidden"
+                                name="subtopic"
+                                :value="selectedValue !== 'new' ? selectedValue : ''"
+                                x-show="!showCustomInput"
+                            />
+
+                            <!-- Custom input for new subtopic -->
+                            <div x-show="showCustomInput" x-transition class="mt-2">
+                                <x-form.input
+                                    type="text"
+                                    name="subtopic"
+                                    label="New Subtopic Name"
+                                    placeholder="Enter new subtopic name"
+                                />
+                            </div>
+                        @else
+                            {{-- Fallback: Simple text input if no subtopics exist --}}
+                            <x-form.input
+                                type="text"
+                                placeholder="Enter subtopic or leave blank"
+                                label="Sub Topic"
+                                name="subtopic"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">No existing subtopics found. Enter a new one above.</p>
+                        @endif
                     </div>
 
                     <div class="space-y-4">

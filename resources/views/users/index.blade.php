@@ -253,8 +253,10 @@
                                 <x-action name="view" :to="route('users.show', ['user' => $user])" />
 
                                 <!-- Quick actions dropdown -->
+                                <!-- Quick actions dropdown -->
                                 <div class="relative" x-data="{ open: false }">
                                     <button @click="open = !open"
+                                            x-ref="button"
                                             class="p-1 text-gray-400 hover:text-gray-600">
                                         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
@@ -269,13 +271,14 @@
                                          x-transition:leave="transition ease-in duration-75"
                                          x-transition:leave-start="transform opacity-100 scale-100"
                                          x-transition:leave-end="transform opacity-0 scale-95"
-                                         class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                         class="absolute right-0 bottom-full mb-2 w-48 rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 focus:outline-none z-50"
+                                         style="z-index: 9999 !important;">
 
                                         @can('own')
                                             @if($user->role !== 'owner')
                                                 <button
                                                     @click="$store.changeRole.show('{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', {{ $user->id }}); open = false"
-                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                     <div class="flex items-center">
                                                         <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -287,7 +290,7 @@
                                         @endcan
 
                                         <a href="{{ route('users.show', ['user' => $user]) }}"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                           class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                             <div class="flex items-center">
                                                 <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -297,8 +300,7 @@
                                             </div>
                                         </a>
                                     </div>
-                                </div>
-                            </div>
+                                </div>                            </div>
                         </x-table.td>
                     </tr>
                 @endforeach

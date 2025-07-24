@@ -99,7 +99,7 @@
                 <h2 class="text-lg font-semibold text-gray-900">Question Content</h2>
             </div>
             <div class="p-6 prose max-w-none">
-                <span x-html="marked.parse(@js($essayQuestion->question->summary))"></span>
+                <span x-html="marked.parse(@js($essayQuestion->question->down))"></span>
             </div>
         </div>
 

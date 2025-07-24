@@ -76,7 +76,7 @@ class MultipleChoiceQuestionController extends Controller
     {
         $this->authorize('moderate');
 
-        $academicTopic->load('academicSubject.academicLevel.academicGroup');
+        $academicTopic->load('academicSubject.academicLevel.academicGroup', 'subtopics');
 
         return view('questions.multiple-choice-questions.create', [
             'academicTopic' => $academicTopic,

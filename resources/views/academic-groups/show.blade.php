@@ -79,81 +79,113 @@
                         @if($academicGroup->academicLevels && $academicGroup->academicLevels->count() > 0)
                             <div class="space-y-4">
                                 @foreach($academicGroup->academicLevels as $level)
-                                    <div class="group flex items-center justify-between p-4 sm:p-5 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 hover:shadow-md">
-                                        <div class="flex items-center min-w-0 flex-1">
-                                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                                </svg>
-                                            </div>
-                                            <div class="ml-4 min-w-0 flex-1">
-                                                <div class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                                    {{ $level->name }}
-                                                </div>
-                                                @if($level->label && $level->label !== $level->name)
-                                                    <div class="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
-                                                        {{ $level->label }}
-                                                    </div>
-                                                @endif
-                                                <div class="flex items-center space-x-4 mt-2">
-                                                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 overflow-hidden">
+                                        <!-- Header Section -->
+                                        <div class="p-6 pb-4">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex items-start space-x-4 flex-1 min-w-0">
+                                                    <!-- Icon -->
+                                                    <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                                         </svg>
-                                                        {{ $level->subjects->count() }} {{ Str::plural('subject', $level->subjects->count()) }}
                                                     </div>
-                                                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                                                    <!-- Content -->
+                                                    <div class="flex-1 min-w-0">
+                                                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1 truncate">
+                                                            {{ $level->name }}
+                                                        </h3>
+                                                        @if($level->label && $level->label !== $level->name)
+                                                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 truncate">
+                                                                {{ $level->label }}
+                                                            </p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <!-- Actions (Desktop) -->
+                                                <div class="hidden sm:flex items-center space-x-2 ml-4">
+                                                    <a href="{{ route('academic-levels.show', ['academic_level' => $level, 'academic_group' => getRouteParameter('academic_group')]) }}"
+                                                       class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl transition-colors duration-200 group/btn"
+                                                       title="View Level Details">
+                                                        <svg class="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                        </svg>
+                                                        View
+                                                    </a>
+
+                                                    @can('administrate')
+                                                        <a href="{{ route('academic-levels.edit', ['academic_level' => $level, 'academic_group' => getRouteParameter('academic_group')]) }}"
+                                                           class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-xl transition-colors duration-200 group/btn"
+                                                           title="Edit Level">
+                                                            <svg class="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                            </svg>
+                                                            Edit
+                                                        </a>
+                                                    @endcan
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Stats Section -->
+                                        <div class="px-6 pb-4">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <!-- Subjects Count -->
+                                                <div class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                                                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center mr-3">
+                                                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{ $level->subjects->count() }}</p>
+                                                        <p class="text-sm text-blue-600 dark:text-blue-400">{{ Str::plural('Subject', $level->subjects->count()) }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Students Count -->
+                                                <div class="flex items-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                                                    <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center mr-3">
+                                                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
                                                         </svg>
-                                                        {{ $level->students->count() }} {{ Str::plural('student', $level->students->count()) }}
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ $level->students->count() }}</p>
+                                                        <p class="text-sm text-emerald-600 dark:text-emerald-400">{{ Str::plural('Student', $level->students->count()) }}</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div class="flex items-center ml-4">
-                                            <!-- Quick Stats for larger screens -->
-                                            <div class="hidden lg:flex items-center space-x-3 mr-4">
-                                                @if($level->subjects->count() > 0)
-                                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
-                                            {{ $level->subjects->count() }} subjects
-                                        </span>
-                                                @endif
-                                                @if($level->students->count() > 0)
-                                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">
-                                            {{ $level->students->count() }} students
-                                        </span>
-                                                @endif
-                                            </div>
-
-                                            <!-- Actions -->
-                                            <div class="flex items-center space-x-2">
+                                        <!-- Mobile Actions -->
+                                        <div class="sm:hidden px-6 pb-4">
+                                            <div class="flex items-center space-x-3">
                                                 <a href="{{ route('academic-levels.show', ['academic_level' => $level, 'academic_group' => getRouteParameter('academic_group')]) }}"
-                                                   class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
-                                                   title="View Level Details">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                   class="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl transition-colors duration-200">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                     </svg>
-                                                    <span class="ml-2 hidden sm:inline">View</span>
+                                                    View
                                                 </a>
 
                                                 @can('administrate')
                                                     <a href="{{ route('academic-levels.edit', ['academic_level' => $level, 'academic_group' => getRouteParameter('academic_group')]) }}"
-                                                       class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors duration-200"
-                                                       title="Edit Level">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                       class="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-xl transition-colors duration-200">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
-                                                        <span class="ml-2 hidden sm:inline">Edit</span>
+                                                        Edit
                                                     </a>
                                                 @endcan
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
-
                                 <!-- View All Link (if there are many levels) -->
                                 @if($academicGroup->academicLevels->count() >= 5)
                                     <div class="pt-4 border-t border-gray-200 dark:border-gray-600">

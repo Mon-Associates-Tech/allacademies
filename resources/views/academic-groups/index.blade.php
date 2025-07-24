@@ -117,79 +117,109 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-200">
                     <div class="divide-y divide-gray-200 dark:divide-gray-700" id="groups-container">
                         @foreach ($academicGroups as $academicGroup)
-                            <div class="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 group-item"
+                            <div class="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 group-item border-l-4 border-l-transparent hover:border-l-blue-500"
                                  data-name="{{ strtolower($academicGroup->name) }}">
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                                     <!-- Group Info -->
                                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                                         <div class="flex-shrink-0">
-                                            <div class="p-2 sm:p-3 bg-blue-100 dark:bg-blue-900 rounded-lg transition-colors duration-200">
-                                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2M7 21H5m2 0h2m6-11V7h-2v3m0 0V7h2v3m-2 0h2v3m-2-3h-2v3"></path>
-                                                </svg>
-                                            </div>
+                                            <!-- Unique Icon Avatar for each Academic Group -->
+                                            <x-avatar
+                                                max-initials="3"
+                                                :name="$academicGroup->name"
+                                                class="w-12 h-12 sm:w-14 sm:h-14 text-sm font-bold"
+                                                text-size="text-sm"
+                                            />
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
-                                                {{ $academicGroup->name }}
-                                            </h3>
-                                            <div class="flex flex-wrap items-center gap-2 mt-1">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                                                    Academic Group
-                                                </span>
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                    Created {{ $academicGroup->created_at->diffForHumans() }}
-                                                </span>
+                                            <div class="flex items-center space-x-3 mb-2">
+                                                <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
+                                                    {{ $academicGroup->name }}
+                                                </h3>
+                                                <!-- Status indicator -->
+                                                <div class="flex items-center">
+                                                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                                    <span class="ml-1 text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
+                                                </div>
                                             </div>
 
-                                            <!-- Quick stats for mobile -->
+                                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2M7 21H5m2 0h2m6-11V7h-2v3m0 0V7h2v3m-2 0h2v3m-2-3h-2v3"></path>
+                            </svg>
+                            Academic Group
+                        </span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Created {{ $academicGroup->created_at->diffForHumans() }}
+                        </span>
+                                            </div>
+
+                                            <!-- Enhanced stats for mobile with better icons -->
                                             <div class="flex items-center gap-4 mt-2 sm:hidden">
-                                                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div class="flex items-center text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                                                    <svg class="w-3 h-3 mr-1 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2M7 21H5m2 0h2m6-11V7h-2v3m0 0V7h2v3m-2 0h2v3m-2-3h-2v3"></path>
                                                     </svg>
-                                                    {{ $academicGroup->academicLevels()->count() }} levels
+                                                    <span class="font-medium">{{ $academicGroup->academicLevels()->count() }}</span>
+                                                    <span class="ml-1">levels</span>
                                                 </div>
-                                                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div class="flex items-center text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                                                    <svg class="w-3 h-3 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                                     </svg>
-                                                    {{ $academicGroup->teachers()->count() }} teachers
+                                                    <span class="font-medium">{{ $academicGroup->teachers()->count() }}</span>
+                                                    <span class="ml-1">teachers</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Quick Stats for Desktop -->
+                                    <!-- Enhanced Quick Stats for Desktop -->
                                     <div class="hidden sm:flex items-center space-x-6 mr-6">
-                                        <div class="text-center">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ $academicGroup->academicLevels()->count() }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">Levels</div>
+                                        <div class="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
+                                            <div class="flex items-center justify-center mb-1">
+                                                <svg class="w-4 h-4 text-purple-600 dark:text-purple-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2M7 21H5m2 0h2m6-11V7h-2v3m0 0V7h2v3m-2 0h2v3m-2-3h-2v3"></path>
+                                                </svg>
+                                                <span class="text-lg font-bold text-purple-600 dark:text-purple-400">{{ $academicGroup->academicLevels()->count() }}</span>
+                                            </div>
+                                            <div class="text-xs text-purple-600 dark:text-purple-400 font-medium">Levels</div>
                                         </div>
-                                        <div class="text-center">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ $academicGroup->teachers()->count() }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">Teachers</div>
+                                        <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
+                                            <div class="flex items-center justify-center mb-1">
+                                                <svg class="w-4 h-4 text-green-600 dark:text-green-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                </svg>
+                                                <span class="text-lg font-bold text-green-600 dark:text-green-400">{{ $academicGroup->teachers()->count() }}</span>
+                                            </div>
+                                            <div class="text-xs text-green-600 dark:text-green-400 font-medium">Teachers</div>
                                         </div>
                                     </div>
 
-                                    <!-- Action Buttons -->
+                                    <!-- Enhanced Action Buttons -->
                                     <div class="flex items-center space-x-2 sm:ml-6 sm:space-x-3">
                                         <a href="{{ route('academic-groups.show', ['academic_group' => $academicGroup]) }}"
-                                           class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
-                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                           class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 group">
+                                            <svg class="w-4 h-4 mr-1.5 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                             </svg>
                                             <span class="hidden sm:inline">View</span>
+                                            <span class="sm:hidden">👁</span>
                                         </a>
 
                                         @can('administrate')
                                             <a href="{{ route('academic-groups.edit', ['academic_group' => $academicGroup]) }}"
-                                               class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
-                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                               class="inline-flex items-center px-3 py-2 border border-amber-300 dark:border-amber-600 text-sm font-medium rounded-lg text-amber-700 dark:text-amber-300 bg-white dark:bg-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-200 group">
+                                                <svg class="w-4 h-4 mr-1.5 group-hover:text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                                 <span class="hidden sm:inline">Edit</span>
+                                                <span class="sm:hidden">✏️</span>
                                             </a>
 
                                             <form method="post" action="{{ route('academic-groups.destroy', ['academic_group' => $academicGroup]) }}" class="inline">
@@ -197,12 +227,13 @@
                                                 @method('DELETE')
                                                 <input type="hidden" name="page" value="{{ $academicGroups->currentPage() }}">
                                                 <button type="submit"
-                                                        onclick="return confirm('Are you sure you want to delete this academic group?')"
-                                                        class="inline-flex items-center px-3 py-1.5 border border-red-300 dark:border-red-600 text-sm font-medium rounded-lg text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200">
-                                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        onclick="return confirm('⚠️ Are you sure you want to delete this academic group?\n\nThis action cannot be undone and will affect all associated levels and teachers.')"
+                                                        class="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 text-sm font-medium rounded-lg text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 group">
+                                                    <svg class="w-4 h-4 mr-1.5 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                     </svg>
                                                     <span class="hidden sm:inline">Delete</span>
+                                                    <span class="sm:hidden">🗑️</span>
                                                 </button>
                                             </form>
                                         @endcan

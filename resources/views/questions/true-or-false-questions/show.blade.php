@@ -37,7 +37,7 @@
                         </div>
                         <div class="p-6">
                             <div class="prose max-w-none">
-                                <span x-html="marked.parse(@js($trueOrFalseQuestion->question->summary))"></span>
+                                <span x-html="marked.parse(@js($trueOrFalseQuestion->question->down))"></span>
                             </div>
                         </div>
                     </div>
