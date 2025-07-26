@@ -24,6 +24,7 @@ class UserLogin extends Model
         'logout_type'
     ];
 
+    protected $table = 'login_activities';
     protected $casts = [
         'login_at' => 'datetime',
         'logout_at' => 'datetime',

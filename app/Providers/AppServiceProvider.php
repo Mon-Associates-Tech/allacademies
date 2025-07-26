@@ -80,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
             'school_setting' => \App\Models\SchoolSetting::class,
             'notification' => DatabaseNotification::class,
             'book_reading_progress' => \App\Models\BookReadingProgress::class,
+            'login_activity' => \App\Models\LoginActivity::class,
         ]);
     }
 }

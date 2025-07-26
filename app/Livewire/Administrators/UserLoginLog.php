@@ -21,6 +21,13 @@ class UserLoginLog extends Component
                     $q->where('name', 'like', '%' . $this->searchTerm . '%');
                 })->orWhere('action', 'like', '%' . $this->searchTerm . '%');
             })
+            ->when($this->searchTerm, function($query) {
+                $query->where('device_type', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('platform', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('browser', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('ip_address', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('country', 'like', '%' . $this->searchTerm . '%');
+            })
             ->latest()
             ->paginate(15);
 
