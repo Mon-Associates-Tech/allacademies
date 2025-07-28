@@ -14,10 +14,12 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class MultipleChoiceQuestionController extends Controller
 {
+    use HasSubtopic;
     /**
      * Display a listing of the resource.
      *
@@ -53,15 +55,10 @@ class MultipleChoiceQuestionController extends Controller
 
         $data = $request->validated();
 
-        if (isset($request->subtopic)) {
-            $subTopic = AcademicSubtopic::firstOrCreate(
-                ['name' => $request->subtopic],
-                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
-
         $multipleChoiceQuestion = $academicTopic->multipleChoiceQuestions()->create($data);
+        $data['academic_subtopic_id'] = $this->getSubtopicId($multipleChoiceQuestion, $request);
+        $multipleChoiceQuestion->update($data);
+
 
         return to_route('multiple-choice-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => $academicSubject , 'academic_level' => $academicLevel, 'academic_group' => $academicGroup])
             ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
@@ -143,13 +140,7 @@ class MultipleChoiceQuestionController extends Controller
 
         $data = $request->validated();
 
-        if (isset($request->subtopic, $multipleChoiceQuestion->subtopic->name)) {
-            $subTopic = AcademicSubtopic::updateOrCreate(
-                ['name' => $multipleChoiceQuestion->subtopic->name],
-                ['name' => $request->subtopic, 'academic_topic_id' => $multipleChoiceQuestion->academic_topic_id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
+        $data['academic_subtopic_id'] = $this->getSubtopicId($multipleChoiceQuestion, $request);
 
         $multipleChoiceQuestion->update($data);
 

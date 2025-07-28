@@ -76,7 +76,10 @@
                 @foreach($multipleChoiceQuestions as $multipleChoiceQuestion)
                     <tr class="hover:bg-gray-50">
                       <td class="px-6 py-4 whitespace-normal">
-                          <div class="text-sm text-gray-900 line-clamp-2"><span x-html="marked.parse(@js($multipleChoiceQuestion->question->summary))"></span></div>
+                          <div class="text-sm text-gray-900 line-clamp-2">
+                              <x-form.markdown-with-math :content="$multipleChoiceQuestion->question->down" />
+{{--                              <span x-html="marked.parse(@js($multipleChoiceQuestion->question->summary))"></span>--}}
+                          </div>
                       </td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">

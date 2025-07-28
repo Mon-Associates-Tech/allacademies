@@ -18,6 +18,7 @@ import axios from 'axios';
 import './fullcalendar'
 // Import chart data helper
 import './activity'; // Import activity tracking
+import renderMathInElement from 'katex/dist/contrib/auto-render';
 
 
 
@@ -68,5 +69,7 @@ renderer.code = function(code, lang, escaped) {
 };
 
 marked.setOptions({ renderer });
+window.katex = katex;
+window.renderMathInElement = renderMathInElement;
 
 Livewire.start();

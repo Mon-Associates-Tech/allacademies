@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 
 class TrueOrFalseQuestionController extends Controller
 {
+    use HasSubtopic;
     /**
      * Display a listing of the resource.
      *
@@ -51,15 +52,12 @@ class TrueOrFalseQuestionController extends Controller
         $this->authorize('moderate');
 
         $data = $request->validated();
-        if (isset($request->subtopic)) {
-            $subTopic = AcademicSubtopic::firstOrCreate(
-                ['name' => $request->subtopic],
-                ['name' => $request->subtopic, 'academic_topic_id' => $academicTopic->id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
 
         $trueOrFalseQuestion = $academicTopic->trueOrFalseQuestions()->create($data);
+        $data['academic_subtopic_id'] = $this->getSubtopicId($trueOrFalseQuestion, $request);
+        $trueOrFalseQuestion->update([
+            'academic_subtopic_id' => $data['academic_subtopic_id'],
+        ]);
 
         return to_route('true-or-false-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.created', ['name' => $trueOrFalseQuestion->question->summary]));
@@ -118,6 +116,7 @@ class TrueOrFalseQuestionController extends Controller
         $this->authorize('moderate');
 
         $trueOrFalseQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
+        $trueOrFalseQuestion->load('subtopic');
 
         return view('questions.true-or-false-questions.edit', [
             'trueOrFalseQuestion' => $trueOrFalseQuestion,
@@ -140,14 +139,7 @@ class TrueOrFalseQuestionController extends Controller
         $this->authorize('moderate');
 
         $data = $request->validated();
-        if (isset($request->subtopic, $true_or_false_question->subtopic->name)) {
-            $subTopic = AcademicSubtopic::updateOrCreate(
-                ['name' => $true_or_false_question->subtopic->name],
-                ['name' => $request->subtopic, 'academic_topic_id' => $true_or_false_question->academic_topic_id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
-
+        $data['academic_subtopic_id'] = $this->getSubtopicId($true_or_false_question, $request);
         $true_or_false_question->update($data);
 
         return to_route('true-or-false-questions.show', ['true_or_false_question' => $true_or_false_question, 'academic_topic' => $true_or_false_question->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])

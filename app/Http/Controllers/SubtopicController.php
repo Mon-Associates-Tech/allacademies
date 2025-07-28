@@ -98,39 +98,66 @@ class SubtopicController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
+     * @param AcademicSubtopic $subtopic
+     * @return Factory|\Illuminate\Foundation\Application|\Illuminate\View\View|object|View
      */
-    public function edit($id)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic)
     {
-        //
+        return view('academic-subtopics.edit', ['subtopic' => $subtopic, 'academic_topic' => $academicTopic, 'academicSubject' => $academicTopic->academicSubject]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic, Request $request)
     {
-        //
+        $this->authorize('administrate');
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+        $subtopic->update($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]));
+
+        return to_route('subtopics.index', [
+            'academic_topic' => $academicTopic,
+            'academic_subject' => $academicSubject,
+            'academic_level' => $academicLevel,
+            'academic_group' => $academicGroup
+        ])->with('success', __('status.resource.updated', ['name' => $subtopic->name]));
+
+
+
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param AcademicTopic $academic_topic
-     * @param AcademicSubtopic $academic_subtopic
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @param AcademicTopic $academicTopic
+     * @param AcademicSubtopic $subtopic
      * @return RedirectResponse
      */
-    public function destroy(AcademicTopic $academic_topic, AcademicSubtopic $academic_subtopic)
+    public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic)
     {
         $this->authorize('administrate');
-        $academic_subtopic->delete();
+        $subtopic->delete();
 
-        return to_route('academic-topics.subtopics.index', ['academic_topic' => $academic_topic])
-            ->with('success', __('status.resource.deleted', ['name' => $academic_subtopic->name]));
+        return to_route('subtopics.index', [
+            'academic_topic' => $academicTopic,
+            'academic_subject' => $academicSubject,
+            'academic_level' => $academicLevel,
+            'academic_group' => $academicGroup
+        ])
+            ->with('success', __('status.resource.deleted', ['name' => $subtopic->name]));
     }
 }

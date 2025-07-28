@@ -29,6 +29,7 @@ class StoreUserLoginHistory
             'device_type' => $agent->device(),
             'platform' => $agent->platform(),
             'browser' => $agent->browser(),
+            'action' => 'login',
             'country' => $location->countryName ?? 'Unknown',
         ]);
     }

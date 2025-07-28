@@ -114,7 +114,7 @@ class StudentSchedule extends Component
 
         // Get reading progress
         if ($this->filterType === 'all' || $this->filterType === 'reading') {
-            $readingProgress = BookReadingProgress::where('student_id', $this->student->id)
+            $readingProgress = BookReadingProgress::where('user_id', $this->student->id)
                 ->with(['book', 'book.subject'])
                 ->whereBetween('updated_at', [$startDate, $endDate])
                 ->get()

@@ -65,6 +65,7 @@
                         :value="old('name')"
                         placeholder="Enter subtopic name"
                         required
+                        :has-label="false"
                         autofocus
                     />
                     @error('name')
@@ -74,10 +75,6 @@
 
                 <!-- Description Input (Optional) -->
                 <div class="space-y-2">
-                    <label for="description" class="block text-sm font-medium text-gray-700">
-                        Subtopic Name
-
-                    </label>
                     <x-form.textarea
                         id="description"
                         name="description"

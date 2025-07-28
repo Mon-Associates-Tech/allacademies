@@ -32,7 +32,7 @@ trait HasAvatar
         }
     }
 
-    public function getProfileAvatarUrlAttribute()
+    public function getProfileAvatarUrlAttribute(): string
     {
         return isset($this->avatar)
             ? Storage::url($this->avatar)
@@ -42,7 +42,7 @@ trait HasAvatar
             );
     }
 
-    public function updateAvatar(?UploadedFile $file, $force = false)
+    public function updateAvatar(?UploadedFile $file, $force = false): void
     {
         if (isset($file)) {
             $path = Storage::putFile('avatars', $file, 'public');
@@ -52,10 +52,13 @@ trait HasAvatar
         }
     }
 
-    protected function changeAvatarPath($path)
+    protected function changeAvatarPath($path): void
     {
-        Storage::delete($this->avatar);
-        $this->update(['avatar' => $path]);
-        Cache::forget("avatar_{$this->id}");
+        if(!empty($path)){
+            Storage::delete($this->avatar);
+            $this->update(['avatar' => $path]);
+            Cache::forget("avatar_{$this->id}");
+        }
+
     }
 }

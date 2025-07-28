@@ -45,8 +45,11 @@
     @elseif($primaryRole === 'librarian')
         @livewire('librarians.library-dashboard')
 
-    @elseif(in_array($primaryRole, ['admin', 'owner', 'moderator']))
+    @elseif(in_array($primaryRole, ['admin', 'owner']))
         @livewire('administrators.dashboard')
+
+    @elseif($primaryRole === 'moderator')
+        @livewire('moderator.dashboard')
 
     @elseif($primaryRole === 'author')
         @livewire('authors.dashboard')

@@ -18,9 +18,14 @@
         <div
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                    Multiple Choice Question
-                </h1>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                        Multiple Choice Question
+                    </h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        ID: {{ $multipleChoiceQuestion->id }}
+                    </p>
+                </div>
                 @can('moderate')
                     <div class="flex space-x-2">
                         <x-button.secondary
@@ -54,6 +59,73 @@
             </div>
         </div>
 
+        <!-- Question Properties -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- Score -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Score</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ $multipleChoiceQuestion->score ?? 'Not set' }}
+                            @if($multipleChoiceQuestion->score)
+                                <span class="text-sm text-gray-500">points</span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Difficulty Level -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        @php
+                            $difficultyColor = match($multipleChoiceQuestion->difficulty_level) {
+                                'easy' => 'text-green-500',
+                                'medium' => 'text-yellow-500',
+                                'hard' => 'text-red-500',
+                                default => 'text-gray-500'
+                            };
+                        @endphp
+                        <svg class="w-8 h-8 {{ $difficultyColor }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white capitalize">
+                            {{ $multipleChoiceQuestion->difficulty_level ?? 'Not set' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Correct Answer -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <span class="text-green-700 dark:text-green-300 font-bold text-sm">
+                                {{ strtoupper($multipleChoiceQuestion->answer) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Correct Answer</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Option {{ strtoupper($multipleChoiceQuestion->answer) }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Question Content -->
         <div
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -69,10 +141,10 @@
             <div class="divide-y divide-gray-200 dark:divide-gray-700">
                 @foreach(['a', 'b', 'c', 'd', 'e'] as $option)
                     @if($multipleChoiceQuestion->{"option_$option"}->html)
-                        <div class="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150
+                        <div class="px-6 py- my-auto hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150
                           {{ strtoupper($multipleChoiceQuestion->answer) === strtoupper($option) ? 'bg-green-50 dark:bg-green-900/20' : '' }}">
-                            <div class="inline-flex  items-start space-x-4 my-auto">
-                                <div class="flex-shrink-0 my-auto">
+                            <div class="flex items-start space-x-4 my-auto">
+                                <div class="flex-shrink-0 flex my-auto">
                                   <span class="inline-flex items-center justify-center w-8 h-8 rounded-full
                                       {{ strtoupper($multipleChoiceQuestion->answer) === strtoupper($option)
                                           ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
@@ -80,11 +152,9 @@
                                       }}">
                                       {{ strtoupper($option) }}
                                   </span>
-                                </div>
-                                <div class="flex-1 my-auto min-w-0">
                                     @if(strtoupper($multipleChoiceQuestion->answer) === strtoupper($option))
-                                        <div class="mt-2 flex items-center text-sm text-green-600 dark:text-green-400">
-                                            <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor"
+                                        <div class="flex items-center my-auto text-sm text-green-600 dark:text-green-400 mb-2">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
                                                  viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -92,12 +162,13 @@
                                         </div>
                                     @endif
                                 </div>
-                                @php
-                                    $optText = $multipleChoiceQuestion->{"option_$option"}->down;
-
-                                @endphp
-                                <div class="prose dark:prose-invert max-w-none">
-                                    <span  x-html="marked.parse(@js($optText))"></span>
+                                <div class="flex-1 min-w-0">
+                                    @php
+                                        $optText = $multipleChoiceQuestion->{"option_$option"}->down;
+                                    @endphp
+                                    <div class="prose dark:prose-invert max-w-none">
+                                        <span x-html="marked.parse(@js($optText))"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -105,27 +176,84 @@
                 @endforeach
             </div>
 
-            <!-- Topic Information -->
+            <!-- Academic Information -->
             <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Topic</h3>
-                        <x-anchor
-                            to="{{ route('academic-topics.show', ['academic_topic' => $multipleChoiceQuestion->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                            class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                        >
-                            {{ $multipleChoiceQuestion->academicTopic->name }}
-                        </x-anchor>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Academic Hierarchy</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400 w-16">Group:</span>
+                                <x-anchor
+                                    to="{{ route('academic-groups.show', ['academic_group' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup]) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                                >
+                                    {{ $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->academicGroup->name }}
+                                </x-anchor>
+                            </div>
+                            <div class="flex items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400 w-16">Level:</span>
+                                <x-anchor
+                                    to="{{ route('academic-levels.show', ['academic_level' => $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                                >
+                                    {{ $multipleChoiceQuestion->academicTopic->academicSubject->academicLevel->name }}
+                                </x-anchor>
+                            </div>
+                            <div class="flex items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400 w-16">Subject:</span>
+                                <x-anchor
+                                    to="{{ route('academic-subjects.show', ['academic_subject' => $multipleChoiceQuestion->academicTopic->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                                >
+                                    {{ $multipleChoiceQuestion->academicTopic->academicSubject->name }}
+                                </x-anchor>
+                            </div>
+                            <div class="flex items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400 w-16">Topic:</span>
+                                <x-anchor
+                                    to="{{ route('academic-topics.show', ['academic_topic' => $multipleChoiceQuestion->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                                >
+                                    {{ $multipleChoiceQuestion->academicTopic->name }}
+                                </x-anchor>
+                            </div>
+                            @if(isset($multipleChoiceQuestion->subtopic))
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-600 dark:text-gray-400 w-16">Subtopic:</span>
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">
+                                        {{ $multipleChoiceQuestion->subtopic->name }}
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
-                    @if(isset($multipleChoiceQuestion->subtopic))
-                        <div>
-                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Subtopic</h3>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">
-                                {{ $multipleChoiceQuestion->subtopic->name }}
-                            </span>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Question Statistics</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400 w-20">Options:</span>
+                                <span class="text-gray-700 dark:text-gray-300">
+                                    {{ collect(['a', 'b', 'c', 'd', 'e'])->filter(fn($opt) => $multipleChoiceQuestion->{"option_$opt"}->html)->count() }} options
+                                </span>
+                            </div>
+                            <div class="flex items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400 w-20">Created:</span>
+                                <span class="text-gray-700 dark:text-gray-300">
+                                    {{ $multipleChoiceQuestion->created_at->format('M j, Y g:i A') }}
+                                </span>
+                            </div>
+                            @if($multipleChoiceQuestion->updated_at->ne($multipleChoiceQuestion->created_at))
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-600 dark:text-gray-400 w-20">Updated:</span>
+                                    <span class="text-gray-700 dark:text-gray-300">
+                                        {{ $multipleChoiceQuestion->updated_at->format('M j, Y g:i A') }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>

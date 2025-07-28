@@ -41,7 +41,7 @@
         <div class="space-y-8 p-4">
 
             @auth
-                @if(in_array(auth()->user()->role, ['admin', 'owner', 'moderator']))
+                @if(in_array(auth()->user()->role, ['admin', 'owner']))
                     @livewire('administrators.admin-navigation', [
                         'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
@@ -63,6 +63,10 @@
                     ])
                 @elseif(auth()->user()->role === 'subscriber')
                     @include('livewire.navigations.subscriber-navigation', [
+                        'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @elseif(auth()->user()->role === 'moderator')
+                    @include('livewire.navigations.moderator-navigation', [
                         'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
                 @endif
