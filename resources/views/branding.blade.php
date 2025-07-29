@@ -1,8 +1,8 @@
 <x-app>
-    <div class="bg-white">
+    <div class="bg-white dark:bg-gray-900 transition-colors duration-300">
         <!-- Navigation -->
         <div x-data="{ open: false }" class="absolute inset-x-0 top-12 w-11/12 mx-auto z-50">
-            <nav class="flex items-center justify-between bg-white/95 backdrop-blur-sm shadow-lg rounded-3xl p-4 lg:px-8 border border-gray-100" aria-label="Global">
+            <nav class="flex items-center justify-between bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-lg rounded-3xl p-4 lg:px-8 border border-gray-100 dark:border-gray-700" aria-label="Global">
                 <div class="flex lg:flex-1">
                     <a href="#" class="-m-1.5 p-1.5 flex items-center gap-4 group">
                         <span class="sr-only">{{ config('app.name') }}</span>
@@ -11,7 +11,7 @@
                     </a>
                 </div>
                 <div class="flex lg:hidden">
-                    <button x-on:click="open = true" type="button" class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 hover:bg-gray-100 transition-colors">
+                    <button x-on:click="open = true" type="button" class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         <span class="sr-only">Open main menu</span>
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -19,23 +19,38 @@
                     </button>
                 </div>
                 <div class="hidden lg:flex lg:gap-x-8">
-                    <a href="#home" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 transition-colors duration-300 relative group">
+                    <a href="#home" class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                        </svg>
                         Home
                         <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
                     </a>
-                    <a href="#about" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 transition-colors duration-300 relative group">
-                        About
-                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-                    </a>
-                    <a href="#features" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 transition-colors duration-300 relative group">
+                    <a href="#features" class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+                        </svg>
                         Features
                         <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
                     </a>
-                    <a href="#pricing" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 transition-colors duration-300 relative group">
+                    <a href="#modules" class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
+                        </svg>
+                        Modules
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="#pricing" class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H4.5m-1.5 0H3c.621 0 1.125.504 1.125 1.125v.375m13.5 0h1.125c.621 0 1.125.504 1.125 1.125v.375a.75.75 0 0 1-1.5 0V6h-.75m-1.5-1.5H21A2.25 2.25 0 0 1 23.25 6v12a2.25 2.25 0 0 1-2.25 2.25H3A2.25 2.25 0 0 1 .75 18V6A2.25 2.25 0 0 1 3 3.75h18Z"/>
+                        </svg>
                         Pricing
                         <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
                     </a>
-                    <a href="#faq" class="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600 transition-colors duration-300 relative group">
+                    <a href="#faq" class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+                        </svg>
                         FAQ
                         <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
                     </a>
@@ -50,13 +65,13 @@
             <!-- Mobile menu -->
             <div x-show="open" x-transition:enter="duration-200 ease-out" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="duration-100 ease-in" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="lg:hidden" role="dialog" aria-modal="true">
                 <div class="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm" x-on:click="open = false"></div>
-                <div class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 shadow-2xl">
+                <div class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 dark:sm:ring-gray-100/10 shadow-2xl">
                     <div class="flex items-center justify-between">
                         <a href="#" class="-m-1.5 p-1.5">
                             <span class="sr-only">{{ config('app.name') }}</span>
                             <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo">
                         </a>
-                        <button x-on:click="open = false" type="button" class="-m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100 transition-colors">
+                        <button x-on:click="open = false" type="button" class="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                             <span class="sr-only">Close menu</span>
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -64,13 +79,13 @@
                         </button>
                     </div>
                     <div class="mt-6 flow-root">
-                        <div class="-my-6 divide-y divide-gray-500/10">
+                        <div class="-my-6 divide-y divide-gray-500/10 dark:divide-gray-400/10">
                             <div class="space-y-2 py-6">
-                                <a href="#home" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-blue-50 transition-colors">Home</a>
-                                <a href="#about" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-blue-50 transition-colors">About</a>
-                                <a href="#features" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-blue-50 transition-colors">Features</a>
-                                <a href="#pricing" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-blue-50 transition-colors">Pricing</a>
-                                <a href="#faq" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-blue-50 transition-colors">FAQ</a>
+                                <a href="#home" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" x-on:click="open = false">Home</a>
+                                <a href="#features" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" x-on:click="open = false">Features</a>
+                                <a href="#modules" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" x-on:click="open = false">Modules</a>
+                                <a href="#pricing" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" x-on:click="open = false">Pricing</a>
+                                <a href="#faq" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" x-on:click="open = false">FAQ</a>
                             </div>
                             <div class="py-6">
                                 <a href="{{ route('sign-in') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">Sign In</a>
@@ -82,154 +97,146 @@
         </div>
 
         <!-- Hero Section -->
-        <div id="home" class="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 overflow-hidden">
-            <!-- Animated background elements -->
+        <div id="home" class="relative min-h-screen overflow-hidden">
+            <!-- Animated Background Elements -->
             <div class="absolute inset-0">
-                <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                <div class="absolute bottom-1/4 left-1/3 w-64 h-64 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+                <div class="absolute top-10 left-10 w-72 h-72 bg-blue-300/20 dark:bg-blue-500/10 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+                <div class="absolute top-10 right-10 w-72 h-72 bg-green-300/20 dark:bg-green-500/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+                <div class="absolute -bottom-8 left-20 w-72 h-72 bg-purple-300/20 dark:bg-purple-500/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
             </div>
 
-            <div class="relative mx-auto max-w-7xl px-4 py-32 sm:px-6 lg:px-8 lg:py-40">
-                <div class="text-center fade-in-text">
-                    <!-- Announcement badge -->
-                    <div class="inline-flex items-center rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800 mb-8 hover:bg-blue-200 transition-colors cursor-pointer">
-                        <svg class="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        Announcing our new interactive quiz platform
-                    </div>
-
-                    <!-- Main heading -->
-                    <h1 class="text-5xl md:text-7xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent mb-8">
-                        Study and Assess
-                        <span class="block">Yourself Online!</span>
-                    </h1>
-
-                    <!-- Subheading -->
-                    <p class="mx-auto max-w-3xl text-xl md:text-2xl leading-relaxed text-gray-600 mb-12">
-                        Study and move at your own pace without any pressure. Easily assess yourself to enhance your understanding.
-                        <span class="font-semibold text-blue-600">Learning made easier and flexible.</span>
-                    </p>
-
-                    <!-- CTA Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                        <a href="{{ route('sign-up') }}" class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
-                            <span class="relative z-10">Get Started Free</span>
-                            <div class="absolute inset-0 bg-gradient-to-r from-blue-700 to-green-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </a>
-                        <a href="#about" class="px-8 py-4 bg-white text-gray-800 font-semibold rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 text-lg">
-                            Learn More →
-                        </a>
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                        <div class="text-center article">
-                            <div class="text-3xl font-bold text-blue-600 mb-2">10,000+</div>
-                            <div class="text-gray-600">Students Learning</div>
-                        </div>
-                        <div class="text-center article">
-                            <div class="text-3xl font-bold text-green-600 mb-2">500+</div>
-                            <div class="text-gray-600">Courses Available</div>
-                        </div>
-                        <div class="text-center article">
-                            <div class="text-3xl font-bold text-purple-600 mb-2">99%</div>
-                            <div class="text-gray-600">Success Rate</div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Main Background Image -->
+            <div class="absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1920&h=1080&fit=crop&crop=center"
+                     alt="Students studying in modern library"
+                     class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-indigo-900/80 to-green-900/70 dark:from-blue-950/95 dark:via-indigo-950/90 dark:to-green-950/85"></div>
             </div>
 
-            <!-- Scroll indicator -->
-            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                <a href="#about" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- About Section -->
-        <div id="about" class="py-24 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16 fade-in-text">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                        Why Choose <span class="text-blue-600">All Academies?</span>
-                    </h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                        We revolutionize online learning with cutting-edge technology and personalized experiences
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <div class="article-container">
-                        <div class="article space-y-8">
-                            <div class="flex items-start space-x-4">
-                                <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Comprehensive Learning</h3>
-                                    <p class="text-gray-600">Access thousands of courses across multiple subjects with expert-curated content</p>
-                                </div>
+            <!-- Content -->
+            <div class="relative z-10 flex items-center pt-8 my-auto min-h-screen">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <!-- Text Content -->
+                        <div class="text-center lg:text-left space-y-8">
+                            <div class="inline-flex items-center px-4 py-2 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 text-white">
+                                <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Trusted by 50,000+ Students Worldwide</span>
                             </div>
 
-                            <div class="flex items-start space-x-4">
-                                <div class="flex-shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            <h1 class="text-4xl font-extrabold pt-4 tracking-tight text-white sm:text-5xl md:text-6xl">
+                                <span class="block">Transform Your</span>
+                                <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">Learning Journey</span>
+                                <span class="block text-3xl sm:text-4xl md:text-5xl mt-2">with All Academies</span>
+                            </h1>
+
+                            <p class="max-w-lg text-xl text-gray-200 leading-relaxed">
+                                Access a comprehensive digital ecosystem featuring 10,000+ educational resources, expert-authored content, and cutting-edge learning tools designed for academic and professional excellence.
+                            </p>
+
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                <a href="#features" class="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                                    <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                     </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Smart Analytics</h3>
-                                    <p class="text-gray-600">Track your progress with detailed analytics and personalized recommendations</p>
-                                </div>
+                                    Start Learning Today
+                                </a>
+                                <a href="#modules" class="inline-flex items-center justify-center px-8 py-4 border-2 border-white/70 text-base font-semibold rounded-xl text-white bg-white/10 backdrop-blur-sm hover:bg-white hover:text-gray-900 shadow-lg hover:shadow-xl transition-all duration-300">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    Explore Modules
+                                </a>
                             </div>
 
-                            <div class="flex items-start space-x-4">
-                                <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
+                            <!-- Trust Indicators -->
+                            <div class="flex items-center justify-center lg:justify-start space-x-6 pt-4">
+                                <div class="flex items-center space-x-1">
+                                    <div class="flex -space-x-1">
+                                        <img class="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" alt="User">
+                                        <img class="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face" alt="User">
+                                        <img class="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" alt="User">
+                                    </div>
+                                    <span class="text-white text-sm ml-2">Join 50,000+ learners</span>
                                 </div>
-                                <div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Community Learning</h3>
-                                    <p class="text-gray-600">Connect with peers and instructors in our interactive learning community</p>
+                                <div class="flex items-center space-x-1">
+                                    <div class="flex space-x-1">
+                                        <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                        <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                        <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                        <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                        <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                    </div>
+                                    <span class="text-white text-sm">4.9/5 Rating</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="article">
-                        <div class="bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl p-8 text-white">
-                            <h3 class="text-2xl font-bold mb-6">Start Learning Today</h3>
-                            <div class="space-y-4 mb-8">
-                                <div class="flex items-center space-x-3">
-                                    <svg class="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Free trial for 7 days</span>
+                        <!-- Stats/Interactive Elements -->
+                        <div class="space-y-4 mt-auto flex flex-col h-full ">
+                            <div class="grid grid-cols-2 gap-4 mt-auto">
+                                <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 dark:border-white/10 hover:scale-105 transition-transform duration-300">
+                                    <div class="text-3xl font-bold text-white mb-2">15,000+</div>
+                                    <div class="text-blue-200 dark:text-blue-300">Books & Resources</div>
+                                    <div class="mt-2">
+                                        <svg class="w-8 h-8 text-blue-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                        </svg>
+                                    </div>
                                 </div>
-                                <div class="flex items-center space-x-3">
-                                    <svg class="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Cancel anytime</span>
+                                <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 dark:border-white/10 hover:scale-105 transition-transform duration-300">
+                                    <div class="text-3xl font-bold text-white mb-2">500+</div>
+                                    <div class="text-green-200 dark:text-green-300">Expert Authors</div>
+                                    <div class="mt-2">
+                                        <svg class="w-8 h-8 text-green-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                        </svg>
+                                    </div>
                                 </div>
-                                <div class="flex items-center space-x-3">
-                                    <svg class="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>24/7 support</span>
+                                <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 dark:border-white/10 hover:scale-105 transition-transform duration-300">
+                                    <div class="text-3xl font-bold text-white mb-2">50,000+</div>
+                                    <div class="text-orange-200 dark:text-orange-300">Active Learners</div>
+                                    <div class="mt-2">
+                                        <svg class="w-8 h-8 text-orange-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 dark:border-white/10 hover:scale-105 transition-transform duration-300">
+                                    <div class="text-3xl font-bold text-white mb-2">150+</div>
+                                    <div class="text-purple-200 dark:text-purple-300">Subject Areas</div>
+                                    <div class="mt-2">
+                                        <svg class="w-8 h-8 text-purple-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                            <a href="{{ route('sign-up') }}" class="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                Join Now →
-                            </a>
+
+                            <!-- Live Activity Feed -->
+                            <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-white/10">
+                                <h3 class="text-white font-semibold mb-4 flex items-center">
+                                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                                    Live Activity
+                                </h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex items-center text-gray-200">
+                                        <span class="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                                        Sarah started "Advanced Mathematics" module
+                                    </div>
+                                    <div class="flex items-center text-gray-200">
+                                        <span class="w-2 h-2 bg-green-400 rounded-full mr-3"></span>
+                                        12 new books added to Computer Science
+                                    </div>
+                                    <div class="flex items-center text-gray-200">
+                                        <span class="w-2 h-2 bg-purple-400 rounded-full mr-3"></span>
+                                        James completed "Business Analytics" course
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -237,265 +244,903 @@
         </div>
 
         <!-- Features Section -->
-        <div id="features" class="py-24 bg-gray-50">
+        <div id="features" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16 fade-in-text">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                        Powerful <span class="text-green-600">Features</span>
+                <div class="text-center mb-20">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Platform Features
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
+                        Everything You Need to <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">Excel</span>
                     </h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Everything you need for an exceptional online learning experience
+                    <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                        Our comprehensive platform combines cutting-edge technology with educational expertise to deliver an unparalleled learning experience that adapts to your unique goals.
                     </p>
                 </div>
 
-                <div class="feature-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="feature-item left bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                            </svg>
+                <div class="space-y-32">
+                    <!-- Feature 1: Comprehensive Library -->
+                    <div class="flex flex-col lg:flex-row items-center gap-16">
+                        <div class="lg:w-1/2">
+                            <div class="relative group">
+                                <div class="absolute -inset-4 bg-gradient-to-r from-blue-500 to-green-500 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&h=400&fit=crop&crop=center"
+                                         alt="Vast Digital Library with thousands of books"
+                                         class="rounded-2xl shadow-2xl w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-700">
+                                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-green-600/10 rounded-2xl"></div>
+
+                                    <!-- Floating Elements -->
+                                    <div class="absolute top-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">15,000+ Books</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="absolute bottom-4 right-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Updated Daily</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Interactive Quizzes</h3>
-                        <p class="text-gray-600">Engage with dynamic quizzes that adapt to your learning pace and provide instant feedback</p>
+                        <div class="lg:w-1/2 space-y-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+                                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">Comprehensive Digital Library</h3>
+                                    <p class="text-blue-600 dark:text-blue-400 font-semibold">Access Everything, Anytime</p>
+                                </div>
+                            </div>
+
+                            <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                                Dive into our ever-expanding collection of over 15,000 carefully curated educational resources spanning multiple disciplines. From foundational textbooks to cutting-edge research papers, discover everything you need in one unified platform.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        <span class="text-gray-700 dark:text-gray-300 font-medium">AI-Powered Search</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        <span class="text-gray-700 dark:text-gray-300 font-medium">Multiple Formats</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        <span class="text-gray-700 dark:text-gray-300 font-medium">Offline Access</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        <span class="text-gray-700 dark:text-gray-300 font-medium">Daily Updates</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="feature-item right bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                    <!-- Feature 2: Expert Authors -->
+                    <div class="flex flex-col lg:flex-row-reverse items-center gap-16">
+                        <div class="lg:w-1/2">
+                            <div class="relative group">
+                                <div class="absolute -inset-4 bg-gradient-to-r from-green-500 to-blue-500 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop&crop=center"
+                                         alt="Expert authors and educators"
+                                         class="rounded-2xl shadow-2xl w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-700">
+                                    <div class="absolute inset-0 bg-gradient-to-tl from-green-600/20 to-blue-600/10 rounded-2xl"></div>
+
+                                    <!-- Author Cards Overlay -->
+                                    <div class="absolute top-4 right-4 space-y-2">
+                                        <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                            <div class="flex items-center space-x-2">
+                                                <img class="w-6 h-6 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=24&h=24&fit=crop&crop=face" alt="Expert">
+                                                <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">Dr. Smith - AI Expert</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                            <div class="flex items-center space-x-2">
+                                                <img class="w-6 h-6 rounded-full" src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=24&h=24&fit=crop&crop=face" alt="Expert">
+                                                <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">Prof. Johnson - PhD</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="absolute bottom-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">500+ Verified Experts</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Flexible Scheduling</h3>
-                        <p class="text-gray-600">Learn at your own pace with 24/7 access to courses and materials from anywhere</p>
+                        <div class="lg:w-1/2 space-y-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
+                                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">Learn from Industry Leaders</h3>
+                                    <p class="text-green-600 dark:text-green-400 font-semibold">Verified Expertise</p>
+                                </div>
+                            </div>
+
+                            <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                                Connect with renowned academics, industry professionals, and thought leaders who contribute high-quality, peer-reviewed content. Every author is verified and brings real-world expertise to ensure you're learning from the best minds in each field.
+                            </p>
+
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Verified Credentials</h4>
+                                        <p class="text-gray-600 dark:text-gray-300">All authors undergo rigorous verification of their academic and professional credentials</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Direct Communication</h4>
+                                        <p class="text-gray-600 dark:text-gray-300">Engage directly with authors through Q&A sessions and discussion forums</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.871 4A17.926 17.926 0 003 12c0 2.874.673 5.59 1.871 8m14.13 0a17.926 17.926 0 001.87-8c0-2.874-.673-5.59-1.87-8M9 9h1.246a1 1 0 01.961.725l1.586 5.55a1 1 0 00.961.725H15m1-7h-.08a2 2 0 00-1.519.698L9.6 15.302A2 2 0 018.08 16H8"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Latest Research</h4>
+                                        <p class="text-gray-600 dark:text-gray-300">Content reflects the most current research and industry best practices</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="feature-item left bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Certified Courses</h3>
-                        <p class="text-gray-600">Earn industry-recognized certificates upon completion of courses</p>
-                    </div>
+                    <!-- Feature 3: Interactive Learning -->
+                    <div class="flex flex-col lg:flex-row items-center gap-16">
+                        <div class="lg:w-1/2">
+                            <div class="relative group">
+                                <div class="absolute -inset-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop&crop=center"
+                                         alt="Interactive learning platform with students collaborating"
+                                         class="rounded-2xl shadow-2xl w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-700">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/10 rounded-2xl"></div>
 
-                    <div class="feature-item right bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
-                        <p class="text-gray-600">Monitor your learning journey with detailed progress reports and analytics</p>
-                    </div>
+                                    <!-- Interactive Elements Overlay -->
+                                    <div class="absolute top-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Live Session</span>
+                                        </div>
+                                    </div>
 
-                    <div class="feature-item left bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Expert Support</h3>
-                        <p class="text-gray-600">Get help from experienced instructors and teaching assistants whenever you need it</p>
-                    </div>
+                                    <div class="absolute top-4 right-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">24 Online</span>
+                                    </div>
 
-                    <div class="feature-item right bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                            </svg>
+                                    <div class="absolute bottom-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Interactive Tools</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Mobile Learning</h3>
-                        <p class="text-gray-600">Access your courses on any device with our responsive mobile-friendly platform</p>
+                        <div class="lg:w-1/2 space-y-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+                                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">Interactive Learning Experience</h3>
+                                    <p class="text-purple-600 dark:text-purple-400 font-semibold">Engage & Collaborate</p>
+                                </div>
+                            </div>
+
+                            <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                                Transform passive reading into active learning through interactive quizzes, multimedia presentations, collaborative projects, and real-time discussions. Our platform adapts to your learning style and pace.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-semibold text-gray-900 dark:text-gray-100">Smart Quizzes</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">Adaptive assessment</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-semibold text-gray-900 dark:text-gray-100">Study Groups</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">Collaborative learning</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-semibold text-gray-900 dark:text-gray-100">Progress Analytics</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">Track your journey</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-semibold text-gray-900 dark:text-gray-100">Mobile Learning</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">Learn anywhere</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pricing Section -->
-        <div id="pricing" class="py-24 bg-white">
+        <!-- Platform Modules Section -->
+        <div id="modules" class="py-24 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16 fade-in-text">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                        Simple <span class="text-blue-600">Pricing</span>
+                <div class="text-center mb-20">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-semibold text-sm mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        Platform Modules
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
+                        Comprehensive Learning <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600">Ecosystem</span>
                     </h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Choose the plan that works best for you
+                    <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                        Discover our integrated modules designed to support every aspect of your educational journey, from administration to assessment and beyond.
                     </p>
                 </div>
 
-                <div class="price-card-container grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    <!-- Basic Plan -->
-                    <div class="price-cards bg-slate-100 border-2 border-gray-200 rounded-2xl p-8 hover:border-blue-300 hover:shadow-xl transition-all duration-300 relative">
-                        <div class="text-center">
-                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Basic</h3>
-                            <p class="text-gray-600 mb-6">Perfect for prolific learners and anyone needing just a short time. </p>
-                            <div class="text-4xl font-bold text-gray-900 mb-6">
-                                GHC 15 <span class="text-lg font-normal text-gray-600">/Subject</span>
+                <!-- Featured Modules -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                    <!-- Administration Module -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 p-8 transform hover:scale-105">
+                        <div class="flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Administration</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            A smart dashboard for managing schools, teachers, students, and resources—all in one place. Track enrollments, assign roles, and monitor progress with ease.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Smart Dashboard
                             </div>
-                            <ul class="space-y-4 mb-8 text-left">
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Access to 100+ courses
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Basic quiz features
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Email support
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Mobile app access
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Progress tracking
-                                </li>
-                            </ul>
-                            <a href="{{ route('sign-up') }}" class="block w-full bg-gray-900 text-white text-center py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-                                Get Started
-                            </a>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Role Management
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Progress Monitoring
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Standard Plan (Featured) -->
-                    <div class="price-cards bg-gradient-to-br from-blue-600 to-green-600 rounded-2xl p-8 text-white transform scale-105 shadow-2xl relative">
-                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <div class="bg-orange-400 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg">
-                                Most Popular
-                            </div>
+                    <!-- Teaching Module -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 p-8 transform hover:scale-105">
+                        <div class="flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-r from-green-500 to-emerald-600 text-white mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
                         </div>
-                        <div class="text-center">
-                            <h3 class="text-2xl font-bold mb-2">Standard</h3>
-                            <p class="text-blue-100 mb-6">Best for serious learners</p>
-                            <div class="text-4xl font-bold mb-6">
-                                GHC 20 <span class="text-lg font-normal opacity-80">/Subject</span>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Teaching</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            Empower teachers to plan lessons, upload notes, record videos, and interact with students in real-time or asynchronously. Perfect for classroom or remote learning.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Lesson Planning
                             </div>
-                            <ul class="space-y-4 mb-8 text-left">
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-300 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Access to all courses
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-300 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Advanced analytics & insights
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-300 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Certificates included
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-300 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Priority support
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-300 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Live instructor sessions
-                                </li>
-                            </ul>
-                            <a href="{{ route('sign-up') }}" class="block w-full bg-white text-blue-600 text-center py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                                Start Free Trial
-                            </a>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Video Recording
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time Interaction
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Enterprise Plan -->
-                    <div class="price-cards bg-slate-50 border-2 border-gray-200 rounded-2xl p-8 hover:border-blue-300 hover:shadow-xl transition-all duration-300 relative">
-                        <div class="text-center">
-                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
-                            <p class="text-gray-600 mb-6">For teams & organizations</p>
-                            <div class="text-4xl font-bold text-gray-900 mb-6">
-                                GHC 30 <span class="text-lg font-normal text-gray-600">/Subject</span>
+                    <!-- Quizzes Module -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 p-8 transform hover:scale-105">
+                        <div class="flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-r from-purple-500 to-violet-600 text-white mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Quizzes</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            Create and assign interactive quizzes automatically graded for instant feedback. Teachers can track scores and identify weak areas to support learners better.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Auto-grading
                             </div>
-                            <ul class="space-y-4 mb-8 text-left">
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Unlimited access for teams
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Custom branding & LMS
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Dedicated account manager
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Advanced integrations
-                                </li>
-                                <li class="flex items-center text-gray-600">
-                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    24/7 premium support
-                                </li>
-                            </ul>
-                            <a href="{{ route('sign-up') }}" class="block w-full bg-gray-900 text-white text-center py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-                                Contact Sales
-                            </a>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Instant Feedback
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Performance Tracking
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Examinations Module -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 p-8 transform hover:scale-105">
+                        <div class="flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-r from-orange-500 to-red-600 text-white mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Examinations</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            Securely set and manage exams with multiple formats—MCQs, essays, theory & practicals. Schedule exams, auto-mark scripts, and generate report cards instantly.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Multiple Formats
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Secure Environment
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Auto Report Cards
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitoring & Reporting Module -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 p-8 transform hover:scale-105">
+                        <div class="flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-r from-indigo-500 to-blue-600 text-white mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Monitoring & Reporting</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            Real-time analytics to track student engagement, teacher activity, and school-wide performance. Instantly spot trends and get custom reports.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time Analytics
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Performance Tracking
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Custom Reports
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Books & Marketplace Module -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600 p-8 transform hover:scale-105">
+                        <div class="flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Books & Marketplace</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            A digital bookstore where authors and publishers can sell or offer books (textbooks, novels, poems, short stories, etc). Schools and students can buy or download books easily.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Digital Marketplace
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Author Publishing
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="h-4 w-4 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Easy Download
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pricing Features Comparison -->
+                <!-- Additional Modules Grid -->
+                <div class="bg-white dark:bg-gray-800 rounded-3xl  p-8 border border-gray-200 dark:border-gray-700">
+                    <div class="text-center mb-12">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Additional Platform Features</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Explore more tools and features that enhance your learning experience</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                        <!-- Content Management -->
+                        <div class="group text-center p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Content Management</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Upload & organize materials</p>
+                        </div>
+
+                        <!-- Communication -->
+                        <div class="group text-center p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Communication</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Messaging & forums</p>
+                        </div>
+
+                        <!-- Student Portal -->
+                        <div class="group text-center p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-lime-500 to-green-500 text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Student Portal</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Personalized space</p>
+                        </div>
+
+                        <!-- Teacher CPD -->
+                        <div class="group text-center p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422A12.083 12.083 0 0112 8.624 12.083 12.083 0 015.84 10.578L12 14z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422A12.083 12.083 0 0112 8.624a12.083 12.083 0 00-6.16 1.954L12 14zm-4 6v-7.5l4-2.222"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Teacher CPD</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Professional development</p>
+                        </div>
+
+                        <!-- Mock Exams -->
+                        <div class="group text-center p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Mock Exams</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">BECE/WASSCE practice</p>
+                        </div>
+
+                        <!-- National Curriculum -->
+                        <div class="group text-center p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">National Curriculum</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Aligned standards</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Call to Action for Modules -->
                 <div class="mt-16 text-center">
-                    <p class="text-gray-600 mb-4">All plans include:</p>
-                    <div class="flex flex-wrap justify-center gap-8 text-sm text-gray-500">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                            No setup fees
+                    <div class="bg-gradient-to-r from-blue-600 to-green-600 rounded-3xl shadow-2xl p-12 text-white">
+                        <h3 class="text-3xl font-bold mb-4">Ready to Transform Education?</h3>
+                        <p class="text-xl mb-8 opacity-90">
+                            Join thousands of educators and learners who are already experiencing the power of our comprehensive platform.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="#pricing" class="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-blue-600 bg-white hover:bg-gray-100 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Start Your Journey
+                            </a>
+                            <a href="#features" class="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-base font-semibold rounded-xl text-white bg-transparent hover:bg-white hover:text-blue-600 shadow-lg hover:shadow-xl transition-all duration-300">
+                                Explore Features
+                            </a>
                         </div>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                            Cancel anytime
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Pricing Section -->
+        <div id="pricing" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-20">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 font-semibold text-sm mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Pricing Plans
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
+                        Simple, Transparent <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">Pricing</span>
+                    </h2>
+                    <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                        Choose the plan that fits your learning needs. Full access, no hidden fees, cancel anytime. Start with our 30-day money-back guarantee.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- Basic Plan -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 relative">
+                        <div class="text-center">
+                            <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-gray-500 to-gray-600 rounded-2xl mx-auto mb-6">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Quarterly Subscription</h3>
+                            <p class="text-gray-600 dark:text-gray-300 mb-6">Ideal for trying out our platform</p>
+                            <div class="mb-8">
+                                <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 15</span>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/Subject</span>
+                            </div>
                         </div>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                            7-day free trial
+
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">3 Months  of access</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Access to 5,000+ books</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Basic search functionality</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Mobile app access</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Email support</span>
+                            </li>
+                        </ul>
+
+                        <a href="{{ route('sign-up') }}" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 px-8 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 block text-center">
+                            Get Started
+                        </a>
+                    </div>
+
+                    <!-- Premium Plan (Most Popular) -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-2 border-blue-500 dark:border-blue-400 p-8 relative transform scale-105">
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">Most Popular</span>
                         </div>
+
+                        <div class="text-center">
+                            <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl mx-auto mb-6">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Biannual Subscription</h3>
+                            <p class="text-gray-600 dark:text-gray-300 mb-6">Great value for half-year access</p>
+                            <div class="mb-8">
+                                <span class="text-5xl font-extrabold text-gray-900 dark:text-white">GHS 20</span>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/6 months</span>
+                            </div>
+                        </div>
+
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Unlimited access to entire library</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Access to all future publications</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Download for offline reading</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Advanced search and filters</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Priority customer support</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Multi-device synchronization</span>
+                            </li>
+                        </ul>
+
+                        <a href="{{ route('sign-up') }}" class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-green-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 block text-center">
+                            Subscribe Now
+                        </a>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 relative">
+                        <div class="text-center">
+                            <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl mx-auto mb-6">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Annual Subscription</h3>
+                            <p class="text-gray-600 dark:text-gray-300 mb-6">Our most popular option for dedicated learners</p>
+                            <div class="mb-8">
+                                <span class="text-5xl font-extrabold text-gray-900 dark:text-white">GHS 30</span>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/year</span>
+                            </div>
+                        </div>
+
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Everything in Premium</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Unlimited user accounts</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Advanced analytics</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Custom integrations</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">Dedicated account manager</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="text-gray-700 dark:text-gray-300">24/7 phone support</span>
+                            </li>
+                        </ul>
+
+                        <a href="{{route('sign-up')}}" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 px-8 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 block text-center">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Money-back guarantee -->
+                <div class="mt-16 text-center">
+                    <div class="inline-flex items-center space-x-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 px-6 py-3 rounded-full">
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="font-semibold">30-day money-back guarantee • Cancel anytime • No questions asked</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonials Section -->
+        <div class="py-24 bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-20">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 font-semibold text-sm mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        What Our Users Say
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
+                        Trusted by <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">50,000+ Learners</span>
+                    </h2>
+                    <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                        Don't just take our word for it. See what our community of learners, educators, and professionals have to say about their experience.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Testimonial 1 -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center space-x-1 mb-4">
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            "All Academies has revolutionized my learning experience. The vast library and expert authors have helped me advance my career in data science significantly."
+                        </p>
                         <div class="flex items-center">
-                            <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                            SSL security
+                            <img class="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face" alt="Sarah Johnson">
+                            <div>
+                                <div class="font-semibold text-gray-900 dark:text-white">Sarah Johnson</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Data Scientist</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center space-x-1 mb-4">
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            "As a university professor, I appreciate the quality and depth of content available. The interactive features have transformed how I teach my courses."
+                        </p>
+                        <div class="flex items-center">
+                            <img class="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop&crop=face" alt="Dr. Michael Chen">
+                            <div>
+                                <div class="font-semibold text-gray-900 dark:text-white">Dr. Michael Chen</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">University Professor</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 3 -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center space-x-1 mb-4">
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                            "The mobile app makes learning so convenient. I can study during my commute and the offline feature is a game-changer for my busy schedule."
+                        </p>
+                        <div class="flex items-center">
+                            <img class="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=48&h=48&fit=crop&crop=face" alt="Emily Rodriguez">
+                            <div>
+                                <div class="font-semibold text-gray-900 dark:text-white">Emily Rodriguez</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">MBA Student</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -503,646 +1148,157 @@
         </div>
 
         <!-- FAQ Section -->
-        <div id="faq" class="py-24 bg-gray-50">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16 fade-in-text">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                        Frequently Asked <span class="text-green-600">Questions</span>
-                    </h2>
-                    <p class="text-xl text-gray-600">
-                        Everything you need to know about All Academies
-                    </p>
-                </div>
-
-                <div x-data="{ openFaq: null }" class="space-y-4">
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <button @click="openFaq = openFaq === 1 ? null : 1" class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-                            <span class="font-semibold text-gray-900">How do I get started?</span>
-                            <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="openFaq === 1 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openFaq === 1" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="px-6 pb-4">
-                            <div class="space-y-4">
-
-                                <!-- Quick Start Guide -->
-                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
-                                    <div class="flex items-center mb-2">
-                                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                        <h4 class="font-semibold text-blue-900">Quick Guide: Creating Your Account</h4>
-                                    </div>
-                                    <p class="text-sm text-blue-800">
-                                        Follow these simple steps to join All Academies and start your learning journey today!
-                                    </p>
-                                </div>
-
-                                <!-- Step 1: Find Sign Up -->
-                                <div class="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                                    <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        1
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-green-900 mb-2">Find the Sign Up Option</h4>
-                                        <div class="text-sm text-green-800 space-y-2">
-                                            <p>On this login page, look for the section below the login form.</p>
-                                            <div class="bg-white p-3 rounded border border-green-200">
-                                                <div class="flex items-center justify-center">
-                                                    <span class="text-xs text-gray-500 mr-2">Look for:</span>
-                                                    <div class="bg-gray-100 px-3 py-1 rounded text-sm font-medium">
-                                                        "New to All Academies?"
-                                                    </div>
-                                                </div>
-                                                <div class="text-center mt-2">
-                                                    <div class="inline-flex items-center text-blue-600 text-sm font-medium">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                                                        </svg>
-                                                        Create new account
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 2: Fill Form Fields -->
-                                <div class="flex items-start space-x-3 p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-                                    <div class="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        2
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-purple-900 mb-3">Complete the Registration Form</h4>
-                                        <div class="text-sm text-purple-800 space-y-3">
-                                            <p class="mb-3">Fill out all required fields in the registration form:</p>
-
-                                            <!-- Form Field Examples -->
-                                            <div class="grid grid-cols-1 gap-3">
-                                                <!-- Full Name -->
-                                                <div class="bg-white p-3 rounded border border-purple-200">
-                                                    <div class="flex items-center mb-2">
-                                                        <svg class="w-4 h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                        </svg>
-                                                        <span class="font-medium text-purple-900">Full Name</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600 ml-6">Enter your complete name (e.g., "John Smith")</p>
-                                                </div>
-
-                                                <!-- Email -->
-                                                <div class="bg-white p-3 rounded border border-purple-200">
-                                                    <div class="flex items-center mb-2">
-                                                        <svg class="w-4 h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-                                                        </svg>
-                                                        <span class="font-medium text-purple-900">Email Address</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600 ml-6">Use a valid email you can access (e.g., "john@email.com")</p>
-                                                </div>
-
-                                                <!-- Password -->
-                                                <div class="bg-white p-3 rounded border border-purple-200">
-                                                    <div class="flex items-center mb-2">
-                                                        <svg class="w-4 h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                                        </svg>
-                                                        <span class="font-medium text-purple-900">Create Password</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600 ml-6">Choose a strong password (minimum 8 characters)</p>
-                                                </div>
-
-                                                <!-- Confirm Password -->
-                                                <div class="bg-white p-3 rounded border border-purple-200">
-                                                    <div class="flex items-center mb-2">
-                                                        <svg class="w-4 h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                        </svg>
-                                                        <span class="font-medium text-purple-900">Confirm Password</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600 ml-6">Type the same password again to confirm</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 3: Submit -->
-                                <div class="flex items-start space-x-3 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500">
-                                    <div class="flex-shrink-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        3
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-orange-900 mb-2">Complete Registration</h4>
-                                        <div class="text-sm text-orange-800 space-y-3">
-                                            <div class="bg-white p-3 rounded border border-orange-200">
-                                                <p class="mb-2">After filling all fields, look for the sign up button:</p>
-                                                <div class="bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-2 rounded-xl text-center font-medium text-sm">
-                                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                                                    </svg>
-                                                    Create your free account
-                                                </div>
-                                                <p class="text-xs text-gray-600 mt-2">Click this button to complete your registration</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Success Message -->
-                                <div class="bg-teal-50 p-4 rounded-lg border border-teal-200">
-                                    <div class="flex items-start">
-                                        <svg class="w-5 h-5 text-teal-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <div>
-                                            <h4 class="font-semibold text-teal-900 mb-1">What Happens Next?</h4>
-                                            <ul class="text-sm text-teal-800 space-y-1">
-                                                <li>• You'll receive a welcome email to verify your account</li>
-                                                <li>• Your account will be created and ready to use</li>
-                                                <li>• You can start exploring courses immediately</li>
-                                                <li>• Your free trial begins automatically</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Quick Tips -->
-                                <div class="bg-gray-50 p-4 rounded-lg border">
-                                    <h4 class="font-semibold text-gray-900 mb-2 flex items-center">
-                                        <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                                        </svg>
-                                        Helpful Tips
-                                    </h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-700">
-                                        <div class="flex items-start">
-                                            <span class="text-blue-500 mr-2">•</span>
-                                            <span>Use a strong password with letters, numbers, and symbols</span>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <span class="text-blue-500 mr-2">•</span>
-                                            <span>Make sure your email is correct for account verification</span>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <span class="text-blue-500 mr-2">•</span>
-                                            <span>Keep your login details safe and secure</span>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <span class="text-blue-500 mr-2">•</span>
-                                            <span>Check your spam folder if you don't receive the welcome email</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <button @click="openFaq = openFaq === 2 ? null : 2" class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-                            <span class="font-semibold text-gray-900">How do I subscribe?</span>
-                            <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="openFaq === 2 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openFaq === 2" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="px-6 pb-4">
-
-                            <!-- Step-by-step subscription guide -->
-                            <div class="space-y-4">
-
-                                <!-- Step 1: Access Subscriptions -->
-                                <div class="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        1
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-blue-900 mb-2">Access Your Subscriptions</h4>
-                                        <div class="text-sm text-blue-800 space-y-1">
-                                            <p>• Look for your <strong>initials</strong> at the top right corner of your home page</p>
-                                            <p>• Click on the dropdown menu</p>
-                                            <p>• Select <strong>"Subscriptions"</strong> from the menu</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 2: Create New Subscription -->
-                                <div class="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        2
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-green-900 mb-2">Start New Subscription</h4>
-                                        <div class="text-sm text-green-800">
-                                            <p>On your subscription page, click the <strong>"New Subscription"</strong> button</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 3: Choose Package Type -->
-                                <div class="flex items-start space-x-3 p-4 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        3
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-purple-900 mb-2">Select Package Type</h4>
-                                        <div class="text-sm text-purple-800">
-                                            <p class="mb-2">Under <strong>"Package"</strong>, choose your subscription type:</p>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                <div class="bg-white p-3 rounded border border-purple-200">
-                                                    <div class="flex items-center">
-                                                        <div class="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
-                                                        <span class="font-medium">Individual Subscription</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600 mt-1">For personal use</p>
-                                                </div>
-                                                <div class="bg-white p-3 rounded border border-purple-200">
-                                                    <div class="flex items-center">
-                                                        <div class="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
-                                                        <span class="font-medium">Institutional Subscription</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-600 mt-1">For schools/organizations</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 4: Choose Duration -->
-                                <div class="flex items-start space-x-3 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        4
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-orange-900 mb-2">Select Duration</h4>
-                                        <div class="text-sm text-orange-800">
-                                            <p class="mb-2">Under <strong>"Duration"</strong>, choose your subscription period:</p>
-                                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                <div class="bg-white p-3 rounded border border-orange-200 text-center">
-                                                    <div class="font-semibold text-orange-600">3 Months</div>
-                                                    <div class="text-xs text-gray-600">Short term</div>
-                                                </div>
-                                                <div class="bg-white p-3 rounded border border-orange-200 text-center">
-                                                    <div class="font-semibold text-orange-600">6 Months</div>
-                                                    <div class="text-xs text-gray-600">Medium term</div>
-                                                </div>
-                                                <div class="bg-white p-3 rounded border border-orange-200 text-center">
-                                                    <div class="font-semibold text-orange-600">12 Months</div>
-                                                    <div class="text-xs text-gray-600">Best value</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 5: Select School Category & Level -->
-                                <div class="flex items-start space-x-3 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        5
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-indigo-900 mb-2">Choose School Category & Level</h4>
-                                        <div class="text-sm text-indigo-800 space-y-2">
-                                            <div class="bg-white p-3 rounded border border-indigo-200">
-                                                <p class="font-medium mb-1">1. Select School Category</p>
-                                                <p class="text-xs">Example: <span class="font-mono bg-gray-100 px-1 rounded">Primary/Basic School</span></p>
-                                            </div>
-                                            <div class="bg-white p-3 rounded border border-indigo-200">
-                                                <p class="font-medium mb-1">2. Choose Your Level</p>
-                                                <p class="text-xs">Example: <span class="font-mono bg-gray-100 px-1 rounded">Basic Three</span></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 6: Select Subjects -->
-                                <div class="flex items-start space-x-3 p-4 bg-teal-50 rounded-lg border-l-4 border-teal-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-teal-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        6
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-teal-900 mb-2">Select Your Subjects</h4>
-                                        <div class="text-sm text-teal-800">
-                                            <div class="bg-white p-3 rounded border border-teal-200">
-                                                <p class="mb-2">All available subjects for your level will be displayed.</p>
-                                                <div class="flex items-center text-xs">
-                                                    <svg class="w-4 h-4 mr-1 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                    </svg>
-                                                    <strong>Tip:</strong> Click the checkboxes on the left of each subject you want to subscribe to
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Step 7: Review & Submit -->
-                                <div class="flex items-start space-x-3 p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                        7
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-red-900 mb-2">Review & Create Subscription</h4>
-                                        <div class="text-sm text-red-800 space-y-2">
-                                            <div class="bg-white p-3 rounded border border-red-200">
-                                                <p class="mb-2">• Check the <strong>"Amount"</strong> section at the bottom to see your total subscription fee</p>
-                                                <p class="mb-2">• Review your selections carefully</p>
-                                                <p>• Click the green <strong>"Create Subscription"</strong> button to submit</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <!-- Quick Summary -->
-                            <div class="mt-6 bg-gray-50 p-4 rounded-lg border">
-                                <h4 class="font-semibold text-gray-900 mb-2 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Quick Summary
-                                </h4>
-                                <p class="text-sm text-gray-700">
-                                    <strong>Path:</strong> Initials Dropdown → Subscriptions → New Subscription → Package Type → Duration → School Category → Level → Select Subjects → Review Amount → Create Subscription
-                                </p>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <button @click="openFaq = openFaq === 3 ? null : 3" class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-                            <span class="font-semibold text-gray-900">How do I pay for my subscription?</span>
-                            <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="openFaq === 3 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openFaq === 3" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="px-6 pb-4">
-                            <div class="bg-green-50 dark:bg-green-900 p-6 rounded-lg">
-                                <h4 class="font-semibold text-green-800 dark:text-green-200 mb-4 flex items-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                                    </svg>
-                                    Complete Your Payment
-                                </h4>
-
-                                <!-- Step-by-step payment guide -->
-                                <div class="space-y-4">
-                                    <!-- Step 1 -->
-                                    <div class="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                            1
-                                        </div>
-                                        <div class="flex-1">
-                                            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Dial USSD Code</h5>
-                                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                On your mobile phone, dial the following code:
-                                            </p>
-                                            <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                                                <code class="text-lg font-mono text-green-600 dark:text-green-400 font-bold">*772*30#</code>
-                                                <button class="ml-2 text-xs text-blue-600 hover:text-blue-500 underline" onclick="navigator.clipboard.writeText('*772*30#')">
-                                                    Copy
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Step 2 -->
-                                    <div class="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                            2
-                                        </div>
-                                        <div class="flex-1">
-                                            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Enter Merchant Code</h5>
-                                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                Press send, then enter the merchant code:
-                                            </p>
-                                            <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                                                <code class="text-lg font-mono text-green-600 dark:text-green-400 font-bold">1326001</code>
-                                                <button class="ml-2 text-xs text-blue-600 hover:text-blue-500 underline" onclick="navigator.clipboard.writeText('1326001')">
-                                                    Copy
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Step 3 -->
-                                    <div class="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                            3
-                                        </div>
-                                        <div class="flex-1">
-                                            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Choose Payment Method</h5>
-                                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                Select your preferred payment option:
-                                            </p>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                <div class="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg border">
-                                                    <div class="flex items-center">
-                                                        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">1</span>
-                                                        <span class="text-sm font-medium text-blue-800 dark:text-blue-200">Mobile Money</span>
-                                                    </div>
-                                                </div>
-                                                <div class="bg-orange-50 dark:bg-orange-900 p-3 rounded-lg border">
-                                                    <div class="flex items-center">
-                                                        <span class="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">2</span>
-                                                        <span class="text-sm font-medium text-orange-800 dark:text-orange-200">Prudential Bank</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Step 4 -->
-                                    <div class="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                            4
-                                        </div>
-                                        <div class="flex-1">
-                                            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Enter Reference Number</h5>
-                                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                When prompted, enter your subscription reference number exactly as shown:
-                                            </p>
-                                            <div class="bg-yellow-50 dark:bg-yellow-900 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                                                <div class="flex items-center justify-between">
-                                                    <code class="text-sm font-mono text-yellow-800 dark:text-yellow-200 break-all">
-                                                        {{ $subscriptionData['reference'] ?? 'N/A' }}
-                                                    </code>
-                                                    <button class="ml-2 text-xs text-blue-600 hover:text-blue-500 underline flex-shrink-0" onclick="navigator.clipboard.writeText('{{ $subscriptionData['reference'] ?? '' }}')">
-                                                        Copy
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-2 flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                                </svg>
-                                                Important: Enter this number exactly as shown
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Step 5 -->
-                                    <div class="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                            5
-                                        </div>
-                                        <div class="flex-1">
-                                            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Confirm Payment</h5>
-                                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                Review the payment details and confirm by pressing:
-                                            </p>
-                                            <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                                                <code class="text-lg font-mono text-green-600 dark:text-green-400 font-bold">1</code>
-                                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">to confirm and submit</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Success notice -->
-                                <div class="mt-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                                    <div class="flex items-start">
-                                        <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <div>
-                                            <h5 class="font-medium text-blue-800 dark:text-blue-200 mb-1">After Payment</h5>
-                                            <p class="text-sm text-blue-700 dark:text-blue-300">
-                                                Your subscription status will automatically change from "unpaid" to "paid" and you'll have immediate access to the content.
-                                                Please check your subscription page to confirm the payment was processed successfully.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Help section -->
-                                <div class="mt-4 text-center">
-                                    <p class="text-xs text-green-700 dark:text-green-300">
-                                        Need help? Contact our support team for assistance with your payment.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <button @click="openFaq = openFaq === 4 ? null : 4" class="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-                            <span class="font-semibold text-gray-900">Is there mobile access?</span>
-                            <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="openFaq === 4 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openFaq === 4" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="px-6 pb-4">
-                            <p class="text-gray-600">Absolutely! Our platform is fully responsive and works seamlessly on all devices including smartphones, tablets, and desktop computers.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA Section -->
-        <div class="py-24 bg-gradient-to-r from-blue-600 to-green-600">
-            <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 fade-in-text">
-                    Ready to Start Learning?
-                </h2>
-                <p class="text-xl text-blue-100 mb-8 fade-in-text">
-                    Join thousands of students already learning with All Academies
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center fade-in-text">
-                    <a href="{{ route('sign-up') }}" class="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-100 transition-all text-lg">
-                        Start Free Trial
-                    </a>
-                    <a href="{{ route('sign-in') }}" class="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white hover:text-blue-600 transition-all text-lg">
-                        Sign In
-                    </a>
-                </div>
-            </div>
+        <div id="faq" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
+          @include('faq')
         </div>
 
         <!-- Footer -->
-        <footer class="bg-gray-900 text-white py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="col-span-1 md:col-span-2">
-                        <div class="flex items-center space-x-3 mb-4">
-                            <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo">
-                            <span class="text-xl font-bold">All Academies</span>
-                        </div>
-                        <p class="text-gray-300 mb-6">
-                            Empowering students worldwide with flexible, accessible, and high-quality online education.
-                        </p>
-                        <div class="flex space-x-4">
-                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-                            </a>
-                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/></svg>
-                            </a>
-                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                            </a>
-                        </div>
-                    </div>
-
+        <footer class="bg-gray-900 dark:bg-black text-white transition-colors duration-300">
+            <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div>
-                        <h3 class="text-lg font-semibold mb-4">Platform</h3>
-                        <ul class="space-y-2">
-                            <li><a href="#features" class="text-gray-300 hover:text-white transition-colors">Features</a></li>
-                            <li><a href="#pricing" class="text-gray-300 hover:text-white transition-colors">Pricing</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors">API</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Integrations</a></li>
+                        <h3 class="text-sm font-semibold tracking-wider uppercase mb-4">Platform</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#features" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Features</a></li>
+                            <li><a href="#modules" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Modules</a></li>
+                            <li><a href="#pricing" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Pricing</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Mobile App</a></li>
                         </ul>
                     </div>
-
                     <div>
-                        <h3 class="text-lg font-semibold mb-4">Support</h3>
-                        <ul class="space-y-2">
-                            <li><a href="#faq" class="text-gray-300 hover:text-white transition-colors">FAQ</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Help Center</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Contact Us</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Status</a></li>
+                        <h3 class="text-sm font-semibold tracking-wider uppercase mb-4">Solutions</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">For Students</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">For Professionals</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">For Institutions</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">For Researchers</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold tracking-wider uppercase mb-4">Support</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#faq" class="text-base text-gray-300 hover:text-white transition-colors duration-200">FAQ</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Help Center</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Contact Us</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">System Status</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold tracking-wider uppercase mb-4">Company</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">About Us</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Blog</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Careers</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Press Kit</a></li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-gray-400 text-sm">
-                        © {{ date('Y') }} All Academies. All rights reserved.
-                    </p>
-                    <div class="flex space-x-6 mt-4 md:mt-0">
-                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
-                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+                <div class="mt-12 border-t border-gray-700 pt-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                            <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo">
+                            <span class="text-xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">All Academies</span>
+                        </div>
+                        <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
+                            <div class="flex space-x-6">
+                                <a href="#" class="text-gray-400 hover:text-gray-300 transition-colors duration-200">
+                                    <span class="sr-only">Facebook</span>
+                                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                        <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                                <a href="#" class="text-gray-400 hover:text-gray-300 transition-colors duration-200">
+                                    <span class="sr-only">Twitter</span>
+                                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                                    </svg>
+                                </a>
+                                <a href="#" class="text-gray-400 hover:text-gray-300 transition-colors duration-200">
+                                    <span class="sr-only">LinkedIn</span>
+                                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                        <path fill-rule="evenodd" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            </div>
+                            <p class="text-base text-gray-400">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+                        <div class="flex space-x-6 mb-4 md:mb-0">
+                            <a href="#" class="hover:text-gray-300 transition-colors duration-200">Privacy Policy</a>
+                            <a href="#" class="hover:text-gray-300 transition-colors duration-200">Terms of Service</a>
+                            <a href="#" class="hover:text-gray-300 transition-colors duration-200">Cookie Policy</a>
+                        </div>
+                        <div class="text-center md:text-right">
+                            <p>Empowering learners worldwide with quality education</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </footer>
     </div>
 
+    <!-- Custom Styles and Animations -->
     <style>
         @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+            100% {
+                transform: translate(0px, 0px) scale(1);
+            }
         }
-
         .animate-blob {
             animation: blob 7s infinite;
         }
-
         .animation-delay-2000 {
             animation-delay: 2s;
         }
-
         .animation-delay-4000 {
             animation-delay: 4s;
         }
 
+        /* Smooth scrolling */
         html {
             scroll-behavior: smooth;
+        }
+
+        /* Custom gradient text animation */
+        @keyframes gradient {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .bg-gradient-animate {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 10s ease infinite;
+        }
+
+        /* Dark mode improvements */
+        @media (prefers-color-scheme: dark) {
+            .animate-blob {
+                opacity: 0.6;
+            }
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 640px) {
+            .animate-blob {
+                width: 200px;
+                height: 200px;
+            }
         }
     </style>
 </x-app>
