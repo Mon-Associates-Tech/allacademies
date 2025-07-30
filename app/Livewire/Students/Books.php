@@ -106,7 +106,7 @@ class Books extends AppComponent
         if (!$student) return false;
 
         // Check individual subscription
-        $hasIndividualSubscription = BookSubscription::where('student_id', $student->id)
+        $hasIndividualSubscription = BookSubscription::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'active')
             ->exists();
@@ -154,7 +154,7 @@ class Books extends AppComponent
         }
 
         // Check individual subscription
-        $individualSubscription = BookSubscription::where('student_id', $student->id)
+        $individualSubscription = BookSubscription::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'active')
             ->first();
@@ -168,7 +168,7 @@ class Books extends AppComponent
         }
 
         // Check pending payment
-        $pendingSubscription = BookSubscription::where('student_id', $student->id)
+        $pendingSubscription = BookSubscription::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'pending_payment')
             ->first();
@@ -213,7 +213,7 @@ class Books extends AppComponent
         if (!$student) return false;
 
         // Check individual subscription
-        $hasIndividualSubscription = BookSubscription::where('student_id', $student->id)
+        $hasIndividualSubscription = BookSubscription::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'active')
             ->exists();
@@ -242,7 +242,7 @@ class Books extends AppComponent
         $student = Auth::user()->student;
         if (!$student) return false;
 
-        return BookBorrowing::where('student_id', $student->id)
+        return BookBorrowing::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'borrowed')
             ->exists();
@@ -253,7 +253,7 @@ class Books extends AppComponent
         $student = Auth::user()->student;
         if (!$student) return null;
 
-        return BookBorrowing::where('student_id', $student->id)
+        return BookBorrowing::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'borrowed')
             ->first();
@@ -270,7 +270,7 @@ class Books extends AppComponent
 
         // Check individual subscription
         $hasIndividualAccess = BookSubscription::where('book_id', $bookId)
-            ->where('student_id', $student->id)
+            ->where('user_id', auth()->user()->id)
             ->where('status', 'active')
             ->exists();
 
@@ -295,7 +295,7 @@ class Books extends AppComponent
 
         // Get saved progress if exists
         $progress = BookReadingProgress::where('book_id', $bookId)
-            ->where('student_id', $student->id)
+            ->where('user_id', auth()->user()->id)
             ->first();
 
         $this->currentPage = $progress ? $progress->current_page : 1;
@@ -353,7 +353,7 @@ class Books extends AppComponent
         $progress = BookReadingProgress::updateOrCreate(
             [
                 'book_id' => $this->currentBookId,
-                'student_id' => auth()->user()->student->id
+                'user_id' => auth()->user()->id
             ],
             [
                 'current_page' => $page,
@@ -375,7 +375,7 @@ class Books extends AppComponent
                 'total_pages' => $totalPages,
                 'progress_percentage' => $totalPages > 0 ? round(($page / $totalPages) * 100, 2) : 0
             ])
-            ->log('Student updated reading progress');
+            ->log('User updated reading progress');
 
         session()->flash('success', 'Reading progress saved!');
     }
@@ -399,7 +399,7 @@ class Books extends AppComponent
             return;
         }
 
-        $existingSubscription = BookSubscription::where('student_id', $student->id)
+        $existingSubscription = BookSubscription::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->whereIn('status', ['active', 'pending_payment'])
             ->first();
@@ -418,7 +418,7 @@ class Books extends AppComponent
         $reference = 'BS' . time() . $student->id . $bookId;
 
         $subscription = BookSubscription::create([
-            'student_id' => $student->id,
+            'user_id' => auth()->user()->id,
             'book_id' => $bookId,
             'start_date' => now(),
             'end_date' => now()->addYear(),
@@ -448,7 +448,7 @@ class Books extends AppComponent
                 'reference' => $reference,
                 'status' => 'pending_payment'
             ])
-            ->log('Student initiated book subscription');
+            ->log('User initiated book subscription');
 
         $this->endLoading();
         $this->dispatch('showSubscriptionModal', $this->subscriptionData);
@@ -487,7 +487,7 @@ class Books extends AppComponent
             return;
         }
 
-        $subscription = BookSubscription::where('student_id', $student->id)
+        $subscription = BookSubscription::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'active')
             ->first();
@@ -536,7 +536,7 @@ class Books extends AppComponent
             return;
         }
 
-        $existingBorrowing = BookBorrowing::where('student_id', $student->id)
+        $existingBorrowing = BookBorrowing::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'borrowed')
             ->first();
@@ -550,7 +550,7 @@ class Books extends AppComponent
         $borrowing = BookBorrowing::create([
             'student_id' => $student->id,
             'book_id' => $bookId,
-            'borrowed_at' => now(),
+            'borrow_date' => now(),
             'due_date' => now()->addDays(14),
             'status' => 'borrowed'
         ]);
@@ -563,7 +563,7 @@ class Books extends AppComponent
                 'action' => 'borrowed_book',
                 'book_id' => $bookId,
                 'book_title' => $book->title,
-                'borrowed_at' => now()->toDateTimeString(),
+                'borrow_date' => now()->toDateTimeString(),
                 'due_date' => now()->addDays(14)->toDateString(),
                 'borrowing_duration' => '14 days'
             ])
@@ -584,7 +584,7 @@ class Books extends AppComponent
             return;
         }
 
-        $borrowing = BookBorrowing::where('student_id', $student->id)
+        $borrowing = BookBorrowing::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
             ->where('status', 'borrowed')
             ->first();
@@ -655,7 +655,7 @@ class Books extends AppComponent
         return Book::query()
             ->with(['author', 'bookCategory'])
             ->whereHas('subscriptions', function ($query) use ($student) {
-                $query->where('student_id', $student->id)
+                $query->where('user_id', auth()->user()->id)
                     ->where('status', 'active')
                     ->orWhere('status', 'pending_payment');
             })
@@ -678,7 +678,7 @@ class Books extends AppComponent
         return Book::query()
             ->with(['author', 'bookCategory'])
             ->whereHas('borrowings', function ($query) use ($student) {
-                $query->where('student_id', $student->id)
+                $query->where('user_id', auth()->user()->id)
                     ->where('status', 'borrowed');
             })
             ->when($this->search, function ($query) {
@@ -697,7 +697,7 @@ class Books extends AppComponent
         $student = Auth::user()->student;
         if (!$student) return collect();
 
-        return BookReadingProgress::where('student_id', $student->id)
+        return BookReadingProgress::where('user_id', auth()->user()->id)
             ->with(['book', 'book.author'])
             ->latest('last_read_at')
             ->when($this->search, function ($query) {

@@ -103,7 +103,7 @@ class LibraryReports extends Component
             'borrowed_copies' => BookCopy::where('status', 'borrowed')->count(),
             'total_students' => Student::count(),
             'active_borrowers' => BookBorrow::whereBetween('borrow_date', [$startDate, $endDate])
-                ->distinct('student_id')->count(),
+                ->distinct('user_id')->count(),
             'total_borrows' => BookBorrow::whereBetween('borrow_date', [$startDate, $endDate])->count(),
             'total_returns' => BookBorrow::whereBetween('return_date', [$startDate, $endDate])->count(),
             'overdue_books' => BookBorrow::whereNull('return_date')

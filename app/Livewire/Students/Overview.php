@@ -208,8 +208,8 @@ class Overview extends Component
         if(!$student) return;
 
         // Existing data
-        $bookSubscriptions = BookSubscription::whereHas('student', function($query) use ($student) {
-            $query->where('student_id', $student->id);
+        $bookSubscriptions = BookSubscription::whereHas('user', function($query) use ($student) {
+            $query->where('user_id', auth()->user()->id);
         })->latest()->take(5)->get();
 
         $bookCount = Book::whereHas('students', function($query) use ($student) {

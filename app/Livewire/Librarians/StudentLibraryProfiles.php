@@ -4,6 +4,7 @@ namespace App\Livewire\Librarians;
 
 use App\Models\Student;
 use App\Models\BookBorrowing;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -82,15 +83,15 @@ class StudentLibraryProfiles extends Component
     private function loadStudentStats()
     {
         $studentId = $this->selectedStudent->id;
-
+        $user_id = $this->selectedStudent->user_id;
         // Current borrowings
         $currentBorrows = BookBorrowing::with(['bookCopy.book'])
-            ->where('student_id', $studentId)
+            ->where('user_id', $user_id)
             ->whereNull('return_date')
             ->get();
 
         // Historical stats
-        $allBorrows = BookBorrowing::where('student_id', $studentId)->get();
+        $allBorrows = BookBorrowing::where('user_id', $user_id)->get();
         $overdueBooks = $currentBorrows->where('due_date', '<', now());
 
         $this->studentStats = [
@@ -110,7 +111,7 @@ class StudentLibraryProfiles extends Component
     private function loadBorrowingHistory()
     {
         $this->borrowingHistory = BookBorrowing::with(['bookCopy.book'])
-            ->where('student_id', $this->selectedStudent->id)
+            ->where('user_id', $this->selectedStudent->user_id)
             ->orderBy('borrow_date', 'desc')
             ->limit(20)
             ->get()
@@ -153,8 +154,8 @@ class StudentLibraryProfiles extends Component
             return 0;
         }
 
-        $firstBorrow = $borrows->min('borrowed_at');
-        $lastBorrow = $borrows->max('borrowed_at');
+        $firstBorrow = $borrows->min('borrow_date');
+        $lastBorrow = $borrows->max('borrow_date');
 
         if (!$firstBorrow || !$lastBorrow) {
             return 0;

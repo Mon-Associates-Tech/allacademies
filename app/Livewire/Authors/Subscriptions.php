@@ -33,13 +33,13 @@ class Subscriptions extends AppComponent
 
     private function getSubscriptions()
     {
-        $query = BookSubscription::with(['student.user', 'book'])
+        $query = BookSubscription::with(['user', 'book'])
             ->whereHas('book', function ($bookQuery) {
                 $bookQuery->where('author_id', $this->author->id);
             });
 
         if ($this->search) {
-            $query->whereHas('student.user', function ($userQuery) {
+            $query->whereHas('user', function ($userQuery) {
                 $userQuery->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('email', 'like', '%' . $this->search . '%');
             });
@@ -56,7 +56,7 @@ class Subscriptions extends AppComponent
     {
         return BookSubscription::whereHas('book', function ($bookQuery) {
             $bookQuery->where('author_id', $this->author->id);
-        })->distinct('student_id')->count();
+        })->distinct('user_id')->count();
     }
 
     private function getActiveSubscriptions()

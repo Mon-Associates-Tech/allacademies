@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -37,10 +38,18 @@ class Student extends Model
         return $this->belongsTo(StudentGroup::class, 'student_group_id');
     }
 
-    public function borrowedBooks(): Student|HasMany
+    public function borrowedBooks()
     {
-        return $this->hasMany(BookBorrowing::class);
+        return $this->hasManyThrough(
+            BookBorrowing::class,  // The final model we want to access
+            User::class,           // The intermediate model
+            'id',                  // Foreign key on the intermediate model (users table)
+            'user_id',             // Foreign key on the final model (book_borrowings table)
+            'user_id',             // Local key on the Student model
+            'id'                   // Local key on the intermediate model (User)
+        );
     }
+
 
     public function subscriptions(): Student|HasMany
     {

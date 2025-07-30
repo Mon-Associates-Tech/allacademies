@@ -19,7 +19,7 @@ Route::get('account', StudentProfile::class)->name('account');
 Route::get('activities', ActivityLogs::class)->name('activities');
 Route::get('schedules', StudentSchedule::class)->name('schedules');
 Route::get('courses', Courses::class)->name('courses');
-Route::get('books', Books::class)->name('books');
+Route::get('books', [\App\Http\Controllers\BookController::class, 'index'])->name('books');
 Route::get('books/{book}', \App\Livewire\Authors\BookDetails::class)->name('books.show');
 Route::get('lessons', Books::class)->name('lessons');
 Route::get('self-assessments', Books::class)->name('self-assessment');

@@ -17,7 +17,7 @@
 
     <!-- System Alerts -->
     @if(count($this->systemAlerts) > 0)
-        <div class="mb-8 space-y-3">
+        <div class="mb-8 space-y-3 hidden">
             @foreach($this->systemAlerts as $alert)
                 <div class="flex items-center justify-between p-4 rounded-lg border {{ $alert['type'] === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-700 dark:text-yellow-200' : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200' }}">
                     <div class="flex items-center">
@@ -39,7 +39,7 @@
     @endif
 
     <!-- System Health Overview -->
-    <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="mb-8 bg-white hidden dark:bg-gray-800 rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">System Health</h2>
             <div class="flex items-center space-x-2">
@@ -69,7 +69,7 @@
     </div>
 
     <!-- Quick Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class=" hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- System Stats -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
@@ -87,7 +87,7 @@
         </div>
 
         <!-- Library Stats -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white hidden dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
                     <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +103,7 @@
         </div>
 
         <!-- Academic Stats -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white hidden dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
                     <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@
     </div>
 
     <!-- User Breakdown and Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class=" hidden grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- User Distribution -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">User Distribution</h3>
@@ -156,7 +156,7 @@
         </div>
 
         <!-- Library Status -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white hidden dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Library Overview</h3>
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
@@ -180,7 +180,7 @@
     </div>
 
     <!-- Recent Activity -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+    <div class=" hidden grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
         <!-- New Users -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Users</h3>
@@ -202,7 +202,7 @@
         </div>
 
         <!-- Recent Borrowings -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white hidden dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Borrowings</h3>
             <div class="space-y-3">
                 @forelse($this->recentActivity['recent_borrowings'] as $borrowing)
@@ -225,7 +225,7 @@
         </div>
 
         <!-- Pending Approvals -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white hidden dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Approvals</h3>
             <div class="space-y-3">
                 @forelse($this->recentActivity['pending_approvals'] as $book)
@@ -251,11 +251,11 @@
     <!-- Quick Actions -->
     @if($showQuickActions)
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-0">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Actions</h3>
-                <button wire:click="$toggle('showQuickActions')" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                    Hide
-                </button>
+{{--                <button wire:click="$toggle('showQuickActions')" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">--}}
+{{--                    Hide--}}
+{{--                </button>--}}
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($this->quickActionItems as $action)

@@ -90,7 +90,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Subscription::class, 'subscriber_id');
     }
 
-    public function borrowedBooks(): Student|HasMany
+    public function borrowedBooks(): HasMany
     {
         return $this->hasMany(BookBorrowing::class);
     }

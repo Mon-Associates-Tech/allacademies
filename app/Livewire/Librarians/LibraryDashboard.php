@@ -4,7 +4,7 @@ namespace App\Livewire\Librarians;
 
 use App\Models\Book;
 use App\Models\BookBorrowing;
-use App\Models\Student;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
@@ -46,7 +46,7 @@ class LibraryDashboard extends Component
     #[Computed]
     public function recentBorrowings()
     {
-        return BookBorrowing::with(['student.user', 'book'])
+        return BookBorrowing::with(['user', 'book'])
             ->where('status', 'active')
             ->latest()
             ->take(5)
@@ -72,7 +72,7 @@ class LibraryDashboard extends Component
         return [
             'new_borrowings' => BookBorrowing::where('created_at', '>=', $startDate)->count(),
             'returned_books' => BookBorrowing::where('return_date', '>=', $startDate)->count(),
-            'active_students' => Student::whereHas('borrowedBooks', function($query) use ($startDate) {
+            'active_students' =>  User::whereHas('borrowedBooks', function($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate);
             })->count(),
             'overdue_rate' => $this->calculateOverdueRate(),
