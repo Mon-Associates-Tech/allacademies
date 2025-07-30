@@ -9,9 +9,9 @@ class MessageServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->app->bind('message.service', function () {
-            return new MessageService();
-        });
+//        $this->app->bind('message.service', function () {
+//            return new MessageService();
+//        });
     }
 
     public function boot()

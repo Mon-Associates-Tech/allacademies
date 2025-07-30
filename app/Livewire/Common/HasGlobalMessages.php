@@ -6,27 +6,43 @@ trait HasGlobalMessages
 {
     public function showSuccess($message, $autoHide = null)
     {
-        $this->dispatch('success', $message, $autoHide);
+        if (!$message || !is_string($message)) {
+            return;
+        }
+        $this->dispatch('success', message: $message, autoHide: $autoHide);
     }
 
     public function showError($message, $autoHide = null)
     {
-        $this->dispatch('error', $message, $autoHide);
+        if (!$message || !is_string($message)) {
+            return;
+        }
+        $this->dispatch('error', message: $message, autoHide: $autoHide);
     }
 
     public function showWarning($message, $autoHide = null)
     {
-        $this->dispatch('warning', $message, $autoHide);
+        if (!$message || !is_string($message)) {
+            return;
+        }
+        $this->dispatch('warning', message: $message, autoHide: $autoHide);
     }
 
     public function showInfo($message, $autoHide = null)
     {
-        $this->dispatch('info', $message, $autoHide);
+        if (!$message || !is_string($message)) {
+            return;
+        }
+        $this->dispatch('info', message: $message, autoHide: $autoHide);
     }
 
     public function showMessage($message, $type = 'info', $autoHide = null)
     {
-        $this->dispatch('showMessage', $message, $type, $autoHide);
+        if (!$message || !is_string($message)) {
+            return;
+        }
+        $type = in_array($type, ['success', 'error', 'warning', 'info']) ? $type : 'info';
+        $this->dispatch('showMessage', message: $message, type: $type, autoHide: $autoHide);
     }
 
     public function clearMessages()

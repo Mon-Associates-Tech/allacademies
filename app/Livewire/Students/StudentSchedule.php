@@ -320,7 +320,7 @@ class StudentSchedule extends Component
                 ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
                 ->count(),
             'assignments_submitted' => 0, // Will depend on Assignment model structure
-            'books_progress' => BookReadingProgress::where('student_id', $this->student->id)
+            'books_progress' => BookReadingProgress::where('user_id', auth()->user()->id)
                 ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
                 ->avg('progress_percentage'),
             'average_score' => $this->student->assessments()

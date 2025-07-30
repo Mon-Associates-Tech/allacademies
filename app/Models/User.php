@@ -90,6 +90,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Subscription::class, 'subscriber_id');
     }
 
+    public function borrowedBooks(): Student|HasMany
+    {
+        return $this->hasMany(BookBorrowing::class);
+    }
+
+    public function bookSubscriptions(): Student|HasMany
+    {
+        return $this->hasMany(BookSubscription::class);
+    }
+
     public function joinedTeams(): BelongsToMany
     {
         return $this->belongsToMany(Team::class);

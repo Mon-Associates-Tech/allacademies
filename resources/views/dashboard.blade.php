@@ -65,15 +65,6 @@
             <strong>Error:</strong> No dashboard found for role: {{ $primaryRole }}
         </div>
     @endif
-    @if(auth()->user()->canImpersonate())
-        <section class="mt-10">
-            <div class="mb-6">
-                <h3 class="text-2xl font-semibold text-gray-900">User Impersonation</h3>
-                <p class="text-gray-600 mt-1">Impersonate users to help troubleshoot issues or provide support</p>
-            </div>
-            @livewire('administrators.user-impersonation')
-        </section>
-    @endif
 
 
     @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))

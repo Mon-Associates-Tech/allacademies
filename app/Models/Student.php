@@ -267,4 +267,14 @@ class Student extends Model
         return $activeCard && $activeCard->can_borrow;
     }
 
+    // Many-to-many relationship with parents through pivot table
+    public function parents(): BelongsToMany
+    {
+        return $this->belongsToMany(StudentParent::class, 'parent_student', 'student_id', 'parent_id')
+            ->withPivot('relationship')
+            ->withTimestamps();
+    }
+
+
+
 }

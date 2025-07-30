@@ -41,7 +41,7 @@ class BookSeeder extends Seeder
                 'price' => 150.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Mathematics',
             ],
             [
@@ -57,7 +57,7 @@ class BookSeeder extends Seeder
                 'price' => 0.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Mathematics',
             ],
 
@@ -75,7 +75,7 @@ class BookSeeder extends Seeder
                 'price' => 180.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Science',
             ],
             [
@@ -91,7 +91,7 @@ class BookSeeder extends Seeder
                 'price' => 120.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Science',
             ],
             [
@@ -107,7 +107,7 @@ class BookSeeder extends Seeder
                 'price' => 160.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Science',
             ],
 
@@ -125,7 +125,7 @@ class BookSeeder extends Seeder
                 'price' => 90.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Literature',
             ],
             [
@@ -141,7 +141,7 @@ class BookSeeder extends Seeder
                 'price' => 0.00,
                 'has_hardcopy' => false,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Literature',
             ],
 
@@ -159,7 +159,7 @@ class BookSeeder extends Seeder
                 'price' => 110.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'History',
             ],
             [
@@ -175,7 +175,7 @@ class BookSeeder extends Seeder
                 'price' => 140.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'History',
             ],
 
@@ -193,7 +193,7 @@ class BookSeeder extends Seeder
                 'price' => 190.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Computer Science',
             ],
             [
@@ -209,7 +209,7 @@ class BookSeeder extends Seeder
                 'price' => 0.00,
                 'has_hardcopy' => false,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Computer Science',
             ],
 
@@ -227,7 +227,7 @@ class BookSeeder extends Seeder
                 'price' => 80.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Language',
             ],
             [
@@ -243,7 +243,7 @@ class BookSeeder extends Seeder
                 'price' => 100.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Language',
             ],
 
@@ -261,7 +261,7 @@ class BookSeeder extends Seeder
                 'price' => 115.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Geography',
             ],
 
@@ -279,7 +279,7 @@ class BookSeeder extends Seeder
                 'price' => 0.00,
                 'has_hardcopy' => true,
                 'has_softcopy' => true,
-                'status' => 'active',
+                'status' => 'published',
                 'category_name' => 'Reference',
             ]
         ];

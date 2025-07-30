@@ -2,226 +2,286 @@
 
 namespace App\Livewire\Administrators;
 
-use Livewire\Component;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Book;
-use App\Models\Assessment;
 use App\Models\BookBorrowing;
-use Carbon\Carbon;
+use App\Models\BookSubscription;
+use App\Models\Assessment;
+use App\Models\Team;
+use App\Models\AcademicSubject;
+use App\Models\BookCategory;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use Carbon\Carbon;
 
 class Overview extends Component
 {
-    public $timeRange = 'today';
-    public $refreshInterval = 30; // seconds
-
-    public $metrics = [
-        'users' => [],
-        'activity' => [],
-        'system' => [],
-        'performance' => []
-    ];
-
-    public $systemHealth = [];
-    public $recentActivities = [];
-    public $alerts = [];
-
-    protected $listeners = ['refreshData' => 'loadData'];
+    public $selectedPeriod = 'week';
+    public $showQuickActions = true;
 
     public function mount()
     {
-        $this->loadData();
+        $this->selectedPeriod = 'week';
     }
 
-    public function updatedTimeRange()
+    #[Computed]
+    public function systemStats()
     {
-        $this->loadData();
-    }
-
-    public function loadData()
-    {
-        $this->loadUserMetrics();
-        $this->loadActivityMetrics();
-        $this->loadSystemHealth();
-        $this->loadRecentActivities();
-        $this->loadAlerts();
-    }
-
-    private function loadUserMetrics()
-    {
-        $dateRange = $this->getDateRange();
-
-        $this->metrics['users'] = [
+        return [
             'total_users' => User::count(),
-            'new_users' => User::whereBetween('created_at', $dateRange)->count(),
-            'active_users' => User::where('is_online', true)->count(),
+            'active_users' => User::where('last_seen_at', '>=', now()->subDays(7))->count(),
+            'verified_users' => User::whereNotNull('email_verified_at')->count(),
+            'pending_verification' => User::whereNull('email_verified_at')->count(),
+        ];
+    }
+
+    #[Computed]
+    public function userBreakdown()
+    {
+        return [
             'students' => Student::count(),
             'teachers' => Teacher::count(),
-            'verified_users' => User::whereNotNull('email_verified_at')->count(),
+            'librarians' => User::where('role', 'librarian')->count(),
+            'authors' => User::where('role', 'author')->count(),
+            'parents' => User::where('role', 'parent')->count(),
+            'administrators' => User::where('role', 'administrator')->count(),
         ];
     }
 
-    private function loadActivityMetrics()
+    #[Computed]
+    public function libraryStats()
     {
-        $dateRange = $this->getDateRange();
+        $startDate = $this->getPeriodStartDate();
 
-        $this->metrics['activity'] = [
-            'assessments_completed' => Assessment::whereBetween('created_at', $dateRange)
-                ->where('status', 'completed')
-                ->count(),
-            'books_borrowed' => BookBorrowing::whereBetween('created_at', $dateRange)->count(),
-            'average_score' => Assessment::whereBetween('created_at', $dateRange)
-                ->where('status', 'completed')
-                ->avg('score') ?? 0,
-            'login_sessions' => $this->getLoginSessions($dateRange),
+        return [
+            'total_books' => Book::count(),
+            'published_books' => Book::where('status', 'published')->count(),
+            'pending_approval' => Book::where('status', 'pending')->orWhereNull('status')->count(),
+            'active_borrowings' => BookBorrowing::where('status', 'active')->count(),
+            'overdue_books' => BookBorrowing::where('status', 'active')
+                ->where('due_date', '<', now())->count(),
+            'new_borrowings' => BookBorrowing::where('created_at', '>=', $startDate)->count(),
         ];
     }
 
-    private function loadSystemHealth()
+    #[Computed]
+    public function academicStats()
     {
-        $this->systemHealth = [
-            'database' => $this->checkDatabaseHealth(),
-            'cache' => $this->checkCacheHealth(),
-            'storage' => $this->checkStorageHealth(),
-            'queue' => $this->checkQueueHealth(),
+        $startDate = $this->getPeriodStartDate();
+
+        return [
+            'total_subjects' => AcademicSubject::count(),
+            'active_subscriptions' => BookSubscription::where('status', 'paid')
+                ->where('end_date', '>', now())->count(),
+            'recent_assessments' => Assessment::where('created_at', '>=', $startDate)->count(),
+            'average_performance' => Assessment::where('created_at', '>=', $startDate)->avg('score') ?? 0,
         ];
     }
 
-    private function loadRecentActivities()
+    #[Computed]
+    public function systemHealth()
     {
-        $this->recentActivities = [
-            'recent_users' => User::with(['student', 'teacher'])
-                ->latest()
-                ->limit(5)
-                ->get()
-                ->map(function ($user) {
-                    return [
-                        'type' => 'user_registration',
-                        'message' => "New {$user->role} registered: {$user->name}",
-                        'time' => $user->created_at,
-                        'user' => $user->name,
-                        'role' => $user->role
-                    ];
-                }),
-            'recent_assessments' => Assessment::with(['student.user', 'subject'])
-                ->where('status', 'completed')
-                ->latest()
-                ->limit(5)
-                ->get()
-                ->map(function ($assessment) {
-                    return [
-                        'type' => 'assessment_completed',
-                        'message' => "{$assessment->student->user->name} completed {$assessment->subject->name}",
-                        'time' => $assessment->created_at,
-                        'score' => $assessment->score,
-                        'max_score' => $assessment->max_score
-                    ];
-                })
+        $overdueBooks = $this->libraryStats['overdue_books'];
+        $pendingApprovals = $this->libraryStats['pending_approval'];
+        $unverifiedUsers = $this->systemStats['pending_verification'];
+
+        $issueCount = 0;
+        $issues = [];
+
+        if ($overdueBooks > 0) {
+            $issueCount++;
+            $issues[] = 'overdue_books';
+        }
+
+        if ($pendingApprovals > 5) {
+            $issueCount++;
+            $issues[] = 'pending_approvals';
+        }
+
+        if ($unverifiedUsers > 10) {
+            $issueCount++;
+            $issues[] = 'unverified_users';
+        }
+
+        return [
+            'status' => $issueCount === 0 ? 'excellent' : ($issueCount <= 1 ? 'good' : ($issueCount <= 2 ? 'fair' : 'poor')),
+            'issues_count' => $issueCount,
+            'issues' => $issues,
+            'score' => max(0, 100 - ($issueCount * 20))
         ];
     }
 
-    private function loadAlerts()
+    #[Computed]
+    public function recentActivity()
     {
-        $this->alerts = [
-            'overdue_books' => BookBorrowing::where('due_date', '<', now())
-                ->where('return_date', null)
-                ->count(),
-            'pending_approvals' => BookBorrowing::where('status', 'pending')->count(),
-            'inactive_users' => User::where('last_seen_at', '<', now()->subDays(30))
-                ->whereNotNull('last_seen_at')
-                ->count(),
-            'system_errors' => $this->getSystemErrorCount(),
+        return [
+            'new_users' => User::where('created_at', '>=', now()->subDays(7))
+                ->orderBy('created_at', 'desc')->take(5)->get(),
+            'recent_borrowings' => BookBorrowing::with(['student.user', 'book'])
+                ->where('created_at', '>=', now()->subDays(3))
+                ->orderBy('created_at', 'desc')->take(5)->get(),
+            'pending_approvals' => Book::with(['author.user'])
+                ->where('status', 'pending')
+                ->orWhereNull('status')
+                ->orderBy('created_at', 'desc')->take(5)->get(),
         ];
     }
 
-    private function getDateRange()
+    #[Computed]
+    public function systemAlerts()
     {
-        return match ($this->timeRange) {
-            'today' => [now()->startOfDay(), now()->endOfDay()],
-            'week' => [now()->startOfWeek(), now()->endOfWeek()],
-            'month' => [now()->startOfMonth(), now()->endOfMonth()],
-            'year' => [now()->startOfYear(), now()->endOfYear()],
-            default => [now()->startOfDay(), now()->endOfDay()]
+        $alerts = [];
+
+        // Check for overdue books
+        $overdueCount = BookBorrowing::where('status', 'active')
+            ->where('due_date', '<', now())->count();
+        if ($overdueCount > 0) {
+            $alerts[] = [
+                'type' => 'warning',
+                'message' => "{$overdueCount} books are overdue",
+                'action' => 'View Overdue Books',
+                'route' => 'admin.book-management'
+            ];
+        }
+
+        // Check for pending book approvals
+        $pendingBooks = Book::where('status', 'pending')->orWhereNull('status')->count();
+        if ($pendingBooks > 0) {
+            $alerts[] = [
+                'type' => 'info',
+                'message' => "{$pendingBooks} books pending approval",
+                'action' => 'Review Books',
+                'route' => 'admin.book-approvals'
+            ];
+        }
+
+        // Check for unverified users
+        $unverifiedUsers = User::whereNull('email_verified_at')->count();
+        if ($unverifiedUsers > 10) {
+            $alerts[] = [
+                'type' => 'warning',
+                'message' => "{$unverifiedUsers} users pending email verification",
+                'action' => 'Manage Users',
+                'route' => 'users.index'
+            ];
+        }
+
+        return $alerts;
+    }
+
+    #[Computed]
+    public function performanceMetrics()
+    {
+        $startDate = $this->getPeriodStartDate();
+
+        return [
+            'user_growth' => $this->getUserGrowthTrend($startDate),
+            'borrowing_trend' => $this->getBorrowingTrend($startDate),
+            'popular_categories' => $this->getPopularBookCategories(),
+            'active_teams' => Team::whereHas('members')->count(),
+        ];
+    }
+
+    #[Computed]
+    public function quickActionItems()
+    {
+        return [
+            [
+                'title' => 'Add New Student',
+                'description' => 'Register a new student in the system',
+                'icon' => 'user-plus',
+                'route' => 'admin.student-management',
+                'color' => 'blue'
+            ],
+            [
+                'title' => 'Approve Books',
+                'description' => 'Review and approve pending book submissions',
+                'icon' => 'check-circle',
+                'route' => 'admin.book-approvals',
+                'color' => 'green',
+                'badge' => Book::where('status', 'pending')->orWhereNull('status')->count()
+            ],
+            [
+                'title' => 'Manage Overdue',
+                'description' => 'Handle overdue book returns',
+                'icon' => 'exclamation-triangle',
+                'route' => 'admin.book-management',
+                'color' => 'red',
+                'badge' => BookBorrowing::where('status', 'active')
+                    ->where('due_date', '<', now())->count()
+            ],
+            [
+                'title' => 'User Impersonation',
+                'description' => 'Login as another user for support',
+                'icon' => 'user-secret',
+                'route' => 'admin.users.impersonate',
+                'color' => 'purple'
+            ],
+            [
+                'title' => 'System Reports',
+                'description' => 'Generate comprehensive system reports',
+                'icon' => 'chart-bar',
+                'route' => 'dashboard', // Replace with actual reports route
+                'color' => 'indigo'
+            ],
+            [
+                'title' => 'Academic Settings',
+                'description' => 'Configure academic groups and levels',
+                'icon' => 'cog',
+                'route' => 'school-settings.index',
+                'color' => 'gray'
+            ]
+        ];
+    }
+
+    private function getPeriodStartDate()
+    {
+        return match($this->selectedPeriod) {
+            'today' => Carbon::today(),
+            'week' => Carbon::now()->startOfWeek(),
+            'month' => Carbon::now()->startOfMonth(),
+            'year' => Carbon::now()->startOfYear(),
+            default => Carbon::now()->startOfWeek(),
         };
     }
 
-    private function checkDatabaseHealth()
+    private function getUserGrowthTrend($startDate)
     {
-        try {
-            DB::connection()->getPdo();
-            $responseTime = $this->measureDatabaseResponseTime();
-            return [
-                'status' => $responseTime < 100 ? 'healthy' : 'warning',
-                'response_time' => $responseTime,
-                'message' => "Response time: {$responseTime}ms"
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Database connection failed'
-            ];
-        }
+        return User::select(
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('COUNT(*) as count')
+        )
+        ->where('created_at', '>=', $startDate)
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
     }
 
-    private function checkCacheHealth()
+    private function getBorrowingTrend($startDate)
     {
-        try {
-            Cache::put('health_check', 'ok', 60);
-            $cached = Cache::get('health_check');
-            return [
-                'status' => $cached === 'ok' ? 'healthy' : 'warning',
-                'message' => $cached === 'ok' ? 'Cache working' : 'Cache issues detected'
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Cache unavailable'
-            ];
-        }
+        return BookBorrowing::select(
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('COUNT(*) as count')
+        )
+        ->where('created_at', '>=', $startDate)
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
     }
 
-    private function checkStorageHealth()
+    private function getPopularBookCategories()
     {
-        $freeSpace = disk_free_space(storage_path());
-        $totalSpace = disk_total_space(storage_path());
-        $usagePercent = (($totalSpace - $freeSpace) / $totalSpace) * 100;
-
-        return [
-            'status' => $usagePercent < 80 ? 'healthy' : ($usagePercent < 90 ? 'warning' : 'error'),
-            'usage_percent' => round($usagePercent, 1),
-            'message' => "Storage usage: " . round($usagePercent, 1) . "%"
-        ];
-    }
-
-    private function checkQueueHealth()
-    {
-        // This would depend on your queue implementation
-        return [
-            'status' => 'healthy',
-            'message' => 'Queue operational'
-        ];
-    }
-
-    private function measureDatabaseResponseTime()
-    {
-        $start = microtime(true);
-        DB::table('users')->limit(1)->get();
-        return round((microtime(true) - $start) * 1000, 2);
-    }
-
-    private function getLoginSessions($dateRange)
-    {
-        // Implement based on your login tracking system
-        return User::whereBetween('last_seen_at', $dateRange)->count();
-    }
-
-    private function getSystemErrorCount()
-    {
-        // Implement based on your error logging system
-        return 0;
+        return BookCategory::withCount(['books' => function($query) {
+            $query->whereHas('borrowings', function($q) {
+                $q->where('created_at', '>=', $this->getPeriodStartDate());
+            });
+        }])
+        ->orderBy('books_count', 'desc')
+        ->take(5)
+        ->get();
     }
 
     public function render()

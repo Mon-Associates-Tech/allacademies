@@ -30,7 +30,7 @@
             </button>
         </div>
         <div class="">
-            <x-avatar :name="auth()->user()->name" avatar="{{ auth()->user()->avatar }}" class="w-12 h-12 rounded-full mx-auto mb-2"/>
+            <x-avatar :name="auth()->user()->name" avatar="{{ auth()->user()->avatar }}" class="w-12 h-12 rounded-full mx-auto mb-2"></x-avatar>
             <div x-show="$store.sidebar.expanded" class="sidebar-text">
                 <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>
                 <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">{{ auth()->user()->email }}</h2>

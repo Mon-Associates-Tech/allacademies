@@ -33,19 +33,19 @@
   :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
   x-data="{}"
 >
-<x-alert.impersonation-banner />
+<x-alert.impersonation-banner></x-alert.impersonation-banner>
     <!-- Page wrapper -->
     <div class="flex h-screen overflow-hidden">
 
         <!-- Sidebar -->
         <aside class="print:hidden">
-            <x-app.sidebar :variant="$attributes['sidebarVariant']" />
+            <x-app.sidebar :variant="$attributes['sidebarVariant']"></x-app.sidebar>
         </aside>
 
         <!-- Content area -->
         <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
             <!-- Header -->
-            <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"/>
+            <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"></x-app.header>
 
             <!-- Main content -->
             <main class="mt-0 p-0">
@@ -54,8 +54,8 @@
 
                 <!-- Alerts -->
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
-                    <x-alert.success/>
-                    <x-alert.danger/>
+                    <x-alert.success></x-alert.success>
+                    <x-alert.danger></x-alert.danger>
                 </div>
 
                 <!-- Page header -->
@@ -77,7 +77,7 @@
                             {{ $slot }}
                     </div>
                 </div>
-{{--                <livewire:common.global-message   />--}}
+{{--              <!-- <livewire:common.global-message ></livewire:common.global-message> -->--}}
 
             </main>
         </div>

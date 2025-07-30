@@ -7,14 +7,21 @@
                     <h1 class="text-2xl font-semibold text-gray-900">Book Management</h1>
                     <p class="mt-1 text-sm text-gray-500">Manage your library's book collection</p>
                 </div>
+                <div class="">
+
+                </div>
                 @if(!$showForm)
-                    <button wire:click="showCreateForm"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Add Book
-                    </button>
+                    <div class="">
+                        <x-link.white class="mr-2" :to="route('books.index')">Browse Books</x-link.white>
+                        <button wire:click="showCreateForm"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add Book
+                        </button>
+                    </div>
+
                 @endif
             </div>
         </div>
@@ -526,31 +533,34 @@
                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                             </td>
                             <td class="px-6 py-4">
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0 mr-3">
-                                        @if($book->cover_image)
-                                            <img src="{{$book->cover_image }}" alt="{{ $book->title }}"
-                                                 class="h-16 w-12 object-cover rounded shadow-sm border">
-                                        @else
-                                            <div class="h-16 w-12 bg-gray-200 rounded flex items-center justify-center border">
-                                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="text-sm font-semibold text-gray-900 leading-5">{{ $book->title }}</div>
-                                        <div class="text-xs text-gray-500 mt-1">
-                                            @if($book->edition)Edition {{ $book->edition }}@endif
-                                            @if($book->edition && $book->publisher) • @endif
-                                            @if($book->publisher){{ $book->publisher }}@endif
+                                <a href="{{route('books.show', $book)}}">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 mr-3">
+                                            @if($book->cover_image)
+                                                <img src="{{$book->cover_image }}" alt="{{ $book->title }}"
+                                                     class="h-16 w-12 object-cover rounded shadow-sm border">
+                                            @else
+                                                <div class="h-16 w-12 bg-gray-200 rounded flex items-center justify-center border">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                    </svg>
+                                                </div>
+                                            @endif
                                         </div>
-                                        @if($book->pages)
-                                            <div class="text-xs text-gray-400 mt-1">{{ $book->pages }} pages</div>
-                                        @endif
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-sm font-semibold text-gray-900 leading-5">{{ $book->title }}</div>
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                @if($book->edition)Edition {{ $book->edition }}@endif
+                                                @if($book->edition && $book->publisher) • @endif
+                                                @if($book->publisher){{ $book->publisher }}@endif
+                                            </div>
+                                            @if($book->pages)
+                                                <div class="text-xs text-gray-400 mt-1">{{ $book->pages }} pages</div>
+                                            @endif
+                                        </div>
                                     </div>
-                                </div>
+                                </a>
+
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">{{ $book->author->user->name }}</div>

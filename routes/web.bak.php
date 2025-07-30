@@ -403,7 +403,7 @@ Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'sho
 Route::middleware(['auth'])->group(function () {
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
-    Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
+//    Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
     Route::get('/books/{book}/read', [BookController::class, 'read'])->name('books.read');
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
@@ -423,15 +423,15 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('teachers.')->group(fu
 
 Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(function () {
 //    Route::get('/dashboard', Dashboard::class)->name('dashboard');
-    Route::get('/student-management', StudentManagement::class)->name('student-management');
-    Route::get('/student-groups', GroupManagement::class)->name('student-groups');
-    Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
-    Route::get('/book-management', BookManagement::class)->name('book-management');
-    Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
-    Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
-    Route::get('/logins', UserLoginLog::class)->name('logins');
-    Route::get('/author-management', AuthorManagement::class)->name('author-management');
-    Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
+//    Route::get('/student-management', StudentManagement::class)->name('student-management');
+//    Route::get('/student-groups', GroupManagement::class)->name('student-groups');
+//    Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
+//    Route::get('/book-management', BookManagement::class)->name('book-management');
+//    Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
+//    Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
+//    Route::get('/logins', UserLoginLog::class)->name('logins');
+//    Route::get('/author-management', AuthorManagement::class)->name('author-management');
+//    Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
 });
 
 

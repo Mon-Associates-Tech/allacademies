@@ -20,7 +20,6 @@ class Author extends Model
         'awards',
         'author_statement',
         'pen_name'
-
     ];
 
     public function user()
@@ -31,5 +30,54 @@ class Author extends Model
     public function books()
     {
         return $this->hasMany(Book::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(BookReview::class);
+    }
+
+    /**
+     * Get only published books for this author
+     */
+    public function publishedBooks()
+    {
+        return $this->hasMany(Book::class)->published();
+    }
+
+    /**
+     * Get the count of published books
+     */
+    public function getPublishedBooksCountAttribute()
+    {
+        return $this->books()->published()->count();
+    }
+
+    /**
+     * Get total readers across all published books
+     */
+    public function getTotalReadersAttribute()
+    {
+        return $this->books()
+            ->published()
+            ->withCount('subscriptions')
+            ->get()
+            ->sum('subscriptions_count');
+    }
+
+    /**
+     * Get average rating across all published books
+     */
+    public function getAverageRatingAttribute()
+    {
+        $books = $this->books()->published()->get();
+        if ($books->isEmpty()) {
+            return 0;
+        }
+
+        $totalRating = $books->sum('average_rating');
+        $booksWithRatings = $books->where('average_rating', '>', 0)->count();
+
+        return $booksWithRatings > 0 ? round($totalRating / $booksWithRatings, 1) : 0;
     }
 }

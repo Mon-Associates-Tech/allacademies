@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\Book;
 use App\Models\BookSubscription;
 use App\Models\BookBorrowing;
@@ -18,12 +19,15 @@ class BookController extends Controller
 
         $query = Book::with(['author', 'bookCategory']);
 
-        // Apply filters
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('author', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
+        // Search filter (title or author)
+        if ($request->query('search')) {
+            $searchTerm = $request->query('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
+                      $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
                   });
+            });
         }
 
         if ($request->filled('category')) {
@@ -47,54 +51,104 @@ class BookController extends Controller
         if ($request->filled('price')) {
             if ($request->price === 'free') {
                 $query->whereNull('annual_subscription_fee')->orWhere('annual_subscription_fee', 0);
-            } else {
+            }
+            elseif($request->price === 'subscribed'){
+                $query->whereHas('subscriptions', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->where('status', 'paid');
+                });
+            }
+            else {
                 $query->where('annual_subscription_fee', '>', 0);
             }
         }
 
-        $books = $query->paginate(12);
+        $books = $query->paginate(12)->appends($request->query());
         $categories = BookCategory::all();
 
         // Get user's subscriptions and borrowings for status checking
-        $subscribedBookIds = $student ? $student->bookSubscriptions()
-            ->where('status', 'active')
-            ->pluck('book_id')->toArray() : [];
+        $subscribedBookIds = $user->bookSubscriptions()
+            ->where('status', 'paid')
+            ->pluck('book_id')->toArray() ?: [];
 
-        $borrowedBookIds = $student ? $student->borrowedBooks()
+        $borrowedBookIds = $user->borrowedBooks()
             ->where('status', 'borrowed')
-            ->pluck('book_id')->toArray() : [];
+            ->pluck('book_id')->toArray() ?: [];
 
         return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds'));
     }
 
+    public function showdd(Book $book)
+    {
+        // Load necessary relationships
+        $book->load([
+            'author',
+            'bookCategory',
+            'reviews' => function ($query) {
+                $query->approved()
+                    ->with('user')
+                    ->latest()
+                    ->limit(5);
+            }
+        ]);
+
+        // Get recent reviews for quick display
+        $recentReviews = $book->reviews()
+            ->approved()
+            ->with('user')
+            ->latest()
+            ->limit(3)
+            ->get();
+
+        return view('books.show', compact('book', 'recentReviews'));
+    }
+
+
     public function show(Book $book)
     {
-        $book->load(['author', 'bookCategory']);
+        $book->load([
+            'author',
+            'bookCategory',
+            'reviews' => function ($query) {
+                $query->approved()
+                    ->with('user')
+                    ->latest()
+                    ->limit(5);
+            }
+        ]);
 
+        $recentReviews = $book->reviews()
+            ->approved()
+            ->with('user')
+            ->latest()
+            ->limit(3)
+            ->get();
         $user = Auth::user();
-        $student = $user->student ?? null;
 
         $isSubscribed = false;
         $isBorrowed = false;
         $subscription = null;
         $borrowing = null;
 
-        if ($student) {
-            $subscription = $student->bookSubscriptions()
+        if ($user) {
+            $subscription = $user->bookSubscriptions()
                 ->where('book_id', $book->id)
-                ->where('status', 'active')
+                ->where('status', 'paid')
                 ->first();
             $isSubscribed = (bool) $subscription;
 
-            $borrowing = $student->borrowedBooks()
+            $borrowing = $user->borrowedBooks()
                 ->where('book_id', $book->id)
                 ->where('status', 'borrowed')
                 ->first();
             $isBorrowed = (bool) $borrowing;
         }
-        $canRead = $isSubscribed || !$book->has_softcopy;
 
-        return view('books.show', compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead'));
+        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user->id  === $user->id;
+
+        return view('books.show',
+            compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
+        );
     }
 
     public function subscribe(Request $request, Book $book)
@@ -102,14 +156,12 @@ class BookController extends Controller
         $user = Auth::user();
         $student = $user->student;
 
-        if (!$student) {
-            return response()->json(['error' => 'Student profile required'], 403);
-        }
+
 
         // Check if already subscribed
-        $existingSubscription = $student->bookSubscriptions()
+        $existingSubscription = $user->bookSubscriptions()
             ->where('book_id', $book->id)
-            ->where('status', 'active')
+            ->where('status', SubscriptionStatus::PAID)
             ->first();
 
         if ($existingSubscription) {
@@ -119,11 +171,11 @@ class BookController extends Controller
         // Free book - direct subscription
         if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
             $subscription = BookSubscription::create([
-                'student_id' => $student->id,
+                'user_id' => $user->id,
                 'book_id' => $book->id,
                 'start_date' => now(),
                 'end_date' => now()->addYear(),
-                'status' => 'active',
+                'status' => SubscriptionStatus::PAID,
                 'annual_fee' => 0,
                 'reference' => 'FREE_' . uniqid(),
                 'payment_completed_at' => now()
@@ -138,7 +190,7 @@ class BookController extends Controller
 
         // Paid book - create pending subscription
         $subscription = BookSubscription::create([
-            'student_id' => $student->id,
+            'student_id' => $user->id,
             'book_id' => $book->id,
             'start_date' => now(),
             'end_date' => now()->addYear(),
@@ -158,18 +210,13 @@ class BookController extends Controller
     public function requestBorrow(Request $request, Book $book)
     {
         $user = Auth::user();
-        $student = $user->student;
-
-        if (!$student) {
-            return response()->json(['error' => 'Student profile required'], 403);
-        }
 
         if (!$book->has_hardcopy) {
             return response()->json(['error' => 'This book is not available in hardcopy format'], 400);
         }
 
         // Check if already borrowed
-        $existingBorrowing = $student->bookBorrowings()
+        $existingBorrowing = $user->bookBorrowings()
             ->where('book_id', $book->id)
             ->whereIn('status', ['borrowed', 'pending_approval'])
             ->first();
@@ -179,7 +226,7 @@ class BookController extends Controller
         }
 
         $borrowing = BookBorrowing::create([
-            'student_id' => $student->id,
+            'user_id' => $user->id,
             'book_id' => $book->id,
             'request_date' => now(),
             'status' => 'pending_approval',
@@ -196,7 +243,6 @@ class BookController extends Controller
     public function read(Book $book)
     {
         $user = Auth::user();
-        $student = $user->student;
 
         if (!$book->has_softcopy) {
             // todo: uncomment
@@ -205,16 +251,21 @@ class BookController extends Controller
 
         // Check subscription for paid books
         if ($book->annual_subscription_fee > 0) {
-            $subscription = $student->bookSubscriptions()
+            $subscription = $user->bookSubscriptions()
                 ->where('book_id', $book->id)
-                ->where('status', 'active')
+                ->where('status', 'paid')
                 ->first();
 
             if (!$subscription) {
-                // return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
+                 return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
             }
         }
 
         return view('books.read', compact('book'));
+    }
+
+    public function preview(Book $book)
+    {
+        return view('books.preview', compact('book'));
     }
 }

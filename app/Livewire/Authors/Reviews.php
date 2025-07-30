@@ -2,13 +2,17 @@
 
 namespace App\Livewire\Authors;
 
-use App\Livewire\AppComponent;
 use App\Models\Author;
-use Illuminate\Support\Facades\DB;
+use App\Models\BookReview;
 use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Livewire\Component;
+use Livewire\WithPagination;
 
-class Reviews extends AppComponent
+class Reviews extends Component
 {
+    use WithPagination;
+
     public Author $author;
     public $search = '';
     public $ratingFilter = 'all';
@@ -39,68 +43,65 @@ class Reviews extends AppComponent
 
     private function getReviews()
     {
-        $reviews = $this->author->books()
-            ->with(['reviews' => function ($reviewQuery) {
-                $reviewQuery->with(['student.user'])
-                    ->orderBy('created_at', $this->sortBy === 'latest' ? 'desc' : 'asc');
-
-                if ($this->search) {
-                    $reviewQuery->where(function ($q) {
-                        $q->where('review_content', 'like', '%' . $this->search . '%')
-                          ->orWhereHas('student.user', function ($userQuery) {
-                              $userQuery->where('name', 'like', '%' . $this->search . '%');
-                          });
-                    });
-                }
-
-                if ($this->ratingFilter !== 'all') {
-                    $reviewQuery->where('rating', $this->ratingFilter);
-                }
-            }])
-            ->when($this->bookFilter !== 'all', function ($q) {
-                $q->where('id', $this->bookFilter);
+        $query = BookReview::query()
+            ->whereHas('book', function ($bookQuery) {
+                $bookQuery->where('author_id', $this->author->id);
             })
-            ->get()
-            ->flatMap(function ($book) {
-                return $book->reviews->map(function ($review) use ($book) {
-                    $review->book = $book;
-                    return $review;
-                });
-            });
+            ->with(['book', 'user'])
+            ->approved(); // Only show approved reviews
 
-        // Apply sorting
-        if ($this->sortBy === 'rating_high') {
-            $reviews = $reviews->sortByDesc('rating');
-        } elseif ($this->sortBy === 'rating_low') {
-            $reviews = $reviews->sortBy('rating');
-        } elseif ($this->sortBy === 'oldest') {
-            $reviews = $reviews->sortBy('created_at');
-        } else {
-            $reviews = $reviews->sortByDesc('created_at');
+        // Apply search filter
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('review', 'like', '%' . $this->search . '%')
+                  ->orWhere('title', 'like', '%' . $this->search . '%')
+                  ->orWhere('reviewer_name', 'like', '%' . $this->search . '%')
+                  ->orWhereHas('user', function ($userQuery) {
+                      $userQuery->where('name', 'like', '%' . $this->search . '%');
+                  });
+            });
         }
 
-        // Manual pagination
-        $currentPage = request()->get('page', 1);
-        $offset = ($currentPage - 1) * $this->perPage;
-        $paginatedReviews = $reviews->slice($offset, $this->perPage);
+        // Apply rating filter
+        if ($this->ratingFilter !== 'all') {
+            $query->where('rating', $this->ratingFilter);
+        }
 
-        return new \Illuminate\Pagination\LengthAwarePaginator(
-            $paginatedReviews,
-            $reviews->count(),
-            $this->perPage,
-            $currentPage,
-            ['path' => request()->url(), 'pageName' => 'page']
-        );
+        // Apply book filter
+        if ($this->bookFilter !== 'all') {
+            $query->where('book_id', $this->bookFilter);
+        }
+
+        // Apply sorting
+        switch ($this->sortBy) {
+            case 'rating_high':
+                $query->orderBy('rating', 'desc')->orderBy('created_at', 'desc');
+                break;
+            case 'rating_low':
+                $query->orderBy('rating', 'asc')->orderBy('created_at', 'desc');
+                break;
+            case 'helpful':
+                $query->orderBy('helpful_count', 'desc')->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        return $query->paginate($this->perPage);
     }
 
     private function getReviewStats()
     {
-        $allReviews = $this->author->books()
-            ->with('reviews')
-            ->get()
-            ->flatMap(function ($book) {
-                return $book->reviews;
-            });
+        $bookIds = $this->author->books()->pluck('id');
+
+        $allReviews = BookReview::whereIn('book_id', $bookIds)
+            ->approved()
+            ->get();
 
         $totalReviews = $allReviews->count();
         $averageRating = $totalReviews > 0 ? $allReviews->avg('rating') : 0;
@@ -114,6 +115,7 @@ class Reviews extends AppComponent
         ];
 
         $recentReviews = $allReviews->where('created_at', '>', now()->subDays(30))->count();
+        $verifiedReviews = $allReviews->where('is_verified_purchase', true)->count();
 
         return [
             'total_reviews' => $totalReviews,
@@ -121,6 +123,9 @@ class Reviews extends AppComponent
             'rating_breakdown' => $ratingBreakdown,
             'recent_reviews' => $recentReviews,
             'positive_reviews' => $allReviews->where('rating', '>=', 4)->count(),
+            'verified_reviews' => $verifiedReviews,
+            'verification_rate' => $totalReviews > 0 ? round(($verifiedReviews / $totalReviews) * 100, 1) : 0,
+            'most_helpful_review' => $allReviews->sortByDesc('helpful_count')->first(),
             'response_rate' => $this->calculateResponseRate($allReviews),
         ];
     }
@@ -130,7 +135,7 @@ class Reviews extends AppComponent
         $totalReviews = $reviews->count();
         if ($totalReviews === 0) return 0;
 
-        // Assuming we have a replied_at field or similar
+        // Count reviews that have author replies (you'll need to add this field if needed)
         $repliedReviews = $reviews->whereNotNull('author_reply')->count();
         return round(($repliedReviews / $totalReviews) * 100, 1);
     }
@@ -184,16 +189,59 @@ class Reviews extends AppComponent
             'replyContent' => 'required|min:10|max:1000',
         ]);
 
-        // Here you would save the reply to the database
-        // Review::find($this->selectedReview)->update(['author_reply' => $this->replyContent]);
+        $review = BookReview::find($this->selectedReview);
+        if ($review) {
+            // You might want to add an author_reply field to the book_reviews table
+            $review->update([
+                'author_reply' => $this->replyContent,
+                'author_replied_at' => now()
+            ]);
+        }
 
         $this->closeReplyModal();
         $this->dispatch('review-reply-sent');
+        session()->flash('message', 'Reply sent successfully!');
     }
 
-    public function markAsHelpful($reviewId)
+    public function toggleHelpful($reviewId)
     {
-        // Implementation for marking review as helpful
-        $this->dispatch('review-marked-helpful', ['reviewId' => $reviewId]);
+        if (!auth()->check()) {
+            $this->dispatch('show-login-modal');
+            return;
+        }
+
+        $review = BookReview::find($reviewId);
+        if ($review) {
+            $wasHelpful = $review->toggleHelpfulVote(auth()->id());
+
+            $this->dispatch('review-helpful-toggled', [
+                'reviewId' => $reviewId,
+                'wasHelpful' => $wasHelpful,
+                'helpfulCount' => $review->helpful_count
+            ]);
+        }
+    }
+
+    public function reportReview($reviewId)
+    {
+        if (!auth()->check()) {
+            $this->dispatch('show-login-modal');
+            return;
+        }
+
+        // Here you could implement review reporting functionality
+        // For now, just show a success message
+        $this->dispatch('review-reported', ['reviewId' => $reviewId]);
+        session()->flash('message', 'Review has been reported for moderation.');
+    }
+
+    public function getReviewsProperty()
+    {
+        return $this->getReviews();
+    }
+
+    public function getReviewStatsProperty()
+    {
+        return $this->getReviewStats();
     }
 }

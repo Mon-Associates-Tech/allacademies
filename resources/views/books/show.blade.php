@@ -1,243 +1,742 @@
 <x-layouts.app>
-
+    @php
+        $cover = $book->cover_image;
+    @endphp
     <div x-data="{
-    showImageModal: false,
-    imageModalSrc: '',
-    showNotification: false,
-    notificationMessage: '',
-    notificationType: 'success',
-    init() {
-        // Listen for browser events dispatched from Livewire
-        window.addEventListener('notify', event => {
-            this.notificationMessage = event.detail.message;
-            this.notificationType = event.detail.type || 'success';
-            this.showNotification = true;
-            setTimeout(() => { this.showNotification = false }, 5000);
-        });
-    }
-}"
-         x-init="init()"
-         class="min-h-screen rounded-lg bg-gray-50 dark:bg-gray-900/95">
+        currentTab: 'overview',
+        showPreviewModal: false,
+        showShareMenu: false,
+        isBookmarked: false,
+        showNotesModal: false,
+        notes: '',
+        imageLoaded: false,
+        isLoading: false,
+        toggleTab(tab) {
+            this.currentTab = tab;
+            window.history.pushState({}, '', `#${tab}`);
+        },
+        initTab() {
+            const hash = window.location.hash.replace('#', '');
+            this.currentTab = hash || 'overview';
+            // Check if bookmarked
+            this.isBookmarked = localStorage.getItem('bookmarked_{{ $book->id }}') === 'true';
+            // Load saved notes
+            this.notes = localStorage.getItem('notes_{{ $book->id }}') || '';
+        },
+        toggleBookmark() {
+            this.isBookmarked = !this.isBookmarked;
+            localStorage.setItem('bookmarked_{{ $book->id }}', this.isBookmarked);
+        },
+        saveNotes() {
+            localStorage.setItem('notes_{{ $book->id }}', this.notes);
+            this.showNotesModal = false;
+        },
+        copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            // Show toast notification (you can implement this)
+        }
+    }" x-init="initTab()"
+         class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 rounded-md dark:from-gray-900 dark:to-gray-800">
 
-        <div x-show="showNotification"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="transform opacity-0 translate-y-2"
-             x-transition:enter-end="transform opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-300"
-             x-transition:leave-start="transform opacity-100 translate-y-0"
-             x-transition:leave-end="transform opacity-0 translate-y-2"
-             class="fixed top-5 right-5 w-full max-w-xs z-[100000]"
-             style="display: none;">
-            <div class="p-4 rounded-xl shadow-2xl"
-                 :class="{
-                'bg-gradient-to-br from-green-500 to-emerald-600 text-white': notificationType === 'success',
-                'bg-gradient-to-br from-red-500 to-rose-600 text-white': notificationType === 'error'
-             }">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <svg x-show="notificationType === 'success'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <svg x-show="notificationType === 'error'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div class="ml-3 w-0 flex-1 pt-0.5">
-                        <p class="text-sm font-semibold" x-text="notificationMessage"></p>
-                    </div>
-                    <div class="ml-4 flex-shrink-0 flex">
-                        <button @click="showNotification = false" class="inline-flex text-white/70 hover:text-white">
-                            <span class="sr-only">Close</span>
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                        </button>
-                    </div>
-                </div>
+        <!-- Breadcrumb Navigation -->
+        <div class="rounded-t-md bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ route('books.index') }}"
+                               class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Books
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                          clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ route('books.index', ['category' =>$book->bookCategory->id]) }}"
+                                   class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white md:ml-2">
+                                    {{ $book->bookCategory->name }}
+                                </a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                          clip-rule="evenodd"></path>
+                                </svg>
+                                <span
+                                    class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2 truncate">{{ $book->title }}</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
             </div>
         </div>
 
-        <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-            <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
-        <header class="sticky top-0 z-50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-b border-gray-200/80 dark:border-gray-800/80">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <button onclick="history.back()" class="group inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm hover:shadow-md transition-all">
-                            <svg class="w-5 h-5 mr-1.5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            Back
-                        </button>
-                        <div class="hidden sm:block">
-                            <h1 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                                {{ $book->title }}
-                            </h1>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">by {{ $book->author->user->name }}</p>
-                        </div>
-                    </div>
-
-                    @auth
-                        @if(auth()->user()->hasRole('author'))
-                            <div class="flex items-center space-x-3">
-                                <a href="{{ route('author.books.edit', $book) }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    Edit
-                                </a>
-                            </div>
-                        @endif
-                    @endauth
-                </div>
+        <!-- Hero Section -->
+        <div class="relative">
+            <!-- Background Image with Overlay -->
+            <div class="absolute inset-0 h-[500px] overflow-hidden">
+                <div x-show="!imageLoaded" class="w-full h-full bg-gray-300 animate-pulse"></div>
+                <img src="{{ $cover }}"
+                     alt=""
+                     class="w-full h-full object-cover blur-lg opacity-30 transition-opacity duration-300"
+                     x-show="imageLoaded"
+                     wire:load="imageLoaded = true">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-50 dark:to-gray-900"></div>
             </div>
-        </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
-                        <div class="relative group">
-                            <div class="aspect-w-16 aspect-h-9 max-h-[450px] rounded-xl overflow-hidden shadow-2xl">
-                                <img src="{{ $book->cover_image }}" alt="{{ $book->title }}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 cursor-pointer" @click="imageModalSrc = '{{ $book->cover_image }}'; showImageModal = true">
-                            </div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent rounded-xl pointer-events-none"></div>
-                            <div class="absolute bottom-4 left-4">
-                                <h2 class="text-4xl font-bold text-white drop-shadow-lg">{{ $book->title }}</h2>
-                                <span class="inline-flex mt-2 items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-200">{{ $book->bookCategory->name }}</span>
-                            </div>
-                            @if($book->content_url)
-                                <a href="{{route('books.read', $book)}}"
-                                   class="absolute bottom-4 right-4 {{ $canRead ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-500 cursor-not-allowed' }} text-white p-3 rounded-full shadow-lg {{ $canRead ? 'transform hover:scale-110 transition-all duration-200' : '' }}"
-                                   {{ $canRead ? '' : 'disabled' }} aria-label="Read Book">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                                </a>
-                            @endif
+            <!-- Quick Stats Bar -->
+            <div
+                class="relative z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                    <div class="flex flex-wrap items-center gap-6 text-sm">
+                        <div class="flex items-center text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            {{ $book->pages }} pages
                         </div>
-                    </div>
-
-                    <div class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
-                        @auth
-                            @if(auth()->user()->student)
-                                @if($subscription && $subscription->status === 'active')
-                                    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6">
-                                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                                            <div class="flex items-center">
-                                                <svg class="w-8 h-8 text-green-500 dark:text-green-400 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                <div>
-                                                    <h3 class="text-lg font-semibold text-green-800 dark:text-green-200">Subscription Active</h3>
-                                                    <p class="text-sm text-green-600 dark:text-green-400">You have access until {{ $subscription->end_date->format('F d, Y') }}.</p>
-                                                </div>
-                                            </div>
-                                            <button wire:click="openPdfReader" class="w-full sm:w-auto flex-shrink-0 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Start Reading</button>
-                                        </div>
-                                    </div>
-                                @elseif($subscription && $subscription->status === 'pending_payment')
-                                    <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6">
-                                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                                            <div class="flex items-center">
-                                                <svg class="w-8 h-8 text-yellow-500 dark:text-yellow-400 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-                                                <div>
-                                                    <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">Payment Pending</h3>
-                                                    <p class="text-sm text-yellow-600 dark:text-yellow-400">Complete your payment to unlock this book.</p>
-                                                </div>
-                                            </div>
-                                            <button wire:click="..." class="w-full sm:w-auto flex-shrink-0 bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Pay Now</button>
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="text-center">
-                                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Unlock Full Access</h3>
-                                        <p class="text-gray-600 dark:text-gray-400 mb-6">Subscribe to read this book online.</p>
-                                        <div class="bg-gray-100 dark:bg-gray-700/50 rounded-xl p-6 mb-6">
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">Annual Subscription</p>
-                                            <p class="my-2">
-                                                @if($book->is_free)
-                                                    <span class="text-4xl font-extrabold text-green-600 dark:text-green-400">FREE</span>
-                                                @else
-                                                    <span class="text-4xl font-extrabold text-gray-800 dark:text-white">{{ $book->formatted_subscription_fee }}</span>
-                                                @endif
-                                            </p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Billed once per year</p>
-                                        </div>
-                                        <button wire:click="subscribeToBook" wire:loading.attr="disabled" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
-                                            <span wire:loading.remove wire:target="subscribeToBook">{{ $book->is_free ? 'Get Instant Access' : 'Subscribe & Pay' }}</span>
-                                            <span wire:loading wire:target="subscribeToBook">Processing...</span>
-                                        </button>
-                                    </div>
-                                @endif
-                            @endif
+                        <div class="flex items-center text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            {{ $book->bookCategory->name }}
+                        </div>
+                        <div class="flex items-center text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            ~{{ ceil($book->pages / 250) }} hour read
+                        </div>
+                        @if($book->is_free)
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                Free
+                            </span>
                         @else
-                            <div class="text-center">
-                                <svg class="w-16 h-16 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Join to Read</h3>
-                                <p class="text-gray-600 dark:text-gray-400 mb-4">Please log in or create an account to subscribe.</p>
-                                <a href="{{ route('sign-in') }}" class="inline-flex items-center px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Log In or Sign Up</a>
-                            </div>
-                        @endauth
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                Premium
+                            </span>
+                        @endif
+                        <!-- Star Rating -->
+                        <div class="flex items-center">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="w-4 h-4 {{ $i <= 4 ? 'text-yellow-400' : 'text-gray-300' }}"
+                                     fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                            @endfor
+
+                            <span class="ml-1 text-gray-600 dark:text-gray-400">(4.2)</span>
+                        </div>
+                        <!-- Social Activity -->
+                        <div class="flex items-center text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            {{ rand(120, 500) }} readers
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="lg:col-span-1 space-y-8" x-data="{ tab: 'details' }">
-                    <div class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-                        <div class="flex border-b border-gray-200/80 dark:border-gray-700/80">
-                            <button @click="tab = 'details'"
-                                    :class="tab === 'details' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
-                                    class="flex-1 p-4 font-medium border-b-2 transition-colors focus:outline-none">
-                                Details
-                            </button>
-                            @if(in_array(auth()->user()?->role, ['owner', 'author']))
-                                <button @click="tab = 'statistics'"
-                                        :class="tab === 'statistics' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
-                                        class="flex-1 p-4 font-medium border-b-2 transition-colors focus:outline-none">
-                                    Statistics
-                                </button>
-                            @endif
-                        </div>
+            <!-- Content -->
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Book Cover -->
+                    <div class="lg:col-span-4 xl:col-span-3">
+                        <div class="sticky top-24">
+                            <div
+                                class="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 group">
+                                <!-- Skeleton loader -->
+                                <div x-show="!imageLoaded" class="w-full h-full bg-gray-300 animate-pulse"></div>
+                                <img src="{{ $cover }}"
+                                     alt="{{ $book->title }}"
+                                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                                     x-show="imageLoaded"
+                                     @load="imageLoaded = true">
 
-                        <div class="p-6">
-                            <div x-show="tab === 'details'" x-transition>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Book Information</h3>
-                                <dl class="space-y-4">
-                                    <div class="flex justify-between">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Author</dt>
-                                        <dd class="text-sm text-gray-900 dark:text-white">{{ $book->author->user->name }}</dd>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Published</dt>
-                                        <dd class="text-sm text-gray-900 dark:text-white">{{ $book->created_at->format('M d, Y') }}</dd>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pages</dt>
-                                        <dd class="text-sm text-gray-900 dark:text-white">{{ $book->page_count ?? 'N/A' }}</dd>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Language</dt>
-                                        <dd class="text-sm text-gray-900 dark:text-white">English</dd>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Hard Copy</dt>
-                                        <dd class="text-sm">@if($book->has_hardcopy) <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 dark:bg-green-900 dark:text-green-200 rounded-full">Available</span> @else <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 dark:bg-red-900 dark:text-red-200 rounded-full">Unavailable</span> @endif</dd>
-                                    </div>
-                                </dl>
+                                <!-- Bookmark overlay -->
+                                <div class="absolute top-4 right-4">
+                                    <button @click="toggleBookmark()"
+                                            class="p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white transition-all duration-200"
+                                            :class="{ 'text-red-500': isBookmarked, 'text-gray-400': !isBookmarked }">
+                                        <svg class="w-5 h-5" :fill="isBookmarked ? 'currentColor' : 'none'"
+                                             stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
 
-                            @if(in_array(auth()->user()?->role, ['owner', 'author']))
-                                <div x-show="tab === 'statistics'" x-transition>
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Metrics</h3>
-                                    <div class="space-y-4">
-                                        <div class="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
-                                            <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Active Subscriptions</p>
-                                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $book->subscriptions_count ?? 0 }}</p>
-                                        </div>
-                                        <div class="p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30">
-                                            <p class="text-sm font-medium text-green-800 dark:text-green-300">Total Borrowings</p>
-                                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $book->borrowings_count ?? 0 }}</p>
-                                        </div>
-                                        <div class="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
-                                            <p class="text-sm font-medium text-purple-800 dark:text-purple-300">Est. Revenue</p>
-                                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">GHS {{ number_format(($book->subscriptions_count ?? 0) * $book->annual_subscription_fee, 2) }}</p>
-                                        </div>
+                            <!-- Action Buttons -->
+                            <div class="mt-6 space-y-3">
+                                <!-- Primary Action -->
+                                @if($canRead)
+                                    <a href="{{ route('books.read', $book) }}"
+                                       class="flex items-center justify-center w-full px-6 py-4 text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                                       x-data="{ loading: false }"
+                                       @click="loading = true">
+                                        <svg x-show="!loading" class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                        <svg x-show="loading" class="animate-spin w-5 h-5 mr-2" fill="none"
+                                             viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                    stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span x-text="loading ? 'Opening...' : 'Read Now'"></span>
+                                    </a>
+                                @else
+                                    <form method="POST" action="{{ route('books.subscribe.store', ['book' => $book]) }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="flex items-center justify-center w-full text-nowrap px-6 py-4 text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                                            </svg>
+                                            <span>Subscribe - GHS {{ number_format($book->annual_subscription_fee, 2) }}/year</span>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                <!-- Secondary Actions Grid -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <!-- Preview Button -->
+                                    @if($book->sample_url)
+                                        <button @click="showPreviewModal = true"
+                                                class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                            <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
+                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            <span class="text-sm font-medium">Preview</span>
+                                        </button>
+                                    @endif
+
+                                    <!-- Notes Button -->
+                                    <button @click="showNotesModal = true"
+                                            class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none"
+                                             stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium">Notes</span>
+                                    </button>
+                                </div>
+
+                                <!-- Share Button -->
+                                <div class="relative" x-data="{ open: false }">
+                                    <button @click="open = !open"
+                                            class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                                        </svg>
+                                        Share Book
+                                    </button>
+                                    <div x-show="open"
+                                         @click.away="open = false"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 transform scale-95"
+                                         x-transition:enter-end="opacity-100 transform scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="opacity-100 transform scale-100"
+                                         x-transition:leave-end="opacity-0 transform scale-95"
+                                         class="absolute right-0 w-56 mt-2 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700">
+                                        <button @click="copyLink(); open = false"
+                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
+                                                 viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                            Copy Link
+                                        </button>
+                                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($book->title) }}&url={{ urlencode(request()->url()) }}"
+                                           target="_blank"
+                                           class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                                                </svg>
+                                                Share on Twitter
+                                            </div>
+                                        </a>
+                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}"
+                                           target="_blank"
+                                           class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                                </svg>
+                                                Share on Facebook
+                                            </div>
+                                        </a>
                                     </div>
                                 </div>
-                            @endif
+
+                                <!-- Add to Reading List -->
+                                <button
+                                    class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add to Reading List
+                                </button>
+                            </div>
+
+                            <!-- Quick Facts Card -->
+                            <div
+                                class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Quick Facts</h3>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Author:</span>
+                                        <span
+                                            class="font-medium text-gray-900 dark:text-white">{{ $book->author->user->name }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Pages:</span>
+                                        <span
+                                            class="font-medium text-gray-900 dark:text-white">{{ $book->pages }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Publisher:</span>
+                                        <span
+                                            class="font-medium text-gray-900 dark:text-white">{{ $book->publisher }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Edition:</span>
+                                        <span
+                                            class="font-medium text-gray-900 dark:text-white">{{ $book->edition }}</span>
+                                    </div>
+                                    @if($book->annual_subscription_fee)
+                                        <div
+                                            class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                            <span class="text-gray-600 dark:text-gray-400">Price:</span>
+                                            <span class="font-semibold text-green-600 dark:text-green-400">GHS {{ number_format($book->annual_subscription_fee, 2) }}/year</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Book Information -->
+                    <div class="lg:col-span-8 xl:col-span-9">
+                        <div class="space-y-6">
+                            <!-- Title and Author -->
+                            <div>
+                                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight">{{ $book->title }}</h1>
+                                <div class="mt-4 flex flex-wrap items-center gap-4">
+                                    <p class="text-xl text-gray-600 dark:text-gray-400">
+                                        by <a href="#"
+                                              class="text-blue-600 hover:text-blue-700 font-medium">{{ $book->author->name ?? $book->author->user->name }}</a>
+                                    </p>
+                                    <div class="flex items-center space-x-1">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <svg class="w-5 h-5 {{ $i <= 4 ? 'text-yellow-400' : 'text-gray-300' }}"
+                                                 fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                            </svg>
+                                        @endfor
+                                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">(4.2 from {{$book->reviews->count()}} reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced Tabs -->
+                            <div class="border-b border-gray-200 dark:border-gray-700">
+                                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                    <button @click="toggleTab('overview')"
+                                            :class="currentTab === 'overview' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Overview
+                                    </button>
+                                    <button @click="toggleTab('contents')"
+                                            :class="currentTab === 'contents' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                        </svg>
+                                        Contents
+                                        <span
+                                            class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">12</span>
+                                    </button>
+                                    <button @click="toggleTab('reviews')"
+                                            :class="currentTab === 'reviews' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                        </svg>
+                                        Reviews
+                                        <span
+                                            class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">{{$book->reviews->count()}}</span>
+                                    </button>
+                                    <button @click="toggleTab('author')"
+                                            :class="currentTab === 'author' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        Author
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content">
+                                <!-- Overview Tab -->
+                                <div x-show="currentTab === 'overview'"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                                     class="space-y-6">
+
+                                    <!-- Book Description -->
+                                    <div
+                                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">About This
+                                            Book</h2>
+                                        <div class="prose prose-gray dark:prose-invert max-w-none">
+                                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                                {{ $book->additional_info ?: 'This comprehensive textbook provides students with a thorough understanding of the subject matter. Written by experts in the field, it combines theoretical knowledge with practical applications to ensure students gain both conceptual understanding and real-world skills.' }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Key Features -->
+                                    <div
+                                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Key
+                                            Features</h2>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="flex items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div
+                                                        class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400"
+                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                                                        Interactive Content</h3>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">Engaging
+                                                        multimedia elements and interactive exercises</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div
+                                                        class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-green-600 dark:text-green-400"
+                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                                                        Updated Content</h3>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">Latest
+                                                        curriculum-aligned material and examples</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div
+                                                        class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-purple-600 dark:text-purple-400"
+                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                                                        Practice Questions</h3>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">Comprehensive
+                                                        exercises and assessment tools</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div
+                                                        class="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-orange-600 dark:text-orange-400"
+                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z"></path>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">Study
+                                                        Guides</h3>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">Structured
+                                                        learning paths and study materials</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Subscription Benefits -->
+                                    @unless($book->is_free)
+                                        <div
+                                            class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-700 p-6">
+                                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                                                Subscription Benefits</h2>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                @foreach(explode("\n", $book->subscription_conditions) as $condition)
+                                                    @if(trim($condition))
+                                                        <div class="flex items-start">
+                                                            <svg
+                                                                class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0"
+                                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                      stroke-width="2"
+                                                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                            <span
+                                                                class="text-sm text-gray-700 dark:text-gray-300">{{ trim($condition, '0123456789. ') }}</span>
+                                                        </div>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endunless
+                                </div>
+
+                                <!-- Contents Tab -->
+                                <div x-show="currentTab === 'contents'"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                                     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                                    <div class="space-y-4">
+                                        @livewire('books.book-table-of-contents', ['book' => $book])
+                                    </div>
+
+                                </div>
+
+                                <!-- Reviews Tab -->
+                                <div x-show="currentTab === 'reviews'"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                                     class="space-y-6">
+
+                                    @livewire('books.book-reviews', ['book' => $book])
+                                </div>
+
+                                <!-- Author Tab -->
+                                <div x-show="currentTab === 'author'"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                                     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                                   <x-common.author-profile variant="default"  :author="$book->author" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- Related Books Section -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
+            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
+
+            <div class="grid hidden grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @for($i = 1; $i <= 6; $i++)
+                    <div class="group cursor-pointer">
+                        <div
+                            class="aspect-[3/4] rounded-lg overflow-hidden shadow-md group-hover:shadow-lg transition-shadow duration-200">
+                            <div
+                                class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                <span class="text-gray-500 text-sm">Book {{ $i }}</span>
+                            </div>
+                        </div>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors duration-200">
+                            Related Book Title {{ $i }}</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Author Name</p>
+                    </div>
+                @endfor
+            </div>
+        </div>
+
+        <!-- Preview Modal -->
+        <div x-show="showPreviewModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 overflow-y-auto"
+             style="display: none;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                     @click="showPreviewModal = false"></div>
+                <div
+                    class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $book->title }} -
+                                Preview</h3>
+                            <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="aspect-video">
+                            <iframe :src="showPreviewModal ? '{{ $book->sample_url }}' : ''"
+                                    style="height: 90vh; width: 100%;" class="w-full h-full rounded-lg"
+                                    frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Modal -->
+        <div x-show="showNotesModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 overflow-y-auto"
+             style="display: none;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                     @click="showNotesModal = false"></div>
+                <div
+                    class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">My Notes
+                                - {{ $book->title }}</h3>
+                            <button @click="showNotesModal = false" class="text-gray-400 hover:text-gray-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <textarea x-model="notes"
+                                  class="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+                                  placeholder="Write your notes about this book here..."></textarea>
+                        <div class="mt-4 flex justify-end space-x-3">
+                            <button @click="showNotesModal = false"
+                                    class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Cancel
+                            </button>
+                            <button @click="saveNotes()"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Save Notes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Sticky Action Bar -->
+        <div
+            class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-40">
+            <div class="flex space-x-3">
+                @if($canRead)
+                    <a href="{{ route('books.read', $book) }}"
+                       class="flex-1 flex items-center justify-center px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-xl font-medium">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        Read Now
+                    </a>
+                @else
+                    <form method="POST" action="{{ route('books.subscribe.store', $book) }}" class="flex-1">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center justify-center px-4 py-3 text-white bg-green-600 hover:bg-green-700 rounded-xl font-medium">
+                            Subscribe
+                        </button>
+                    </form>
+                @endif
+                @if($book->sample_url)
+                    <button @click="showPreviewModal = true"
+                            class="px-4 py-3 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                @endif
+                <button @click="toggleBookmark()" class="px-4 py-3 rounded-xl transition-colors duration-200"
+                        :class="isBookmarked ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'">
+                    <svg class="w-5 h-5" :fill="isBookmarked ? 'currentColor' : 'none'" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 </x-layouts.app>

@@ -63,9 +63,9 @@ class SubscriptionController extends Controller
 
         // Get book subscriptions for current user's student
         $bookSubscriptions = collect();
-        if (auth()->user()->student) {
+
             $bookSubscriptions = BookSubscription::query()
-                ->where('student_id', auth()->user()->student->id)
+                ->where('user_id', auth()->user()->id)
                 ->with(['book', 'book.author', 'book.bookCategory', 'student'])
                 ->latest('id')
                 ->get()
@@ -92,7 +92,7 @@ class SubscriptionController extends Controller
                         'model' => $subscription,
                     ];
                 });
-        }
+
 
         // Combine both types of subscriptions
         $allSubscriptions = $regularSubscriptions->merge($bookSubscriptions)

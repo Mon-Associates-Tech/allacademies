@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\BookSubscription;
 use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
+use App\Traits\HandlesPayments;
 use Brick\Money\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    use HandlesPayments;
+
     /**
      * Display a listing of the resource.
      */
@@ -32,11 +35,11 @@ class PaymentController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('reference', 'LIKE', "%{$search}%")
-                      ->orWhere('amount', 'LIKE', "%{$search}%")
-                      ->orWhereHas('subscription.user', function ($userQuery) use ($search) {
-                          $userQuery->where('name', 'LIKE', "%{$search}%")
-                                   ->orWhere('email', 'LIKE', "%{$search}%");
-                      });
+                        ->orWhere('amount', 'LIKE', "%{$search}%")
+                        ->orWhereHas('subscription.user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+                        });
                 });
             })
             ->when($request->filled('status'), function ($query) use ($request) {
@@ -100,7 +103,9 @@ class PaymentController extends Controller
         if ($paymentType === 'book_subscription') {
             $bookSubscription = BookSubscription::where('reference', $reference)->first();
             if ($bookSubscription) {
-                return $this->processBookSubscriptionPayment($request, $bookSubscription);
+                $this->payForBookSubscription($request, $bookSubscription); // $this->processBookSubscriptionPayment($request, $bookSubscription);
+                return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
+
             } else {
                 throw ValidationException::withMessages([
                     'reference' => 'The provided reference is invalid.',
@@ -112,12 +117,45 @@ class PaymentController extends Controller
         $subscription = Subscription::where('reference', $reference)->first();
 
         if ($subscription) {
-            return $this->processSubscriptionPayment($request, $subscription);
+            $this->payForSubscription($request, $subscription);
+            return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
+
         } else {
             throw ValidationException::withMessages([
                 'reference' => 'The provided reference is invalid.',
             ]);
         }
+    }
+
+    /**
+     * Process the payment for a book subscription.
+     *
+     * @param PaymentRequest $request
+     * @param BookSubscription $bookSubscription
+     * @return RedirectResponse
+     */
+    public function processBookSubscriptionPayment(PaymentRequest $request, BookSubscription $bookSubscription)
+    {
+        try {
+            DB::transaction(function () use ($request, $bookSubscription) {
+                $amount = Money::of($request->validated('amount'), 'GHS');
+                $payment = new Payment([
+                    'reference' => $request->validated('reference'),
+                    'amount' => (string)$amount->getAmount(),
+                    'status' => PaymentStatus::SUCCEEDED,
+                    'currency' => 'GHS',
+                    'book_subscription_id' => $bookSubscription->id,
+                ]);
+                $payment->save();
+
+                $bookSubscription->status = SubscriptionStatus::PAID;
+                $bookSubscription->save();
+            });
+        } catch (Exception $e) {
+            return back()->with('error', 'An error occurred while processing the payment. Please try again.');
+        }
+
+        return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
     }
 
     /**
@@ -142,7 +180,7 @@ class PaymentController extends Controller
                 $amount = Money::of($request->validated('amount'), 'GHS');
                 $payment = new Payment([
                     'reference' => $request->validated('reference'),
-                    'amount' => (string) $amount->getAmount(),
+                    'amount' => (string)$amount->getAmount(),
                     'status' => PaymentStatus::SUCCEEDED,
                     'currency' => 'GHS',
                 ]);
@@ -160,36 +198,5 @@ class PaymentController extends Controller
         }
 
         return to_route('payments.index')->with('success', 'Payment for subscription has been manually recorded.');
-    }
-
-    /**
-     * Process the payment for a book subscription.
-     *
-     * @param PaymentRequest $request
-     * @param BookSubscription $bookSubscription
-     * @return RedirectResponse
-     */
-    private function processBookSubscriptionPayment(PaymentRequest $request, BookSubscription $bookSubscription)
-    {
-        try {
-            DB::transaction(function () use ($request, $bookSubscription) {
-                $amount = Money::of($request->validated('amount'), 'GHS');
-                $payment = new Payment([
-                    'reference' => $request->validated('reference'),
-                    'amount' => (string) $amount->getAmount(),
-                    'status' => PaymentStatus::SUCCEEDED,
-                    'currency' => 'GHS',
-                    'book_subscription_id' => $bookSubscription->id,
-                ]);
-                $payment->save();
-
-                $bookSubscription->status = SubscriptionStatus::PAID;
-                $bookSubscription->save();
-            });
-        } catch (Exception $e) {
-            return back()->with('error', 'An error occurred while processing the payment. Please try again.');
-        }
-
-        return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
     }
 }

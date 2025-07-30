@@ -33,7 +33,7 @@
             </div>
 
             <a href="{{ route('dashboard') }}" wire:click="openBookModal"
-                    class="relative px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+               class="relative px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                 <i class="fas fa-plus mr-2"></i>
                 <span>Add New Book</span>
                 <div class="absolute inset-0 bg-white opacity-20 rounded-lg blur-xl -z-10"></div>
@@ -287,145 +287,109 @@
                 <!-- Grid View -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                     @foreach($books as $book)
-                        <div
-                            class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-violet-200 dark:hover:border-violet-700 transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-violet-300 dark:hover:border-violet-600 transition-all duration-300 transform hover:-translate-y-1.5">
                             <!-- Book Cover with Overlay -->
-                            <div
-                                class="relative aspect-1  bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-t-xl overflow-hidden">
+                            <div class="relative aspect-[3/4] max-h-64 w-full border-b border-gray-500 shadow-lg drop-shadow-md bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-t-xl overflow-hidden">
                                 @if($book->cover_image)
                                     <img src="{{ $book->cover_image }}"
                                          alt="{{ $book->title }}"
-                                         class="w-full  object-cover transition-transform duration-300 group-hover:scale-105">
+                                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                                 @else
-                                    <div
-                                        class="w-full h-48 flex items-center justify-center bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20">
-                                        <svg class="w-16 h-16 text-violet-400 dark:text-violet-500" fill="none"
-                                             stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/30">
+                                        <svg class="w-16 h-16 text-violet-400 dark:text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                         </svg>
                                     </div>
                                 @endif
 
                                 <!-- Status Badge - Positioned in top-right corner -->
-                                <div class="absolute top-3 right-3">
+                                <div class="absolute top-2 right-2">
                                     @if($book->status === 'published')
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-1 text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 rounded-full shadow-sm">
-                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            Published
-                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-800/50 dark:text-green-200 rounded-full shadow-sm">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                    </svg>
+                    Published
+                </span>
                                     @elseif($book->status === 'draft')
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-1 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100 rounded-full shadow-sm">
-                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path
-                                    d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                            </svg>
-                            Draft
-                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-800/50 dark:text-amber-200 rounded-full shadow-sm">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                    </svg>
+                    Draft
+                </span>
                                     @else
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-1 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 rounded-full shadow-sm">
-                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
-                            </svg>
-                            Review
-                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200 rounded-full shadow-sm">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+                    </svg>
+                    Review
+                </span>
                                     @endif
                                 </div>
 
                                 <!-- Quick Actions Overlay - Appears on hover -->
-                                <div
-                                    class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-2">
-                                    <button
-                                        class="p-2 bg-white dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-violet-900 transition-colors duration-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                <div class="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
+                                    <button class="p-2 bg-white/80 dark:bg-gray-800/80 rounded-full text-gray-900 dark:text-gray-100 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors duration-200">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </button>
-                                    <button
-                                        class="p-2 bg-white dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-violet-900 transition-colors duration-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    <button class="p-2 bg-white/80 dark:bg-gray-800/80 rounded-full text-gray-900 dark:text-gray-100 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors duration-200">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Book Info -->
-                            <div class="p-5">
+                            <div class="p-4">
                                 <!-- Title and Category -->
                                 <div class="mb-3">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors duration-200">
+                                    <h3 class="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors duration-200">
                                         {{ $book->title }}
                                     </h3>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                         </svg>
                                         {{ $book->bookCategory->name ?? 'No Category' }}
                                     </p>
                                 </div>
 
                                 <!-- Enhanced Stats Grid -->
-                                <div class="grid grid-cols-2 gap-3 mb-4">
-                                    <div
-                                        class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-3 text-center border border-green-100 dark:border-green-800">
+                                <div class="grid grid-cols-2 gap-2 mb-3">
+                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-2 text-center border border-green-100 dark:border-green-800">
                                         <div class="flex items-center justify-center mb-1">
-                                            <svg class="w-4 h-4 text-green-600 dark:text-green-400 mr-1" fill="none"
-                                                 stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                            <svg class="w-3 h-3 text-green-600 dark:text-green-400 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                             </svg>
-                                            <span
-                                                class="text-lg font-bold text-green-700 dark:text-green-300">{{ number_format($book->subscriptions_count) }}</span>
+                                            <span class="text-sm font-bold text-green-700 dark:text-green-300">{{ number_format($book->subscriptions_count) }}</span>
                                         </div>
-                                        <div class="text-xs text-green-600 dark:text-green-400 font-medium">
-                                            Subscriptions
-                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400 font-medium">Subscriptions</div>
                                     </div>
-                                    <div
-                                        class="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-lg p-3 text-center border border-purple-100 dark:border-purple-800">
+                                    <div class="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/30 dark:to-violet-900/30 rounded-lg p-2 text-center border border-purple-100 dark:border-purple-800">
                                         <div class="flex items-center justify-center mb-1">
-                                            <svg class="w-4 h-4 text-purple-600 dark:text-purple-400 mr-1" fill="none"
-                                                 stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            <svg class="w-3 h-3 text-purple-600 dark:text-purple-400 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                             </svg>
-                                            <span
-                                                class="text-lg font-bold text-purple-700 dark:text-purple-300">{{ number_format($book->borrowings_count) }}</span>
+                                            <span class="text-sm font-bold text-purple-700 dark:text-purple-300">{{ number_format($book->borrowings_count) }}</span>
                                         </div>
-                                        <div class="text-xs text-purple-600 dark:text-purple-400 font-medium">
-                                            Borrowings
-                                        </div>
+                                        <div class="text-xs text-purple-600 dark:text-purple-400 font-medium">Borrowings</div>
                                     </div>
                                 </div>
 
                                 <!-- Revenue Section -->
-                                <div
-                                    class="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg p-3 text-center mb-4 border border-yellow-100 dark:border-yellow-800">
+                                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-lg p-2 text-center mb-3 border border-yellow-100 dark:border-yellow-800">
                                     <div class="flex items-center justify-center mb-1">
-                                        <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400 mr-1" fill="none"
-                                             stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        <svg class="w-3 h-3 text-yellow-600 dark:text-yellow-400 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
-                                        <span
-                                            class="text-lg font-bold text-yellow-700 dark:text-yellow-300">GHS {{ number_format($book->annual_subscription_fee, 2) }}</span>
+                                        <span class="text-sm font-bold text-yellow-700 dark:text-yellow-300">GHS {{ number_format($book->annual_subscription_fee, 2) }}</span>
                                     </div>
-                                    <div class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Annual
-                                        Subscription
-                                    </div>
+                                    <div class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Annual Subscription</div>
                                 </div>
 
                                 <!-- Performance Indicator -->
@@ -434,15 +398,12 @@
                                     $performanceClass = $performanceScore >= 50 ? 'text-green-600 dark:text-green-400' :
                                                        ($performanceScore >= 20 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-400');
                                 @endphp
-                                <div class="flex items-center justify-center mb-4 text-sm">
-                                    <span class="text-gray-600 dark:text-gray-400 mr-2">Performance:</span>
+                                <div class="flex items-center justify-center mb-3 text-xs">
+                                    <span class="text-gray-600 dark:text-gray-400 mr-1">Performance:</span>
                                     <div class="flex items-center">
                                         @for($i = 1; $i <= 5; $i++)
-                                            <svg
-                                                class="w-4 h-4 {{ $performanceScore >= ($i * 10) ? $performanceClass : 'text-gray-300 dark:text-gray-600' }}"
-                                                fill="currentColor" viewBox="0 0 20 20">
-                                                <path
-                                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            <svg class="w-3 h-3 {{ $performanceScore >= ($i * 10) ? $performanceClass : 'text-gray-300 dark:text-gray-600' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                             </svg>
                                         @endfor
                                     </div>
@@ -450,29 +411,22 @@
 
                                 <!-- Enhanced Actions -->
                                 <div class="flex space-x-2">
-                                    <a href="{{route('author.books.show', ['book' => $book])}}"
-                                       class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm">
+                                    <a href="{{route('author.books.show', ['book' => $book])}}" class="flex-1 inline-flex items-center justify-center px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                         View
                                     </a>
-                                    <a href="#"
-                                       class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-all duration-200">
+                                    <a href="#" class="flex-1 inline-flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-all duration-200">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                         Edit
                                     </a>
-                                    <button wire:click="confirmDelete({{ $book->id }})"
-                                            class="inline-flex items-center justify-center px-3 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800">
+                                    <button wire:click="confirmDelete({{ $book->id }})" class="inline-flex items-center justify-center px-2 py-1 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-medium rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </button>
                                 </div>

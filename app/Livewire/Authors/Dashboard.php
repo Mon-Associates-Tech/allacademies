@@ -79,7 +79,7 @@ class Dashboard extends Component
         if ($author) {
             $books = $author->books();
             $this->totalBooks = $books->count();
-            $this->publishedBooks = $books->whereNotNull('cover_image')->count();
+            $this->publishedBooks = $books->whereNotNull('status')->where('status', 'published')->count();
             $this->draftBooks = $books->whereNull('cover_image')->count();
             $this->totalSubscriptions = $books->withCount('subscriptions')->get()->sum('subscriptions_count');
             $this->totalRevenue = $books->get()->sum('annual_subscription_fee');
@@ -260,9 +260,10 @@ class Dashboard extends Component
 
             if ($this->statusFilter) {
                 if ($this->statusFilter === 'published') {
-                    $query->whereNotNull('cover_image_path');
+                    $query->where('status', 'published');
                 } elseif ($this->statusFilter === 'draft') {
-                    $query->whereNull('cover_image_path');
+                    $query->whereNull('status')
+                        ->orWhere('status', 'draft');
                 }
             }
 

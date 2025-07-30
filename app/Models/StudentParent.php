@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class StudentParent extends Model
 {
@@ -21,7 +22,11 @@ class StudentParent extends Model
     public function student(){
         return $this->belongsTo(Student::class);
     }
-    public function students(){
-        return $this->belongsToMany(Student::class, 'parent_student', 'parent_id', 'student_id');
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'parent_student', 'parent_id', 'student_id')
+            ->withPivot('relationship')
+            ->withTimestamps();
     }
+
 }

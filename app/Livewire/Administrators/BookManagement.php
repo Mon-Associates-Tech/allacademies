@@ -96,6 +96,7 @@ class BookManagement extends Component
 
     public function showCreateForm()
     {
+        return redirect(route('admin.create-book'));
         $this->showForm = true;
         $this->isEditing = false;
         $this->resetForm();
@@ -160,8 +161,8 @@ class BookManagement extends Component
             'additional_info' => $this->additionalInfo,
             'annual_subscription_fee' => $this->annualSubscriptionFee,
             'subscription_conditions' => $this->subscriptionConditions,
-            'cover_image_path' => $coverPath,
-            'pdf_file_path' => $pdfPath,
+            'cover_image' => $coverPath,
+            'content_url' => $pdfPath,
         ]);
 
         $this->resetForm();
@@ -239,8 +240,8 @@ class BookManagement extends Component
             'additional_info' => $this->additionalInfo,
             'annual_subscription_fee' => $this->annualSubscriptionFee,
             'subscription_conditions' => $this->subscriptionConditions,
-            'cover_image_path' => $coverPath,
-            'pdf_file_path' => $pdfPath,
+            'cover_image' => $coverPath,
+            'content_url' => $pdfPath,
         ]);
 
         $this->resetForm();

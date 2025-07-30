@@ -13,7 +13,7 @@ class BookSubscription extends Model
     use HasFactory, LogsActivity;
 
     protected $fillable = [
-        'student_id',
+        'user_id',
         'book_id',
         'start_date',
         'end_date',
@@ -46,6 +46,10 @@ class BookSubscription extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function user(){
+        return $this->belongsTo(User::class);
     }
 
     public function isPending(): bool

@@ -72,17 +72,17 @@ class DashboardController extends Controller
             'total_users' => User::whereHas('joinedTeams', function ($query) use ($teamId) {
                 $query->where('team_id', $teamId);
             })->count(),
-            'active_subscriptions' => BookSubscription::where('status', 'active')
-                ->whereHas('student.user', function ($query) use ($teamId) {
+            'active_subscriptions' => BookSubscription::where('status', 'paid')
+                ->whereHas('user', function ($query) use ($teamId) {
                     $query->where('current_team_id', $teamId);
                 })->count(),
             'books_borrowed_today' => BookBorrowing::whereDate('created_at', today())
-                ->whereHas('student.user', function ($query) use ($teamId) {
+                ->whereHas('user', function ($query) use ($teamId) {
                     $query->where('current_team_id', $teamId);
                 })->count(),
             'overdue_books' => BookBorrowing::where('status', 'active')
                 ->where('due_date', '<', now())
-                ->whereHas('student.user', function ($query) use ($teamId) {
+                ->whereHas('user', function ($query) use ($teamId) {
                     $query->where('current_team_id', $teamId);
                 })->count(),
         ];
@@ -93,16 +93,16 @@ class DashboardController extends Controller
         $teamId = auth()->user()->current_team_id;
 
         return [
-            'recent_borrowings' => BookBorrowing::with(['student.user', 'book'])
-                ->whereHas('student.user', function ($query) use ($teamId) {
+            'recent_borrowings' => BookBorrowing::with(['user', 'book'])
+                ->whereHas('user', function ($query) use ($teamId) {
                     $query->where('current_team_id', $teamId);
                 })
                 ->latest()
                 ->take(5)
                 ->get(),
-            'new_subscriptions' => BookSubscription::with(['student.user', 'book'])
-                ->where('status', 'active')
-                ->whereHas('student.user', function ($query) use ($teamId) {
+            'new_subscriptions' => BookSubscription::with(['user', 'book'])
+                ->where('status', 'paid')
+                ->whereHas('user', function ($query) use ($teamId) {
                     $query->where('current_team_id', $teamId);
                 })
                 ->whereDate('created_at', '>=', now()->subDays(7))
@@ -115,14 +115,14 @@ class DashboardController extends Controller
     private function getUpcomingEvents()
     {
         return [
-            'due_returns' => BookBorrowing::with(['student.user', 'book'])
+            'due_returns' => BookBorrowing::with(['user', 'book'])
                 ->where('status', 'active')
                 ->whereBetween('due_date', [now(), now()->addDays(7)])
                 ->orderBy('due_date')
                 ->take(10)
                 ->get(),
-            'expiring_subscriptions' => BookSubscription::with(['student.user', 'book'])
-                ->where('status', 'active')
+            'expiring_subscriptions' => BookSubscription::with(['user', 'book'])
+                ->where('status', 'paid')
                 ->whereBetween('end_date', [now(), now()->addDays(30)])
                 ->orderBy('end_date')
                 ->take(10)

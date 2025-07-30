@@ -158,11 +158,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //    Route::resource('academic-topics.subtopics', SubtopicController::class);
 
 
-    Route::post('export/pdf', static function(){
-       return exportToPdf();
+    Route::post('export/pdf', static function () {
+        return exportToPdf();
 
     })->name('export.pdf');
-    Route::post('export/word', static function(){
+    Route::post('export/word', static function () {
         return exportToWord();
 
     })->name('export.word');
@@ -299,8 +299,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
     Route::get('/essays', function () {
-        $assessments = Assessment::whereHas('responses', fn($q) =>
-        $q->whereJsonContains('data->needs_grading', true)
+        $assessments = Assessment::whereHas('responses', fn($q) => $q->whereJsonContains('data->needs_grading', true)
         )->with('student.user')->get();
 
         return view('livewire.teachers.essay-dashboard', compact('assessments'));
@@ -311,7 +310,6 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
-    // Existing routes
 
     // Hierarchical academic routes with full nesting
     Route::resource('academic-groups', AcademicGroupController::class);
@@ -352,8 +350,6 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
             });
         });
     });
-
-    // Other existing routes
 });
 
 Route::get('/mail', static function () {
@@ -404,7 +400,7 @@ Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'sho
 Route::middleware(['auth'])->group(function () {
 //    Route::get('/books', [BookController::class, 'index'])->name('books.index');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
-    Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
+//    Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
 //    Route::get('/books/{book}/read', [BookController::class, 'read'])->name('books.read');
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
@@ -422,19 +418,6 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('teachers.')->group(fu
 
 });
 
-Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(function () {
-//    Route::get('/dashboard', Dashboard::class)->name('dashboard');
-    Route::get('/student-management', StudentManagement::class)->name('student-management');
-    Route::get('/student-groups', GroupManagement::class)->name('student-groups');
-    Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
-    Route::get('/book-management', BookManagement::class)->name('book-management');
-    Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
-    Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
-    Route::get('/logins', UserLoginLog::class)->name('logins');
-    Route::get('/author-management', AuthorManagement::class)->name('author-management');
-    Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
-});
-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -445,10 +428,22 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::get('books', [BookController::class, 'index'])->name('books.index');
-Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
-
 Route::middleware(['auth'])->group(function () {
+    Route::get('books', [BookController::class, 'index'])->name('books.index');
+    Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
+    Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
+    Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])
+        ->name('books.payment-instructions');
+    Route::post('books/{book}/subscribe', [BookSubscriptionController::class, 'store'])
+        ->name('books.subscribe.store');
+    Route::get('subscriptions/{subscription}/payment', [BookSubscriptionController::class, 'showPayment'])
+        ->name('subscriptions.payment.show');
+    Route::post('subscriptions/{subscription}/verify-payment', [BookSubscriptionController::class, 'verifyPayment'])
+        ->name('subscriptions.payment.verify');
+    Route::delete('subscriptions/{subscription}/cancel', [BookSubscriptionController::class, 'cancel'])
+        ->name('subscriptions.cancel');
+
+    Route::post('/books/{book}/reviews/')->name('books.reviews.store');
     Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
 });
 
