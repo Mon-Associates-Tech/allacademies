@@ -76,7 +76,7 @@ class Book extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('status', 'published');
+        return $query->where('status', 'published')->orWhere('status', 'active');
     }
 
     public function getCoverImageAttribute()
