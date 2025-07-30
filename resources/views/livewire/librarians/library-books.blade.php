@@ -276,7 +276,7 @@
 
                         <button
                             class="flex-1 px-3 py-1 text-xs font-medium text-violet-700 bg-violet-100 rounded-lg hover:bg-violet-200 transition-colors"
-                            onclick="window.location.href='{{ route('librarian.books.show', $book->id) }}'"
+                            onclick="window.location.href='{{ route('books.show', $book->id) }}'"
                         >
                             View Details
                         </button>
