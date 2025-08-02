@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Throwable;
 
 class SubscriptionController extends Controller
@@ -32,9 +34,15 @@ class SubscriptionController extends Controller
      * Display a listing of the resource.
      *
      * @return Application|Factory|View|\Illuminate\View\View
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function index()
     {
+        $user = auth()->user();
+
+        $user->ensureUserHasTeam();
+
         // Get regular subscriptions
         $regularSubscriptions = Subscription::query()
             ->where('team_id', auth()->user()->current_team_id)
@@ -151,6 +159,10 @@ class SubscriptionController extends Controller
                 })->toArray()
             ];
         })->toArray();
+
+        if (!$user->currentTeam){
+            return redirect()->route('teams.create')->with('error', 'Please create a team before creating a subscription.');
+        }
 
         return view('subscriptions.create', [
             'academicGroups' => $academicGroups,

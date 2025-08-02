@@ -5,7 +5,7 @@
     @can('privileged', $currentTeam)
         <div class="text-right mb-4">
             <x-link.primary
-                :to="route('quizzes.create', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
+                :to="$academicSubject->getQuizCreateRoute()">
                 New Quiz
             </x-link.primary>
         </div>

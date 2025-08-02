@@ -12,6 +12,7 @@ class Students extends Component
 {
     use WithPagination;
 
+
     public $teacher;
     public $search = '';
     public $selectedGroup = '';
@@ -30,6 +31,9 @@ class Students extends Component
 
     public function getStudentsQuery()
     {
+
+
+        return $this->teacher->getStudentsWithDetails();
         $query = collect();
 
         // Get students from direct assignments

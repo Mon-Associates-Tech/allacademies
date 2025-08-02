@@ -25,4 +25,5 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(funct
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
+    Route::get('datamanager', \App\Livewire\Common\DataManager::class)->name('data-manager');
 });

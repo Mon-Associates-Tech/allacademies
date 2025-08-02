@@ -83,9 +83,6 @@
                             <div class="px-6 py-4 space-y-6">
                                 <!-- Team Name -->
                                 <div>
-                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Team Name <span class="text-red-500">*</span>
-                                    </label>
                                     <x-form.input
                                         name="name"
                                         type="text"

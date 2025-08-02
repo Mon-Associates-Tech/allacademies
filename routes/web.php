@@ -5,11 +5,13 @@ use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\AcademicTopicController;
 use App\Http\Controllers\AuditTeamController;
+use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ExaminationController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
@@ -38,6 +40,7 @@ use App\Livewire\Administrators\StudentManagement;
 use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
 use App\Livewire\Administrators\UserLoginLog;
+use App\Livewire\Students\Courses;
 use App\Livewire\Teachers\EssayGrader;
 use App\Models\Assessment;
 use Illuminate\Support\Facades\Route;
@@ -73,7 +76,12 @@ use App\Http\Controllers\BookApprovalController;
 |
 */
 
-Route::view('/', 'branding');
+Route::view('/', 'branding')->name('home');
+Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
+Route::view('/terms', 'branding.terms')->name('branding.terms');
+Route::view('/contact', 'branding.contact')->name('branding.contact');
+Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+
 
 Route::middleware('guest')->group(function () {
     Route::get('sign-in', [SignInController::class, 'create'])->name('sign-in');
@@ -446,6 +454,24 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/books/{book}/reviews/')->name('books.reviews.store');
     Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
 });
+
+// routes/web.php - Add subscriber routes
+Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(function () {
+    Route::get('/library', \App\Livewire\Subscribers\Library::class)->name('library');
+    Route::get('/assessments', \App\Livewire\Subscribers\Assessments::class)->name('assessments');
+    Route::get('/quizzes', \App\Livewire\Subscribers\Quizzes::class)->name('quizzes');
+    Route::get('/progress', \App\Livewire\Subscribers\Progress::class)->name('progress');
+    Route::get('/forums', \App\Livewire\Forums\ForumManagement::class)->name('forums');
+    Route::get('/groups', \App\Livewire\Subscribers\StudyGroups::class)->name('groups');
+    Route::get('/premium', \App\Livewire\Subscribers\Premium::class)->name('premium');
+    Route::get('/analytics', \App\Livewire\Subscribers\Analytics::class)->name('analytics');
+    Route::get('courses', Courses::class)->name('courses');
+});
+
+// Add these routes to your existing web.php file
+
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
 include 'student.php';
 include 'teacher.php';

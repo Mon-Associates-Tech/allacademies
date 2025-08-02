@@ -42,7 +42,7 @@ class SubscriberDashboard extends Component
 
         // Get user's subscribed books if they have a student profile
         if ($user->student) {
-            $this->subscribedBooks = BookSubscription::where('student_id', $user->student->id)
+            $this->subscribedBooks = BookSubscription::where('user_id', $user->id)
                 ->where('status', 'active')
                 ->with(['book', 'book.author', 'book.author.user', 'book.category'])
                 ->take(3)
@@ -61,7 +61,7 @@ class SubscriberDashboard extends Component
 
         // Get subscription statistics
         $this->subscriptionStats = [
-            'total_subscriptions' => $user->student ? BookSubscription::where('student_id', $user->student->id)
+            'total_subscriptions' => $user->student ? BookSubscription::where('user_id', $user->id)
                 ->where('status', 'active')
                 ->count() : 0,
             'free_books_available' => $this->freeBooks,
@@ -81,7 +81,7 @@ class SubscriberDashboard extends Component
 
         // Check if already subscribed
         $existingSubscription = BookSubscription::where('book_id', $bookId)
-            ->where('student_id', $user->student->id)
+            ->where('user_id', $user->id)
             ->where('status', 'active')
             ->first();
 
@@ -93,7 +93,7 @@ class SubscriberDashboard extends Component
         // Create subscription
         BookSubscription::create([
             'book_id' => $bookId,
-            'student_id' => $user->student->id,
+            'user_id' => $user->id,
             'status' => 'active',
             'subscription_date' => now(),
             'expiry_date' => now()->addYear(),

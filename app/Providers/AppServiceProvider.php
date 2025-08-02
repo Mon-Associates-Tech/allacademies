@@ -12,6 +12,8 @@ use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\EssayQuestion;
 use App\Models\Examination;
+use App\Models\Forum\ForumCategory;
+use App\Models\Forum\ForumTopic;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\Payment;
 use App\Models\Role;
@@ -81,6 +83,12 @@ class AppServiceProvider extends ServiceProvider
             'notification' => DatabaseNotification::class,
             'book_reading_progress' => \App\Models\BookReadingProgress::class,
             'login_activity' => \App\Models\LoginActivity::class,
+            'forum_category' => ForumCategory::class,
+            'forum_topic' => ForumTopic::class,
+            'forum_post' => \App\Models\Forum\ForumPost::class,
+            'forum_reaction' => \App\Models\Forum\ForumReaction::class,
+            'forum_mention' => \App\Models\Forum\ForumMention::class,
+
         ]);
     }
 }

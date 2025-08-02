@@ -58,7 +58,10 @@ class Courses extends Component
         $student = auth()->user()->student;
 
         if (!$student) {
-            abort(403, 'Student record not found.');
+            $student = Student::create([
+                'user_id' => auth()->id(),
+                'team_id' => auth()->user()->current_team_id,
+            ]);
         }
 
         // Get student's accessible subjects using the getSubjectDetails method
@@ -100,7 +103,6 @@ class Courses extends Component
             session()->flash('message', 'You don\'t have any active academic subjects.');
         }
 
-
         return view('livewire.students.courses', [
             'academicSubjects' => $academicSubjects,
             'currentTeam' => $currentTeam,
@@ -108,4 +110,5 @@ class Courses extends Component
             'subjectDetails' => $subjectDetails
         ]);
     }
+
 }

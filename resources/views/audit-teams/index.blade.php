@@ -1,4 +1,4 @@
-<x-layouts.app title="Teams (Auditing)">
+<x-layouts.app page-name="Teams (Auditing)">
     <x-slot name="breadcrumb">
         <x-breadcrumb />
     </x-slot>

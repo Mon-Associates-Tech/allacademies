@@ -61,8 +61,8 @@ class Dashboard extends Component
             return;
         }
 
-        // Get total counts
-        $this->totalStudents = $this->teacher->assignedStudents()->count();
+        // Get total counts using new helper methods
+        $this->totalStudents = $this->teacher->getStudentsCount(); // Uses getAllStudents() internally
         $this->totalAssignments = $this->teacher->assignments()->count();
         $this->totalSubjects = $this->teacher->academicSubjects()->count();
 
@@ -83,12 +83,18 @@ class Dashboard extends Component
             ->get()
             ->toArray();
 
-        // Get my students
-        $this->myStudents = $this->teacher->assignedStudents()
-            ->with(['user', 'academicLevel.academicGroup'])
-            ->take(20)
-            ->get()
-            ->toArray();
+        // Get all students (including automatically associated ones) - limit to 20 for dashboard
+        $allStudents = $this->teacher->getAllStudents();
+        $this->myStudents = $allStudents->take(20)->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'user' => $student->user->toArray(),
+                'academic_level' => $student->academicLevel ? $student->academicLevel->toArray() : null,
+                'academic_group' => $student->academicLevel && $student->academicLevel->academicGroup
+                    ? $student->academicLevel->academicGroup->toArray()
+                    : null,
+            ];
+        })->toArray();
 
         // Get my subjects
         $this->mySubjects = $this->teacher->academicSubjects()
@@ -96,13 +102,18 @@ class Dashboard extends Component
             ->get()
             ->toArray();
 
-        // Get my academic levels
+        // Get my academic levels with enhanced student count
         $this->myAcademicLevels = $this->teacher->academicLevels()
-            ->with(['academicGroup', 'students'])
+            ->with(['academicGroup'])
             ->get()
+            ->map(function ($level) {
+                $levelArray = $level->toArray();
+                // Get actual count of students this teacher has access to in this level
+                $levelArray['accessible_students_count'] = $this->teacher->getStudentsByLevel($level->id)->count();
+                return $levelArray;
+            })
             ->toArray();
     }
-
     public function refreshDashboard(): void
     {
         $this->loadDashboardMetrics();

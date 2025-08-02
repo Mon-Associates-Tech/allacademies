@@ -27,14 +27,16 @@ class TeamController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $team->load('members', 'owner');
+        // Check if user can switch to this team
+        if (!$user->canSwitchToTeam($team)) {
+            return redirect()->back()->withErrors(['error' => 'You cannot switch to this team.']);
+        }
 
-        Gate::allowIf($team->owner->is($user) || $team->members->contains($user));
-
-        $user->currentTeam()->associate($team)->save();
+        $user->setCurrentTeam($team);
 
         return to_route('teams.index')->with('success', __('status.team.activate', ['name' => $team->name]));
     }
+
 
     /**
      * Display a listing of the resource.
@@ -46,48 +48,44 @@ class TeamController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
+        // Ensure user has a team
+        $user->ensureUserHasTeam();
+
         $user->load('currentTeam');
 
-        // Get base query for owned teams
-        $ownedTeamsQuery = $user->ownedTeams()->withCount('subscriptions', 'members');
+        // Get all accessible teams using the unified method
+        $teams = $user->getAllUserTeams();
 
-        // Get base query for joined teams
-        $joinedTeamsQuery = $user->joinedTeams()->with('owner')->withCount('subscriptions', 'members');
+        // Load additional data for display
+        $teams->load(['owner', 'members']);
+        $teams->loadCount('subscriptions', 'members');
 
         // Apply search filter
         if (request('search')) {
             $search = request('search');
-            $ownedTeamsQuery->where('name', 'like', "%{$search}%");
-            $joinedTeamsQuery->where('name', 'like', "%{$search}%");
+            $teams = $teams->filter(function($team) use ($search) {
+                return stripos($team->name, $search) !== false;
+            });
         }
 
         // Apply specific filters
         if (request('owned')) {
-            $joinedTeamsQuery = $joinedTeamsQuery->whereRaw('1 = 0'); // Return no joined teams
+            $teams = $teams->where('owner_id', $user->id);
         } elseif (request('joined')) {
-            $ownedTeamsQuery = $ownedTeamsQuery->whereRaw('1 = 0'); // Return no owned teams
+            $teams = $teams->where('owner_id', '!=', $user->id);
         }
 
         // Apply personal filter
         if (request('personal')) {
-            $ownedTeamsQuery->where('is_personal', true);
-            $joinedTeamsQuery->whereRaw('1 = 0'); // Personal teams can't be joined
+            $teams = $teams->where('is_personal', true);
         }
 
-        $ownedTeams = $ownedTeamsQuery->get();
-        $ownedTeams->each(fn (Team $team) => $team->setRelation('owner', $user));
-
-        $joinedTeams = $joinedTeamsQuery->get();
-
-        $teams = $ownedTeams->merge($joinedTeams);
-        unset($ownedTeams, $joinedTeams);
-        $teams = $teams->sort();
-
         return view('teams.index', [
-            'teams' => $teams,
+            'teams' => $teams->values(), // Reset collection keys
             'user' => $user,
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -106,70 +104,77 @@ class TeamController extends Controller
      * @return RedirectResponse|null
      * @throws \Throwable
      */
-public function store(Request $request): ?RedirectResponse
-{
-    $request->validate([
-        'name' => ['required', 'string', 'min:2', 'max:100'],
-        'description' => ['nullable', 'string', 'max:500'],
-        'type' => ['required', 'in:academic,professional,personal'],
-        'privacy' => ['required', 'in:private,public'],
-        'generate_code' => ['boolean'],
-        'auto_activate' => ['boolean'],
-    ], [
-        'name.required' => 'Team name is required.',
-        'name.min' => 'Team name must be at least 2 characters.',
-        'name.max' => 'Team name cannot exceed 100 characters.',
-        'description.max' => 'Description cannot exceed 500 characters.',
-        'type.required' => 'Please select a team type.',
-        'type.in' => 'Invalid team type selected.',
-        'privacy.required' => 'Please select privacy settings.',
-        'privacy.in' => 'Invalid privacy setting selected.',
-    ]);
-
-    try {
-        DB::beginTransaction();
-
-        $team = Team::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'type' => $request->type,
-            'privacy' => $request->privacy,
-            'owner_id' => auth()->id(),
-            'is_active' => $request->boolean('auto_activate', true),
-            'joining_code' => $request->boolean('generate_code', true) ? Str::random(8) : null,
-            'created_at' => now(),
+    public function store(Request $request): ?RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'type' => ['required', 'in:academic,professional,personal'],
+            'privacy' => ['required', 'in:private,public'],
+            'allow_member_switching' => ['boolean'],
+            'generate_code' => ['boolean'],
+            'auto_activate' => ['boolean'],
+        ], [
+            'name.required' => 'Team name is required.',
+            'name.min' => 'Team name must be at least 2 characters.',
+            'name.max' => 'Team name cannot exceed 100 characters.',
+            'description.max' => 'Description cannot exceed 500 characters.',
+            'type.required' => 'Please select a team type.',
+            'type.in' => 'Invalid team type selected.',
+            'privacy.required' => 'Please select privacy settings.',
+            'privacy.in' => 'Invalid privacy setting selected.',
         ]);
 
-        // Log team creation
-        Log::info('Team created', [
-            'team_id' => $team->id,
-            'owner_id' => auth()->id(),
-            'team_name' => $team->name,
-            'type' => $team->type,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        DB::commit();
+            $team = Team::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'type' => $request->type,
+                'privacy' => $request->privacy,
+                'owner_id' => auth()->id(),
+                'is_active' => true,
+                'allow_member_switching' => $request->boolean('allow_member_switching', true),
+                'is_personal' => $request->type === 'personal',
+                'joining_code' => $request->boolean('generate_code', true) ? Str::random(8) : null,
+            ]);
 
-        $message = __('status.resource.created', ['name' => $team->name]);
+            // Log team creation
+            Log::info('Team created', [
+                'team_id' => $team->id,
+                'owner_id' => auth()->id(),
+                'team_name' => $team->name,
+                'type' => $team->type,
+            ]);
 
-        if ($team->joining_code) {
-            $message .= ' ' . __('Your team code is: :code', ['code' => $team->joining_code]);
+            // Auto-activate if requested
+            if ($request->boolean('auto_activate', true)) {
+                auth()->user()->setCurrentTeam($team);
+            }
+
+            DB::commit();
+
+            $message = __('status.resource.created', ['name' => $team->name]);
+
+            if ($team->joining_code) {
+                $message .= ' ' . __('Your team code is: :code', ['code' => $team->joining_code]);
+            }
+
+            return redirect()->route('teams.index')->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating team', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'An error occurred while creating the team. Please try again.']);
         }
-
-        return redirect()->route('teams.index')->with('success', $message);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error creating team', [
-            'error' => $e->getMessage(),
-            'user_id' => auth()->id(),
-        ]);
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => 'An error occurred while creating the team. Please try again.']);
     }
-}
 
     /**
      * Show the form for editing the specified resource.
@@ -271,4 +276,46 @@ public function store(Request $request): ?RedirectResponse
         return to_route('teams.index')
             ->with('success', __('status.resource.deleted', ['name' => $team->name]));
     }
+
+    public function join(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'joining_code' => ['required', 'string', 'size:8'],
+        ]);
+
+        $team = Team::where('joining_code', $request->joining_code)->first();
+
+        if (!$team) {
+            return back()->withErrors(['joining_code' => 'Invalid joining code.']);
+        }
+
+        $user = Auth::user();
+
+        if (!$team->addMember($user)) {
+            return back()->withErrors(['error' => 'Unable to join this team.']);
+        }
+
+        return redirect()->route('teams.index')
+            ->with('success', __('Successfully joined team: :name', ['name' => $team->name]));
+    }
+
+    /**
+     * Leave a team
+     */
+    public function leave(Team $team): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($team->owner_id === $user->id) {
+            return back()->withErrors(['error' => 'You cannot leave a team you own.']);
+        }
+
+        if (!$team->removeMember($user)) {
+            return back()->withErrors(['error' => 'Unable to leave this team.']);
+        }
+
+        return redirect()->route('teams.index')
+            ->with('success', __('Successfully left team: :name', ['name' => $team->name]));
+    }
+
 }

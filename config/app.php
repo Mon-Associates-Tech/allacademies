@@ -214,5 +214,6 @@ return [
     ])->toArray(),
 
     'enable_otp' => env('ENABLE_OTP', false),
+    'enable_importers' => env('ENABLE_IMPORTERS', false),
 
 ];

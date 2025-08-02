@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasStudents;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Collection;
 
 class Teacher extends Model
 {
     use HasFactory;
+    use HasStudents;
 
     protected $fillable = ['user_id'];
 
@@ -109,4 +112,5 @@ class Teacher extends Model
     {
         return $this->belongsToMany(Book::class, 'teacher_book', 'teacher_id', 'book_id');
     }
+
 }

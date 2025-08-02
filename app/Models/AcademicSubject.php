@@ -150,4 +150,14 @@ class AcademicSubject extends Model
     public function assessments(){
         return $this->hasMany(Assessment::class, 'subject_id');
     }
+
+    public function getQuizCreateRoute()
+    {
+        return route('quizzes.create', [
+            'academic_group' => $this->academicLevel->academicGroup->id,
+            'academic_level' => $this->academicLevel->id,
+            'academic_subject' => $this->id
+        ]);
+    }
+
 }

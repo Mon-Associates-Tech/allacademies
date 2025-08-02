@@ -181,9 +181,9 @@
                             <div class="ml-3 text-sm">
                                 <label for="terms" class="text-gray-700">
                                     I agree to the
-                                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Terms of Service</a>
+                                    <a href="{{route('branding.terms')}}" class="font-medium text-blue-600 hover:text-blue-500">Terms of Service</a>
                                     and
-                                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                                    <a href="{{route('branding.privacy')}}" class="font-medium text-blue-600 hover:text-blue-500">Privacy Policy</a>
                                 </label>
                             </div>
                         </div>
@@ -203,10 +203,10 @@
                     </form>
 
                     <!-- Divider -->
-                    <div class="mt-8 mb-6">
+                    <div class="mt-8 mb-6 rounded-xl text-nowrap">
                         <div class="relative">
                             <div class="absolute inset-0 flex items-center">
-                                <div class="w-full border-t border-gray-300" />
+                                <div class="w-full rounded-xl border-t border-gray-300" />
                             </div>
                             <div class="relative flex justify-center text-sm">
                                 <span class="px-2 bg-gray-50 text-gray-500">Already have an account?</span>
@@ -215,10 +215,10 @@
                     </div>
 
                     <!-- Sign in link -->
-                    <div class="text-center">
+                    <div class="text-center text-nowrap rounded-xl">
                         <a
                             href="{{ route('sign-in') }}"
-                            class="inline-flex items-center justify-center w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            class="inline-flex items-center text-nowrap justify-center w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                         >
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>

@@ -64,7 +64,7 @@
 
         @if ($teams->count())
             <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
-                <x-table class="min-w-full divide-y divide-gray-200">
+                <x-table class="min-w-full divide-y divide-gray-200" style="z-index: 1">
                     <x-slot name="head">
                         <tr>
                             <x-table.th>
@@ -221,8 +221,30 @@
                                         </form>
                                     @endif
 
-                                    <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                                        <button @click="open = !open"
+                                    <div x-data="{
+            open: false,
+            toggle() {
+                this.open = !this.open;
+                if (this.open) {
+                    this.$nextTick(() => {
+                        this.positionDropdown();
+                    });
+                }
+            },
+            positionDropdown() {
+                const button = this.$refs.button;
+                const dropdown = this.$refs.dropdown;
+                const rect = button.getBoundingClientRect();
+
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = (rect.bottom + 4) + 'px';
+                dropdown.style.left = (rect.right - dropdown.offsetWidth) + 'px';
+            }
+        }"
+                                         @click.away="open = false"
+                                         @resize.window="open && positionDropdown()">
+                                        <button @click="toggle()"
+                                                x-ref="button"
                                                 type="button"
                                                 class="p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
                                                 :aria-expanded="open"
@@ -233,18 +255,21 @@
                                             </svg>
                                         </button>
 
+                                        <!-- Dropdown positioned fixed to body -->
                                         <div x-show="open"
+                                             x-ref="dropdown"
                                              x-transition:enter="transition ease-out duration-100"
                                              x-transition:enter-start="transform opacity-0 scale-95"
                                              x-transition:enter-end="transform opacity-100 scale-100"
                                              x-transition:leave="transition ease-in duration-75"
                                              x-transition:leave-start="transform opacity-100 scale-100"
                                              x-transition:leave-end="transform opacity-0 scale-95"
-                                             class="absolute right-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-50"
-                                             style="z-index: 1000;"
+                                             class="w-56 bg-white rounded-md shadow-lg border border-gray-200"
+                                             style="position: fixed; z-index: 9999;"
                                              role="menu"
                                              aria-orientation="vertical">
-                                            <div class="py-1">
+                                            <div class="py-1 text-left">
+                                                <!-- Your dropdown content here -->
                                                 <a href="{{ route('teams.members.index', ['team' => $team]) }}"
                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
                                                    role="menuitem"
@@ -255,9 +280,10 @@
                                                     View Members
                                                 </a>
 
+
                                                 @if ($team->owner->is($user))
                                                     <a href="{{ route('teams.edit', ['team' => $team]) }}"
-                                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+                                                       class="block text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
                                                        role="menuitem"
                                                        @click="open = false">
                                                         <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

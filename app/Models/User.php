@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserRole;
 use App\Traits\HasAvatar;
 use App\Traits\HasRoles;
+use App\Traits\HasTeams;
 use App\Traits\Trackable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use Trackable;
     use Impersonate;
     use HasRoles;
+    use HasTeams;
 
     /**
      * @var array<int, string>
@@ -100,21 +102,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(BookSubscription::class);
     }
 
-    public function joinedTeams(): BelongsToMany
-    {
-        return $this->belongsToMany(Team::class);
-    }
-
-    public function ownedTeams(): User|HasMany
-    {
-        return $this->hasMany(Team::class, 'owner_id');
-    }
-
-    public function currentTeam(): BelongsTo
-    {
-        return $this->belongsTo(Team::class);
-    }
-
     public function worksheets(): User|HasMany
     {
         return $this->hasMany(Worksheet::class);
@@ -150,51 +137,66 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected static function booted()
     {
+        // Handle both created and updated events
+        static::created(static function ($user) {
+            self::handleRoleChange($user);
+        });
+
         static::updated(static function ($user) {
             if ($user->isDirty('role')) {
-                // Handle student role
-                if ($user->hasRole('student')) {
-                    Student::firstOrCreate(
-                        ['user_id' => $user->id],
-                        ['student_group_id' => null]
-                    );
-                }
-
-                // Handle teacher role
-                if ($user->hasRole('teacher')) {
-                    Teacher::firstOrCreate(
-                        ['user_id' => $user->id],
-                        [/* default teacher fields */]
-                    );
-                }
-
-                // Handle author role
-                if ($user->hasRole('author')) {
-                    Author::firstOrCreate(
-                        ['user_id' => $user->id],
-                        [/* default author fields */]
-                    );
-                }
-
-                // Handle librarian role
-                if ($user->hasRole('librarian')) {
-                    Librarian::firstOrCreate(
-                        ['user_id' => $user->id],
-                        [/* default librarian fields */]
-                    );
-                }
-
-                // Handle parent role
-                if ($user->hasRole('parent')) {
-                    StudentParent::firstOrCreate(
-                        ['user_id' => $user->id],
-                        [
-                            'relationship' => null,
-                        ]
-                    );
-                }
+                self::handleRoleChange($user);
             }
         });
+    }
+
+    private static function handleRoleChange($user)
+    {
+        // Handle student role
+        if ($user->role === 'student') {
+            Student::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'student_group_id' => null,
+                    'academic_level_id' => null,
+                    'academic_group_id' => null,
+                    'school_id' => null,
+                ]
+            );
+        }
+
+        // Handle teacher role
+        if ($user->role === 'teacher') {
+            Teacher::firstOrCreate(
+                ['user_id' => $user->id],
+                [/* default teacher fields */]
+            );
+        }
+
+        // Handle author role
+        if ($user->role === 'author') {
+            Author::firstOrCreate(
+                ['user_id' => $user->id],
+                [/* default author fields */]
+            );
+        }
+
+        // Handle librarian role
+        if ($user->role === 'librarian') {
+            Librarian::firstOrCreate(
+                ['user_id' => $user->id],
+                [/* default librarian fields */]
+            );
+        }
+
+        // Handle parent role
+        if ($user->role === 'parent') {
+            StudentParent::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'relationship' => null,
+                ]
+            );
+        }
     }
 
     public function teacher(): HasOne
