@@ -57,7 +57,7 @@
 
                 <!-- Newsletter Subscription -->
                 <x-newsletter.subscription-form
-                    theme="dark"
+                    theme="light"
                     size="compact"
                     button-text="Subscribe"
                 />

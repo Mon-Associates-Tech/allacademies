@@ -74,7 +74,7 @@
                        x-model="form.email"
                        placeholder="Enter your email address"
                        required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
+                       class="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
             </div>
 
             <button type="submit"
