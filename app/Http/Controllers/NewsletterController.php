@@ -64,9 +64,9 @@ class NewsletterController extends Controller
         $success = $this->newsletterService->unsubscribe($token);
 
         if ($success) {
-            return view('newsletter.unsubscribed')->with('success', true);
+            return view('components.newsletter.unsubscribe')->with('success', true);
         }
 
-        return view('newsletter.unsubscribed')->with('success', false);
+        return view('components.newsletter.unsubscribe')->with('success', false);
     }
 }
