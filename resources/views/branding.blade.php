@@ -870,7 +870,7 @@
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-start">
                     <!-- Basic Plan -->
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 relative">
                         <div class="text-center">
@@ -881,52 +881,41 @@
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Quarterly Subscription</h3>
                             <p class="text-gray-600 dark:text-gray-300 mb-6">Ideal for trying out our platform</p>
+
                             <div class="mb-8">
-                                <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 15</span>
-                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/Subject</span>
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Basic Subscription
+                                </div>
+                                <div class="mb-2 text-nowrap">
+                                    <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 20</span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Subject For 3 Months</span>
+                            </div>
+
+                            <div class="mb-8">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Secondary Subscription
+                                </div>
+                                <div class="mb-2 text-nowrap">
+                                    <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 35</span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Subject For 3 Months</span>
                             </div>
                         </div>
 
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">3 Months  of access</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Access to 5,000+ books</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Basic search functionality</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Mobile app access</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Email support</span>
-                            </li>
-                        </ul>
-
-                        <a href="{{ route('sign-up') }}" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 px-8 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 block text-center">
+                        <a href="{{ route('sign-up') }}" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-4 px-8 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 block text-center">
                             Get Started
                         </a>
                     </div>
 
                     <!-- Premium Plan (Most Popular) -->
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-2 border-blue-500 dark:border-blue-400 p-8 relative transform scale-105">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-2 border-blue-500 dark:border-blue-400 p-8 relative">
                         <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
                             <span class="bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">Most Popular</span>
                         </div>
@@ -939,52 +928,35 @@
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Biannual Subscription</h3>
                             <p class="text-gray-600 dark:text-gray-300 mb-6">Great value for half-year access</p>
+
                             <div class="mb-8">
-                                <span class="text-5xl font-extrabold text-gray-900 dark:text-white">GHS 20</span>
-                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/6 months</span>
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Basic Subscription
+                                </div>
+                                <div class="mb-2 text-nowrap">
+                                    <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 30</span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Subject For 6 Months</span>
+                            </div>
+
+                            <div class="mb-8">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Secondary Subscription
+                                </div>
+                                <div class="mb-2 text-nowrap">
+                                    <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 50</span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Subject For 6 Months</span>
                             </div>
                         </div>
 
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Unlimited access to entire library</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Access to all future publications</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Download for offline reading</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Advanced search and filters</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Priority customer support</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Multi-device synchronization</span>
-                            </li>
-                        </ul>
-
-                        <a href="{{ route('sign-up') }}" class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-green-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 block text-center">
+                        <a href="{{ route('sign-up') }}" class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-green-700 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 block text-center">
                             Subscribe Now
                         </a>
                     </div>
@@ -999,64 +971,70 @@
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Annual Subscription</h3>
                             <p class="text-gray-600 dark:text-gray-300 mb-6">Our most popular option for dedicated learners</p>
+
                             <div class="mb-8">
-                                <span class="text-5xl font-extrabold text-gray-900 dark:text-white">GHS 30</span>
-                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/year</span>
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Basic Subscription
+                                </div>
+                                <div class="mb-2 text-nowrap">
+                                    <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 45</span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Subject For 1 Year</span>
+                            </div>
+
+                            <div class="mb-8">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Secondary Subscription
+                                </div>
+                                <div class="mb-2 text-nowrap">
+                                    <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 75</span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Subject For 1 Year</span>
+                            </div>
+
+                            <div class="mb-8">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Institutional Subscription
+                                </div>
+                                <div class="mb-4">
+                                    <span class="text-lg text-gray-900 dark:text-white">Basic</span>
+                                    <div class="mb-2 text-nowrap">
+                                        <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 45</span>
+                                    </div>
+                                    <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Student For All Subjects</span>
+                                </div>
+
+                                <div class="border-t border-slate-200 py-2 mt-2">
+                                    <span class="text-lg text-gray-900 dark:text-white">Secondary</span>
+                                    <div class="mb-2 text-nowrap">
+                                        <span class="text-4xl font-extrabold text-gray-900 dark:text-white">GHS 75</span>
+                                    </div>
+                                    <span class="text-lg font-medium text-gray-500 dark:text-gray-400">Per Student For All Subjects</span>
+                                </div>
                             </div>
                         </div>
 
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Everything in Premium</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Unlimited user accounts</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Advanced analytics</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Custom integrations</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">Dedicated account manager</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="h-5 w-5 text-green-500 mt-0.5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span class="text-gray-700 dark:text-gray-300">24/7 phone support</span>
-                            </li>
-                        </ul>
-
-                        <a href="{{route('sign-up')}}" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 px-8 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 block text-center">
+                        <a href="{{route('sign-up')}}" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 px-8 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 block text-center">
                             Get Started
                         </a>
                     </div>
                 </div>
-
                 <!-- Money-back guarantee -->
                 <div class="mt-16 text-center">
                     <div class="inline-flex items-center space-x-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 px-6 py-3 rounded-full">
                         <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span class="font-semibold">30-day money-back guarantee • Cancel anytime • No questions asked</span>
+                        <span class="font-semibold">Cancellation follows our <a href="{{route('branding.terms')}}" class="text-blue-600 dark:text-blue-400">Terms & Conditions</a></span>
                     </div>
                 </div>
             </div>

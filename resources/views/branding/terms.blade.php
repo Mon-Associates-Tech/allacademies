@@ -48,18 +48,18 @@
 
                         <!-- Section 1 -->
                         <section id="acceptance" class="scroll-mt-24">
-                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">1. Acceptance of Terms</h2>
-                            <p>By creating an account or using the Services, you affirm that you are at least 13 years of age (or have obtained parental/guardian consent if required by your local laws) and agree to comply with these Terms. If you are using the Services on behalf of an organization, you represent that you have the authority to bind that organization to these Terms.</p>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">1. Acceptance of Terms</h2>
+                            <p class="tracking-tight leading-normal">By creating an account or using the Services, you affirm that you are at least 13 years of age (or have obtained parental/guardian consent if required by your local laws) and agree to comply with these Terms. If you are using the Services on behalf of an organization, you represent that you have the authority to bind that organization to these Terms.</p>
                         </section>
 
                         <!-- Section 2 -->
                         <section id="services" class="scroll-mt-24">
-                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">2. Description of Services</h2>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">2. Description of Services</h2>
                             <p>All Academies provides a comprehensive educational platform that includes, but is not limited to:</p>
-                            <ul class="list-disc pl-6 space-y-2">
-                                <li>Access to a digital library of books, quizzes, and learning materials.</li>
-                                <li>A marketplace for authors to publish and monetize educational content.</li>
-                                <li>Management tools for students, teachers, and academic administrators.</li>
+                            <ul class="list-disc pl-6 space-y-">
+                                <li  class="tracking-tight leading-normal">Access to a digital library of books, quizzes, and learning materials.</li>
+                                <li  class="tracking-tight leading-normal">A marketplace for authors to publish and monetize educational content.</li>
+                                <li  class="tracking-tight leading-normal">Management tools for students, teachers, and academic administrators.</li>
                             </ul>
                             <p>We reserve the right to modify, suspend, or discontinue any part of our Services at any time, with or without notice.</p>
                         </section>
