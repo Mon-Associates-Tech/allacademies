@@ -20,3 +20,6 @@ yarn-error.log
 /public/js/tinymce/
 tools
 ddl
+.fleet
+.tinker
+.run
