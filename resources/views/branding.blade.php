@@ -1176,8 +1176,7 @@
 
                             <!-- Header -->
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Basic Subscription</h3>
-                            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">For Individuals in Basic and
-                                Junior High Schools</p>
+                            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">For Individuals in Basic Schools</p>
 
                             <!-- Pricing Options -->
                             <div class="space-y-6 mb-10">
@@ -1399,7 +1398,7 @@
                             <div class="space-y-5 mb-10">
                                 <!-- Quarterly -->
                                 <div
-                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-5 border border-blue-200 dark:border-blue-600 hover:border-blue-300 dark:hover:border-blue-500 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg">
+                                    class="bg-gradient-to-r hidden from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-5 border border-blue-200 dark:border-blue-600 hover:border-blue-300 dark:hover:border-blue-500 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg">
                                     <div
                                         class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-5">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1425,7 +1424,7 @@
 
                                 <!-- Biannual -->
                                 <div
-                                    class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-5 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg relative">
+                                    class="bg-gradient-to-r hidden from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-5 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg relative">
                                     <div
                                         class="absolute hidden -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                                         SAVE 10%
