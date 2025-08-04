@@ -76,7 +76,7 @@ class BookSubscriptionController extends Controller
                     [
                         'user_id' => auth()->user()->id,
                         'book_id' => $book->id,
-                        'reference' => $book->is_free ? 'FREE' : $reference,
+                        'reference' => $book->is_free ? 'FREE_'.uniqid() : $reference,
                         'annual_fee' => 0,
                         'status' => $book->is_free ? 'paid' : 'pending_payment',
                         'start_date' => now(),
@@ -85,7 +85,13 @@ class BookSubscriptionController extends Controller
                     ]
                 );
                 if ($book->is_free) {
-                    $this->payForBookSubscription($request, $subscription);
+
+                    $this->payForBookSubscription([
+                        'book' => $book,
+                        'subscription' => $subscription,
+                        'reference' => $subscription->reference,
+                        'amount' => 0.1,
+                    ], $subscription);
 
                 }
 

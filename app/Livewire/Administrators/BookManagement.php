@@ -277,7 +277,7 @@ class BookManagement extends Component
         $this->resetForm();
         $this->showForm = false;
         session()->flash('message', 'Book updated successfully!');
-        $this->emit('refreshBooks');
+//        $this->emit('refreshBooks');
     }
 
     public function delete($bookId)
