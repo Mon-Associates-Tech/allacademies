@@ -10,10 +10,11 @@ use App\Livewire\Students\StudentSchedule;
 
 Route::middleware(['auth'])->prefix('dashboard')->name('student.')->group(function () {
 
-Route::get('assessments', \App\Livewire\Students\SelfAssessment::class )->name('assessments');
+//Route::get('assessments', \App\Livewire\Students\SelfAssessment::class )->name('assessments');
 //Route::get('assessments', \App\Livewire\Assessment\SubjectSelectionComponent::class )->name('assessments');
 //Route::get('assessments', \App\Livewire\Assessment\QuestionGeneratorComponent::class )->name('assessments');
 //Route::get('assessments', \App\Livewire\Assessment\UnifiedAssessmentComponent::class )->name('assessments');
+Route::get('assessments', \App\Livewire\Assessment\QuizTakingComponent::class )->name('assessments');
 Route::get('performance', PerformanceOverview::class)->name('performance');
 Route::get('account', StudentProfile::class)->name('account');
 Route::get('activities', ActivityLogs::class)->name('activities');

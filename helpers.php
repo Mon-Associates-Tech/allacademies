@@ -210,3 +210,33 @@ if (!function_exists('set_school_setting')) {
         return SchoolSetting::set($key, $value);
     }
 }
+
+/**
+ * Generate a route with academic hierarchy parameters
+ *
+ * @param string $routeName The route name
+ * @param array $parameters Route parameters (e.g., ['essay_question' => $model])
+ * @param array $overrides Override specific academic parameters
+ * @return string The generated route URL
+ */
+function academicRoute(string $routeName, array $parameters = [], array $overrides = []): string
+{
+    // Default academic parameters from current route
+    $academicParams = [
+        'academic_group' => getRouteParameter('academic_group'),
+        'academic_level' => getRouteParameter('academic_level'),
+        'academic_subject' => getRouteParameter('academic_subject'),
+        'academic_topic' => getRouteParameter('academic_topic'),
+    ];
+
+    // Override with any provided values
+    $academicParams = array_merge($academicParams, $overrides);
+
+    // Filter out null values
+    $academicParams = array_filter($academicParams);
+
+    // Merge with provided parameters
+    $allParams = array_merge($academicParams, $parameters);
+
+    return route($routeName, $allParams);
+}

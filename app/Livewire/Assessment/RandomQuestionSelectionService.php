@@ -232,7 +232,7 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
                 'type' => $question['type'],
                 'question' => $formatted['question'] ?? '',
                 'options' => $formatted['options'] ?? [],
-                'correct_answer' => $formatted['correct_answer'] ?? null,
+                'answer' => $formatted['answer'] ?? null,
                 'difficulty' => $question['difficulty'],
                 'points' => $question['points'],
                 'subject_id' => $question['subject_id'],

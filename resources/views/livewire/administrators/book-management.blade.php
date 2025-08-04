@@ -507,21 +507,10 @@
                                 @endif
                             </div>
                         </th>
-                        <th class="w-40 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                            wire:click="sortBy('author')">
-                            <div class="flex items-center space-x-1">
-                                <span>Author</span>
-                                @if($sortBy === 'author')
-                                    <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? 'transform rotate-180' : '' }}" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path>
-                                    </svg>
-                                @endif
-                            </div>
-                        </th>
 {{--                        <th class="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>--}}
                         <th class="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
                         <th class="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fee</th>
-{{--                        <th class="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>--}}
+                        <th class="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="w-32 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                     </thead>
@@ -550,6 +539,7 @@
                                         <div class="min-w-0 flex-1">
                                             <div class="text-sm font-semibold text-gray-900 leading-5">{{ $book->title }}</div>
                                             <div class="text-xs text-gray-500 mt-1">
+                                                <div class="text-sm font-medium text-gray-900">{{ $book->author->user->name }}</div>
                                                 @if($book->edition)Edition {{ $book->edition }}@endif
                                                 @if($book->edition && $book->publisher) • @endif
                                                 @if($book->publisher){{ $book->publisher }}@endif
@@ -562,14 +552,6 @@
                                 </a>
 
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $book->author->user->name }}</div>
-                            </td>
-{{--                            <td class="px-6 py-4 whitespace-nowrap">--}}
-{{--                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">--}}
-{{--                                        {{ $book->bookCategory->name }}--}}
-{{--                                    </span>--}}
-{{--                            </td>--}}
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex flex-col space-y-1">
                                     @if($book->has_hardcopy)
@@ -603,6 +585,36 @@
                                             Available
                                         </span>
                                 @endif
+                            </td>
+                            <td class="px- py-2 whitespace-nowrap text-center">
+                                @php
+                                    // Handle legacy boolean/integer status values
+                                    $statusEnum = App\Enums\PublishingStatus::fromLegacy($book->status);
+                                    $isPublished = $statusEnum === App\Enums\PublishingStatus::PUBLISHED;
+                                @endphp
+
+                                <div class="flex flex-col items-center space-y-1">
+                                    <!-- Toggle Switch -->
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox"
+                                               wire:click="toggleBookStatus({{ $book->id }})"
+                                               {{ $isPublished ? 'checked' : '' }}
+                                               class="sr-only peer">
+                                        <div class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 hover:peer-checked:bg-green-600"></div>
+                                    </label>
+
+                                    <!-- Status Text -->
+                                    <span class="text-xs font-medium {{ $isPublished ? 'text-green-600' : 'text-yellow-600' }}">
+                                        {{ $statusEnum->getLabel() }}
+                                    </span>
+
+                                    <!-- Debug info (remove in production) -->
+                                    @if(config('app.debug'))
+                                        <span class="text-xs text-gray-400">
+                                            Raw: {{ $book->status }}
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="flex items-center justify-end space-x-2">

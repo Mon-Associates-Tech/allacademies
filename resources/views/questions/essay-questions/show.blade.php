@@ -302,13 +302,13 @@
                     <x-button.secondary
                         type="button"
                         x-data="{}"
-                        x-on:click="$store.deleteForm.show('Delete Question', 'Are you sure?', '{{ route('essay-questions.destroy', ['essay_question' => $essayQuestion, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_topic' => getRouteParameter('academic_topic'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}')"
+                        x-on:click="$store.deleteForm.show('Delete Question', 'Are you sure?', '{{academicRoute('essay-questions.destroy', ['essay_question' => $essayQuestion])}}')"
                         class="flex-1"
                     >
                         Delete
                     </x-button.secondary>
                     <x-link.primary
-                        :to="route('essay-questions.edit', ['essay_question' => $essayQuestion, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_topic' => getRouteParameter('academic_topic'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])"
+                        :to="academicRoute('essay-questions.destroy', ['essay_question' => $essayQuestion])"
                         class="flex-1"
                     >
                         Edit

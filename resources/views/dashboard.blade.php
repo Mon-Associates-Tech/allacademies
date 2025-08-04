@@ -1,25 +1,5 @@
-@php use App\Enums\UserRole; @endphp
 <x-layouts.app :has-action="false" page-name="Dashboard">
 
-
-    <div class="grid-cols-12 gap-6 hidden">
-
-        <!-- Doughnut chart (Top Countries) -->
-        <x-dashboard.dashboard-card-06/>
-
-        <!-- Table (Top Channels) -->
-        <x-dashboard.dashboard-card-07/>
-
-        <!-- Card (Customers) -->
-        <x-dashboard.dashboard-card-10/>
-
-        <!-- Card (Recent Activity) -->
-        <x-dashboard.dashboard-card-12/>
-
-        <!-- Card (Income/Expenses) -->
-        <x-dashboard.dashboard-card-13/>
-
-    </div>
     @php
         $user = Auth::user();
         $primaryRole = $user->role; // This is the main role from the role field

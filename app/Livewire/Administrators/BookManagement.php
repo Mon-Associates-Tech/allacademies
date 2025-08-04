@@ -8,6 +8,7 @@ use Livewire\WithFileUploads;
 use App\Models\Book;
 use App\Models\Author;
 use App\Models\BookCategory;
+use App\Enums\PublishingStatus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -50,6 +51,7 @@ class BookManagement extends Component
     public $authors;
     public $bookCategories;
     public $isAdmin = true;
+    public string $status = 'published';
 
     protected $rules = [
         'title' => 'required|min:3|max:255',
@@ -73,6 +75,31 @@ class BookManagement extends Component
     {
         $this->authors = Author::with('user')->orderBy('id')->get();
         $this->bookCategories = BookCategory::orderBy('name')->get();
+    }
+
+    /**
+     * Toggle the publishing status of a book
+     */
+    public function toggleBookStatus($bookId)
+    {
+        try {
+            $book = Book::findOrFail($bookId);
+
+            // Convert current status from legacy format if needed
+            $currentStatus = PublishingStatus::fromLegacy($book->status);
+
+            // Toggle between published and draft
+            $newStatus = $currentStatus === PublishingStatus::PUBLISHED
+                ? PublishingStatus::DRAFT
+                : PublishingStatus::PUBLISHED;
+
+            $book->update(['status' => $newStatus->value]);
+
+            session()->flash('success', "Book status updated to {$newStatus->getLabel()} successfully!");
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to update book status. Please try again.');
+        }
     }
 
     public function updatedTitle()
@@ -156,6 +183,7 @@ class BookManagement extends Component
             'edition' => $this->edition,
             'publisher' => $this->publisher,
             'pages' => $this->pages,
+            'status' => $this->status,
             'has_hardcopy' => $this->hasHardcopy,
             'has_softcopy' => $this->hasSoftcopy,
             'additional_info' => $this->additionalInfo,
@@ -192,6 +220,7 @@ class BookManagement extends Component
         $this->subscriptionConditions = $book->subscription_conditions;
         $this->existingCover = $book->cover_image_path;
         $this->existingPdf = $book->pdf_file_path;
+        $this->status = $book->status;
     }
 
     public function update()
@@ -235,6 +264,7 @@ class BookManagement extends Component
             'edition' => $this->edition,
             'publisher' => $this->publisher,
             'pages' => $this->pages,
+            'status' => $this->status,
             'has_hardcopy' => $this->hasHardcopy,
             'has_softcopy' => $this->hasSoftcopy,
             'additional_info' => $this->additionalInfo,
@@ -336,6 +366,7 @@ class BookManagement extends Component
         $this->edition = '';
         $this->publisher = '';
         $this->pages = null;
+        $this->status = '';
         $this->hasHardcopy = false;
         $this->hasSoftcopy = false;
         $this->additionalInfo = '';

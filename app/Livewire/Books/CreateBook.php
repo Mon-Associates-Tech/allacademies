@@ -8,6 +8,7 @@ use App\Models\Book;
 use App\Models\Author;
 use App\Models\BookCategory;
 use App\Models\User;
+use App\Enums\PublishingStatus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -34,13 +35,12 @@ class CreateBook extends Component
     public $pdfFile;
     public $annualSubscriptionFee = 0;
     public $subscriptionConditions;
-    public $status = 'published';
+    public $status = 'published'; // Default to published
 
     // Table of Contents
     public $tableOfContents = [];
     public $showTableOfContents = false;
     public $expandedChapters = [];
-
 
     // Data collections
     public $authors;
@@ -74,7 +74,6 @@ class CreateBook extends Component
         'tableOfContents.*.sections.*.page_start' => 'required|integer|min:1',
         'tableOfContents.*.sections.*.page_end' => 'required|integer|min:1',
         'tableOfContents.*.sections.*.description' => 'nullable|string',
-
     ];
 
     protected $messages = [
@@ -91,12 +90,12 @@ class CreateBook extends Component
         'tableOfContents.*.sections.*.page_end.required' => 'Section end page is required.',
     ];
 
-
-
     public function mount()
     {
         $this->loadData();
         $this->initializeTableOfContents();
+        // Set default publishing status to published
+        $this->status = PublishingStatus::default()->value;
     }
 
     public function loadData()
@@ -104,6 +103,25 @@ class CreateBook extends Component
         $this->authors = Author::with('user')->orderBy('id')->get();
         $this->bookCategories = BookCategory::orderBy('name')->get();
     }
+
+    // Get publishing status options for the view
+    public function getPublishingStatusOptionsProperty()
+    {
+        return PublishingStatus::getOptions();
+    }
+
+    // Get current publishing status enum
+    public function getCurrentPublishingStatusProperty()
+    {
+        try {
+            return PublishingStatus::from($this->status);
+        } catch (\ValueError $e) {
+            return PublishingStatus::default();
+        }
+    }
+
+    // Rest of your existing methods remain the same...
+    // (updatedTitle, updatedPages, toggleNewAuthorForm, etc.)
 
     public function updatedTitle()
     {
@@ -183,7 +201,6 @@ class CreateBook extends Component
         }
     }
 
-
     public function initializeTableOfContents()
     {
         if (empty($this->tableOfContents)) {
@@ -242,7 +259,6 @@ class CreateBook extends Component
             $this->tableOfContents = array_values($this->tableOfContents);
         }
     }
-
 
     public function addSection($chapterIndex)
     {
@@ -306,7 +322,6 @@ class CreateBook extends Component
         }
     }
 
-
     public function create()
     {
         $this->validate();
@@ -333,7 +348,6 @@ class CreateBook extends Component
                 return;
             }
         }
-
 
         DB::beginTransaction();
         try {
@@ -373,7 +387,9 @@ class CreateBook extends Component
             ]);
 
             DB::commit();
-            session()->flash('message', 'Book created successfully!');
+
+            $statusLabel = PublishingStatus::from($this->status)->getLabel();
+            session()->flash('message', "Book created successfully and saved as {$statusLabel}!");
             return redirect()->route('admin.book-management');
         } catch (\Exception $e) {
             logError('Exception in create:'. $e);
@@ -381,7 +397,6 @@ class CreateBook extends Component
             $this->addError('general', 'Failed to create book. Please try again.');
         }
     }
-
 
     private function validateTableOfContents()
     {
@@ -411,7 +426,6 @@ class CreateBook extends Component
 
         return $errors;
     }
-
 
     public function cancel()
     {

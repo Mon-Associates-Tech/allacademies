@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PublishingStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\Book;
 use App\Models\BookSubscription;
@@ -17,7 +18,7 @@ class BookController extends Controller
         $user = Auth::user();
         $student = $user->student;
 
-        $query = Book::with(['author', 'bookCategory']);
+        $query = Book::with(['author', 'bookCategory'])->whereStatus(PublishingStatus::PUBLISHED->value);
 
         // Search filter (title or author)
         if ($request->query('search')) {
