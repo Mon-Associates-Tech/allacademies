@@ -254,7 +254,7 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
-        $borrowedBookIds = BookBorrowing::where('student_id', $this->selectedWardId)
+        $borrowedBookIds = BookBorrowing::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
@@ -292,7 +292,7 @@ class ParentBooksManager extends AppComponent
             ->where('status', 'active')
             ->pluck('book_id');
 
-        $borrowedBookIds = BookBorrowing::where('student_id', $this->selectedWardId)
+        $borrowedBookIds = BookBorrowing::where('user_id', $student->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
@@ -371,7 +371,7 @@ class ParentBooksManager extends AppComponent
         if (!$this->selectedWardId) return [];
 
         $subscriptions = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)->get();
-        $borrowings = BookBorrowing::where('student_id', $this->selectedWardId)->get();
+        $borrowings = BookBorrowing::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)->get();
 
         return [
             'active_subscriptions' => $subscriptions->where('status', 'paid')->count(),
