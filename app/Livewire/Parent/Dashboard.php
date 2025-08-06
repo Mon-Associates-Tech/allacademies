@@ -102,8 +102,8 @@ class Dashboard extends AppComponent
     public function bookSubscriptions()
     {
         if (!$this->selectedWard) return collect();
-
-        return BookSubscription::where('student_id', $this->selectedWardId)
+        $user  = $this->selectedWard->user;
+        return BookSubscription::where('user_id', $user->id)
             ->with(['book.bookCategory'])
             ->where('status', 'active')
             ->latest()

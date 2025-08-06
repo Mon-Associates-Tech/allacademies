@@ -220,7 +220,7 @@ class BookManagement extends Component
         $this->subscriptionConditions = $book->subscription_conditions;
         $this->existingCover = $book->cover_image_path;
         $this->existingPdf = $book->pdf_file_path;
-        $this->status = $book->status;
+        $this->status = $book->status ?? 'draft';
     }
 
     public function update()
@@ -294,7 +294,7 @@ class BookManagement extends Component
         $book->delete();
 
         session()->flash('message', 'Book deleted successfully!');
-        $this->emit('refreshBooks');
+        $this->dispatch('refreshBooks');
     }
 
     public function bulkDelete()
@@ -330,7 +330,7 @@ class BookManagement extends Component
 
         $this->selectedBooks = [];
         $this->selectAll = false;
-        $this->emit('refreshBooks');
+        $this->dispatch('refreshBooks');
     }
 
     private function deleteBookFiles($book)
