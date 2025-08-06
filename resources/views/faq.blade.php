@@ -13,7 +13,7 @@
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
             Everything you need to know about All Academies platform. Can't find what you're looking for?
-            <a href="#" class="text-blue-600 dark:text-blue-400 hover:underline">Contact our support team</a>.
+            <a href="{{route('branding.contact')}}" class="text-blue-600 dark:text-blue-400 hover:underline">Contact our support team</a>.
         </p>
     </div>
 
