@@ -89,7 +89,7 @@ class ParentBooksManager extends AppComponent
         }
 
         // Check if already subscribed
-        $existingSubscription = BookSubscription::where('student_id', $this->selectedWardId)
+        $existingSubscription = BookSubscription::where('user_id', $student->user->id)
             ->where('book_id', $this->selectedBookId)
             ->where('status', 'active')
             ->first();
@@ -101,7 +101,7 @@ class ParentBooksManager extends AppComponent
 
         // Create subscription with pending payment status
         $subscription = BookSubscription::create([
-            'student_id' => $this->selectedWardId,
+            'user_id' => $student->user->id,
             'book_id' => $this->selectedBookId,
             'subscription_type' => $this->subscriptionType,
             'status' => 'pending_payment',
@@ -117,7 +117,7 @@ class ParentBooksManager extends AppComponent
     public function cancelSubscription($subscriptionId)
     {
         $subscription = BookSubscription::where('id', $subscriptionId)
-            ->where('student_id', $this->selectedWardId)
+            ->where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->first();
 
         if ($subscription) {
@@ -137,7 +137,7 @@ class ParentBooksManager extends AppComponent
         if (!$book) return null;
 
         // Check if book is subscribed
-        $subscription = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscription = BookSubscription::where('user_id', $student->user->id)
             ->where('book_id', $bookId)
             ->where('status', 'active')
             ->first();
@@ -151,7 +151,7 @@ class ParentBooksManager extends AppComponent
         }
 
         // Check if book is borrowed
-        $borrowing = BookBorrowing::where('student_id', $this->selectedWardId)
+        $borrowing = BookBorrowing::where('user_id', $student->user->id)
             ->where('book_id', $bookId)
             ->where('status', 'active')
             ->first();
@@ -223,7 +223,7 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
-        $subscribedBookIds = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'paid')
             ->pluck('book_id');
 
@@ -285,8 +285,10 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
+        $student = Student::find($this->selectedWardId);
+
         // Get IDs of books that are already subscribed or borrowed
-        $subscribedBookIds = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscribedBookIds = BookSubscription::where('user_id', $student->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
@@ -338,7 +340,7 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
-        return BookSubscription::where('student_id', $this->selectedWardId)
+        return BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'paid')
             ->with(['book.bookCategory', 'book.author'])
             ->get();
@@ -349,7 +351,7 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
-        return BookBorrowing::where('student_id', $this->selectedWardId)
+        return BookBorrowing::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->with(['book.bookCategory', 'book.author'])
             ->get();
@@ -368,7 +370,7 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return [];
 
-        $subscriptions = BookSubscription::where('student_id', $this->selectedWardId)->get();
+        $subscriptions = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)->get();
         $borrowings = BookBorrowing::where('student_id', $this->selectedWardId)->get();
 
         return [
