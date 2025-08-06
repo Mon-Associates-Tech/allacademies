@@ -129,7 +129,7 @@ class ParentLibraryManager extends AppComponent
         if (!$this->selectedWardId) return collect();
 
         // Get books that the ward has access to through subscriptions
-        $subscribedBookIds = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
@@ -165,7 +165,7 @@ class ParentLibraryManager extends AppComponent
         if (!$this->selectedWardId) return collect();
 
         // Get categories of books the ward has access to
-        $subscribedBookIds = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
@@ -184,7 +184,7 @@ class ParentLibraryManager extends AppComponent
     {
         if (!$this->selectedWardId) return [];
 
-        $subscribedBooks = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscribedBooks = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->count();
 
@@ -202,7 +202,7 @@ class ParentLibraryManager extends AppComponent
         if (!$this->selectedWardId) return collect();
 
         // Mock implementation - in real app, track reading history
-        $subscribedBookIds = BookSubscription::where('student_id', $this->selectedWardId)
+        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
