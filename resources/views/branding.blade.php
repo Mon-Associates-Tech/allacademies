@@ -1176,7 +1176,8 @@
 
                             <!-- Header -->
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Basic Subscription</h3>
-                            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">For Individuals in Basic Schools</p>
+                            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">For Individuals in Basic
+                                Schools</p>
 
                             <!-- Pricing Options -->
                             <div class="space-y-6 mb-10">
@@ -1424,62 +1425,43 @@
 
                                 <!-- Biannual -->
                                 <div
-                                    class="bg-gradient-to-r hidden from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-5 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg relative">
+                                    class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 transition-all duration-300 hover:scale-[1.02] relative">
                                     <div
                                         class="absolute hidden -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                        SAVE 10%
+                                        SAVE 15%
                                     </div>
                                     <div
-                                        class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-semibold text-sm mb-5">
+                                        class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-semibold text-sm mb-4">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                         </svg>
-                                        Biannual Subscription
+                                        Basic Subscription
                                     </div>
-                                    <div class="space-y-3">
-                                        <div
-                                            class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <span class="font-semibold text-gray-700 dark:text-gray-300">Basic:</span>
-                                            <span class="font-bold text-md text-gray-900 dark:text-white">GHS 45 / Student</span>
-                                        </div>
-                                        <div
-                                            class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <span
-                                                class="font-semibold text-gray-700 dark:text-gray-300">Secondary:</span>
-                                            <span class="font-bold text-md text-gray-900 dark:text-white">GHS 75 / Student</span>
-                                        </div>
+                                    <div class="flex items-baseline justify-center mb-2">
+                                        <span class="text-5xl font-black text-gray-900 dark:text-white">GHS 45</span>
                                     </div>
+                                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Student For 1 Year</span>
                                 </div>
-
                                 <!-- Annual -->
                                 <div
-                                    class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-5 border-2 border-purple-300 dark:border-purple-500 hover:border-purple-400 dark:hover:border-purple-400 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg relative">
+                                    class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6 border-2 border-purple-300 dark:border-purple-500 hover:border-purple-400 dark:hover:border-purple-400 transition-all duration-300 hover:scale-[1.02] relative">
                                     <div
-                                        class="absolute hidden -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                                        class="absolute hidden -top-2 -right-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
                                         BEST VALUE
                                     </div>
                                     <div
-                                        class="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 text-purple-800 dark:text-purple-200 font-semibold text-sm mb-5">
+                                        class="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 font-semibold text-sm mb-4">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                         </svg>
-                                        Annual Subscription
+                                        Secondary Subscription
                                     </div>
-                                    <div class="space-y-3">
-                                        <div
-                                            class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <span class="font-semibold text-gray-700 dark:text-gray-300">Basic:</span>
-                                            <span class="font-bold text-md text-gray-900 dark:text-white">GHS 45 / Student</span>
-                                        </div>
-                                        <div
-                                            class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <span
-                                                class="font-semibold text-gray-700 dark:text-gray-300">Secondary:</span>
-                                            <span class="font-bold text-md text-gray-900 dark:text-white">GHS 75 / Student</span>
-                                        </div>
+                                    <div class="flex items-baseline justify-center mb-2">
+                                        <span class="text-5xl font-black text-gray-900 dark:text-white">GHS 75</span>
                                     </div>
+                                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Student For 1 Year</span>
                                 </div>
                             </div>
                         </div>
