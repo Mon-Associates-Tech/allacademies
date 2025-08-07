@@ -58,13 +58,13 @@ class QuestionGenerator
                 $sections[$index] = (new QuestionGenerator())->processDocument($section, $sections[$index]);
             }
 
-            if (!empty($subtopics)) {
+
+            if (!empty($subtopics) && !empty($subtopics['count'])) {
                 // Handle questions with subtopics
                 collect($subtopics)->each(/**
                  * @throws NotEnoughQuestionsException
                  */ function ($subtopic) use ($table, &$sectionQuestions, &$usedQuestions) {
                     $count = (int)$subtopic['count'];
-
 
                     $topic_id = AcademicSubtopic::find($subtopic['id'])->academic_topic_id;
                     if ($topic_id == null) {
@@ -87,22 +87,47 @@ class QuestionGenerator
 
                     $sectionQuestions = array_merge($sectionQuestions, $questions);
                 });
+
+                // Calculate remaining questions needed
+                $subtopicQuestionCount = count($sectionQuestions);
+                $remainingQuestionsNeeded = $section['count'] - $subtopicQuestionCount;
+
+                // If we still need more questions, get them from topic level
+                if ($remainingQuestionsNeeded > 0) {
+                    $topicQuestions = DB::table($table)
+                        ->whereIn('academic_topic_id', $topicIds)
+                        ->whereNull('academic_subtopic_id')
+                        ->whereNotIn('id', $usedQuestions[$table])
+                        ->inRandomOrder()
+                        ->take($remainingQuestionsNeeded)
+                        ->pluck('' . $table . '.id')
+                        ->all();
+
+                    if (count($topicQuestions) < $remainingQuestionsNeeded) {
+                        throw new NotEnoughQuestionsException();
+                    }
+
+                    $sectionQuestions = array_merge($sectionQuestions, $topicQuestions);
+                }
+            } else {
+                // Handle questions without subtopics (topic-level questions only)
+                // This handles the case where subtopics array is empty []
+                $questions = DB::table($table)
+                    ->whereIn('academic_topic_id', $topicIds)
+                    ->whereNull('academic_subtopic_id')
+                    ->whereNotIn('id', $usedQuestions[$table])
+                    ->inRandomOrder()
+                    ->take($section['count'])
+                    ->pluck('' . $table . '.id')
+                    ->all();
+
+                if (count($questions) < $section['count']) {
+                    throw new NotEnoughQuestionsException();
+                }
+
+                $sectionQuestions = $questions;
             }
 
-
-            // Handle questions without subtopics (topic-level questions)
-            $questions = DB::table($table)
-                ->whereIn('academic_topic_id', $topicIds)
-                ->whereNull('academic_subtopic_id')
-                ->whereNotIn('id', $usedQuestions[$table])
-                ->inRandomOrder()
-                ->take($section['count'])
-                ->pluck('' . $table . '.id')
-                ->all();
-
-            if (count($questions) < $section['count']) {
-                throw new NotEnoughQuestionsException();
-            }
 
             $sectionQuestions = $questions;
 

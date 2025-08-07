@@ -1,7 +1,13 @@
-@props(['name', 'value' => null, 'label' => null, 'options' => [], 'nullable' => false])
+@props(['name', 'value' => null, 'label' => null, 'options' => [], 'nullable' => false, 'required' => false])
 
 <div class="space-y-1">
-    <label for="{{ $name }}" class="block text-sm tracking-wide font-medium text-gray-700">{{ $label ?? ucfirst($name) }}</label>
+    <div class="flex">
+        <label for="{{ $name }}" class="block text-sm tracking-wide font-medium text-gray-700">{{ $label ?? ucfirst($name) }}</label>
+        @if($required)
+            <span class="text-xs text-red-600"> *</span>
+        @endif
+    </div>
+
     <div class="relative">
         <select name="{{ $name }}" id="{{ $name }}" {{ $attributes->merge(['class' => 'block border-gray-300 rounded-lg shadow-sm w-full leading-tight']) }}>
             @if($nullable)

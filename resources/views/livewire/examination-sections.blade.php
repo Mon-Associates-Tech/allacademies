@@ -1,8 +1,9 @@
 @php
     $options = [
+        '' => 'Select question type',
         'multiple_choice_questions' => 'Multiple Choice',
         'true_or_false_questions' => 'True/False',
-        'essay_questions' => 'Essay'
+        'essay_questions' => 'Essay',
     ];
 
     $count = function ($topic, $type) {
@@ -30,7 +31,8 @@
     </div>
 
     @foreach ($sections as $sectionIndex => $section)
-        <div class="mb-8 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div
+            class="mb-8 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
             <!-- Section Header -->
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200 rounded-t-xl">
                 <div class="flex items-center justify-between">
@@ -49,8 +51,9 @@
                         <button wire:click="removeSection({{ $sectionIndex }})"
                                 class="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-200"
                                 title="Remove Section">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     @endif
@@ -66,6 +69,7 @@
                                       wire:model.live="sections.{{ $sectionIndex }}.name"
                                       name="sections[{{ $sectionIndex }}][name]"
                                       type="text"
+                                      required
                                       label="Section Name"
                                       placeholder="e.g., Multiple Choice Questions"/>
                     </div>
@@ -74,6 +78,7 @@
                                        wire:model.live="sections.{{ $sectionIndex }}.type"
                                        name="sections[{{ $sectionIndex }}][type]"
                                        label="Question Type"
+                                       required
                                        value="multiple_choice_questions"
                                        :options="$options"/>
                     </div>
@@ -82,6 +87,7 @@
                                       wire:model.live="sections.{{ $sectionIndex }}.count"
                                       name="sections[{{ $sectionIndex }}][count]"
                                       type="number"
+                                      required
                                       label="Number of Questions"
                                       placeholder="0"/>
                     </div>
@@ -140,18 +146,21 @@
 
                                             <div class="flex items-center space-x-3">
                                                 @can('administrate')
-                                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                                                    <span
+                                                        class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
                                                         {{ $topic['questions_count'] }} total
                                                     </span>
                                                 @endcan
 
                                                 <div class="flex items-center space-x-2">
                                                     @can('administrate')
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $count($topic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                                        <span
+                                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $count($topic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
                                                         {{ $count($topic, $section['type']) }} available
                                                     </span>
                                                     @endcan
-                                                    <div class="w-2 h-2 rounded-full {{ $count($topic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
+                                                    <div
+                                                        class="w-2 h-2 rounded-full {{ $count($topic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -170,29 +179,34 @@
                                                 <div class="bg-blue-50 rounded-lg p-3 space-y-3">
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex items-center space-x-3">
-                                                            <input wire:key="subtopic-{{ $sectionIndex }}-{{ $subtopic['id'] }}"
-                                                                   wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
-                                                                   name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
-                                                                   value="{{ $subtopic['id'] }}"
-                                                                   type="checkbox"
-                                                                   class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
-                                                            <label class="text-sm font-medium text-gray-800 capitalize cursor-pointer">
+                                                            <input
+                                                                wire:key="subtopic-{{ $sectionIndex }}-{{ $subtopic['id'] }}"
+                                                                wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
+                                                                name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
+                                                                value="{{ $subtopic['id'] }}"
+                                                                type="checkbox"
+                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
+                                                            <label
+                                                                class="text-sm font-medium text-gray-800 capitalize cursor-pointer">
                                                                 {{ $subtopic['name'] }}
                                                             </label>
                                                         </div>
 
                                                         <div class="flex items-center space-x-2">
                                                             @can('administrate')
-                                                                <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
+                                                                <span
+                                                                    class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
                                                                     {{ $subcount($subtopic, $section['type']) }} available
                                                                 </span>
                                                             @endcan
-                                                            <div class="w-2 h-2 rounded-full {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
+                                                            <div
+                                                                class="w-2 h-2 rounded-full {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
                                                         </div>
                                                     </div>
 
                                                     <div class="flex items-center space-x-3">
-                                                        <label class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
+                                                        <label
+                                                            class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
                                                             Questions to include:
                                                         </label>
                                                         <x-form.input :has-label="false"
@@ -271,7 +285,7 @@
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-transparent rounded-l-md hover:bg-gray-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                 {{ count($sections) <= 1 ? 'disabled' : '' }}>
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
                 </svg>
                 Remove Section
             </button>
@@ -283,7 +297,7 @@
                     title="Add Section"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                 </svg>
                 Add Section
             </button>
