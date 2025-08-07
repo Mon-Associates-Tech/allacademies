@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\NotEnoughQuestionsException;
 use App\Exceptions\NoTopicsException;
 use App\Models\AcademicSubject;
+use App\Models\AcademicSubtopic;
 use App\Models\EssayQuestion;
 use App\Models\Examination;
 use App\Models\MultipleChoiceQuestion;
@@ -21,66 +22,15 @@ use RuntimeException;
 
 class QuestionGenerator
 {
-    /**
-     * Convert sections with question objects to sections with question IDs only
-     * This normalizes the data structure to always use IDs
-     */
-    public function normalizeQuestionsToIds(array $sections): array
-    {
-        foreach ($sections as &$section) {
-            if (isset($section['questions']) && is_array($section['questions'])) {
-                $section['questions'] = $this->extractQuestionIds($section['questions']);
-            }
-        }
-
-        return $sections;
-    }
-
-    /**
-     * Extract question IDs from a mixed array of IDs and objects
-     * Returns an array of question IDs only
-     */
-    public function getQuestionIdsOnly(array $questions): array
-    {
-        return $this->extractQuestionIds($questions);
-    }
-
-    /**
-     * Extract question IDs from questions array, handling both ID arrays and object arrays
-     * This ensures we always work with IDs going forward
-     */
-    private function extractQuestionIds(array $questions): array
-    {
-        $questionIds = [];
-
-        foreach ($questions as $question) {
-            if (is_numeric($question)) {
-                // It's already an ID
-                $questionIds[] = (int)$question;
-            } elseif (is_array($question) && isset($question['id'])) {
-                // It's an array with an ID
-                $questionIds[] = (int)$question['id'];
-            } elseif (is_object($question) && isset($question->id)) {
-                // It's a model object with an ID
-                $questionIds[] = (int)$question->id;
-            } elseif (is_object($question) && method_exists($question, 'getKey')) {
-                // It's an Eloquent model
-                $questionIds[] = (int)$question->getKey();
-            }
-        }
-
-        return array_unique(array_filter($questionIds));
-    }
-
     public static function generate(
         array $heading,
         array $sections,
         array $metadata = []
     ): array
     {
+
         // Ensure file uploads are handled first
         $sections = static::preprocessSections($sections);
-
         $usedQuestions = [
             'multiple_choice_questions' => [],
             'true_or_false_questions' => [],
@@ -115,9 +65,15 @@ class QuestionGenerator
                  */ function ($subtopic) use ($table, &$sectionQuestions, &$usedQuestions) {
                     $count = (int)$subtopic['count'];
 
+
+                    $topic_id = AcademicSubtopic::find($subtopic['id'])->academic_topic_id;
+                    if ($topic_id == null) {
+                        return;
+                    }
+
                     $questions = DB::table($table)
                         ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                        ->where('academic_subtopics.academic_topic_id', $subtopic['topic_id']?? $subtopic['academic_topic_id'])
+                        ->where('academic_subtopics.academic_topic_id', $topic_id)
                         ->where('academic_subtopics.id', $subtopic['id'])
                         ->whereNotIn($table . '.id', $usedQuestions[$table])
                         ->inRandomOrder()
@@ -131,23 +87,25 @@ class QuestionGenerator
 
                     $sectionQuestions = array_merge($sectionQuestions, $questions);
                 });
-            } else {
-                // Handle questions without subtopics (topic-level questions)
-                $questions = DB::table($table)
-                    ->whereIn('academic_topic_id', $topicIds)
-                    ->whereNull('academic_subtopic_id')
-                    ->whereNotIn('id', $usedQuestions[$table])
-                    ->inRandomOrder()
-                    ->take($section['count'])
-                    ->pluck('' . $table . '.id')
-                    ->all();
-
-                if (count($questions) < $section['count']) {
-                    throw new NotEnoughQuestionsException();
-                }
-
-                $sectionQuestions = $questions;
             }
+
+
+            // Handle questions without subtopics (topic-level questions)
+            $questions = DB::table($table)
+                ->whereIn('academic_topic_id', $topicIds)
+                ->whereNull('academic_subtopic_id')
+                ->whereNotIn('id', $usedQuestions[$table])
+                ->inRandomOrder()
+                ->take($section['count'])
+                ->pluck('' . $table . '.id')
+                ->all();
+
+            if (count($questions) < $section['count']) {
+                throw new NotEnoughQuestionsException();
+            }
+
+            $sectionQuestions = $questions;
+
 
             // Add questions to the tracking array for duplicate prevention
             $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
@@ -200,53 +158,6 @@ class QuestionGenerator
             }
             return $section;
         })->toArray();
-    }
-
-    private function processFileContent(string $filePath, string $storedPath, string $extension): array
-    {
-        $result = [
-            'extension' => $extension,
-            'original_path' => $storedPath,
-            'document' => $storedPath,
-            'pdf_images' => [],
-        ];
-
-        if (!file_exists($filePath)) {
-            Log::warning('File does not exist for processing', ['path' => $filePath]);
-            return $result;
-        }
-
-        switch ($extension) {
-            case 'pdf':
-                $result['pdf_images'] = $this->generatePdfImages($filePath, $storedPath);
-                break;
-
-            case 'doc':
-            case 'docx':
-                $result['document'] = $this->extractDocxText($filePath);
-                break;
-
-            case 'txt':
-                $result['document'] = file_get_contents($filePath);
-                break;
-
-            case 'jpg':
-            case 'jpeg':
-            case 'png':
-            case 'gif':
-            case 'webp':
-                // Images don't need additional processing, just the path
-                $result['document'] = $storedPath;
-                break;
-
-            default:
-                Log::warning('Unsupported file type', [
-                    'extension' => $extension,
-                    'path' => $filePath
-                ]);
-        }
-
-        return $result;
     }
 
     private function storeUploadedFile(UploadedFile $file): array
@@ -305,16 +216,51 @@ class QuestionGenerator
         return $this->processFileContent($fullPath, $storedPath, $extension);
     }
 
-    private function processDocument(array $section, array $processedSection): array
+    private function processFileContent(string $filePath, string $storedPath, string $extension): array
     {
-        $storedPath = $section['document'];
-        $fullPath = storage_path('app/public/' . $storedPath);
-        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+        $result = [
+            'extension' => $extension,
+            'original_path' => $storedPath,
+            'document' => $storedPath,
+            'pdf_images' => [],
+        ];
 
-        // Use the shared processing method and merge with existing processed section
-        $fileResult = $this->processFileContent($fullPath, $storedPath, $extension);
+        if (!file_exists($filePath)) {
+            Log::warning('File does not exist for processing', ['path' => $filePath]);
+            return $result;
+        }
 
-        return array_merge($processedSection, $fileResult);
+        switch ($extension) {
+            case 'pdf':
+                $result['pdf_images'] = $this->generatePdfImages($filePath, $storedPath);
+                break;
+
+            case 'doc':
+            case 'docx':
+                $result['document'] = $this->extractDocxText($filePath);
+                break;
+
+            case 'txt':
+                $result['document'] = file_get_contents($filePath);
+                break;
+
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+            case 'webp':
+                // Images don't need additional processing, just the path
+                $result['document'] = $storedPath;
+                break;
+
+            default:
+                Log::warning('Unsupported file type', [
+                    'extension' => $extension,
+                    'path' => $filePath
+                ]);
+        }
+
+        return $result;
     }
 
     private function generatePdfImages(string $pdfPath, string $originalPath): array
@@ -402,6 +348,68 @@ class QuestionGenerator
         }
     }
 
+    private function processDocument(array $section, array $processedSection): array
+    {
+        $storedPath = $section['document'];
+        $fullPath = storage_path('app/public/' . $storedPath);
+        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+        // Use the shared processing method and merge with existing processed section
+        $fileResult = $this->processFileContent($fullPath, $storedPath, $extension);
+
+        return array_merge($processedSection, $fileResult);
+    }
+
+    /**
+     * Convert sections with question objects to sections with question IDs only
+     * This normalizes the data structure to always use IDs
+     */
+    public function normalizeQuestionsToIds(array $sections): array
+    {
+        foreach ($sections as &$section) {
+            if (isset($section['questions']) && is_array($section['questions'])) {
+                $section['questions'] = $this->extractQuestionIds($section['questions']);
+            }
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Extract question IDs from questions array, handling both ID arrays and object arrays
+     * This ensures we always work with IDs going forward
+     */
+    private function extractQuestionIds(array $questions): array
+    {
+        $questionIds = [];
+
+        foreach ($questions as $question) {
+            if (is_numeric($question)) {
+                // It's already an ID
+                $questionIds[] = (int)$question;
+            } elseif (is_array($question) && isset($question['id'])) {
+                // It's an array with an ID
+                $questionIds[] = (int)$question['id'];
+            } elseif (is_object($question) && isset($question->id)) {
+                // It's a model object with an ID
+                $questionIds[] = (int)$question->id;
+            } elseif (is_object($question) && method_exists($question, 'getKey')) {
+                // It's an Eloquent model
+                $questionIds[] = (int)$question->getKey();
+            }
+        }
+
+        return array_unique(array_filter($questionIds));
+    }
+
+    /**
+     * Extract question IDs from a mixed array of IDs and objects
+     * Returns an array of question IDs only
+     */
+    public function getQuestionIdsOnly(array $questions): array
+    {
+        return $this->extractQuestionIds($questions);
+    }
 
     /**
      * @throws Exception
@@ -584,29 +592,6 @@ class QuestionGenerator
         return $baseFormat;
     }
 
-    private function convertQuestionToArray($question): array
-    {
-        $questionArray = $question->toArray();
-        $markFields = $this->getMarkFieldsForQuestion($question);
-
-        foreach ($markFields as $field) {
-            if ($question->$field instanceof Mark) {
-                $questionArray[$field] = $question->$field->toArray();
-            }
-        }
-
-        return $questionArray;
-    }
-
-    private function getMarkFieldsForQuestion($question): array
-    {
-        if ($question instanceof MultipleChoiceQuestion) {
-            return ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'];
-        }
-
-        return ['question', 'answer'];
-    }
-
     public function formatExistingQuestions(array $questions): array
     {
         return collect($questions)->map(function ($question) {
@@ -657,5 +642,28 @@ class QuestionGenerator
     private function isJsonString($string): bool
     {
         return is_string($string) && is_array(json_decode($string, true)) && (json_last_error() == JSON_ERROR_NONE);
+    }
+
+    private function convertQuestionToArray($question): array
+    {
+        $questionArray = $question->toArray();
+        $markFields = $this->getMarkFieldsForQuestion($question);
+
+        foreach ($markFields as $field) {
+            if ($question->$field instanceof Mark) {
+                $questionArray[$field] = $question->$field->toArray();
+            }
+        }
+
+        return $questionArray;
+    }
+
+    private function getMarkFieldsForQuestion($question): array
+    {
+        if ($question instanceof MultipleChoiceQuestion) {
+            return ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'];
+        }
+
+        return ['question', 'answer'];
     }
 }
