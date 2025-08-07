@@ -26,7 +26,7 @@
         @livewire('librarians.library-dashboard')
 
     @elseif(in_array($primaryRole, ['admin', 'owner']))
-        @livewire('administrators.dashboard')
+        <livewire:administrators.overview/>
 
     @elseif($primaryRole === 'moderator')
         @livewire('moderator.dashboard')

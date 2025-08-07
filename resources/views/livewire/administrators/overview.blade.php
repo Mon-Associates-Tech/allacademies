@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+<div class="bg-gray-50 dark:bg-gray-900 p-6">
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-8">
         <div>
