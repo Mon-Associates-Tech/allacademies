@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use App\Models\AcademicSubject;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
 use App\Models\Book;
 use App\Models\User;
 use App\Models\BookBorrowing;
@@ -11,20 +13,26 @@ use App\Models\BookSubscription;
 use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionPackage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $currentTeam = Team::query()->find(auth()->user()->current_team_id);
         if (!$currentTeam) {
             $currentTeam = Team::query()->where('owner_id', auth()->id())->first();
         }
 
-        $academicSubjects = AcademicSubject::query()
-            ->with('academicLevel.academicGroup')
+        // Get filter options
+        $academicGroups = AcademicGroup::with('academicLevels')->orderBy('name')->get();
+        $academicLevels = AcademicLevel::with('academicGroup')->orderBy('name')->get();
+
+        // Build the query with filters
+        $query = AcademicSubject::query()
+            ->with(['academicLevel.academicGroup', 'quizzes', 'examinations'])
             ->whereHas('subscriptions', function (Builder $query) {
                 $query->where('status', SubscriptionStatus::PAID)
                     ->where('expires_at', '>', now())
@@ -43,9 +51,63 @@ class DashboardController extends Controller
                                 ->whereRelation('subscriber', 'id', auth()->id());
                         });
                     });
-            })
-            ->latest('id')
-            ->paginate();
+            });
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function (Builder $q) use ($searchTerm) {
+                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('code', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('academicLevel', function (Builder $levelQuery) use ($searchTerm) {
+                        $levelQuery->where('name', 'LIKE', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('academicLevel.academicGroup', function (Builder $groupQuery) use ($searchTerm) {
+                        $groupQuery->where('name', 'LIKE', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        // Apply academic group filter
+        if ($request->filled('academic_group')) {
+            $query->whereHas('academicLevel.academicGroup', function (Builder $q) use ($request) {
+                $q->where('id', $request->academic_group);
+            });
+        }
+
+        // Apply academic level filter
+        if ($request->filled('academic_level')) {
+            $query->where('academic_level_id', $request->academic_level);
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        switch ($sortBy) {
+            case 'group':
+                $query->join('academic_levels', 'academic_subjects.academic_level_id', '=', 'academic_levels.id')
+                    ->join('academic_groups', 'academic_levels.academic_group_id', '=', 'academic_groups.id')
+                    ->orderBy('academic_groups.name', $sortOrder)
+                    ->select('academic_subjects.*');
+                break;
+            case 'level':
+                $query->join('academic_levels', 'academic_subjects.academic_level_id', '=', 'academic_levels.id')
+                    ->orderBy('academic_levels.name', $sortOrder)
+                    ->select('academic_subjects.*');
+                break;
+            case 'quizzes_count':
+                $query->withCount('quizzes')->orderBy('quizzes_count', $sortOrder);
+                break;
+            case 'examinations_count':
+                $query->withCount('examinations')->orderBy('examinations_count', $sortOrder);
+                break;
+            default:
+                $query->orderBy($sortBy, $sortOrder);
+                break;
+        }
+
+        $academicSubjects = $query->latest('id')->paginate(12);
 
         // Enhanced analytics data
         $dashboardStats = $this->getDashboardStats();
@@ -56,10 +118,19 @@ class DashboardController extends Controller
         return view('dashboard', [
             'academicSubjects' => $academicSubjects,
             'currentTeam' => $currentTeam,
+            'academicGroups' => $academicGroups,
+            'academicLevels' => $academicLevels,
             'dashboardStats' => $dashboardStats,
             'recentActivity' => $recentActivity,
             'upcomingEvents' => $upcomingEvents,
             'performanceMetrics' => $performanceMetrics,
+            'filters' => [
+                'search' => $request->search,
+                'academic_group' => $request->academic_group,
+                'academic_level' => $request->academic_level,
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 

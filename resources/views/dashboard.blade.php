@@ -49,14 +49,18 @@
 
     @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>
-            @if ($academicSubjects->count())
+            @if ($academicSubjects->count() || request()->hasAny(['search', 'academic_group', 'academic_level']))
                 <section class="mt-10 w-full mx-auto">
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h3 class="font-semibold text-3xl text-gray-900">My Courses</h3>
                             <div class="text-sm text-gray-500 mt-1">
-                                {{ $academicSubjects->count() }} {{ Str::plural('course', $academicSubjects->count()) }}
-                                available
+                                {{ $academicSubjects->total() }} {{ Str::plural('course', $academicSubjects->total()) }}
+                                @if(request()->hasAny(['search', 'academic_group', 'academic_level']))
+                                    found
+                                @else
+                                    available
+                                @endif
                             </div>
                         </div>
 
@@ -86,224 +90,400 @@
                         </div>
                     </div>
 
-                    <!-- Grid View -->
-                    <div id="grid-view" class="grid hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        @foreach ($academicSubjects as $academicSubject)
-                            <div
-                                class="bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-all duration-200 hover:shadow-lg group">
-                                <!-- Course Header -->
-                                <div class="p-6">
-                                    <div class="flex items-start justify-between mb-4">
-                                        <div class="flex-1">
-                                            <!-- Subject hierarchy -->
-                                            <div class="text-sm text-gray-500 mb-2">
-                                    <span class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                        {{ $academicSubject->academicLevel->academicGroup->name }}
-                                    </span>
-                                                <span class="mx-1">•</span>
-                                                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                                        {{ $academicSubject->academicLevel->name }}
-                                    </span>
-                                            </div>
-
-                                            <!-- Subject name -->
-                                            <h4 class="text-lg font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
-                                                {{ $academicSubject->name }}
-                                            </h4>
-
-                                            @if($academicSubject->code)
-                                                <p class="text-sm text-gray-500 mt-1">{{ $academicSubject->code }}</p>
-                                            @endif
-                                        </div>
-
-                                        <!-- Subject icon -->
-                                        <div class="ml-3">
-                                            <div
-                                                class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                    <!-- Advanced Filters & Search -->
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
+                        <div class="p-6">
+                            <form method="GET" action="{{ route('dashboard') }}" class="space-y-4" id="filters-form">
+                                <!-- Search Row -->
+                                <div class="flex flex-col lg:flex-row gap-4">
+                                    <div class="flex-1">
+                                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Search Courses
+                                        </label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                                                 </svg>
                                             </div>
+                                            <input type="text"
+                                                   id="search"
+                                                   name="search"
+                                                   value="{{ $filters['search'] ?? '' }}"
+                                                   placeholder="Search by subject name, code, level, or group..."
+                                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm">
                                         </div>
                                     </div>
 
-                                    <!-- Quick stats -->
-                                    <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-                                        <div class="flex items-center text-gray-600">
-                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                      d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                                                      clip-rule="evenodd"/>
-                                            </svg>
-                                            {{ $academicSubject->quizzes_count ?? $academicSubject->quizzes()->count() }}
-                                            Quizzes
+                                    <div class="lg:w-48">
+                                        <label for="academic_group" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Academic Group
+                                        </label>
+                                        <select name="academic_group"
+                                                id="academic_group"
+                                                onchange="updateLevels()"
+                                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
+                                            <option value="">All Groups</option>
+                                            @foreach($academicGroups as $group)
+                                                <option value="{{ $group->id }}" {{ ($filters['academic_group'] ?? '') == $group->id ? 'selected' : '' }}>
+                                                    {{ $group->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="lg:w-48">
+                                        <label for="academic_level" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Academic Level
+                                        </label>
+                                        <select name="academic_level"
+                                                id="academic_level"
+                                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
+                                            <option value="">All Levels</option>
+                                            @foreach($academicLevels as $level)
+                                                <option value="{{ $level->id }}"
+                                                        data-group="{{ $level->academic_group_id }}"
+                                                        {{ ($filters['academic_level'] ?? '') == $level->id ? 'selected' : '' }}>
+                                                    {{ $level->name }} ({{ $level->academicGroup?->name }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Sorting and Action Row -->
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <label for="sort_by" class="text-sm font-medium text-gray-700 whitespace-nowrap">Sort by:</label>
+                                            <select name="sort_by" id="sort_by" class="text-sm border border-gray-300 rounded px-2 py-1">
+                                                <option value="name" {{ ($filters['sort_by'] ?? '') == 'name' ? 'selected' : '' }}>Name</option>
+                                                <option value="group" {{ ($filters['sort_by'] ?? '') == 'group' ? 'selected' : '' }}>Group</option>
+                                                <option value="level" {{ ($filters['sort_by'] ?? '') == 'level' ? 'selected' : '' }}>Level</option>
+                                                <option value="quizzes_count" {{ ($filters['sort_by'] ?? '') == 'quizzes_count' ? 'selected' : '' }}>Quiz Count</option>
+                                                <option value="examinations_count" {{ ($filters['sort_by'] ?? '') == 'examinations_count' ? 'selected' : '' }}>Exam Count</option>
+                                            </select>
                                         </div>
-                                        @can('privileged', $currentTeam)
+
+                                        <div class="flex items-center gap-2">
+                                            <select name="sort_order" id="sort_order" class="text-sm border border-gray-300 rounded px-2 py-1">
+                                                <option value="asc" {{ ($filters['sort_order'] ?? '') == 'asc' ? 'selected' : '' }}>↑ Ascending</option>
+                                                <option value="desc" {{ ($filters['sort_order'] ?? '') == 'desc' ? 'selected' : '' }}>↓ Descending</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <button type="submit"
+                                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                            </svg>
+                                            Filter
+                                        </button>
+
+                                        @if(request()->hasAny(['search', 'academic_group', 'academic_level']) || ($filters['sort_by'] ?? 'name') !== 'name' || ($filters['sort_order'] ?? 'asc') !== 'asc')
+                                            <a href="{{ route('dashboard') }}"
+                                               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                                Clear
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Active Filters Display -->
+                                @if(request()->hasAny(['search', 'academic_group', 'academic_level']))
+                                    <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
+                                        <span class="text-sm font-medium text-gray-700">Active filters:</span>
+
+                                        @if($filters['search'])
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                                Search: "{{ $filters['search'] }}"
+                                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" class="ml-1.5">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </a>
+                                            </span>
+                                        @endif
+
+                                        @if($filters['academic_group'])
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Group: {{ $academicGroups->find($filters['academic_group'])->name }}
+                                                <a href="{{ request()->fullUrlWithQuery(['academic_group' => null]) }}" class="ml-1.5">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </a>
+                                            </span>
+                                        @endif
+
+                                        @if($filters['academic_level'])
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Level: {{ $academicLevels->find($filters['academic_level'])->name }}
+                                                <a href="{{ request()->fullUrlWithQuery(['academic_level' => null]) }}" class="ml-1.5">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </a>
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </form>
+                        </div>
+                    </div>
+
+                    @if($academicSubjects->count())
+                        <!-- Grid View -->
+                        <div id="grid-view" class="grid hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            @foreach ($academicSubjects as $academicSubject)
+                                <div
+                                    class="bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-all duration-200 hover:shadow-lg group">
+                                    <!-- Course Header -->
+                                    <div class="p-6">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex-1">
+                                                <!-- Subject hierarchy -->
+                                                <div class="text-sm text-gray-500 mb-2">
+                                        <span class="bg-gray-100 px-2 py-1 rounded text-xs">
+                                            {{ $academicSubject->academicLevel->academicGroup->name }}
+                                        </span>
+                                                    <span class="mx-1">•</span>
+                                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                            {{ $academicSubject->academicLevel->name }}
+                                        </span>
+                                                </div>
+
+                                                <!-- Subject name -->
+                                                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
+                                                    {{ $academicSubject->name }}
+                                                </h4>
+
+                                                @if($academicSubject->code)
+                                                    <p class="text-sm text-gray-500 mt-1">{{ $academicSubject->code }}</p>
+                                                @endif
+                                            </div>
+
+                                            <!-- Subject icon -->
+                                            <div class="ml-3">
+                                                <div
+                                                    class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path
+                                                            d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick stats -->
+                                        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                                             <div class="flex items-center text-gray-600">
                                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
-                                                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                          d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                                                           clip-rule="evenodd"/>
                                                 </svg>
-                                                {{ $academicSubject->examinations_count ?? $academicSubject->examinations()->count() }}
-                                                Exams
+                                                {{ $academicSubject->quizzes_count ?? $academicSubject->quizzes()->count() }}
+                                                Quizzes
                                             </div>
-                                        @endcan
-                                    </div>
+                                            @can('privileged', $currentTeam)
+                                                <div class="flex items-center text-gray-600">
+                                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd"
+                                                              d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                              clip-rule="evenodd"/>
+                                                    </svg>
+                                                    {{ $academicSubject->examinations_count ?? $academicSubject->examinations()->count() }}
+                                                    Exams
+                                                </div>
+                                            @endcan
+                                        </div>
 
-                                    <!-- Action buttons -->
-                                    <div class="flex flex-col space-y-2">
-                                        <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                           class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
-                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                      d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                                                      clip-rule="evenodd"/>
-                                            </svg>
-                                            Practice Quizzes
-                                        </a>
-
-                                        @can('privileged', $currentTeam)
-                                            <a href="{{ route('examinations.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                               class="inline-flex items-center justify-center px-4 py-2 border border-primary-600 text-primary-600 hover:bg-primary-50 text-sm font-medium rounded-md transition-colors duration-200">
+                                        <!-- Action buttons -->
+                                        <div class="flex flex-col space-y-2">
+                                            <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
+                                               class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
-                                                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                          d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                                                           clip-rule="evenodd"/>
                                                 </svg>
-                                                Take Examinations
+                                                Practice Quizzes
                                             </a>
-                                        @endcan
+
+                                            @can('privileged', $currentTeam)
+                                                <a href="{{ route('examinations.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
+                                                   class="inline-flex items-center justify-center px-4 py-2 border border-primary-600 text-primary-600 hover:bg-primary-50 text-sm font-medium rounded-md transition-colors duration-200">
+                                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd"
+                                                              d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                              clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Take Examinations
+                                                </a>
+                                            @endcan
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
+                            @endforeach
+                        </div>
 
-                    <!-- List View -->
-                    <div id="list-view"
-                         class="hidden bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-8">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Course Details
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Statistics
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach ($academicSubjects as $academicSubject)
-                                    <tr class="hover:bg-gray-50 transition-colors duration-200">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-10 w-10">
-                                                    <div
-                                                        class="h-10 w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                                                        <svg class="w-5 h-5 text-white" fill="currentColor"
-                                                             viewBox="0 0 20 20">
-                                                            <path
-                                                                d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                                                        </svg>
+                        <!-- List View -->
+                        <div id="list-view"
+                             class="hidden bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-8">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Course Details
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Statistics
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach ($academicSubjects as $academicSubject)
+                                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10">
+                                                        <div
+                                                            class="h-10 w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+                                                            <svg class="w-5 h-5 text-white" fill="currentColor"
+                                                                 viewBox="0 0 20 20">
+                                                                <path
+                                                                    d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                                                            </svg>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">
-                                                        {{ $academicSubject->name }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500">
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                    {{ $academicSubject->academicLevel->academicGroup->name }}
-                                                </span>
-                                                        <span class="mx-1">•</span>
-                                                        <span
-                                                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {{ $academicSubject->academicLevel->name }}
-                                                </span>
-                                                        @if($academicSubject->code)
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $academicSubject->name }}
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">
+                                                    <span
+                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                        {{ $academicSubject->academicLevel->academicGroup->name }}
+                                                    </span>
                                                             <span class="mx-1">•</span>
                                                             <span
-                                                                class="text-gray-500">{{ $academicSubject->code }}</span>
-                                                        @endif
+                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        {{ $academicSubject->academicLevel->name }}
+                                                    </span>
+                                                            @if($academicSubject->code)
+                                                                <span class="mx-1">•</span>
+                                                                <span
+                                                                    class="text-gray-500">{{ $academicSubject->code }}</span>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center space-x-4 text-sm text-gray-500">
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                              d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                                                              clip-rule="evenodd"/>
-                                                    </svg>
-                                                    {{ $academicSubject->quizzes_count ?? $academicSubject->quizzes()->count() }}
-                                                    Quizzes
-                                                </div>
-                                                @can('privileged', $currentTeam)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center space-x-4 text-sm text-gray-500">
                                                     <div class="flex items-center">
-                                                        <svg class="w-4 h-4 mr-1" fill="currentColor"
-                                                             viewBox="0 0 20 20">
+                                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
-                                                                  d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                                                                   clip-rule="evenodd"/>
                                                         </svg>
-                                                        {{ $academicSubject->examinations_count ?? $academicSubject->examinations()->count() }}
-                                                        Exams
+                                                        {{ $academicSubject->quizzes_count ?? $academicSubject->quizzes()->count() }}
+                                                        Quizzes
                                                     </div>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div class="flex items-center space-x-3">
-                                                <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                              d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                                                              clip-rule="evenodd"/>
-                                                    </svg>
-                                                    Quizzes
-                                                </a>
-                                                @can('privileged', $currentTeam)
-                                                    <a href="{{ route('examinations.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                                       class="inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded-full text-primary-600 hover:bg-primary-50 transition-colors duration-200">
-                                                        <svg class="w-3 h-3 mr-1" fill="currentColor"
-                                                             viewBox="0 0 20 20">
+                                                    @can('privileged', $currentTeam)
+                                                        <div class="flex items-center">
+                                                            <svg class="w-4 h-4 mr-1" fill="currentColor"
+                                                                 viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd"
+                                                                      d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                      clip-rule="evenodd"/>
+                                                            </svg>
+                                                            {{ $academicSubject->examinations_count ?? $academicSubject->examinations()->count() }}
+                                                            Exams
+                                                        </div>
+                                                    @endcan
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex items-center space-x-3">
+                                                    <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
+                                                       class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200">
+                                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
-                                                                  d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                                                                   clip-rule="evenodd"/>
                                                         </svg>
-                                                        Exams
+                                                        Quizzes
                                                     </a>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
+                                                    @can('privileged', $currentTeam)
+                                                        <a href="{{ route('examinations.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
+                                                           class="inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded-full text-primary-600 hover:bg-primary-50 transition-colors duration-200">
+                                                            <svg class="w-3 h-3 mr-1" fill="currentColor"
+                                                                 viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd"
+                                                                      d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                      clip-rule="evenodd"/>
+                                                            </svg>
+                                                            Exams
+                                                        </a>
+                                                    @endcan
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Enhanced Pagination -->
-                    <div class="mt-6 flex items-center justify-between">
-                        <div class="text-sm text-gray-500">
-                            Showing {{ $academicSubjects->firstItem() }} to {{ $academicSubjects->lastItem() }}
-                            of {{ $academicSubjects->total() }} courses
+                        <!-- Enhanced Pagination -->
+                        <div class="mt-6 flex items-center justify-between">
+                            <div class="text-sm text-gray-500">
+                                Showing {{ $academicSubjects->firstItem() }} to {{ $academicSubjects->lastItem() }}
+                                of {{ $academicSubjects->total() }} courses
+                            </div>
+                            {{ $academicSubjects->appends(request()->query())->links() }}
                         </div>
-                        {{ $academicSubjects->links() }}
-                    </div>
+                    @else
+                        <!-- No Results Found -->
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.291-1.267-5.543-3.259M6.343 6.343A8 8 0 0112.001 20a8 8 0 011.498-15.657" />
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No courses found</h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                @if(request()->hasAny(['search', 'academic_group', 'academic_level']))
+                                    No courses match your current filters. Try adjusting your search criteria.
+                                @else
+                                    You don't have access to any courses yet.
+                                @endif
+                            </p>
+                            @if(request()->hasAny(['search', 'academic_group', 'academic_level']))
+                                <div class="mt-6">
+                                    <a href="{{ route('dashboard') }}"
+                                       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                        Clear Filters
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </section>
 
+                <!-- JavaScript for enhanced functionality -->
                 <script>
                     // View toggle functionality
                     function toggleView(viewType) {
@@ -332,10 +512,77 @@
                         localStorage.setItem('courseViewPreference', viewType);
                     }
 
+                    // Dynamic level filtering based on selected group
+                    function updateLevels() {
+                        const groupSelect = document.getElementById('academic_group');
+                        const levelSelect = document.getElementById('academic_level');
+                        const selectedGroupId = groupSelect.value;
+
+                        // Show all levels if no group selected
+                        if (!selectedGroupId) {
+                            Array.from(levelSelect.options).forEach(option => {
+                                if (option.value !== '') {
+                                    option.style.display = 'block';
+                                }
+                            });
+                            return;
+                        }
+
+                        // Hide/show levels based on selected group
+                        Array.from(levelSelect.options).forEach(option => {
+                            if (option.value === '') {
+                                option.style.display = 'block';
+                                return;
+                            }
+
+                            const levelGroupId = option.getAttribute('data-group');
+                            if (levelGroupId === selectedGroupId) {
+                                option.style.display = 'block';
+                            } else {
+                                option.style.display = 'none';
+                            }
+                        });
+
+                        // Clear level selection if current selection is not valid for the selected group
+                        const currentLevelOption = levelSelect.options[levelSelect.selectedIndex];
+                        if (currentLevelOption && currentLevelOption.style.display === 'none') {
+                            levelSelect.value = '';
+                        }
+                    }
+
+                    // Auto-submit form on filter changes (optional)
                     // Load saved preference on page load
-                    document.addEventListener('DOMContentLoaded', function () {
+                    document.addEventListener('DOMContentLoaded', function() {
                         const savedView = localStorage.getItem('courseViewPreference') || 'grid';
                         toggleView(savedView);
+
+                        // Initialize level filtering
+                        updateLevels();
+
+                        // Optional: Auto-submit form when filters change
+                        const autoSubmitElements = ['academic_group', 'academic_level'];
+                        autoSubmitElements.forEach(id => {
+                            const element = document.getElementById(id);
+                            if (element) {
+                                element.addEventListener('change', function() {
+                                    // Uncomment the next line to enable auto-submit
+                                    // document.getElementById('filters-form').submit();
+                                });
+                            }
+                        });
+
+                        // Search input debounce
+                        const searchInput = document.getElementById('search');
+                        if (searchInput) {
+                            let searchTimeout;
+                            searchInput.addEventListener('input', function() {
+                                clearTimeout(searchTimeout);
+                                searchTimeout = setTimeout(() => {
+                                    // Uncomment the next line to enable auto-submit on search
+                                    // document.getElementById('filters-form').submit();
+                                }, 500);
+                            });
+                        }
                     });
                 </script>
             @else
