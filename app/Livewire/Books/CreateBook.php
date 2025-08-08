@@ -25,6 +25,9 @@ class CreateBook extends Component
     public $newAuthorEmail = '';
     public $showNewAuthorForm = false;
     public $bookCategoryId;
+    public $newCategoryName = '';
+    public $newCategoryDescription = '';
+    public $showNewCategoryForm = false;
     public $edition;
     public $publisher;
     public $pages;
@@ -63,6 +66,8 @@ class CreateBook extends Component
         'status' => 'required|in:draft,published',
         'newAuthorName' => 'required_if:showNewAuthorForm,true|string|max:255',
         'newAuthorEmail' => 'required_if:showNewAuthorForm,true|email|unique:users,email',
+        'newCategoryName' => 'required_if:showNewCategoryForm,true|string|max:255',
+        'newCategoryDescription' => 'nullable|string',
 
         'tableOfContents.*.title' => 'required|string|max:255',
         'tableOfContents.*.chapter' => 'required|integer|min:1',
@@ -80,6 +85,7 @@ class CreateBook extends Component
         'newAuthorName.required_if' => 'Author name is required when adding a new author.',
         'newAuthorEmail.required_if' => 'Author email is required when adding a new author.',
         'newAuthorEmail.unique' => 'This email is already registered.',
+        'newCategoryName.required_if' => 'Category name is required when adding a new category.',
         'tableOfContents.*.title.required' => 'Chapter title is required.',
         'tableOfContents.*.chapter.required' => 'Chapter number is required.',
         'tableOfContents.*.page_start.required' => 'Start page is required.',
@@ -120,9 +126,6 @@ class CreateBook extends Component
         }
     }
 
-    // Rest of your existing methods remain the same...
-    // (updatedTitle, updatedPages, toggleNewAuthorForm, etc.)
-
     public function updatedTitle()
     {
         $this->slug = Str::slug($this->title);
@@ -140,6 +143,13 @@ class CreateBook extends Component
         $this->showNewAuthorForm = !$this->showNewAuthorForm;
         $this->reset(['newAuthorName', 'newAuthorEmail']);
         $this->resetValidation(['newAuthorName', 'newAuthorEmail']);
+    }
+
+    public function toggleNewCategoryForm()
+    {
+        $this->showNewCategoryForm = !$this->showNewCategoryForm;
+        $this->reset(['newCategoryName', 'newCategoryDescription']);
+        $this->resetValidation(['newCategoryName', 'newCategoryDescription']);
     }
 
     public function createNewAuthor()
@@ -181,6 +191,37 @@ class CreateBook extends Component
             logError('Exception in createNewAuthor:'. $e);
             DB::rollback();
             $this->addError('newAuthorEmail', 'Failed to create author. Please try again.');
+        }
+    }
+
+    public function createNewCategory()
+    {
+        $this->validate([
+            'newCategoryName' => 'required|string|max:255|unique:book_categories,name',
+            'newCategoryDescription' => 'nullable|string',
+        ]);
+
+        try {
+            // Create new category
+            $category = BookCategory::create([
+                'name' => $this->newCategoryName,
+                'description' => $this->newCategoryDescription,
+            ]);
+
+            // Refresh categories list
+            $this->loadData();
+
+            // Select the new category
+            $this->bookCategoryId = $category->id;
+
+            // Hide the form and reset fields
+            $this->showNewCategoryForm = false;
+            $this->reset(['newCategoryName', 'newCategoryDescription']);
+
+            session()->flash('message', 'New category created successfully!');
+        } catch (\Exception $e) {
+            logError('Exception in createNewCategory:'. $e);
+            $this->addError('newCategoryName', 'Failed to create category. Please try again.');
         }
     }
 
