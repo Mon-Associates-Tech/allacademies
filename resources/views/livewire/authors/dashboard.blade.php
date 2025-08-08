@@ -36,14 +36,14 @@
                         </button>
 
                         <!-- Enhanced Add Book Button -->
-                        <button wire:click="openBookModal"
+                        <a href="{{route('author.books.create')}}"
                                 class="relative px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                             <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
                             <span>Add New Book</span>
                             <div class="absolute inset-0 bg-white opacity-20 rounded-lg blur-xl -z-10"></div>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

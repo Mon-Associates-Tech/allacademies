@@ -470,7 +470,10 @@ class CreateBook extends Component
 
     public function cancel()
     {
-        return redirect()->route('admin.book-management');
+        if(auth()->user()->role === 'admin' || auth()->user()->role === 'owner') {
+            return redirect()->route('admin.book-management');
+        }
+        return redirect()->route('author.books.index');
     }
 
     public function render()

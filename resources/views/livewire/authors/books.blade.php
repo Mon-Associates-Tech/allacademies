@@ -32,7 +32,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('dashboard') }}" wire:click="openBookModal"
+            <a href="{{ route('author.books.create') }}"
                class="relative px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                 <i class="fas fa-plus mr-2"></i>
                 <span>Add New Book</span>
