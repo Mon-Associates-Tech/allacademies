@@ -201,15 +201,25 @@ class Student extends Model
         return $this->getAllAccessibleSubjects();
     }
 
-    // Legacy method for backward compatibility - now returns all accessible subjects
-    public function academicSdubjects()
-    {
-        return $this->getAllAccessibleSubjects();
-    }
-
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function getSchoolAttribute()
+    {
+        // First check if student's user belongs to a team
+        if ($this->user) {
+            return $this->user->currentTeam;
+        }
+
+        // Fallback to actual school if no team exists
+        return $this->getRelationValue('school');
+    }
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
     }
 
     public function bookSubscriptions(): Student|HasMany

@@ -168,7 +168,7 @@
                     </div>
 
                     <!-- Question Distribution Preview -->
-                    @if(!empty($questionDistribution))
+                    @if(!empty($questionDistribution) && config('app.debug'))
                         <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                             <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Available Questions by
                                 Type & Difficulty</h4>
@@ -202,10 +202,12 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-3 justify-end">
+                        @if(config('app.debug'))
                         <button wire:click="debugQuestionData"
-                                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors duration-200">
+                                class="px-4 py-2  bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors duration-200">
                             Debug Data
                         </button>
+                        @endif
                         <button wire:click="startAssessment"
                                 class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200">
                             Start Assessment

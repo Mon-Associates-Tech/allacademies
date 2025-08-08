@@ -1,4 +1,219 @@
 <div class="space-y-6">
+    <!-- Account Alerts Section -->
+    @if(count($accountAlerts) > 0)
+        <div class="space-y-3">
+            @foreach($accountAlerts as $alert)
+                <div class="border-l-4 rounded-lg p-4 shadow-sm
+                @if($alert['type'] === 'error') bg-red-50 border-red-400 dark:bg-red-900/20 dark:border-red-500
+                @elseif($alert['type'] === 'warning') bg-amber-50 border-amber-400 dark:bg-amber-900/20 dark:border-amber-500
+                @else bg-blue-50 border-blue-400 dark:bg-blue-900/20 dark:border-blue-500 @endif">
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <span class="text-2xl">{{ $alert['icon'] }}</span>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-lg font-semibold
+                            @if($alert['type'] === 'error') text-red-800 dark:text-red-200
+                            @elseif($alert['type'] === 'warning') text-amber-800 dark:text-amber-200
+                            @else text-blue-800 dark:text-blue-200 @endif">
+                                {{ $alert['title'] }}
+                            </h3>
+                            <p class="text-sm mt-1
+                            @if($alert['type'] === 'error') text-red-700 dark:text-red-300
+                            @elseif($alert['type'] === 'warning') text-amber-700 dark:text-amber-300
+                            @else text-blue-700 dark:text-blue-300 @endif">
+                                {{ $alert['message'] }}
+                            </p>
+                        </div>
+                        @if(isset($alert['action']))
+                            <div class="ml-4">
+                                <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2
+                                @if($alert['type'] === 'error') bg-red-600 hover:bg-red-700 focus:ring-red-500
+                                @elseif($alert['type'] === 'warning') bg-amber-600 hover:bg-amber-700 focus:ring-amber-500
+                                @else bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 @endif">
+                                    {{ $alert['action'] }}
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    <!-- Account Completeness Section -->
+    @if($accountCompleteness['percentage'] < 100)
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Account Setup Progress
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {{ $accountCompleteness['completed_items'] }} of {{ $accountCompleteness['total_items'] }} completed
+                    </span>
+                        <div class="flex items-center">
+                            <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ $accountCompleteness['percentage'] }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 mb-6">
+                    <div class="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+                         style="width: {{ $accountCompleteness['percentage'] }}%"></div>
+                </div>
+
+                <!-- Checklist -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach($accountCompleteness['checklist'] as $key => $item)
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                @if($item['completed'])
+                                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                @else
+                                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                @endif
+                            </div>
+                            <div class="flex-1">
+                            <span class="text-sm font-medium {{ $item['completed'] ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400' }}">
+                                {{ $item['label'] }}
+                            </span>
+                            </div>
+                            <div class="text-xs text-gray-400">{{ $item['weight'] }}%</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Academic Status Overview -->
+    @if($academicStatus)
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                    </svg>
+                    Academic Information
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Academic Group -->
+                    <div class="space-y-2">
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                            <span class="text-lg mr-2">👥</span>
+                            Academic Group
+                        </h4>
+                        @if($academicStatus['academic_group'])
+                            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                                <p class="font-semibold text-green-800 dark:text-green-200">
+                                    {{ $academicStatus['academic_group']['name'] }}
+                                </p>
+                                <p class="text-sm text-green-700 dark:text-green-300">
+                                    {{ $academicStatus['academic_group']['teachers_count'] }} teacher(s) assigned
+                                </p>
+                            </div>
+                        @else
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                                <p class="text-red-800 dark:text-red-200 font-medium">Not Assigned</p>
+                                <p class="text-sm text-red-700 dark:text-red-300">Contact your administrator</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Academic Level -->
+                    <div class="space-y-2">
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                            <span class="text-lg mr-2">📚</span>
+                            Academic Level
+                        </h4>
+                        @if($academicStatus['academic_level'])
+                            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                                <p class="font-semibold text-green-800 dark:text-green-200">
+                                    {{ $academicStatus['academic_level']['name'] }}
+                                </p>
+                                <p class="text-sm text-green-700 dark:text-green-300">
+                                    {{ $academicStatus['academic_level']['subjects_count'] }} subject(s) available
+                                </p>
+                            </div>
+                        @else
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                                <p class="text-red-800 dark:text-red-200 font-medium">Not Assigned</p>
+                                <p class="text-sm text-red-700 dark:text-red-300">Contact your administrator</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- School -->
+                    <div class="space-y-2">
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                            <span class="text-lg mr-2">🏫</span>
+                            School
+                        </h4>
+                        @if($academicStatus['school'])
+                            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                                <p class="font-semibold text-green-800 dark:text-green-200">
+                                    {{ $academicStatus['school']['name'] }}
+                                </p>
+                            </div>
+                        @else
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                                <p class="text-red-800 dark:text-red-200 font-medium">Not Assigned</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Subjects Summary -->
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                        <span class="text-lg mr-2">📖</span>
+                        Subjects Summary
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                {{ $academicStatus['subjects_summary']['total_accessible'] }}
+                            </div>
+                            <div class="text-sm text-blue-700 dark:text-blue-300">Total Accessible</div>
+                        </div>
+                        <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                            <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                {{ $academicStatus['subjects_summary']['from_level'] }}
+                            </div>
+                            <div class="text-sm text-green-700 dark:text-green-300">From Level</div>
+                        </div>
+                        <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                                {{ $academicStatus['subjects_summary']['individually_assigned'] }}
+                            </div>
+                            <div class="text-sm text-purple-700 dark:text-purple-300">Individual</div>
+                        </div>
+                        <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
+                            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                {{ $academicStatus['subjects_summary']['removed_from_level'] }}
+                            </div>
+                            <div class="text-sm text-orange-700 dark:text-orange-300">Removed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Enhanced Welcome Section -->
     <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-xl p-4 text-white shadow-lg">
         <div class="flex items-center justify-between">
@@ -109,39 +324,39 @@
 
     <!-- Subject Progress Section -->
     @if(count($subjectProgress) > 0)
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold flex items-center">
-                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
-                </svg>
-                Subject Progress
-            </h3>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($subjectProgress as $subject)
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="font-medium text-gray-900 dark:text-gray-100">{{ $subject['name'] }}</h4>
-                            <span class="text-2xl font-bold text-{{ $subject['color'] }}-600">{{ $subject['average_score'] }}%</span>
-                        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    Subject Progress
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($subjectProgress as $subject)
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-medium text-gray-900 dark:text-gray-100">{{ $subject['name'] }}</h4>
+                                <span class="text-2xl font-bold text-{{ $subject['color'] }}-600">{{ $subject['average_score'] }}%</span>
+                            </div>
 
-                        <!-- Progress Bar -->
-                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mb-3">
-                            <div class="bg-{{ $subject['color'] }}-600 h-2 rounded-full transition-all duration-300"
-                                 style="width: {{ $subject['progress_percentage'] }}%"></div>
-                        </div>
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mb-3">
+                                <div class="bg-{{ $subject['color'] }}-600 h-2 rounded-full transition-all duration-300"
+                                     style="width: {{ $subject['progress_percentage'] }}%"></div>
+                            </div>
 
-                        <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                            <span>{{ $subject['total_assessments'] }} assessments</span>
-                            <span>{{ $subject['recent_activity'] }} this week</span>
+                            <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                                <span>{{ $subject['total_assessments'] }} assessments</span>
+                                <span>{{ $subject['recent_activity'] }} this week</span>
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </div>
-    </div>
     @endif
 
     <!-- Main Content Grid -->

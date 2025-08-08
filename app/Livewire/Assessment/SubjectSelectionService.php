@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Assessment;
 
+use App\Enums\UserRole;
 use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
 use App\Models\AcademicSubtopic;
@@ -10,7 +11,6 @@ use App\Models\TrueOrFalseQuestion;
 use App\Models\EssayQuestion;
 use App\Models\Student;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 
 class SubjectSelectionService implements SubjectSelectionInterface
 {
@@ -26,8 +26,8 @@ class SubjectSelectionService implements SubjectSelectionInterface
      */
     public function getAvailableSubjects(): Collection
     {
-        if (!$this->student) {
-            return collect();
+        if (!$this->student && auth()->user()->role === UserRole::STUDENT->value) {
+          $this->student =  Student::firstOrCreate(['user_id' => auth()->id()]);
         }
 
         $subjects = collect();
