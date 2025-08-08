@@ -174,19 +174,20 @@ class Student extends Model
 
     public function getIndividuallyAssignedSubjects()
     {
-        return $this->individualSubjects()
-            ->wherePivot('is_active', true)
-            ->whereNotIn('academic_subjects.id', function($query) {
-                if ($this->academicLevel) {
-                    $query->select('id')
-                        ->from('academic_subjects')
-                        ->where('academic_level_id', $this->academicLevel->id);
-            } else {
-                $query->selectRaw('NULL')->whereRaw('1=0');
-            }
-        })
-        ->get();
+        $query = $this->individualSubjects()
+            ->wherePivot('is_active', true);
+
+        if ($this->academicLevel) {
+            $query->whereNotIn('academic_subjects.id', function($subquery) {
+                $subquery->select('id')
+                    ->from('academic_subjects')
+                    ->where('academic_level_id', $this->academicLevel->id);
+            });
+        }
+
+        return $query->get();
     }
+
 
     public function getRemovedLevelSubjects()
     {
