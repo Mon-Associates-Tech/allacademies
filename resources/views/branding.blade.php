@@ -1,150 +1,212 @@
 <x-app>
-    <div class="bg-white dark:bg-gray-900 transition-colors duration-300">
-        <!-- Navigation -->
-        <div x-data="{ open: false }" class="absolute inset-x-0 top-12 w-11/12 mx-auto z-50">
-            <nav
-                class="flex items-center justify-between bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-lg rounded-3xl p-4 lg:px-8 border border-gray-100 dark:border-gray-700"
-                aria-label="Global">
-                <div class="flex lg:flex-1">
-                    <a href="#" class="-m-1.5 p-1.5 flex items-center gap-4 group">
-                        <span class="sr-only">{{ config('app.name') }}</span>
-                        <img class="h-8 w-auto group-hover:scale-110 transition-transform duration-300"
-                             src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo">
-                        <span
-                            class="text-lg font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">All Academies</span>
-                    </a>
-                </div>
-                <div class="flex lg:hidden">
-                    <button x-on:click="open = true" type="button"
-                            class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                        <span class="sr-only">Open main menu</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                             aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="hidden lg:flex lg:gap-x-8">
-                    <a href="#home"
-                       class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
-                        </svg>
-                        Home
-                        <span
-                            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-                    </a>
-                    <a href="#features"
-                       class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
-                        </svg>
-                        Features
-                        <span
-                            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-                    </a>
-                    <a href="#modules"
-                       class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
-                        </svg>
-                        Modules
-                        <span
-                            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-                    </a>
-                    <a href="#pricing"
-                       class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H4.5m-1.5 0H3c.621 0 1.125.504 1.125 1.125v.375m13.5 0h1.125c.621 0 1.125.504 1.125 1.125v.375a.75.75 0 0 1-1.5 0V6h-.75m-1.5-1.5H21A2.25 2.25 0 0 1 23.25 6v12a2.25 2.25 0 0 1-2.25 2.25H3A2.25 2.25 0 0 1 .75 18V6A2.25 2.25 0 0 1 3 3.75h18Z"/>
-                        </svg>
-                        Pricing
-                        <span
-                            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-                    </a>
-                    <a href="#faq"
-                       class="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 relative group flex items-center">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
-                        </svg>
-                        FAQ
-                        <span
-                            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-                    </a>
-                </div>
-                <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-                    <a href="{{ route('sign-in') }}"
-                       class="text-sm font-semibold leading-6 text-white px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 shadow-lg hover:shadow-xl hover:scale-105 rounded-xl transition-all duration-300">
-                        Sign In <span aria-hidden="true">&rarr;</span>
-                    </a>
-                </div>
-            </nav>
 
-            <!-- Mobile menu -->
-            <div x-show="open" x-transition:enter="duration-200 ease-out" x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100" x-transition:leave="duration-100 ease-in"
-                 x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                 class="lg:hidden" role="dialog" aria-modal="true">
-                <div class="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm" x-on:click="open = false"></div>
-                <div
-                    class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 dark:sm:ring-gray-100/10 shadow-2xl">
-                    <div class="flex items-center justify-between">
-                        <a href="#" class="-m-1.5 p-1.5">
-                            <span class="sr-only">{{ config('app.name') }}</span>
-                            <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}"
-                                 alt="{{ config('app.name') }} Logo">
+    <!-- Navigation -->
+    <div class="bg-white dark:bg-gray-900 transition-colors  duration-300">
+        <!-- Navigation -->
+        <header
+            x-data="{
+                scrolled: false,
+                init() {
+                    const updateHeader = () => {
+                        this.scrolled = window.scrollY > 10;
+                    };
+                    window.addEventListener('scroll', updateHeader);
+                    updateHeader();
+                }
+            }"
+            class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 header-blur"
+            :class="{
+                'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg border-b border-white/20 dark:border-gray-700/50': scrolled,
+                '': !scrolled
+            }">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div x-data="{ open: false }" class="flex justify-between items-center h-16 lg:h-20">
+                    <!-- Logo -->
+                    <div class="flex items-center">
+                        <a href="{{ route('home') }}" class="flex items-center space-x-3 group">
+                            <div class="relative">
+                                <div
+                                    class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                                    <img src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo"
+                                         class="w-8 h-8">
+                                </div>
+                                <div
+                                    class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block">
+                                <span class="text-xl lg:text-2xl font-bold transition-colors duration-300"
+                                      :class="scrolled ? 'text-gray-900 dark:text-white' : 'text-white'">
+                                    All Academies
+                                </span>
+                                <div class="text-xs font-medium tracking-wider transition-colors duration-300"
+                                     :class="scrolled ? 'text-gray-500 dark:text-gray-400' : 'text-blue-200'">
+                                    Educational Excellence
+                                </div>
+                            </div>
                         </a>
-                        <button x-on:click="open = false" type="button"
-                                class="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                            <span class="sr-only">Close menu</span>
+                    </div>
+
+                    <!-- Desktop Navigation -->
+                    <nav class="hidden lg:flex items-center space-x-8">
+                        <a href="#home"
+                           class="font-semibold transition-colors duration-300 relative group flex items-center"
+                           :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                            </svg>
+                            Home
+                            <span
+                                class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                                :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
+                        </a>
+                        <a href="#features"
+                           class="font-semibold transition-colors duration-300 relative group flex items-center"
+                           :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+                            </svg>
+                            Features
+                            <span
+                                class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                                :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
+                        </a>
+                        <a href="#modules"
+                           class="font-semibold transition-colors duration-300 relative group flex items-center"
+                           :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
+                            </svg>
+                            Modules
+                            <span
+                                class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                                :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
+                        </a>
+                        <a href="#pricing"
+                           class="font-semibold transition-colors duration-300 relative group flex items-center"
+                           :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H4.5m-1.5 0H3c.621 0 1.125.504 1.125 1.125v.375m13.5 0h1.125c.621 0 1.125.504 1.125 1.125v.375a.75.75 0 0 1-1.5 0V6h-.75m-1.5-1.5H21A2.25 2.25 0 0 1 23.25 6v12a2.25 2.25 0 0 1-2.25 2.25H3A2.25 2.25 0 0 1 .75 18V6A2.25 2.25 0 0 1 3 3.75h18Z"/>
+                            </svg>
+                            Pricing
+                            <span
+                                class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                                :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
+                        </a>
+                        <a href="#faq"
+                           class="font-semibold transition-colors duration-300 relative group flex items-center"
+                           :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+                            </svg>
+                            FAQ
+                            <span
+                                class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                                :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
+                        </a>
+                    </nav>
+
+                    <!-- Right side actions -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Sign In Button -->
+                        <div class="hidden lg:flex">
+                            <a href="{{ route('sign-in') }}"
+                               class="inline-flex items-center px-6 py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                               :class="scrolled ? 'text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700' : 'text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white hover:text-blue-600'">
+                                Sign In
+                                <span aria-hidden="true" class="ml-2">&rarr;</span>
+                            </a>
+                        </div>
+
+                        <!-- Mobile menu button -->
+                        <button x-on:click="open = true" type="button"
+                                class="lg:hidden inline-flex items-center justify-center rounded-md p-2.5 hover:bg-white/10 transition-colors"
+                                :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' : 'text-white'">
+                            <span class="sr-only">Open main menu</span>
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
                             </svg>
                         </button>
                     </div>
-                    <div class="mt-6 flow-root">
-                        <div class="-my-6 divide-y divide-gray-500/10 dark:divide-gray-400/10">
-                            <div class="space-y-2 py-6">
-                                <a href="#home"
-                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">Home</a>
-                                <a href="#features"
-                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">Features</a>
-                                <a href="#modules"
-                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">Modules</a>
-                                <a href="#pricing"
-                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">Pricing</a>
-                                <a href="#faq"
-                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">FAQ</a>
+
+                    <!-- Mobile menu -->
+                    <div x-show="open"
+                         x-transition:enter="duration-200 ease-out"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="duration-100 ease-in"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="lg:hidden"
+                         role="dialog"
+                         aria-modal="true"
+                         @click.outside="open = false">
+                        <div class="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm" x-on:click="open = false"></div>
+                        <div
+                            class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-gray-900 px-6 py-6 sm:max-w-sm shadow-2xl">
+                            <div class="flex items-center justify-between">
+                                <a href="{{ route('home') }}" class="-m-1.5 p-1.5">
+                                    <span class="sr-only">{{ config('app.name') }}</span>
+                                    <img class="h-8 w-auto" src="{{ asset('img/logo.png') }}"
+                                         alt="{{ config('app.name') }} Logo">
+                                </a>
+                                <button x-on:click="open = false" type="button"
+                                        class="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <span class="sr-only">Close menu</span>
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                         stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
                             </div>
-                            <div class="py-6">
-                                <a href="{{ route('sign-in') }}"
-                                   class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">Sign
-                                    In</a>
+                            <div class="mt-6 flow-root">
+                                <div class="-my-6 divide-y divide-gray-500/10 dark:divide-gray-400/10">
+                                    <div class="space-y-2 py-6">
+                                        <a href="#home"
+                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                           x-on:click="open = false">Home</a>
+                                        <a href="#features"
+                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                           x-on:click="open = false">Features</a>
+                                        <a href="#modules"
+                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                           x-on:click="open = false">Modules</a>
+                                        <a href="#pricing"
+                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                           x-on:click="open = false">Pricing</a>
+                                        <a href="#faq"
+                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                           x-on:click="open = false">FAQ</a>
+                                    </div>
+                                    <div class="py-6">
+                                        <a href="{{ route('sign-in') }}"
+                                           class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
+                                            Sign In
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
         <!-- Hero Section -->
-        <div id="home" class="relative min-h-screen overflow-hidden">
+        <div id="home" class="relative min-h-screen overflow-hidden pb-5">
             <!-- Animated Background Elements -->
             <div class="absolute inset-0">
                 <div
@@ -166,27 +228,30 @@
             </div>
 
             <!-- Content -->
-            <div class="relative z-10 flex items-center pt-8 my-auto min-h-screen">
+            <div class="relative z-10 flex items-center pt-16 lg:pt-20 my-auto min-h-screen">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <!-- Text Content -->
                         <div class="text-center lg:text-left space-y-8">
-                            <div
-                                class="inline-flex items-center px-4 py-2 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 text-white">
-                                <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor"
-                                     viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="text-sm font-medium">Trusted by 50,000+ Students Worldwide</span>
+                            <div class="text-white">
+                                <div
+                                    class="inline-flex items-center px-3 py-1 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 text-white">
+                                    <svg class="w-4 h-4 mr-2 text-green-400" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-xs font-medium">Trusted by 50,000+ Students Worldwide</span>
+                                </div>
+
+                                <h1 class="text-4xl font-extrabold pt-2 tracking-tight text-white sm:text-5xl md:text-6xl">
+                                    <span class="block">Transform Your</span>
+                                    <span
+                                        class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">Learning Journey</span>
+                                    <span class="block text-3xl sm:text-4xl md:text-5xl mt-2">with All Academies</span>
+                                </h1>
                             </div>
 
-                            <h1 class="text-4xl font-extrabold pt-4 tracking-tight text-white sm:text-5xl md:text-6xl">
-                                <span class="block">Transform Your</span>
-                                <span
-                                    class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">Learning Journey</span>
-                                <span class="block text-3xl sm:text-4xl md:text-5xl mt-2">with All Academies</span>
-                            </h1>
 
                             <p class="max-w-lg text-xl text-gray-200 leading-relaxed">
                                 Access a comprehensive digital ecosystem featuring 10,000+ educational resources,
@@ -340,7 +405,13 @@
                 </div>
             </div>
         </div>
-
+        <!-- Add header blur CSS -->
+        <style>
+            .header-blur {
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+            }
+        </style>
         <!-- Features Section -->
         <div id="features" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -389,7 +460,8 @@
 
                                     <div
                                         class="absolute bottom-4 right-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Updated Daily</span>
+                                    <span
+                                        class="text-sm font-semibold text-gray-900 dark:text-gray-100">Updated Daily</span>
                                     </div>
                                 </div>
                             </div>
@@ -1107,29 +1179,165 @@
                 </div>
 
                 <!-- Call to Action for Modules -->
-                <div class="mt-16 text-center">
-                    <div class="bg-gradient-to-r from-blue-600 to-green-600 rounded-3xl shadow-2xl p-12 text-white">
-                        <h3 class="text-3xl font-bold mb-4">Ready to Transform Education?</h3>
-                        <p class="text-xl mb-8 opacity-90">
-                            Join thousands of educators and learners who are already experiencing the power of our
-                            comprehensive platform.
-                        </p>
-                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a href="#pricing"
-                               class="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-blue-600 bg-white hover:bg-gray-100 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                Start Your Journey
-                            </a>
-                            <a href="#features"
-                               class="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-base font-semibold rounded-xl text-white bg-transparent hover:bg-white hover:text-blue-600 shadow-lg hover:shadow-xl transition-all duration-300">
-                                Explore Features
-                            </a>
+                <div class="mt-20 relative">
+                    <!-- Subtle Background Elements -->
+                    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-50/30 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
+                        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-gray-50/40 dark:bg-gray-800/20 rounded-full blur-3xl"></div>
+                    </div>
+
+                    <div class="relative max-w-6xl mx-auto text-center">
+                        <!-- Clean CTA Card -->
+                        <div class="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:scale-105 transition-all duration-500">
+                            <!-- Subtle Pattern Overlay -->
+                            <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
+                                <div class="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-600"></div>
+                            </div>
+
+                            <!-- Minimal Border Effect -->
+                            <div class="absolute inset-0 rounded-3xl ring-1 ring-gray-200/50 dark:ring-gray-700/50 group-hover:ring-blue-200/50 dark:group-hover:ring-blue-700/50 transition-all duration-500"></div>
+
+                            <!-- Subtle Shine Effect -->
+                            <div class="absolute inset-0 rounded-3xl overflow-hidden">
+                                <div class="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 dark:via-white/5 to-transparent"></div>
+                            </div>
+
+                            <div class="relative p-12 lg:p-16 text-gray-900 dark:text-white">
+                                <!-- Simple Icon -->
+                                <div class="mb-8 flex justify-center">
+                                    <div class="relative">
+                                        <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center shadow-sm border border-blue-100 dark:border-blue-800/50">
+                                            <svg class="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                            </svg>
+                                        </div>
+                                        <!-- Single accent dot -->
+                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Clean Heading -->
+                                <h3 class="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+                                    Ready to
+                                    <span class="relative inline-block text-blue-600 dark:text-blue-400">
+                        Transform
+                        <svg class="absolute -bottom-2 left-0 w-full h-2 text-blue-200 dark:text-blue-800/50" viewBox="0 0 100 8" fill="none">
+                            <path d="M2 6C20 2 40 2 60 6C70 2 80 2 98 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                                    <br>Education?
+                                </h3>
+
+                                <!-- Simple Description -->
+                                <div class="max-w-3xl mx-auto mb-10">
+                                    <p class="text-xl lg:text-2xl mb-6 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                        Join <span class="font-bold text-blue-600 dark:text-blue-400">50,000+</span> educators and learners who are already experiencing the power of our comprehensive platform.
+                                    </p>
+
+                                    <!-- Clean Stats Row -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                                        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">15,000+</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">Resources Available</div>
+                                        </div>
+                                        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">500+</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">Expert Authors</div>
+                                        </div>
+                                        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">4.9★</div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">User Rating</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Clean Action Buttons -->
+                                <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                                    <!-- Primary CTA -->
+                                    <a href="{{ route('sign-up') }}"
+                                       class="group relative inline-flex items-center justify-center px-10 py-5 text-lg font-bold rounded-2xl bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
+                                        <svg class="w-6 h-6 mr-3 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                        </svg>
+                                        <span>Start Your Journey</span>
+                                    </a>
+
+                                    <!-- Secondary CTA -->
+                                    <a href="{{route('branding.features')}}"
+                                       class="group inline-flex items-center justify-center px-10 py-5 text-lg font-semibold rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/30 hover:border-blue-300 dark:hover:border-blue-600 shadow-md hover:shadow-lg transition-all duration-300 min-w-[200px]">
+                                        <svg class="w-6 h-6 mr-3 transform group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Explore Features
+                                    </a>
+                                </div>
+
+                                <!-- Simple Trust Indicators -->
+                                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center justify-center space-x-8 text-sm text-gray-500 dark:text-gray-400">
+                                        <div class="flex items-center space-x-2">
+                                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Free 30-day trial</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>No credit card required</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Cancel anytime</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Minimal Social Proof Section -->
+                        <div class="mt-12 flex items-center justify-center space-x-6 text-gray-500 dark:text-gray-400">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm font-medium">Trusted by leading institutions:</span>
+                            </div>
+                            <div class="flex -space-x-2">
+                                <div class="w-8 h-8 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-full flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                                    U1
+                                </div>
+                                <div class="w-8 h-8 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-400">
+                                    S2
+                                </div>
+                                <div class="w-8 h-8 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-full flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                                    C3
+                                </div>
+                                <div class="w-8 h-8 bg-gray-100 dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-500 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
+                                    +50
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <style>
+                .animation-delay-1000 {
+                    animation-delay: 1s;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px) rotate(0deg); }
+                    50% { transform: translateY(-10px) rotate(2deg); }
+                }
+                .animate-float {
+                    animation: float 6s ease-in-out infinite;
+                }
+            </style>
             </div>
         </div>
         <!-- Pricing Section -->
@@ -1412,13 +1620,15 @@
                                         <div
                                             class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
                                             <span class="font-semibold text-gray-700 dark:text-gray-300">Basic:</span>
-                                            <span class="font-bold text-md text-gray-900 dark:text-white">GHS 45 / Student</span>
+                                            <span
+                                                class="font-bold text-md text-gray-900 dark:text-white">GHS 45 / Student</span>
                                         </div>
                                         <div
                                             class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
                                             <span
                                                 class="font-semibold text-gray-700 dark:text-gray-300">Secondary:</span>
-                                            <span class="font-bold text-md text-gray-900 dark:text-white">GHS 75 / Student</span>
+                                            <span
+                                                class="font-bold text-md text-gray-900 dark:text-white">GHS 75 / Student</span>
                                         </div>
                                     </div>
                                 </div>

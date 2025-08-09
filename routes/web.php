@@ -79,6 +79,7 @@ use App\Http\Controllers\BookApprovalController;
 Route::view('/', 'branding')->name('home');
 Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
 Route::view('/terms', 'branding.terms')->name('branding.terms');
+Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
