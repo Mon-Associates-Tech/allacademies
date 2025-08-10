@@ -257,7 +257,7 @@ class BookController extends Controller
                 ->where('status', 'paid')
                 ->first();
 
-            if (!$subscription) {
+            if (!$subscription && !$book->author->user->id === $user->id) {
                  return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
             }
         }

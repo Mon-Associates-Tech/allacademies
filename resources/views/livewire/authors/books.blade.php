@@ -411,14 +411,14 @@
 
                                 <!-- Enhanced Actions -->
                                 <div class="flex space-x-2">
-                                    <a href="{{route('author.books.show', ['book' => $book])}}" class="flex-1 inline-flex items-center justify-center px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md">
+                                    <a href="{{route('books.show', ['book' => $book])}}" class="flex-1 inline-flex items-center justify-center px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                         View
                                     </a>
-                                    <a href="#" class="flex-1 inline-flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-all duration-200">
+                                    <a href="{{route('author.books.edit', ['book' => $book])}}" class="flex-1 inline-flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-all duration-200">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
@@ -544,11 +544,11 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
-                                            <a href="#"
+                                            <a href="{{route('books.show', $book)}}"
                                                class="btn btn-sm bg-violet-500 hover:bg-violet-600 text-white">
                                                 View
                                             </a>
-                                            <a href="#"
+                                            <a href="{{route('author.books.edit', $book)}}"
                                                class="btn btn-sm bg-gray-500 hover:bg-gray-600 text-white">
                                                 Edit
                                             </a>

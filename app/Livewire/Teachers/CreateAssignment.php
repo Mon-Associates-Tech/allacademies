@@ -9,7 +9,7 @@ use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\AcademicSubtopic;
 use App\Models\Teacher;
-use App\Livewire\Assessment\AssignmentNotificationService;
+use App\Services\AssignmentNotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Students\ActivityLogs;
+use App\Livewire\Students\AssignmentTakingComponent;
 use App\Livewire\Students\Books;
 use App\Livewire\Students\Courses;
 use App\Livewire\Students\Notifications;
@@ -37,4 +38,7 @@ Route::get('profile', Books::class)->name('profile');
 Route::get('settings', Books::class)->name('settings');
 Route::get('help', Books::class)->name('help');
 Route::get('notifications', Notifications::class)->name('notifications.index');
+    Route::get('assignments/{assignment}/take', AssignmentTakingComponent::class)
+        ->name('assignment.take')
+        ->middleware(['auth', 'role:student']);
 });

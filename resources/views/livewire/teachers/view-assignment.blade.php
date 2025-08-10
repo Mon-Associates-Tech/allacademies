@@ -327,7 +327,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         @if($student['submission_id'])
-                                            <a href="{{ route('teachers.submission.view', $student['submission_id']) }}"
+                                            <a href="{{ route('teacher.submissions.view', $student['submission_id']) }}"
                                                class="text-indigo-600 hover:text-indigo-900">View Submission</a>
                                         @else
                                             <span class="text-gray-400">No submission</span>

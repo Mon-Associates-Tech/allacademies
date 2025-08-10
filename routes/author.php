@@ -19,6 +19,7 @@ use App\Livewire\Authors\Revenue;
 use App\Livewire\Authors\Reviews;
 use App\Livewire\Authors\Settings;
 use App\Livewire\Authors\Subscriptions;
+use App\Livewire\Books\BookForm;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('author.')->group(function () {
@@ -30,9 +31,12 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('autho
     Route::prefix('books')->name('books.')->group(function () {
         Route::get('/', Books::class)->name('index');
 //        Route::get('/create', BookCreate::class)->name('create');
-        Route::get('/create', App\Livewire\Books\CreateBook::class)->name('create');
-        Route::get('/{book}/edit', BookCreate::class)->name('edit');
+//        Route::get('/create', App\Livewire\Books\CreateBook::class)->name('create');
+//        Route::get('/{book}/edit', BookCreate::class)->name('edit');
         Route::get('/{book}', BookDetails::class)->name('show');
+        Route::get('/create', BookForm::class)->name('create');
+        Route::get('{book}/edit', BookForm::class)->name('edit');
+
     });
 
     // Subscribers Management

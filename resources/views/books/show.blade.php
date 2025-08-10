@@ -238,6 +238,17 @@
                                             </svg>
                                             <span class="text-sm font-medium">Preview</span>
                                         </button>
+
+                                        <button onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                                                class="px-4 py-3 hidden  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            <span>Read PDF</span>
+                                        </button>
                                     @endif
 
                                     <!-- Notes Button -->
@@ -727,6 +738,15 @@
                                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
                     </button>
+                        <button onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                                class="px-4 py-3 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
                 @endif
                 <button @click="toggleBookmark()" class="px-4 py-3 rounded-xl transition-colors duration-200"
                         :class="isBookmarked ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'">
@@ -739,4 +759,5 @@
             </div>
         </div>
     </div>
+    @livewire('common.p-d-f-reader-component', ['bookId' => $book->id, 'config' => ['book' => $book]])
 </x-layouts.app>

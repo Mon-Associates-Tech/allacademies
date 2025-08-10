@@ -13,13 +13,13 @@
                 @if(!$showForm)
                     <div class="">
                         <x-link.white class="mr-2" :to="route('books.index')">Browse Books</x-link.white>
-                        <button wire:click="showCreateForm"
+                        <a href="{{route('admin.bookss.create')}}"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                             Add Book
-                        </button>
+                        </a>
                     </div>
 
                 @endif
@@ -618,13 +618,13 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="flex items-center justify-end space-x-2">
-                                    <button wire:click="edit({{ $book->id }})"
+                                    <a href="{{route('admin.books.edit', ['book' => $book])}}" wire:click="edit({{ $book->id }})"
                                             class="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
                                             title="Edit">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
-                                    </button>
+                                    </a>
                                     @if($book->has_softcopy && $book->pdf_file_path)
                                         <a href="{{ Storage::url($book->pdf_file_path) }}" target="_blank"
                                            class="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-50 rounded transition-colors"

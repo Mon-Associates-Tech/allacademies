@@ -123,7 +123,7 @@ class BookManagement extends Component
 
     public function showCreateForm()
     {
-        return redirect(route('admin.create-book'));
+        return redirect(route('admin.books.create'));
         $this->showForm = true;
         $this->isEditing = false;
         $this->resetForm();
@@ -290,8 +290,8 @@ class BookManagement extends Component
             return;
         }
 
-        $this->deleteBookFiles($book);
-        $book->delete();
+//        $this->deleteBookFiles($book);
+//        $book->delete();
 
         session()->flash('message', 'Book deleted successfully!');
         $this->dispatch('refreshBooks');

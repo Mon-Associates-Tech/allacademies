@@ -15,12 +15,14 @@ import {
 import { marked } from "marked";
 import katex from "katex";
 import axios from 'axios';
-import './fullcalendar'
+import './fullcalendar';
+import 'aos/dist/aos.css'
+import * as AOS from 'aos'
 // Import chart data helper
 import './activity'; // Import activity tracking
 import renderMathInElement from 'katex/dist/contrib/auto-render';
 
-
+import './pdf_reader_wrapper'
 
 // Register Chart.js components (added RadialLinearScale for radar charts)
 Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale);
@@ -30,6 +32,7 @@ window.Alpine = Alpine;
 window.marked = marked;
 window.Chart = Chart;
 window.axios = axios;
+window.AOS = AOS;
 
 
 import './ChartDataHelper';

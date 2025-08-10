@@ -23,11 +23,11 @@ class ViewAssignment extends Component
     public $showStudentDetails = false;
     public $selectedFilter = 'all'; // all, completed, in_progress, not_started
 
-    public function mount($assignmentId)
+    public function mount(Assignment $assignment)
     {
         $this->teacher = Teacher::where('user_id', Auth::id())->first();
 
-        $this->assignment = Assignment::with([
+        $this->assignment = $assignment->load([
             'academicSubject',
             'academicGroups',
             'academicLevels',
@@ -36,7 +36,7 @@ class ViewAssignment extends Component
             'topics',
             'subtopics',
             'submissions.student.user'
-        ])->findOrFail($assignmentId);
+        ]);
 
         // Ensure the assignment belongs to the current teacher
         if ($this->assignment->teacher_id !== $this->teacher->id) {

@@ -9,6 +9,7 @@ use App\Livewire\Teachers\Subjects;
 use App\Livewire\Teachers\TeacherNotifications;
 use App\Livewire\Teachers\TeacherProfile;
 use App\Livewire\Teachers\ViewAssignment;
+use App\Livewire\Teachers\ViewAssignmentSubmission;
 use App\Livewire\Teachers\VirtualClassroom;
 
 Route::middleware(['auth'])->prefix('dashboard/teacher')->name('teacher.')->group(function () {
@@ -22,5 +23,7 @@ Route::middleware(['auth'])->prefix('dashboard/teacher')->name('teacher.')->grou
     Route::get('notifications', TeacherNotifications::class)->name('notifications.index');
     Route::get('schedules', Schedules::class)->name('schedules');
     Route::get('classroom', VirtualClassroom::class)->name('classroom');
-//    Route::get('books', Books::class)->name('books');
+    Route::get('books', [\App\Http\Controllers\BookController::class,  'index'])->name('books.index');
+    Route::get('submissions/{submission}', ViewAssignmentSubmission::class)
+        ->name('submissions.view');
 });

@@ -5,7 +5,10 @@
 'hasAction' => false,
 'pageName' => null,
 'action_link' => '',
-'actionLinkText' => ''])
+'actionLinkText' => '',
+'showTitleArea' => true,
+]
+)
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" :class="{ 'dark': $store.darkMode.on }">
@@ -59,19 +62,21 @@
                 </div>
 
                 <!-- Page header -->
-                <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
+                @if($showTitleArea)
+                <div class="max-w-7xl mr-auto  sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
                     <div class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
                         <div class="text-lg md:text-2xl hidden print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
                             {{ $title }}
                         </div>
                     </div>
                 </div>
+                @endif
 
                 <!-- Page content -->
                 <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible overflow-x-hidden">
                     <div
                         x-data="{}"
-                        class="w-full overflow-y-visible  sm:px-6 lg:px-8 "
+                        class="w-full overflow-y-visible  sm:px-4 lg:px-6 "
                     >
                         <x-loader />
                             {{ $slot }}

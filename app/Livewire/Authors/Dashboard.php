@@ -210,6 +210,7 @@ class Dashboard extends Component
     {
         $this->bookToDelete = Book::findOrFail($bookId);
         $this->showDeleteModal = true;
+        $this->js('alert()');
     }
 
     public function deleteBook()
