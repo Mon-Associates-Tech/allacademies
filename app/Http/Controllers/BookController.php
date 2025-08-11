@@ -79,32 +79,6 @@ class BookController extends Controller
         return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds'));
     }
 
-    public function showdd(Book $book)
-    {
-        // Load necessary relationships
-        $book->load([
-            'author',
-            'bookCategory',
-            'reviews' => function ($query) {
-                $query->approved()
-                    ->with('user')
-                    ->latest()
-                    ->limit(5);
-            }
-        ]);
-
-        // Get recent reviews for quick display
-        $recentReviews = $book->reviews()
-            ->approved()
-            ->with('user')
-            ->latest()
-            ->limit(3)
-            ->get();
-
-        return view('books.show', compact('book', 'recentReviews'));
-    }
-
-
     public function show(Book $book)
     {
         $book->load([
@@ -150,6 +124,16 @@ class BookController extends Controller
         return view('books.show',
             compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
         );
+    }
+
+    public function create()
+    {
+        return view('books.create');
+    }
+
+    public function edit(Book $book)
+    {
+        return view('books.edit', compact('book'));
     }
 
     public function subscribe(Request $request, Book $book)

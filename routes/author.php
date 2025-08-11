@@ -1,15 +1,13 @@
 <?php
 
+use App\Http\Controllers\BookController;
 use App\Livewire\Authors\AuthorProfile;
 use App\Livewire\Authors\BookAnalytics;
 use App\Livewire\Authors\BookBorrowings;
 use App\Livewire\Authors\BookCategories;
-use App\Livewire\Authors\BookCreate;
 use App\Livewire\Authors\BookDetails;
-use App\Livewire\Authors\BookEdit;
 use App\Livewire\Authors\Books;
 use App\Livewire\Authors\Community;
-use App\Livewire\Authors\Dashboard;
 use App\Livewire\Authors\Help;
 use App\Livewire\Authors\Notifications;
 use App\Livewire\Authors\Profile;
@@ -19,7 +17,7 @@ use App\Livewire\Authors\Revenue;
 use App\Livewire\Authors\Reviews;
 use App\Livewire\Authors\Settings;
 use App\Livewire\Authors\Subscriptions;
-use App\Livewire\Books\BookForm;
+
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('author.')->group(function () {
@@ -34,8 +32,8 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('autho
 //        Route::get('/create', App\Livewire\Books\CreateBook::class)->name('create');
 //        Route::get('/{book}/edit', BookCreate::class)->name('edit');
         Route::get('/{book}', BookDetails::class)->name('show');
-        Route::get('/create', BookForm::class)->name('create');
-        Route::get('{book}/edit', BookForm::class)->name('edit');
+        Route::get('/create', [BookController::class, 'create'])->name('books.create');
+        Route::get('/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
 
     });
 

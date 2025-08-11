@@ -115,6 +115,8 @@ class BookForm extends Component
             $this->mode = 'edit';
         } else {
             $this->mode = 'create';
+            $this->book = null;
+            $this->bookId = null;
         }
 
         $this->loadData();
@@ -198,9 +200,9 @@ class BookForm extends Component
         $this->subscriptionConditions = $this->book->subscription_conditions;
         $this->status = $this->book->status;
 
-        // Handle existing files
-        $this->existingCoverImage = $this->book->cover_image;
-        $this->existingPdfFile = $this->book->content_url;
+        // Handle existing files - use the raw database field, not the accessor
+        $this->existingCoverImage = $this->book->getAttributes()['cover_image'] ?? null;
+        $this->existingPdfFile = $this->book->getAttributes()['content_url'] ?? null;
 
         // Handle table of contents
         if ($this->book->table_of_contents) {
@@ -574,57 +576,57 @@ class BookForm extends Component
         ]);
     }
 
-    private function updateBook()
-    {
-        // Handle cover image update
-        $coverPath = $this->book->cover_image;
-        if ($this->removeCoverImage && $this->book->cover_image) {
-            Storage::disk('public')->delete($this->book->cover_image);
-            $coverPath = null;
-        }
-        if ($this->coverImage) {
-            if ($this->book->cover_image) {
-                Storage::disk('public')->delete($this->book->cover_image);
-            }
-            $coverPath = $this->coverImage->store('book-covers', 'public');
-        }
-
-        // Handle PDF file update
-        $pdfPath = $this->book->content_url;
-        if ($this->removePdfFile && $this->book->content_url) {
-            Storage::disk('public')->delete($this->book->content_url);
-            $pdfPath = null;
-        }
-        if ($this->pdfFile) {
-            if ($this->book->content_url) {
-                Storage::disk('public')->delete($this->book->content_url);
-            }
-            $pdfPath = $this->pdfFile->store('book-pdfs', 'public');
-        }
-
-        // Prepare table of contents
-        $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
-
-        // Update book
-        $this->book->update([
-            'title' => $this->title,
-            'slug' => $this->slug,
-            'author_id' => $this->authorId,
-            'book_category_id' => $this->bookCategoryId,
-            'edition' => $this->edition,
-            'publisher' => $this->publisher,
-            'pages' => $this->pages,
-            'has_hardcopy' => $this->hasHardcopy,
-            'has_softcopy' => $this->hasSoftcopy,
-            'additional_info' => $this->additionalInfo,
-            'annual_subscription_fee' => $this->annualSubscriptionFee,
-            'subscription_conditions' => $this->subscriptionConditions,
-            'cover_image' => $coverPath,
-            'content_url' => $pdfPath,
-            'table_of_contents' => $tocData,
-            'status' => $this->status,
-        ]);
+private function updateBook()
+{
+    // Handle cover image update - use the raw database field
+    $coverPath = $this->book->getAttributes()['cover_image'];
+    if ($this->removeCoverImage && $coverPath) {
+        Storage::disk('public')->delete($coverPath);
+        $coverPath = null;
     }
+    if ($this->coverImage) {
+        if ($coverPath) {
+            Storage::disk('public')->delete($coverPath);
+        }
+        $coverPath = $this->coverImage->store('book-covers', 'public');
+    }
+
+    // Handle PDF file update - use the raw database field
+    $pdfPath = $this->book->getAttributes()['content_url'];
+    if ($this->removePdfFile && $pdfPath) {
+        Storage::disk('public')->delete($pdfPath);
+        $pdfPath = null;
+    }
+    if ($this->pdfFile) {
+        if ($pdfPath) {
+            Storage::disk('public')->delete($pdfPath);
+        }
+        $pdfPath = $this->pdfFile->store('book-pdfs', 'public');
+    }
+
+    // Prepare table of contents
+    $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
+
+    // Update book
+    $this->book->update([
+        'title' => $this->title,
+        'slug' => $this->slug,
+        'author_id' => $this->authorId,
+        'book_category_id' => $this->bookCategoryId,
+        'edition' => $this->edition,
+        'publisher' => $this->publisher,
+        'pages' => $this->pages,
+        'has_hardcopy' => $this->hasHardcopy,
+        'has_softcopy' => $this->hasSoftcopy,
+        'additional_info' => $this->additionalInfo,
+        'annual_subscription_fee' => $this->annualSubscriptionFee,
+        'subscription_conditions' => $this->subscriptionConditions,
+        'cover_image' => $coverPath,
+        'content_url' => $pdfPath,
+        'table_of_contents' => $tocData,
+        'status' => $this->status,
+    ]);
+}
 
     private function validateTableOfContents()
     {

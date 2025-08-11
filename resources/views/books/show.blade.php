@@ -86,12 +86,10 @@
         <div class="relative">
             <!-- Background Image with Overlay -->
             <div class="absolute inset-0 h-[500px] overflow-hidden">
-                <div x-show="!imageLoaded" class="w-full h-full bg-gray-300 animate-pulse"></div>
+
                 <img src="{{ $cover }}"
                      alt=""
-                     class="w-full h-full object-cover blur-lg opacity-30 transition-opacity duration-300"
-                     x-show="imageLoaded"
-                     wire:load="imageLoaded = true">
+                     class="w-full h-full object-cover blur-lg opacity-30 transition-opacity duration-300">
                 <div
                     class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-50 dark:to-gray-900"></div>
             </div>
@@ -165,13 +163,11 @@
                         <div class="sticky top-24">
                             <div
                                 class="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 group">
-                                <!-- Skeleton loader -->
-                                <div x-show="!imageLoaded" class="w-full h-full bg-gray-300 animate-pulse"></div>
+
                                 <img src="{{ $cover }}"
                                      alt="{{ $book->title }}"
                                      class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                                     x-show="imageLoaded"
-                                     @load="imageLoaded = true">
+                                >
 
                                 <!-- Bookmark overlay -->
                                 <div class="absolute top-4 right-4">
@@ -444,16 +440,18 @@
                                      class="space-y-6">
 
                                     <!-- Book Description -->
+                                    @if($book->additional_info !== null)
                                     <div
                                         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">About This
                                             Book</h2>
                                         <div class="prose prose-gray dark:prose-invert max-w-none">
                                             <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                                {{ $book->additional_info ?: 'This comprehensive textbook provides students with a thorough understanding of the subject matter. Written by experts in the field, it combines theoretical knowledge with practical applications to ensure students gain both conceptual understanding and real-world skills.' }}
+                                                {{ $book->additional_info ?: '' }}
                                             </p>
                                         </div>
                                     </div>
+                                    @endif
 
                                     <!-- Key Features -->
                                     <div

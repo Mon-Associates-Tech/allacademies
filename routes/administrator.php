@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookController;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
@@ -18,9 +19,9 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(funct
     Route::get('/student-groups', GroupManagement::class)->name('student-groups');
     Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
     Route::get('/book-management', BookManagement::class)->name('book-management');
-    Route::get('/book-management/create', BookForm::class)->name('bookss.create');
-    Route::get('/book-management/{book}/edit', BookForm::class)->name('books.edit');
-    Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
+    Route::get('/book-management/create', [BookController::class, 'create'])->name('books.create');
+    Route::get('/book-management/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
+ Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
     Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
     Route::get('/logins', UserLoginLog::class)->name('logins');
     Route::get('/author-management', AuthorManagement::class)->name('author-management');
