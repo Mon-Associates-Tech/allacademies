@@ -277,7 +277,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center space-x-4">
+                        <div class="hidden items-center space-x-4">
                             <select
                                 wire:model.live="filterStatus"
                                 class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2
