@@ -1,6 +1,6 @@
 @props(['content' => '', 'class' => 'prose max-w-none'])
 
-<div {{ $attributes->merge(['class' => $class]) }}
+<div  {{ $attributes->merge(['class' => $class]) }}
      x-data="{
         htmlContent: '',
         init() {

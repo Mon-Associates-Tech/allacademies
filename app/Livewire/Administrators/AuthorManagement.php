@@ -151,8 +151,9 @@ class AuthorManagement extends Component
     {
         return [
             'total_authors' => Author::count(),
-            'active_authors' => 1, // Author::where('is_active', true)->count(),
-            'inactive_authors' => 3, // Author::where('is_active', false)->count(),
+            'active_authors' =>  Author::with('user')->whereHas('user', function ($query) {$query->where('is_active', true);})->count(),
+            'inactive_authors' =>  Author::with('user')->whereHas('user', function ($query) {$query->where('is_active', false);})->count(),
+//            'inactive_authors' =>  Author::where('is_active', false)->count(),
             'total_books' => Book::whereHas('author')->count(),
             'authors_with_books' => Author::has('books')->count(),
             'authors_without_books' => Author::doesntHave('books')->count(),
@@ -161,11 +162,11 @@ class AuthorManagement extends Component
 
     public function getSpecializationsProperty()
     {
-        return collect();
-        Author::whereNotNull('specialization')
-            ->where('specialization', '!=', '')
+
+        Author::whereNotNull('authors.writing_experience')
+            ->where('authors.writing_experience', '!=', '')
             ->distinct()
-            ->pluck('specialization')
+            ->pluck('authors.writing_experience')
             ->sort()
             ->values();
     }
@@ -200,7 +201,7 @@ class AuthorManagement extends Component
             Author::create([
                 'user_id' => $user->id,
                 'biography' => $this->biography,
-                'specialization' => $this->specialization,
+//                'specialization' => $this->specialization,
                 'website' => $this->website,
                 'profile_image' => $profileImagePath,
                 'social_media' => json_encode($this->socialMedia),
@@ -252,19 +253,20 @@ class AuthorManagement extends Component
 
         try {
             // Handle profile image upload
-            $profileImagePath = $author->profile_image;
+            $profileImagePath = $author->user->avatar;
             if ($this->profileImage) {
                 // Delete old image if exists
                 if ($profileImagePath) {
                     Storage::disk('public')->delete($profileImagePath);
                 }
-                $profileImagePath = $this->profileImage->store('author-profiles', 'public');
+                $profileImagePath = $this->profileImage->store('avatars', 'public');
             }
 
             // Update user
             $userData = [
                 'name' => $this->name,
                 'email' => $this->email,
+                'avatar' => $profileImagePath,
                 'is_active' => $this->isActive,
             ];
 
@@ -277,7 +279,7 @@ class AuthorManagement extends Component
             // Update author profile
             $author->update([
                 'biography' => $this->biography,
-                'specialization' => $this->specialization,
+//                'specialization' => $this->specialization,
                 'website' => $this->website,
                 'profile_image' => $profileImagePath,
                 'social_media' => json_encode($this->socialMedia),
@@ -308,13 +310,14 @@ class AuthorManagement extends Component
             }
 
             // Delete author and user
-            $this->authorToDelete->user->delete();
+//            $this->authorToDelete->user->delete();
             $this->authorToDelete->delete();
 
             $this->showDeleteModal = false;
             session()->flash('message', "Author '{$this->authorToDelete->user->name}' has been deleted successfully!");
 
         } catch (\Exception $e) {
+            logError($e);
             session()->flash('error', 'Failed to delete author. Please try again.');
         }
     }
@@ -380,8 +383,8 @@ class AuthorManagement extends Component
                 $query->whereHas('user', function ($q) {
                     $q->where('name', 'like', '%' . $this->searchTerm . '%')
                       ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
-                })
-                ->orWhere('specialization', 'like', '%' . $this->searchTerm . '%');
+                });
+            //    ->orWhere('specialization', 'like', '%' . $this->searchTerm . '%');
             })
             ->when($this->filterStatus !== '', function ($query) {
                 $query->where('is_active', $this->filterStatus);

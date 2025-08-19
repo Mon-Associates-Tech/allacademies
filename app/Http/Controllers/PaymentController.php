@@ -102,6 +102,7 @@ class PaymentController extends Controller
         // Check if it's a book subscription payment
         if ($paymentType === 'book_subscription') {
             $bookSubscription = BookSubscription::where('reference', $reference)->first();
+
             if ($bookSubscription) {
                 $this->payForBookSubscription($request, $bookSubscription); // $this->processBookSubscriptionPayment($request, $bookSubscription);
                 return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');

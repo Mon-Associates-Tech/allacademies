@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Common;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\Book;
 use App\Models\BookReadingProgress;
 use App\Models\BookSubscription;
-use App\Models\GroupBookSubscription;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\On;
@@ -35,7 +38,10 @@ class PDFReaderComponent extends Component
     public $minZoom = 0.5;
     public $zoomStep = 0.2;
 
-    public function mount($bookId = null, array $config = [])
+    /**
+     * @throws \Exception
+     */
+    public function mount($bookId = null, array $config = []): void
     {
         // Apply configuration
        $this->autoSaveInterval = $config['autoSaveInterval'] ?? $this->autoSaveInterval;
@@ -51,7 +57,7 @@ class PDFReaderComponent extends Component
     }
 
     #[On('openPDFReader')]
-    public function openReader(int $bookId, array $options = [])
+    public function openReader(int $bookId, array $options = []): void
     {
         \Log::info('openPDFReader event received', ['bookId' => $bookId, 'options' => $options]);
 
@@ -125,7 +131,7 @@ class PDFReaderComponent extends Component
     }
 
     #[On('closePDFReader')]
-    public function closeReader()
+    public function closeReader(): void
     {
         $this->saveProgressFinal();
         $this->isVisible = false;
@@ -134,7 +140,7 @@ class PDFReaderComponent extends Component
     }
 
     #[On('updatePageProgress')]
-    public function handlePageProgress($data)
+    public function handlePageProgress($data): void
     {
         $currentPage = $data['currentPage'] ?? $data[0] ?? null;
         $totalPages = $data['totalPages'] ?? $data[1] ?? null;
@@ -148,7 +154,7 @@ class PDFReaderComponent extends Component
     }
 
     #[On('updateReaderState')]
-    public function handleReaderStateUpdate($data)
+    public function handleReaderStateUpdate($data): void
     {
         if (isset($data['scale'])) {
             $this->scale = max($this->minZoom, min($this->maxZoom, (float) $data['scale']));
@@ -160,7 +166,7 @@ class PDFReaderComponent extends Component
     }
 
     #[On('pdfReaderError')]
-    public function handleReaderError($error)
+    public function handleReaderError($error): void
     {
         $this->errorMessage = $error['message'] ?? 'PDF reader encountered an error';
         $this->isLoading = false;
@@ -174,21 +180,21 @@ class PDFReaderComponent extends Component
     }
 
     // Navigation methods
-    public function goToPage(int $pageNumber)
+    public function goToPage(int $pageNumber): void
     {
         if ($pageNumber >= 1 && $pageNumber <= $this->totalPages && $pageNumber !== $this->currentPage) {
             $this->dispatch('pdfGoToPage', ['page' => $pageNumber]);
         }
     }
 
-    public function nextPage()
+    public function nextPage(): void
     {
         if ($this->currentPage < $this->totalPages) {
             $this->dispatch('pdfNextPage');
         }
     }
 
-    public function previousPage()
+    public function previousPage(): void
     {
         if ($this->currentPage > 1) {
             $this->dispatch('pdfPreviousPage');
@@ -196,7 +202,7 @@ class PDFReaderComponent extends Component
     }
 
     // Zoom methods
-    public function zoomIn()
+    public function zoomIn(): void
     {
         $newScale = min($this->maxZoom, $this->scale + $this->zoomStep);
         if ($newScale !== $this->scale) {
@@ -205,7 +211,7 @@ class PDFReaderComponent extends Component
         }
     }
 
-    public function zoomOut()
+    public function zoomOut(): void
     {
         $newScale = max($this->minZoom, $this->scale - $this->zoomStep);
         if ($newScale !== $this->scale) {
@@ -214,25 +220,25 @@ class PDFReaderComponent extends Component
         }
     }
 
-    public function fitToWidth()
+    public function fitToWidth(): void
     {
         $this->dispatch('pdfFitToWidth');
     }
 
-    public function resetZoom()
+    public function resetZoom(): void
     {
         $this->scale = 1.2;
         $this->dispatch('pdfResetZoom');
     }
 
     // Fullscreen methods
-    public function toggleFullscreen()
+    public function toggleFullscreen(): void
     {
         $this->isFullscreen = !$this->isFullscreen;
         $this->dispatch('pdfToggleFullscreen');
     }
 
-    private function loadBook()
+    private function loadBook(): void
     {
         try {
             $this->book = Book::with(['author.user'])->findOrFail($this->bookId);
@@ -254,7 +260,7 @@ class PDFReaderComponent extends Component
         }
     }
 
-    private function checkAccess()
+    private function checkAccess(): void
     {
         $user = Auth::user();
         $student = $user->student ?? $user;
@@ -269,7 +275,7 @@ class PDFReaderComponent extends Component
         // Check individual subscription
         $individualSubscription = BookSubscription::where('book_id', $this->bookId)
             ->where('user_id', $user->id)
-            ->where('status', 'active')
+            ->where('status', SubscriptionStatus::PAID->value)
             ->first();
 
         if ($individualSubscription) {
@@ -282,7 +288,7 @@ class PDFReaderComponent extends Component
         if ($student && method_exists($student, 'studentGroup') && $student->studentGroup) {
             $groupSubscription = $student->studentGroup->groupBookSubscriptions()
                 ->where('book_id', $this->bookId)
-                ->where('status', 'active')
+                ->where('status', SubscriptionStatus::PAID->value)
                 ->first();
 
             if ($groupSubscription) {
@@ -296,7 +302,7 @@ class PDFReaderComponent extends Component
         $this->errorMessage = 'You need to subscribe to this book to access it.';
     }
 
-    private function loadUserProgress()
+    private function loadUserProgress(): void
     {
         $user = Auth::user();
 
@@ -310,7 +316,7 @@ class PDFReaderComponent extends Component
         }
     }
 
-    private function saveProgress($currentPage, $totalPages)
+    private function saveProgress($currentPage, $totalPages): void
     {
         $user = Auth::user();
 
@@ -350,14 +356,14 @@ class PDFReaderComponent extends Component
         }
     }
 
-    private function saveProgressFinal()
+    private function saveProgressFinal(): void
     {
         if ($this->currentPage && $this->totalPages) {
             $this->saveProgress($this->currentPage, $this->totalPages);
         }
     }
 
-    private function logBookAccess()
+    private function logBookAccess(): void
     {
         try {
             activity()
@@ -380,7 +386,7 @@ class PDFReaderComponent extends Component
         }
     }
 
-    private function resetReaderState()
+    private function resetReaderState(): void
     {
         $this->reset([
             'bookId', 'book', 'currentPage', 'totalPages', 'userProgress',
@@ -390,33 +396,33 @@ class PDFReaderComponent extends Component
     }
 
     // Computed properties
-    public function getProgressPercentage()
+    public function getProgressPercentage(): float|int
     {
         if ($this->totalPages <= 0) return 0;
         return round(($this->currentPage / $this->totalPages) * 100, 2);
     }
 
-    public function getCanGoNext()
+    public function getCanGoNext(): bool
     {
         return $this->currentPage < $this->totalPages;
     }
 
-    public function getCanGoPrevious()
+    public function getCanGoPrevious(): bool
     {
         return $this->currentPage > 1;
     }
 
-    public function getCanZoomIn()
+    public function getCanZoomIn(): bool
     {
         return $this->scale < $this->maxZoom;
     }
 
-    public function getCanZoomOut()
+    public function getCanZoomOut(): bool
     {
         return $this->scale > $this->minZoom;
     }
 
-    public function getScalePercentage()
+    public function getScalePercentage(): float
     {
         return round($this->scale * 100);
     }
@@ -431,7 +437,7 @@ class PDFReaderComponent extends Component
         return $this->book->author->user->name ?? 'Unknown Author';
     }
 
-    public function render()
+    public function render(): View|Application|Factory|\Illuminate\View\View
     {
         \Log::info('Rendering PDFReaderComponent', [
             'isVisible' => $this->isVisible,

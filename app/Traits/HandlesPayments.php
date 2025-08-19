@@ -33,11 +33,12 @@ trait HandlesPayments
             $validatedData = $this->extractAndValidatePaymentData($request);
 
             DB::transaction(function () use ($validatedData, $bookSubscription) {
-                $amount = Money::of($validatedData['amount'], $validatedData['currency'] ?? 'GHS');
+                $money = Money::of($validatedData['amount'], $validatedData['currency'] ?? 'GHS');
+               // dd($money->getAmount()->getIntegralPart());
 
                 $payment = new Payment([
                     'reference' => $validatedData['reference'],
-                    'amount' => (string)$amount->getAmount(),
+                    'amount' => (string)$money->getAmount(),
                     'status' => PaymentStatus::from($validatedData['status'] ?? 'succeeded'),
                     'currency' => $validatedData['currency'] ?? 'GHS',
                     'book_subscription_id' => $bookSubscription->id,
@@ -47,12 +48,14 @@ trait HandlesPayments
                 $payment->save();
 
                 $bookSubscription->status = SubscriptionStatus::PAID;
+                $bookSubscription->annual_fee = (float)$bookSubscription->annual_fee += (float)$money->getAmount()->getIntegralPart();
                 $bookSubscription->payment_completed_at = now();
                 $bookSubscription->save();
             });
         } catch (ValidationException $e) {
             throw $e;
         } catch (Exception $e) {
+            logError($e);
             return back()->with('error', 'An error occurred while processing the payment. Please try again.');
         }
 

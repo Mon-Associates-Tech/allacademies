@@ -14,9 +14,13 @@ class Subscriptions extends AppComponent
     public $statusFilter = 'all';
     public $perPage = 10;
 
-    public function mount(Author $author)
+    public function mount(?Author $author)
     {
-        $this->author = $author;
+        //if (!$author) {
+            $this->author = auth()->user()->author;
+        //} else {
+          //  $this->author = $author;
+       // }
     }
 
     public function render(): View

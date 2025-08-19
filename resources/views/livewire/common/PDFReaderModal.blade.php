@@ -1,6 +1,5 @@
 <div>
     @if($isVisible && $hasAccess)
-        <!-- PDF Reader Modal/Fullscreen -->
         <div class="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center"
              x-data="pdfReaderAlpine()"
              x-init="init()"
@@ -196,14 +195,7 @@
             </div>
         </div>
     @endif
-
-
-    <!-- PDF.js Library -->
-    {{--        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.js"></script>--}}
-
-    <!-- Define Alpine.js function globally first -->
     <script>
-        // Define pdfReaderAlpine globally so Alpine can access it
         window.pdfReaderAlpine = function () {
             return {
                 isFullscreen: false,

@@ -148,67 +148,66 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
         return true;
     }
 
-    /**
-     * Get questions for a specific question type
-     */
-    public function getQuestionsByType(string $type, array $config, int $count): Collection
-    {
-        Log::info("getQuestionsByType called for type: {$type}, count: {$count}");
+/**
+ * Get questions for a specific question type
+ */
+public function getQuestionsByType(string $type, array $config, int $count): Collection
+{
+    Log::info("getQuestionsByType called for type: {$type}, count: {$count}");
 
-        if ($count <= 0) {
-            Log::warning("Invalid count: {$count}");
-            return collect();
-        }
-
-        $class = $this->getQuestionClass($type);
-        if (!$class) {
-            Log::warning("Unknown question class for type: {$type}");
-            return collect();
-        }
-
-        $query = $this->buildBaseQuery($class, $config);
-
-        // Debug: Log the actual SQL query
-        Log::info("Base query SQL: " . $query->toSql());
-        Log::info("Base query bindings: " . json_encode($query->getBindings()));
-
-        // Apply difficulty filter if specified
-        if (!empty($config['difficulty']) && $config['difficulty'] !== 'all') {
-            $query->where('difficulty_level', $config['difficulty']);
-            Log::info("Applied difficulty filter: {$config['difficulty']}");
-        }
-
-        // Get available questions
-        $availableQuestions = $query->get();
-        Log::info("Available questions count: {$availableQuestions->count()}");
-
-        if ($availableQuestions->isEmpty()) {
-            Log::warning("No questions available for type: {$type}");
-            return collect();
-        }
-
-        // Randomly select the required number of questions
-        $selectedQuestions = $availableQuestions->count() <= $count
-            ? $availableQuestions
-            : $availableQuestions->random($count);
-
-        Log::info("Selected {$selectedQuestions->count()} questions for type: {$type}");
-
-        // Format questions for assessment
-        return $selectedQuestions->map(function ($question) use ($type) {
-            return [
-                'id' => $question->id,
-                'type' => $type,
-                'model' => $question,
-                'formatted' => $question->getQuestion(),
-                'difficulty' => $question->difficulty_level ?? 'medium',
-                'points' => $question->score ?? 1,
-                'subject_id' => $this->getSubjectIdFromQuestion($question),
-                'topic_id' => $this->getTopicIdFromQuestion($question),
-                'subtopic_id' => $question->academic_subtopic_id ?? null,
-            ];
-        });
+    if ($count <= 0) {
+        Log::warning("Invalid count: {$count}");
+        return collect();
     }
+
+    $class = $this->getQuestionClass($type);
+    if (!$class) {
+        Log::warning("Unknown question class for type: {$type}");
+        return collect();
+    }
+
+    $query = $this->buildBaseQuery($class, $config);
+
+    // Apply difficulty filter if specified
+    if (!empty($config['difficulty']) && $config['difficulty'] !== 'all') {
+        $query->where('difficulty_level', $config['difficulty']);
+        Log::info("Applied difficulty filter: {$config['difficulty']}");
+    }
+
+    // Get available questions
+    $availableQuestions = $query->get();
+    Log::info("Available questions count: {$availableQuestions->count()}");
+
+    if ($availableQuestions->isEmpty()) {
+        Log::warning("No questions available for type: {$type}");
+        return collect();
+    }
+
+    // Randomly select the required number of questions
+    $selectedQuestions = $availableQuestions->count() <= $count
+        ? $availableQuestions
+        : $availableQuestions->random($count);
+
+    Log::info("Selected {$selectedQuestions->count()} questions for type: {$type}");
+
+    // Format questions for assessment
+    return $selectedQuestions->map(function ($question) use ($type) {
+        // Get the question data from the model
+        $questionData = $question->getQuestion();
+
+        return [
+            'id' => $question->id,
+            'type' => $type,
+            'model' => $question,
+            'formatted' => $questionData, // This ensures we get the proper question structure
+            'difficulty' => $question->difficulty_level ?? 'medium',
+            'points' => $question->score ?? 1,
+            'subject_id' => $this->getSubjectIdFromQuestion($question),
+            'topic_id' => $this->getTopicIdFromQuestion($question),
+            'subtopic_id' => $question->academic_subtopic_id ?? null,
+        ];
+    });
+}
 
     /**
      * Mix questions from different types according to configuration
@@ -226,13 +225,12 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
         return $questions->map(function ($question, $index) {
             $formatted = $question['formatted'] ?? [];
 
-            return [
+            // Ensure we're getting the correct data based on question type
+            $baseData = [
                 'index' => $index + 1,
                 'id' => $question['id'],
                 'type' => $question['type'],
                 'question' => $formatted['question'] ?? '',
-                'options' => $formatted['options'] ?? [],
-                'answer' => $formatted['answer'] ?? null,
                 'difficulty' => $question['difficulty'],
                 'points' => $question['points'],
                 'subject_id' => $question['subject_id'],
@@ -240,6 +238,25 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
                 'subtopic_id' => $question['subtopic_id'],
                 'model' => $question['model'],
             ];
+
+            // Add type-specific fields
+            switch ($question['type']) {
+                case 'multiple_choice_question':
+                    $baseData['options'] = $formatted['options'] ?? [];
+                    $baseData['answer'] = $formatted['answer'] ?? null;
+                    break;
+
+                case 'true_or_false_question':
+                    $baseData['answer'] = $formatted['answer'] ?? null;
+                    // No options needed for true/false
+                    break;
+
+                case 'essay_question':
+                    // No options or specific answer for essay questions
+                    break;
+            }
+
+            return $baseData;
         });
     }
 

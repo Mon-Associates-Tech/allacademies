@@ -2,17 +2,14 @@
 
 namespace App\Livewire\Students;
 
-use App\Livewire\Common\HasGlobalMessages;
 use App\Models\Assignment;
-use App\Models\AssignmentSubmission;
-use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Assignments extends Component
 {
-    use WithPagination, HasGlobalMessages;
+    use WithPagination;
 
     public $search = '';
     public $statusFilter = 'all';
@@ -34,37 +31,6 @@ class Assignments extends Component
     public function mount()
     {
         $this->student = Auth::user()->student;
-
-        // Add debugging
-        if ($this->student) {
-            \Log::info('=== Student Assignment Debug ===');
-            \Log::info('Student ID: ' . $this->student->id);
-            \Log::info('Student User ID: ' . $this->student->user_id);
-            \Log::info('Student Academic Level ID: ' . ($this->student->academic_level_id ?? 'NULL'));
-
-            // Check academic groups
-            $academicGroups = $this->student->academicGroups ?? collect();
-            \Log::info('Student Academic Groups: ', $academicGroups->pluck('id')->toArray());
-
-            // Check student groups
-            $studentGroups = $this->student->studentGroups ?? collect();
-            \Log::info('Student Groups: ', $studentGroups->pluck('id')->toArray());
-
-            // Check all published assignments
-            $allAssignments = \App\Models\Assignment::where('status', 'published')->get();
-            \Log::info('Total published assignments: ' . $allAssignments->count());
-
-            foreach ($allAssignments as $assignment) {
-                \Log::info('Assignment ID: ' . $assignment->id . ' - Title: ' . $assignment->title);
-                \Log::info('  - Academic Groups: ', $assignment->academicGroups->pluck('id')->toArray());
-                \Log::info('  - Academic Levels: ', $assignment->academicLevels->pluck('id')->toArray());
-                \Log::info('  - Student Groups: ', $assignment->studentGroups->pluck('id')->toArray());
-                \Log::info('  - Direct Students: ', $assignment->students->pluck('id')->toArray());
-                \Log::info('  - Start: ' . $assignment->starts_at . ' - End: ' . $assignment->ends_at);
-            }
-        } else {
-            \Log::info('No student found for user: ' . Auth::id());
-        }
     }
 
     public function updatingSearch()
@@ -116,7 +82,6 @@ class Assignments extends Component
 
     public function startAssignment(Assignment $assignment)
     {
-        \Log::warning('lets  go');
         return redirect()->route('student.assignment.take', ['assignment' => $assignment]);
     }
 

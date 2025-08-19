@@ -34,6 +34,12 @@ class Book extends Model
         'annual_subscription_fee',
         'subscription_conditions',
         'status',
+        'has_audio',
+        'has_video',
+        'single_audio_file',
+        'single_video_file',
+        'chapter_audio_files',
+        'chapter_video_files',
     ];
 
     protected $casts = [
@@ -43,7 +49,11 @@ class Book extends Model
         'annual_subscription_fee' => 'decimal:2',
         'table_of_contents' => 'array',
         'average_rating' => 'decimal:2',
-        'total_reviews' => 'integer'
+        'total_reviews' => 'integer',
+        'has_audio' => 'boolean',
+        'has_video' => 'boolean',
+        'chapter_audio_files' => 'array',
+        'chapter_video_files' => 'array',
     ];
 
     public function author(): BelongsTo
@@ -239,6 +249,13 @@ class Book extends Model
         })->toArray();
     }
 
+
+
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->average('rating');
+    }
+
     /**
      * Update the book's average rating and total reviews count
      */
@@ -262,8 +279,8 @@ class Book extends Model
         $distribution = [];
 
         for ($i = 5; $i >= 1; $i--) {
-            $count = $this->reviews()->approved()->where('rating', $i)->count();
-            $percentage = $this->total_reviews > 0 ? ($count / $this->total_reviews) * 100 : 0;
+            $count = $this->reviews()->where('rating', $i)->count();
+            $percentage = $this->reviews()->count() > 0 ? ($count / $this->reviews()->count()) * 100 : 0;
 
             $distribution[] = [
                 'rating' => $i,
@@ -365,5 +382,37 @@ class Book extends Model
             ->with(['author', 'bookCategory'])
             ->limit($limit)
             ->get();
+    }
+
+    public function getSingleAudioUrlAttribute(): ?string
+    {
+        if ($this->attributes['single_audio_file']) {
+            return asset('storage/' . $this->attributes['single_audio_file']);
+        }
+        return asset('/media/audio/friends_lovers_and_terrible_thing_sample.mp3');
+    }
+
+    public function getSingleVideoUrlAttribute(): ?string
+    {
+        if ($this->attributes['single_video_file']) {
+            return asset('storage/' . $this->attributes['single_video_file']);
+        }
+        return asset('/media/video/the_ultimate_gift.mp4');
+    }
+
+    public function getChapterAudioUrlsAttribute(): array
+    {
+        $files = $this->chapter_audio_files ?? [];
+        return array_map(function($file) {
+            return asset('storage/' . $file);
+        }, $files);
+    }
+
+    public function getChapterVideoUrlsAttribute(): array
+    {
+        $files = $this->chapter_video_files ?? [];
+        return array_map(function($file) {
+            return asset('storage/' . $file);
+        }, $files);
     }
 }

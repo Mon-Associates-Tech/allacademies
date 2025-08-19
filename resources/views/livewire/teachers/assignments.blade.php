@@ -263,7 +263,7 @@
                         <div
                             class="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
                             <div class="flex items-center justify-between">
-                                <a href="{{ route('teacher.assignments.show', $assignment) }}"
+                                <a href="{{ route('teachers.assignments.show', $assignment) }}"
                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm font-medium hover:underline transition-colors">
                                     View Details
                                 </a>

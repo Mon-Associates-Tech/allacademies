@@ -206,9 +206,15 @@
                                         <div class="flex items-center justify-end space-x-2">
                                             <button
                                                 wire:click="toggleDetails({{ $student->id }})"
-                                                class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 text-sm font-medium"
+                                                class="text-indigo-600 hidden dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 text-sm font-medium"
                                             >
                                                 {{ in_array($student->id, $showDetails) ? 'Hide' : 'Show' }} Details
+                                            </button>
+                                            <button
+                                                wire:click="viewStudentDetails({{ $student->id }})"
+                                                class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 text-sm font-medium"
+                                            >
+                                                View Details
                                             </button>
                                         </div>
                                     </td>
@@ -313,9 +319,16 @@
                             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     wire:click="toggleDetails({{ $student->id }})"
-                                    class="w-full text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 py-2"
+                                    class="w-full hidden text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 py-2"
                                 >
                                     {{ in_array($student->id, $showDetails) ? 'Hide' : 'Show' }} Details
+                                </button>
+
+                                <button
+                                    wire:click="viewStudentDetails({{ $student->id }})"
+                                    class="w-full text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 py-2"
+                                >
+                                    View Details
                                 </button>
 
                                 @if(in_array($student->id, $showDetails))

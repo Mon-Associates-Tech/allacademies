@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\AssignmentSubmission;
 use App\Models\Student;
 use App\Models\Assessment;
 use App\Models\Assignment;
@@ -27,9 +28,10 @@ class StudentSchedule extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public function mount(Student $student, $date = null)
+    public function mount(?Student $student, $date = null)
     {
-        $this->student = $student;
+//        $this->student = $student;
+        $this->student = auth()->user()->student;
         $this->selectedDate = $date ? Carbon::parse($date) : now();
         $this->currentMonth = $this->selectedDate->month;
         $this->currentYear = $this->selectedDate->year;
@@ -114,7 +116,7 @@ class StudentSchedule extends Component
 
         // Get reading progress
         if ($this->filterType === 'all' || $this->filterType === 'reading') {
-            $readingProgress = BookReadingProgress::where('user_id', $this->student->id)
+            $readingProgress = BookReadingProgress::where('user_id', auth()->user()->id)
                 ->with(['book', 'book.subject'])
                 ->whereBetween('updated_at', [$startDate, $endDate])
                 ->get()
@@ -319,7 +321,7 @@ class StudentSchedule extends Component
                 ->where('status', 'completed')
                 ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
                 ->count(),
-            'assignments_submitted' => 0, // Will depend on Assignment model structure
+            'assignments_submitted' => AssignmentSubmission::where('student_id', $this->student->id)->get(), // Will depend on Assignment model structure
             'books_progress' => BookReadingProgress::where('user_id', auth()->user()->id)
                 ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
                 ->avg('progress_percentage'),

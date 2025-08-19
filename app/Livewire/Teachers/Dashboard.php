@@ -1,12 +1,12 @@
 <?php
+
 namespace App\Livewire\Teachers;
 
 use App\Models\Teacher;
-use App\Models\Assignment;
-use App\Models\Student;
-use App\Models\AcademicSubject;
-use App\Models\AcademicLevel;
 use App\Models\Team;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Livewire\Component;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
@@ -39,12 +39,6 @@ class Dashboard extends Component
         $this->loadDashboardMetrics();
     }
 
-    public function setActiveTab($tab): void
-    {
-        $this->activeTab = $tab;
-        $this->dispatch('tabChanged', $tab);
-    }
-
     private function loadTeacherData(): void
     {
         $this->teacher = Teacher::where('user_id', Auth::id())->first();
@@ -62,7 +56,7 @@ class Dashboard extends Component
         }
 
         // Get total counts using new helper methods
-        $this->totalStudents = $this->teacher->getStudentsCount(); // Uses getAllStudents() internally
+        $this->totalStudents = $this->teacher->getStudentsCount();
         $this->totalAssignments = $this->teacher->assignments()->count();
         $this->totalSubjects = $this->teacher->academicSubjects()->count();
 
@@ -83,7 +77,7 @@ class Dashboard extends Component
             ->get()
             ->toArray();
 
-        // Get all students (including automatically associated ones) - limit to 20 for dashboard
+
         $allStudents = $this->teacher->getAllStudents();
         $this->myStudents = $allStudents->take(20)->map(function ($student) {
             return [
@@ -114,13 +108,20 @@ class Dashboard extends Component
             })
             ->toArray();
     }
+
+    public function setActiveTab($tab): void
+    {
+        $this->activeTab = $tab;
+        $this->dispatch('tabChanged', $tab);
+    }
+
     public function refreshDashboard(): void
     {
         $this->loadDashboardMetrics();
         $this->dispatch('dashboardRefreshed');
     }
 
-    public function render()
+    public function render(): View|Application|Factory|\Illuminate\View\View
     {
         return view('livewire.teachers.dashboard', [
             'teacher' => $this->teacher,

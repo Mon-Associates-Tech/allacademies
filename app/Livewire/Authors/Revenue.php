@@ -12,14 +12,18 @@ use Illuminate\Contracts\View\View;
 class Revenue extends AppComponent
 {
     public Author $author;
-    public $dateRange = '30'; // days
+    public $dateRange = '60'; // days
     public $selectedPeriod = 'monthly';
     public $selectedBook = 'all';
     public $showDetails = false;
 
-    public function mount(Author $author)
+    public function mount(?Author $author)
     {
-        $this->author = $author;
+       // if (!$author) {
+            $this->author = auth()->user()->author;
+       // } else {
+           // $this->author = $author;
+        //}
     }
 
     public function render(): View
@@ -42,24 +46,31 @@ class Revenue extends AppComponent
 
     private function getRevenueData()
     {
+
         $startDate = Carbon::now()->subDays($this->dateRange);
         $endDate = Carbon::now();
 
         // Get base query for author's book subscriptions
         $baseQuery = BookSubscription::whereHas('book', function ($query) {
             $query->where('author_id', $this->author->id);
-        })->where('status', 'active');
+        })->where('status', 'paid');
 
         if ($this->selectedBook !== 'all') {
             $baseQuery->where('book_id', $this->selectedBook);
         }
+        // Active subscriptions
+        $activeSubscriptions = $baseQuery->where('end_date', '>', Carbon::now())->count();
+
 
         // Total revenue
         $totalRevenue = $baseQuery->sum('annual_fee');
 
+//        dd($startDate,  $endDate);
         // Revenue for selected period
         $periodRevenue = $baseQuery->whereBetween('payment_completed_at', [$startDate, $endDate])
             ->sum('annual_fee');
+
+
 
         // Previous period for comparison
         $prevStartDate = Carbon::now()->subDays($this->dateRange * 2);
@@ -73,13 +84,11 @@ class Revenue extends AppComponent
             ? (($periodRevenue - $previousPeriodRevenue) / $previousPeriodRevenue) * 100
             : 0;
 
+
         // Monthly recurring revenue
         $monthlyRevenue = $baseQuery->whereMonth('payment_completed_at', Carbon::now()->month)
             ->whereYear('payment_completed_at', Carbon::now()->year)
             ->sum('annual_fee');
-
-        // Active subscriptions
-        $activeSubscriptions = $baseQuery->where('end_date', '>', Carbon::now())->count();
 
         // Average revenue per subscriber
         $averageRevenue = $activeSubscriptions > 0 ? $totalRevenue / $activeSubscriptions : 0;
@@ -103,7 +112,7 @@ class Revenue extends AppComponent
         $dailyRevenue = BookSubscription::whereHas('book', function ($query) {
             $query->where('author_id', $this->author->id);
         })
-        ->where('status', 'active')
+        ->where('status', 'paid')
         ->whereBetween('payment_completed_at', [$startDate, $endDate])
         ->select(
             DB::raw('DATE(payment_completed_at) as date'),
@@ -142,11 +151,11 @@ class Revenue extends AppComponent
     {
         return $this->author->books()
             ->withCount(['subscriptions as active_subscriptions_count' => function ($query) {
-                $query->where('status', 'active')
+                $query->where('status', 'paid')
                     ->where('end_date', '>', Carbon::now());
             }])
             ->with(['subscriptions' => function ($query) {
-                $query->where('status', 'active');
+                $query->where('status', 'paid');
             }])
             ->get()
             ->map(function ($book) {
@@ -167,7 +176,7 @@ class Revenue extends AppComponent
         return BookSubscription::whereHas('book', function ($query) {
             $query->where('author_id', $this->author->id);
         })
-        ->where('status', 'active')
+        ->where('status', 'paid')
         ->whereNotNull('payment_completed_at')
         ->with(['book', 'student.user'])
         ->orderBy('payment_completed_at', 'desc')
@@ -180,7 +189,7 @@ class Revenue extends AppComponent
         $currentMonthRevenue = BookSubscription::whereHas('book', function ($query) {
             $query->where('author_id', $this->author->id);
         })
-        ->where('status', 'active')
+        ->where('status', 'paid')
         ->whereMonth('payment_completed_at', Carbon::now()->month)
         ->whereYear('payment_completed_at', Carbon::now()->year)
         ->sum('annual_fee');
@@ -188,7 +197,7 @@ class Revenue extends AppComponent
         $previousMonthRevenue = BookSubscription::whereHas('book', function ($query) {
             $query->where('author_id', $this->author->id);
         })
-        ->where('status', 'active')
+        ->where('status', 'paid')
         ->whereMonth('payment_completed_at', Carbon::now()->subMonth()->month)
         ->whereYear('payment_completed_at', Carbon::now()->subMonth()->year)
         ->sum('annual_fee');

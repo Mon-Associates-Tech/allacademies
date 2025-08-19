@@ -23,9 +23,14 @@ class Reviews extends Component
     public $showReplyModal = false;
     public $replyContent = '';
 
-    public function mount(Author $author)
+    public function mount(?Author $author)
     {
-        $this->author = $author;
+        if (!$author) {
+            $this->author = auth()->user->author;
+        } else {
+            $this->author = $author;
+        }
+
     }
 
     public function render(): View
@@ -43,13 +48,13 @@ class Reviews extends Component
 
     private function getReviews()
     {
-        $query = BookReview::query()
-            ->whereHas('book', function ($bookQuery) {
-                $bookQuery->where('author_id', $this->author->id);
-            })
-            ->with(['book', 'user'])
-            ->approved(); // Only show approved reviews
 
+
+        $query = BookReview::
+            whereHas('book', function ($bookQuery) {
+                $bookQuery->where('author_id',   auth()->user()->author->id);
+            })
+            ->with(['book', 'user']); // Only show approved reviews
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
@@ -95,12 +100,17 @@ class Reviews extends Component
         return $query->paginate($this->perPage);
     }
 
+    public function markAsHelpful(BookReview $review)
+    {
+        $review->toggleHelpfulVote(auth()->user()->id);
+    }
+
     private function getReviewStats()
     {
-        $bookIds = $this->author->books()->pluck('id');
+        $bookIds = auth()->user()->author->books()->pluck('id');
 
         $allReviews = BookReview::whereIn('book_id', $bookIds)
-            ->approved()
+//            ->approved()
             ->get();
 
         $totalReviews = $allReviews->count();

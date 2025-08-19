@@ -169,6 +169,11 @@ class Students extends Component
         $this->resetPage();
     }
 
+    public function viewStudentDetails($studentId)
+    {
+        return redirect()->route('teachers.student.details', ['student' => $studentId]);
+    }
+
     public function render()
     {
         $students = $this->getStudentsQuery();

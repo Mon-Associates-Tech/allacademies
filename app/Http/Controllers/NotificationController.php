@@ -70,10 +70,11 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         $notification = null;
+        $notificationData = null;
 
         if ($type === 'generic') {
             $notification = DatabaseNotification::where('id', $id)
-                ->where('notifiable_type', get_class($user))
+                ->where('notifiable_type', 'user')
                 ->where('notifiable_id', $user->id)
                 ->first();
 

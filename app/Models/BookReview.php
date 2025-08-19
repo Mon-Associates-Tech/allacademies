@@ -154,9 +154,9 @@ class BookReview extends Model
     /**
      * Get the formatted time since review was created
      */
-    public function getTimeAgoAttribute(): string
+    public function getTimeAgoAttribute()
     {
-        return $this->created_at->diffForHumans();
+        return $this->created_at?->diffForHumans();
     }
 
     /**

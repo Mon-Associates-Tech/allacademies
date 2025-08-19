@@ -326,7 +326,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
-                                                <a href="{{ route('teachers.assignment.view', $assignment['id']) }}"
+                                                <a href="{{ route('teachers.assignments.show', ['assignment' => $assignment['id']]) }}"
                                                    class="inline-flex items-center px-3 py-1 border border-transparent text-xs leading-4 font-medium rounded text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                     View
                                                 </a>
@@ -423,7 +423,7 @@
                                     <div class="space-y-2">
                                         <p class="text-sm text-gray-600 dark:text-gray-400">
                                             <span class="font-medium">Students:</span>
-                                            {{ count($level['students'] ?? []) }}
+                                            {{ $level['accessible_students_count'] ?? 0 }}
                                         </p>
                                     </div>
                                 </div>

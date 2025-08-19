@@ -174,13 +174,22 @@
                                     </div>
 
                                     <div class="flex gap-2">
-                                        <button type="submit"
-                                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
-                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                                            </svg>
+{{--                                        <button type="submit"--}}
+{{--                                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">--}}
+{{--                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">--}}
+{{--                                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />--}}
+{{--                                            </svg>--}}
+{{--                                            Filter--}}
+{{--                                        </button>--}}
+
+                                        <x-button.primary type="submit" size="sm">
+                                            <x-slot:icon>
+                                                <svg class="w-4 my-auto h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                                </svg>
+                                            </x-slot:icon>
                                             Filter
-                                        </button>
+                                        </x-button.primary>
 
                                         @if(request()->hasAny(['search', 'academic_group', 'academic_level']) || ($filters['sort_by'] ?? 'name') !== 'name' || ($filters['sort_order'] ?? 'asc') !== 'asc')
                                             <a href="{{ route('dashboard') }}"

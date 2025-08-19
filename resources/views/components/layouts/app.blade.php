@@ -53,7 +53,11 @@
             <!-- Main content -->
             <main class="mt-0 p-0">
                 <!-- Breadcrumb -->
-                <div class="max-w-5xl py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
+                @if($breadcrumb)
+                    <div class="max-w-5xl py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
+                @endif
+
+
 
                 <!-- Alerts -->
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
@@ -76,13 +80,12 @@
                 <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible overflow-x-hidden">
                     <div
                         x-data="{}"
-                        class="w-full overflow-y-visible  sm:px-4 lg:px-6 "
+                        class="w-full overflow-y-visible sm:px-4 lg:px-6 "
                     >
-                        <x-loader />
                             {{ $slot }}
                     </div>
                 </div>
-{{--              <!-- <livewire:common.global-message ></livewire:common.global-message> -->--}}
+              <livewire:common.flash-message-handler></livewire:common.flash-message-handler>
 
             </main>
         </div>

@@ -88,6 +88,8 @@ class AppServiceProvider extends ServiceProvider
             'forum_post' => \App\Models\Forum\ForumPost::class,
             'forum_reaction' => \App\Models\Forum\ForumReaction::class,
             'forum_mention' => \App\Models\Forum\ForumMention::class,
+            'user_preference' => \App\Models\UserPreference::class,
+            'assignment_submission' => \App\Models\AssignmentSubmission::class,
 
         ]);
     }

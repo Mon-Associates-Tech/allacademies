@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Students;
 
-use App\Livewire\Common\HasGlobalMessages;
 use App\Livewire\Student\StartsAssessment;
 use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicSubtopic as Subtopic;
@@ -19,7 +18,7 @@ use Livewire\Component;
 
 class SelfAssessment extends Component
 {
-    use StartsAssessment, HasGlobalMessages;
+    use StartsAssessment;
 
     public $step = 'setup'; // setup, assessment, results
     public $assessmentMode = 'self'; // 'self' or 'assignment'

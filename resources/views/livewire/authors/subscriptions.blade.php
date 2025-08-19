@@ -142,16 +142,16 @@
                                     <div class="flex-shrink-0">
                                         <div class="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
                                             <span class="text-white font-bold text-lg">
-                                                {{ strtoupper(substr($subscription->student->user->name, 0, 1)) }}
+                                                {{ strtoupper(substr($subscription->user->name, 0, 1)) }}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
-                                            {{ $subscription->student->user->name }}
+                                            {{ $subscription->user->name }}
                                         </p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                            {{ $subscription->student->user->email }}
+                                            {{ $subscription->user->email }}
                                         </p>
                                     </div>
                                 </div>

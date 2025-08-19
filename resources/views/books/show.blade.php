@@ -134,14 +134,13 @@
                         <!-- Star Rating -->
                         <div class="flex items-center">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-4 h-4 {{ $i <= 4 ? 'text-yellow-400' : 'text-gray-300' }}"
+                                <svg class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
                                      fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             @endfor
 
-                            <span class="ml-1 text-gray-600 dark:text-gray-400">(4.2)</span>
+                            <span class="ml-1 text-gray-600 dark:text-gray-400">({{number_format($book->average_rating,1)}})</span>
                         </div>
                         <!-- Social Activity -->
                         <div class="flex items-center text-gray-600 dark:text-gray-400">
@@ -187,8 +186,20 @@
                             <div class="mt-6 space-y-3">
                                 <!-- Primary Action -->
                                 @if($canRead)
+
+                                    <x-button.primary onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                                            class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        <span>Read Now</span>
+                                    </x-button.primary>
+
                                     <a href="{{ route('books.read', $book) }}"
-                                       class="flex items-center justify-center w-full px-6 py-4 text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                                       class="hidden items-center justify-center w-full px-6 py-4 text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
                                        x-data="{ loading: false }"
                                        @click="loading = true">
                                         <svg x-show="!loading" class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
@@ -206,11 +217,13 @@
                                         <span x-text="loading ? 'Opening...' : 'Read Now'"></span>
                                     </a>
                                 @else
-                                    <form method="POST" action="{{ route('books.subscribe.store', ['book' => $book]) }}">
+                                    <form method="POST"
+                                          action="{{ route('books.subscribe.store', ['book' => $book]) }}">
                                         @csrf
                                         <button type="submit"
                                                 class="flex items-center text-sm justify-center w-full text-nowrap px-6 py-4 text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
-                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
                                             </svg>
@@ -235,16 +248,7 @@
                                             <span class="text-sm font-medium">Preview</span>
                                         </button>
 
-                                        <button onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
-                                                class="px-4 py-3 hidden  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            <span>Read PDF</span>
-                                        </button>
+
                                     @endif
 
                                     <!-- Notes Button -->
@@ -314,7 +318,7 @@
 
                                 <!-- Add to Reading List -->
                                 <button
-                                    class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
+                                    class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -373,13 +377,12 @@
                                     </p>
                                     <div class="flex items-center space-x-1">
                                         @for($i = 1; $i <= 5; $i++)
-                                            <svg class="w-5 h-5 {{ $i <= 4 ? 'text-yellow-400' : 'text-gray-300' }}"
+                                            <svg class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
                                                  fill="currentColor" viewBox="0 0 20 20">
-                                                <path
-                                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                             </svg>
                                         @endfor
-                                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">(4.2 from {{$book->reviews->count()}} reviews)</span>
+                                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">({{number_format($book->average_rating,1)}} from {{$book->reviews->count()}} reviews)</span>
                                     </div>
                                 </div>
                             </div>
@@ -404,9 +407,18 @@
                                                   d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                                         </svg>
                                         Contents
-                                        <span
-                                            class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">12</span>
+{{--                                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">{{''}}</span>--}}
                                     </button>
+                                    <button @click="toggleTab('media')"
+                                            :class="currentTab === 'media' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 7h8m-8 4h8m-8 4h8M5 7a2 2 0 01-2-2v8a2 2 0 012 2zm0 0a2 2 0 002 2h8a2 2 0 002-2M5 7a2 2 0 012-2m8 0a2 2 0 012 2m0 0a2 2 0 002 2m0 0v4a2 2 0 01-2 2m0 0a2 2 0 01-2-2"></path>
+                                        </svg>
+                                        Media
+                                    </button>
+
                                     <button @click="toggleTab('reviews')"
                                             :class="currentTab === 'reviews' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
                                             class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200">
@@ -441,16 +453,17 @@
 
                                     <!-- Book Description -->
                                     @if($book->additional_info !== null)
-                                    <div
-                                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">About This
-                                            Book</h2>
-                                        <div class="prose prose-gray dark:prose-invert max-w-none">
-                                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                                {{ $book->additional_info ?: '' }}
-                                            </p>
+                                        <div
+                                            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">About
+                                                This
+                                                Book</h2>
+                                            <div class="prose prose-gray dark:prose-invert max-w-none">
+                                                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                                    {{ $book->additional_info ?: '' }}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
                                     @endif
 
                                     <!-- Key Features -->
@@ -565,6 +578,18 @@
                                     @endunless
                                 </div>
 
+                                <div x-show="currentTab === 'media'"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                                     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                                    <div class="mt-8 space-y-8">
+                                        @livewire('books.book-media', ['book' => $book])
+
+                                    </div>
+
+
+                                </div>
                                 <!-- Contents Tab -->
                                 <div x-show="currentTab === 'contents'"
                                      x-transition:enter="transition ease-out duration-300"
@@ -593,7 +618,7 @@
                                      x-transition:enter-start="opacity-0 transform translate-y-4"
                                      x-transition:enter-end="opacity-100 transform translate-y-0"
                                      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                                   <x-common.author-profile variant="default"  :author="$book->author" />
+                                    <x-common.author-profile variant="default" :author="$book->author"/>
                                 </div>
                             </div>
                         </div>
@@ -721,7 +746,8 @@
                 @else
                     <form method="POST" action="{{ route('books.subscribe.store', $book) }}" class="flex-1">
                         @csrf
-                        <button type="submit" class="w-full flex items-center justify-center px-4 py-3 text-white bg-green-600 hover:bg-green-700 rounded-xl font-medium">
+                        <button type="submit"
+                                class="w-full flex items-center justify-center px-4 py-3 text-white bg-green-600 hover:bg-green-700 rounded-xl font-medium">
                             Subscribe
                         </button>
                     </form>
@@ -736,15 +762,15 @@
                                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
                     </button>
-                        <button onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
-                                class="px-4 py-3 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                        </button>
+                    <button onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                            class="px-4 py-3 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
                 @endif
                 <button @click="toggleBookmark()" class="px-4 py-3 rounded-xl transition-colors duration-200"
                         :class="isBookmarked ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'">

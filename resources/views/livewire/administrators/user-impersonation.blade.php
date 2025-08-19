@@ -48,19 +48,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <!-- Avatar -->
-                        <div class="flex-shrink-0">
-                            @if($user->avatar)
-                                <img class="h-10 w-10 rounded-full object-cover"
-                                     src="{{ $user->avatar }}"
-                                     alt="{{ $user->name }}">
-                            @else
-                                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                    <span class="text-sm font-medium text-gray-700">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
+                          <x-avatar name="{{$user->name}}" class="w-8 h-8" text-size="text-xs" avatar="{{$user->avatar}}" />
 
                         <!-- User Info -->
                         <div class="flex-1">

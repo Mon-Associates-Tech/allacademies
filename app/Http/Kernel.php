@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\ApplyUserPreferences;
 use App\Http\Middleware\EnsureUserIsParent;
 use App\Http\Middleware\TrackUserLoginActivity;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -39,6 +40,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            ApplyUserPreferences::class,
         ],
 
         'api' => [

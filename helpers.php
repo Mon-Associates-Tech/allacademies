@@ -4,6 +4,7 @@ use App\Http\Controllers\ExaminationController;
 use App\Models\AcademicSubtopic;
 use App\Models\Examination;
 use App\Support\Examiner;
+use Carbon\Carbon;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Exception\CommonMarkException;
 use League\CommonMark\Output\RenderedContentInterface;
@@ -239,4 +240,52 @@ function academicRoute(string $routeName, array $parameters = [], array $overrid
     $allParams = array_merge($academicParams, $parameters);
 
     return route($routeName, $allParams);
+}
+
+
+if (!function_exists('getTimeRemaining')) {
+    /**
+     * Calculates the remaining days, hours, and minutes from now until a future timestamp.
+     *
+     * @param string|Carbon|\DateTimeInterface $futureTimestamp The future date.
+     * @return string
+     */
+    function getTimeRemaining($futureTimestamp): string
+    {
+        // Ensure we have a Carbon instance to work with
+        $futureDate = Carbon::parse($futureTimestamp);
+        $now = Carbon::now();
+
+        // If the date is in the past, return an "expired" message
+        if ($now->greaterThan($futureDate)) {
+            return 'Expired';
+        }
+
+        // Get the difference between now and the future date
+        $diff = $now->diff($futureDate);
+
+        $parts = [];
+
+        // Add days to the output string if there are any
+        if ($diff->d > 0) {
+            $parts[] = $diff->d . ' ' . Str::plural('day', $diff->d);
+        }
+
+        // Add hours if there are any
+        if ($diff->h > 0) {
+            $parts[] = $diff->h . ' ' . Str::plural('hour', $diff->h);
+        }
+
+        // Add minutes if there are any
+        if ($diff->i > 0) {
+            $parts[] = $diff->i . ' ' . Str::plural('minute', $diff->i);
+        }
+
+        // If the difference is less than a minute, provide a specific message
+        if (empty($parts)) {
+            return 'Less than a minute remaining';
+        }
+
+        return implode(', ', $parts) . ' remaining';
+    }
 }

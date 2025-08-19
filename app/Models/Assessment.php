@@ -176,4 +176,8 @@ class Assessment extends Model
         $this->update(['questions_data' => $questionsData]);
     }
 
+    public function responses(){
+        return $this->hasMany(AssessmentResponse::class);
+    }
+
 }

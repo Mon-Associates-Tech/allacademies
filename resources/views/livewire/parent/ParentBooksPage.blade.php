@@ -207,14 +207,14 @@
                     @if($viewMode === 'grid')
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                             @foreach($this->books as $book)
-                                @livewire('books.book-manager', ['book' => $book])
+                                @include('livewire.books.partials.book-card', ['book' => $book])
                             @endforeach
                         </div>
                     @else
                         <!-- List view -->
                         <div class="space-y-4">
                             @foreach($this->books as $book)
-                                @livewire('books.book-manager', ['book' => $book])
+                                @include('livewire.books.partials.book-card', ['book' => $book])
                             @endforeach
                         </div>
                     @endif

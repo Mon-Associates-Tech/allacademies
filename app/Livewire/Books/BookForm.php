@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Books;
 
+use Illuminate\Http\RedirectResponse;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Book;
@@ -60,6 +61,23 @@ class BookForm extends Component
     public $authors;
     public $bookCategories;
 
+    public $hasAudio = false;
+    public $hasVideo = false;
+    public $singleAudioUpload = false;
+    public $singleVideoUpload = false;
+    public $singleAudioFile;
+    public $singleVideoFile;
+    public $chapterAudioFiles = [];
+    public $chapterVideoFiles = [];
+    public $existingSingleAudioFile = null;
+    public $existingSingleVideoFile = null;
+    public $existingChapterAudioFiles = [];
+    public $existingChapterVideoFiles = [];
+    public $removeSingleAudioFile = false;
+    public $removeSingleVideoFile = false;
+    public $removeChapterAudioFiles = [];
+    public $removeChapterVideoFiles = [];
+
     protected $rules = [
         'title' => 'required|min:3|max:255',
         'authorId' => 'required|exists:authors,id',
@@ -90,6 +108,14 @@ class BookForm extends Component
         'tableOfContents.*.sections.*.page_start' => 'required|integer|min:1',
         'tableOfContents.*.sections.*.page_end' => 'required|integer|min:1',
         'tableOfContents.*.sections.*.description' => 'nullable|string',
+
+        'hasAudio' => 'boolean',
+        'hasVideo' => 'boolean',
+        'singleAudioFile' => 'nullable|file|mimes:mp3,wav,ogg|max:51200', // 50MB max
+        'singleVideoFile' => 'nullable|file|mimes:mp4,mov,avi|max:524288',
+        'chapterAudioFiles.*' => 'nullable|file|mimes:mp3,wav,ogg|max:51200',
+        'chapterVideoFiles.*' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
+
     ];
 
     protected $messages = [
@@ -157,21 +183,16 @@ class BookForm extends Component
 
     // ... rest of your existing methods remain the same ...
 
-    public function cancel()
+    public function cancel(): RedirectResponse
     {
         $user = auth()->user();
 
-        switch ($user->role) {
-            case 'admin':
-            case 'owner':
-                return redirect()->route('admin.book-management');
-            case 'author':
-                return redirect()->route('author.books.index');
-            case 'teacher':
-                return redirect()->route('teacher.books.index');
-            default:
-                return redirect()->back();
-        }
+        return match ($user->role) {
+            'admin', 'owner' => redirect()->route('admin.book-management'),
+            'author' => redirect()->route('author.books.index'),
+            'teacher' => redirect()->route('books.index'),
+            default => redirect()->back(),
+        };
     }
 
 
@@ -211,6 +232,14 @@ class BookForm extends Component
         } else {
             $this->initializeTableOfContents();
         }
+
+        $this->hasAudio = $this->book->has_audio;
+        $this->hasVideo = $this->book->has_video;
+        $this->existingSingleAudioFile = $this->book->getAttributes()['single_audio_file'] ?? null;
+        $this->existingSingleVideoFile = $this->book->getAttributes()['single_video_file'] ?? null;
+        $this->existingChapterAudioFiles = $this->book->chapter_audio_files ?? [];
+        $this->existingChapterVideoFiles = $this->book->chapter_video_files ?? [];
+
     }
 
     // Get publishing status options for the view
@@ -530,7 +559,15 @@ class BookForm extends Component
             $statusLabel = PublishingStatus::from($this->status)->getLabel();
             $action = $this->mode === 'create' ? 'created' : 'updated';
             session()->flash('message', "Book {$action} successfully and saved as {$statusLabel}!");
-            return redirect()->route('admin.book-management');
+            $user = auth()->user();
+
+            return match ($user->role) {
+                'admin', 'owner' => redirect()->route('admin.book-management'),
+                'author' => redirect()->route('author.books.index'),
+                'teacher' => redirect()->route('books.index'),
+                default => redirect()->back(),
+            };
+
         } catch (\Exception $e) {
             logError("Exception in {$this->mode}: " . $e);
             DB::rollback();
@@ -555,6 +592,7 @@ class BookForm extends Component
         // Prepare table of contents
         $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
 
+        $mediaData = $this->handleMediaFiles();
         // Create book
         Book::create([
             'title' => $this->title,
@@ -573,6 +611,13 @@ class BookForm extends Component
             'content_url' => $pdfPath,
             'table_of_contents' => $tocData,
             'status' => $this->status,
+            'has_audio' => $mediaData['has_audio'],
+            'has_video' => $mediaData['has_video'],
+            'single_audio_file' => $mediaData['single_audio_file'],
+            'single_video_file' => $mediaData['single_video_file'],
+            'chapter_audio_files' => $mediaData['chapter_audio_files'],
+            'chapter_video_files' => $mediaData['chapter_video_files'],
+
         ]);
     }
 
@@ -607,6 +652,8 @@ private function updateBook()
     // Prepare table of contents
     $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
 
+
+    $mediaData = $this->handleMediaFiles();
     // Update book
     $this->book->update([
         'title' => $this->title,
@@ -625,6 +672,13 @@ private function updateBook()
         'content_url' => $pdfPath,
         'table_of_contents' => $tocData,
         'status' => $this->status,
+        'has_audio' => $mediaData['has_audio'],
+        'has_video' => $mediaData['has_video'],
+        'single_audio_file' => $mediaData['single_audio_file'],
+        'single_video_file' => $mediaData['single_video_file'],
+        'chapter_audio_files' => $mediaData['chapter_audio_files'],
+        'chapter_video_files' => $mediaData['chapter_video_files'],
+
     ]);
 }
 
@@ -655,6 +709,93 @@ private function updateBook()
         }
 
         return $errors;
+    }
+    public function removeExistingSingleAudioFile()
+    {
+        $this->removeSingleAudioFile = true;
+        $this->existingSingleAudioFile = null;
+    }
+
+    public function removeExistingSingleVideoFile()
+    {
+        $this->removeSingleVideoFile = true;
+        $this->existingSingleVideoFile = null;
+    }
+
+    public function removeChapterAudioFile($chapterIndex)
+    {
+        $this->removeChapterAudioFiles[$chapterIndex] = true;
+        unset($this->existingChapterAudioFiles[$chapterIndex]);
+    }
+
+    public function removeChapterVideoFile($chapterIndex)
+    {
+        $this->removeChapterVideoFiles[$chapterIndex] = true;
+        unset($this->existingChapterVideoFiles[$chapterIndex]);
+    }
+
+    private function handleMediaFiles()
+    {
+        $mediaData = [
+            'has_audio' => $this->hasAudio,
+            'has_video' => $this->hasVideo,
+            'single_audio_file' => $this->existingSingleAudioFile,
+            'single_video_file' => $this->existingSingleVideoFile,
+            'chapter_audio_files' => [],
+            'chapter_video_files' => [],
+        ];
+
+        // Handle single audio file
+        if ($this->removeSingleAudioFile && $this->existingSingleAudioFile) {
+            Storage::disk('public')->delete($this->existingSingleAudioFile);
+            $mediaData['single_audio_file'] = null;
+        }
+        if ($this->singleAudioFile) {
+            if ($this->existingSingleAudioFile) {
+                Storage::disk('public')->delete($this->existingSingleAudioFile);
+            }
+            $mediaData['single_audio_file'] = $this->singleAudioFile->store('book-audio', 'public');
+        }
+
+        // Handle single video file
+        if ($this->removeSingleVideoFile && $this->existingSingleVideoFile) {
+            Storage::disk('public')->delete($this->existingSingleVideoFile);
+            $mediaData['single_video_file'] = null;
+        }
+        if ($this->singleVideoFile) {
+            if ($this->existingSingleVideoFile) {
+                Storage::disk('public')->delete($this->existingSingleVideoFile);
+            }
+            $mediaData['single_video_file'] = $this->singleVideoFile->store('book-video', 'public');
+        }
+
+        // Handle chapter audio files
+        if ($this->chapterAudioFiles) {
+            foreach ($this->chapterAudioFiles as $index => $file) {
+                if ($file) {
+                    $path = $file->store('book-audio/chapters', 'public');
+                    $mediaData['chapter_audio_files'][$index] = $path;
+                }
+            }
+        }
+
+        // Handle chapter video files
+        if ($this->chapterVideoFiles) {
+            foreach ($this->chapterVideoFiles as $index => $file) {
+                if ($file) {
+                    $path = $file->store('book-video/chapters', 'public');
+                    $mediaData['chapter_video_files'][$index] = $path;
+                }
+            }
+        }
+
+        return $mediaData;
+    }
+
+    public function redirectIntended($default = '/', $navigate = false)
+    {
+
+        return redirect()->intended($default)->with('success', 'Book updated successfully.');
     }
 
     public function render()

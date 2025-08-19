@@ -15,13 +15,13 @@ class Subjects extends Component
     public $selectedSubject = null;
     public $showSubjectModal = false;
     public $teacher;
-    public $viewMode = 'grid'; // grid or list view
+    public $viewMode = 'list'; // grid or list view
     public $sortBy = 'name';
     public $sortDirection = 'asc';
     public $filterByLevel = '';
     public $filterByGroup = '';
 
-    public function mount()
+    public function mount(): void
     {
         $this->teacher = Auth::user()->teacher;
 
@@ -30,27 +30,27 @@ class Subjects extends Component
         }
     }
 
-    public function updatedSearchTerm()
+    public function updatedSearchTerm(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterByLevel()
+    public function updatedFilterByLevel(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterByGroup()
+    public function updatedFilterByGroup(): void
     {
         $this->resetPage();
     }
 
-    public function toggleViewMode()
+    public function toggleViewMode(): void
     {
-        $this->viewMode = $this->viewMode === 'grid' ? 'list' : 'grid';
+        $this->viewMode = $this->viewMode === 'list' ? 'grid' : 'list';
     }
 
-    public function sortBy($field)
+    public function sortBy($field): void
     {
         if ($this->sortBy === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -61,7 +61,7 @@ class Subjects extends Component
         $this->resetPage();
     }
 
-    public function showSubjectDetails($subjectId)
+    public function showSubjectDetails($subjectId): void
     {
         $this->selectedSubject = $this->teacher->academicSubjects()
             ->with([
@@ -76,7 +76,7 @@ class Subjects extends Component
         $this->showSubjectModal = true;
     }
 
-    public function closeSubjectModal()
+    public function closeSubjectModal(): void
     {
         $this->showSubjectModal = false;
         $this->selectedSubject = null;

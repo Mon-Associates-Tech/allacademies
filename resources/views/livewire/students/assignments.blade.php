@@ -146,7 +146,7 @@
                     $status = $this->getAssignmentStatus($assignment);
                     $progress = $this->getAssignmentProgress($assignment);
                     $isOverdue = $assignment->ends_at < now();
-                    $timeLeft = now()->diffInHours($assignment->ends_at, false);
+                    $timeLeft = now()->diffInHours($assignment->ends_at, true);
                 @endphp
 
                 <div class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
@@ -251,7 +251,7 @@
                                 @elseif ($timeLeft < 1)
                                     < 1 hour left
                                 @elseif ($timeLeft < 24)
-                                    {{ $timeLeft }}h left
+                                    {{ getTimeRemaining($assignment->ends_at) }}
                                 @else
                                     {{ ceil($timeLeft / 24) }} days left
                                 @endif

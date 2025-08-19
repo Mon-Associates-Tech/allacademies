@@ -198,7 +198,7 @@
                     </div>
                     <div class="px-6 py-5">
                         <div class="space-y-3">
-                            <a href="{{ route('teacher.assignments.index') }}"
+                            <a href="{{ route('teachers.assignments.index') }}"
                                class="flex items-center p-3 text-sm font-medium text-gray-900 dark:text-white rounded-lg
                                       hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +207,7 @@
                                 View Assignments
                             </a>
 
-                            <a href="{{ route('teacher.students.index') }}"
+                            <a href="{{ route('teachers.students.index') }}"
                                class="flex items-center p-3 text-sm font-medium text-gray-900 dark:text-white rounded-lg
                                       hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,7 +216,7 @@
                                 Manage Students
                             </a>
 
-                            <a href="{{ route('teacher.subjects.index') }}"
+                            <a href="{{ route('teachers.subjects.index') }}"
                                class="flex items-center p-3 text-sm font-medium text-gray-900 dark:text-white rounded-lg
                                       hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,7 +225,7 @@
                                 View Subjects
                             </a>
 
-                            <a href="{{ route('teacher.performance') }}"
+                            <a href="{{ route('teachers.performance') }}"
                                class="flex items-center p-3 text-sm font-medium text-gray-900 dark:text-white rounded-lg
                                       hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

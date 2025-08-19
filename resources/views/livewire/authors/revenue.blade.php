@@ -212,9 +212,7 @@
                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                    </svg>
+                                    <img src="{{$bookData['book']->cover_image}}" alt="">
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $bookData['book']->title }}</p>
@@ -270,16 +268,10 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-8 w-8">
-                                            <div class="h-8 w-8 rounded-full bg-gradient-to-r from-emerald-400 to-blue-500 flex items-center justify-center">
-                                                <span class="text-white font-medium text-xs">
-                                                    {{ strtoupper(substr($transaction->student->user->name, 0, 1)) }}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <x-avatar :name="$transaction->user->name" avatar="{{ $transaction->user->avatar }}" class="mr-3 h-8 w-8" />
                                         <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $transaction->student->user->name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $transaction->student->user->email }}</div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $transaction->user->name }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $transaction->user->email }}</div>
                                         </div>
                                     </div>
                                 </td>

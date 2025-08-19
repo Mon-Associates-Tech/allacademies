@@ -57,39 +57,6 @@ export class PDFReader {
         }
     }
 
-    async loadTableOfContents() {
-        // First try to extract TOC from PDF
-        try {
-            if (this.pdfDocument) {
-                const outline = await this.pdfDocument.getOutline();
-                if (outline && outline.length > 0) {
-                    this.config.tableOfContents = this.processPdfOutline(outline);
-                }
-            }
-        } catch (error) {
-            console.warn('Could not extract PDF outline:', error);
-        }
-
-        // If no PDF outline and book has TOC data, use that
-        if (!this.config.tableOfContents && this.config.book?.formatted_table_of_contents) {
-            this.config.tableOfContents = this.config.book.formatted_table_of_contents;
-        }
-
-        // Update TOC sidebar if it exists
-        this.updateTableOfContents();
-    }
-
-    processPdfOutline(outline, level = 0) {
-        return outline.map((item, index) => {
-            const tocItem = {
-                title: item.title,
-                page: item.dest ? this.getPageFromDest(item.dest) : null,
-                level: level,
-                children: item.items && item.items.length > 0 ? this.processPdfOutline(item.items, level + 1) : []
-            };
-            return tocItem;
-        });
-    }
 
     getPageFromDest(dest) {
         // This is a simplified version - you might need to enhance this
@@ -331,166 +298,13 @@ export class PDFReader {
         }
     }
 
-    updateTableOfContents() {
-        if (!this.config.showTableOfContents || !this.config.tableOfContents) return;
-
-        const tocContent = document.getElementById('toc-content');
-        if (!tocContent) return;
-
-        let tocHtml = '';
-
-        if (Array.isArray(this.config.tableOfContents)) {
-            tocHtml = this.renderTocItems(this.config.tableOfContents);
-        }
-
-        if (tocHtml) {
-            tocContent.innerHTML = `<div class="space-y-1">${tocHtml}</div>`;
-            this.attachTocItemListeners();
-        } else {
-            tocContent.innerHTML = `
-                <div class="text-gray-400 text-center py-8">
-                    <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <p>No table of contents available</p>
-                </div>
-            `;
-        }
-    }
-
-    renderTocItems(items, level = 0) {
-        return items.map(item => {
-            const indent = level * 16;
-            const hasChildren = item.children && item.children.length > 0;
-
-            let html = `
-                <div class="toc-item" data-level="${level}">
-                    <div class="flex items-start py-2 px-2 hover:bg-gray-700 rounded cursor-pointer transition-colors"
-                         style="padding-left: ${indent + 8}px"
-                         onclick="pdfReader.goToTocItem('${item.page || item.start_page || 1}', '${item.title}')">
-                        ${hasChildren ? `
-                            <button class="toc-toggle w-4 h-4 mt-0.5 mr-2 text-gray-400 hover:text-white"
-                                    onclick="event.stopPropagation(); pdfReader.toggleTocItem(this)">
-                                <svg class="w-3 h-3 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        ` : `<div class="w-6 h-4"></div>`}
-
-                        <div class="flex-1 min-w-0">
-                            <div class="text-sm text-white truncate">${item.title}</div>
-                            ${item.page || item.start_page ? `
-                                <div class="text-xs text-gray-400">Page ${item.page || item.start_page}</div>
-                            ` : ''}
-                        </div>
-                    </div>
-
-                    ${hasChildren ? `
-                        <div class="toc-children hidden">
-                            ${this.renderTocItems(item.children, level + 1)}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-
-            return html;
-        }).join('');
-    }
-
-    attachTocItemListeners() {
-        // Set global reference for onclick handlers
-        window.pdfReader = this;
-    }
-
-
-// Update the goToTocItem method and related TOC functionality
-    goToTocItem(page, title) {
-        let pageNum;
-
-        // Handle different page formats
-        if (typeof page === 'string') {
-            // Extract page number from string like "Page 15" or "15-20"
-            const match = page.match(/\d+/);
-            pageNum = match ? parseInt(match[0]) : null;
-        } else {
-            pageNum = parseInt(page);
-        }
-
-        console.log('TOC Navigation - Raw page:', page, 'Parsed page:', pageNum, 'Title:', title);
-
-        if (pageNum && pageNum >= 1 && pageNum <= this.totalPages) {
-            console.log(`Navigating to page ${pageNum} from TOC item: ${title}`);
-            this.goToPage(pageNum);
-
-            // Highlight the current TOC item
-            this.highlightTocItem(title);
-
-            // Auto-hide TOC after navigation (optional)
-            setTimeout(() => {
-                if (this.tocVisible && window.innerWidth < 1024) { // Hide on mobile/tablet
-                    this.hideTableOfContents();
-                }
-            }, 1500);
-        } else {
-            console.warn(`Invalid page number for TOC navigation: ${pageNum} (Total pages: ${this.totalPages})`);
-        }
-    }
-
-// Update the renderTocItems method to fix onclick handlers
-    renderTocItems(items, level = 0) {
-        return items.map((item, index) => {
-            const indent = level * 16;
-            const hasChildren = item.children && item.children.length > 0;
-
-            // Get page number from various possible properties
-            let pageNum = item.page || item.start_page || item.page_number || null;
-
-            // If we have a page range like "15-20", take the first number
-            if (typeof pageNum === 'string' && pageNum.includes('-')) {
-                pageNum = pageNum.split('-')[0];
-            }
-
-            let html = `
-            <div class="toc-item" data-level="${level}" data-page="${pageNum}" data-title="${this.escapeHtml(item.title)}">
-                <div class="toc-item-content flex items-start py-2 px-2 hover:bg-gray-700 rounded cursor-pointer transition-colors"
-                     style="padding-left: ${indent + 8}px">
-                    ${hasChildren ? `
-                        <button class="toc-toggle w-4 h-4 mt-0.5 mr-2 text-gray-400 hover:text-white flex-shrink-0"
-                                data-toggle="true">
-                            <svg class="w-3 h-3 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    ` : `<div class="w-6 h-4 flex-shrink-0"></div>`}
-
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm text-white truncate">${this.escapeHtml(item.title)}</div>
-                        ${pageNum ? `
-                            <div class="text-xs text-gray-400">Page ${pageNum}</div>
-                        ` : ''}
-                    </div>
-                </div>
-
-                ${hasChildren ? `
-                    <div class="toc-children hidden">
-                        ${this.renderTocItems(item.children, level + 1)}
-                    </div>
-                ` : ''}
-            </div>
-        `;
-
-            return html;
-        }).join('');
-    }
-
-// Add helper method to escape HTML
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-// Update the attachTocItemListeners method
+
     attachTocItemListeners() {
         // Remove the global pdfReader reference approach
         const tocContent = document.getElementById('toc-content');
@@ -518,7 +332,6 @@ export class PDFReader {
         });
     }
 
-// Add separate method to handle toggle
     handleTocToggle(toggleButton) {
         const tocItem = toggleButton.closest('.toc-item');
         const children = tocItem.querySelector('.toc-children');
@@ -535,11 +348,7 @@ export class PDFReader {
         }
     }
 
-// Remove the old toggleTocItem method and update the reference
-// Remove this line from renderTocItems:
-// onclick="event.stopPropagation(); pdfReader.toggleTocItem(this)"
 
-// Update the updateTableOfContents method
     updateTableOfContents() {
         if (!this.config.showTableOfContents) return;
 
@@ -577,35 +386,247 @@ export class PDFReader {
         }
     }
 
-// Update the processPdfOutline method to handle PDF.js outline better
     processPdfOutline(outline, level = 0) {
         return outline.map((item, index) => {
             let pageNum = null;
 
             // Handle PDF.js destination format
             if (item.dest) {
-                if (Array.isArray(item.dest)) {
-                    pageNum = item.dest[0] + 1; // PDF.js uses 0-based indexing
-                } else if (typeof item.dest === 'string') {
-                    // For named destinations, we might need to resolve them
-                    // This is a simplified approach - you might need more complex logic
-                    pageNum = 1; // Default fallback
+                if (Array.isArray(item.dest) && item.dest.length > 0) {
+                    // PDF.js destinations are 0-based, convert to 1-based
+                    if (typeof item.dest[0] === 'object' && item.dest[0].num !== undefined) {
+                        // Handle reference objects
+                        pageNum = item.dest[0].num;
+                    } else if (typeof item.dest[0] === 'number') {
+                        // Handle direct page numbers
+                        pageNum = item.dest[0] + 1;
+                    }
                 }
+            }
+
+            // Fallback to index-based page if no destination found
+            if (!pageNum) {
+                pageNum = index + 1;
             }
 
             const tocItem = {
                 title: item.title || `Chapter ${index + 1}`,
                 page: pageNum,
                 level: level,
-                children: item.items && item.items.length > 0 ? this.processPdfOutline(item.items, level + 1) : []
+                children: item.items && item.items.length > 0 ?
+                    this.processPdfOutline(item.items, level + 1) : []
             };
 
-            console.log('Processed outline item:', tocItem);
+            console.log('Processed PDF outline item:', tocItem);
             return tocItem;
         });
     }
 
-// Add method to handle named destinations (if needed)
+    renderTocItems(items, level = 0) {
+        return items.map((item, index) => {
+            const indent = level * 16;
+            const hasChildren = item.children && item.children.length > 0;
+
+            // Extract page number - handle different possible formats
+            let pageNum = null;
+            if (item.page) {
+                if (typeof item.page === 'number') {
+                    pageNum = item.page;
+                } else if (typeof item.page === 'string') {
+                    // Extract number from string like "Page 15" or "15-20"
+                    const match = item.page.match(/(\d+)/);
+                    pageNum = match ? parseInt(match[1]) : null;
+                }
+            }
+
+            // Try other possible properties
+            if (!pageNum) {
+                pageNum = item.start_page || item.page_number || item.pageNumber;
+                if (typeof pageNum === 'string') {
+                    const match = pageNum.match(/(\d+)/);
+                    pageNum = match ? parseInt(match[1]) : null;
+                }
+            }
+
+            // Final fallback
+            if (!pageNum || pageNum < 1) {
+                pageNum = 1;
+            }
+
+            console.log('Rendering TOC item:', {
+                title: item.title,
+                originalPage: item.page,
+                extractedPage: pageNum
+            });
+
+            return `
+            <div class="toc-item" data-level="${level}" data-page="${pageNum}" data-title="${this.escapeHtml(item.title)}">
+                <div class="toc-item-content flex items-start py-2 px-2 hover:bg-gray-700 rounded cursor-pointer transition-colors"
+                     style="padding-left: ${indent + 8}px">
+                    ${hasChildren ? `
+                        <button class="toc-toggle w-4 h-4 mt-0.5 mr-2 text-gray-400 hover:text-white flex-shrink-0">
+                            <svg class="w-3 h-3 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    ` : `<div class="w-6 h-4 flex-shrink-0"></div>`}
+
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm text-white truncate">${this.escapeHtml(item.title)}</div>
+                        <div class="text-xs text-gray-400">Page ${pageNum}</div>
+                    </div>
+                </div>
+
+                ${hasChildren ? `
+                    <div class="toc-children hidden">
+                        ${this.renderTocItems(item.children, level + 1)}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        }).join('');
+    }
+
+    goToTocItem(page, title) {
+        console.log('=== TOC NAVIGATION ===');
+        console.log('Original page parameter:', page);
+        console.log('Title:', title);
+
+        let pageNum;
+
+        // Handle different page formats
+        if (typeof page === 'number') {
+            pageNum = page;
+        } else if (typeof page === 'string') {
+            // Extract first number from string
+            const match = page.match(/(\d+)/);
+            pageNum = match ? parseInt(match[1]) : null;
+        } else {
+            pageNum = parseInt(page);
+        }
+
+        console.log('Extracted page number:', pageNum);
+        console.log('Total pages:', this.totalPages);
+        console.log('Is valid page?', pageNum >= 1 && pageNum <= this.totalPages);
+
+        if (pageNum && pageNum >= 1 && pageNum <= this.totalPages) {
+            console.log(`Navigating to page ${pageNum}`);
+            this.goToPage(pageNum);
+
+            // Highlight the current TOC item
+            this.highlightTocItem(title);
+
+            // Auto-hide TOC after navigation on small screens
+            setTimeout(() => {
+                if (this.tocVisible && window.innerWidth < 1024) {
+                    this.hideTableOfContents();
+                }
+            }, 1500);
+        } else {
+            console.error(`Invalid page number: ${pageNum} (should be between 1 and ${this.totalPages})`);
+            alert(`Invalid page number: ${pageNum}. Please check the table of contents.`);
+        }
+    }
+
+    async getActualPageNumber(dest) {
+        if (!this.pdfDocument || !dest) return 1;
+
+        try {
+            if (Array.isArray(dest) && dest.length > 0) {
+                const pageRef = dest[0];
+
+                if (typeof pageRef === 'number') {
+                    // Direct page index (0-based)
+                    return pageRef + 1;
+                } else if (pageRef && typeof pageRef === 'object' && pageRef.num !== undefined) {
+                    // Page reference object - need to resolve it
+                    const pageIndex = await this.pdfDocument.getPageIndex(pageRef);
+                    return pageIndex + 1;
+                }
+            } else if (typeof dest === 'string') {
+                // Named destination
+                const resolvedDest = await this.pdfDocument.getDestination(dest);
+                return this.getActualPageNumber(resolvedDest);
+            }
+        } catch (error) {
+            console.warn('Failed to resolve page number from destination:', dest, error);
+        }
+
+        return 1; // Fallback
+    }
+
+    async loadTableOfContents() {
+        console.log('Loading table of contents...');
+
+        // First try to extract TOC from PDF
+        try {
+            if (this.pdfDocument) {
+                const outline = await this.pdfDocument.getOutline();
+                console.log('PDF outline extracted:', outline);
+
+                if (outline && outline.length > 0) {
+                    // Process the outline with proper page resolution
+                    const processedOutline = [];
+                    for (const item of outline) {
+                        const pageNum = await this.getActualPageNumber(item.dest);
+                        processedOutline.push({
+                            title: item.title,
+                            page: pageNum,
+                            level: 0,
+                            children: item.items ? await this.processChildItems(item.items, 1) : []
+                        });
+                    }
+
+                    this.config.tableOfContents = processedOutline;
+                    console.log('Processed PDF outline:', this.config.tableOfContents);
+                }
+            }
+        } catch (error) {
+            console.warn('Could not extract PDF outline:', error);
+        }
+
+        // If no PDF outline and book has TOC data, use that
+        if (!this.config.tableOfContents && this.config.book?.formatted_table_of_contents) {
+            console.log('Using book TOC data:', this.config.book.formatted_table_of_contents);
+            this.config.tableOfContents = this.config.book.formatted_table_of_contents;
+        }
+
+        // Update TOC sidebar
+        this.updateTableOfContents();
+    }
+
+    async processChildItems(items, level) {
+        const processedItems = [];
+        for (const item of items) {
+            const pageNum = await this.getActualPageNumber(item.dest);
+            processedItems.push({
+                title: item.title,
+                page: pageNum,
+                level: level,
+                children: item.items ? await this.processChildItems(item.items, level + 1) : []
+            });
+        }
+        return processedItems;
+    }
+
+    debugTocData() {
+        console.log('=== TOC DEBUG INFO ===');
+        console.log('Book TOC data:', this.config.book?.formatted_table_of_contents);
+        console.log('Processed TOC data:', this.config.tableOfContents);
+        console.log('Total pages:', this.totalPages);
+
+        if (this.config.tableOfContents) {
+            this.config.tableOfContents.forEach((item, index) => {
+                console.log(`TOC Item ${index}:`, {
+                    title: item.title,
+                    page: item.page,
+                    type: typeof item.page
+                });
+            });
+        }
+        console.log('=== END TOC DEBUG ===');
+    }
+
     async getPageFromNamedDest(destName) {
         if (!this.pdfDocument) return 1;
 
@@ -779,7 +800,6 @@ export class PDFReader {
         }
     }
 
-    // ... rest of the existing methods remain unchanged
     async initializeContinuousMode() {
         const container = document.getElementById('continuous-container');
         const singleContainer = document.getElementById('single-page-container');
@@ -1144,7 +1164,6 @@ export class PDFReader {
         }
     }
 
-    // Zoom methods
     async zoomIn() {
         if (this.scale < 3.0 && !this.isDestroyed) {
             this.scale += 0.2;
@@ -1250,7 +1269,7 @@ export class PDFReader {
         }
     }
 
-    // UI updates
+
     updateNavigationButtons() {
         if (this.isDestroyed) return;
 
@@ -1375,7 +1394,7 @@ export class PDFReader {
         }
     }
 
-    // Public API methods
+
     getCurrentPage() {
         return this.currentPage;
     }

@@ -328,7 +328,7 @@ class BookAnalytics extends Component
     {
         $currentUsers = BookSubscription::whereIn('book_id', $bookIds)
             ->where('created_at', '>=', $startDate)
-            ->distinct('student_id')
+            ->distinct('user_id')
             ->count();
 
         $previousPeriodStart = Carbon::now()->subDays($this->period * 2);
@@ -336,7 +336,7 @@ class BookAnalytics extends Component
 
         $previousUsers = BookSubscription::whereIn('book_id', $bookIds)
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
-            ->distinct('student_id')
+            ->distinct('user_id')
             ->count();
 
         return $previousUsers > 0
@@ -378,7 +378,7 @@ class BookAnalytics extends Component
     {
         return BookSubscription::whereIn('book_id', $bookIds)
             ->where('book_subscriptions.created_at', '>=', $startDate)
-            ->join('students', 'book_subscriptions.student_id', '=', 'students.id')
+            ->join('students', 'book_subscriptions.user_id', '=', 'students.user_id')
             ->join('users', 'students.user_id', '=', 'users.id')
             ->select('users.role', DB::raw('count(*) as count'))
             ->groupBy('users.role')

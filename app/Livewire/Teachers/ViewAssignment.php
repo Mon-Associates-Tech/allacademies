@@ -6,6 +6,7 @@ use App\Models\Assignment;
 use App\Models\Teacher;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ViewAssignment extends Component
 {
@@ -37,13 +38,13 @@ class ViewAssignment extends Component
             'subtopics',
             'submissions.student.user'
         ]);
-
         // Ensure the assignment belongs to the current teacher
         if ($this->assignment->teacher_id !== $this->teacher->id) {
             abort(403, 'You are not authorized to view this assignment.');
         }
 
         $this->loadAssignmentData();
+
     }
 
     private function loadAssignmentData()

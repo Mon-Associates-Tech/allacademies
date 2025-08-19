@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Collection;
 trait HasStudents
 {
 
-    // ... existing relationships ...
-
     /**
      * Get all students associated with this teacher
      * Includes students from:

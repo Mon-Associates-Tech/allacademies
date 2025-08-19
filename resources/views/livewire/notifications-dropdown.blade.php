@@ -12,12 +12,16 @@
         wire:click="loadNotifications"
     >
         <span class="sr-only">Notifications</span>
-        <svg class="fill-current text-gray-500/80 dark:text-gray-400/80" width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 0a7 7 0 0 0-7 7c0 1.202.308 2.33.84 3.316l-.789 2.368a1 1 0 0 0 1.265 1.265l2.595-.865a1 1 0 0 0-.632-1.898l-.698.233.3-.9a1 1 0 0 0-.104-.85A4.97 4.97 0 0 1 2 7a5 5 0 0 1 5-5 4.99 4.99 0 0 1 4.093 2.135 1 1 0 1 0 1.638-1.148A6.99 6.99 0 0 0 7 0Z" />
-            <path d="M11 6a5 5 0 0 0 0 10c.807 0 1.567-.194 2.24-.533l1.444.482a1 1 0 0 0 1.265-1.265l-.482-1.444A4.962 4.962 0 0 0 16 11a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0c0 .588-.171 1.134-.466 1.6a1 1 0 0 0-.115.82 1 1 0 0 0-.82.114A2.973 2.973 0 0 1 11 14a3 3 0 0 1-3-3Z" />
+        <svg class="fill-current text-gray-500/80 dark:text-gray-400/80" width="16" height="16" viewBox="0 0 16 16"
+             xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M7 0a7 7 0 0 0-7 7c0 1.202.308 2.33.84 3.316l-.789 2.368a1 1 0 0 0 1.265 1.265l2.595-.865a1 1 0 0 0-.632-1.898l-.698.233.3-.9a1 1 0 0 0-.104-.85A4.97 4.97 0 0 1 2 7a5 5 0 0 1 5-5 4.99 4.99 0 0 1 4.093 2.135 1 1 0 1 0 1.638-1.148A6.99 6.99 0 0 0 7 0Z"/>
+            <path
+                d="M11 6a5 5 0 0 0 0 10c.807 0 1.567-.194 2.24-.533l1.444.482a1 1 0 0 0 1.265-1.265l-.482-1.444A4.962 4.962 0 0 0 16 11a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0c0 .588-.171 1.134-.466 1.6a1 1 0 0 0-.115.82 1 1 0 0 0-.82.114A2.973 2.973 0 0 1 11 14a3 3 0 0 1-3-3Z"/>
         </svg>
         @if($unreadCount > 0)
-            <div class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-gray-100 dark:border-gray-900 rounded-full"></div>
+            <div
+                class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-gray-100 dark:border-gray-900 rounded-full"></div>
         @endif
     </button>
     <div
@@ -33,7 +37,8 @@
         x-transition:leave-end="opacity-0"
         x-cloak
     >
-        <div class="flex items-center justify-between text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase pt-1.5 pb-2 px-4">
+        <div
+            class="flex items-center justify-between text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase pt-1.5 pb-2 px-4">
             <span>Notifications</span>
             @if($unreadCount > 0)
                 <button
@@ -45,16 +50,16 @@
             @endif
         </div>
 
-        @if($notifications && count($notifications) > 0)
+        @if($notifications && count($notifications) > 0 )
             <ul>
                 @foreach($notifications as $notification)
-                    <li class="border-b border-gray-200 dark:border-gray-700/60 last:border-0">
-                        <button
-                            class="block w-full text-left py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors duration-150
-           {{ is_null($notification['read_at']) ? 'bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
-                            wire:click="viewNotification('{{ $notification['id'] }}', '{{ $notification['type'] }}')"
-                            @click="open = false"
-                        >
+                    @if(is_null($notification['read_at']))
+                        <li class="border-b border-gray-200 dark:border-gray-700/60 last:border-0">
+                            <button
+                                class="block w-full text-left py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors duration-150"
+                                wire:click="viewNotification('{{ $notification['id'] }}', '{{ $notification['type'] }}')"
+                                @click="open = false"
+                            >
 
                             <span class="block text-sm mb-2">
                                 @switch($notification['type'])
@@ -67,24 +72,25 @@
                                 <span class="font-medium text-gray-800 dark:text-gray-100">
                                     {{ $notification['title'] }}
                                 </span>
-                                @if(is_null($notification['read_at']))
                                     <span class="inline-block w-2 h-2 bg-blue-500 rounded-full ml-2"></span>
-                                @endif
                             </span>
-                            <span class="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                <span class="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {{ Str::limit($notification['message'], 100) }}
                             </span>
-                            <span class="block text-xs font-medium text-gray-400 dark:text-gray-500">
+                                <span class="block text-xs font-medium text-gray-400 dark:text-gray-500">
                                 {{ $notification['created_at']->diffForHumans() }}
                             </span>
-                        </button>
-                    </li>
+                            </button>
+                        </li>
+                    @endif
                 @endforeach
             </ul>
         @else
             <div class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
-                <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 17h5l-5 5v-5zM13.5 6H5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V9.5L13.5 6z" />
+                <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                          d="M15 17h5l-5 5v-5zM13.5 6H5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V9.5L13.5 6z"/>
                 </svg>
                 <p class="text-sm">No notifications yet</p>
             </div>

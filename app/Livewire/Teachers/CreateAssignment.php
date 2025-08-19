@@ -67,9 +67,9 @@ class CreateAssignment extends Component
         'instructions' => 'nullable|string',
         'total_marks' => 'required|integer|min:1',
     ];
-
     public function mount()
     {
+
         $this->teacher = Teacher::where('user_id', Auth::id())->first();
         $this->loadAvailableOptions();
 

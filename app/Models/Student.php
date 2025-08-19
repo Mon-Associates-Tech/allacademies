@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Attendance\AttendanceRecord;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -100,25 +101,11 @@ class Student extends Model
             ->withTimestamps();
     }
 
-    public function academicLevel(): BelongsTo
-    {
-        return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
-    }
-
     public function academicGroup(): BelongsTo
     {
         return $this->belongsTo(AcademicGroup::class);
     }
 
-    // Individual subject assignments (overrides/additions to academic level subjects)
-    public function individualSubjects(): BelongsToMany
-    {
-        return $this->belongsToMany(AcademicSubject::class, 'student_subject')
-            ->withTimestamps()
-            ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
-    }
-
-    // Main relationship for academic subjects (for eager loading compatibility)
     public function academicSubjects(): BelongsToMany
     {
         return $this->belongsToMany(AcademicSubject::class, 'student_subject')
@@ -126,7 +113,8 @@ class Student extends Model
             ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
     }
 
-    // Get subjects from academic level (as relationship)
+    // Individual subject assignments (overrides/additions to academic level subjects)
+
     public function levelSubjects()
     {
         return $this->hasManyThrough(
@@ -139,13 +127,61 @@ class Student extends Model
         );
     }
 
-    // Alternative approach - get level subjects via academic level relationship
+    // Main relationship for academic subjects (for eager loading compatibility)
+
     public function subjectsFromLevel()
     {
         return $this->academicLevel()->with('academicSubjects');
     }
 
+    // Get subjects from academic level (as relationship)
+
+    public function academicLevel(): BelongsTo
+    {
+        return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
+    }
+
+    // Alternative approach - get level subjects via academic level relationship
+
+    public function getIndividuallyAssignedSubjects()
+    {
+        $query = $this->individualSubjects()
+            ->wherePivot('is_active', true);
+
+        if ($this->academicLevel) {
+            $query->whereNotIn('academic_subjects.id', function ($subquery) {
+                $subquery->select('id')
+                    ->from('academic_subjects')
+                    ->where('academic_level_id', $this->academicLevel->id);
+            });
+        }
+
+        return $query->get();
+    }
+
     // Helper methods that return collections (not relationships)
+
+    public function individualSubjects(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicSubject::class, 'student_subject')
+            ->withTimestamps()
+            ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
+    }
+
+    public function getRemovedLevelSubjects()
+    {
+        return $this->individualSubjects()
+            ->wherePivot('is_active', false)
+            ->get();
+    }
+
+    public function getAccessibleSubjectsAttribute()
+    {
+        return $this->getAllAccessibleSubjects();
+    }
+
+    // Accessor for getting all accessible subjects as an attribute
+
     public function getAllAccessibleSubjects()
     {
         $levelSubjects = collect();
@@ -170,36 +206,6 @@ class Student extends Model
         }
 
         return $allSubjects->values();
-    }
-
-    public function getIndividuallyAssignedSubjects()
-    {
-        $query = $this->individualSubjects()
-            ->wherePivot('is_active', true);
-
-        if ($this->academicLevel) {
-            $query->whereNotIn('academic_subjects.id', function($subquery) {
-                $subquery->select('id')
-                    ->from('academic_subjects')
-                    ->where('academic_level_id', $this->academicLevel->id);
-            });
-        }
-
-        return $query->get();
-    }
-
-
-    public function getRemovedLevelSubjects()
-    {
-        return $this->individualSubjects()
-            ->wherePivot('is_active', false)
-            ->get();
-    }
-
-    // Accessor for getting all accessible subjects as an attribute
-    public function getAccessibleSubjectsAttribute()
-    {
-        return $this->getAllAccessibleSubjects();
     }
 
     public function school(): BelongsTo
@@ -295,6 +301,35 @@ class Student extends Model
             ->withTimestamps();
     }
 
+    public function getAttendanceForDate($date, $academicLevelId = null)
+    {
+        $query = $this->attendanceRecords()
+            ->whereHas('attendance', function ($query) use ($date) {
+                $query->where('date', $date);
+            });
 
+        if ($academicLevelId) {
+            $query->whereHas('attendance', function ($query) use ($academicLevelId) {
+                $query->where('academic_level_id', $academicLevelId);
+            });
+        }
+
+        return $query->first();
+    }
+
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function assignmentSubmissions()
+    {
+        return $this->hasMany(AssignmentSubmission::class);
+    }
+
+    public function academicHistory()
+    {
+        return $this->hasMany(AcademicHistory::class);
+    }
 
 }

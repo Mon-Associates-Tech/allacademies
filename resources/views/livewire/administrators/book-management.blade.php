@@ -10,7 +10,7 @@
                 <div class="">
 
                 </div>
-                @if(!$showForm)
+
                     <div class="">
                         <x-link.white class="mr-2" :to="route('books.index')">Browse Books</x-link.white>
                         <a href="{{route('admin.books.create')}}"
@@ -21,8 +21,6 @@
                             Add Book
                         </a>
                     </div>
-
-                @endif
             </div>
         </div>
     </div>

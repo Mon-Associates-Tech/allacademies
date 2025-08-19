@@ -1,4 +1,4 @@
-@props(['name', 'type', 'value' => null, 'label' => null, 'error' => null, 'hasLabel' => true, 'required' =>false])
+@props(['name', 'type' => 'text', 'value' => null, 'label' => null, 'error' => null, 'hasLabel' => true, 'required' =>false])
 
 <div class="space-y-1">
     @if ($hasLabel ?? false)

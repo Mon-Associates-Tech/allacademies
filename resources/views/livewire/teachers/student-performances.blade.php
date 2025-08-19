@@ -180,17 +180,14 @@
             <div class="px-4 sm:px-6 py-6">
                 @if($viewMode === 'overview')
                     <!-- Overview Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                         @forelse($students as $student)
                             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer"
                                  wire:click="showStudentDetails({{ $student->id }})">
                                 <div class="flex items-center justify-between mb-3">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                                            <span class="text-white text-sm font-medium">
-                                                {{ substr($student->user->name, 0, 1) }}
-                                            </span>
-                                        </div>
+                                    <x-avatar name="{{$student->user->name}}" class="w-8 h-8" text-size="text-xs" avatar="{{$student->user->avatar}}" />
+
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
                                                 {{ $student->user->name }}
@@ -304,11 +301,7 @@
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
-                                                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                                                        <span class="text-white text-sm font-medium">
-                                                            {{ substr($student->user->name, 0, 1) }}
-                                                        </span>
-                                                </div>
+                                                 <x-avatar name="{{$student->user->name}}" class="w-8 h-8" text-size="text-xs" avatar="{{$student->user->avatar}}" />
                                                 <div class="ml-4">
                                                     <div class="text-sm font-medium text-gray-900 dark:text-white">
                                                         {{ $student->user->name }}
@@ -441,95 +434,144 @@
         @endif
     </div>
 
-    <!-- Student Detail Modal -->
-    @if($showStudentModal && $selectedStudent)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeStudentModal"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                                {{ $selectedStudent->user->name }} - Performance Details
-                            </h3>
-                            <button wire:click="closeStudentModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
+<!-- Student Detail Modal -->
+@if($showStudentModal && $selectedStudent)
+    <div class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 ease-out"
+         aria-labelledby="modal-title" role="dialog" aria-modal="true" wire:transition.opacity>
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 sm:p-0">
+            <!-- Overlay -->
+            <div class="fixed inset-0 transition-opacity" wire:click="closeStudentModal" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Student Info -->
-                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Student Information</h4>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Email:</span>
-                                        <span class="text-sm text-gray-900 dark:text-white">{{ $selectedStudent->user->email }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Academic Level:</span>
-                                        <span class="text-sm text-gray-900 dark:text-white">{{ $selectedStudent->academicLevel->name ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Academic Group:</span>
-                                        <span class="text-sm text-gray-900 dark:text-white">{{ $selectedStudent->academicLevel->academicGroup->name ?? 'N/A' }}</span>
-                                    </div>
-                                </div>
-                            </div>
+            <!-- Modal Content -->
+            <div class="relative inline-block w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl transform transition-all duration-300 ease-out sm:my-8 sm:align-middle"
+                 x-data="{ open: true }"
+                 x-show="open"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
 
-                            <!-- Performance Summary -->
-                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Performance Summary</h4>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Overall Grade:</span>
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $selectedStudent->performance_grade ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Average Score:</span>
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($selectedStudent->performance_avg ?? 0, 1) }}%</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Total Submissions:</span>
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $selectedStudent->total_submissions ?? 0 }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600 dark:text-gray-300">Completed:</span>
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $selectedStudent->completed_assignments ?? 0 }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Subjects -->
-                        <div class="mt-6">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Enrolled Subjects</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                @forelse($selectedStudent->academicSubjects as $subject)
-                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $subject->name }}</div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $subject->code }}</div>
-                                    </div>
-                                @empty
-                                    <div class="col-span-full text-center py-4">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">No subjects assigned</p>
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <!-- Modal Header -->
+                <div class="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            {{ $selectedStudent->user->name }} - Performance Details
+                        </h3>
                         <button wire:click="closeStudentModal"
-                                class="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Close
+                                class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
+                                aria-label="Close modal">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
+
+                <!-- Modal Body -->
+                <div class="px-6 py-4 sm:p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Student Info -->
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 shadow-sm">
+                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"></path>
+                                </svg>
+                                Student Information
+                            </h4>
+                            <dl class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Email</dt>
+                                    <dd class="text-sm text-gray-900 dark:text-white">{{ $selectedStudent->user->email }}</dd>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Academic Level</dt>
+                                    <dd class="text-sm text-gray-900 dark:text-white">{{ $selectedStudent->academicLevel->name ?? 'N/A' }}</dd>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Academic Group</dt>
+                                    <dd class="text-sm text-gray-900 dark:text-white">{{ $selectedStudent->academicLevel->academicGroup->name ?? 'N/A' }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Performance Summary -->
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 shadow-sm">
+                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                                </svg>
+                                Performance Summary
+                            </h4>
+                            <dl class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Overall Grade</dt>
+                                    <dd class="text-sm font-semibold text-gray-900 dark:text-white">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              :class="$selectedStudent->performance_grade ? '{{ $selectedStudent->performance_grade == "A" ? "bg-green-100 text-green-800" : ($selectedStudent->performance_grade == "B" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800") }}' : 'bg-gray-100 text-gray-800'">
+                                            {{ $selectedStudent->performance_grade ?? 'N/A' }}
+                                        </span>
+                                    </dd>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Average Score</dt>
+                                    <dd class="text-sm font-semibold text-gray-900 dark:text-white">
+                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: {{ $selectedStudent->performance_avg ?? 0 }}%"></div>
+                                        </div>
+                                        <span class="mt-1 block text-xs">{{ number_format($selectedStudent->performance_avg ?? 0, 1) }}%</span>
+                                    </dd>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Total Submissions</dt>
+                                    <dd class="text-sm font-semibold text-gray-900 dark:text-white">{{ $selectedStudent->total_submissions ?? 0 }}</dd>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-300">Completed</dt>
+                                    <dd class="text-sm font-semibold text-gray-900 dark:text-white">{{ $selectedStudent->completed_assignments ?? 0 }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Enrolled Subjects -->
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            Enrolled Subjects
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @forelse($selectedStudent->academicSubjects as $subject)
+                                <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $subject->name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $subject->code }}</div>
+                                </div>
+                            @empty
+                                <div class="col-span-full text-center py-6 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">No subjects assigned</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 sm:flex sm:flex-row-reverse sm:gap-4">
+                    <button wire:click="closeStudentModal"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                            aria-label="Close modal">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
-    @endif
+    </div>
+@endif
 </div>

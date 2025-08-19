@@ -216,12 +216,12 @@
                                 <div class="flex items-center space-x-3">
                                     <div class="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
                                         <span class="text-white font-bold text-sm">
-                                            {{ strtoupper(substr($review->student->user->name, 0, 1)) }}
+                                            {{ strtoupper(substr($review->user->name, 0, 1)) }}
                                         </span>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $review->student->user->name }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $review->created_at->format('M j, Y') }}</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $review->user->name }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $review->created_at?->format('M j, Y') }}</p>
                                     </div>
                                 </div>
 
@@ -254,7 +254,7 @@
                         <div class="p-6">
                             <div class="mb-4">
                                 <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                                    {{ $review->review_content }}
+                                    {{ $review->review }}
                                 </p>
                             </div>
 

@@ -20,7 +20,7 @@
         @if($type === 'textarea')
             <textarea
                 id="{{ $fieldId }}"
-                wire:model.live="{{ $model }}"
+                wire:model="{{ $model }}"
                 rows="4"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
@@ -34,7 +34,7 @@
             <input
                 id="{{ $fieldId }}"
                 type="{{ $type }}"
-                wire:model.live="{{ $model }}"
+                wire:model="{{ $model }}"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                        dark:bg-gray-700 dark:text-white dark:focus:ring-blue-400

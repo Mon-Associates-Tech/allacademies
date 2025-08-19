@@ -4,7 +4,7 @@
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    Customer Reviews
+                    User Reviews
                 </h2>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center">
@@ -21,7 +21,7 @@
                         </span>
                     </div>
                     <span class="text-gray-600 dark:text-gray-400">
-                        Based on {{ $book->total_reviews }} review{{ $book->total_reviews !== 1 ? 's' : '' }}
+                        Based on {{ $book->reviews->count() }} review{{ $book->reviews !== 1 ? 's' : '' }}
                     </span>
                 </div>
             </div>
@@ -54,7 +54,7 @@
         </div>
 
         <!-- Rating Distribution -->
-        @if($book->total_reviews > 0)
+        @if($book->reviews()->count() > 0)
             <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="space-y-3">
                     @foreach($ratingDistribution as $dist)

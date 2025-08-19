@@ -12,6 +12,12 @@ class Assignment extends Model
 {
     use HasFactory;
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_SUBMITTED = 'submitted';
+    const STATUS_GRADED = 'graded';
+    const STATUS_LATE = 'late';
+    const STATUS_NOT_SUBMITTED = 'not_submitted';
+
     protected $fillable = [
         'title',
         'description',
@@ -348,4 +354,19 @@ class Assignment extends Model
         };
     }
 
+    public function getStatusColorAttribute()
+    {
+        return match($this->status) {
+            self::STATUS_PENDING => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            self::STATUS_SUBMITTED => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            self::STATUS_GRADED => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            self::STATUS_LATE => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            self::STATUS_NOT_SUBMITTED => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+        };
+    }
+
+    public function subject(){
+        return $this->belongsTo(AcademicSubject::class, 'academic_subject_id');
+    }
 }

@@ -32,8 +32,8 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('autho
 //        Route::get('/create', App\Livewire\Books\CreateBook::class)->name('create');
 //        Route::get('/{book}/edit', BookCreate::class)->name('edit');
         Route::get('/{book}', BookDetails::class)->name('show');
-        Route::get('/create', [BookController::class, 'create'])->name('books.create');
-        Route::get('/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
+        Route::get('/create', [BookController::class, 'create'])->name('create');
+        Route::get('/{book}/edit', [BookController::class, 'edit'])->name('edit');
 
     });
 

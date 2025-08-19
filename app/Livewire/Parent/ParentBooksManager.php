@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Parent;
 
+use App\Enums\SubscriptionStatus;
 use App\Livewire\AppComponent;
 use App\Models\Student;
 use App\Models\Book;
@@ -9,7 +10,10 @@ use App\Models\BookCategory;
 use App\Models\BookSubscription;
 use App\Models\BookBorrowing;
 use App\Models\StudentParent;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use LaravelIdea\Helper\App\Models\_IH_Book_C;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 
@@ -223,7 +227,10 @@ class ParentBooksManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
-        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
+//        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
+//            ->where('status', 'paid')
+//            ->pluck('book_id');
+        $subscribedBookIds = BookSubscription::where('user_id', auth()->user()->id)
             ->where('status', 'paid')
             ->pluck('book_id');
 
@@ -281,7 +288,7 @@ class ParentBooksManager extends AppComponent
     }
 
     #[Computed]
-    public function availableBooks()
+    public function availableBooks(): array|LengthAwarePaginator|Collection
     {
         if (!$this->selectedWardId) return collect();
 
@@ -289,7 +296,7 @@ class ParentBooksManager extends AppComponent
 
         // Get IDs of books that are already subscribed or borrowed
         $subscribedBookIds = BookSubscription::where('user_id', $student->user->id)
-            ->where('status', 'active')
+            ->where('status', SubscriptionStatus::PAID->value)
             ->pluck('book_id');
 
         $borrowedBookIds = BookBorrowing::where('user_id', $student->user->id)
@@ -323,16 +330,11 @@ class ParentBooksManager extends AppComponent
     #[Computed]
     public function books()
     {
-        switch ($this->activeTab) {
-            case 'subscribed':
-                return $this->subscribedBooks();
-            case 'borrowed':
-                return $this->borrowedBooks();
-            case 'available':
-                return $this->availableBooks();
-            default:
-                return $this->availableBooks();
-        }
+        return match ($this->activeTab) {
+            'subscribed' => $this->subscribedBooks(),
+            'borrowed' => $this->borrowedBooks(),
+            default => $this->availableBooks(),
+        };
     }
 
     #[Computed]
@@ -341,7 +343,7 @@ class ParentBooksManager extends AppComponent
         if (!$this->selectedWardId) return collect();
 
         return BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
-            ->where('status', 'paid')
+            ->where('status', SubscriptionStatus::PAID->value)
             ->with(['book.bookCategory', 'book.author'])
             ->get();
     }
@@ -352,7 +354,7 @@ class ParentBooksManager extends AppComponent
         if (!$this->selectedWardId) return collect();
 
         return BookBorrowing::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
-            ->where('status', 'active')
+            ->where('status', SubscriptionStatus::PAID->value)
             ->with(['book.bookCategory', 'book.author'])
             ->get();
     }
@@ -366,18 +368,18 @@ class ParentBooksManager extends AppComponent
     }
 
     #[Computed]
-    public function subscriptionStats()
+    public function subscriptionStats(): array
     {
         if (!$this->selectedWardId) return [];
 
-        $subscriptions = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)->get();
+        $subscriptions = BookSubscription::where('user_id', auth()->user()->id)->get();
         $borrowings = BookBorrowing::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)->get();
 
         return [
-            'active_subscriptions' => $subscriptions->where('status', 'paid')->count(),
+            'active_subscriptions' => $subscriptions->where('status', SubscriptionStatus::PAID->value)->count(),
             'active_borrowings' => $borrowings->where('status', 'active')->count(),
             'total_subscriptions' => $subscriptions->count(),
-            'expired_subscriptions' => $subscriptions->where('status', 'expired')->count(),
+            'expired_subscriptions' => $subscriptions->where('status',SubscriptionStatus::UNPAID->value )->count(),
             'cancelled_subscriptions' => $subscriptions->where('status', 'cancelled')->count(),
         ];
     }

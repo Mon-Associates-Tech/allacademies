@@ -24,7 +24,7 @@ class AssignmentAssignedMail extends Mailable
     public function build()
     {
         return $this->subject('New Assignment: ' . $this->assignment->title)
-                    ->view('emails.assignment-assigned')
+                    ->view('emails.assignment_notification')
                     ->with([
                         'assignment' => $this->assignment,
                         'student' => $this->student,

@@ -30,10 +30,10 @@
         <!-- Teacher Overview Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <!-- Academic Groups Card -->
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 overflow-hidden">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Academic Groups</h3>
+                        <h3 class="text-lg font-semibold text-nowrap text-gray-900 dark:text-gray-100">Academic Groups</h3>
                         <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $academicGroups->count() }}</p>
                     </div>
                     <div class="p-3 bg-indigo-100 dark:bg-indigo-900 rounded-full">
@@ -60,7 +60,7 @@
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Academic Levels</h3>
+                        <h3 class="text-lg font-semibold text-nowrap text-gray-900 dark:text-gray-100">Academic Levels</h3>
                         <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $academicLevels->count() }}</p>
                     </div>
                     <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
@@ -87,8 +87,8 @@
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Subjects</h3>
-                        <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ $subjects->total() }}</p>
+                        <h3 class="text-lg text-nowrap font-semibold text-gray-900 dark:text-gray-100">Total Subjects</h3>
+                        <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ auth()->user()->teacher->subjects()->count() }}</p>
                     </div>
                     <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
                         <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
