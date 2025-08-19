@@ -180,7 +180,7 @@
                                             @endif
                                         </div>
                                         <div class="text-xs text-gray-400 mt-1">
-                                            {{ $subscription['created_at']->format('M d, Y') }}
+                                            {{ $subscription['created_at'] }}
                                         </div>
                                     </div>
                                 </div>

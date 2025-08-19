@@ -37,93 +37,102 @@ class SubscriptionController extends Controller
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function index()
-    {
-        $user = auth()->user();
+public function index()
+{
+    $user = auth()->user();
 
-        $user->ensureUserHasTeam();
+    $user->ensureUserHasTeam();
 
-        // Get regular subscriptions
-        $regularSubscriptions = Subscription::query()
-            ->where('team_id', auth()->user()->current_team_id)
-            ->with(['academicSubjects', 'team', 'subscriber'])
-            ->latest('id')
-            ->get()
-            ->map(function ($subscription) {
-                return [
-                    'id' => $subscription->id,
-                    'type' => 'regular',
-                    'reference' => $subscription->reference,
-                    'package' => $subscription->package,
-                    'amount' => $subscription->amount,
-                    'currency' => $subscription->currency ?? 'GHS',
-                    'status' => $subscription->status,
-                    'duration_in_months' => $subscription->duration_in_months,
-                    'beneficiaries' => $subscription->beneficiaries,
-                    'expires_at' => $subscription->expires_at,
-                    'created_at' => $subscription->created_at,
-                    'updated_at' => $subscription->updated_at,
-                    'subjects' => $subscription->academicSubjects->pluck('name')->join(', '),
-                    'subject_count' => $subscription->academicSubjects->count(),
-                    'model' => $subscription,
-                ];
-            });
+    // Get regular subscriptions - keep as Eloquent collection
+    $regularSubscriptions = Subscription::query()
+        ->where('team_id', auth()->user()->current_team_id)
+        ->with(['academicSubjects', 'team', 'subscriber'])
+        ->latest('id')
+        ->get();
 
-        // Get book subscriptions for current user's student
-        $bookSubscriptions = collect();
+    // Get book subscriptions for current user's student - keep as Eloquent collection
+    $bookSubscriptions = BookSubscription::query()
+        ->where('user_id', auth()->user()->id)
+        ->with(['book', 'book.author', 'book.bookCategory', 'student'])
+        ->latest('id')
+        ->get();
 
-            $bookSubscriptions = BookSubscription::query()
-                ->where('user_id', auth()->user()->id)
-                ->with(['book', 'book.author', 'book.bookCategory', 'student'])
-                ->latest('id')
-                ->get()
-                ->map(function ($subscription) {
-                    return [
-                        'id' => $subscription->id,
-                        'type' => 'book',
-                        'reference' => $subscription->reference,
-                        'package' => 'Book Subscription',
-                        'amount' => $subscription->annual_fee,
-                        'currency' => 'GHS',
-                        'status' => $subscription->status,
-                        'duration_in_months' => 12, // Book subscriptions are typically annual
-                        'beneficiaries' => 1,
-                        'expires_at' => $subscription->end_date,
-                        'created_at' => $subscription->created_at,
-                        'updated_at' => $subscription->updated_at,
-                        'book_title' => $subscription->book->title,
-                        'book_author' => $subscription->book->author->user->name ?? 'Unknown Author',
-                        'book_category' => $subscription->book->bookCategory->name ?? 'Uncategorized',
-                        'start_date' => $subscription->start_date,
-                        'end_date' => $subscription->end_date,
-                        'payment_completed_at' => $subscription->payment_completed_at,
-                        'model' => $subscription,
-                    ];
-                });
+    // Create a combined collection with computed fields
+    $combinedSubscriptions = collect();
 
-
-        // Combine both types of subscriptions
-        $allSubscriptions = $regularSubscriptions->merge($bookSubscriptions)
-            ->sortByDesc('created_at');
-
-        // Paginate the combined results
-        $currentPage = request()->get('page', 1);
-        $perPage = 15;
-        $paginatedSubscriptions = new \Illuminate\Pagination\LengthAwarePaginator(
-            $allSubscriptions->forPage($currentPage, $perPage),
-            $allSubscriptions->count(),
-            $perPage,
-            $currentPage,
-            ['path' => request()->url(), 'pageName' => 'page']
-        );
-
-        return view('subscriptions.index', [
-            'subscriptions' => $paginatedSubscriptions,
-            'totalSubscriptions' => $allSubscriptions->count(),
-            'regularSubscriptions' => $regularSubscriptions,
-            'bookSubscriptions' => $bookSubscriptions,
+    // Add regular subscriptions with additional computed fields
+    foreach ($regularSubscriptions as $subscription) {
+        $combinedSubscriptions->push([
+            'id' => $subscription->id,
+            'type' => 'regular',
+            'reference' => $subscription->reference,
+            'package' => $subscription->package,
+            'amount' => $subscription->amount,
+            'currency' => $subscription->currency ?? 'GHS',
+            'status' => $subscription->status,
+            'duration_in_months' => $subscription->duration_in_months,
+            'beneficiaries' => $subscription->beneficiaries,
+            'expires_at' => $subscription->expires_at,
+            'created_at' => $subscription->created_at,
+            'updated_at' => $subscription->updated_at,
+            'subjects' => $subscription->academicSubjects->pluck('name')->join(', '),
+            'subject_count' => $subscription->academicSubjects->count(),
+            'model' => $subscription, // Keep the actual model
         ]);
     }
+
+    // Add book subscriptions with additional computed fields
+    foreach ($bookSubscriptions as $subscription) {
+        $combinedSubscriptions->push([
+            'id' => $subscription->id,
+            'type' => 'book',
+            'reference' => $subscription->reference,
+            'package' => 'Book Subscription',
+            'amount' => $subscription->annual_fee,
+            'currency' => 'GHS',
+            'status' => $subscription->status,
+            'duration_in_months' => 12,
+            'beneficiaries' => 1,
+            'expires_at' => $subscription->end_date,
+            'created_at' => $subscription->created_at,
+            'updated_at' => $subscription->updated_at,
+            'book_title' => $subscription->book->title,
+            'book_author' => $subscription->book->author->user->name ?? 'Unknown Author',
+            'book_category' => $subscription->book->bookCategory->name ?? 'Uncategorized',
+            'start_date' => $subscription->start_date,
+            'end_date' => $subscription->end_date,
+            'payment_completed_at' => $subscription->payment_completed_at,
+            'model' => $subscription, // Keep the actual model
+        ]);
+    }
+
+    // Sort by created_at descending
+    $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+
+    // Paginate the combined results
+    $currentPage = request()->get('page', 1);
+    $perPage = 15;
+
+    // Create a custom paginator with the actual models
+    $paginatedSubscriptions = new \Illuminate\Pagination\LengthAwarePaginator(
+        $combinedSubscriptions->forPage($currentPage, $perPage),
+        $combinedSubscriptions->count(),
+        $perPage,
+        $currentPage,
+        [
+            'path' => request()->url(),
+            'pageName' => 'page'
+        ]
+    );
+
+    return view('subscriptions.index', [
+        'subscriptions' => $paginatedSubscriptions,
+        'totalSubscriptions' => $combinedSubscriptions->count(),
+        'regularSubscriptions' => $regularSubscriptions,
+        'bookSubscriptions' => $bookSubscriptions,
+    ]);
+}
+
 
 
     /**
