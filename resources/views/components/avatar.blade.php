@@ -22,18 +22,23 @@
     }
 
     // --- Background Gradient Generation ---
-    // A palette of visually pleasing gradients that contrast well with white text.
+    // A palette of subtle, muted gradients that contrast well with white text.
     $gradients = [
-        ['#ef4444', '#f97316'], // Red to Orange
-        ['#eab308', '#84cc16'], // Yellow to Lime
-        ['#22c55e', '#14b8a6'], // Green to Teal
-        ['#06b6d4', '#3b82f6'], // Cyan to Blue
-        ['#8b5cf6', '#d946ef'], // Violet to Fuchsia
-        ['#ec4899', '#f472b6'], // Pink to Rose
-        ['#7c3aed', '#a78bfa']  // Indigo to Violet
+        ['#64748b', '#475569'], // Slate
+        ['#6b7280', '#4b5563'], // Gray
+        ['#78716c', '#57534e'], // Stone
+        ['#71717a', '#52525b'], // Zinc
+        ['#737373', '#525252'], // Neutral
+        ['#7c2d12', '#991b1b'], // Muted Red
+        ['#a16207', '#ca8a04'], // Muted Yellow
+        ['#166534', '#15803d'], // Muted Green
+        ['#0f4c75', '#1e40af'], // Muted Blue
+        ['#581c87', '#7c3aed'], // Muted Purple
+        ['#be185d', '#db2777'], // Muted Pink
+        ['#0f766e', '#0d9488']  // Muted Teal
     ];
 
-    $backgroundStyle = 'background-color: #9ca3af;'; // Default fallback
+    $backgroundStyle = 'background-color: #6b7280;'; // Default fallback (muted gray)
 
     // Generate a deterministic gradient based on the name's hash.
     if (!empty($name)) {

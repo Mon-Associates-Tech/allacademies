@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\AcademicGroupLogs;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,12 +15,18 @@ class AcademicGroup extends Model
     use HasFactory;
     use SoftDeletes;
     use Trackable;
+    use AcademicGroupLogs;
+//    use BelongsToSchoolEnhanced;
 
     /**
      * @var array<int, string>
      */
     protected $fillable = [
         'name',
+        'tag',
+        'modified_by',
+        'added_by',
+        'school_id',
     ];
 
     public function academicLevels(): AcademicGroup|HasMany

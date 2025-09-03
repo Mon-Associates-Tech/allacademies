@@ -13,6 +13,7 @@ use App\Livewire\Administrators\TeacherManagement;
 use App\Livewire\Administrators\UserImpersonation;
 use App\Livewire\Administrators\UserLoginLog;
 use App\Livewire\Books\BookForm;
+use App\Livewire\Common\ActivityLogManager;
 
 Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
@@ -29,4 +30,8 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(funct
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
     Route::get('datamanager', \App\Livewire\Common\DataManager::class)->name('data-manager');
+    Route::get('/academic-activities', ActivityLogManager::class)
+        ->name('academic-activities')
+        ->middleware('auth');
+
 });

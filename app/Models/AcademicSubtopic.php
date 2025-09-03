@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\AcademicGroupLogs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AcademicSubtopic extends Model
 {
     use HasFactory;
+    use AcademicGroupLogs;
 
     public function academicTopic(): BelongsTo {
         return $this->belongsTo(AcademicTopic::class);

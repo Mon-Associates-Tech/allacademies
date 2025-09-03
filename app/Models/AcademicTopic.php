@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\AcademicGroupLogs;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,12 +15,16 @@ class AcademicTopic extends Model
     use HasFactory;
     use SoftDeletes;
     use Trackable;
+    use AcademicGroupLogs;
 
     /**
      * @var array<int, string>
      */
     protected $fillable = [
         'name',
+        'academic_subject_id',
+        'description',
+
     ];
 
     public function academicSubject()
