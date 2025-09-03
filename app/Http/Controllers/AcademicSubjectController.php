@@ -57,17 +57,17 @@ class AcademicSubjectController extends Controller
      * @param AcademicSubjectRequest $request
      * @return RedirectResponse
      */
-    public function store(AcademicLevel $academicLevel, AcademicSubjectRequest $request): RedirectResponse
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubjectRequest $request): RedirectResponse
     {
         $this->authorize('administrate');
 
         $academicSubject = $academicLevel->academicSubjects()->create($request->validated());
 
-        return to_route('academic-subjects.index', ['academic_level' => $academicLevel])
+        return to_route('academic-subjects.index', ['academic_group' => $academicGroup, 'academic_level' => $academicLevel])
             ->with('success', __('status.resource.created', ['name' => $academicSubject->name]));
     }
 
-    // In your AcademicSubjectController show method
+
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel,  AcademicSubject $academicSubject)
     {
         // Get paginated topics with subtopics count
@@ -130,7 +130,7 @@ class AcademicSubjectController extends Controller
 
         $academicSubject->load('academicLevel')->delete();
 
-        return to_route('academic-subjects.index', ['academic_level' => $academicSubject->academicLevel])
+        return to_route('academic-subjects.index', ['academic_group' => $academicGroup,'academic_level' => $academicSubject->academicLevel])
             ->with('success', __('status.resource.deleted', ['name' => $academicSubject->name]));
     }
 }

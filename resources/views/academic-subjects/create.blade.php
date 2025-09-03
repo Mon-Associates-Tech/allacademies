@@ -55,32 +55,30 @@
 
                                 <!-- Name Field -->
                                 <div class="space-y-2">
-                                    <label for="name" class="block text-sm font-medium text-gray-700">
-                                        Subject Name <span class="text-red-500">*</span>
-                                    </label>
+
                                     <x-form.input
                                         name="name"
                                         type="text"
                                         placeholder="e.g., Mathematics, English Literature"
-                                        class="w-full"
+                                        class="w-full" label="Subject Name"
+                                        info="The full name of the subject as it will appear across the system."
+                                        info-position="bottom"
                                         required
                                     />
-                                    <p class="text-xs text-gray-500">The full name of the subject as it will appear across the system.</p>
                                 </div>
 
                                 <!-- Code Field -->
                                 <div class="space-y-2">
-                                    <label for="code" class="block text-sm font-medium text-gray-700">
-                                        Subject Code <span class="text-red-500">*</span>
-                                    </label>
                                     <x-form.input
                                         name="code"
                                         type="text"
                                         placeholder="e.g., MATH101, ENG201"
                                         class="w-full"
+                                        label="Subject Code"
+                                        info-position="bottom"
+                                        info="A unique identifier for this subject. Usually a short code."
                                         required
                                     />
-                                    <p class="text-xs text-gray-500">A unique identifier for this subject. Usually a short code.</p>
                                 </div>
 
                                 <!-- Action Buttons -->

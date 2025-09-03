@@ -14,4 +14,22 @@ enum UserRole: string
     case AUTHOR = 'author';
     case PARENT = 'parent';
     case ACCOUNTANT = 'accountant';
+
+    case SUPER_ADMIN = 'super_admin';
+
+    public static function getAll(): array
+    {
+        return [
+            self::OWNER,
+            self::ADMIN,
+            self::MODERATOR,
+            self::SUBSCRIBER,
+            self::TEACHER,
+            self::STUDENT,
+            self::LIBRARIAN,
+            self::AUTHOR,
+            self::PARENT,
+            self::ACCOUNTANT,
+        ];
+    }
 }
