@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -134,18 +135,18 @@ return new class extends Migration {
             $table->index('target_date');
         });
 
-        Schema::table('user_reading_info', function (Blueprint $table) {
+        Schema::create('user_reading_info', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->json('reading_preferences')->nullable()->after('learning_accommodations');
-            $table->decimal('estimated_reading_speed', 5, 2)->nullable()->after('reading_preferences'); // pages per hour
-            $table->integer('daily_reading_goal_minutes')->nullable()->after('estimated_reading_speed');
-            $table->time('preferred_reading_time')->nullable()->after('daily_reading_goal_minutes');
-            $table->json('favorite_book_categories')->nullable()->after('preferred_reading_time');
-            $table->json('completed_achievements')->nullable()->after('favorite_book_categories');
-            $table->integer('total_books_read')->default(0)->after('completed_achievements');
-            $table->integer('current_reading_streak')->default(0)->after('total_books_read');
-            $table->date('last_reading_date')->nullable()->after('current_reading_streak');
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->json('reading_preferences')->nullable();
+            $table->decimal('estimated_reading_speed', 5, 2)->nullable(); // pages per hour
+            $table->integer('daily_reading_goal_minutes')->nullable();
+            $table->time('preferred_reading_time')->nullable();
+            $table->json('favorite_book_categories')->nullable();
+            $table->json('completed_achievements')->nullable();
+            $table->integer('total_books_read')->default(0);
+            $table->integer('current_reading_streak')->default(0);
+            $table->date('last_reading_date')->nullable();
             $table->timestamps();
         });
 
