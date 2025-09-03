@@ -3,16 +3,15 @@
 namespace App\Livewire\Authors;
 
 use App\Models\Book;
-use App\Models\BookSubscription;
 use App\Models\BookBorrowing;
-use Livewire\Component;
+use App\Models\BookSubscription;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
+use Livewire\Component;
 
 class BookAnalytics extends Component
 {

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Book;
 use App\Models\GroupBookSubscription;
 use App\Models\StudentGroup;
-use App\Models\Book;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class GroupBookSubscriptionFactory extends Factory
@@ -15,7 +15,7 @@ class GroupBookSubscriptionFactory extends Factory
     {
         $startDate = $this->faker->dateTimeBetween('-6 months', 'now');
         $endDate = $this->faker->dateTimeBetween($startDate, '+1 year');
-        
+
         return [
             'student_group_id' => StudentGroup::factory(),
             'book_id' => Book::factory()->state(function (array $attributes) {

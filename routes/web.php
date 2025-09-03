@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AcademicChatController;
 use App\Http\Controllers\AcademicGroupController;
 use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AcademicSubjectController;
 use App\Http\Controllers\AcademicTopicController;
+use App\Http\Controllers\ActivityTrailController;
 use App\Http\Controllers\AuditTeamController;
 use App\Http\Controllers\BookProgressController;
 use App\Http\Controllers\Company\ContactController;
@@ -41,6 +43,8 @@ use App\Livewire\Administrators\StudentManagement;
 use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
 use App\Livewire\Administrators\UserLoginLog;
+use App\Livewire\Chats\ChatInterface;
+use App\Livewire\Forums\ForumManagement;
 use App\Livewire\Students\Courses;
 use App\Livewire\Teachers\EssayGrader;
 use App\Models\Assessment;
@@ -376,7 +380,7 @@ Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(fu
     Route::get('/assessments', \App\Livewire\Subscribers\Assessments::class)->name('assessments');
     Route::get('/quizzes', \App\Livewire\Subscribers\Quizzes::class)->name('quizzes');
     Route::get('/progress', \App\Livewire\Subscribers\Progress::class)->name('progress');
-    Route::get('/forums', \App\Livewire\Forums\ForumManagement::class)->name('forums');
+    Route::get('/forums', ForumManagement::class)->name('forums');
     Route::get('/groups', \App\Livewire\Subscribers\StudyGroups::class)->name('groups');
     Route::get('/premium', \App\Livewire\Subscribers\Premium::class)->name('premium');
     Route::get('/analytics', \App\Livewire\Subscribers\Analytics::class)->name('analytics');
@@ -402,7 +406,39 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/academic-calendar', function () {
         return view('academic-calendar');
     })->name('academic-calendar');
+
+    Route::get('/mediapage', [\App\Http\Controllers\Media\MediaController::class, 'index'])->name('media.index');
+    Route::get('/media/download', [\App\Http\Controllers\Media\MediaController::class, 'download'])->name('media.download');
+
 });
+
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('onboarding/school-setup', \App\Livewire\SchoolOnboarding::class)->name('onboarding.school-setup');
+
+
+    Route::middleware(['auth', 'verified'])->group(function () {
+        // Chat routes
+        Route::get('/chat', ChatInterface::class)->name('chat');
+        Route::get('/chat/{group}', ChatInterface::class)->name('chat.group');
+    });
+
+    // Educational Chat Routes
+    Route::prefix('academic-chats')->name('academic-chat.')->group(function () {
+        // Main chat interface
+        Route::get('/', [AcademicChatController::class, 'index'])->name('index');
+
+        // API endpoints
+        Route::post('/chat', [AcademicChatController::class, 'chat'])->name('chat');
+        Route::get('/subjects', [AcademicChatController::class, 'subjects'])->name('subjects');
+        Route::post('/recommendations', [AcademicChatController::class, 'recommendations'])->name('recommendations');
+        Route::post('/export', [AcademicChatController::class, 'exportChat'])->name('export');
+    });
+
+    Route::get('/forums', ForumManagement::class)->name('forums');
+});
+
+
 
 
 include_once 'student.php';

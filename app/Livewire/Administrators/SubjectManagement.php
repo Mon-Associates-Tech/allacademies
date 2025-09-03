@@ -25,6 +25,7 @@ class SubjectManagement extends Component
     public $topicSlug;
     public $topicDescription;
     public $subjectId;
+    public $subjectCode;
 
     // For Subtopic
     public $subtopicName;
@@ -59,6 +60,7 @@ class SubjectManagement extends Component
         'name' => 'required|min:2',
         'description' => 'nullable|string',
         'academicLevelId' => 'required|exists:academic_levels,id',
+        'subjectCode' => 'required|min:2',
     ];
 
     protected $topicRules = [
@@ -118,6 +120,7 @@ class SubjectManagement extends Component
 
     public function createSubject()
     {
+
         $this->validate($this->subjectRules);
 
         $uniqueSlug = $this->generateUniqueSlug($this->slug, 'subject');
@@ -125,6 +128,7 @@ class SubjectManagement extends Component
         Subject::create([
             'name' => $this->name,
             'slug' => $uniqueSlug,
+            'code' => $this->subjectCode,
             'description' => $this->description,
             'academic_level_id' => $this->academicLevelId,
         ]);
@@ -141,6 +145,7 @@ class SubjectManagement extends Component
         $subject = Subject::findOrFail($subjectId);
         $this->name = $subject->name;
         $this->slug = $subject->slug;
+        $this->subjectCode = $subject->code;
         $this->description = $subject->description;
         $this->academicLevelId = $subject->academic_level_id;
 
@@ -167,6 +172,7 @@ class SubjectManagement extends Component
         $subject->update([
             'name' => $this->name,
             'slug' => $slug,
+            'code' => $this->subjectCode,
             'description' => $this->description,
             'academic_level_id' => $this->academicLevelId,
         ]);
@@ -441,10 +447,12 @@ class SubjectManagement extends Component
     {
         $this->name = '';
         $this->slug = '';
+        $this->subjectCode = '';
         $this->description = '';
         $this->isEditingSubject = false;
         $this->editingSubjectId = null;
         $this->resetValidation();
+        $this->js('window.Modal.close("subject-management-form")');
     }
 
     public function resetTopicForm()

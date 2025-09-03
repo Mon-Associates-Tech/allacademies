@@ -106,7 +106,7 @@ class ParentWardPerformance extends AppComponent
             ->with(['subject']);
 
         if ($this->selectedSubjectId) {
-            $query->where('academic_subject_id', $this->selectedSubjectId);
+            $query->where('subject_id', $this->selectedSubjectId);
         }
 
         if ($this->selectedAssessmentType !== 'all') {
@@ -145,7 +145,7 @@ class ParentWardPerformance extends AppComponent
             $assessments = Assessment::where('student_id', $this->selectedWardId);
 
             if ($this->selectedSubjectId) {
-                $assessments->where('academic_subject_id', $this->selectedSubjectId);
+                $assessments->where('subject_id', $this->selectedSubjectId);
             }
 
             if ($this->selectedPeriod !== 'all') {

@@ -3,8 +3,8 @@
 namespace App\Livewire\Subscribers;
 
 use App\Models\Book;
-use App\Models\BookSubscription;
 use App\Models\BookCategory;
+use App\Models\BookSubscription;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;

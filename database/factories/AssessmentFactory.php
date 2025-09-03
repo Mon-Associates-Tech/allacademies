@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Assessment;
-use App\Models\Student;
 use App\Models\Book;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AssessmentFactory extends Factory

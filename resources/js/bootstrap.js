@@ -23,6 +23,13 @@ import './activity'; // Import activity tracking
 import renderMathInElement from 'katex/dist/contrib/auto-render';
 
 import './pdf_reader_wrapper'
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import 'videojs-markers';
+import 'videojs-contrib-quality-levels';
+import 'videojs-http-source-selector';
+import './modal'
+import './upload_progress'
 
 // Register Chart.js components (added RadialLinearScale for radar charts)
 Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale);
@@ -33,6 +40,8 @@ window.marked = marked;
 window.Chart = Chart;
 window.axios = axios;
 window.AOS = AOS;
+window.videojs = videojs;
+import '../css/videoplayer.css'
 
 
 import './ChartDataHelper';
@@ -74,5 +83,8 @@ renderer.code = function(code, lang, escaped) {
 marked.setOptions({ renderer });
 window.katex = katex;
 window.renderMathInElement = renderMathInElement;
+
+
+
 
 Livewire.start();

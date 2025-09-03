@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Author extends Model
 {
     use HasFactory;
+    use BelongsToSchoolEnhanced;
+
+    protected static bool $schoolRestricted = false;
 
     protected $fillable = [
         'user_id',

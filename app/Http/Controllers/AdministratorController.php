@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AdministratorCollection;
+use App\Http\Resources\AdministratorResource;
+use App\Http\Resources\GroupBookSubscriptionResource;
 use App\Models\Administrator;
 use App\Models\Book;
-use App\Models\StudentGroup;
 use App\Models\GroupBookSubscription;
+use App\Models\StudentGroup;
 use Illuminate\Http\Request;
-use App\Http\Resources\AdministratorResource;
-use App\Http\Resources\AdministratorCollection;
-use App\Http\Resources\GroupBookSubscriptionResource;
 
 class AdministratorController extends Controller
 {

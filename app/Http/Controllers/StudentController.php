@@ -2,29 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
+use App\Http\Resources\AssessmentResource;
+use App\Http\Resources\BookBorrowingResource;
+use App\Http\Resources\BookSubscriptionResource;
+use App\Http\Resources\StudentCollection;
+use App\Http\Resources\StudentResource;
+use App\Models\AcademicLevel;
+use App\Models\Assessment;
 use App\Models\Book;
 use App\Models\BookBorrowing;
 use App\Models\BookSubscription;
-use App\Models\Assessment;
+use App\Models\Student;
 use Illuminate\Http\Request;
-use App\Http\Resources\StudentResource;
-use App\Http\Resources\StudentCollection;
-use App\Http\Resources\BookBorrowingResource;
-use App\Http\Resources\BookSubscriptionResource;
-use App\Http\Resources\AssessmentResource;
 
-class StudentController extends Controller
+class StudentController extends BaseSchoolController
 {
     public function __construct()
     {
+        parent::__construct();
         $this->authorizeResource(Student::class, 'student');
     }
 
     public function index()
     {
         return view('students.index');
-        return new StudentCollection(Student::with('user', 'group')->paginate());
+       // return new StudentCollection(Student::with('user', 'group')->paginate());
     }
 
     public function store(Request $request)
@@ -195,4 +197,61 @@ class StudentController extends Controller
         $assessments = $student->assessments()->with('book')->paginate();
         return AssessmentResource::collection($assessments);
     }
+
+    public function indexNew()
+    {
+        $this->authorize('students.view');
+
+        $students = Student::with(['user', 'academicLevel', 'academicGroup'])
+            ->when(request('academic_level'), function ($query, $level) {
+                $query->where('academic_level_id', $level);
+            })
+            ->when(request('status'), function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->paginate(20);
+
+        $academicLevels = AcademicLevel::with('academicGroup')->get();
+
+        return view('students.index', compact('students', 'academicLevels'));
+    }
+
+    public function storeNew(Request $request)
+    {
+        $this->authorize('students.create');
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'academic_level_id' => 'required|exists:academic_levels,id',
+            'academic_group_id' => 'required|exists:academic_groups,id'
+        ]);
+
+        // Ensure academic level belongs to current school
+        $academicLevel = AcademicLevel::where('school_id', $this->school->id)
+            ->findOrFail($validated['academic_level_id']);
+
+        \DB::transaction(function () use ($validated, $academicLevel) {
+            // Create user
+            $user = \App\Models\User::create([
+                'school_id' => $this->school->id,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => \Hash::make('temporary_password'),
+                'role' => 'student',
+                'status' => 'active'
+            ]);
+
+            // Student record is auto-created by User model observer
+            $student = $user->student;
+            $student->update([
+                'academic_level_id' => $validated['academic_level_id'],
+                'academic_group_id' => $validated['academic_group_id']
+            ]);
+        });
+
+        return redirect()->route('students.index')
+            ->with('success', 'Student created successfully');
+    }
+
 }

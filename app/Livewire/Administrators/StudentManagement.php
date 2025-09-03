@@ -2,19 +2,19 @@
 
 namespace App\Livewire\Administrators;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\Student;
-use App\Models\User;
-use App\Models\StudentGroup;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Models\Teacher;
 use App\Models\Role;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
+use App\Models\Student;
+use App\Models\StudentGroup;
+use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class StudentManagement extends Component
 {
@@ -34,7 +34,9 @@ class StudentManagement extends Component
     public $isEditing = false;
     public $editingStudentId;
     public $showIndividualSubjects = false;
-
+    public $showForm = false;
+    public $formMode = 'create';
+    public $showFormModal = false;
     // Teacher management
     public $showTeacherModal = false;
     public $teacherName;
@@ -56,6 +58,7 @@ class StudentManagement extends Component
     public $availableAdditionalSubjects = [];
     public $availableTeachers = [];
     public $allTeachers = [];
+    public $viewMode = 'card'; // 'card' or 'list'
 
     protected $rules = [
         'name' => 'required|min:3',
@@ -78,6 +81,49 @@ class StudentManagement extends Component
         $this->studentGroups = StudentGroup::all();
         $this->academicGroups = AcademicGroup::all();
         $this->allTeachers = Teacher::with('user')->get();
+    }
+
+    public function toggleViewMode()
+    {
+        $this->viewMode = $this->viewMode === 'card' ? 'list' : 'card';
+    }
+
+    public function showCreateForm()
+    {
+        $this->resetForm();
+        $this->showFormModal = true;
+        $this->formMode = 'create';
+    }
+
+    public function resetForm()
+    {
+
+        $this->showFormModal = false;
+        $this->formMode = 'create';
+        $this->name = '';
+        $this->email = '';
+        $this->password = '';
+        $this->studentGroupId = '';
+        $this->academicGroupId = '';
+        $this->academicLevelId = '';
+        $this->primaryTeacherId = '';
+        $this->selectedTeachers = [];
+        $this->additionalSubjects = [];
+        $this->removedSubjects = [];
+        $this->isEditing = false;
+        $this->editingStudentId = null;
+        $this->showIndividualSubjects = false;
+        $this->academicLevels = [];
+        $this->levelSubjects = [];
+        $this->availableAdditionalSubjects = [];
+        $this->availableTeachers = [];
+        $this->resetValidation();
+    }
+
+    public function hideForm()
+    {
+        $this->showFormModal = false;
+        $this->resetForm();
     }
 
     public function updatedAcademicGroupId()
@@ -106,6 +152,19 @@ class StudentManagement extends Component
         $this->dispatch('$refresh');
     }
 
+    // Teacher Management Methods
+
+    public function loadTeachersForGroupManagement()
+    {
+        if (!$this->academicGroupId) return;
+
+        $group = AcademicGroup::with('teachers')->find($this->academicGroupId);
+        $assignedTeacherIds = $group->teachers->pluck('id')->toArray();
+
+        $this->teachersToAssignToGroup = Teacher::whereNotIn('id', $assignedTeacherIds)
+            ->with('user')->get();
+    }
+
     public function updatedAcademicLevelId()
     {
         $this->primaryTeacherId = '';
@@ -121,7 +180,7 @@ class StudentManagement extends Component
             $this->availableAdditionalSubjects = AcademicSubject::where('academic_level_id', '!=', $this->academicLevelId)->get();
 
             // Load teachers who belong to this academic level
-            $this->availableTeachers = Teacher::whereHas('academicLevels', function($query) {
+            $this->availableTeachers = Teacher::whereHas('academicLevels', function ($query) {
                 $query->where('academic_level_id', $this->academicLevelId);
             })->with('user')->get();
 
@@ -133,27 +192,6 @@ class StudentManagement extends Component
         }
     }
 
-    // Teacher Management Methods
-    public function showManageTeachersModal()
-    {
-        $this->showManageTeachers = true;
-        $this->loadTeachersForGroupManagement();
-        if ($this->academicLevelId) {
-            $this->loadTeachersForLevelManagement();
-        }
-    }
-
-    public function loadTeachersForGroupManagement()
-    {
-        if (!$this->academicGroupId) return;
-
-        $group = AcademicGroup::with('teachers')->find($this->academicGroupId);
-        $assignedTeacherIds = $group->teachers->pluck('id')->toArray();
-
-        $this->teachersToAssignToGroup = Teacher::whereNotIn('id', $assignedTeacherIds)
-            ->with('user')->get();
-    }
-
     public function loadTeachersForLevelManagement()
     {
         if (!$this->academicLevelId) return;
@@ -163,6 +201,15 @@ class StudentManagement extends Component
 
         $this->teachersToAssignToLevel = Teacher::whereNotIn('id', $assignedTeacherIds)
             ->with('user')->get();
+    }
+
+    public function showManageTeachersModal()
+    {
+        $this->showManageTeachers = true;
+        $this->loadTeachersForGroupManagement();
+        if ($this->academicLevelId) {
+            $this->loadTeachersForLevelManagement();
+        }
     }
 
     public function assignTeachersToGroup()
@@ -216,7 +263,7 @@ class StudentManagement extends Component
         $this->loadTeachersForLevelManagement();
 
         // Refresh available teachers for student assignment
-        $this->availableTeachers = Teacher::whereHas('academicLevels', function($query) {
+        $this->availableTeachers = Teacher::whereHas('academicLevels', function ($query) {
             $query->where('academic_level_id', $this->academicLevelId);
         })->with('user')->get();
 
@@ -240,7 +287,7 @@ class StudentManagement extends Component
         $this->loadTeachersForLevelManagement();
 
         // Refresh available teachers for student assignment
-        $this->availableTeachers = Teacher::whereHas('academicLevels', function($query) {
+        $this->availableTeachers = Teacher::whereHas('academicLevels', function ($query) {
             $query->where('academic_level_id', $this->academicLevelId);
         })->with('user')->get();
 
@@ -252,6 +299,14 @@ class StudentManagement extends Component
         $this->showTeacherModal = true;
         $this->isEditingTeacher = false;
         $this->resetTeacherForm();
+    }
+
+    public function resetTeacherForm()
+    {
+        $this->teacherName = '';
+        $this->teacherEmail = '';
+        $this->teacherPassword = '';
+        $this->resetValidation(['teacherName', 'teacherEmail', 'teacherPassword']);
     }
 
     public function createTeacher()
@@ -310,48 +365,14 @@ class StudentManagement extends Component
         $this->loadTeachersForGroupManagement();
         if ($this->academicLevelId) {
             $this->loadTeachersForLevelManagement();
-            $this->availableTeachers = Teacher::whereHas('academicLevels', function($query) {
+            $this->availableTeachers = Teacher::whereHas('academicLevels', function ($query) {
                 $query->where('academic_level_id', $this->academicLevelId);
             })->with('user')->get();
         }
 
         session()->flash('message', 'Teacher created and assigned successfully!');
-    }
 
-    public function resetTeacherForm()
-    {
-        $this->teacherName = '';
-        $this->teacherEmail = '';
-        $this->teacherPassword = '';
-        $this->resetValidation(['teacherName', 'teacherEmail', 'teacherPassword']);
-    }
-
-    public function closeManageTeachersModal()
-    {
-        $this->showManageTeachers = false;
-        $this->selectedTeachersForGroup = [];
-        $this->selectedTeachersForLevel = [];
-    }
-
-    public function closeTeacherModal()
-    {
-        $this->showTeacherModal = false;
-        $this->resetTeacherForm();
-    }
-
-    // Existing methods (keeping them unchanged)
-    public function updatedPrimaryTeacherId()
-    {
-        if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
-            $this->selectedTeachers[] = $this->primaryTeacherId;
-        }
-    }
-
-    public function updatedSelectedTeachers()
-    {
-        if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
-            $this->primaryTeacherId = '';
-        }
+        $this->js('window.Modal.close("teacher-add-form")');
     }
 
     public function create()
@@ -398,10 +419,83 @@ class StudentManagement extends Component
 
         $this->resetForm();
         session()->flash('message', 'Student created successfully! They have access to all subjects from their academic level plus any additional subjects assigned.');
+        $this->js('window.Modal.close("student-add-form")');
+    }
+
+    // Existing methods (keeping them unchanged)
+
+    private function assignIndividualSubjects($student)
+    {
+        // Clear existing individual assignments
+        $student->individualSubjects()->detach();
+
+        $currentUserId = Auth::id();
+        $now = now();
+
+        // Add additional subjects (subjects not in their academic level)
+        if (!empty($this->additionalSubjects)) {
+            $additionalData = [];
+            foreach ($this->additionalSubjects as $subjectId) {
+                $additionalData[$subjectId] = [
+                    'is_active' => true,
+                    'assigned_by' => $currentUserId,
+                    'notes' => 'Additional subject assignment',
+                    'assigned_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            $student->individualSubjects()->attach($additionalData);
+        }
+
+        // Remove subjects from academic level access
+        if (!empty($this->removedSubjects)) {
+            $removedData = [];
+            foreach ($this->removedSubjects as $subjectId) {
+                $removedData[$subjectId] = [
+                    'is_active' => false,
+                    'assigned_by' => $currentUserId,
+                    'notes' => 'Removed from academic level access',
+                    'assigned_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            $student->individualSubjects()->attach($removedData);
+        }
+    }
+
+    public function closeManageTeachersModal()
+    {
+        $this->showManageTeachers = false;
+        $this->selectedTeachersForGroup = [];
+        $this->selectedTeachersForLevel = [];
+    }
+
+    public function closeTeacherModal()
+    {
+        $this->showTeacherModal = false;
+        $this->resetTeacherForm();
+    }
+
+    public function updatedPrimaryTeacherId()
+    {
+        if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
+            $this->selectedTeachers[] = $this->primaryTeacherId;
+        }
+    }
+
+    public function updatedSelectedTeachers()
+    {
+        if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
+            $this->primaryTeacherId = '';
+        }
     }
 
     public function edit($studentId)
     {
+        $this->formMode = 'edit';
+        $this->showFormModal = true;
         $this->isEditing = true;
         $this->editingStudentId = $studentId;
 
@@ -428,7 +522,7 @@ class StudentManagement extends Component
         if ($this->academicLevelId) {
             $this->levelSubjects = AcademicSubject::where('academic_level_id', $this->academicLevelId)->get();
             $this->availableAdditionalSubjects = AcademicSubject::where('academic_level_id', '!=', $this->academicLevelId)->get();
-            $this->availableTeachers = Teacher::whereHas('academicLevels', function($query) {
+            $this->availableTeachers = Teacher::whereHas('academicLevels', function ($query) {
                 $query->where('academic_level_id', $this->academicLevelId);
             })->with('user')->get();
         }
@@ -451,6 +545,8 @@ class StudentManagement extends Component
             ->wherePivot('is_active', false)
             ->pluck('academic_subjects.id')
             ->toArray();
+
+        $this->js('window.Modal.open("student-add-form")');
     }
 
     public function update()
@@ -459,7 +555,7 @@ class StudentManagement extends Component
 
         $this->validate([
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:users,email,'.$student->user_id,
+            'email' => 'required|email|unique:users,email,' . $student->user_id,
             'academicGroupId' => 'required|exists:academic_groups,id',
             'academicLevelId' => 'required|exists:academic_levels,id',
             'primaryTeacherId' => 'nullable|exists:teachers,id',
@@ -511,47 +607,7 @@ class StudentManagement extends Component
 
         $this->resetForm();
         session()->flash('message', 'Student updated successfully!');
-    }
-
-    private function assignIndividualSubjects($student)
-    {
-        // Clear existing individual assignments
-        $student->individualSubjects()->detach();
-
-        $currentUserId = Auth::id();
-        $now = now();
-
-        // Add additional subjects (subjects not in their academic level)
-        if (!empty($this->additionalSubjects)) {
-            $additionalData = [];
-            foreach ($this->additionalSubjects as $subjectId) {
-                $additionalData[$subjectId] = [
-                    'is_active' => true,
-                    'assigned_by' => $currentUserId,
-                    'notes' => 'Additional subject assignment',
-                    'assigned_at' => $now,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-            $student->individualSubjects()->attach($additionalData);
-        }
-
-        // Remove subjects from academic level access
-        if (!empty($this->removedSubjects)) {
-            $removedData = [];
-            foreach ($this->removedSubjects as $subjectId) {
-                $removedData[$subjectId] = [
-                    'is_active' => false,
-                    'assigned_by' => $currentUserId,
-                    'notes' => 'Removed from academic level access',
-                    'assigned_at' => $now,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-            $student->individualSubjects()->attach($removedData);
-        }
+        $this->js('window.Modal.close("student-add-form")');
     }
 
     public function delete($studentId)
@@ -565,44 +621,23 @@ class StudentManagement extends Component
         });
 
         session()->flash('message', 'Student deleted successfully!');
-    }
-
-    public function resetForm()
-    {
-        $this->name = '';
-        $this->email = '';
-        $this->password = '';
-        $this->studentGroupId = '';
-        $this->academicGroupId = '';
-        $this->academicLevelId = '';
-        $this->primaryTeacherId = '';
-        $this->selectedTeachers = [];
-        $this->additionalSubjects = [];
-        $this->removedSubjects = [];
-        $this->isEditing = false;
-        $this->editingStudentId = null;
-        $this->showIndividualSubjects = false;
-        $this->academicLevels = [];
-        $this->levelSubjects = [];
-        $this->availableAdditionalSubjects = [];
-        $this->availableTeachers = [];
-        $this->resetValidation();
+        $this->js('window.Modal.close("student-delete-form")');
     }
 
     public function render()
     {
-        $students = Student::whereHas('user', function($query) {
-                $query->where('name', 'like', '%'.$this->searchTerm.'%')
-                    ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
+        $students = Student::whereHas('user', function ($query) {
+            $query->where('name', 'like', '%' . $this->searchTerm . '%')
+                ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+        })
+            ->orWhereHas('studentGroup', function ($query) {
+                $query->where('name', 'like', '%' . $this->searchTerm . '%');
             })
-            ->orWhereHas('studentGroup', function($query) {
-                $query->where('name', 'like', '%'.$this->searchTerm.'%');
+            ->orWhereHas('academicGroup', function ($query) {
+                $query->where('name', 'like', '%' . $this->searchTerm . '%');
             })
-            ->orWhereHas('academicGroup', function($query) {
-                $query->where('name', 'like', '%'.$this->searchTerm.'%');
-            })
-            ->orWhereHas('academicLevel', function($query) {
-                $query->where('name', 'like', '%'.$this->searchTerm.'%');
+            ->orWhereHas('academicLevel', function ($query) {
+                $query->where('name', 'like', '%' . $this->searchTerm . '%');
             })
             ->with([
                 'user',

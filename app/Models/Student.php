@@ -3,20 +3,40 @@
 namespace App\Models;
 
 use App\Models\Attendance\AttendanceRecord;
+use App\Traits\BelongsToSchoolEnhanced;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Student extends Model
 {
     use HasFactory, LogsActivity;
+    use BelongsToSchoolEnhanced;
 
-    protected $fillable = ['user_id', 'student_group_id', 'academic_level_id', 'academic_group_id', 'school_id'];
+    protected $fillable = [
+        'school_id', 'user_id', 'student_id', 'student_group_id',
+        'academic_level_id', 'academic_group_id', 'admission_date',
+        'graduation_date', 'status', 'metadata'
+    ];
+
+    protected $casts = [
+        'admission_date' => 'date',
+        'graduation_date' => 'date',
+        'metadata' => 'array'
+    ];
+
+    protected $with = [
+        'user',
+        'user',
+        'academicLevel',
+        'academicGroup'
+    ];
 
     /**
      * @return LogOptions
@@ -24,7 +44,7 @@ class Student extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['user_id', 'student_group_id'])
+            ->logOnly(['user_id', 'student_group_id', 'academic_level_id', 'status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -81,11 +101,6 @@ class Student extends Model
             ->wherePivot('is_primary', false);
     }
 
-    public function enrollments()
-    {
-        //return $this->hasMany(Enrollment::class);
-    }
-
     public function assessments(): Student|HasMany
     {
         return $this->hasMany(Assessment::class);
@@ -113,7 +128,6 @@ class Student extends Model
             ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
     }
 
-    // Individual subject assignments (overrides/additions to academic level subjects)
 
     public function levelSubjects()
     {
@@ -127,21 +141,16 @@ class Student extends Model
         );
     }
 
-    // Main relationship for academic subjects (for eager loading compatibility)
 
-    public function subjectsFromLevel()
+    public function subjectsFromLevel(): BelongsTo|Builder
     {
         return $this->academicLevel()->with('academicSubjects');
     }
-
-    // Get subjects from academic level (as relationship)
 
     public function academicLevel(): BelongsTo
     {
         return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
     }
-
-    // Alternative approach - get level subjects via academic level relationship
 
     public function getIndividuallyAssignedSubjects()
     {
@@ -159,7 +168,6 @@ class Student extends Model
         return $query->get();
     }
 
-    // Helper methods that return collections (not relationships)
 
     public function individualSubjects(): BelongsToMany
     {
@@ -180,7 +188,6 @@ class Student extends Model
         return $this->getAllAccessibleSubjects();
     }
 
-    // Accessor for getting all accessible subjects as an attribute
 
     public function getAllAccessibleSubjects()
     {
@@ -272,22 +279,22 @@ class Student extends Model
         return $details;
     }
 
-    public function libraryCard()
+    public function libraryCard(): Student|HasOne
     {
         return $this->hasOne(LibraryCard::class);
     }
 
-    public function libraryCards()
+    public function libraryCards(): Student|HasMany
     {
         return $this->hasMany(LibraryCard::class);
     }
 
-    public function activeLibraryCard()
+    public function activeLibraryCard(): Student|HasOne
     {
         return $this->hasOne(LibraryCard::class)->where('status', 'active');
     }
 
-    public function getCanBorrowBooksAttribute()
+    public function getCanBorrowBooksAttribute(): bool
     {
         $activeCard = $this->activeLibraryCard;
         return $activeCard && $activeCard->can_borrow;
@@ -301,7 +308,7 @@ class Student extends Model
             ->withTimestamps();
     }
 
-    public function getAttendanceForDate($date, $academicLevelId = null)
+    public function getAttendanceForDate($date, $academicLevelId = null): ?Student
     {
         $query = $this->attendanceRecords()
             ->whereHas('attendance', function ($query) use ($date) {
@@ -317,19 +324,67 @@ class Student extends Model
         return $query->first();
     }
 
-    public function attendanceRecords()
+    public function attendanceRecords(): Student|HasMany
     {
         return $this->hasMany(AttendanceRecord::class);
     }
 
-    public function assignmentSubmissions()
+    public function assignmentSubmissions(): Student|HasMany
     {
         return $this->hasMany(AssignmentSubmission::class);
     }
 
-    public function academicHistory()
+    public function academicHistory(): Student|HasMany
     {
         return $this->hasMany(AcademicHistory::class);
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeByAcademicLevel($query, $levelId)
+    {
+        return $query->where('academic_level_id', $levelId);
+    }
+
+    public function scopeByAcademicGroup($query, $groupId)
+    {
+        return $query->where('academic_group_id', $groupId);
+    }
+
+    // Generate school-specific student ID
+    public static function generateStudentId($schoolId): string
+    {
+        $school = School::find($schoolId);
+        $year = date('Y');
+
+        $lastStudent = static::withoutGlobalScope('school')
+            ->where('school_id', $schoolId)
+            ->where('student_id', 'like', "{$school->code}{$year}%")
+            ->latest('student_id')
+            ->first();
+
+        $sequence = $lastStudent ?
+            (int)substr($lastStudent->student_id, -4) + 1 : 1;
+
+        return $school->code . $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function scopeForCurrentUser($query)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query->whereRaw('0=1');
+        }
+
+        if ($user->canAccessCrossSchool()) {
+            $schoolId = app()->has('current_school') ? app('current_school')->id : null;
+            return $schoolId ? $query->where('school_id', $schoolId) : $query;
+        }
+
+        return $query->where('school_id', $user->school_id);
+    }
 }

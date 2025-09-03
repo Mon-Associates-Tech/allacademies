@@ -50,7 +50,8 @@ class SearchableMultiSelect extends Component
         string $valueKey = 'id',
         string $labelKey = 'name',
         string $childrenKey = 'children'
-    ) {
+    ): void
+    {
         $this->items = $items;
         $this->selected = $selected;
         $this->placeholder = $placeholder;
@@ -85,7 +86,7 @@ class SearchableMultiSelect extends Component
     }
 
     #[Computed]
-    public function selectedItems()
+    public function selectedItems(): array
     {
         return array_filter($this->items, function ($item) {
             $value = is_array($item) ? ($item[$this->valueKey] ?? '') : $item->id ?? $item->value ?? '';
@@ -93,19 +94,20 @@ class SearchableMultiSelect extends Component
         });
     }
 
-    public function toggleDropdown()
+    public function toggleDropdown(): void
     {
         if (!$this->disabled) {
             $this->dropdownOpen = !$this->dropdownOpen;
         }
     }
 
-    public function closeDropdown()
+
+    public function closeDropdown(): void
     {
         $this->dropdownOpen = false;
     }
 
-    public function selectItem($value)
+    public function selectItem($value): void
     {
         if ($this->disabled) {
             return;
@@ -120,15 +122,21 @@ class SearchableMultiSelect extends Component
         } else {
             $this->selected = [$value];
             $this->dropdownOpen = false;
+            $this->search = '';
         }
+
 
         $this->dispatch('selection-changed', [
             'name' => $this->name,
             'selected' => $this->selected,
+            'value' => $this->multiple ? $this->selected : ($this->selected[0] ?? null)
         ]);
+
+        $this->dispatch('update-' . $this->name, $this->multiple ? $this->selected : ($this->selected[0] ?? null));
     }
 
-    public function removeItem($value)
+
+    public function removeItem($value): void
     {
         if ($this->disabled) {
             return;
@@ -142,7 +150,7 @@ class SearchableMultiSelect extends Component
         ]);
     }
 
-    public function clearAll()
+    public function clearAll(): void
     {
         if ($this->disabled) {
             return;
@@ -157,14 +165,14 @@ class SearchableMultiSelect extends Component
         ]);
     }
 
-    public function updatedSearch()
+    public function updatedSearch(): void
     {
         if (!$this->dropdownOpen) {
             $this->dropdownOpen = true;
         }
     }
 
-    public function resetComponent()
+    public function resetComponent(): void
     {
         $this->selected = [];
         $this->search = '';

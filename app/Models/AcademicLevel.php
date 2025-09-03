@@ -27,6 +27,9 @@ class AcademicLevel extends Model
     protected $fillable = [
         'name',
         'label',
+        'school_id',
+        'academic_group_id',
+
     ];
 
     public function academicGroup(): BelongsTo
@@ -60,5 +63,63 @@ class AcademicLevel extends Model
     public function subjects(): AcademicLevel|HasMany
     {
         return $this->hasMany(AcademicSubject::class);
+    }
+
+    // Get active students count
+    public function getActiveStudentsCountAttribute()
+    {
+        return $this->students()->where('status', 'active')->count();
+    }
+
+    // Scope for levels with students
+    public function scopeWithStudents($query)
+    {
+        return $query->has('students');
+    }
+
+    public function schools(): BelongsToMany
+    {
+        return $this->belongsToMany(School::class, 'school_academic_level')
+            ->withPivot('is_active', 'sort_order', 'custom_settings', 'academic_group_id')
+            ->withTimestamps();
+    }
+
+    // Get students for a specific school
+    public function studentsForSchool($schoolId)
+    {
+        return $this->students()->where('school_id', $schoolId);
+    }
+
+    // Scope to get levels for a specific school
+    public function scopeForSchool($query, $schoolId)
+    {
+        return $query->whereHas('schools', function($q) use ($schoolId) {
+            $q->where('school_id', $schoolId);
+        });
+    }
+
+    // Scope to get levels for specific academic groups
+    public function scopeForAcademicGroups($query, array $groupIds)
+    {
+        return $query->whereIn('academic_group_id', $groupIds);
+    }
+
+    public function scopeForCurrentSchool($query)
+    {
+        $user = auth()->user();
+
+        if (!$user || $user->canAccessCrossSchool()) {
+            $schoolId = app()->has('current_school') ? app('current_school')->id : null;
+            if ($schoolId) {
+                return $query->whereHas('schools', function($q) use ($schoolId) {
+                    $q->where('school_id', $schoolId)->where('is_active', true);
+                });
+            }
+            return $query;
+        }
+
+        return $query->whereHas('schools', function($q) use ($user) {
+            $q->where('school_id', $user->school_id)->where('is_active', true);
+        });
     }
 }

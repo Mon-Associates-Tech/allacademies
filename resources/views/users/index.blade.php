@@ -59,108 +59,17 @@
             </a>
 
             <!-- Add New User Button -->
-            <button type="button"
-                    onclick="document.getElementById('addUserModal').classList.remove('hidden')"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <x-button.primary variant="primary" size="sm" type="button"
+                              onclick="window.Modal.open('add-user-form')"
+                              class="px-4 py-2">
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Add User
-            </button>
+            </x-button.primary>
 
         </div>
     </div>
-
-    <div id="addUserModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-medium text-gray-900">Add New User</h3>
-                    <button type="button"
-                            onclick="document.getElementById('addUserModal').classList.add('hidden')"
-                            class="text-gray-400 hover:text-gray-600">
-                        <span class="sr-only">Close</span>
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Modal Form -->
-                <form method="POST" action="{{ route('users.store') }}">
-                    @csrf
-
-                    <!-- Name Field -->
-                    <div class="mb-4">
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                        <input type="text"
-                               id="name"
-                               name="name"
-                               required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="Enter user's full name">
-                    </div>
-
-                    <!-- Email Field -->
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email"
-                               id="email"
-                               name="email"
-                               required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="Enter user's email address">
-                    </div>
-
-                    <!-- Password Field -->
-                    <div class="mb-4">
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input type="password"
-                               id="password"
-                               name="password"
-                               required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="Enter a secure password">
-                    </div>
-
-                    <!-- Role Field -->
-                    <div class="mb-6">
-                        <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                        <select id="role"
-                                name="role"
-                                required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select a role</option>
-                            <option value="admin">Admin</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
-                            <option value="librarian">Librarian</option>
-                            <option value="moderator">Moderator</option>
-                            <option value="author">Author</option>
-                            <option value="parent">Parent</option>
-                            <option value="subscriber">Subscriber</option>
-                        </select>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex items-center justify-end gap-3">
-                        <button type="button"
-                                onclick="document.getElementById('addUserModal').classList.add('hidden')"
-                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                            Cancel
-                        </button>
-                        <button type="submit"
-                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            Create User
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 
     @if ($users->count())
         <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg overflow-hidden">
@@ -183,7 +92,8 @@
                                 <div class="relative">
                                     <x-avatar avatar="{{$user->avatar}}" class="h-10 w-10" name="{{ $user->name }}"/>
                                     @if($user->is_online)
-                                        <div class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-400 border-2 border-white"></div>
+                                        <div
+                                            class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-400 border-2 border-white"></div>
                                     @endif
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -212,12 +122,16 @@
                 ])>
                     @if($user->email_verified_at)
                         <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clip-rule="evenodd"/>
                         </svg>
                         Verified
                     @else
                         <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                  clip-rule="evenodd"/>
                         </svg>
                         Unverified
                     @endif
@@ -249,7 +163,8 @@
                                     <!-- Trigger -->
                                     <button class="p-1 text-gray-400 hover:text-gray-600">
                                         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                            <path
+                                                d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                         </svg>
                                     </button>
 
@@ -258,22 +173,30 @@
                                         @can('own')
                                             @if($user->role !== 'owner')
                                                 <x-dropdown.item
-                                                    click="$store.changeRole.show('{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', {{ $user->id }}); $parent.open = false">
+                                                    onclick="window.Modal.open('change-role-form', { userName:  '{{$user->name}}', email: '{{$user->email}}', role: '{{$user->role}}', id: '{{$user->id}}' })">
                                                     <x-slot name="icon">
-                                                        <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        <svg class="mr-3 h-4 w-4 text-gray-400" fill="none"
+                                                             stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                         </svg>
                                                     </x-slot>
                                                     Change Role
                                                 </x-dropdown.item>
                                             @endif
                                         @endcan
+                                        {{--                                            onclick="window.Modal.open({name: 'change-role-form'}) $store.changeRole.show('{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', {{ $user->id }}); $parent.open = false">--}}
 
                                         <x-dropdown.item :href="route('users.show', ['user' => $user])">
                                             <x-slot name="icon">
-                                                <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                <svg class="mr-3 h-4 w-4 text-gray-400" fill="none"
+                                                     stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2"
+                                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
                                             </x-slot>
                                             View Details
@@ -292,113 +215,6 @@
             {{ $users->links() }}
         </div>
 
-        <!-- Change Role Modal -->
-        <div x-show="$store.changeRole.open"
-             x-cloak
-             class="fixed inset-0 z-50 overflow-y-auto"
-             aria-labelledby="modal-title"
-             role="dialog"
-             aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <!-- Background overlay -->
-                <div x-show="$store.changeRole.open"
-                     x-transition:enter="ease-out duration-300"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     x-transition:leave="ease-in duration-200"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
-                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                     @click="$store.changeRole.hide()"></div>
-
-                <!-- Center the modal -->
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <!-- Modal panel -->
-                <div x-show="$store.changeRole.open"
-                     x-transition:enter="ease-out duration-300"
-                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                     x-transition:leave="ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                     class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-
-                    <form method="POST" action="{{ route('users.change-role') }}" id="changeRoleForm">
-                        @csrf
-                        <input type="hidden" name="user_id" x-model="$store.changeRole.userId">
-
-                        <div>
-                            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor"
-                                     viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-5">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Change User Role
-                                </h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500">
-                                        You are about to change the role for the following user:
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-5 space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">User Name</label>
-                                <input type="text"
-                                       x-model="$store.changeRole.userName"
-                                       readonly
-                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
-                                <input type="email"
-                                       name="email"
-                                       x-model="$store.changeRole.userEmail"
-                                       readonly
-                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500">
-                            </div>
-
-                            <div>
-                                <label for="role" class="block text-sm font-medium text-gray-700">New Role</label>
-                                <select name="role"
-                                        id="role"
-                                        x-model="$store.changeRole.selectedRole"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="subscriber">Subscriber</option>
-                                    <option value="student">Student</option>
-                                    <option value="teacher">Teacher</option>
-                                    <option value="librarian">Librarian</option>
-                                    <option value="author">Author</option>
-                                    <option value="parent">Parent</option>
-                                    <option value="moderator">Moderator</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                            <button type="submit"
-                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
-                                Change Role
-                            </button>
-                            <button type="button"
-                                    @click="$store.changeRole.hide()"
-                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     @else
         <!-- Empty state -->
         <div class="text-center py-12">
@@ -412,4 +228,166 @@
             </p>
         </div>
     @endif
+
+    <x-modal-component name="change-role-form">
+        <x-slot:header>
+            <div class="pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    Change User Role
+                </h3>
+            </div>
+        </x-slot:header>
+        <form method="POST" action="{{ route('users.change-role') }}" id="change-role-form">
+            @csrf
+            <input type="hidden" name="user_id" x-model="modalData.id">
+
+            <div>
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-5">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                        Change User Role
+                    </h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">
+                            You are about to change the role for the following user:
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">User Name</label>
+                    <input type="text"
+                           x-model="modalData.userName"
+                           readonly
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email"
+                           name="email"
+                           x-model="modalData.email"
+                           readonly
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500">
+                </div>
+
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700">New Role</label>
+                    <select name="role"
+                            id="role"
+                            x-model="modalData.role"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="subscriber">Subscriber</option>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="librarian">Librarian</option>
+                        <option value="author">Author</option>
+                        <option value="parent">Parent</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <x-slot:footer>
+            <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                <x-button.white type="button"
+                                onclick="window.Modal.close('change-role-form')"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                    Cancel
+                </x-button.white>
+                <x-button.primary type="submit" form="change-role-form"
+                                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+                    Change Role
+                </x-button.primary>
+
+            </div>
+        </x-slot:footer>
+    </x-modal-component>
+    <x-modal-component name="add-user-form" height="h-96">
+        <x-slot:header>
+            <div class="">
+                <h3 class="text-lg font-medium pb-4 text-gray-900">Add New User</h3>
+            </div>
+        </x-slot:header>
+
+        <form method="POST" id="user-add-form" action="{{ route('users.store') }}">
+            @csrf
+
+            <!-- Name Field -->
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <input type="text"
+                       id="name"
+                       name="name"
+                       required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Enter user's full name">
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input type="email"
+                       id="email"
+                       name="email"
+                       required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Enter user's email address">
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-4">
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Enter a secure password">
+            </div>
+
+            <!-- Role Field -->
+            <div class="mb-6">
+                <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <select id="role"
+                        name="role"
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select a role</option>
+                    <option value="admin">Admin</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="student">Student</option>
+                    <option value="librarian">Librarian</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="author">Author</option>
+                    <option value="parent">Parent</option>
+                    <option value="subscriber">Subscriber</option>
+                </select>
+            </div>
+        </form>
+
+        <x-slot:footer>
+            <div class="flex items-center justify-end gap-3">
+                <button type="button"
+                        onclick="window.Modal.close('add-user-form')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    Cancel
+                </button>
+                <x-button.primary size="md" type="submit" form="user-add-form"
+                                  class="px-4  text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Create User
+                </x-button.primary>
+            </div>
+        </x-slot:footer>
+    </x-modal-component>
 </x-layouts.app>

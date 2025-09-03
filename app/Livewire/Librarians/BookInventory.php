@@ -3,9 +3,8 @@
 namespace App\Livewire\Librarians;
 
 use App\Models\Book;
-use App\Models\BookCategory;
 use App\Models\Book as BookCopy;
-use App\Models\Publisher;
+use App\Models\BookCategory;
 use Livewire\Component;
 use Livewire\WithPagination;
 

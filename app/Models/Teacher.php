@@ -3,19 +3,32 @@
 namespace App\Models;
 
 use App\Models\Attendance\Attendance;
+use App\Traits\BelongsToSchool;
+use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\HasStudents;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Teacher extends Model
 {
     use HasFactory;
     use HasStudents;
+    use BelongsToSchoolEnhanced;
 
-    protected $fillable = ['user_id'];
+    protected $fillable = [
+        'school_id', 'user_id', 'employee_id', 'department',
+        'hire_date', 'termination_date', 'salary',
+        'employment_type', 'status', 'qualifications'
+    ];
+
+    protected $casts = [
+        'hire_date' => 'date',
+        'termination_date' => 'date',
+        'salary' => 'decimal:2',
+        'qualifications' => 'array'
+    ];
 
     public function user()
     {
@@ -133,22 +146,20 @@ class Teacher extends Model
             ->exists();
     }
 
+    // Access control methods
     public function hasAccessToStudent(Student $student): bool
     {
+        // Check if same school
+        if ($this->school_id !== $student->school_id) {
+            return false;
+        }
+
         // Check direct assignments
         if ($this->assignedStudents()->where('student_id', $student->id)->exists()) {
             return true;
         }
 
-        // Check academic groups
-        if ($this->academicGroups()
-            ->whereHas('academicLevels.students', function ($query) use ($student) {
-                $query->where('students.id', $student->id);
-            })->exists()) {
-            return true;
-        }
-
-        // Check academic levels
+        // Check academic level assignments
         if ($this->academicLevels()
             ->whereHas('students', function ($query) use ($student) {
                 $query->where('students.id', $student->id);
@@ -156,9 +167,9 @@ class Teacher extends Model
             return true;
         }
 
-        // Check student groups
-        if ($this->studentGroups()
-            ->whereHas('students', function ($query) use ($student) {
+        // Check academic group assignments
+        if ($this->academicGroups()
+            ->whereHas('academicLevels.students', function ($query) use ($student) {
                 $query->where('students.id', $student->id);
             })->exists()) {
             return true;
@@ -170,6 +181,34 @@ class Teacher extends Model
     public function studentGroups(): HasMany|Teacher
     {
         return $this->hasMany(StudentGroup::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeByDepartment($query, $department)
+    {
+        return $query->where('department', $department);
+    }
+
+    // Generate school-specific employee ID
+    public static function generateEmployeeId($schoolId)
+    {
+        $school = School::find($schoolId);
+
+        $lastTeacher = static::withoutGlobalScope('school')
+            ->where('school_id', $schoolId)
+            ->where('employee_id', 'like', "{$school->code}T%")
+            ->latest('employee_id')
+            ->first();
+
+        $sequence = $lastTeacher ?
+            (int)substr($lastTeacher->employee_id, -4) + 1 : 1;
+
+        return $school->code . 'T' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
 }

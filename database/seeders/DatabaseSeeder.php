@@ -2,29 +2,23 @@
 
 namespace Database\Seeders;
 
-use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
-use Database\Factories\AcademicLevelFactory;
-use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Student;
-use App\Models\Teacher;
-use App\Models\Librarian;
-use App\Models\Administrator;
+use App\Models\Assessment;
 use App\Models\Author;
-use App\Models\BookCategory;
 use App\Models\Book;
-use App\Models\StudentGroup;
-use App\Models\Lesson;
-use App\Models\LessonNote;
+use App\Models\BookApproval;
 use App\Models\BookBorrowing;
+use App\Models\BookCategory;
 use App\Models\BookSubscription;
 use App\Models\GroupBookSubscription;
-use App\Models\Assessment;
-use App\Models\BookApproval;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Lesson;
+use App\Models\LessonNote;
+use App\Models\Librarian;
+use App\Models\Role;
+use App\Models\StudentGroup;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
 
 class DatabaseSeeder extends Seeder

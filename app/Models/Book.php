@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Models\Book\BookMedia;
+use App\Models\Book\BookTableOfContent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Book extends Model
 {
     use HasFactory;
 
+    public $with = [
+        'media', 'author', 'publisher', 'bookCategory', 'copies', 'approvedReviews', 'borrowings', 'subscriptions', 'groupSubscriptions', 'approvals', 'students'
+    ];
     protected $fillable = [
         'title',
         'slug',
@@ -36,12 +42,11 @@ class Book extends Model
         'status',
         'has_audio',
         'has_video',
-        'single_audio_file',
-        'single_video_file',
-        'chapter_audio_files',
-        'chapter_video_files',
+        'single_audio',
+        'single_video',
+        'chapter_audios',
+        'chapter_videos',
     ];
-
     protected $casts = [
         'has_hardcopy' => 'boolean',
         'has_softcopy' => 'boolean',
@@ -52,8 +57,8 @@ class Book extends Model
         'total_reviews' => 'integer',
         'has_audio' => 'boolean',
         'has_video' => 'boolean',
-        'chapter_audio_files' => 'array',
-        'chapter_video_files' => 'array',
+        'chapter_audios' => 'array',
+        'chapter_videos' => 'array',
     ];
 
     public function author(): BelongsTo
@@ -71,11 +76,6 @@ class Book extends Model
         return $this->hasMany(BookInventory::class);
     }
 
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(BookReview::class);
-    }
-
     public function approvedReviews(): HasMany
     {
         return $this->hasMany(BookReview::class)->approved();
@@ -89,7 +89,7 @@ class Book extends Model
         return $query->where('status', 'published')->orWhere('status', 'active');
     }
 
-    public function getCoverImageAttribute()
+    public function getCoverImageAttribute(): string
     {
         if ($this->attributes['cover_image']) {
             return asset('storage/' . $this->attributes['cover_image']);
@@ -121,6 +121,11 @@ class Book extends Model
     public function bookCategory(): BelongsTo
     {
         return $this->belongsTo(BookCategory::class, 'book_category_id');
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(BookCategory::class, 'book_category', 'book_id', 'category_id');
     }
 
     public function borrowings(): HasMany
@@ -155,7 +160,7 @@ class Book extends Model
             ->withTimestamps();
     }
 
-    public function getFormattedSubscriptionFeeAttribute()
+    public function getFormattedSubscriptionFeeAttribute(): string
     {
         return 'GHS ' . number_format($this->annual_subscription_fee, 2);
     }
@@ -185,14 +190,15 @@ class Book extends Model
         return $query->where('annual_subscription_fee', '>', 0);
     }
 
-    public function subject(){
+    public function subject(): BelongsTo
+    {
         return $this->belongsTo(AcademicSubject::class, 'subject_id');
     }
 
     /**
      * Get the table of contents with default structure if empty
      */
-    public function getTableOfContentsAttribute()
+    public function getTableOfContentsAttributeDeprecated()
     {
         $toc = $this->attributes['table_of_contents'] ? json_decode($this->attributes['table_of_contents'], true) : null;
 
@@ -229,7 +235,7 @@ class Book extends Model
     /**
      * Get formatted table of contents for display
      */
-    public function getFormattedTableOfContentsAttribute(): array
+    public function getFormattedTableOfContentsAttributeDeprecated(): array
     {
         $toc = $this->table_of_contents;
 
@@ -249,11 +255,14 @@ class Book extends Model
         })->toArray();
     }
 
-
-
     public function getAverageRatingAttribute()
     {
         return $this->reviews()->average('rating');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(BookReview::class);
     }
 
     /**
@@ -368,7 +377,8 @@ class Book extends Model
         }
     }
 
-    public function getSimilarBooks(int $limit = 6){
+    public function getSimilarBooks(int $limit = 6)
+    {
         return $this->where('book_category_id', $this->attributes['book_category_id'])
             ->where('id', '!=', $this->attributes['id'])
             ->with(['author', 'bookCategory'])
@@ -376,43 +386,79 @@ class Book extends Model
             ->get();
     }
 
-    public function getAuthorBooks(int $limit = 3){
-       return $this->where('author_id', $this->attributes['author_id'])
+    public function getAuthorBooks(int $limit = 3)
+    {
+        return $this->where('author_id', $this->attributes['author_id'])
             ->where('id', '!=', $this->attributes['id'])
             ->with(['author', 'bookCategory'])
             ->limit($limit)
             ->get();
     }
 
-    public function getSingleAudioUrlAttribute(): ?string
+    public function getTableOfContentsAttribute()
     {
-        if ($this->attributes['single_audio_file']) {
-            return asset('storage/' . $this->attributes['single_audio_file']);
+        // First try to get from relationship
+        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+            return $this->tableOfContents->content;
         }
-        return asset('/media/audio/friends_lovers_and_terrible_thing_sample.mp3');
+
+        // If no relation exists, generate default
+        return $this->generateDefaultTableOfContents();
     }
 
-    public function getSingleVideoUrlAttribute(): ?string
+    public function getFormattedTableOfContentsAttribute(): array
     {
-        if ($this->attributes['single_video_file']) {
-            return asset('storage/' . $this->attributes['single_video_file']);
+        // First try to get from relationship
+        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+            $toc = $this->tableOfContents->content;
+        } else {
+            $toc = $this->generateDefaultTableOfContents();
         }
-        return asset('/media/video/the_ultimate_gift.mp4');
+
+        return collect($toc)->map(function ($chapter) {
+            return [
+                'chapter_number' => $chapter['chapter'] ?? 1,
+                'title' => $chapter['title'] ?? 'Untitled Chapter',
+                'description' => $chapter['description'] ?? '',
+                'page_range' => isset($chapter['page_start'], $chapter['page_end'])
+                    ? "Pages {$chapter['page_start']}-{$chapter['page_end']}"
+                    : '',
+                'page_count' => isset($chapter['page_start'], $chapter['page_end'])
+                    ? $chapter['page_end'] - $chapter['page_start'] + 1
+                    : 0,
+                'sections' => $chapter['sections'] ?? []
+            ];
+        })->toArray();
     }
 
-    public function getChapterAudioUrlsAttribute(): array
+
+    public function getSingleAudioAttribute(): ?string
     {
-        $files = $this->chapter_audio_files ?? [];
-        return array_map(function($file) {
-            return asset('storage/' . $file);
-        }, $files);
+        return $this->media?->getSingleAudioAttribute();
     }
 
-    public function getChapterVideoUrlsAttribute(): array
+    public function getSingleVideoAttribute(): ?string
     {
-        $files = $this->chapter_video_files ?? [];
-        return array_map(function($file) {
-            return asset('storage/' . $file);
-        }, $files);
+        return $this->media?->getSingleVideoAttribute();
+    }
+
+    public function getChapterAudiosAttribute(): array
+    {
+        return $this->media?->getChapterAudiosAttribute() ?? [];
+    }
+
+    public function getChapterVideosAttribute(): array
+    {
+        return $this->media?->getChapterVideosAttribute() ?? [];
+    }
+
+    public function tableOfContents(): HasOne|Book
+    {
+        return $this->hasOne(BookTableOfContent::class);
+    }
+
+    public function media(): HasOne|Book
+    {
+        return $this->hasOne(BookMedia::class);
     }
 }

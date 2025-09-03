@@ -53,7 +53,7 @@ class FlashMessageHandler extends Component
         $this->flashMessages[] = [
             'id' => $id,
             'message' => $message,
-            'type' => in_array($type, ['success', 'error', 'warning', 'info']) ? $type : 'info',
+            'type' => in_array($type, ['success', 'error', 'warning', 'info', 'message']) ? $type : 'info',
             'autoHide' => $autoHide,
             'timestamp' => now()->toISOString(),
         ];

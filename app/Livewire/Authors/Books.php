@@ -4,9 +4,9 @@ namespace App\Livewire\Authors;
 
 use App\Models\Book;
 use App\Models\BookCategory;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 
 class Books extends Component
 {

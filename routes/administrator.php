@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityTrailController;
 use App\Http\Controllers\BookController;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;

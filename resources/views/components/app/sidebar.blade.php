@@ -19,7 +19,7 @@
     >
 
         <!-- Sidebar header -->
-        <div class="flex justify-between mb-10 pr-3 sm:px-2">
+        <div class="flex lg:hidden justify-start pt-4 pb-6 pl-6 sm:px-6">
             <!-- Close button -->
             <button class="lg:hidden text-gray-500 hover:text-gray-400" @click.stop="$store.sidebar.toggleOpen()"
                     aria-controls="sidebar" :aria-expanded="$store.sidebar.open">
@@ -29,7 +29,7 @@
                 </svg>
             </button>
         </div>
-        <div class="">
+        <div class="lg:pt-6">
             <x-avatar :name="auth()->user()->name" avatar="{{ auth()->user()->avatar }}" class="w-12 h-12 rounded-full mx-auto mb-2"></x-avatar>
             <div x-show="$store.sidebar.expanded" class="sidebar-text">
                 <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>

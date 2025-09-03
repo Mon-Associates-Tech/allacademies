@@ -245,7 +245,7 @@
                                 <div class="text-sm font-medium text-gray-900">{{ $book->author->user->name }}</div>
                                 <div class="text-sm text-gray-500 mt-1">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {{ $book->bookCategory->name }}
+                                            {{ $book->bookCategory?->name }}
                                         </span>
                                 </div>
                                 @if($book->annual_subscription_fee > 0)
