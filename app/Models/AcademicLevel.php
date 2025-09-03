@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Traits\AcademicGroupLogs;
+use App\Traits\BelongsToSchool;
+use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +19,7 @@ class AcademicLevel extends Model
     use SoftDeletes;
     use Trackable;
     use AcademicGroupLogs;
+//    use BelongsToSchoolEnhanced;
 
     /**
      * @var array<int, string>
