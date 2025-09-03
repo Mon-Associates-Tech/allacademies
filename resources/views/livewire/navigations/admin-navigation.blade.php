@@ -253,6 +253,21 @@
             </a>
         </li>
 
+        {{-- Moderator Activities --}}
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.academic-activities*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.academic-activities')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('admin.academic-activities*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path
+                            d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3zm2 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm0 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm0 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-8h4a.5.5 0 0 1 0 1H9a.5.5 0 0 1 0-1zm0 4h4a.5.5 0 0 1 0 1H9a.5.5 0 0 1 0-1zm0 4h4a.5.5 0 0 1 0 1H9a.5.5 0 0 1 0-1z"/>
+                    </svg>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Moderator Activities</span>
+                </div>
+            </a>
+        </li>
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('school-settings.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('school-settings.index')}}">
