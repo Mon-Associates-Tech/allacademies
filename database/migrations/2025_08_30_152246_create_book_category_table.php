@@ -36,6 +36,7 @@ return new class extends Migration
         }
 
         Schema::table('books', function (Blueprint $table) {
+            $table->dropForeign(['book_category_id']);
             $table->dropColumn('book_category_id');
 
         });
