@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use setasign\Fpdi\Fpdi;
+use Storage;
 
 class Book extends Model
 {
@@ -110,13 +112,99 @@ class Book extends Model
         return asset('sample.pdf');
     }
 
+
     public function getSampleUrlAttribute(): string
     {
+        // If we have an existing sample URL, return it
         if ($this->attributes['sample_url']) {
             return asset('storage/' . $this->attributes['sample_url']);
         }
+
+        // If no sample exists but we have a full PDF and table of contents, try to generate one
+        if ($this->shouldGenerateSample()) {
+            $generatedSample = $this->generateSampleFromFullPdf();
+            if ($generatedSample) {
+                // Update the model with the generated sample
+                $this->update(['sample_url' => $generatedSample]);
+                return asset('storage/' . $generatedSample);
+            }
+        }
+
+        // Fallback to default sample
         return asset('sample.pdf');
     }
+
+    /**
+     * Determine if we should generate a sample PDF
+     */
+    private function shouldGenerateSample(): bool
+    {
+        return $this->attributes['content_url']
+            && !$this->attributes['sample_url'];
+    }
+
+    /**
+     * Generate a sample PDF from the full PDF using the first chapter
+     */
+    private function generateSampleFromFullPdf(): ?string
+    {
+        // Check if we have what we need
+        if (!$this->shouldGenerateSample()) {
+            return null;
+        }
+
+        try {
+            // Get the path to the full PDF
+            $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
+
+            // Check if the file exists
+            if (!file_exists($fullPdfPath)) {
+                return null;
+            }
+
+            // Create a new FPDI instance
+            $pdf = new Fpdi();
+
+            // Get the first chapter pages
+            $firstChapter = $this->table_of_contents[0] ?? null;
+            if (!$firstChapter) {
+                return null;
+            }
+
+            $startPage = $firstChapter['page_start'] ?? 1;
+            $endPage = $firstChapter['page_end'] ?? min(5, $this->pages ?? 5); // Limit to 5 pages if not specified
+
+            // Import pages from the source PDF
+            $pageCount = $pdf->setSourceFile($fullPdfPath);
+
+            // Make sure page numbers are within bounds
+            $startPage = max(1, min($startPage, $pageCount));
+            $endPage = max($startPage, min($endPage, $pageCount));
+
+            // Add pages to the new PDF
+            for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+            }
+
+            // Generate a unique filename for the sample
+            $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
+            $samplePath = 'book-samples/' . $filename;
+
+            // Save the sample PDF
+            $pdfContent = $pdf->Output('', 'S');
+            Storage::disk('public')->put($samplePath, $pdfContent);
+
+            return $samplePath;
+        } catch (\Exception $e) {
+            // Log the error but don't break the flow
+            \Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+            return null;
+        }
+    }
+
 
     public function bookCategory(): BelongsTo
     {

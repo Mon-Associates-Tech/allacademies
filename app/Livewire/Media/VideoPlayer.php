@@ -68,11 +68,6 @@ class VideoPlayer extends Component
     {
         $media = $resource->media ?? null;
 
-        if (!$media) {
-            return [];
-            throw new \InvalidArgumentException('Resource must have media relationship');
-        }
-
         $mediaData = [
             'title' => $resource->title ?? $resource->name ?? 'Untitled',
             'description' => $resource->description ?? '',
@@ -86,7 +81,7 @@ class VideoPlayer extends Component
 
         // Handle different media types
         if ($type === 'video') {
-            if ($media->single_video) {
+            if ($media && $media->single_video) {
                 // Single video
                 $mediaData['current_source'] = [
                     'url' => $media->single_video,
@@ -95,7 +90,7 @@ class VideoPlayer extends Component
                 ];
                 $mediaData['captions_url'] = $media->single_video_captions ?? null;
                 $mediaData['thumbnail_url'] = $media->single_video_thumbnail ?? null;
-            } elseif ($media->chapter_videos) {
+            } elseif ($media && $media->chapter_videos) {
                 // Chapter videos
                 $chapters = is_string($media->chapter_videos)
                     ? json_decode($media->chapter_videos, true)
@@ -104,9 +99,16 @@ class VideoPlayer extends Component
                 $mediaData['chapters'] = $this->buildChaptersFromArray($chapters, 'video');
                 $mediaData['current_source'] = $mediaData['chapters'][0] ?? null;
                 $mediaData['playlist'] = $mediaData['chapters'];
+            } else {
+                // Fallback to sample video
+                $mediaData['current_source'] = [
+                    'url' => asset('/media/video/the_ultimate_gift.mp4'),
+                    'type' => 'video/mp4',
+                    'chapter' => null,
+                ];
             }
         } elseif ($type === 'audio') {
-            if ($media->single_audio) {
+            if ($media && $media->single_audio) {
                 // Single audio
                 $mediaData['current_source'] = [
                     'url' => $media->single_audio,
@@ -115,7 +117,7 @@ class VideoPlayer extends Component
                 ];
                 $mediaData['captions_url'] = $media->single_audio_captions ?? null;
                 $mediaData['thumbnail_url'] = $media->single_audio_thumbnail ?? null;
-            } elseif ($media->chapter_audios) {
+            } elseif ($media && $media->chapter_audios) {
                 // Chapter audios
                 $chapters = is_string($media->chapter_audios)
                     ? json_decode($media->chapter_audios, true)
@@ -124,6 +126,13 @@ class VideoPlayer extends Component
                 $mediaData['chapters'] = $this->buildChaptersFromArray($chapters, 'audio');
                 $mediaData['current_source'] = $mediaData['chapters'][0] ?? null;
                 $mediaData['playlist'] = $mediaData['chapters'];
+            } else {
+                // Fallback to sample audio
+                $mediaData['current_source'] = [
+                    'url' => asset('/media/audio/great-expectations-sample.mp3'),
+                    'type' => 'audio/mpeg',
+                    'chapter' => null,
+                ];
             }
         }
 

@@ -1568,4 +1568,278 @@
                                                 <div class="text-sm text-gray-500 dark:text-gray-400">A, B, C, D options</div>
                                             </div>
                                         </label>
-                                        <label class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50
+                                        <label class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50{{-- Continuation of the Question Explanations section --}}
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1 0 01.293.707l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Question-by-Question Review
+                            </h3>
+                            @foreach($quizResults['question_breakdown'] as $index => $detail)
+                                <div class="bg-white dark:bg-gray-700 rounded-xl p-6 border border-gray-200 dark:border-gray-600 question-review-card">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex items-center justify-center w-10 h-10 rounded-full font-bold text-white"
+                                                 :class="{'bg-green-500': {{ $detail['is_correct'] ? 'true' : 'false' }}, 'bg-red-500': {{ $detail['is_correct'] ? 'false' : 'true' }}}">
+                                                {{ $detail['question_number'] }}
+                                            </div>
+                                            <div>
+                                                <div class="font-medium text-gray-900 dark:text-white">
+                                                    {{ ucfirst(str_replace('_', ' ', $detail['question_type'])) }} Question
+                                                </div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                    {{ $detail['points_earned'] }}/{{ $detail['points_possible'] }} points
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            @if($detail['is_correct'])
+                                                <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                    Correct
+                                                </div>
+                                            @else
+                                                <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                    Incorrect
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Question Text --}}
+                                    <div class="mb-6">
+                                        <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Question:</h4>
+                                        <div class="prose dark:prose-invert max-w-none">
+                                            <p class="text-gray-700 dark:text-gray-300">{{ $detail['question_text'] }}</p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Answer Section --}}
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        <div>
+                                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Your Answer:</h5>
+                                            <div class="p-4 rounded-lg border-2"
+                                                 :class="{'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20': {{ $detail['is_correct'] ? 'true' : 'false' }}, 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20': {{ $detail['is_correct'] ? 'false' : 'true' }}}">
+                                                <span class="text-gray-800 dark:text-gray-200 font-medium">
+                                                    {{ $detail['user_answer'] ?? 'No answer provided' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @if($detail['question_type'] !== 'essay')
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-white mb-2">Correct Answer:</h5>
+                                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                                                    <span class="text-blue-800 dark:text-blue-200 font-medium">
+                                                        {{ $detail['correct_answer'] }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Explanation --}}
+                                    @if($detail['feedback'])
+                                        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                                            <h5 class="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                                                <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                Explanation:
+                                            </h5>
+                                            <div class="prose dark:prose-invert max-w-none">
+                                                <p class="text-gray-700 dark:text-gray-300">{{ $detail['feedback'] }}</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
+        @endif
+    </div>
+
+    {{-- Loading States --}}
+    <div wire:loading.flex wire:target="generateQuiz" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Generating Your Quiz</h3>
+            <p class="text-gray-600 dark:text-gray-400">Our AI is creating personalized questions based on your book selection...</p>
+            <div class="mt-4 text-sm text-gray-500 dark:text-gray-500">This may take 10-30 seconds</div>
+        </div>
+    </div>
+
+    <div wire:loading.flex wire:target="submitQuizAnswers" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Grading Your Quiz</h3>
+            <p class="text-gray-600 dark:text-gray-400">Analyzing your answers and generating detailed feedback...</p>
+        </div>
+    </div>
+</div>
+
+{{-- Custom Styles --}}
+<style>
+    .quiz-option:hover {
+        transform: translateY(-2px);
+        transition: all 0.2s ease;
+    }
+
+    .quiz-progress-bar {
+        background: linear-gradient(45deg, #3B82F6, #1D4ED8);
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    }
+
+    .timer-display {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 1px;
+    }
+
+    .achievement-badge {
+        animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(-25%);
+            animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+        }
+        50% {
+            transform: translateY(0);
+            animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+        }
+    }
+
+    .question-review-card {
+        transition: all 0.3s ease;
+    }
+
+    .question-review-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode enhancements */
+    @media (prefers-color-scheme: dark) {
+        .question-review-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    /* Responsive design improvements */
+    @media (max-width: 768px) {
+        .achievement-badge {
+            animation: none;
+        }
+        
+        .question-review-card:hover {
+            transform: none;
+        }
+    }
+
+    /* Print styles for quiz results */
+    @media print {
+        .quiz-option, .achievement-badge {
+            animation: none !important;
+        }
+        
+        .bg-gradient-to-r, .bg-gradient-to-br {
+            background: #f8f9fa !important;
+            color: #333 !important;
+        }
+    }
+</style>
+
+{{-- JavaScript Event Listeners --}}
+<script>
+    document.addEventListener('alpine:init', () => {
+        // Listen for quiz events
+        Livewire.on('quiz-generated', () => {
+            // Scroll to quiz section when generated
+            document.getElementById('quiz-section')?.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        });
+
+        Livewire.on('quiz-reset', () => {
+            // Reset any client-side state
+            console.log('Quiz reset');
+        });
+
+        Livewire.on('download-results', (data) => {
+            // Handle results download
+            const blob = new Blob([JSON.stringify(data, null, 2)], { 
+                type: 'application/json' 
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `quiz-results-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+
+        // Keyboard shortcuts for quiz navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            const quizComponent = document.querySelector('[x-data]').__x.$data;
+            if (quizComponent.currentStep === 'quiz') {
+                switch(e.key) {
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        quizComponent.nextQuestion();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        quizComponent.prevQuestion();
+                        break;
+                    case 'Enter':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            quizComponent.submitQuiz();
+                        }
+                        break;
+                }
+            }
+        });
+
+        // Auto-save quiz progress (optional)
+        window.addEventListener('beforeunload', (e) => {
+            const quizComponent = document.querySelector('[x-data]').__x.$data;
+            if (quizComponent.currentStep === 'quiz' && Object.keys(quizComponent.answers).length > 0) {
+                localStorage.setItem('quiz_progress', JSON.stringify({
+                    currentQuestion: quizComponent.currentQuestion,
+                    answers: quizComponent.answers,
+                    timestamp: Date.now()
+                }));
+            }
+        });
+
+        // Restore quiz progress on page load (optional)
+        const savedProgress = localStorage.getItem('quiz_progress');
+        if (savedProgress) {
+            try {
+                const progress = JSON.parse(savedProgress);
+                // Only restore if less than 1 hour old
+                if (Date.now() - progress.timestamp < 3600000) {
+                    const quizComponent = document.querySelector('[x-data]').__x.$data;
+                    if (confirm('Would you like to restore your previous quiz progress?')) {
+                        quizComponent.currentQuestion = progress.currentQuestion;
+                        quizComponent.answers = progress.answers;
+                        quizComponent.currentStep = 'quiz';
+                    }
+                }
+            } catch (e) {
+                localStorage.removeItem('quiz_progress');
+            }
+        }
+    });
+</script>

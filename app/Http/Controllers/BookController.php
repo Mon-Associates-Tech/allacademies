@@ -25,19 +25,20 @@ class BookController extends Controller
         $topCategories = collect();
         if (!$request->hasAny(['search', 'category', 'format', 'price'])) {
             $topCategories = BookCategory::with(['books' => function($query) {
-                $query->with(['author', 'bookCategory'])
-                    ->whereStatus(PublishingStatus::PUBLISHED->value)
+                $query->with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
+                ->whereStatus(PublishingStatus::PUBLISHED->value)
                     ->latest()
-                    ->limit(4); // Show 4 books per category
+                    ->limit(4);
             }])
                 ->withCount('books')
                 ->orderBy('books_count', 'desc')
-                ->limit(3) // Get top 3 categories
+                ->limit(3)
                 ->get();
         }
 
         // Main books query
-        $query = Book::with(['author', 'bookCategory'])->whereStatus(PublishingStatus::PUBLISHED->value);
+        $query = Book::with(['author', 'categories']);
+
 
         // Search filter (title, author, or genre)
         if ($request->query('search')) {
@@ -48,7 +49,7 @@ class BookController extends Controller
                     ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
                         $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
                     })
-                    ->orWhereHas('bookCategory', function ($categoryQuery) use ($searchTerm) {
+                    ->orWhereHas('categories', function ($categoryQuery) use ($searchTerm) { // Changed from 'bookCategory'
                         $categoryQuery->where('name', 'like', '%' . $searchTerm . '%');
                     });
             });
@@ -56,7 +57,9 @@ class BookController extends Controller
 
         // Category filter
         if ($request->filled('category')) {
-            $query->where('book_category_id', $request->category);
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('book_category.id', $request->category);
+            });
         }
 
         // Format filter
@@ -129,9 +132,11 @@ class BookController extends Controller
         ]);
 
         // Get related books from the same category
-        $relatedBooks = Book::with(['author', 'bookCategory', 'categories'])
-            ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->where('book_category_id', $book->book_category_id)
+        $relatedBooks = Book::with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
+        ->whereStatus(PublishingStatus::PUBLISHED->value)
+            ->whereHas('categories', function($q) use ($book) { // Changed approach
+                $q->whereIn('category_id', $book->categories->pluck('id'));
+            })
             ->where('id', '!=', $book->id)
             ->limit(4)
             ->get();
@@ -304,9 +309,11 @@ class BookController extends Controller
      */
     public function getByCategory(Request $request, BookCategory $category)
     {
-        $books = Book::with(['author', 'bookCategory'])
-            ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->where('book_category_id', $category->id)
+        $books = Book::with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
+        ->whereStatus(PublishingStatus::PUBLISHED->value)
+            ->whereHas('categories', function($query) use ($category) { // Changed approach
+                $query->where('category_id', $category->id);
+            })
             ->when($request->limit, function($query, $limit) {
                 return $query->limit($limit);
             }, function($query) {
@@ -324,7 +331,6 @@ class BookController extends Controller
 
         return view('books.category', compact('books', 'category'));
     }
-
     /**
      * Get featured/popular books for homepage
      */

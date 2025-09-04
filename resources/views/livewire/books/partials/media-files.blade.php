@@ -116,6 +116,57 @@
             @endif
             @error('pdfFile') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
+
+        <!-- Add this after the PDF File section in the basic information section -->
+        <!-- Sample PDF -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">
+                Sample PDF
+                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full ml-1">Optional</span>
+            </label>
+
+            @if($existingSamplePdfFile && !$removeSamplePdfFile)
+                <div class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="w-8 h-8 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Current Sample PDF</p>
+                            <p class="text-xs text-gray-500">Click "View" to preview</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{{ asset('storage/' . $existingSamplePdfFile) }}" target="_blank"
+                           class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors">
+                            View
+                        </a>
+                        <button type="button" wire:click="removeExistingSamplePdfFile"
+                                class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium hover:bg-red-200 transition-colors">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            @endif
+
+            <div class="relative">
+                <input type="file" wire:model="samplePdfFile"
+                       accept="application/pdf"
+                       class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            @error('samplePdfFile') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+
+            <p class="mt-1 text-xs text-gray-500">
+                Upload a sample PDF of the book (max 10MB). If not provided, the first chapter will be extracted from the full PDF.
+            </p>
+        </div>
+
     </div>
     <div class="mt-8 space-y-8">
         <!-- Audio Content -->

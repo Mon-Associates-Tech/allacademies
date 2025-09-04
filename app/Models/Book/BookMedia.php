@@ -30,7 +30,7 @@ class BookMedia extends Model
     {
         return $this->attributes['single_audio']
             ? asset('storage/' . $this->attributes['single_audio'])
-            : asset('/media/audio/friends_lovers_and_terrible_thing_sample.mp3');
+            : asset('/media/audio/great-expectations-sample.mp3');
     }
 
     public function getSingleVideoAttribute(): ?string

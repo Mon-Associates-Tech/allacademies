@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use setasign\Fpdi\Fpdi;
 
 class BookForm extends Component
 {
@@ -85,6 +86,13 @@ class BookForm extends Component
     public $uploadProgress = [];
     public $uploadComplete = [];
 
+
+    #[Validate('nullable|file|mimes:pdf|max:10240')] // 10MB limit for sample
+    public $samplePdfFile;
+
+    public $existingSamplePdfFile = null;
+    public $removeSamplePdfFile = false;
+
     protected $listeners = [
         'update-authorId' => 'updateAuthorId',
         'update-bookCategoryIds' => 'updateBookCategoryIds',
@@ -103,6 +111,7 @@ class BookForm extends Component
         'annualSubscriptionFee' => 'nullable|numeric|min:0|max:999999.99',
         'subscriptionConditions' => 'nullable|string',
         'coverImage' => 'nullable|image|max:2048',
+        'samplePdfFile' => 'nullable|mimes:pdf|max:10240',
         'pdfFile' => 'nullable|mimes:pdf|max:10240',
         'status' => 'required|in:draft,published',
         'newAuthorName' => 'required_if:showNewAuthorForm,true|string|max:255',
@@ -244,6 +253,7 @@ class BookForm extends Component
         $this->slug = $this->book->slug;
         $this->authorId = $this->book->author_id;
 //        $this->bookCategoryId = $this->book->book_category_id;
+        $this->existingSamplePdfFile = $this->book->getAttributes()['sample_url'] ?? null;
         $this->bookCategoryIds = $this->book->categories->pluck('id')->toArray();
         $this->edition = $this->book->edition;
         $this->publisher = $this->book->publisher;
@@ -275,6 +285,98 @@ class BookForm extends Component
         $this->existingChapterVideos = $this->book->chapter_videos ?? [];
 
     }
+
+    public function removeExistingSamplePdfFile(): void
+    {
+        $this->removeSamplePdfFile = true;
+        $this->existingSamplePdfFile = null;
+    }
+
+    private function handleSamplePdfFile($book): void
+    {
+        $samplePath = $book->getAttributes()['sample_url'] ?? null;
+
+        if ($this->removeSamplePdfFile && $samplePath) {
+            Storage::disk('public')->delete($samplePath);
+            $samplePath = null;
+        }
+
+        if ($this->samplePdfFile) {
+            if ($samplePath) {
+                Storage::disk('public')->delete($samplePath);
+            }
+            $samplePath = $this->samplePdfFile->store('book-samples', 'public');
+        } else if (!$samplePath && $this->pdfFile && $this->showTableOfContents && !empty($this->tableOfContents)) {
+            // If no sample provided, try to extract a chapter from the full PDF
+            $samplePath = $this->extractChapterAsSample($book);
+        }
+
+        if ($samplePath !== ($book->getAttributes()['sample_url'] ?? null)) {
+            $book->update(['sample_url' => $samplePath]);
+        }
+    }
+
+    private function extractChapterAsSample(Book $book): ?string
+    {
+        // Check if we have a full PDF file and table of contents
+        $contentUrl = $book->getAttributes()['content_url'] ?? null;
+        if (!$contentUrl || empty($this->tableOfContents)) {
+            return null;
+        }
+
+        try {
+            // Get the path to the full PDF
+            $fullPdfPath = Storage::disk('public')->path($contentUrl);
+
+            // Check if the file exists
+            if (!file_exists($fullPdfPath)) {
+                return null;
+            }
+
+            // Create a new FPDI instance
+            $pdf = new Fpdi();
+
+            // Get the first chapter pages
+            $firstChapter = $this->tableOfContents[0] ?? null;
+            if (!$firstChapter) {
+                return null;
+            }
+
+            $startPage = $firstChapter['page_start'] ?? 1;
+            $endPage = $firstChapter['page_end'] ?? min(5, $book->pages ?? 5); // Limit to 5 pages if not specified
+
+            // Import pages from the source PDF
+            $pageCount = $pdf->setSourceFile($fullPdfPath);
+
+            // Make sure page numbers are within bounds
+            $startPage = max(1, min($startPage, $pageCount));
+            $endPage = max($startPage, min($endPage, $pageCount));
+
+            // Add pages to the new PDF
+            for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+            }
+
+            // Generate a unique filename for the sample
+            $filename = 'sample_' . $book->id . '_' . time() . '.pdf';
+            $samplePath = 'book-samples/' . $filename;
+
+            // Save the sample PDF
+            $pdfContent = $pdf->Output('', 'S');
+            Storage::disk('public')->put($samplePath, $pdfContent);
+
+            return $samplePath;
+        } catch (\Exception $e) {
+            // Log the error but don't break the flow
+            \Log::error('Error extracting sample PDF: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+
 
     // Get publishing status options for the view
     public function getPublishingStatusOptionsProperty()
@@ -642,6 +744,7 @@ class BookForm extends Component
             'annual_subscription_fee' => $this->annualSubscriptionFee,
             'subscription_conditions' => $this->subscriptionConditions,
             'cover_image' => $coverPath,
+            'sample_url' => '',
             'content_url' => $pdfPath,
             'table_of_contents' => $tocData,
             'status' => $this->status,
@@ -655,6 +758,7 @@ class BookForm extends Component
         ]);
 
        $book->categories()->attach($this->bookCategoryIds);
+        $this->handleSamplePdfFile($book);
 
        if($book->has_audio || $book->has_video){
            $book->media()->create([
@@ -726,6 +830,8 @@ private function updateBook(): void
        // 'chapter_videos' => $mediaData['chapter_videos'],
 
     ]);
+
+    $this->handleSamplePdfFile($this->book);
 
     $this->book->categories()->sync($this->bookCategoryIds);
 
