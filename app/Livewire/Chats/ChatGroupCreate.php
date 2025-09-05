@@ -121,6 +121,6 @@ class ChatGroupCreate extends Component
 
     public function render()
     {
-        return view('livewire.chat.create-chat-group');
+        return view('livewire.chats.chat-group-create');
     }
 }
