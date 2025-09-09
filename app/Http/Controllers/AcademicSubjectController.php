@@ -53,6 +53,7 @@ class AcademicSubjectController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * @param AcademicGroup $academicGroup
      * @param AcademicLevel $academicLevel
      * @param AcademicSubjectRequest $request
      * @return RedirectResponse
@@ -67,7 +68,14 @@ class AcademicSubjectController extends Controller
             ->with('success', __('status.resource.created', ['name' => $academicSubject->name]));
     }
 
-
+    /**
+     * Display the specified resource.
+     *
+     * @param AcademicGroup $academicGroup
+     * @param AcademicLevel $academicLevel
+     * @param AcademicSubject $academicSubject
+     * @return Application|Factory|\Illuminate\View\View|object|View
+     */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel,  AcademicSubject $academicSubject)
     {
         // Get paginated topics with subtopics count
@@ -112,7 +120,7 @@ class AcademicSubjectController extends Controller
 
         $academicSubject->update($request->validated());
 
-        return to_route('academic-subjects.show', ['academic_subject' =>  $academicSubject])
+        return to_route('academic-subjects.show', ['academic_group' => $academicGroup, 'academic_level' => $academicLevel, 'academic_subject' =>  $academicSubject])
             ->with('success', __('status.resource.updated', ['name' => $academicSubject->name]));
     }
 
@@ -128,9 +136,9 @@ class AcademicSubjectController extends Controller
     {
         $this->authorize('administrate');
 
-        $academicSubject->load('academicLevel')->delete();
-
-        return to_route('academic-subjects.index', ['academic_group' => $academicGroup,'academic_level' => $academicSubject->academicLevel])
+        $academicSubject->load('academicLevel');
+        $academicSubject->delete();
+        return to_route('academic-subjects.index', ['academic_group' => $academicGroup, 'academic_level' => $academicSubject->academicLevel])
             ->with('success', __('status.resource.deleted', ['name' => $academicSubject->name]));
     }
 }

@@ -17,6 +17,6 @@
         <input type="hidden" name="token" value="{{ $token }}">
         <x-form.input name="email" type="email" :value="$email" />
         <x-form.input name="password" type="password" />
-        <x-button.primary class="w-full justify-center">Update Password</x-button.primary>
+        <x-button.primary type="submit" class="w-full justify-center">Update Password</x-button.primary>
     </form>
 </x-center>
