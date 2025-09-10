@@ -116,19 +116,14 @@ class UserController extends Controller
                 break;
 
             case 'teacher':
+                logInfo("Creating teacher account for user {$user->name}");
                 if (!$user->teacher) {
                     Teacher::create([
                         'user_id' => $user->id,
-                        'department_id' => null,
-                        'hire_date' => now(),
                     ]);
                 }
                 break;
 
-            // Add other role-specific account creation here as needed
-            // case 'librarian':
-            //     Librarian::create(['user_id' => $user->id]);
-            //     break;
         }
     }
 
@@ -204,6 +199,8 @@ class UserController extends Controller
         $user->role = UserRole::from($request->role);
         $user->save();
         $user->assignRole($request->role);
+
+        $user->handleRoleChange($user);
 
         // Create student record if role is changed to student
         if ($request->role === 'student' && !$user->student) {

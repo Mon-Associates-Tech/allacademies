@@ -135,8 +135,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return redirect()->route('impersonate', $userId);
     }
 
-    protected static function booted()
+    protected static function booted(): void
     {
+
         // Handle both created and updated events
         static::created(static function ($user) {
             self::handleRoleChange($user);
@@ -149,10 +150,12 @@ class User extends Authenticatable implements MustVerifyEmail
         });
     }
 
-    private static function handleRoleChange($user)
+    public static function handleRoleChange(User $user): void
     {
+
+        $role = $user->role instanceof UserRole ? $user->role->value : $user->role;
         // Handle student role
-        if ($user->role === 'student') {
+        if ($role === 'student') {
             Student::firstOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -165,31 +168,31 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         // Handle teacher role
-        if ($user->role === 'teacher') {
+        if ($role === 'teacher') {
             Teacher::firstOrCreate(
                 ['user_id' => $user->id],
-                [/* default teacher fields */]
             );
         }
 
         // Handle author role
-        if ($user->role === 'author') {
+        if ($role === 'author') {
             Author::firstOrCreate(
                 ['user_id' => $user->id],
-                [/* default author fields */]
             );
         }
 
         // Handle librarian role
-        if ($user->role === 'librarian') {
+        if ($role === 'librarian') {
             Librarian::firstOrCreate(
                 ['user_id' => $user->id],
-                [/* default librarian fields */]
+                [
+                    'employee_id' => uniqid('employee_')
+                ]
             );
         }
 
         // Handle parent role
-        if ($user->role === 'parent') {
+        if ($role === 'parent') {
             StudentParent::firstOrCreate(
                 ['user_id' => $user->id],
                 [
