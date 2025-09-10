@@ -56,6 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'school',
     ];
 
+
     protected static function booted(): void
     {
         // Handle both created and updated events
@@ -134,7 +135,6 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($user->role === 'teacher') {
             Teacher::firstOrCreate(
                 ['user_id' => $user->id],
-                [/* default teacher fields */]
             );
         }
 
@@ -142,7 +142,6 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($user->role === 'author') {
             Author::firstOrCreate(
                 ['user_id' => $user->id],
-                [/* default author fields */]
             );
         }
 
@@ -150,7 +149,9 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($user->role === 'librarian') {
             Librarian::firstOrCreate(
                 ['user_id' => $user->id],
-                [/* default librarian fields */]
+                [
+                    'employee_id' => uniqid('employee_')
+                ]
             );
         }
 

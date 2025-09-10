@@ -13,18 +13,7 @@
                 <!-- Avatar Section -->
                 <div class="flex-shrink-0">
                     <div class="relative">
-                        @if($user->avatar)
-                            <img class="w-24 h-24 md:w-32 md:h-32 object-cover rounded-full shadow-lg border-4 border-white"
-                                 src="{{ $user->avatar }}"
-                                 alt="{{ $user->name }}">
-                        @else
-                            <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg border-4 border-white">
-                                <span class="text-white font-bold text-2xl md:text-3xl">
-                                    {{ strtoupper(substr($user->name, 0, 2)) }}
-                                </span>
-                            </div>
-                        @endif
-
+                        <x-avatar name="{{$user->name}}" radius="rounded" avatar="{{$user->avatar}}" class="w-24 h-24" />
                         <!-- Online Status Indicator -->
                         @if($user->is_online)
                             <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-400 border-4 border-white rounded-full"></div>
@@ -37,10 +26,10 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h1>
-                            <p class="text-gray-600 mt-1">{{ $user->email }}</p>
+                            <p class="text-gray-500">{{ $user->email }}</p>
 
                             <!-- Role Badge -->
-                            <div class="mt-3">
+                            <div class="mt-1">
                                 <span class="inline-flex items-center rounded-md px-3 py-1 text-sm font-medium capitalize
                                     {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : '' }}
                                     {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-700' : '' }}

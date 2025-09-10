@@ -1,4 +1,4 @@
-@props(['name' => '', 'avatar' => '', 'textSize' => '', 'maxInitials' => 2])
+@props(['name' => '', 'avatar' => '', 'textSize' => '', 'maxInitials' => 2, 'radius' => null])
 
 @php
     // --- Initials Generation ---
@@ -38,7 +38,8 @@
         ['#0f766e', '#0d9488']  // Muted Teal
     ];
 
-    $backgroundStyle = 'background-color: #6b7280;'; // Default fallback (muted gray)
+    $backgroundStyle = 'background-color: #6b7280;'; // Default fallback
+    $radiusClass = $radius ?: 'rounded-full';
 
     // Generate a deterministic gradient based on the name's hash.
     if (!empty($name)) {
@@ -49,10 +50,11 @@
     }
 @endphp
 
-<div {{ $attributes->merge(['class' => 'flex items-center justify-center rounded-full text-white font-bold']) }}
+<div {{ $attributes->merge(['class' => "flex items-center $radiusClass justify-center text-white font-bold"]) }}
+
      style="{{ $backgroundStyle }}">
     @if($avatar)
-        <img class="w-full h-full rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+        <img class="w-full h-full  object-cover border-2 border-gray-200 dark:border-gray-600 {{ $radiusClass }}"
              src="{{ Storage::url($avatar) }}"
              alt="{{ $name }}">
     @else
