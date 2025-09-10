@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('teachers', function (Blueprint $table) {
-            $table->string('employee_id')->nullable()->change();
-        });
+
+            if(Schema::hasColumn('teachers', 'employee_id')){
+                Schema::table('teachers', function (Blueprint $table) {
+                    $table->string('employee_id')->nullable()->change();
+                });
+            }
+
     }
 
     /**
@@ -21,8 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('teachers', function (Blueprint $table) {
-            $table->string('employee_id')->nullable(false)->change();
-        });
+        if (Schema::hasColumn('teachers', 'employee_id')) {
+            Schema::table('teachers', function (Blueprint $table) {
+                $table->string('employee_id')->nullable(false)->change();
+            });
+        }
     }
 };
