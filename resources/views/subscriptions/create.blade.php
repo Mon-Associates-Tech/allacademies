@@ -32,6 +32,8 @@
 
         <div class="justify-center w-full">
 
+            {{-- <p>{{ route('payment.verify') }}</p> --}}
+            {{-- {{ route('subscriptions.store') }} --}}
             <form method="POST" action="{{ route('subscriptions.store') }}">
                 @csrf
 
@@ -57,30 +59,29 @@
                                 <span x-show="hasSubjects" x-cloak>Ready to create your subscription</span>
                             </div>
 
+                             <!-- Amount Input (Hidden but keeping for form submission) -->
+                                
+
                             <!-- Submit Button -->
-                            <div class="flex items-center gap-3">
-                                <button type="submit"
-                                        :disabled="!hasSubjects"
-                                        :class="hasSubjects ?
-                                            'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105' :
-                                            'bg-gray-300 text-gray-500 cursor-not-allowed'"
-                                        class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                           <!-- Submit Button -->
+                        <div class="flex items-center gap-3">
+                            <button id="subscriptionButton" type="submit"
+                                    class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-300 text-gray-500 cursor-not-allowed">
 
-                                    <!-- Loading State -->
-                                    <svg x-show="!hasSubjects" class="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
+                                <!-- Loading/Disabled State -->
+                                <svg id="iconDisabled" class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
 
-                                    <!-- Success Icon -->
-                                    <svg x-show="hasSubjects" x-cloak class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
+                                <!-- Success Icon -->
+                                <svg id="iconEnabled" class="w-5 h-5 mr-2 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
 
-                                    <span x-show="!hasSubjects">Select Subjects First</span>
-                                    <span x-show="hasSubjects" x-cloak>Create Subscription</span>
-                                </button>
-                            </div>
+                                <span id="textDisabled">Select Subjects First</span>
+                                <span id="textEnabled" class="hidden">Create Subscription</span>
+                            </button>
+                        </div>
                         </div>
 
                         <!-- Additional Info -->
@@ -98,4 +99,48 @@
         </div>
     </section>
 
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const button = document.getElementById("subscriptionButton");
+    const iconDisabled = document.getElementById("iconDisabled");
+    const iconEnabled = document.getElementById("iconEnabled");
+    const textDisabled = document.getElementById("textDisabled");
+    const textEnabled = document.getElementById("textEnabled");
+
+    // Replace this with your actual subjects count logic
+    let subjectsCount = {{ count($academicGroups) }};
+
+    function updateButton() {
+        if (subjectsCount === 0) {
+            button.disabled = true;
+            button.classList.remove("bg-gradient-to-r", "from-blue-600", "to-indigo-600", "hover:from-blue-700", "hover:to-indigo-700", "text-white", "shadow-lg", "hover:shadow-xl", "transform", "hover:scale-105");
+            button.classList.add("bg-gray-300", "text-gray-500", "cursor-not-allowed");
+
+            iconDisabled.classList.remove("hidden");
+            iconEnabled.classList.add("hidden");
+            textDisabled.classList.remove("hidden");
+            textEnabled.classList.add("hidden");
+        } else {
+            button.disabled = false;
+            button.classList.remove("bg-gray-300", "text-gray-500", "cursor-not-allowed");
+            button.classList.add("bg-gradient-to-r", "from-blue-600", "to-indigo-600", "hover:from-blue-700", "hover:to-indigo-700", "text-white", "shadow-lg", "hover:shadow-xl", "transform", "hover:scale-105");
+
+            iconDisabled.classList.add("hidden");
+            iconEnabled.classList.remove("hidden");
+            textDisabled.classList.add("hidden");
+            textEnabled.classList.remove("hidden");
+        }
+    }
+
+    // Initial load
+    updateButton();
+
+    // Example: when subjects are updated (you can trigger this in Livewire or JS)
+    window.updateSubjects = function (count) {
+        subjectsCount = count;
+        updateButton();
+    };
+});
+
+</script>
 </x-layouts.app>

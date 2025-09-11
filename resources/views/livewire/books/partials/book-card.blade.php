@@ -79,7 +79,7 @@
                 <div class="flex items-center gap-2 mb-2">
                     <div class="w-1 h-4 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full"></div>
                     <p class="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                        {{ $book->author->name ?? $book->author->user->name }}
+                        {{ $book->author->name ?? $book->author->user?->name }}
                     </p>
                 </div>
 

@@ -190,7 +190,9 @@ public function index()
      * @throws RoundingNecessaryException
      * @throws UnknownCurrencyException
      */
-    public function store(SubscriptionRequest $request): RedirectResponse
+
+
+  /*  public function store(SubscriptionRequest $request): RedirectResponse
     {
 
         $money = Pricer::calculate(
@@ -201,7 +203,7 @@ public function index()
             AcademicGroupTag::BASIC
         );
         /** @var User $user */
-        $user = auth()->user();
+       /* $user = auth()->user();
         $user->load('currentTeam');
         $subscription = new Subscription([
             'package' => $package,
@@ -217,7 +219,7 @@ public function index()
             || (!$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package)
         ) {
             throw ValidationException::withMessages([
-                'package' => 'You can not subscribe to this package for the current team',
+                'package' => 'You can not subscribe to this package for the current team', // after success update[status="paid",expires_at=duration_in_months]
             ]);
         }
 
@@ -231,7 +233,59 @@ public function index()
 
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
+    } */
+
+
+public function store(SubscriptionRequest $request): RedirectResponse
+{
+    //dd($request->all());
+
+    $money = Pricer::calculate(
+        $package = SubscriptionPackage::from($request->input('package')),
+        $durationInMonths = $request->integer('duration_in_months'),
+        count($subjects = $request->validated('academic_subject_ids')),
+        $beneficiaries = max($request->integer('beneficiaries') ? : 1, 1),
+        AcademicGroupTag::BASIC
+    );
+
+   // dd($money);
+
+    /** @var User $user */
+    $user = auth()->user();
+    $user->load('currentTeam');
+
+    $subscription = new Subscription([
+        'package' => $package,
+        'reference' => uniqid(),
+        'amount' => $request->amount,  //(string) $money->getAmount(),
+        'beneficiaries' => $beneficiaries,
+        'duration_in_months' => $durationInMonths,
+        'status' => 'unpaid',
+        'expires_at' => null,
+    ]);
+
+    if (
+        ($user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package)
+        || (!$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package)
+    ) {
+        throw ValidationException::withMessages([
+            'package' => 'You can not subscribe to this package for the current team',
+        ]);
     }
+
+    DB::transaction(static function () use ($subscription, $user, $subjects) {
+        $subscription->team()->associate($user->currentTeam);
+        $subscription = $user->subscriptions()->save($subscription);
+        $subscription->academicSubjects()->attach($subjects);
+    });
+
+    // Instead of going back to index, redirect to payment initialize
+    return redirect()->route('payment.initialize', ['subscription' => $subscription->id]);
+}
+
+
+
+
 
     /**
      * Display the specified resource.

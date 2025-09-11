@@ -335,7 +335,7 @@
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Author:</span>
                                         <span
-                                            class="font-medium text-gray-900 dark:text-white">{{ $book->author->user->name }}</span>
+                                            class="font-medium text-gray-900 dark:text-white">{{ $book->author->user?->name }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Pages:</span>
@@ -373,7 +373,7 @@
                                 <div class="mt-4 flex flex-wrap items-center gap-4">
                                     <p class="text-xl text-gray-600 dark:text-gray-400">
                                         by <a href="#"
-                                              class="text-blue-600 hover:text-blue-700 font-medium">{{ $book->author->name ?? $book->author->user->name }}</a>
+                                              class="text-blue-600 hover:text-blue-700 font-medium">{{ $book->author->name ?? $book->author->user?->name }}</a>
                                     </p>
                                     <div class="flex items-center space-x-1">
                                         @for($i = 1; $i <= 5; $i++)
@@ -629,7 +629,7 @@
 
         <!-- Related Books Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
+            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user?->name])
             @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
 
             <div class="grid hidden grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">

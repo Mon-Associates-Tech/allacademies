@@ -135,7 +135,7 @@
                                                 class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                             <option value="">Choose an author</option>
                                             @foreach($authors as $author)
-                                                <option value="{{ $author->id }}">{{ $author->user->name }}</option>
+                                                <option value="{{ $author->id }}">{{ $author->user?->name }}</option>
                                             @endforeach
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -465,7 +465,7 @@
                                 class="block w-full border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">All Authors</option>
                             @foreach($authors as $author)
-                                <option value="{{ $author->id }}">{{ $author->user->name }}</option>
+                                <option value="{{ $author->id }}">{{ $author->user?->name  }}</option>
                             @endforeach
                         </select>
 
@@ -537,7 +537,7 @@
                                         <div class="min-w-0 flex-1">
                                             <div class="text-sm font-semibold text-gray-900 leading-5">{{ $book->title }}</div>
                                             <div class="text-xs text-gray-500 mt-1">
-                                                <div class="text-sm font-medium text-gray-900">{{ $book->author->user->name }}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $book->author->user?->name }}</div>
                                                 @if($book->edition)Edition {{ $book->edition }}@endif
                                                 @if($book->edition && $book->publisher) • @endif
                                                 @if($book->publisher){{ $book->publisher }}@endif

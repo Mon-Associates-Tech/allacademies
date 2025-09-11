@@ -405,6 +405,15 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+// Adding paystack payment routes
+Route::get('/payment', [PaymentController::class, 'showForm'])->name('payment.form');
+Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.initialize');
+Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBook'])->name('payment.book.initialize');
+Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback']) ->name('payment.book.callback');
+
+
+
 include_once 'student.php';
 include_once 'teacher.php';
 include_once 'author.php';

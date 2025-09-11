@@ -181,7 +181,7 @@
                                         </span>
                                     </div>
                                     <div class="flex justify-between py-2 border-b border-blue-200">
-                                        <span class="text-gray-600">Subjects:</span>
+                                        <span class="text-gray-600">Subjects++:</span>
                                         <span class="font-medium">{{ $this->subjects_count }}</span>
                                     </div>
                                     @if('institution:full' === $package && $beneficiaries)

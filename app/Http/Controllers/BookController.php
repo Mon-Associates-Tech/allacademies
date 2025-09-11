@@ -119,7 +119,7 @@ class BookController extends Controller
             $isBorrowed = (bool) $borrowing;
         }
 
-        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user->id  === $user->id;
+        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user?->id  === $user->id;
 
         return view('books.show',
             compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
