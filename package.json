@@ -3,8 +3,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "copy-pdf-worker": "node resources/js/copy-worker.js",
-        "postinstall": "cp -r vendor/tinymce/tinymce public/js/tinymce"
+        "copy-pdf-worker": "node resources/js/copy-worker.js"
     },
     "devDependencies": {
         "@tailwindcss/aspect-ratio": "^0.4.2",

@@ -8,6 +8,7 @@ use App\Livewire\Administrators\BookManagement;
 use App\Livewire\Administrators\GroupManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
+use App\Livewire\Administrators\SchoolSwitcherPage;
 use App\Livewire\Administrators\StudentManagement;
 use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
@@ -18,15 +19,16 @@ use App\Livewire\Common\Messages\ComposeMessage;
 use App\Livewire\Common\Messages\MessageEdit;
 use App\Livewire\Common\Messages\MessageIndex;
 use App\Livewire\Common\Messages\MessageShow;
+use App\Livewire\School\SchoolDetails;
 
-Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
     Route::get('/student-groups', GroupManagement::class)->name('student-groups');
     Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
     Route::get('/book-management', BookManagement::class)->name('book-management');
     Route::get('/book-management/create', [BookController::class, 'create'])->name('books.create');
     Route::get('/book-management/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
- Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
+    Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
     Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
     Route::get('/logins', UserLoginLog::class)->name('logins');
     Route::get('/author-management', AuthorManagement::class)->name('author-management');
@@ -68,5 +70,11 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(funct
     Route::get('/academic-activities', ActivityLogManager::class)
         ->name('academic-activities')
         ->middleware('auth');
+
+    Route::get('/admin/school-switcher', SchoolSwitcherPage::class)
+        ->name('school-switcher');
+
+    Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
+        ->name('school-details');
 
 });

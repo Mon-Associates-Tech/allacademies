@@ -278,4 +278,41 @@ class ChatService
             ->orderBy('name')
             ->get();
     }
+
+
+public function leaveGroup(ChatGroup $chatGroup, User $user): void
+{
+    // Check if the user is the owner of the group
+    if ($chatGroup->created_by === $user->id) {
+        throw new \Exception('Group owners cannot leave their own group. You can delete the group instead.');
+    }
+
+    // Check if user is actually a member
+    if (!$chatGroup->isUserMember($user)) {
+        throw new \Exception('User is not a member of this group');
+    }
+
+    // Remove the user from the group
+    $chatGroup->removeMember($user);
+
+    // Create a system message about the user leaving
+    ChatMessage::create([
+        'chat_group_id' => $chatGroup->id,
+        'user_id' => $user->id,
+        'message' => $user->name . ' left the group',
+        'message_type' => 'system'
+    ]);
+}
+
+public function deleteGroup(ChatGroup $chatGroup, User $user): void
+{
+    // Check if the user is the owner of the group
+    if ($chatGroup->created_by !== $user->id) {
+        throw new \Exception('Only the group owner can delete the group');
+    }
+
+    // Delete the group (this will cascade delete messages, members, etc. through database constraints)
+    $chatGroup->delete();
+}
+
 }

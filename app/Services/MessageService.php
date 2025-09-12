@@ -55,6 +55,7 @@ class MessageService
 
         return User::whereIn('role', $roles)
             ->where('is_active', true)
+            ->where('status', 'active')
             ->get();
     }
 
@@ -168,6 +169,7 @@ class MessageService
 
         return User::whereIn('id', $userIds)
             ->where('is_active', true)
+            ->where('status', 'active')
             ->get();
     }
 

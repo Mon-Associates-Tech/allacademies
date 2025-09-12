@@ -15,7 +15,7 @@ class BookBasedLearningService
 {
     protected $chatService;
 
-    public function __construct(EducationalChatService $chatService)
+    public function __construct(AcademicChatService $chatService)
     {
         $this->chatService = $chatService;
     }
@@ -667,70 +667,163 @@ class BookBasedLearningService
         return $this->parseAdaptiveQuizResponse($result['content'], $context);
     }
 
-    /**
-     * Build adaptive quiz prompt
-     */
-    protected function buildAdaptiveQuizPrompt(Book $book, array $context, User $user): string
-    {
-        $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author}.\n\n";
+/**
+ * Build enhanced adaptive quiz prompt with comprehensive context
+ */
+protected function buildAdaptiveQuizPrompt(Book $book, array $context, User $user): string
+{
+    $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author}.\n\n";
 
-        $prompt .= "ADAPTATION CONTEXT:\n";
-        $prompt .= "- Adaptive Difficulty: {$context['adaptive_difficulty']}\n";
-        $prompt .= "- User Academic Level: {$user->academic_level}\n";
-        $prompt .= "- Learning Style: {$user->learning_style}\n";
+    $prompt .= "BOOK DETAILS:\n";
+    $prompt .= "- Title: {$book->title}\n";
+    $prompt .= "- Author: {$book->author}\n";
+    $prompt .= "- Genre: {$book->genre}\n";
+    $prompt .= "- Difficulty Score: {$book->difficulty_score}/10\n";
+    $prompt .= "- Estimated Reading Time: {$book->estimated_reading_time} hours\n";
 
-        if (!empty($context['weak_concepts'])) {
-            $prompt .= "- Focus on weak areas: " . implode(', ', $context['weak_concepts']) . "\n";
-        }
-
-        if (!empty($context['focus_areas'])) {
-            $prompt .= "- Problem areas from previous quizzes:\n";
-            foreach ($context['focus_areas'] as $area) {
-                $prompt .= "  * {$area['title']} (avg score: {$area['average_score']}%)\n";
-            }
-        }
-
-        $prompt .= "\nPERFORMANCE HISTORY:\n";
-        if (!empty($context['user_performance_history'])) {
-            $recentQuizzes = array_slice($context['user_performance_history'], -3);
-            foreach ($recentQuizzes as $quiz) {
-                $prompt .= "- {$quiz['date']}: {$quiz['score']}% ({$quiz['question_count']} questions)\n";
-            }
-        } else {
-            $prompt .= "- No previous performance data available\n";
-        }
-
-        $prompt .= "\nQUIZ REQUIREMENTS:\n";
-        $prompt .= "- Generate {$context['question_count']} questions\n";
-        $prompt .= "- Question type: {$context['question_type']}\n";
-        $prompt .= "- Adapt question complexity based on user's weak areas\n";
-        $prompt .= "- Include scaffolding questions if user is struggling\n";
-        $prompt .= "- Provide detailed explanations for learning\n";
-
-        return $prompt;
+    if (!empty($book->themes)) {
+        $prompt .= "- Themes: " . implode(', ', $book->themes) . "\n";
     }
 
-    /**
-     * Parse adaptive quiz response
-     */
-    protected function parseAdaptiveQuizResponse(string $content, array $context): array
-    {
-        // Implementation would be similar to regular quiz parsing
-        // but with additional adaptive features
+    $prompt .= "\nUSER PROFILE:\n";
+    $prompt .= "- Age: {$user->age}\n";
+    $prompt .= "- Academic Level: {$user->academic_level}\n";
+    $prompt .= "- Learning Style: {$user->learning_style}\n";
+    $prompt .= "- Reading Level: " . $this->determineUserReadingLevel($user) . "/10\n";
 
-        return [
-            'questions' => [], // Parsed questions
-            'adaptive_features' => [
-                'difficulty_adjusted' => $context['adaptive_difficulty'],
-                'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                'scaffolding_included' => true
-            ],
-            'metadata' => [
-                'generation_type' => 'adaptive',
-                'user_level' => $context['user_level'] ?? 'intermediate'
-            ]
-        ];
+    $prompt .= "\nADAPTATION CONTEXT:\n";
+    $prompt .= "- Requested Difficulty: {$context['difficulty']}\n";
+    $prompt .= "- Adaptive Difficulty: {$context['adaptive_difficulty']}\n";
+
+    if (!empty($context['weak_concepts'])) {
+        $prompt .= "- Focus on weak areas: " . implode(', ', $context['weak_concepts']) . "\n";
     }
+
+    if (!empty($context['focus_areas'])) {
+        $prompt .= "- Problem areas from previous quizzes:\n";
+        foreach ($context['focus_areas'] as $area) {
+            $prompt .= "  * {$area['title']} (avg score: {$area['average_score']}%)\n";
+        }
+    }
+
+    if (!empty($context['focus_topics'])) {
+        $prompt .= "- Focus Topics: " . implode(', ', $context['focus_topics']) . "\n";
+    }
+
+    $prompt .= "\nPERFORMANCE HISTORY:\n";
+    if (!empty($context['user_performance_history'])) {
+        $recentQuizzes = array_slice($context['user_performance_history'], -3);
+        foreach ($recentQuizzes as $quiz) {
+            $prompt .= "- {$quiz['date']}: {$quiz['score']}% ({$quiz['question_count']} questions)\n";
+        }
+    } else {
+        $prompt .= "- No previous performance data available\n";
+    }
+
+    $prompt .= "\nQUIZ REQUIREMENTS:\n";
+    $prompt .= "- Generate {$context['question_count']} questions\n";
+    $prompt .= "- Question type: {$context['question_type']}\n";
+    $prompt .= "- Adapt question complexity based on user's weak areas\n";
+    $prompt .= "- Include scaffolding questions if user is struggling\n";
+    $prompt .= "- Provide detailed explanations for learning\n";
+
+    if ($context['include_quotes'] ?? false) {
+        $prompt .= "- Include relevant book quotes in questions where appropriate\n";
+    }
+
+    $prompt .= "\nOUTPUT FORMAT:\n";
+    $prompt .= "Return a JSON object with the following structure:\n";
+    $prompt .= "{\n";
+    $prompt .= "  \"quiz_session\": {\n";
+    $prompt .= "    \"book_title\": \"string\",\n";
+    $prompt .= "    \"author\": \"string\",\n";
+    $prompt .= "    \"context\": \"string\"\n";
+    $prompt .= "  },\n";
+    $prompt .= "  \"questions\": [\n";
+    $prompt .= "    {\n";
+    $prompt .= "      \"question\": \"string\",\n";
+    $prompt .= "      \"type\": \"multiple_choice|true_false|essay\",\n";
+    $prompt .= "      \"options\": [\"string\"],\n";
+    $prompt .= "      \"correct_answer\": \"string\",\n";
+    $prompt .= "      \"explanation\": \"string\",\n";
+    $prompt .= "      \"difficulty\": \"easy|medium|hard\",\n";
+    $prompt .= "      \"points\": \"integer\",\n";
+    $prompt .= "      \"learning_objective\": \"string\"\n";
+    $prompt .= "    }\n";
+    $prompt .= "  ]\n";
+    $prompt .= "}\n";
+
+    return $prompt;
+}
+
+/**
+ * Parse adaptive quiz response with enhanced error handling
+ */
+protected function parseAdaptiveQuizResponse(string $content, array $context): array
+{
+    // Try to extract JSON from the response
+    $jsonStart = strpos($content, '{');
+    $jsonEnd = strrpos($content, '}');
+
+    if ($jsonStart !== false && $jsonEnd !== false) {
+        $jsonString = substr($content, $jsonStart, $jsonEnd - $jsonStart + 1);
+
+        try {
+            $parsed = json_decode($jsonString, true);
+
+            if (is_array($parsed) && isset($parsed['questions'])) {
+                return [
+                    'quiz_session' => $parsed['quiz_session'] ?? [],
+                    'questions' => $parsed['questions'],
+                    'adaptive_features' => [
+                        'difficulty_adjusted' => $context['adaptive_difficulty'],
+                        'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                        'scaffolding_included' => true
+                    ],
+                    'metadata' => [
+                        'generation_type' => 'adaptive',
+                        'user_level' => $context['user_level'] ?? 'intermediate'
+                    ]
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to parse quiz JSON', [
+                'content' => $content,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    // Fallback parsing - extract questions manually
+    return $this->parseQuizManually($content, $context);
+}
+
+/**
+ * Fallback method to parse quiz manually from unstructured response
+ */
+protected function parseQuizManually(string $content, array $context): array
+{
+    // This would implement a more sophisticated parsing algorithm
+    // to extract questions from unstructured text
+
+    return [
+        'quiz_session' => [
+            'book_title' => $context['book_title'] ?? '',
+            'author' => $context['author'] ?? '',
+            'context' => 'Adaptive quiz based on user performance'
+        ],
+        'questions' => [],
+        'adaptive_features' => [
+            'difficulty_adjusted' => $context['adaptive_difficulty'],
+            'focus_areas_addressed' => $context['focus_areas'] ?? [],
+            'scaffolding_included' => true
+        ],
+        'metadata' => [
+            'generation_type' => 'adaptive',
+            'user_level' => $context['user_level'] ?? 'intermediate'
+        ]
+    ];
+}
 
     /**
      * Build discussion questions prompt
@@ -875,6 +968,99 @@ class BookBasedLearningService
 
         return $milestones;
     }
+
+    /**
+ * Check for quiz-related achievements
+ */
+protected function checkQuizAchievements(User $user, array $quizData): array
+{
+    $achievements = [];
+    $quizResults = $quizData['results'] ?? [];
+
+    // Get total quizzes completed
+    $totalQuizzes = QuizSession::where('user_id', $user->id)
+        ->where('status', 'completed')
+        ->count();
+
+    // Perfect score achievement
+    if (isset($quizResults['percentage']) && $quizResults['percentage'] >= 95) {
+        $achievements[] = [
+            'type' => 'perfect_score',
+            'name' => 'Perfect Score!',
+            'description' => 'Achieved 95% or higher on a quiz',
+            'criteria' => ['score' => $quizResults['percentage']]
+        ];
+    }
+
+    // High score achievement
+    if (isset($quizResults['percentage']) && $quizResults['percentage'] >= 90) {
+        $achievements[] = [
+            'type' => 'high_score',
+            'name' => 'High Achiever',
+            'description' => 'Scored 90% or higher on a quiz',
+            'criteria' => ['score' => $quizResults['percentage']]
+        ];
+    }
+
+    // First quiz achievement
+    if ($totalQuizzes === 1) {
+        $achievements[] = [
+            'type' => 'first_quiz',
+            'name' => 'First Quiz Completed',
+            'description' => 'Completed your first book quiz',
+            'criteria' => ['quiz_count' => 1]
+        ];
+    }
+
+    // Quiz master achievement
+    if ($totalQuizzes >= 10) {
+        $achievements[] = [
+            'type' => 'quiz_master',
+            'name' => 'Quiz Master',
+            'description' => 'Completed 10 or more quizzes',
+            'criteria' => ['quiz_count' => $totalQuizzes]
+        ];
+    }
+
+    // Consistent performer achievement
+    $recentQuizzes = QuizSession::where('user_id', $user->id)
+        ->where('status', 'completed')
+        ->where('completed_at', '>=', now()->subWeek())
+        ->count();
+
+    if ($recentQuizzes >= 3) {
+        $achievements[] = [
+            'type' => 'consistent_performer',
+            'name' => 'Consistent Performer',
+            'description' => 'Completed 3 or more quizzes in one week',
+            'criteria' => ['recent_quiz_count' => $recentQuizzes]
+        ];
+    }
+
+    return $achievements;
+}
+
+    public function getNextLearningSteps($user, $book, $quizResults)
+    {
+        // Placeholder implementation - return generic suggestions
+        $suggestions = [];
+
+        $percentage = $quizResults['percentage'] ?? 0;
+
+        if ($percentage < 70) {
+            $suggestions[] = "Review the book chapters again";
+            $suggestions[] = "Take notes while reading";
+        } elseif ($percentage < 85) {
+            $suggestions[] = "Explore related books by the same author";
+            $suggestions[] = "Join a book discussion group";
+        } else {
+            $suggestions[] = "Try more challenging books";
+            $suggestions[] = "Explore critical analysis of this work";
+        }
+
+        return $suggestions;
+    }
+
 
     /**
      * Additional helper methods would continue here...

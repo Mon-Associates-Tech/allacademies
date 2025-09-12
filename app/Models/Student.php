@@ -354,23 +354,47 @@ class Student extends Model
         return $query->where('academic_group_id', $groupId);
     }
 
-    // Generate school-specific student ID
-    public static function generateStudentId($schoolId): string
-    {
-        $school = School::find($schoolId);
-        $year = date('Y');
+// Generate school-specific student ID
+public static function generateStudentId($schoolId): string
+{
+    $school = School::find($schoolId);
 
+    // Handle case where school doesn't exist or doesn't have proper attributes
+    if (!$school) {
+        $schoolCode = 'SCH';
+    } else {
+        // Try to get school code, fallback to name, then to generic code
+        $schoolCode = 'SCH';
+        if (!empty($school->code)) {
+            $schoolCode = substr(strtoupper($school->code), 0, 3);
+        } elseif (!empty($school->name)) {
+            $schoolCode = substr(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $school->name)), 0, 3);
+            // Ensure we have at least 3 characters
+            $schoolCode = str_pad($schoolCode, 3, 'X', STR_PAD_RIGHT);
+        }
+    }
+
+    $year = date('Y');
+
+    try {
         $lastStudent = static::withoutGlobalScope('school')
             ->where('school_id', $schoolId)
-            ->where('student_id', 'like', "{$school->code}{$year}%")
+            ->where('student_id', 'like', "{$schoolCode}{$year}%")
             ->latest('student_id')
             ->first();
 
         $sequence = $lastStudent ?
             (int)substr($lastStudent->student_id, -4) + 1 : 1;
 
-        return $school->code . $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        $studentId = $schoolCode . $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    } catch (\Exception $e) {
+        // Fallback if there's any database issue
+        $studentId = $schoolCode . $year . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
     }
+
+    return $studentId;
+}
+
 
     public function scopeForCurrentUser($query)
     {

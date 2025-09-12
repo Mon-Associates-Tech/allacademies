@@ -57,10 +57,6 @@
                         Role
                     </th>
                     <th scope="col"
-                        class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200 hidden md:table-cell">
-                        Email
-                    </th>
-                    <th scope="col"
                         class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Status
                     </th>
                     <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -75,33 +71,29 @@
                             <div class="flex items-center gap-x-3">
                                 <x-avatar
                                     name="{{$user->name}}"
-                                    class="w-8 h-8"
+                                    class="w-8 h-8 flex-shrink-0"
                                     text-size="text-xs"
                                     avatar="{{$user->avatar}}"
                                 />
-                                <!-- Mobile: Show name and role together -->
-                                <div class="sm:hidden">
-                                    <div class="font-medium text-gray-900 dark:text-gray-200">{{ $user->name }}</div>
-                                    <div class="mt-1">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {{ $user->role === 'student' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
-                                            {{ $user->role === 'teacher' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
-                                            {{ $user->role === 'librarian' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}
-                                            {{ $user->role === 'author' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
-                                            {{ $user->role === 'parent' ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200' : '' }}
-                                            {{ in_array($user->role, ['moderator', 'subscriber']) ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : '' }}">
-                                            {{ ucfirst($user->role) }}
-                                        </span>
+                                <div class="min-w-0 flex-1">
+                                    <div
+                                        class="font-medium text-gray-900 dark:text-gray-200 truncate text-sm">{{ $user->name }}</div>
+                                    <div class="hidden md:block text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        {{ $user->email }}
+                                    </div>
+                                    <div
+                                        class="hidden lg:block text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                                        @if($user->school)
+                                            <span
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                    {{ $user->school->name }}
+                                             </span>
+                                        @endif
                                     </div>
                                 </div>
-                                <!-- Desktop: Show only name -->
-                                <div class="hidden sm:block font-medium text-gray-900 dark:text-gray-200">
-                                    {{ $user->name }}
-                                </div>
                             </div>
-                        </td>
 
-                        <!-- Role (hidden on mobile) -->
+
                         <td class="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                 {{ $user->role === 'student' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
@@ -112,11 +104,6 @@
                                 {{ in_array($user->role, ['moderator', 'subscriber']) ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : '' }}">
                                 {{ ucfirst($user->role) }}
                             </span>
-                        </td>
-
-                        <!-- Email (hidden on mobile) -->
-                        <td class="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            {{ $user->email }}
                         </td>
 
                         <!-- Status -->

@@ -1,12 +1,11 @@
 <?php
+
 namespace App\Scopes;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 
 class SchoolScope implements Scope
 {
@@ -17,20 +16,35 @@ class SchoolScope implements Scope
             return;
         }
 
-        // Check if we're in a web context with auth available
-        if (!Auth::hasUser() || !Auth::check()) {
-            return; // Skip scoping if no authenticated user
+        // Check if we have school context from middleware
+        if (app()->bound('current_school_id')) {
+            $schoolId = app('current_school_id');
+
+            // If null, they want to see all schools (no scoping)
+            if ($schoolId === null) {
+                return;
+            }
+
+            // If it's a valid school ID, apply scoping
+            if ($schoolId > 0) {
+                $builder->where($model->getTable() . '.school_id', $schoolId);
+                return;
+            }
         }
 
-        $user = Auth::user();
-        // Skip scoping for super admins and owners
-        if ($user && $user->hasAnyRole(['owner', 'super-admin', 'admin'])) {
-            return;
-        }
+        // Fallback to user context
+        if (Auth::hasUser() && Auth::check()) {
+            $user = Auth::user();
 
-        // Apply school scoping
-        if ($user && $user->school_id) {
-            $builder->where($model->getTable() . '.school_id', $user->school_id);
+            // Skip scoping for super admins and owners by default
+            if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+                return;
+            }
+
+            // Apply school scoping for regular users
+            if ($user->school_id) {
+                $builder->where($model->getTable() . '.school_id', $user->school_id);
+            }
         }
     }
 }

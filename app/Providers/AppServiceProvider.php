@@ -100,6 +100,8 @@ class AppServiceProvider extends ServiceProvider
             'media_attachment' => \App\Models\Media\MediaAttachment::class,
             'message' => \App\Models\Message::class,
             'chat_group' => ChatGroup::class,
+            'school' => \App\Models\School::class,
+            'academic_period' => \App\Models\AcademicPeriod::class,
 
         ]);
     }

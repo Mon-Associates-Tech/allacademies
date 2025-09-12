@@ -44,7 +44,6 @@ trait BelongsToSchoolEnhanced
 
     /**
      * Determine if this model should have school scope applied
-     * This is the core logic that handles all user roles and model types
      */
     protected static function shouldApplySchoolScope(): bool
     {
@@ -52,9 +51,6 @@ trait BelongsToSchoolEnhanced
         $globalModels = [
             \App\Models\School::class,
             \App\Models\User::class, // Users are never scoped - they provide context
-            // Add other global resources
-            // \App\Models\Category::class,
-            // \App\Models\SystemSetting::class,
         ];
 
         if (in_array(static::class, $globalModels)) {
@@ -74,23 +70,16 @@ trait BelongsToSchoolEnhanced
         }
 
         // Roles that can access across all schools (never scoped)
-        $crossSchoolRoles = ['superadmin', 'owner', 'moderator'];
+        $crossSchoolRoles = ['superadmin', 'owner'];
 
         if ($user->hasAnyRole($crossSchoolRoles)) {
-            return false; // No scoping for these roles
+            // But still apply scoping unless they're in "all schools" view
+            return app()->has('current_school_id') && app('current_school_id') !== null;
         }
 
         // Special handling for Author model - not school-bound by design
         if (static::class === \App\Models\Author::class) {
             return false; // Authors are global
-        }
-
-        // Roles that are not school-bound (no associated school context)
-        $nonSchoolRoles = ['subscriber', 'moderator'];
-
-        // If user only has non-school roles, don't scope
-        if ($user->hasAnyRole($nonSchoolRoles)) {
-            return false;
         }
 
         // Default: apply school scope for all other cases
@@ -126,7 +115,7 @@ trait BelongsToSchoolEnhanced
         }
 
         // Don't auto-assign for non-school roles
-        $nonSchoolRoles = ['subscriber', 'moderator'];
+        $nonSchoolRoles = ['subscriber'];
         if ($user->hasAnyRole($nonSchoolRoles)) {
             return false;
         }
@@ -138,13 +127,18 @@ trait BelongsToSchoolEnhanced
     protected static function getSchoolIdFromContext()
     {
         try {
+            // First, check if we have it from middleware
+            if (app()->bound('current_school_id')) {
+                return app('current_school_id');
+            }
+
             // Check if we're in a web request with authenticated user
             if (app()->bound('auth') && app('auth')->hasResolvedGuards()) {
                 $user = Auth::user();
 
                 if ($user) {
                     // Cross-school roles don't auto-assign school
-                    $crossSchoolRoles = ['superadmin', 'owner', 'moderator'];
+                    $crossSchoolRoles = ['superadmin', 'owner'];
                     if ($user->hasAnyRole($crossSchoolRoles)) {
                         // Check if there's a current school context for these users
                         if (app()->bound('current_school')) {
@@ -154,7 +148,7 @@ trait BelongsToSchoolEnhanced
                     }
 
                     // Non-school roles don't have school context
-                    $nonSchoolRoles = ['subscriber', 'moderator'];
+                    $nonSchoolRoles = ['subscriber'];
                     if ($user->hasAnyRole($nonSchoolRoles)) {
                         return null;
                     }
@@ -190,7 +184,7 @@ trait BelongsToSchoolEnhanced
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->hasAnyRole(['superadmin', 'owner', 'moderator']))) {
+        if (!$user || (!$user->hasAnyRole(['superadmin', 'owner']))) {
             abort(403, 'Unauthorized to access cross-school data');
         }
 

@@ -54,6 +54,21 @@ class SignInController extends Controller
                     ->with('info', 'Please verify your email address before continuing.');
             }
 
+            // Check if user account is suspended
+            if ($user->status  === 'suspended') {
+                // Log out the user immediately
+                auth()->logout();
+
+                // Regenerate session to prevent session fixation
+                $request->session()->regenerate();
+
+                // Redirect to suspended account page
+                return redirect()->route('login')
+                    ->withErrors([
+                        'email' => 'Your account has been suspended. Please contact the administrator for more information.'
+                    ]);
+            }
+
             // Check if OTP is enabled in environment
             $otpEnabled = config('app.enable_otp', false) || env('ENABLE_OTP', false);
 
@@ -165,6 +180,17 @@ class SignInController extends Controller
                 ->with('info', 'Please verify your email address before continuing.');
         }
 
+        // Check if user account is suspended
+        if ($user->status  === 'suspended') {
+            // Clear 2FA session
+            $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
+
+            return redirect()->route('login')
+                ->withErrors([
+                    'email' => 'Your account has been suspended. Please contact the administrator for more information.'
+                ]);
+        }
+
         // Check if code exists and is not expired
         if (!$user->two_factor_code || !$user->two_factor_expires_at) {
             return back()->withErrors(['code' => 'No verification code found. Please request a new one.']);
@@ -238,6 +264,14 @@ class SignInController extends Controller
             ], 404);
         }
 
+        // Check if user account is suspended
+        if ($user->status  === 'suspended') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account has been suspended. Please contact the administrator for more information.'
+            ], 403);
+        }
+
         try {
             // Generate and send new code
             $this->generate2faCode($user);
@@ -304,8 +338,6 @@ class SignInController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            // You might want to throw an exception here or handle this differently
-            // depending on your application's requirements
             throw $e;
         }
     }

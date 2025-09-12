@@ -6,15 +6,45 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 class School extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'name', 'code', 'address', 'phone', 'email', 'website',
-        'logo', 'status', 'subscription_plan', 'settings', 'subscription_ends_at',
-        'ownership', 'established_date', 'student_capacity', 'country', 'city', 'state'
+        // Basic information
+        'name',
+        'code',
+        'email',
+        'phone',
+        'website',
+        'logo',
+
+        // Location
+        'address',
+        'city',
+        'state',
+        'country',
+        'postal_code',
+
+        // School details
+        'type',
+        'description',
+        'student_capacity',
+
+        // System settings
+        'status',
+        'subscription_plan',
+        'subscription_ends_at',
+        'settings',
+        'timezone',
+        'currency',
+
+        // Academic year
+        'academic_year_start',
+        'academic_year_end',
     ];
 
     protected $casts = [
@@ -121,7 +151,7 @@ class School extends Model
 
     // Helper methods
 
-    public function getStats(): array
+    public function getStatsDeprecated(): array
     {
         return [
             'total_students' => $this->students()->count(),
@@ -172,6 +202,100 @@ class School extends Model
     public function scopeByOwnership($query, $ownership)
     {
         return $query->where('ownership', $ownership);
+    }
+
+    public function academicPeriods(): HasMany
+    {
+        return $this->hasMany(AcademicPeriod::class);
+    }
+
+    public function currentAcademicPeriod(): HasOne
+    {
+        return $this->hasOne(AcademicPeriod::class)->where('is_current', true);
+    }
+
+    public function activeAcademicPeriods()
+    {
+        return $this->hasMany(AcademicPeriod::class)->where('status', 'active');
+    }
+
+    public function upcomingAcademicPeriods()
+    {
+        return $this->hasMany(AcademicPeriod::class)->where('status', 'upcoming');
+    }
+
+    // Helper methods for academic periods
+    public function getCurrentPeriod(): ?AcademicPeriod
+    {
+        return $this->academicPeriods()->where('status', 'active')->first();
+//        return $this->academicPeriods()->where('is_current', true)->first();
+    }
+
+    public function getPeriodsForYear(string $academicYear)
+    {
+        return $this->academicPeriods()
+            ->where('academic_year', $academicYear)
+            ->orderBy('year_sequence')
+            ->orderBy('sequence')
+            ->get();
+    }
+
+    public function createAcademicPeriod(array $data): AcademicPeriod
+    {
+        return $this->academicPeriods()->create($data);
+    }
+
+    public function getAvailableAcademicYears(): Collection
+    {
+        return $this->academicPeriods()
+            ->select('academic_year')
+            ->distinct()
+            ->orderBy('academic_year', 'desc')
+            ->pluck('academic_year');
+    }
+
+    public function hasActiveAcademicPeriod(): bool
+    {
+        return $this->academicPeriods()->where('status', 'active')->exists();
+    }
+
+    public function isRegistrationOpen(): bool
+    {
+        return $this->academicPeriods()
+            ->where('status', 'upcoming')
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->whereNotNull('registration_start')
+                        ->whereNotNull('registration_end')
+                        ->where('registration_start', '<=', now())
+                        ->where('registration_end', '>=', now());
+                })->orWhere(function ($q) {
+                    $q->whereNull('registration_start')
+                        ->orWhereNull('registration_end');
+                });
+            })
+            ->exists();
+    }
+
+    // Update the getStats method to include academic period info
+    public function getStats(): array
+    {
+        $currentPeriod = $this->getCurrentPeriod();
+
+        return [
+            'total_students' => $this->students()->count(),
+            'active_students' => $this->students()->where('status', 'active')->count(),
+            'total_teachers' => $this->teachers()->count(),
+            'active_teachers' => $this->teachers()->where('status', 'active')->count(),
+            'total_librarians' => $this->librarians()->count(),
+            'total_parents' => $this->parents()->count(),
+            'academic_groups' => $this->academicGroups()->count(),
+            'academic_levels' => $this->academicLevels()->count(),
+            'current_period' => $currentPeriod ? $currentPeriod->getDisplayName() : 'No active period',
+            'current_period_progress' => $currentPeriod ? round($currentPeriod->getProgressPercentage(), 1) : 0,
+            'total_academic_periods' => $this->academicPeriods()->count(),
+            'active_periods' => $this->academicPeriods()->where('status', 'active')->count(),
+        ];
     }
 
 }

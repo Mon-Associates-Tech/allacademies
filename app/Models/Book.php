@@ -549,4 +549,9 @@ class Book extends Model
     {
         return $this->hasOne(BookMedia::class);
     }
+
+    public function quizSessions()
+    {
+        return $this->hasMany(QuizSession::class);
+    }
 }

@@ -37,6 +37,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'school_id', 'name', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
+        'suspension_reason', 'suspended_at', 'suspended_by',
     ];
 
     protected $hidden = [
@@ -53,7 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $with = [
-        'school',
+
     ];
 
 
@@ -61,129 +62,93 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Handle both created and updated events
         static::created(static function ($user) {
-            self::handleRoleChange($user);
+            (new User)->handleRoleChange();
         });
 
         static::updated(static function ($user) {
             if ($user->isDirty('role')) {
-                self::handleRoleChange($user);
+                (new User)->handleRoleChange();
             }
         });
     }
 
-    public function handleRoleChange(): void
-    {
-        $roleModels = [
-            'student' => Student::class,
-            'teacher' => Teacher::class,
-            'author' => Author::class,
-            'librarian' => Librarian::class,
-            'parent' => StudentParent::class,
-        ];
+public function handleRoleChange(): void
+{
+    $roleModels = [
+        'student' => Student::class,
+        'teacher' => Teacher::class,
+        'author' => Author::class,
+        'librarian' => Librarian::class,
+        'parent' => StudentParent::class,
+    ];
 
-        if (isset($roleModels[$this->role])) {
-            $modelClass = $roleModels[$this->role];
-            $data = ['user_id' => $this->id];
+    if (isset($roleModels[$this->role])) {
+        $modelClass = $roleModels[$this->role];
+        $data = ['user_id' => $this->id];
 
-            // Add school_id for school-specific roles
-            if (in_array($this->role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
-                $data['school_id'] = $this->school_id;
+        // Add school_id for school-specific roles
+        if (in_array($this->role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
+            $data['school_id'] = $this->school_id;
 
-                // Generate IDs and set defaults based on role
-                switch ($this->role) {
-                    case 'teacher':
-                        $data['employee_id'] = Teacher::generateEmployeeId($this->school_id);
-                        $data['hire_date'] = now();
-                        $data['employment_type'] = 'full_time';
-                        $data['status'] = 'active';
-                        break;
+            // Generate IDs and set defaults based on role
+            switch ($this->role) {
+                case 'teacher':
+                    if (method_exists($modelClass, 'generateEmployeeId')) {
+                        $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
+                    } else {
+                        $data['employee_id'] = 'EMP' . time() . rand(100, 999);
+                    }
+                    $data['hire_date'] = now();
+                    $data['employment_type'] = 'full_time';
+                    $data['status'] = 'active';
+                    break;
 
-                    case 'librarian':
-                        $data['employee_id'] = Librarian::generateEmployeeId($this->school_id);
-                        $data['hire_date'] = now();
-                        $data['status'] = 'active';
-                        break;
+                case 'librarian':
+                    if (method_exists($modelClass, 'generateEmployeeId')) {
+                        $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
+                    } else {
+                        $data['employee_id'] = 'LIB' . time() . rand(100, 999);
+                    }
+                    $data['hire_date'] = now();
+                    $data['status'] = 'active';
+                    break;
 
-                    case 'student':
-                        $data['student_id'] = Student::generateStudentId($this->school_id);
-                        $data['admission_date'] = now();
-                        $data['status'] = 'active';
-                        break;
-                }
+                case 'student':
+                    if (method_exists($modelClass, 'generateStudentId')) {
+                        $data['student_id'] = $modelClass::generateStudentId($this->school_id);
+                    } else {
+                        $data['student_id'] = 'STU' . time() . rand(100, 999);
+                    }
+                    $data['admission_date'] = now();
+                    $data['status'] = 'active';
+                    break;
             }
+        }
 
+        // Ensure required fields have values
+        if ($this->role === 'student' && empty($data['student_id'])) {
+            $data['student_id'] = 'STU' . $this->id . time();
+        }
+
+        if (in_array($this->role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
+            $data['employee_id'] = strtoupper(substr($this->role, 0, 3)) . $this->id . time();
+        }
+
+        try {
             $modelClass::firstOrCreate(['user_id' => $this->id], $data);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create role model', [
+                'user_id' => $this->id,
+                'role' => $this->role,
+                'data' => $data,
+                'error' => $e->getMessage()
+            ]);
+
+            // Fallback: try without the additional data
+            $modelClass::firstOrCreate(['user_id' => $this->id]);
         }
     }
-
-    private static function handleRoleChangeDeprecated($user)
-    {
-        // Handle student role
-        if ($user->role === 'student') {
-            Student::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'student_group_id' => null,
-                    'academic_level_id' => null,
-                    'academic_group_id' => null,
-                    'school_id' => null,
-                ]
-            );
-        }
-
-        // Handle teacher role
-        if ($user->role === 'teacher') {
-            Teacher::firstOrCreate(
-                ['user_id' => $user->id],
-            );
-        }
-
-        // Handle author role
-        if ($user->role === 'author') {
-            Author::firstOrCreate(
-                ['user_id' => $user->id],
-            );
-        }
-
-        // Handle librarian role
-        if ($user->role === 'librarian') {
-            Librarian::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'employee_id' => uniqid('employee_')
-                ]
-            );
-        }
-
-        // Handle parent role
-        if ($user->role === 'parent') {
-            StudentParent::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'relationship' => null,
-                ]
-            );
-        }
-    }
-
-    /**
-     * Check if the user can impersonate other users
-     */
-    public function canImpersonateDeprecated(): bool
-    {
-        // Only admins can impersonate other users
-        return in_array($this->attributes['role'], ['owner', 'admin', 'administrator']);
-    }
-
-    /**
-     * Check if the user can be impersonated
-     */
-    public function canBeImpersonatedDeprecated(): bool
-    {
-        // Don't allow impersonating other admins or inactive users
-        return !in_array($this->attributes['role'], ['owner', 'admin', 'administrator']) &&
-            ($this->is_active ?? true);
-    }
+}
 
     public function subscriptions(): User|HasMany
     {
@@ -247,26 +212,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole('superadmin');
     }
 
-    public function hasRole($role, $schoolId = null): bool
-    {
-        if ($role === 'superadmin') {
-            return $this->roles()
-                ->where('name', 'superadmin')
-//                ->whereNull('roles.school_id')
-                ->exists();
-        }
-
-        $query = $this->roles()->where('name', $role);
-
-        if ($schoolId) {
-            // $query->where('users.school_id', $schoolId);
-        } elseif ($this->school_id) {
-            // $query->where('users.school_id', $this->school_id);
-        }
-
-        return $query->exists();
-    }
-
     public function hasSchoolBoundRole(): bool
     {
         return $this->student || $this->teacher || $this->admin ||
@@ -288,6 +233,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canBeImpersonated(): bool
     {
+        return true;
         return !$this->isSuperAdmin() &&
             !in_array($this->role, ['owner', 'admin', 'administrator', 'superadmin']) &&
             ($this->is_active ?? true);
@@ -402,15 +348,97 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Accountant::class);
     }
 
-    public function scopeForCurrentSchool($query)
-    {
-        $user = auth()->user();
+public function scopeForCurrentSchool($query)
+{
+    $user = auth()->user();
 
-        if (!$user || $user->canAccessCrossSchool()) {
-            $schoolId = app()->has('current_school') ? app('current_school')->id : null;
-            return $schoolId ? $query->where('school_id', $schoolId) : $query;
+    if (!$user) {
+        return $query->whereRaw('0=1'); // No results for unauthenticated users
+    }
+
+    // Super admins and owners with cross-school access
+    if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+        // Check if they're in a specific school context
+        if (session()->has('current_school_id')) {
+            $schoolId = session('current_school_id');
+            if ($schoolId !== null) { // Explicitly check for null
+                return $query->where('school_id', $schoolId);
+            }
+            // If current_school_id is explicitly set to null, they want to see all schools
+            return $query;
         }
 
-        return $query->where('school_id', $user->school_id);
+        // If no session context, check if they want to see all schools or their own
+        // By default, super admins and owners can see all schools
+        // unless they've specifically selected a school
+        return $query;
     }
+
+    // Regular users and admins only see their own school
+    return $query->where('school_id', $user->school_id);
+}
+
+
+    public function scopeForSchool($query, $schoolId = null)
+{
+    if ($schoolId) {
+        return $query->where('school_id', $schoolId);
+    }
+
+    $user = auth()->user();
+    if (!$user) {
+        return $query->whereRaw('0=1'); // No results for unauthenticated users
+    }
+
+    // Super admins and owners might see all users or just their school
+    if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+        // Check if they're in a specific school context
+        $currentSchoolId = session('current_school_id', $user->school_id);
+        if ($currentSchoolId) {
+            return $query->where('school_id', $currentSchoolId);
+        }
+        // If in "all schools" view, don't apply scoping
+        return $query;
+    }
+
+    // Regular users only see users from their school
+    return $query->where('school_id', $user->school_id);
+}
+
+
+    public function suspend($reason = null)
+    {
+        $this->update([
+            'status' => 'suspended',
+            'suspension_reason' => $reason,
+            'suspended_at' => now(),
+            'suspended_by' => auth()->id(),
+        ]);
+    }
+
+    public function unsuspend()
+    {
+        $this->update([
+            'status' => 'active', // or whatever your default active status is
+            'suspension_reason' => null,
+            'suspended_at' => null,
+            'suspended_by' => null,
+        ]);
+    }
+
+    public function isSuspended()
+    {
+        return $this->status === 'suspended';
+    }
+
+    public function suspendedBy()
+    {
+        return $this->belongsTo(User::class, 'suspended_by');
+    }
+
+    public function quizSessions()
+    {
+        return $this->hasMany(QuizSession::class);
+    }
+
 }

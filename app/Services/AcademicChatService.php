@@ -18,7 +18,7 @@ class AcademicChatService
     /**
      * Generate educational chat response with context parameters
      */
-    public function chat(array $parameters, array $messages = [], string $model = 'gpt-4'): array
+    public function chat(array $parameters, array $messages = [], string $model = 'gpt-4.1-nano'): array
     {
         // Build system message based on educational parameters
         $systemMessage = $this->buildEducationalSystemMessage($parameters);

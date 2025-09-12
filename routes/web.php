@@ -1,73 +1,52 @@
 <?php
 
 use App\Http\Controllers\AcademicChatController;
-use App\Http\Controllers\AcademicGroupController;
-use App\Http\Controllers\AcademicLevelController;
-use App\Http\Controllers\AcademicSubjectController;
-use App\Http\Controllers\AcademicTopicController;
-use App\Http\Controllers\ActivityTrailController;
+use App\Http\Controllers\AdministratorController;
+use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\BookApprovalController;
+use App\Http\Controllers\BookBorrowingController;
+use App\Http\Controllers\BookCategoryController;
+use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookProgressController;
+use App\Http\Controllers\BookSubscriptionController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
-use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\GroupBookSubscriptionController;
 use App\Http\Controllers\JoinTeamController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\LessonNoteController;
+use App\Http\Controllers\LibrarianController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Questions\EssayQuestionController;
-use App\Http\Controllers\Questions\MultipleChoiceQuestionController;
-use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
-use App\Http\Controllers\QuizController;
-use App\Http\Controllers\SchoolSettingsController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\SignOutController;
 use App\Http\Controllers\SignUpController;
+use App\Http\Controllers\StudentGroupController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\SubtopicController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
-use App\Livewire\Administrators\AuthorManagement;
-use App\Livewire\Administrators\BookApprovalManagement;
-use App\Livewire\Administrators\BookManagement;
-use App\Livewire\Administrators\Dashboard;
-use App\Livewire\Administrators\GroupManagement;
-use App\Livewire\Administrators\LibrarianManagement;
-use App\Livewire\Administrators\StudentManagement;
-use App\Livewire\Administrators\SubjectManagement;
-use App\Livewire\Administrators\TeacherManagement;
-use App\Livewire\Administrators\UserLoginLog;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
+use App\Livewire\Learning\BookQuizInterface;
 use App\Livewire\Students\Courses;
 use App\Livewire\Teachers\EssayGrader;
 use App\Models\Assessment;
+use App\Models\Student;
+use App\Services\SchoolContextService;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\LibrarianController;
-use App\Http\Controllers\AdministratorController;
-use App\Http\Controllers\AuthorController;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\BookCategoryController;
-use App\Http\Controllers\StudentGroupController;
-use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\TopicController;
-use App\Http\Controllers\LessonController;
-use App\Http\Controllers\LessonNoteController;
-use App\Http\Controllers\AssessmentController;
-use App\Http\Controllers\BookBorrowingController;
-use App\Http\Controllers\BookSubscriptionController;
-use App\Http\Controllers\GroupBookSubscriptionController;
-use App\Http\Controllers\BookApprovalController;
 
 
 /*
@@ -144,7 +123,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
-
 
 
     Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
@@ -286,7 +264,6 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
 
     Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
 });
-
 
 
 Route::get('/mail', static function () {
@@ -436,9 +413,25 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/forums', ForumManagement::class)->name('forums');
+
+    Route::get('v2', function () {
+        $contextInfo = SchoolContextService::getContextInfo();
+        $stats = SchoolContextService::getStats();
+
+        // Get students based on current context
+        $students = SchoolContextService::applySchoolContext(Student::query())
+            ->with(['user', 'academicLevel', 'academicGroup'])
+            ->latest()
+            ->paginate(20);
+
+        return view('dashboard-v2', compact('contextInfo', 'stats', 'students'));
+    }
+    );
+
+    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
+    Route::get('/learning/quiz', BookQuizInterface::class)
+        ->name('learning.quiz');
 });
-
-
 
 
 include_once 'student.php';

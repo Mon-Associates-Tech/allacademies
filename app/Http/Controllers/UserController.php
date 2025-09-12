@@ -26,6 +26,7 @@ class UserController extends Controller
         $this->authorize('administrate');
 
         $users = User::query()
+            ->forCurrentSchool()
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
@@ -89,7 +90,7 @@ class UserController extends Controller
         $user->assignRole($request->role);
 
         // Create associated model based on role
-        $this->createRoleSpecificAccount($user, $request->role);
+        $user->handleRoleChange();
 
         return redirect()->route('users.index')->with('success',
             "User '{$user->name}' has been created successfully with the role of {$request->role}."

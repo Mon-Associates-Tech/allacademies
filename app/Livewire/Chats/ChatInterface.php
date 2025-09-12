@@ -26,6 +26,9 @@ class ChatInterface extends Component
 
     protected $chatService;
     public ?bool $showMembersModal;
+    public $showGroupInfoModal = false;
+    public $showLeaveGroupModal = false;
+    public $showDeleteGroupModal = false;
 
     public function boot(ChatService $chatService)
     {
@@ -36,6 +39,73 @@ class ChatInterface extends Component
     {
         $this->loadChatGroups();
     }
+
+public function leaveGroup()
+{
+    if (!$this->selectedChatGroup) {
+        return;
+    }
+
+    try {
+        // Use the ChatService method to leave the group
+        app(ChatService::class)->leaveGroup($this->selectedChatGroup, auth()->user());
+
+        // Reset the selected group
+        $this->selectedChatGroup = null;
+        $this->messages = [];
+
+        // Reload chat groups
+        $this->loadChatGroups();
+
+        // Close modal
+        $this->showLeaveGroupModal = false;
+
+        // Show success message
+        session()->flash('message', 'You have left the group successfully.');
+        $this->dispatch('close-modal', name: 'leave-group-confirmation');
+    } catch (\Exception $e) {
+        \Log::error('Error leaving group', [
+            'group_id' => $this->selectedChatGroup->id,
+            'user_id' => auth()->id(),
+            'error' => $e->getMessage()
+        ]);
+        $this->addError('group', $e->getMessage());
+    }
+}
+
+public function deleteGroup()
+{
+    if (!$this->selectedChatGroup) {
+        return;
+    }
+
+    try {
+        // Use the ChatService method to delete the group
+        app(ChatService::class)->deleteGroup($this->selectedChatGroup, auth()->user());
+
+        // Reset the selected group
+        $this->selectedChatGroup = null;
+        $this->messages = [];
+
+        // Reload chat groups
+        $this->loadChatGroups();
+
+        // Close modal
+        $this->showDeleteGroupModal = false;
+
+        // Show success message
+        session()->flash('message', 'Group has been deleted successfully.');
+        $this->dispatch('close-modal', name: 'delete-group-confirmation');
+    } catch (\Exception $e) {
+        \Log::error('Error deleting group', [
+            'group_id' => $this->selectedChatGroup->id,
+            'user_id' => auth()->id(),
+            'error' => $e->getMessage()
+        ]);
+        $this->addError('group', $e->getMessage());
+    }
+}
+
 
     public function loadChatGroups()
     {

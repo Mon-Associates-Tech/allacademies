@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Livewire\Administrators;
+
+use App\Models\School;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+class SchoolSwitcherPage extends Component
+{
+    use WithPagination;
+
+    public $search = '';
+    public $perPage = 10;
+    public $currentSchool = null;
+
+    protected $queryString = ['search', 'page'];
+
+    public function mount()
+    {
+        if (!auth()->user()->canAccessCrossSchool()) {
+            abort(403);
+        }
+
+        try {
+            $this->currentSchool = app()->bound('current_school') ? app('current_school') : null;
+        } catch (\Exception $e) {
+            $this->currentSchool = null;
+        }    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function switchToSchool($schoolId)
+    {
+        if (!auth()->user()->canAccessCrossSchool()) {
+            abort(403);
+        }
+
+        $school = School::find($schoolId);
+
+        if (!$school) {
+            session()->flash('error', 'School not found.');
+            return;
+        }
+
+        // Set the current school in session
+        session()->put('current_school_id', $schoolId);
+        app()->instance('current_school', $school);
+
+        $this->currentSchool = $school;
+
+        session()->flash('success', "Switched to {$school->name}");
+
+        return redirect()->route('admin.school-switcher');
+    }
+
+public function showAllSchools()
+{
+    if (!auth()->user()->canAccessCrossSchool()) {
+        abort(403);
+    }
+
+    // Clear all school context
+    session()->forget('current_school_id');
+
+    // Remove any bound instances
+    if (app()->bound('current_school')) {
+        // Instead of forgetInstance, just rebind to null
+        app()->singleton('current_school', function () {
+            return null;
+        });
+    }
+
+    // Also explicitly set the instance
+    app()->instance('current_school', null);
+
+    $this->currentSchool = null;
+
+    session()->flash('success', 'Now viewing all schools');
+
+    return redirect()->route('admin.school-switcher');
+}
+
+
+    public function viewSchoolDetails($schoolId)
+    {
+        return redirect()->route('admin.school-details', $schoolId);
+    }
+
+    public function getSchoolsProperty()
+    {
+        return School::active()
+            ->withValidSubscription()
+            ->when($this->search, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('code', 'like', '%' . $search . '%');
+            })
+            ->orderBy('name')
+            ->paginate($this->perPage);
+    }
+
+    public function render()
+    {
+        return view('livewire.administrators.school-switcher-page', [
+            'schools' => $this->schools
+        ]);
+    }
+}
+

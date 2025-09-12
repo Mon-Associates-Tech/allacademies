@@ -71,7 +71,7 @@ class ChatGroupCreate extends Component
 
     public function createGroup()
     {
-       // $this->validate();
+        // $this->validate();
 
         try {
             $chatService = app(ChatService::class);
@@ -104,7 +104,9 @@ class ChatGroupCreate extends Component
             $this->is_private = false;
 
 // Dispatch success event
+            $this->dispatch('close-modal', name: 'create-chat-group');
             $this->dispatch('chatGroupCreated', $chatGroup->id);
+
 
         } catch (Exception $e) {
             Log::error('Chat group creation failed', [
