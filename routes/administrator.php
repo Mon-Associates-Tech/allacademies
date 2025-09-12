@@ -21,6 +21,10 @@ use App\Livewire\Common\Messages\MessageIndex;
 use App\Livewire\Common\Messages\MessageShow;
 use App\Livewire\School\SchoolDetails;
 
+use App\Livewire\Changelogs\ChangelogList;
+use App\Livewire\Changelogs\CreateChangelog;
+
+
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
     Route::get('/student-groups', GroupManagement::class)->name('student-groups');
@@ -76,5 +80,8 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
 
     Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
         ->name('school-details');
+
+    Route::get('/change-log', CreateChangelog::class)->name('change-log');
+    Route::get('/changelog', ChangelogList::class)->name('change-log.index');
 
 });

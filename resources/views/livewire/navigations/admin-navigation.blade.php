@@ -457,7 +457,23 @@
             </a>
         </li>
 
+        @if(Auth::user()->hasRole('owner'))
+            <li class="mb-0.5 last:mb-0" tile="ChangeLog">
+                <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.change-log*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{route('admin.change-log.index')}}">
+                    <div class="flex items-center">
+                 <svg
+    class="shrink-0 fill-current {{ Route::is('admin.change-log*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <path d="M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm0 13c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z"/>
+    <path d="M8 4c.3 0 .5.2.5.5v3.6l2.4 1.5c.2.1.3.4.1.6-.1.2-.4.3-.6.1l-2.6-1.6c-.2-.1-.3-.3-.3-.5V4.5c0-.3.2-.5.5-.5z"/>
+</svg>
 
+                        <span class="text-sm ml-4 sidebar-text duration-200">Change  Log</span>
+                    </div>
+                </a>
+            </li>
+        @endif
         <!-- User Logins -->
         <li class="mb-0.5 last:mb-0 hidden" title="User Logins">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ $activeTab === 'teacher-delegate' ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
