@@ -11,6 +11,7 @@ use App\Http\Controllers\Questions\MultipleChoiceQuestionController;
 use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\SubtopicController;
+use App\Livewire\AcademicManagement\AcademicHierarchy;
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
 
@@ -53,4 +54,8 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
             });
         });
     });
+
+
+    Route::get('/academic-structure', AcademicHierarchy::class)->name('academic.structure');
+
 });

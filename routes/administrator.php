@@ -12,7 +12,8 @@ use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
 use App\Livewire\Administrators\UserImpersonation;
 use App\Livewire\Administrators\UserLoginLog;
-use App\Livewire\Books\BookForm;
+use App\Livewire\Changelogs\ChangelogList;
+use App\Livewire\Changelogs\CreateChangelog;
 
 Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
@@ -29,4 +30,7 @@ Route::middleware(['auth', 'verified'])->prefix('')->name('admin.')->group(funct
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
     Route::get('datamanager', \App\Livewire\Common\DataManager::class)->name('data-manager');
+
+    Route::get('/change-log', CreateChangelog::class)->name('change-log');
+    Route::get('/changelog', ChangelogList::class)->name('change-log.index');
 });

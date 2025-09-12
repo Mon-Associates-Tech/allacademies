@@ -54,7 +54,7 @@
             <main class="mt-0 p-0">
                 <!-- Breadcrumb -->
                 @if($breadcrumb)
-                    <div class="max-w-5xl py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
+                    <div class="max-w-5xl px-4 lg:px-8 py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
                 @endif
 
 
