@@ -278,6 +278,15 @@
                                             </x-slot>
                                             View Details
                                         </x-dropdown.item>
+
+                                            <x-dropdown.item click="$dispatch('open-delete-modal', {{ $user->id }})">
+                                                <x-slot name="icon">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </x-slot>
+                                                Delete User
+                                            </x-dropdown.item>
                                     </x-slot>
                                 </x-dropdown>
                             </div>
@@ -412,4 +421,15 @@
             </p>
         </div>
     @endif
+
+    @livewire('users.delete-user-modal')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.addEventListener('open-delete-modal', function(event) {
+                // Use the correct Livewire dispatch method
+                Livewire.dispatch('openDeleteModal', { userId: event.detail });
+            });
+        });
+    </script>
 </x-layouts.app>

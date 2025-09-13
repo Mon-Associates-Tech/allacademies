@@ -286,6 +286,18 @@
                         </svg>
                         Suspend Account
                     </button>
+
+                        <button
+                            type="button"
+                            x-data="{}"
+                            @click="$dispatch('open-delete-modal', {{ $user->id }})"
+                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete Account
+                        </button>
+
                 </div>
             </div>
 
@@ -331,4 +343,16 @@
             @endif
         </div>
     </div>
+
+    @livewire('users.delete-user-modal')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.addEventListener('open-delete-modal', function(event) {
+                // Use the correct Livewire dispatch method
+                Livewire.dispatch('openDeleteModal', { userId: event.detail });
+            });
+        });
+    </script>
+
 </x-layouts.app>
