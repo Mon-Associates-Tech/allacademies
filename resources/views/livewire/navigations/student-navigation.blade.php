@@ -1,7 +1,7 @@
 <div>
     <ul class="mt-3">
         <!-- Main -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Dashboard">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('dashboard')}}">
                 <div class="flex items-center">
@@ -16,7 +16,7 @@
         </li>
 
         <!-- Learning -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Learning Center">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.assessments') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.assessments')}}">
                 <div class="flex items-center">
@@ -30,7 +30,7 @@
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Assignments">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.assignments') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.assignments')}}">
                 <div class="flex items-center">
@@ -47,7 +47,7 @@
 
 
         <!-- Resources -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Resources">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.books')}}">
                 <div class="flex items-center">
@@ -62,7 +62,7 @@
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0 hidden" title="Courses">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.courses') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.courses')}}">
                 <div class="flex items-center">
@@ -78,7 +78,7 @@
         </li>
 
         <!-- Schedule -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Schedule">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.schedules') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.schedules')}}">
                 <div class="flex items-center">
@@ -94,7 +94,7 @@
         </li>
 
         <!-- Academic -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Academic Performance">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.performance') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.performance')}}">
                 <div class="flex items-center">
@@ -109,7 +109,7 @@
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Forums">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('forums*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('forums')}}">
                 <div class="flex items-center">
@@ -125,7 +125,7 @@
         </li>
 
         <!-- Account -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="My Profile">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.account') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.account')}}">
                 <div class="flex items-center">
@@ -140,7 +140,7 @@
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Notifications">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('notifications.index')}}">
                 <div class="flex items-center">
@@ -156,7 +156,7 @@
         </li>
 
         <!-- Activity -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 last:mb-0" title="Activities">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('student.activities') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('student.activities')}}">
                 <div class="flex items-center">
