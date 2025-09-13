@@ -89,7 +89,7 @@ class Assignments extends Component
     public function getAssignmentsProperty()
     {
         if (!$this->student) {
-            \Log::info('No student available for assignments query');
+            abort(403,  'Student record  not found');
             return collect();
         }
 
