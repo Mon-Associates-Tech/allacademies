@@ -20,7 +20,7 @@
                                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 <option value="">Choose a book...</option>
                                 @foreach($availableBooks as $book)
-                                    <option value="{{ $book->id }}">{{ $book->title }} by {{ $book->author->name ?? 'Unknown' }}</option>
+                                    <option value="{{ $book->id }}">{{ $book->title }} by {{ $book->author->name ?? $book->author->user?->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -41,7 +41,7 @@
                                     @endif
                                     <div>
                                         <h3 class="font-bold text-gray-900 dark:text-white">{{ $selectedBook->title }}</h3>
-                                        <p class="text-gray-600 dark:text-gray-400 text-sm">by {{ $selectedBook->author->name ?? 'Unknown' }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400 text-sm">by {{ $selectedBook->author->name ?? $selectedBook->author->user?->nam }}</p>
                                         @if($selectedBook->genre)
                                             <span class="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mt-1">
                                                 {{ $selectedBook->genre }}
@@ -286,7 +286,9 @@ id="quiz-section">
                 Question <span x-text="currentQuestion + 1"></span>
             </span>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white"
-                x-text="$wire.quizData.questions[currentQuestion].question"></h3>
+                x-text="$wire.quizData.questions[currentQuestion].question">
+
+            </h3>
         </div>
 
         {{-- Question Options --}}

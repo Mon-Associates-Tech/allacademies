@@ -129,7 +129,7 @@ public function generateQuiz()
             'focus_topics' => $this->parseFocusTopics(),
             'include_quotes' => $this->includeQuotes,
             'book_title' => $this->selectedBook->title,
-            'author' => $this->selectedBook->author->name ?? 'Unknown',
+            'author' => $this->selectedBook->author->name ?? $this->selectedBook->author?->user?->name,
             'genre' => $this->selectedBook->genre,
             'themes' => $this->selectedBook->themes ?? [],
             'difficulty_score' => $this->selectedBook->difficulty_score
@@ -210,7 +210,7 @@ protected function buildQuizContext(array $parameters): array
 {
     $context = [
         'book_title' => $this->selectedBook->title,
-        'author' => $this->selectedBook->author->name ?? 'Unknown',
+        'author' => $this->selectedBook->author->name ?? $this->selectedBook->author?->user?->name,
         'book_category' => $this->selectedBook->bookCategory->name ?? 'General',
         'genre' => $this->selectedBook->genre,
         'difficulty_score' => $this->selectedBook->difficulty_score,
@@ -633,6 +633,7 @@ protected function parseEssayGradingResult(string $content): array
     {
         $suggestions = [];
         $percentage = $results['percentage'];
+        $author = $book->author->name ?? $book->author->user->name;
 
         if ($percentage < 70) {
             $suggestions[] = "Re-read key chapters focusing on main themes and character development";
@@ -644,7 +645,7 @@ protected function parseEssayGradingResult(string $content): array
             $suggestions[] = "Research the historical context of the book's setting";
         } else {
             $suggestions[] = "Explore critical essays about this work for deeper insights";
-            $suggestions[] = "Read other books by {$book->author->name} for comparison";
+            $suggestions[] = "Read other books by {$author} for comparison";
             $suggestions[] = "Consider the book's influence on later literature";
         }
 
@@ -716,7 +717,7 @@ protected function parseEssayGradingResult(string $content): array
 // Implement export functionality
         $exportData = [
             'book' => $this->selectedBook->title,
-            'author' => $this->selectedBook->author->name,
+            'author' => $this->selectedBook->author->name ?? $this->selectedBook->author?->user?->name,
             'quiz_date' => now()->format('Y-m-d'),
             'results' => $this->quizResults['results'],
             'performance' => $this->quizResults['detailed_feedback']

@@ -16,7 +16,7 @@ use App\Livewire\Students\StudentSchedule;
 
 Route::middleware(['auth'])->prefix('dashboard')->name('student.')->group(function () {
 
-Route::get('assessments', QuizTakingPage::class )->name('assessments');
+Route::get('assessments', \App\Livewire\Learning\BookQuizInterface::class )->name('assessments');
 Route::get('performance', PerformanceOverview::class)->name('performance');
 Route::get('account', StudentProfile::class)->name('account');
 Route::get('activities', ActivityLogs::class)->name('activities');

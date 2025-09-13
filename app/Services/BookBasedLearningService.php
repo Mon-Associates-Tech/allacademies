@@ -672,7 +672,7 @@ class BookBasedLearningService
  */
 protected function buildAdaptiveQuizPrompt(Book $book, array $context, User $user): string
 {
-    $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author}.\n\n";
+    $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
 
     $prompt .= "BOOK DETAILS:\n";
     $prompt .= "- Title: {$book->title}\n";

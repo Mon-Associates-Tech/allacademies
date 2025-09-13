@@ -26,6 +26,9 @@ class Author extends Model
         'pen_name'
     ];
 
+   protected  $with = [
+        'user'
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);
