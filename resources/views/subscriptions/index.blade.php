@@ -1,6 +1,6 @@
 <x-layouts.app title="My Subscriptions" page-name="Subscriptions">
     <!-- Payment Information Banner -->
-    <div class="rounded-lg bg-blue-50 p-6 mb-6 border border-blue-200">
+    {{-- <div class="rounded-lg bg-blue-50 p-6 mb-6 border border-blue-200">
         <div class="flex">
             <div class="flex-shrink-0">
                 <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +16,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     @if ($subscriptions->count())
         <!-- Summary Stats -->
