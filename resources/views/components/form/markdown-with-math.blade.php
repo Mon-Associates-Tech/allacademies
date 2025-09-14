@@ -1,16 +1,24 @@
 @props(['content' => '', 'class' => 'prose max-w-none'])
 
-<div  {{ $attributes->merge(['class' => $class]) }}
+<div {{ $attributes->merge(['class' => $class]) }}
      x-data="{
         htmlContent: '',
         init() {
             this.renderContent();
         },
         renderContent() {
-            this.htmlContent = marked.parse(@js($content));
-            this.$nextTick(() => {
-                this.renderMath();
-            });
+            // Process escaped square brackets first
+            let processedContent = @js($content);
+
+             // Remove all backticks (both single and triple)
+          processedContent = processedContent.replace(/\\\[/g, '\\\\\\[');
+processedContent = processedContent.replace(/\\\]/g, '\\\\\\]');
+processedContent = processedContent.replace(/`/g, ''); // Remove all backticks
+
+this.htmlContent = window.renderMarkdownWithMath(processedContent);
+this.$nextTick(() => {
+    this.renderMath();
+});
         },
         renderMath() {
             if (typeof window.renderMathInElement !== 'undefined') {
@@ -24,7 +32,7 @@
                     throwOnError: false,
                     errorColor: '#cc0000',
                     strict: false,
-                    trust: false
+                    trust: true
                 });
             }
         }

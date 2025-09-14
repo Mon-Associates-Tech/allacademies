@@ -2,10 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Models\AcademicChatMessage;
 use App\Services\AcademicChatService;
 use Livewire\Component;
 use Livewire\Attributes\Rule;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AcademicChat extends Component
 {
@@ -51,8 +53,10 @@ class AcademicChat extends Component
     public $showParameters = false;
     public $availableSubjects = [];
     public $availableTopics = [];
-    public $sessionId;
     public $errors = [];
+    public $conversationId = null;
+    public $conversationHistory = []; // This needs to be a simple array, not associative
+    public $showHistory = false;
 
     protected $chatService;
 
@@ -63,8 +67,8 @@ class AcademicChat extends Component
 
     public function mount()
     {
-        $this->sessionId = Session::getId();
         $this->availableSubjects = $this->chatService->getAvailableSubjects();
+        $this->loadConversationHistory();
         $this->loadChatHistory();
 
         // Set default values
@@ -85,6 +89,11 @@ class AcademicChat extends Component
         $this->isLoading = true;
         $this->errors = [];
 
+        // Generate conversation ID if this is a new conversation
+        if (!$this->conversationId) {
+            $this->conversationId = (string) Str::uuid();
+        }
+
         // Prepare parameters
         $parameters = $this->getParameters();
         $parameters['message'] = $this->message;
@@ -97,13 +106,23 @@ class AcademicChat extends Component
             return;
         }
 
-        // Add user message to chat
+        // Add user message to chat and database
         $userMessage = [
             'role' => 'user',
             'content' => $this->message,
             'timestamp' => now()->toISOString()
         ];
         $this->messages[] = $userMessage;
+
+        // Save user message to database
+        AcademicChatMessage::create([
+            'user_id' => Auth::id(),
+            'conversation_id' => $this->conversationId,
+            'conversation_title' => $this->generateConversationTitle(),
+            'content' => $this->message,
+            'role' => 'user',
+            'parameters' => $parameters
+        ]);
 
         // Get conversation history for context
         $conversationHistory = $this->getConversationHistory();
@@ -121,8 +140,16 @@ class AcademicChat extends Component
             ];
             $this->messages[] = $aiMessage;
 
-            // Save chat history
-            $this->saveChatHistory();
+            // Save AI response to database
+            AcademicChatMessage::create([
+                'user_id' => Auth::id(),
+                'conversation_id' => $this->conversationId,
+                'conversation_title' => $this->generateConversationTitle(),
+                'content' => $response['content'],
+                'role' => 'assistant',
+                'parameters' => $parameters,
+                'usage' => $response['usage'] ?? null
+            ]);
         } else {
             $this->errors[] = $response['error'];
         }
@@ -130,12 +157,103 @@ class AcademicChat extends Component
         // Clear message and reset loading
         $this->message = '';
         $this->isLoading = false;
+
+        // Refresh conversation history
+        $this->loadConversationHistory();
     }
 
     public function clearChat()
     {
         $this->messages = [];
-        $this->clearChatHistory();
+        $this->conversationId = null;
+    }
+
+    public function loadConversation($conversationId)
+    {
+        $this->conversationId = $conversationId;
+        $this->loadChatHistory();
+    }
+
+    public function deleteConversation($conversationId)
+    {
+        AcademicChatMessage::where('user_id', Auth::id())
+            ->where('conversation_id', $conversationId)
+            ->delete();
+
+        if ($this->conversationId === $conversationId) {
+            $this->messages = [];
+            $this->conversationId = null;
+        }
+
+        $this->loadConversationHistory();
+    }
+
+    public function newConversation()
+    {
+        $this->messages = [];
+        $this->conversationId = null;
+    }
+
+    public function toggleHistory()
+    {
+        $this->showHistory = !$this->showHistory;
+    }
+
+    protected function loadChatHistory()
+    {
+        if ($this->conversationId) {
+            // Load chat history from database for specific conversation
+            $dbMessages = AcademicChatMessage::where('user_id', Auth::id())
+                ->where('conversation_id', $this->conversationId)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $this->messages = $dbMessages->map(function ($msg) {
+                return [
+                    'role' => $msg->role,
+                    'content' => $msg->content,
+                    'timestamp' => $msg->created_at->toISOString(),
+                    'usage' => $msg->usage
+                ];
+            })->toArray();
+        } else {
+            $this->messages = [];
+        }
+    }
+
+    protected function loadConversationHistory()
+    {
+        // Load conversation history from database as a simple array
+        $conversations = AcademicChatMessage::select('conversation_id', 'conversation_title', 'created_at')
+            ->where('user_id', Auth::id())
+            ->whereNotNull('conversation_id')
+            ->groupBy('conversation_id', 'conversation_title', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        // Convert to simple array format that Livewire supports
+        $this->conversationHistory = $conversations->map(function ($conversation) {
+            return [
+                'id' => $conversation->conversation_id,
+                'title' => $conversation->conversation_title ?? 'Untitled Conversation',
+                'created_at' => $conversation->created_at
+            ];
+        })->toArray();
+    }
+
+    protected function generateConversationTitle()
+    {
+        if (!empty($this->messages)) {
+            // Use the first user message as the title
+            $firstUserMessage = collect($this->messages)->firstWhere('role', 'user');
+            if ($firstUserMessage) {
+                return Str::limit($firstUserMessage['content'], 50);
+            }
+        }
+
+        // Fallback title
+        return 'Academic Chat - ' . now()->format('M j, Y');
     }
 
     public function toggleParameters()
@@ -232,21 +350,6 @@ class AcademicChat extends Component
                 'content' => $msg['content']
             ];
         }, $history);
-    }
-
-    protected function loadChatHistory()
-    {
-        $this->messages = Session::get("chat_history_{$this->sessionId}", []);
-    }
-
-    protected function saveChatHistory()
-    {
-        Session::put("chat_history_{$this->sessionId}", $this->messages);
-    }
-
-    protected function clearChatHistory()
-    {
-        Session::forget("chat_history_{$this->sessionId}");
     }
 
     public function render()

@@ -3,13 +3,12 @@
 namespace App\Services;
 
 use App\Models\Book;
-use App\Models\BookChapter;
-use App\Models\ReadingProgress;
 use App\Models\QuizSession;
 use App\Models\ReadingAchievement;
+use App\Models\ReadingProgress;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class BookBasedLearningService
 {
@@ -64,6 +63,170 @@ class BookBasedLearningService
     }
 
     /**
+     * Get user's reading history with performance data
+     */
+    protected function getUserReadingHistory(User $user): Collection
+    {
+        return $user->readingProgress()
+            ->with(['book', 'book.reviews' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->where('status', 'completed')
+            ->orderBy('completed_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Extract favorite genres from reading history
+     */
+    protected function extractFavoriteGenres(Collection $readingHistory): array
+    {
+        $genreCounts = [];
+
+        foreach ($readingHistory as $progress) {
+            if ($progress->book && $progress->book->genre) {
+                $genre = $progress->book->genre;
+                $genreCounts[$genre] = ($genreCounts[$genre] ?? 0) + 1;
+            }
+        }
+
+        arsort($genreCounts);
+        return array_slice(array_keys($genreCounts), 0, 3);
+    }
+
+    /**
+     * Get average user rating for completed books
+     */
+    protected function getAverageUserRating(User $user): float
+    {
+        return $user->bookReviews()->avg('rating') ?? 3.0;
+    }
+
+    /**
+     * Determine user's current reading level
+     */
+    protected function determineUserReadingLevel(User $user): int
+    {
+        $quizzes = $user->quizSessions()
+            ->where('status', 'completed')
+            ->get();
+
+        if ($quizzes->isEmpty()) {
+            return 5; // Default medium difficulty
+        }
+
+        $averageScore = $quizzes->avg(function ($quiz) {
+            return $quiz->results['percentage'] ?? 0;
+        });
+
+        // Convert percentage to difficulty scale (1-10)
+        if ($averageScore >= 90) return 8; // Advanced
+        if ($averageScore >= 80) return 6; // Intermediate-Advanced
+        if ($averageScore >= 70) return 5; // Intermediate
+        if ($averageScore >= 60) return 4; // Beginner-Intermediate
+        return 3; // Beginner
+    }
+
+    /**
+     * Enrich book data with recommendation information
+     */
+    protected function enrichBookWithRecommendationData(Book $book, User $user): array
+    {
+        return [
+            'id' => $book->id,
+            'title' => $book->title,
+            'author' => $book->author,
+            'genre' => $book->genre,
+            'description' => $book->description,
+            'total_pages' => $book->total_pages,
+            'estimated_reading_time' => $book->estimated_reading_time,
+            'difficulty_score' => $book->difficulty_score,
+            'reading_difficulty' => $book->reading_difficulty,
+            'cover_image_url' => $book->cover_image_url,
+            'themes' => $book->themes,
+            'recommendation_reasons' => $this->getRecommendationReasons($book, $user),
+            'match_score' => $this->calculateMatchScore($book, $user)
+        ];
+    }
+
+    /**
+     * Get reasons why book is recommended for user
+     */
+    protected function getRecommendationReasons(Book $book, User $user): array
+    {
+        $reasons = [];
+
+        // Check genre match
+        $favoriteGenres = $this->extractFavoriteGenres($this->getUserReadingHistory($user));
+        if (in_array($book->genre, $favoriteGenres)) {
+            $reasons[] = "Matches your favorite genre: {$book->genre}";
+        }
+
+        // Check difficulty appropriateness
+        $userLevel = $this->determineUserReadingLevel($user);
+        if (abs($book->difficulty_score - $userLevel) <= 1) {
+            $reasons[] = "Perfect difficulty level for your reading skills";
+        }
+
+        // Check themes alignment
+        if (!empty($book->themes)) {
+            $reasons[] = "Explores themes: " . implode(', ', array_slice($book->themes, 0, 3));
+        }
+
+        // Check academic level match
+        if (in_array($user->academic_level, $book->academic_levels ?? [])) {
+            $reasons[] = "Aligned with your academic level";
+        }
+
+        return $reasons;
+    }
+
+    // ==========================================
+    // PROTECTED HELPER METHODS
+    // ==========================================
+
+    /**
+     * Calculate match score for recommendation
+     */
+    protected function calculateMatchScore(Book $book, User $user): float
+    {
+        $score = 0;
+        $maxScore = 100;
+
+        // Genre matching (30 points)
+        $favoriteGenres = $this->extractFavoriteGenres($this->getUserReadingHistory($user));
+        if (in_array($book->genre, $favoriteGenres)) {
+            $score += 30;
+        }
+
+        // Difficulty matching (25 points)
+        $userLevel = $this->determineUserReadingLevel($user);
+        $difficultyDiff = abs($book->difficulty_score - $userLevel);
+        if ($difficultyDiff <= 1) {
+            $score += 25;
+        } elseif ($difficultyDiff <= 2) {
+            $score += 15;
+        }
+
+        // Academic level matching (20 points)
+        if (in_array($user->academic_level, $book->academic_levels ?? [])) {
+            $score += 20;
+        }
+
+        // Age appropriateness (15 points)
+        if ($user->age && $book->isSuitableForAge($user->age)) {
+            $score += 15;
+        }
+
+        // Reading time appropriateness (10 points)
+        if ($book->estimated_reading_time <= 20) { // Under 20 hours
+            $score += 10;
+        }
+
+        return round(($score / $maxScore) * 100, 1);
+    }
+
+    /**
      * Generate adaptive quiz based on user's performance
      */
     public function generateAdaptiveQuiz(User $user, Book $book, array $parameters): array
@@ -92,6 +255,381 @@ class BookBasedLearningService
         ]);
 
         return $this->generateQuizWithContext($book, $adaptiveContext, $user);
+    }
+
+    /**
+     * Calculate adaptive difficulty based on previous performance
+     */
+    protected function calculateAdaptiveDifficulty(Collection $previousQuizzes, string $requestedDifficulty): string
+    {
+        if ($previousQuizzes->isEmpty()) {
+            return $requestedDifficulty;
+        }
+
+        $averageScore = $previousQuizzes->avg(function ($quiz) {
+            return $quiz->results['percentage'] ?? 0;
+        });
+
+        $recentTrend = $this->calculatePerformanceTrend($previousQuizzes);
+
+        // Adapt based on performance
+        if ($averageScore >= 85 && $recentTrend >= 0) {
+            // Performing well, can increase difficulty
+            return $this->increaseDifficulty($requestedDifficulty);
+        } elseif ($averageScore <= 65 || $recentTrend < -10) {
+            // Struggling, should decrease difficulty
+            return $this->decreaseDifficulty($requestedDifficulty);
+        }
+
+        return $requestedDifficulty;
+    }
+
+    /**
+     * Calculate performance trend from recent quizzes
+     */
+    protected function calculatePerformanceTrend(Collection $quizzes): float
+    {
+        $recent = $quizzes->sortByDesc('completed_at')->take(3);
+
+        if ($recent->count() < 2) {
+            return 0;
+        }
+
+        $scores = $recent->pluck('results.percentage')->filter()->values();
+
+        if ($scores->count() < 2) {
+            return 0;
+        }
+
+        // Simple linear trend calculation
+        $firstHalf = $scores->take(ceil($scores->count() / 2))->avg();
+        $secondHalf = $scores->skip(ceil($scores->count() / 2))->avg();
+
+        return $secondHalf - $firstHalf;
+    }
+
+    /**
+     * Increase difficulty level
+     */
+    protected function increaseDifficulty(string $current): string
+    {
+        return match ($current) {
+            'easy' => 'medium',
+            'medium' => 'hard',
+            'hard' => 'hard', // Cap at hard
+            default => $current
+        };
+    }
+
+    /**
+     * Decrease difficulty level
+     */
+    protected function decreaseDifficulty(string $current): string
+    {
+        return match ($current) {
+            'hard' => 'medium',
+            'medium' => 'easy',
+            'easy' => 'easy', // Cap at easy
+            default => $current
+        };
+    }
+
+    /**
+     * Identify weak areas from previous quiz results
+     */
+    protected function identifyWeakAreas(Collection $previousQuizzes): array
+    {
+        $weakAreas = [];
+
+        foreach ($previousQuizzes as $quiz) {
+            $questionDetails = $quiz->results['question_details'] ?? [];
+
+            foreach ($questionDetails as $detail) {
+                if (!($detail['is_correct'] ?? true)) {
+                    $questionType = $detail['question_type'] ?? 'unknown';
+                    $weakAreas[$questionType] = ($weakAreas[$questionType] ?? 0) + 1;
+                }
+            }
+        }
+
+        // Return areas where user got wrong answers most frequently
+        arsort($weakAreas);
+        return array_slice(array_keys($weakAreas), 0, 3);
+    }
+
+    /**
+     * Identify focus areas for adaptive learning
+     */
+    protected function identifyFocusAreas(User $user, Book $book, array $weakAreas): array
+    {
+        $focusAreas = [];
+
+        // Focus on chapters where user had difficulties
+        $chapterPerformance = [];
+        $userQuizzes = QuizSession::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->where('status', 'completed')
+            ->whereNotNull('chapter_id')
+            ->get();
+
+        foreach ($userQuizzes as $quiz) {
+            $chapterId = $quiz->chapter_id;
+            $score = $quiz->results['percentage'] ?? 0;
+
+            if (!isset($chapterPerformance[$chapterId])) {
+                $chapterPerformance[$chapterId] = [];
+            }
+            $chapterPerformance[$chapterId][] = $score;
+        }
+
+        // Find chapters with low average performance
+        foreach ($chapterPerformance as $chapterId => $scores) {
+            $avgScore = array_sum($scores) / count($scores);
+            if ($avgScore < 70) {
+                // Get the book's table of content
+                $toc = $book->table_of_contents;
+
+                if ($toc) {
+                    // Format the contents directly since $toc is already the content array
+                    $formattedContents = collect($toc)->map(function ($chapter) {
+                        return [
+                            'chapter_number' => $chapter['chapter'] ?? 1,
+                            'title' => $chapter['title'] ?? 'Untitled Chapter',
+                            'description' => $chapter['description'] ?? '',
+                            'page_range' => isset($chapter['page_start'], $chapter['page_end'])
+                                ? "Pages {$chapter['page_start']}-{$chapter['page_end']}"
+                                : '',
+                            'page_count' => isset($chapter['page_start'], $chapter['page_end'])
+                                ? $chapter['page_end'] - $chapter['page_start'] + 1
+                                : 0,
+                            'sections' => $chapter['sections'] ?? []
+                        ];
+                    })->toArray();
+
+                    $chapterInfo = collect($formattedContents)->firstWhere('chapter_number', $chapterId);
+
+                    if ($chapterInfo) {
+                        $focusAreas[] = [
+                            'type' => 'chapter',
+                            'id' => $chapterId,
+                            'title' => $chapterInfo['title'],
+                            'average_score' => $avgScore
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $focusAreas;
+    }
+
+    /**
+     * Get user's performance history with a book
+     */
+    protected function getUserPerformanceHistory(User $user, Book $book): array
+    {
+        $quizzes = QuizSession::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->where('status', 'completed')
+            ->orderBy('completed_at')
+            ->get();
+
+        return $quizzes->map(function ($quiz) {
+            return [
+                'date' => $quiz->completed_at->toDateString(),
+                'score' => $quiz->results['percentage'] ?? 0,
+                'question_count' => $quiz->results['total_questions'] ?? 0,
+                'time_taken' => $quiz->time_taken ?? 0,
+                'difficulty' => $quiz->difficulty
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Generate quiz with adaptive context
+     */
+    protected function generateQuizWithContext(Book $book, array $context, User $user): array
+    {
+        $prompt = $this->buildAdaptiveQuizPrompt($book, $context, $user);
+
+        $chatParameters = [
+            'message' => $prompt,
+            'age' => $user->age,
+            'academic_level' => $user->academic_level,
+            'subject' => 'language_arts',
+            'topics' => ['adaptive_learning', 'reading_comprehension'],
+            'learning_style' => $user->learning_style,
+            'response_format' => 'structured',
+            'difficulty' => $context['adaptive_difficulty'],
+            'creativity_level' => 0.6,
+            'response_length' => 2000
+        ];
+
+        $result = $this->chatService->chat($chatParameters);
+
+        if (!$result['success']) {
+            throw new \Exception('Failed to generate adaptive quiz: ' . $result['error']);
+        }
+
+        return $this->parseAdaptiveQuizResponse($result['content'], $context);
+    }
+
+    /**
+     * Build enhanced adaptive quiz prompt with comprehensive context
+     */
+    protected function buildAdaptiveQuizPrompt(Book $book, array $context, User $user): string
+    {
+        $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
+
+        $prompt .= "BOOK DETAILS:\n";
+        $prompt .= "- Title: {$book->title}\n";
+        $prompt .= "- Author: {$book->author}\n";
+        $prompt .= "- Genre: {$book->genre}\n";
+        $prompt .= "- Difficulty Score: {$book->difficulty_score}/10\n";
+        $prompt .= "- Estimated Reading Time: {$book->estimated_reading_time} hours\n";
+
+        if (!empty($book->themes)) {
+            $prompt .= "- Themes: " . implode(', ', $book->themes) . "\n";
+        }
+
+        $prompt .= "\nUSER PROFILE:\n";
+        $prompt .= "- Age: {$user->age}\n";
+        $prompt .= "- Academic Level: {$user->academic_level}\n";
+        $prompt .= "- Learning Style: {$user->learning_style}\n";
+        $prompt .= "- Reading Level: " . $this->determineUserReadingLevel($user) . "/10\n";
+
+        $prompt .= "\nADAPTATION CONTEXT:\n";
+        $prompt .= "- Requested Difficulty: {$context['difficulty']}\n";
+        $prompt .= "- Adaptive Difficulty: {$context['adaptive_difficulty']}\n";
+
+        if (!empty($context['weak_concepts'])) {
+            $prompt .= "- Focus on weak areas: " . implode(', ', $context['weak_concepts']) . "\n";
+        }
+
+        if (!empty($context['focus_areas'])) {
+            $prompt .= "- Problem areas from previous quizzes:\n";
+            foreach ($context['focus_areas'] as $area) {
+                $prompt .= "  * {$area['title']} (avg score: {$area['average_score']}%)\n";
+            }
+        }
+
+        if (!empty($context['focus_topics'])) {
+            $prompt .= "- Focus Topics: " . implode(', ', $context['focus_topics']) . "\n";
+        }
+
+        $prompt .= "\nPERFORMANCE HISTORY:\n";
+        if (!empty($context['user_performance_history'])) {
+            $recentQuizzes = array_slice($context['user_performance_history'], -3);
+            foreach ($recentQuizzes as $quiz) {
+                $prompt .= "- {$quiz['date']}: {$quiz['score']}% ({$quiz['question_count']} questions)\n";
+            }
+        } else {
+            $prompt .= "- No previous performance data available\n";
+        }
+
+        $prompt .= "\nQUIZ REQUIREMENTS:\n";
+        $prompt .= "- Generate {$context['question_count']} questions\n";
+        $prompt .= "- Question type: {$context['question_type']}\n";
+        $prompt .= "- Adapt question complexity based on user's weak areas\n";
+        $prompt .= "- Include scaffolding questions if user is struggling\n";
+        $prompt .= "- Provide detailed explanations for learning\n";
+
+        if ($context['include_quotes'] ?? false) {
+            $prompt .= "- Include relevant book quotes in questions where appropriate\n";
+        }
+
+        $prompt .= "\nOUTPUT FORMAT:\n";
+        $prompt .= "Return a JSON object with the following structure:\n";
+        $prompt .= "{\n";
+        $prompt .= "  \"quiz_session\": {\n";
+        $prompt .= "    \"book_title\": \"string\",\n";
+        $prompt .= "    \"author\": \"string\",\n";
+        $prompt .= "    \"context\": \"string\"\n";
+        $prompt .= "  },\n";
+        $prompt .= "  \"questions\": [\n";
+        $prompt .= "    {\n";
+        $prompt .= "      \"question\": \"string\",\n";
+        $prompt .= "      \"type\": \"multiple_choice|true_false|essay\",\n";
+        $prompt .= "      \"options\": [\"string\"],\n";
+        $prompt .= "      \"correct_answer\": \"string\",\n";
+        $prompt .= "      \"explanation\": \"string\",\n";
+        $prompt .= "      \"difficulty\": \"easy|medium|hard\",\n";
+        $prompt .= "      \"points\": \"integer\",\n";
+        $prompt .= "      \"learning_objective\": \"string\"\n";
+        $prompt .= "    }\n";
+        $prompt .= "  ]\n";
+        $prompt .= "}\n";
+
+        return $prompt;
+    }
+
+    /**
+     * Parse adaptive quiz response with enhanced error handling
+     */
+    protected function parseAdaptiveQuizResponse(string $content, array $context): array
+    {
+        // Try to extract JSON from the response
+        $jsonStart = strpos($content, '{');
+        $jsonEnd = strrpos($content, '}');
+
+        if ($jsonStart !== false && $jsonEnd !== false) {
+            $jsonString = substr($content, $jsonStart, $jsonEnd - $jsonStart + 1);
+
+            try {
+                $parsed = json_decode($jsonString, true);
+
+                if (is_array($parsed) && isset($parsed['questions'])) {
+                    return [
+                        'quiz_session' => $parsed['quiz_session'] ?? [],
+                        'questions' => $parsed['questions'],
+                        'adaptive_features' => [
+                            'difficulty_adjusted' => $context['adaptive_difficulty'],
+                            'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                            'scaffolding_included' => true
+                        ],
+                        'metadata' => [
+                            'generation_type' => 'adaptive',
+                            'user_level' => $context['user_level'] ?? 'intermediate'
+                        ]
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to parse quiz JSON', [
+                    'content' => $content,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Fallback parsing - extract questions manually
+        return $this->parseQuizManually($content, $context);
+    }
+
+    /**
+     * Fallback method to parse quiz manually from unstructured response
+     */
+    protected function parseQuizManually(string $content, array $context): array
+    {
+        // This would implement a more sophisticated parsing algorithm
+        // to extract questions from unstructured text
+
+        return [
+            'quiz_session' => [
+                'book_title' => $context['book_title'] ?? '',
+                'author' => $context['author'] ?? '',
+                'context' => 'Adaptive quiz based on user performance'
+            ],
+            'questions' => [],
+            'adaptive_features' => [
+                'difficulty_adjusted' => $context['adaptive_difficulty'],
+                'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                'scaffolding_included' => true
+            ],
+            'metadata' => [
+                'generation_type' => 'adaptive',
+                'user_level' => $context['user_level'] ?? 'intermediate'
+            ]
+        ];
     }
 
     /**
@@ -181,6 +719,77 @@ class BookBasedLearningService
     }
 
     /**
+     * Check for quiz-related achievements
+     */
+    protected function checkQuizAchievements(User $user, array $quizData): array
+    {
+        $achievements = [];
+        $quizResults = $quizData['results'] ?? [];
+
+        // Get total quizzes completed
+        $totalQuizzes = QuizSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+
+        // Perfect score achievement
+        if (isset($quizResults['percentage']) && $quizResults['percentage'] >= 95) {
+            $achievements[] = [
+                'type' => 'perfect_score',
+                'name' => 'Perfect Score!',
+                'description' => 'Achieved 95% or higher on a quiz',
+                'criteria' => ['score' => $quizResults['percentage']]
+            ];
+        }
+
+        // High score achievement
+        if (isset($quizResults['percentage']) && $quizResults['percentage'] >= 90) {
+            $achievements[] = [
+                'type' => 'high_score',
+                'name' => 'High Achiever',
+                'description' => 'Scored 90% or higher on a quiz',
+                'criteria' => ['score' => $quizResults['percentage']]
+            ];
+        }
+
+        // First quiz achievement
+        if ($totalQuizzes === 1) {
+            $achievements[] = [
+                'type' => 'first_quiz',
+                'name' => 'First Quiz Completed',
+                'description' => 'Completed your first book quiz',
+                'criteria' => ['quiz_count' => 1]
+            ];
+        }
+
+        // Quiz master achievement
+        if ($totalQuizzes >= 10) {
+            $achievements[] = [
+                'type' => 'quiz_master',
+                'name' => 'Quiz Master',
+                'description' => 'Completed 10 or more quizzes',
+                'criteria' => ['quiz_count' => $totalQuizzes]
+            ];
+        }
+
+        // Consistent performer achievement
+        $recentQuizzes = QuizSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', now()->subWeek())
+            ->count();
+
+        if ($recentQuizzes >= 3) {
+            $achievements[] = [
+                'type' => 'consistent_performer',
+                'name' => 'Consistent Performer',
+                'description' => 'Completed 3 or more quizzes in one week',
+                'criteria' => ['recent_quiz_count' => $recentQuizzes]
+            ];
+        }
+
+        return $achievements;
+    }
+
+    /**
      * Generate discussion questions for book clubs or group discussions
      */
     public function generateDiscussionQuestions(Book $book, array $parameters): array
@@ -216,6 +825,49 @@ class BookBasedLearningService
 
         // Fallback questions
         return $this->getFallbackDiscussionQuestions($book, $context);
+    }
+
+    /**
+     * Build discussion questions prompt
+     */
+    protected function buildDiscussionQuestionsPrompt(array $context): string
+    {
+        $prompt = "Generate engaging discussion questions for \"{$context['book_title']}\" by {$context['author']}.\n\n";
+
+        $prompt .= "CONTEXT:\n";
+        $prompt .= "- Genre: {$context['genre']}\n";
+        $prompt .= "- Academic Level: {$context['academic_level']}\n";
+        $prompt .= "- Discussion Focus: {$context['discussion_focus']}\n";
+        $prompt .= "- Group Size: {$context['group_size']} group\n";
+        $prompt .= "- Time Available: {$context['time_available']} minutes\n";
+
+        if (!empty($context['themes'])) {
+            $prompt .= "- Key Themes: " . implode(', ', $context['themes']) . "\n";
+        }
+
+        $prompt .= "\nGENERATE:\n";
+        $prompt .= "1. 5-7 discussion questions of varying complexity\n";
+        $prompt .= "2. Include warm-up questions and deeper analysis questions\n";
+        $prompt .= "3. Provide follow-up prompts for each question\n";
+        $prompt .= "4. Suggest discussion formats (pairs, small groups, whole class)\n";
+        $prompt .= "5. Include questions that connect to students' lives\n";
+
+        return $prompt;
+    }
+
+    /**
+     * Parse discussion questions from AI response
+     */
+    protected function parseDiscussionQuestions(string $content, array $context): array
+    {
+        // Implementation would parse the AI response into structured discussion questions
+        return [
+            'warm_up_questions' => [],
+            'analysis_questions' => [],
+            'personal_connection_questions' => [],
+            'creative_questions' => [],
+            'discussion_formats' => []
+        ];
     }
 
     /**
@@ -270,605 +922,6 @@ class BookBasedLearningService
     }
 
     /**
-     * Provide contextual vocabulary support
-     */
-    public function getVocabularySupport(Book $book, array $parameters): array
-    {
-        $chapterId = $parameters['chapter_id'] ?? null;
-        $pageNumber = $parameters['page_number'] ?? null;
-        $difficulty = $parameters['difficulty'] ?? 'medium';
-        $userLevel = $parameters['user_level'] ?? 'intermediate';
-
-        // Get chapter context if specified
-        $chapter = null;
-        if ($chapterId) {
-            $chapter = BookChapter::find($chapterId);
-        }
-
-        // Build vocabulary request
-        $vocabPrompt = $this->buildVocabularyPrompt($book, $chapter, $parameters);
-
-        $chatParameters = [
-            'message' => $vocabPrompt,
-            'academic_level' => $userLevel,
-            'subject' => 'language_arts',
-            'topics' => ['vocabulary', 'reading_comprehension'],
-            'response_format' => 'structured',
-            'creativity_level' => 0.4,
-            'response_length' => 1000
-        ];
-
-        $result = $this->chatService->chat($chatParameters);
-
-        if ($result['success']) {
-            return $this->parseVocabularySupport($result['content'], $book, $chapter);
-        }
-
-        // Fallback vocabulary support
-        return $this->getFallbackVocabularySupport($book, $chapter, $userLevel);
-    }
-
-    // ==========================================
-    // PROTECTED HELPER METHODS
-    // ==========================================
-
-    /**
-     * Get user's reading history with performance data
-     */
-    protected function getUserReadingHistory(User $user): Collection
-    {
-        return $user->readingProgress()
-            ->with(['book', 'book.reviews' => function($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
-            ->where('status', 'completed')
-            ->orderBy('completed_at', 'desc')
-            ->get();
-    }
-
-    /**
-     * Extract favorite genres from reading history
-     */
-    protected function extractFavoriteGenres(Collection $readingHistory): array
-    {
-        $genreCounts = [];
-
-        foreach ($readingHistory as $progress) {
-            if ($progress->book && $progress->book->genre) {
-                $genre = $progress->book->genre;
-                $genreCounts[$genre] = ($genreCounts[$genre] ?? 0) + 1;
-            }
-        }
-
-        arsort($genreCounts);
-        return array_slice(array_keys($genreCounts), 0, 3);
-    }
-
-    /**
-     * Get average user rating for completed books
-     */
-    protected function getAverageUserRating(User $user): float
-    {
-        return $user->bookReviews()->avg('rating') ?? 3.0;
-    }
-
-    /**
-     * Determine user's current reading level
-     */
-    protected function determineUserReadingLevel(User $user): int
-    {
-        $quizzes = $user->quizSessions()
-            ->where('status', 'completed')
-            ->get();
-
-        if ($quizzes->isEmpty()) {
-            return 5; // Default medium difficulty
-        }
-
-        $averageScore = $quizzes->avg(function($quiz) {
-            return $quiz->results['percentage'] ?? 0;
-        });
-
-        // Convert percentage to difficulty scale (1-10)
-        if ($averageScore >= 90) return 8; // Advanced
-        if ($averageScore >= 80) return 6; // Intermediate-Advanced
-        if ($averageScore >= 70) return 5; // Intermediate
-        if ($averageScore >= 60) return 4; // Beginner-Intermediate
-        return 3; // Beginner
-    }
-
-    /**
-     * Enrich book data with recommendation information
-     */
-    protected function enrichBookWithRecommendationData(Book $book, User $user): array
-    {
-        return [
-            'id' => $book->id,
-            'title' => $book->title,
-            'author' => $book->author,
-            'genre' => $book->genre,
-            'description' => $book->description,
-            'total_pages' => $book->total_pages,
-            'estimated_reading_time' => $book->estimated_reading_time,
-            'difficulty_score' => $book->difficulty_score,
-            'reading_difficulty' => $book->reading_difficulty,
-            'cover_image_url' => $book->cover_image_url,
-            'themes' => $book->themes,
-            'recommendation_reasons' => $this->getRecommendationReasons($book, $user),
-            'match_score' => $this->calculateMatchScore($book, $user)
-        ];
-    }
-
-    /**
-     * Get reasons why book is recommended for user
-     */
-    protected function getRecommendationReasons(Book $book, User $user): array
-    {
-        $reasons = [];
-
-        // Check genre match
-        $favoriteGenres = $this->extractFavoriteGenres($this->getUserReadingHistory($user));
-        if (in_array($book->genre, $favoriteGenres)) {
-            $reasons[] = "Matches your favorite genre: {$book->genre}";
-        }
-
-        // Check difficulty appropriateness
-        $userLevel = $this->determineUserReadingLevel($user);
-        if (abs($book->difficulty_score - $userLevel) <= 1) {
-            $reasons[] = "Perfect difficulty level for your reading skills";
-        }
-
-        // Check themes alignment
-        if (!empty($book->themes)) {
-            $reasons[] = "Explores themes: " . implode(', ', array_slice($book->themes, 0, 3));
-        }
-
-        // Check academic level match
-        if (in_array($user->academic_level, $book->academic_levels ?? [])) {
-            $reasons[] = "Aligned with your academic level";
-        }
-
-        return $reasons;
-    }
-
-    /**
-     * Calculate match score for recommendation
-     */
-    protected function calculateMatchScore(Book $book, User $user): float
-    {
-        $score = 0;
-        $maxScore = 100;
-
-        // Genre matching (30 points)
-        $favoriteGenres = $this->extractFavoriteGenres($this->getUserReadingHistory($user));
-        if (in_array($book->genre, $favoriteGenres)) {
-            $score += 30;
-        }
-
-        // Difficulty matching (25 points)
-        $userLevel = $this->determineUserReadingLevel($user);
-        $difficultyDiff = abs($book->difficulty_score - $userLevel);
-        if ($difficultyDiff <= 1) {
-            $score += 25;
-        } elseif ($difficultyDiff <= 2) {
-            $score += 15;
-        }
-
-        // Academic level matching (20 points)
-        if (in_array($user->academic_level, $book->academic_levels ?? [])) {
-            $score += 20;
-        }
-
-        // Age appropriateness (15 points)
-        if ($user->age && $book->isSuitableForAge($user->age)) {
-            $score += 15;
-        }
-
-        // Reading time appropriateness (10 points)
-        if ($book->estimated_reading_time <= 20) { // Under 20 hours
-            $score += 10;
-        }
-
-        return round(($score / $maxScore) * 100, 1);
-    }
-
-    /**
-     * Calculate adaptive difficulty based on previous performance
-     */
-    protected function calculateAdaptiveDifficulty(Collection $previousQuizzes, string $requestedDifficulty): string
-    {
-        if ($previousQuizzes->isEmpty()) {
-            return $requestedDifficulty;
-        }
-
-        $averageScore = $previousQuizzes->avg(function($quiz) {
-            return $quiz->results['percentage'] ?? 0;
-        });
-
-        $recentTrend = $this->calculatePerformanceTrend($previousQuizzes);
-
-        // Adapt based on performance
-        if ($averageScore >= 85 && $recentTrend >= 0) {
-            // Performing well, can increase difficulty
-            return $this->increaseDifficulty($requestedDifficulty);
-        } elseif ($averageScore <= 65 || $recentTrend < -10) {
-            // Struggling, should decrease difficulty
-            return $this->decreaseDifficulty($requestedDifficulty);
-        }
-
-        return $requestedDifficulty;
-    }
-
-    /**
-     * Calculate performance trend from recent quizzes
-     */
-    protected function calculatePerformanceTrend(Collection $quizzes): float
-    {
-        $recent = $quizzes->sortByDesc('completed_at')->take(3);
-
-        if ($recent->count() < 2) {
-            return 0;
-        }
-
-        $scores = $recent->pluck('results.percentage')->filter()->values();
-
-        if ($scores->count() < 2) {
-            return 0;
-        }
-
-        // Simple linear trend calculation
-        $firstHalf = $scores->take(ceil($scores->count() / 2))->avg();
-        $secondHalf = $scores->skip(ceil($scores->count() / 2))->avg();
-
-        return $secondHalf - $firstHalf;
-    }
-
-    /**
-     * Increase difficulty level
-     */
-    protected function increaseDifficulty(string $current): string
-    {
-        return match($current) {
-            'easy' => 'medium',
-            'medium' => 'hard',
-            'hard' => 'hard', // Cap at hard
-            default => $current
-        };
-    }
-
-    /**
-     * Decrease difficulty level
-     */
-    protected function decreaseDifficulty(string $current): string
-    {
-        return match($current) {
-            'hard' => 'medium',
-            'medium' => 'easy',
-            'easy' => 'easy', // Cap at easy
-            default => $current
-        };
-    }
-
-    /**
-     * Identify weak areas from previous quiz results
-     */
-    protected function identifyWeakAreas(Collection $previousQuizzes): array
-    {
-        $weakAreas = [];
-
-        foreach ($previousQuizzes as $quiz) {
-            $questionDetails = $quiz->results['question_details'] ?? [];
-
-            foreach ($questionDetails as $detail) {
-                if (!($detail['is_correct'] ?? true)) {
-                    $questionType = $detail['question_type'] ?? 'unknown';
-                    $weakAreas[$questionType] = ($weakAreas[$questionType] ?? 0) + 1;
-                }
-            }
-        }
-
-        // Return areas where user got wrong answers most frequently
-        arsort($weakAreas);
-        return array_slice(array_keys($weakAreas), 0, 3);
-    }
-
-    /**
-     * Identify focus areas for adaptive learning
-     */
-    protected function identifyFocusAreas(User $user, Book $book, array $weakAreas): array
-    {
-        $focusAreas = [];
-
-        // Focus on chapters where user had difficulties
-        $chapterPerformance = [];
-        $userQuizzes = QuizSession::where('user_id', $user->id)
-            ->where('book_id', $book->id)
-            ->where('status', 'completed')
-            ->whereNotNull('chapter_id')
-            ->get();
-
-        foreach ($userQuizzes as $quiz) {
-            $chapterId = $quiz->chapter_id;
-            $score = $quiz->results['percentage'] ?? 0;
-
-            if (!isset($chapterPerformance[$chapterId])) {
-                $chapterPerformance[$chapterId] = [];
-            }
-            $chapterPerformance[$chapterId][] = $score;
-        }
-
-        // Find chapters with low average performance
-        foreach ($chapterPerformance as $chapterId => $scores) {
-            $avgScore = array_sum($scores) / count($scores);
-            if ($avgScore < 70) {
-                $chapter = BookChapter::find($chapterId);
-                if ($chapter) {
-                    $focusAreas[] = [
-                        'type' => 'chapter',
-                        'id' => $chapterId,
-                        'title' => $chapter->title,
-                        'average_score' => $avgScore
-                    ];
-                }
-            }
-        }
-
-        return $focusAreas;
-    }
-
-    /**
-     * Get user's performance history with a book
-     */
-    protected function getUserPerformanceHistory(User $user, Book $book): array
-    {
-        $quizzes = QuizSession::where('user_id', $user->id)
-            ->where('book_id', $book->id)
-            ->where('status', 'completed')
-            ->orderBy('completed_at')
-            ->get();
-
-        return $quizzes->map(function($quiz) {
-            return [
-                'date' => $quiz->completed_at->toDateString(),
-                'score' => $quiz->results['percentage'] ?? 0,
-                'question_count' => $quiz->results['total_questions'] ?? 0,
-                'time_taken' => $quiz->time_taken ?? 0,
-                'difficulty' => $quiz->difficulty
-            ];
-        })->toArray();
-    }
-
-    /**
-     * Generate quiz with adaptive context
-     */
-    protected function generateQuizWithContext(Book $book, array $context, User $user): array
-    {
-        $prompt = $this->buildAdaptiveQuizPrompt($book, $context, $user);
-
-        $chatParameters = [
-            'message' => $prompt,
-            'age' => $user->age,
-            'academic_level' => $user->academic_level,
-            'subject' => 'language_arts',
-            'topics' => ['adaptive_learning', 'reading_comprehension'],
-            'learning_style' => $user->learning_style,
-            'response_format' => 'structured',
-            'difficulty' => $context['adaptive_difficulty'],
-            'creativity_level' => 0.6,
-            'response_length' => 2000
-        ];
-
-        $result = $this->chatService->chat($chatParameters);
-
-        if (!$result['success']) {
-            throw new \Exception('Failed to generate adaptive quiz: ' . $result['error']);
-        }
-
-        return $this->parseAdaptiveQuizResponse($result['content'], $context);
-    }
-
-/**
- * Build enhanced adaptive quiz prompt with comprehensive context
- */
-protected function buildAdaptiveQuizPrompt(Book $book, array $context, User $user): string
-{
-    $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
-
-    $prompt .= "BOOK DETAILS:\n";
-    $prompt .= "- Title: {$book->title}\n";
-    $prompt .= "- Author: {$book->author}\n";
-    $prompt .= "- Genre: {$book->genre}\n";
-    $prompt .= "- Difficulty Score: {$book->difficulty_score}/10\n";
-    $prompt .= "- Estimated Reading Time: {$book->estimated_reading_time} hours\n";
-
-    if (!empty($book->themes)) {
-        $prompt .= "- Themes: " . implode(', ', $book->themes) . "\n";
-    }
-
-    $prompt .= "\nUSER PROFILE:\n";
-    $prompt .= "- Age: {$user->age}\n";
-    $prompt .= "- Academic Level: {$user->academic_level}\n";
-    $prompt .= "- Learning Style: {$user->learning_style}\n";
-    $prompt .= "- Reading Level: " . $this->determineUserReadingLevel($user) . "/10\n";
-
-    $prompt .= "\nADAPTATION CONTEXT:\n";
-    $prompt .= "- Requested Difficulty: {$context['difficulty']}\n";
-    $prompt .= "- Adaptive Difficulty: {$context['adaptive_difficulty']}\n";
-
-    if (!empty($context['weak_concepts'])) {
-        $prompt .= "- Focus on weak areas: " . implode(', ', $context['weak_concepts']) . "\n";
-    }
-
-    if (!empty($context['focus_areas'])) {
-        $prompt .= "- Problem areas from previous quizzes:\n";
-        foreach ($context['focus_areas'] as $area) {
-            $prompt .= "  * {$area['title']} (avg score: {$area['average_score']}%)\n";
-        }
-    }
-
-    if (!empty($context['focus_topics'])) {
-        $prompt .= "- Focus Topics: " . implode(', ', $context['focus_topics']) . "\n";
-    }
-
-    $prompt .= "\nPERFORMANCE HISTORY:\n";
-    if (!empty($context['user_performance_history'])) {
-        $recentQuizzes = array_slice($context['user_performance_history'], -3);
-        foreach ($recentQuizzes as $quiz) {
-            $prompt .= "- {$quiz['date']}: {$quiz['score']}% ({$quiz['question_count']} questions)\n";
-        }
-    } else {
-        $prompt .= "- No previous performance data available\n";
-    }
-
-    $prompt .= "\nQUIZ REQUIREMENTS:\n";
-    $prompt .= "- Generate {$context['question_count']} questions\n";
-    $prompt .= "- Question type: {$context['question_type']}\n";
-    $prompt .= "- Adapt question complexity based on user's weak areas\n";
-    $prompt .= "- Include scaffolding questions if user is struggling\n";
-    $prompt .= "- Provide detailed explanations for learning\n";
-
-    if ($context['include_quotes'] ?? false) {
-        $prompt .= "- Include relevant book quotes in questions where appropriate\n";
-    }
-
-    $prompt .= "\nOUTPUT FORMAT:\n";
-    $prompt .= "Return a JSON object with the following structure:\n";
-    $prompt .= "{\n";
-    $prompt .= "  \"quiz_session\": {\n";
-    $prompt .= "    \"book_title\": \"string\",\n";
-    $prompt .= "    \"author\": \"string\",\n";
-    $prompt .= "    \"context\": \"string\"\n";
-    $prompt .= "  },\n";
-    $prompt .= "  \"questions\": [\n";
-    $prompt .= "    {\n";
-    $prompt .= "      \"question\": \"string\",\n";
-    $prompt .= "      \"type\": \"multiple_choice|true_false|essay\",\n";
-    $prompt .= "      \"options\": [\"string\"],\n";
-    $prompt .= "      \"correct_answer\": \"string\",\n";
-    $prompt .= "      \"explanation\": \"string\",\n";
-    $prompt .= "      \"difficulty\": \"easy|medium|hard\",\n";
-    $prompt .= "      \"points\": \"integer\",\n";
-    $prompt .= "      \"learning_objective\": \"string\"\n";
-    $prompt .= "    }\n";
-    $prompt .= "  ]\n";
-    $prompt .= "}\n";
-
-    return $prompt;
-}
-
-/**
- * Parse adaptive quiz response with enhanced error handling
- */
-protected function parseAdaptiveQuizResponse(string $content, array $context): array
-{
-    // Try to extract JSON from the response
-    $jsonStart = strpos($content, '{');
-    $jsonEnd = strrpos($content, '}');
-
-    if ($jsonStart !== false && $jsonEnd !== false) {
-        $jsonString = substr($content, $jsonStart, $jsonEnd - $jsonStart + 1);
-
-        try {
-            $parsed = json_decode($jsonString, true);
-
-            if (is_array($parsed) && isset($parsed['questions'])) {
-                return [
-                    'quiz_session' => $parsed['quiz_session'] ?? [],
-                    'questions' => $parsed['questions'],
-                    'adaptive_features' => [
-                        'difficulty_adjusted' => $context['adaptive_difficulty'],
-                        'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                        'scaffolding_included' => true
-                    ],
-                    'metadata' => [
-                        'generation_type' => 'adaptive',
-                        'user_level' => $context['user_level'] ?? 'intermediate'
-                    ]
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to parse quiz JSON', [
-                'content' => $content,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    // Fallback parsing - extract questions manually
-    return $this->parseQuizManually($content, $context);
-}
-
-/**
- * Fallback method to parse quiz manually from unstructured response
- */
-protected function parseQuizManually(string $content, array $context): array
-{
-    // This would implement a more sophisticated parsing algorithm
-    // to extract questions from unstructured text
-
-    return [
-        'quiz_session' => [
-            'book_title' => $context['book_title'] ?? '',
-            'author' => $context['author'] ?? '',
-            'context' => 'Adaptive quiz based on user performance'
-        ],
-        'questions' => [],
-        'adaptive_features' => [
-            'difficulty_adjusted' => $context['adaptive_difficulty'],
-            'focus_areas_addressed' => $context['focus_areas'] ?? [],
-            'scaffolding_included' => true
-        ],
-        'metadata' => [
-            'generation_type' => 'adaptive',
-            'user_level' => $context['user_level'] ?? 'intermediate'
-        ]
-    ];
-}
-
-    /**
-     * Build discussion questions prompt
-     */
-    protected function buildDiscussionQuestionsPrompt(array $context): string
-    {
-        $prompt = "Generate engaging discussion questions for \"{$context['book_title']}\" by {$context['author']}.\n\n";
-
-        $prompt .= "CONTEXT:\n";
-        $prompt .= "- Genre: {$context['genre']}\n";
-        $prompt .= "- Academic Level: {$context['academic_level']}\n";
-        $prompt .= "- Discussion Focus: {$context['discussion_focus']}\n";
-        $prompt .= "- Group Size: {$context['group_size']} group\n";
-        $prompt .= "- Time Available: {$context['time_available']} minutes\n";
-
-        if (!empty($context['themes'])) {
-            $prompt .= "- Key Themes: " . implode(', ', $context['themes']) . "\n";
-        }
-
-        $prompt .= "\nGENERATE:\n";
-        $prompt .= "1. 5-7 discussion questions of varying complexity\n";
-        $prompt .= "2. Include warm-up questions and deeper analysis questions\n";
-        $prompt .= "3. Provide follow-up prompts for each question\n";
-        $prompt .= "4. Suggest discussion formats (pairs, small groups, whole class)\n";
-        $prompt .= "5. Include questions that connect to students' lives\n";
-
-        return $prompt;
-    }
-
-    /**
-     * Parse discussion questions from AI response
-     */
-    protected function parseDiscussionQuestions(string $content, array $context): array
-    {
-        // Implementation would parse the AI response into structured discussion questions
-        return [
-            'warm_up_questions' => [],
-            'analysis_questions' => [],
-            'personal_connection_questions' => [],
-            'creative_questions' => [],
-            'discussion_formats' => []
-        ];
-    }
-
-    /**
      * Estimate user's reading speed
      */
     protected function estimateUserReadingSpeed(User $user, Book $book): float
@@ -906,7 +959,11 @@ protected function parseQuizManually(string $content, array $context): array
      */
     protected function createReadingMilestones(Book $book, int $targetDays): array
     {
-        $chapters = $book->chapters()->orderBy('chapter_number')->get();
+        // Use table of contents instead of chapters relationship
+        $chapters = collect();
+        if ($book->table_of_contents) {
+            $chapters = collect($book->table_of_contents->getFormattedContents());
+        }
 
         if ($chapters->isEmpty()) {
             // Create page-based milestones
@@ -927,13 +984,13 @@ protected function parseQuizManually(string $content, array $context): array
             $milestones[] = [
                 'milestone_number' => $currentMilestone,
                 'title' => $group->count() === 1
-                    ? "Complete Chapter {$startChapter->chapter_number}: {$startChapter->title}"
-                    : "Complete Chapters {$startChapter->chapter_number}-{$endChapter->chapter_number}",
+                    ? "Complete Chapter {$startChapter['chapter_number']}: {$startChapter['title']}"
+                    : "Complete Chapters {$startChapter['chapter_number']}-{$endChapter['chapter_number']}",
                 'chapters' => $group->pluck('title')->toArray(),
-                'page_start' => $startChapter->page_start,
-                'page_end' => $endChapter->page_end,
+                'page_start' => '', // TOC format doesn't have direct page_start
+                'page_end' => '',   // TOC format doesn't have direct page_end
                 'estimated_days' => ceil($targetDays * ($group->count() / $chapters->count())),
-                'key_concepts' => $group->pluck('key_concepts')->flatten()->unique()->take(5)->toArray()
+                'key_concepts' => [] // TOC format doesn't have key_concepts
             ];
 
             $currentMilestone++;
@@ -970,75 +1027,45 @@ protected function parseQuizManually(string $content, array $context): array
     }
 
     /**
- * Check for quiz-related achievements
- */
-protected function checkQuizAchievements(User $user, array $quizData): array
-{
-    $achievements = [];
-    $quizResults = $quizData['results'] ?? [];
+     * Provide contextual vocabulary support
+     */
+    public function getVocabularySupport(Book $book, array $parameters): array
+    {
+        $chapterId = $parameters['chapter_id'] ?? null;
+        $pageNumber = $parameters['page_number'] ?? null;
+        $difficulty = $parameters['difficulty'] ?? 'medium';
+        $userLevel = $parameters['user_level'] ?? 'intermediate';
 
-    // Get total quizzes completed
-    $totalQuizzes = QuizSession::where('user_id', $user->id)
-        ->where('status', 'completed')
-        ->count();
+        // Get chapter context if specified
+        $chapter = null;
+        if ($chapterId && $book->table_of_contents) {
+            // Use table of contents instead of BookChapter
+            $formattedContents = $book->table_of_contents->getFormattedContents();
+            $chapter = collect($formattedContents)->firstWhere('chapter_number', $chapterId);
+        }
 
-    // Perfect score achievement
-    if (isset($quizResults['percentage']) && $quizResults['percentage'] >= 95) {
-        $achievements[] = [
-            'type' => 'perfect_score',
-            'name' => 'Perfect Score!',
-            'description' => 'Achieved 95% or higher on a quiz',
-            'criteria' => ['score' => $quizResults['percentage']]
+        // Build vocabulary request
+        $vocabPrompt = $this->buildVocabularyPrompt($book, $chapter, $parameters);
+
+        $chatParameters = [
+            'message' => $vocabPrompt,
+            'academic_level' => $userLevel,
+            'subject' => 'language_arts',
+            'topics' => ['vocabulary', 'reading_comprehension'],
+            'response_format' => 'structured',
+            'creativity_level' => 0.4,
+            'response_length' => 1000
         ];
+
+        $result = $this->chatService->chat($chatParameters);
+
+        if ($result['success']) {
+            return $this->parseVocabularySupport($result['content'], $book, $chapter);
+        }
+
+        // Fallback vocabulary support
+        return $this->getFallbackVocabularySupport($book, $chapter, $userLevel);
     }
-
-    // High score achievement
-    if (isset($quizResults['percentage']) && $quizResults['percentage'] >= 90) {
-        $achievements[] = [
-            'type' => 'high_score',
-            'name' => 'High Achiever',
-            'description' => 'Scored 90% or higher on a quiz',
-            'criteria' => ['score' => $quizResults['percentage']]
-        ];
-    }
-
-    // First quiz achievement
-    if ($totalQuizzes === 1) {
-        $achievements[] = [
-            'type' => 'first_quiz',
-            'name' => 'First Quiz Completed',
-            'description' => 'Completed your first book quiz',
-            'criteria' => ['quiz_count' => 1]
-        ];
-    }
-
-    // Quiz master achievement
-    if ($totalQuizzes >= 10) {
-        $achievements[] = [
-            'type' => 'quiz_master',
-            'name' => 'Quiz Master',
-            'description' => 'Completed 10 or more quizzes',
-            'criteria' => ['quiz_count' => $totalQuizzes]
-        ];
-    }
-
-    // Consistent performer achievement
-    $recentQuizzes = QuizSession::where('user_id', $user->id)
-        ->where('status', 'completed')
-        ->where('completed_at', '>=', now()->subWeek())
-        ->count();
-
-    if ($recentQuizzes >= 3) {
-        $achievements[] = [
-            'type' => 'consistent_performer',
-            'name' => 'Consistent Performer',
-            'description' => 'Completed 3 or more quizzes in one week',
-            'criteria' => ['recent_quiz_count' => $recentQuizzes]
-        ];
-    }
-
-    return $achievements;
-}
 
     public function getNextLearningSteps($user, $book, $quizResults)
     {

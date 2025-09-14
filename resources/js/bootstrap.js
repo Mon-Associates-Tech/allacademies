@@ -30,6 +30,9 @@ import 'videojs-contrib-quality-levels';
 import 'videojs-http-source-selector';
 import './modal'
 import './upload_progress'
+import DOMPurify from 'dompurify';
+window.DOMPurify = DOMPurify;
+
 
 // Register Chart.js components (added RadialLinearScale for radar charts)
 Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale);
@@ -84,6 +87,43 @@ marked.setOptions({ renderer });
 window.katex = katex;
 window.renderMathInElement = renderMathInElement;
 
+// Safe markdown and math rendering function
+window.renderMarkdownWithMath = function(content) {
+    if (!content) return '';
+
+    try {
+        // Sanitize input to prevent XSS
+        const sanitizedContent = DOMPurify ? DOMPurify.sanitize(content) : content;
+
+        // Parse markdown with marked
+        let htmlContent = marked.parse(sanitizedContent);
+
+        // Create temporary element for math rendering
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+
+        // Apply math rendering if available
+        if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(tempDiv, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false,
+                errorColor: '#cc0000',
+                strict: false,
+                trust: false
+            });
+        }
+
+        return tempDiv.innerHTML;
+    } catch (e) {
+        console.warn('Markdown/Math rendering error:', e);
+        return content; // Fallback to plain text
+    }
+};
 
 
 

@@ -286,69 +286,74 @@ id="quiz-section">
                 Question <span x-text="currentQuestion + 1"></span>
             </span>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white"
-                x-text="$wire.quizData.questions[currentQuestion].question">
-
+                x-html="window.renderMarkdownWithMath($wire.quizData.questions[currentQuestion].question || '')">
             </h3>
         </div>
 
-        {{-- Question Options --}}
+{{-- Question Options --}}
+<div class="space-y-3">
+    <template x-if="$wire.quizData.questions[currentQuestion].type === 'multiple_choice'">
         <div class="space-y-3">
-            <template x-if="$wire.quizData.questions[currentQuestion].type === 'multiple_choice'">
-                <div class="space-y-3">
-                    <template x-for="(option, index) in $wire.quizData.questions[currentQuestion].options" :key="index">
-                        <label @click="selectAnswer(currentQuestion, option)"
-                               class="flex items-center p-4 border rounded-lg cursor-pointer transition-all"
-                               :class="isAnswerSelected(currentQuestion, option) ?
-                                       'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/30' :
-                                       'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
-                            <input type="radio"
-                                   :checked="isAnswerSelected(currentQuestion, option)"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-3 text-gray-900 dark:text-white" x-text="option"></span>
-                        </label>
-                    </template>
-                </div>
-            </template>
-
-            <template x-if="$wire.quizData.questions[currentQuestion].type === 'true_false'">
-                <div class="grid grid-cols-2 gap-4">
-                    <label @click="selectAnswer(currentQuestion, 'True')"
-                           class="flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all"
-                           :class="isAnswerSelected(currentQuestion, 'True') ?
-                                   'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/30' :
-                                   'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
-                        <input type="radio"
-                               :checked="isAnswerSelected(currentQuestion, 'True')"
-                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 mr-2">
-                        <span class="text-gray-900 dark:text-white font-medium">True</span>
-                    </label>
-                    <label @click="selectAnswer(currentQuestion, 'False')"
-                           class="flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all"
-                           :class="isAnswerSelected(currentQuestion, 'False') ?
-                                   'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/30' :
-                                   'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
-                        <input type="radio"
-                               :checked="isAnswerSelected(currentQuestion, 'False')"
-                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 mr-2">
-                        <span class="text-gray-900 dark:text-white font-medium">False</span>
-                    </label>
-                </div>
-            </template>
-
-            <template x-if="$wire.quizData.questions[currentQuestion].type === 'essay'">
-                <div>
-                    <textarea
-                        x-model="answers[currentQuestion]"
-                        placeholder="Type your detailed answer here..."
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        rows="6"></textarea>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                        Please provide a detailed response. Word count:
-                        <span x-text="(answers[currentQuestion] || '').split(/\s+/).filter(word => word.length > 0).length">0</span> words
-                    </p>
-                </div>
+            <template x-for="(option, index) in $wire.quizData.questions[currentQuestion].options" :key="index">
+                <label @click="selectAnswer(currentQuestion, option)"
+                       class="flex items-center p-4 border rounded-lg cursor-pointer transition-all"
+                       :class="isAnswerSelected(currentQuestion, option) ?
+                               'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/30' :
+                               'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                    <input type="radio"
+                           :checked="isAnswerSelected(currentQuestion, option)"
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                    <span class="font-medium mr-2 ml-2 text-gray-900 dark:text-white"
+                          x-text="String.fromCharCode(65 + index) + '.'"></span>
+                    <span class="text-gray-900 dark:text-white"
+                          x-html="window.renderMarkdownWithMath(option || '')"></span>
+                </label>
             </template>
         </div>
+    </template>
+
+    <template x-if="$wire.quizData.questions[currentQuestion].type === 'true_false'">
+        <div class="space-y-3">
+            <label @click="selectAnswer(currentQuestion, 'True')"
+                   class="flex items-center justify-start p-4 border rounded-lg cursor-pointer transition-all"
+                   :class="isAnswerSelected(currentQuestion, 'True') ?
+                           'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/30' :
+                           'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                <input type="radio"
+                       :checked="isAnswerSelected(currentQuestion, 'True')"
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 mr-2">
+                <span class="font-medium mx-2 text-gray-900 dark:text-white">A.</span>
+                <span class="text-gray-900 dark:text-white font-medium">True</span>
+            </label>
+            <label @click="selectAnswer(currentQuestion, 'False')"
+                   class="flex items-center justify-start p-4 border rounded-lg cursor-pointer transition-all"
+                   :class="isAnswerSelected(currentQuestion, 'False') ?
+                           'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/30' :
+                           'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                <input type="radio"
+                       :checked="isAnswerSelected(currentQuestion, 'False')"
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 mr-2">
+                <span class="font-medium mx-2 text-gray-900 dark:text-white">B.</span>
+                <span class="text-gray-900 dark:text-white font-medium">False</span>
+            </label>
+        </div>
+    </template>
+
+    <template x-if="$wire.quizData.questions[currentQuestion].type === 'essay'">
+        <div>
+            <textarea
+                x-model="answers[currentQuestion]"
+                placeholder="Type your detailed answer here..."
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                rows="6"></textarea>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                Please provide a detailed response. Word count:
+                <span x-text="(answers[currentQuestion] || '').split(/\s+/).filter(word => word.length > 0).length">0</span> words
+            </p>
+        </div>
+    </template>
+</div>
+
 
         {{-- Navigation Buttons --}}
         <div class="flex justify-between mt-8">

@@ -129,7 +129,7 @@ public function generateQuiz()
             'focus_topics' => $this->parseFocusTopics(),
             'include_quotes' => $this->includeQuotes,
             'book_title' => $this->selectedBook->title,
-            'author' => $this->selectedBook->author->name ?? $this->selectedBook->author?->user?->name,
+            'author' => $this->selectedBook->author_name,
             'genre' => $this->selectedBook->genre,
             'themes' => $this->selectedBook->themes ?? [],
             'difficulty_score' => $this->selectedBook->difficulty_score
@@ -210,7 +210,7 @@ protected function buildQuizContext(array $parameters): array
 {
     $context = [
         'book_title' => $this->selectedBook->title,
-        'author' => $this->selectedBook->author->name ?? $this->selectedBook->author?->user?->name,
+        'author' => $this->selectedBook->author_name,
         'book_category' => $this->selectedBook->bookCategory->name ?? 'General',
         'genre' => $this->selectedBook->genre,
         'difficulty_score' => $this->selectedBook->difficulty_score,
@@ -633,7 +633,7 @@ protected function parseEssayGradingResult(string $content): array
     {
         $suggestions = [];
         $percentage = $results['percentage'];
-        $author = $book->author->name ?? $book->author->user->name;
+        $author = $book->author_name;
 
         if ($percentage < 70) {
             $suggestions[] = "Re-read key chapters focusing on main themes and character development";
@@ -717,7 +717,7 @@ protected function parseEssayGradingResult(string $content): array
 // Implement export functionality
         $exportData = [
             'book' => $this->selectedBook->title,
-            'author' => $this->selectedBook->author->name ?? $this->selectedBook->author?->user?->name,
+            'author' => $this->selectedBook->author_name,
             'quiz_date' => now()->format('Y-m-d'),
             'results' => $this->quizResults['results'],
             'performance' => $this->quizResults['detailed_feedback']

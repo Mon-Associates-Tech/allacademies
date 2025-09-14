@@ -83,6 +83,13 @@ class Book extends Model
         return $this->hasMany(BookReview::class)->approved();
     }
 
+    public function getAuthorNameAttribute()
+    {
+        return $this->author->name
+            ?? $this->author?->user?->name
+            ?? 'Unknown';
+    }
+
     /**
      * Scope a query to only include published books.
      */
