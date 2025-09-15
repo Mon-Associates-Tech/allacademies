@@ -238,17 +238,16 @@ public function index()
 
 public function store(SubscriptionRequest $request): RedirectResponse
 {
-    //dd($request->all());
+//    dd($request->all());
 
     $money = Pricer::calculate(
         $package = SubscriptionPackage::from($request->input('package')),
         $durationInMonths = $request->integer('duration_in_months'),
         count($subjects = $request->validated('academic_subject_ids')),
         $beneficiaries = max($request->integer('beneficiaries') ? : 1, 1),
-        AcademicGroupTag::BASIC
+        $request->academic_group_tag
     );
 
-   // dd($money);
 
     /** @var User $user */
     $user = auth()->user();
@@ -257,7 +256,7 @@ public function store(SubscriptionRequest $request): RedirectResponse
     $subscription = new Subscription([
         'package' => $package,
         'reference' => uniqid(),
-        'amount' => $request->amount,  //(string) $money->getAmount(),
+        'amount' => $money->getAmount()->toFloat(),  //(string) $money->getAmount(),
         'beneficiaries' => $beneficiaries,
         'duration_in_months' => $durationInMonths,
         'status' => 'unpaid',

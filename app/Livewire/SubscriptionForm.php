@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\SubscriptionPackage;
 use App\Models\AcademicGroup;
+use App\Support\AcademicGroupTag;
 use App\Support\Pricer;
 use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\NumberFormatException;
@@ -34,6 +35,11 @@ class SubscriptionForm extends Component
         $this->academicGroupId = $academicGroups[0]['id'];
         $this->academicLevels = $academicGroups[0]['academic_levels'];
         $this->academicSubjects = [];
+
+        // Initialize the academicGroupTag
+        $academicGroup = AcademicGroup::find($this->academicGroupId);
+        $this->academicGroupTag = $academicGroup?->tag ?? AcademicGroupTag::BASIC;
+
     }
 
     public function updatedAcademicGroupId($value): void
@@ -62,7 +68,7 @@ class SubscriptionForm extends Component
         } else {
             $this->academicLevels = [];
         }
-
+        $this->academicGroupTag = $academicGroup->tag ?? AcademicGroupTag::BASIC;
         // Emit event to update button state
         $this->dispatch('subjectsUpdated', count($this->academicSubjects));
     }
@@ -104,8 +110,15 @@ class SubscriptionForm extends Component
 
     public function getAcademicGroupTagProperty()
     {
-        $academicGroup = AcademicGroup::find($this->academicGroupId);
-        return $academicGroup->tag ?? null;
+        if ($this->academicGroupId) {
+            $academicGroup = AcademicGroup::find($this->academicGroupId);
+            return $academicGroup?->tag ?? AcademicGroupTag::BASIC;
+        }
+        return AcademicGroupTag::BASIC;
+    }
+
+    public function updatedAcademicGroup(){
+
     }
 
     /**
