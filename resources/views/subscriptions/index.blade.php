@@ -1,6 +1,23 @@
 <x-layouts.app title="My Subscriptions" page-name="Subscriptions">
     <!-- Payment Information Banner -->
-  
+    {{-- <div class="rounded-lg bg-blue-50 p-6 mb-6 border border-blue-200">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-3 flex-1">
+                <h3 class="text-lg font-medium text-blue-900 mb-2">Payment Information</h3>
+                <div class="text-sm text-blue-800 space-y-1">
+                    <p>📱 Dial <strong class="font-semibold">*772*30#</strong> to pay for any subscription</p>
+                    <p>🏪 Merchant Code: <strong class="font-semibold bg-blue-100 px-2 py-1 rounded">1326001</strong></p>
+                    <p>📋 Please use the subscription reference as payment reference</p>
+                </div>
+            </div>
+        </div>
+    </div> --}}
+
     @if ($subscriptions->count())
         <!-- Summary Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -9,82 +26,178 @@
                 $activeBookSubscriptions = $bookSubscriptions->where('status', 'active')->where('end_date', '>', now())->count();
                 $totalActiveSubscriptions = $activeRegularSubscriptions + $activeBookSubscriptions;
 
-                $pendingRegularPayments = $regularSubscriptions->where('status', \App\Enums\SubscriptionStatus::UNPAID->value)->count();
-                $pendingBookPayments = $bookSubscriptions->where('status', 'pending_payment')->count();
-                $totalPendingPayments = $pendingRegularPayments + $pendingBookPayments;
+            $pendingRegularPayments = $regularSubscriptions->where('status', \App\Enums\SubscriptionStatus::UNPAID->value)->count();
+            $pendingBookPayments = $bookSubscriptions->where('status', 'pending_payment')->count();
+            $totalPendingPayments = $pendingRegularPayments + $pendingBookPayments;
 
-                $totalRegularAmount = $regularSubscriptions->where('status', \App\Enums\SubscriptionStatus::PAID->value)->sum('amount');
-                $totalBookAmount = $bookSubscriptions->where('status', 'active')->sum('annual_fee');
-                $totalAmount = $totalRegularAmount + $totalBookAmount;
-            @endphp
+            // Financial stats
+            $totalRegularAmount = $regularSubscriptions->sum('amount');
+            $totalBookAmount = $bookSubscriptions->sum('annual_fee');
+            $totalAmount = $totalRegularAmount + $totalBookAmount;
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Subscriptions</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $totalSubscriptions }}</p>
-                        <p class="text-xs text-gray-500">{{ $regularSubscriptions->count() }} courses, {{ $bookSubscriptions->count() }} books</p>
+            $paidRegularAmount = $regularSubscriptions->where('status', \App\Enums\SubscriptionStatus::PAID->value)->sum('amount');
+            $paidBookAmount = $bookSubscriptions->where('status', 'active')->sum('annual_fee');
+            $totalPaidAmount = $paidRegularAmount + $paidBookAmount;
+
+            $unpaidRegularAmount = $regularSubscriptions->where('status', \App\Enums\SubscriptionStatus::UNPAID->value)->sum('amount');
+            $unpaidBookAmount = $bookSubscriptions->where('status', 'pending_payment')->sum('annual_fee');
+            $totalUnpaidAmount = $unpaidRegularAmount + $unpaidBookAmount;
+
+            // Count stats
+            $totalRegularSubscriptions = $regularSubscriptions->count();
+            $totalBookSubscriptions = $bookSubscriptions->count();
+        @endphp
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
                     </div>
                 </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Active Subscriptions</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $totalActiveSubscriptions }}</p>
-                        <p class="text-xs text-gray-500">{{ $activeRegularSubscriptions }} courses, {{ $activeBookSubscriptions }} books</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Pending Payments</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $totalPendingPayments }}</p>
-                        <p class="text-xs text-gray-500">{{ $pendingRegularPayments }} courses, {{ $pendingBookPayments }} books</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Paid</p>
-                        <p class="text-2xl font-bold text-gray-900">GHS {{ number_format($totalAmount, 2) }}</p>
-                    </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Subscriptions</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalSubscriptions }}</p>
+                    <p class="text-xs text-gray-500">{{ $totalRegularSubscriptions }} courses, {{ $totalBookSubscriptions }} books</p>
                 </div>
             </div>
         </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Active Subscriptions</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalActiveSubscriptions }}</p>
+                    <p class="text-xs text-gray-500">{{ $activeRegularSubscriptions }} courses, {{ $activeBookSubscriptions }} books</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Pending Payments</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalPendingPayments }}</p>
+                    <p class="text-xs text-gray-500">{{ $pendingRegularPayments }} courses, {{ $pendingBookPayments }} books</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Value</p>
+                    <p class="text-2xl font-bold text-gray-900">GHS {{ number_format($totalAmount, 2) }}</p>
+                    <p class="text-xs text-gray-500">GHS {{ number_format($totalPaidAmount, 2) }} paid</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Value</p>
+                    <p class="text-2xl font-bold text-gray-900">GHS {{ number_format($totalAmount, 2) }}</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Course Subscriptions:</span>
+                    <span class="font-medium">GHS {{ number_format($totalRegularAmount, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Book Subscriptions:</span>
+                    <span class="font-medium">GHS {{ number_format($totalBookAmount, 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Paid Amount</p>
+                    <p class="text-2xl font-bold text-green-600">GHS {{ number_format($totalPaidAmount, 2) }}</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Paid Courses:</span>
+                    <span class="font-medium">GHS {{ number_format($paidRegularAmount, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Paid Books:</span>
+                    <span class="font-medium">GHS {{ number_format($paidBookAmount, 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Unpaid Amount</p>
+                    <p class="text-2xl font-bold text-yellow-600">GHS {{ number_format($totalUnpaidAmount, 2) }}</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Unpaid Courses:</span>
+                    <span class="font-medium">GHS {{ number_format($unpaidRegularAmount, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Unpaid Books:</span>
+                    <span class="font-medium">GHS {{ number_format($unpaidBookAmount, 2) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
         <!-- Subscriptions Table -->
         <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">

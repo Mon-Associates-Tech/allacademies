@@ -27,5 +27,8 @@ enum SubscriptionAmount
     public const  BASIC_SCHOOL_ONE_OFF = 10;
     public const  SENIOR_SCHOOL_ONE_OFF = 15;
     public const  UNIVERSITY_ONE_OFF = 20;
+    public const UNIVERSITY_SCHOOL_PER_STUDENT_PER_YEAR = 35;
+    public const UNIVERSITY_SCHOOL_PER_STUDENT_PER_HALF = 35;
+    public const UNIVERSITY_SCHOOL_PER_STUDENT_PER_QUARTER = 35;
 
 }
