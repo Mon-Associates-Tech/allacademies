@@ -35,7 +35,7 @@
                 <input name="metadata" value="{{base64_encode(json_encode($metadata, JSON_THROW_ON_ERROR))}}"
                        type="hidden" hidden/>
                 <div class="sm:col-span-5 text-start ms-auto">
-                    <x-button.primary class="text-right">Preview Examination</x-button.primary>
+                    <x-button.primary type="submit" class="text-right">Preview Examination</x-button.primary>
                 </div>
             </div>
         </form>
