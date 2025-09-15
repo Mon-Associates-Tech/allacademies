@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 
 class EssayQuestionController extends Controller
 {
+    use HasSubtopic;
     /**
      * Display a listing of the resource.
      *
@@ -60,6 +61,8 @@ class EssayQuestionController extends Controller
         }
 
         $essayQuestion = $academicTopic->essayQuestions()->create($data);
+        $data['academic_subtopic_id'] = $this->getSubtopicId($essayQuestion, $request);
+        $essayQuestion->update($data);
 
         return to_route('essay-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.created', ['name' => $essayQuestion->question->summary]));
@@ -142,13 +145,8 @@ class EssayQuestionController extends Controller
         $this->authorize('moderate');
 
         $data = $request->validated();
-        if (isset($request->subtopic, $essayQuestion->subtopic->name)) {
-            $subTopic = AcademicSubtopic::updateOrCreate(
-                ['name' => $essayQuestion->subtopic->name],
-                ['name' => $request->subtopic, 'academic_topic_id' => $essayQuestion->academic_topic_id]
-            );
-            $data['academic_subtopic_id'] = $subTopic->id;
-        }
+
+        $data['academic_subtopic_id'] = $this->getSubtopicId($essayQuestion, $request);
 
         $essayQuestion->update($data);
 
