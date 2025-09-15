@@ -1,23 +1,6 @@
 <x-layouts.app title="My Subscriptions" page-name="Subscriptions">
     <!-- Payment Information Banner -->
-    {{-- <div class="rounded-lg bg-blue-50 p-6 mb-6 border border-blue-200">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div class="ml-3 flex-1">
-                <h3 class="text-lg font-medium text-blue-900 mb-2">Payment Information</h3>
-                <div class="text-sm text-blue-800 space-y-1">
-                    <p>📱 Dial <strong class="font-semibold">*772*30#</strong> to pay for any subscription</p>
-                    <p>🏪 Merchant Code: <strong class="font-semibold bg-blue-100 px-2 py-1 rounded">1326001</strong></p>
-                    <p>📋 Please use the subscription reference as payment reference</p>
-                </div>
-            </div>
-        </div>
-    </div> --}}
-
+  
     @if ($subscriptions->count())
         <!-- Summary Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

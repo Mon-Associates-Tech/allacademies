@@ -47,11 +47,3 @@ class PaystackService
         return json_decode($response->getBody(), true);
     }
 }
-
-
-
-/*
-PAYSTACK_LIVE_SECRET_KEY=sk_live_bde288cc508dcacf10710769312117b97b89df08
-PAYSTACK_LIVE_PUBLIC_KEY=pk_live_cda325d588f6a2965283bc6c76aad1325af017f1
-
-*/
