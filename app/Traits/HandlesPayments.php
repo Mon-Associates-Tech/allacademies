@@ -183,7 +183,7 @@ trait HandlesPayments
     {
         return [
             'reference' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', 'min:0.00'],
             'currency' => ['sometimes', 'string', 'in:GHS,USD,EUR'],
             'status' => ['sometimes', 'string', 'in:pending,succeeded,failed'],
             'gateway_reference' => ['nullable', 'string', 'max:255'],
@@ -203,7 +203,7 @@ trait HandlesPayments
             'reference.max' => 'Payment reference cannot exceed 255 characters.',
             'amount.required' => 'Payment amount is required.',
             'amount.numeric' => 'Payment amount must be a valid number.',
-            'amount.min' => 'Payment amount must be at least 0.01.',
+            'amount.min' => 'Payment amount must be at least 0.00.',
             'currency.in' => 'Currency must be one of: GHS, USD, EUR.',
             'status.in' => 'Status must be one of: pending, succeeded, failed.',
             'gateway_reference.max' => 'Gateway reference cannot exceed 255 characters.',

@@ -3,7 +3,7 @@
     @if($similarBooks->count() > 0)
         <div class="flex justify-between">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{{$heading ?? 'Similar Books'}}</h2>
-            <a href="{{ route('books.index', ['search' =>$book->author->name ?? $book->author->user->name]) }}"
+            <a href="{{ route('books.index', ['search' =>$book->author_name]) }}"
                class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white md:ml-2">
                 See All
             </a>
