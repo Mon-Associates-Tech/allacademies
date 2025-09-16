@@ -18,7 +18,9 @@ class ContactController extends Controller
     public function submit(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
+
+
+       $validated =  $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -26,22 +28,6 @@ class ContactController extends Controller
             'message' => 'required|string|max:2000',
             'newsletter' => ['in:true,false,1,0']
         ]);
-
-
-        if ($validator->fails()) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $validated = $validator->validated();
 
         try {
             // Send email to admin

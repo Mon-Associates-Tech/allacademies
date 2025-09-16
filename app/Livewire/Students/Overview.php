@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\AcademicSubject as Subject;
 use App\Models\Activity;
 use App\Models\Assessment;
 use App\Models\Book;
 use App\Models\BookSubscription;
 use App\Models\Student;
-use App\Models\AcademicSubject as Subject;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Overview extends Component
@@ -439,17 +439,17 @@ class Overview extends Component
 
     public function render()
     {
-        $student = auth()->user()->student;
+        $user = auth()->user();
+        if (!$user){
+            return;
+        }
+        $student = $user->student;
         if(!$student) return view('livewire.students.overview-no-student');
 
         // Existing data
         $bookSubscriptions = BookSubscription::whereHas('user', function($query) use ($student) {
             $query->where('user_id', auth()->user()->id);
         })->latest()->take(5)->get();
-
-        $bookCount = Book::whereHas('students', function($query) use ($student) {
-            $query->where('student_id', $student->id);
-        })->count();
 
         $recentAssessments = Assessment::where('student_id', $student->id)
             ->with(['subject', 'topic'])
@@ -495,7 +495,7 @@ class Overview extends Component
 
         return view('livewire.students.overview', [
             'bookSubscriptions' => $bookSubscriptions,
-            'bookCount' => $bookCount,
+            'bookCount' => 0,
             'recentAssessments' => $recentAssessments,
             'upcomingActivities' => $upcomingActivities,
             'upcomingActivitiesCount' => $upcomingActivitiesCount,

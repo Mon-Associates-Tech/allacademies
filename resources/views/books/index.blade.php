@@ -1,4 +1,4 @@
-<x-layouts.app page-name="Books Library" :show-title-area="false">
+<x-layouts.app page-name="Library and Bookshop" :show-title-area="false">
 
     <div
         class="min-h-screen bg-gradient-to-br  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -38,7 +38,7 @@
                     <span class="hidden md:block">All Academies</span>
                     <span
                         class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 animate-pulse">
-                Books Library
+                Library and Bookshop
             </span>
                 </h1>
 
@@ -76,7 +76,6 @@
                         <span>Show Filters</span>
                     </button>
                 </section>
-
 
                 <div id="filters"
                      class="hidden mb-4 mt-6 w-full max-w-7xl mx-auto px-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-8">
@@ -120,7 +119,7 @@
                                             📚 Physical Only
                                         </option>
                                         <option value="both" {{ request('format') == 'both' ? 'selected' : '' }}>
-                                            🔄 Both Available
+                                            📄 Both Available
                                         </option>
                                     </select>
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -178,9 +177,7 @@
                                     <span>Reset All</span>
                                 </a>
                             </div>
-
                         </div>
-
                     </form>
                 </div>
             </div>
@@ -206,7 +203,61 @@
                 }
             });
         </script>
-        <div class="max-w-7xl mx-auto py-12">
+
+        <div class="max-w-7xl hidden mx-auto py-12">
+            @if(!request()->hasAny(['search', 'category', 'format', 'price']))
+                {{-- Category Sections - Only show when no filters are applied --}}
+                @foreach($topCategories as $category)
+                    <div class="mb-16">
+                        {{-- Category Header --}}
+                        <div class="flex items-center justify-between mb-6 px-4">
+                            <div>
+                                <h2 class="text-lg font-medium text-gray-900 dark:text-white">
+                                    {{ $category->name }}
+                                </h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    {{ $category->books_count }} books
+                                </p>
+                            </div>
+                            <a href="{{ route('books.index', ['category' => $category->id]) }}"
+                               class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
+                                View all
+                            </a>
+                        </div>
+
+                        {{-- Category Books Grid --}}
+                        @if($category->books->count() > 0)
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
+                                @foreach($category->books->take(4) as $book)
+                                    <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transform hover:-translate-y-2">
+                                        @include('livewire.books.partials.book-card', ['book' => $book])
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-12 px-4">
+                                <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full mx-auto flex items-center justify-center mb-4">
+                                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-500 dark:text-gray-400">No books available in this category yet.</p>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+
+                {{-- All Books Section Header --}}
+                <div class="mb-6 px-4 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white">
+                        All Books
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Complete library collection
+                    </p>
+                </div>
+            @endif
+
             @if($books->count() > 0)
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     @foreach($books as $book)

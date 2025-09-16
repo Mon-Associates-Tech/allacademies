@@ -4,9 +4,9 @@ namespace App\Livewire\Librarians;
 
 use App\Models\Book;
 use App\Models\BookCategory;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
 
 class LibraryBooks extends Component
 {

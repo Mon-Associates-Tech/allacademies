@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Teacher;
-use App\Models\StudentGroup;
-use App\Models\Lesson;
-use App\Models\LessonNote;
+use App\Http\Resources\GroupBookSubscriptionResource;
+use App\Http\Resources\LessonNoteResource;
+use App\Http\Resources\LessonResource;
+use App\Http\Resources\StudentGroupResource;
+use App\Http\Resources\TeacherCollection;
+use App\Http\Resources\TeacherResource;
 use App\Models\Book;
 use App\Models\GroupBookSubscription;
+use App\Models\Lesson;
+use App\Models\LessonNote;
+use App\Models\StudentGroup;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
-use App\Http\Resources\TeacherResource;
-use App\Http\Resources\TeacherCollection;
-use App\Http\Resources\StudentGroupResource;
-use App\Http\Resources\LessonResource;
-use App\Http\Resources\LessonNoteResource;
-use App\Http\Resources\GroupBookSubscriptionResource;
 
 class TeacherController extends Controller
 {

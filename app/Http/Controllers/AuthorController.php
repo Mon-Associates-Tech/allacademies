@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AuthorCollection;
+use App\Http\Resources\AuthorResource;
+use App\Http\Resources\BookResource;
 use App\Models\Author;
 use App\Models\Book;
-use App\Models\BookCategory;
 use Illuminate\Http\Request;
-use App\Http\Resources\AuthorResource;
-use App\Http\Resources\AuthorCollection;
-use App\Http\Resources\BookResource;
 
 class AuthorController extends Controller
 {

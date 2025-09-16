@@ -20,7 +20,7 @@ class BookTableOfContents extends Component
     {
         $this->book = $book;
         $this->filteredChapters = $this->book->formatted_table_of_contents;
-        
+
         // Auto-expand first chapter if it has sections
         if (!empty($this->filteredChapters) && !empty($this->filteredChapters[0]['sections'])) {
             $this->expandedChapters[] = 1;
@@ -30,7 +30,7 @@ class BookTableOfContents extends Component
     public function render(): View
     {
         $this->filterChapters();
-        
+
         return view('livewire.books.book-table-of-contents', [
             'chapters' => $this->filteredChapters,
             'totalChapters' => count($this->book->formatted_table_of_contents),
@@ -42,7 +42,7 @@ class BookTableOfContents extends Component
     public function updatedSearchTerm()
     {
         $this->filterChapters();
-        
+
         // Auto-expand chapters that match search
         if ($this->searchTerm) {
             $this->expandedChapters = collect($this->filteredChapters)
@@ -87,15 +87,15 @@ class BookTableOfContents extends Component
     public function jumpToChapter($chapterNumber)
     {
         $this->highlightedChapter = $chapterNumber;
-        
+
         // Auto-expand if not already expanded
         if (!in_array($chapterNumber, $this->expandedChapters)) {
             $this->expandedChapters[] = $chapterNumber;
         }
-        
+
         // Dispatch event to scroll to chapter
         $this->dispatch('scroll-to-chapter', chapterNumber: $chapterNumber);
-        
+
         // Remove highlight after 3 seconds
         $this->dispatch('remove-highlight-after-delay');
     }
@@ -111,14 +111,14 @@ class BookTableOfContents extends Component
         $pageCount = $chapter['page_count'] ?? 0;
         $wordsPerPage = 250;
         $wordsPerMinute = 250;
-        
+
         if ($pageCount === 0) {
             return 'N/A';
         }
-        
+
         $totalWords = $pageCount * $wordsPerPage;
         $readingTimeMinutes = $totalWords / $wordsPerMinute;
-        
+
         if ($readingTimeMinutes < 1) {
             return '< 1 min';
         } elseif ($readingTimeMinutes < 60) {
@@ -126,7 +126,7 @@ class BookTableOfContents extends Component
         } else {
             $hours = floor($readingTimeMinutes / 60);
             $minutes = round($readingTimeMinutes % 60);
-            
+
             if ($minutes === 0) {
                 return $hours . 'h';
             } else {
@@ -143,19 +143,19 @@ class BookTableOfContents extends Component
         }
 
         $searchTerm = strtolower($this->searchTerm);
-        
+
         $this->filteredChapters = collect($this->book->formatted_table_of_contents)
             ->filter(function ($chapter) use ($searchTerm) {
                 // Search in chapter title
                 if (str_contains(strtolower($chapter['title']), $searchTerm)) {
                     return true;
                 }
-                
+
                 // Search in chapter description
                 if (str_contains(strtolower($chapter['description'] ?? ''), $searchTerm)) {
                     return true;
                 }
-                
+
                 // Search in sections
                 if (!empty($chapter['sections'])) {
                     foreach ($chapter['sections'] as $section) {
@@ -164,7 +164,7 @@ class BookTableOfContents extends Component
                         }
                     }
                 }
-                
+
                 return false;
             })
             ->values()
@@ -183,27 +183,27 @@ class BookTableOfContents extends Component
         // Generate a text version of the table of contents
         $tocText = "Table of Contents - {$this->book->title}\n";
         $tocText .= str_repeat("=", 50) . "\n\n";
-        
+
         foreach ($this->book->formatted_table_of_contents as $chapter) {
             $tocText .= "Chapter {$chapter['chapter_number']}: {$chapter['title']}\n";
-            
+
             if ($this->showPageNumbers && $chapter['page_range']) {
                 $tocText .= "  {$chapter['page_range']}\n";
             }
-            
+
             if (!empty($chapter['description'])) {
                 $tocText .= "  {$chapter['description']}\n";
             }
-            
+
             if (!empty($chapter['sections'])) {
                 foreach ($chapter['sections'] as $section) {
                     $tocText .= "    • {$section}\n";
                 }
             }
-            
+
             $tocText .= "\n";
         }
-        
+
         // Dispatch event to download the file
         $this->dispatch('download-toc', content: $tocText, filename: "toc-{$this->book->slug}.txt");
     }

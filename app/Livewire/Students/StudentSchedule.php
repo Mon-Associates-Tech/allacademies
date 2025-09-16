@@ -27,11 +27,18 @@ class StudentSchedule extends Component
     public $showActivityModal = false;
 
     protected $paginationTheme = 'bootstrap';
+    protected $authorized = false;
 
     public function mount(?Student $student, $date = null)
     {
 //        $this->student = $student;
-        $this->student = auth()->user()->student;
+        if(!$student ||  !auth()->user()->student) {
+            $this->authorized = true;
+        }
+        else{
+            $this->student = auth()->user()->student;
+        }
+
         $this->selectedDate = $date ? Carbon::parse($date) : now();
         $this->currentMonth = $this->selectedDate->month;
         $this->currentYear = $this->selectedDate->year;
@@ -39,6 +46,11 @@ class StudentSchedule extends Component
 
     public function render()
     {
+
+        if($this->authorized){
+            return view('livewire.students.unauthorized');
+        }
+
         $activities = $this->getActivitiesForPeriod();
         $calendarData = $this->getCalendarData();
 

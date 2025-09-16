@@ -19,6 +19,7 @@ class Assignments extends Component
     public $showDetails = false;
     public $selectedAssignment = null;
     public $student;
+    public $unauthorized = false; // New property to track unauthorized access
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -31,6 +32,11 @@ class Assignments extends Component
     public function mount()
     {
         $this->student = Auth::user()->student;
+
+        // Check if student record exists
+        if (!$this->student) {
+            $this->unauthorized = true;
+        }
     }
 
     public function updatingSearch()
@@ -85,11 +91,10 @@ class Assignments extends Component
         return redirect()->route('student.assignment.take', ['assignment' => $assignment]);
     }
 
-
     public function getAssignmentsProperty()
     {
-        if (!$this->student) {
-            \Log::info('No student available for assignments query');
+        // Return empty collection if unauthorized
+        if (!$this->student || $this->unauthorized) {
             return collect();
         }
 
@@ -191,7 +196,7 @@ class Assignments extends Component
 
     public function getSubjectsProperty()
     {
-        if (!$this->student) {
+        if (!$this->student || $this->unauthorized) {
             return collect();
         }
 
@@ -200,7 +205,7 @@ class Assignments extends Component
 
     public function getAssignmentStatus($assignment)
     {
-        if (!$this->student) {
+        if (!$this->student || $this->unauthorized) {
             return 'not_started';
         }
 
@@ -215,7 +220,7 @@ class Assignments extends Component
 
     public function getAssignmentProgress($assignment)
     {
-        if (!$this->student) {
+        if (!$this->student || $this->unauthorized) {
             return 0;
         }
 
@@ -240,6 +245,11 @@ class Assignments extends Component
 
     public function render()
     {
+        // Show unauthorized view if needed
+        if ($this->unauthorized) {
+            return view('livewire.students.unauthorized');
+        }
+
         return view('livewire.students.assignments', [
             'assignments' => $this->assignments,
             'subjects' => $this->subjects,

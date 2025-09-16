@@ -61,18 +61,17 @@
                 @method('PATCH')
 
                 <div class="space-y-2">
-                    <label for="name" class="block text-sm font-medium text-gray-700">
-                        Topic Name <span class="text-red-500">*</span>
-                    </label>
                     <x-form.input
                         name="name"
                         type="text"
                         :value="$academicTopic->name"
                         placeholder="Enter topic name"
                         class="w-full"
+                        label="Topic Name"
+                        info="The name used to identify this academic topic."
+                        info-position="bottom"
                         required
                     />
-                    <p class="text-xs text-gray-500">The name used to identify this academic topic.</p>
                     @error('name')
                     <p class="text-sm text-red-600">{{ $message }}</p>
                     @enderror

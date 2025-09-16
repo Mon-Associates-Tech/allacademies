@@ -167,6 +167,21 @@
                             @enderror
                         </div>
 
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input
+                                    id="author"
+                                    name="author"
+                                    type="checkbox"
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                >
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="author" class="text-gray-700">
+                                Sign me up as an author</label>
+                            </div>
+                        </div>
+
                         <!-- Terms agreement -->
                         <div class="flex items-start">
                             <div class="flex items-center h-5">

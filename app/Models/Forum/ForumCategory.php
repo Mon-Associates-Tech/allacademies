@@ -37,6 +37,10 @@ class ForumCategory extends Model
         'moderator_ids' => 'array'
     ];
 
+    protected $with = [
+        'latestPost'
+    ];
+
     public function parent()
     {
         return $this->belongsTo(ForumCategory::class, 'parent_id');

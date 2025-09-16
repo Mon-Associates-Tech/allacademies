@@ -4,13 +4,11 @@ namespace App\Livewire\Authors;
 
 use App\Models\Book;
 use App\Models\BookCategory;
-use App\Models\Author;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class Dashboard extends Component
 {

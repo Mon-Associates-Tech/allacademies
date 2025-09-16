@@ -1,4 +1,4 @@
-<div class="relative" x-data="{
+<div class="{{$this->attributes->merge(['class' => 'relative'])}}" x-data="{
     size: '{{ $size }}',
     multiple: {{ $multiple ? 'true' : 'false' }},
     disabled: {{ $disabled ? 'true' : 'false' }}

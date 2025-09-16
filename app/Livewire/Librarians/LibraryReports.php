@@ -3,8 +3,8 @@
 namespace App\Livewire\Librarians;
 
 use App\Models\Book;
-use App\Models\BookBorrowing as BookBorrow;
 use App\Models\Book as BookCopy;
+use App\Models\BookBorrowing as BookBorrow;
 use App\Models\Student;
 use Carbon\Carbon;
 use Livewire\Component;

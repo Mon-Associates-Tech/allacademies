@@ -1,70 +1,52 @@
 <?php
 
-use App\Http\Controllers\AcademicGroupController;
-use App\Http\Controllers\AcademicLevelController;
-use App\Http\Controllers\AcademicSubjectController;
-use App\Http\Controllers\AcademicTopicController;
+use App\Http\Controllers\AcademicChatController;
+use App\Http\Controllers\AdministratorController;
+use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\BookApprovalController;
+use App\Http\Controllers\BookBorrowingController;
+use App\Http\Controllers\BookCategoryController;
+use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookProgressController;
+use App\Http\Controllers\BookSubscriptionController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
-use App\Http\Controllers\ExaminationController;
+use App\Http\Controllers\GroupBookSubscriptionController;
 use App\Http\Controllers\JoinTeamController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\LessonNoteController;
+use App\Http\Controllers\LibrarianController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Questions\EssayQuestionController;
-use App\Http\Controllers\Questions\MultipleChoiceQuestionController;
-use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
-use App\Http\Controllers\QuizController;
-use App\Http\Controllers\SchoolSettingsController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignInController;
 use App\Http\Controllers\SignOutController;
 use App\Http\Controllers\SignUpController;
+use App\Http\Controllers\StudentGroupController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\SubtopicController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
-use App\Livewire\Administrators\AuthorManagement;
-use App\Livewire\Administrators\BookApprovalManagement;
-use App\Livewire\Administrators\BookManagement;
-use App\Livewire\Administrators\Dashboard;
-use App\Livewire\Administrators\GroupManagement;
-use App\Livewire\Administrators\LibrarianManagement;
-use App\Livewire\Administrators\StudentManagement;
-use App\Livewire\Administrators\SubjectManagement;
-use App\Livewire\Administrators\TeacherManagement;
-use App\Livewire\Administrators\UserLoginLog;
+use App\Livewire\Chats\ChatInterface;
+use App\Livewire\Forums\ForumManagement;
+use App\Livewire\Learning\BookQuizInterface;
 use App\Livewire\Students\Courses;
 use App\Livewire\Teachers\EssayGrader;
 use App\Models\Assessment;
+use App\Models\Student;
+use App\Services\SchoolContextService;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\LibrarianController;
-use App\Http\Controllers\AdministratorController;
-use App\Http\Controllers\AuthorController;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\BookCategoryController;
-use App\Http\Controllers\StudentGroupController;
-use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\TopicController;
-use App\Http\Controllers\LessonController;
-use App\Http\Controllers\LessonNoteController;
-use App\Http\Controllers\AssessmentController;
-use App\Http\Controllers\BookBorrowingController;
-use App\Http\Controllers\BookSubscriptionController;
-use App\Http\Controllers\GroupBookSubscriptionController;
-use App\Http\Controllers\BookApprovalController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +59,7 @@ use App\Http\Controllers\BookApprovalController;
 |
 */
 
+// Public Routes
 Route::view('/', 'branding')->name('home');
 Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
 Route::view('/terms', 'branding.terms')->name('branding.terms');
@@ -84,35 +67,52 @@ Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
-
+// Authentication Routes
 Route::middleware('guest')->group(function () {
+    // Sign In/Up Routes
     Route::get('sign-in', [SignInController::class, 'create'])->name('sign-in');
     Route::post('sign-in', [SignInController::class, 'store']);
     Route::get('sign-up', [SignUpController::class, 'create'])->name('sign-up');
     Route::post('sign-up', [SignUpController::class, 'store']);
-});
 
-Route::post('sign-out', [SignOutController::class, 'store'])->middleware('auth')->name('logout');
-
-// Email verification routes - these should be outside auth middleware
-Route::get('verify/email/notice', [EmailVerificationController::class, 'notice'])->name('verification.notice');
-Route::post('verify/email/send', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('verification.send');
-Route::get('verify/email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
-
-Route::prefix('password')->name('password.')->group(function () {
-    Route::middleware('guest')->group(function () {
+    // Password Reset Routes
+    Route::prefix('password')->name('password.')->group(function () {
         Route::get('forgot', [PasswordController::class, 'forgotForm'])->name('request');
         Route::post('forgot', [PasswordController::class, 'forgot'])->name('email');
         Route::get('reset/{token}', [PasswordController::class, 'resetForm'])->name('reset');
         Route::post('reset', [PasswordController::class, 'reset'])->name('update');
     });
-    Route::middleware(['auth', 'verified'])->group(function () {
-        Route::get('change', [PasswordController::class, 'changeForm'])->name('change');
-        Route::post('change', [PasswordController::class, 'change']);
-    });
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Email Verification Routes
+Route::get('verify/email/notice', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+Route::post('verify/email/send', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('verification.send');
+Route::get('verify/email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
+
+// 2FA Routes
+Route::get('2fa/verify', [SignInController::class, 'show2faForm'])->name('2fa.verify');
+Route::post('2fa/verify', [SignInController::class, 'verify2fa']);
+Route::post('/2fa/resend', [SignInController::class, 'resend2fa'])->name('2fa.resend');
+
+// Newsletter Routes
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+// Authenticated Routes
+Route::middleware(['auth'])->group(function () {
+    // Sign Out
+    Route::post('sign-out', [SignOutController::class, 'store'])->name('logout');
+
+    // Ping Route
+    Route::post('/ping', static function () {
+        // Just touch the session
+        return response()->noContent();
+    });
+
+    // Impersonation
+    Route::impersonate();
+
+    // Profile Routes
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -120,6 +120,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/preferences', function () {
         return view('preferences');
     })->name('preferences');
+
+    // Password Change Routes
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('password/change', [PasswordController::class, 'changeForm'])->name('password.change');
+        Route::post('password/change', [PasswordController::class, 'change']);
+    });
+
+    // Dashboard Routes
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Team Routes
     Route::post('teams/{team}/activate', [TeamController::class, 'activate'])->name('teams.activate');
     Route::resource('teams', TeamController::class)->except('show');
     Route::post('teams/{team}/code', [JoinTeamController::class, 'generate'])->name('teams.code');
@@ -127,47 +138,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('teams/joining', [JoinTeamController::class, 'joining'])->name('teams.joining');
     Route::post('teams/add-member', [JoinTeamController::class, 'join'])->name('teams.add-member');
 
+    // Team Member Routes
     Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
     Route::get('teams/{team}/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
     Route::post('teams/{team}/members/{member}', [MemberController::class, 'update'])->name('members.update');
 
+    // Subscription & Payment Routes
     Route::resource('subscriptions', SubscriptionController::class);
+    Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
 
+    // Settings Routes
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::match(['GET', 'POST'], 'settings/role', [SettingsController::class, 'role'])->name('settings.role');
 
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    // User Routes
     Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
+    Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');
 
+    // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{type}/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/{type}/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
-
+    // Audit Team Routes
     Route::post('audit-teams/{audit_team}/approve', [AuditTeamController::class, 'approve'])->name('audit-teams.approve');
     Route::post('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'decline'])->name('audit-teams.decline');
     Route::get('audit-teams/{audit_team}/decline', [AuditTeamController::class, 'reason'])->name('audit-teams.reason');
     Route::resource('audit-teams', AuditTeamController::class)->only(['index', 'show']);
     Route::post('audit-teams/bulk-approve', [AuditTeamController::class, 'bulkApprove'])->name('audit-teams.bulk-approve');
 
-
+    // Export Routes
     Route::post('export/pdf', static function () {
         return exportToPdf();
-
     })->name('export.pdf');
     Route::post('export/word', static function () {
         return exportToWord();
-
     })->name('export.word');
-});
 
-
-Route::middleware(['auth'])->group(function () {
-
-    // Role routes
+    // Role Routes
     Route::resource('roles', RoleController::class);
 
-
-    // Teacher routes
+    // Teacher Routes
     Route::resource('teachers', TeacherController::class);
     Route::prefix('teachers/{teacher}')->group(function () {
         Route::get('/student-groups/create', [TeacherController::class, 'showStudentGroupForm'])->name('teachers.student-groups.form');
@@ -184,7 +197,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/group-subscriptions', [TeacherController::class, 'getGroupSubscriptions'])->name('teachers.group-subscriptions');
     });
 
-    // Librarian routes
+    // Librarian Routes
     Route::resource('librarians', LibrarianController::class);
     Route::prefix('librarians/{librarian}')->group(function () {
         Route::get('/book-approvals/create', [LibrarianController::class, 'showBookApprovalForm'])->name('librarians.book-approvals.form');
@@ -200,7 +213,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/group-subscriptions', [LibrarianController::class, 'getGroupSubscriptions'])->name('librarians.group-subscriptions');
     });
 
-    // Administrator routes
+    // Administrator Routes
     Route::resource('administrators', AdministratorController::class);
     Route::prefix('administrators/{administrator}')->group(function () {
         Route::get('/group-subscriptions/create', [AdministratorController::class, 'showGroupSubscriptionForm'])->name('administrators.group-subscriptions.form');
@@ -208,7 +221,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/group-subscriptions', [AdministratorController::class, 'getGroupSubscriptions'])->name('administrators.group-subscriptions');
     });
 
-    // Author routes
+    // Author Routes
     Route::resource('authors', AuthorController::class);
     Route::prefix('authors/{author}')->group(function () {
         Route::get('/books/create', [AuthorController::class, 'showCreateBookForm'])->name('authors.books.create.form');
@@ -219,14 +232,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/books', [AuthorController::class, 'getBooks'])->name('authors.books');
     });
 
-    // Book routes
-//    Route::resource('books', BookController::class);
-
-    // Book Category routes
+    // Book Category Routes
     Route::resource('book-categories', BookCategoryController::class);
     Route::get('book-categories/{bookCategory}/books', [BookCategoryController::class, 'getBooks'])->name('book-categories.books');
 
-    // Student Group routes
+    // Student Group Routes
     Route::resource('student-groups', StudentGroupController::class);
     Route::prefix('student-groups/{studentGroup}')->group(function () {
         Route::get('/students/add', [StudentGroupController::class, 'showAddStudentForm'])->name('student-groups.students.add.form');
@@ -236,73 +246,107 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/students', [StudentGroupController::class, 'getStudents'])->name('student-groups.students');
     });
 
-    // Subject routes
+    // Subject Routes
     Route::resource('subjects', SubjectController::class);
     Route::get('subjects/{subject}/topics', [SubjectController::class, 'getTopics'])->name('subjects.topics');
 
-    // Topic routes
+    // Topic Routes
     Route::resource('topics', TopicController::class);
     Route::get('topics/{topic}/lesson-notes', [TopicController::class, 'getLessonNotes'])->name('topics.lesson-notes');
 
-    // Lesson routes
+    // Lesson Routes
     Route::resource('lessons', LessonController::class);
     Route::get('lessons/{lesson}/notes', [LessonController::class, 'getNotes'])->name('lessons.notes');
 
-    // Lesson Note routes
+    // Lesson Note Routes
     Route::resource('lesson-notes', LessonNoteController::class);
 
-    // Assessment routes
+    // Assessment Routes
     Route::resource('assessments', AssessmentController::class);
 
-    // Book Borrowing routes
-//    Route::resource('book-borrowings', BookBorrowingController::class)->except(['destroy']);
+    // Book Routes
+    Route::get('books', [BookController::class, 'index'])->name('books.index');
+    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
+    Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
+    Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
+    Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
+    Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
 
-    // Book Subscription routes
-//    Route::resource('book-subscriptions', BookSubscriptionController::class)->except(['destroy']);
+    // Book Subscription Routes
+    Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])->name('books.payment-instructions');
+    Route::post('books/{book}/subscribe', [BookSubscriptionController::class, 'store'])->name('books.subscribe.store');
+    Route::get('subscriptions/{subscription}/payment', [BookSubscriptionController::class, 'showPayment'])->name('subscriptions.payment.show');
+    Route::post('subscriptions/{subscription}/verify-payment', [BookSubscriptionController::class, 'verifyPayment'])->name('subscriptions.payment.verify');
+    Route::delete('subscriptions/{subscription}/cancel', [BookSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('/books/{book}/reviews/')->name('books.reviews.store');
 
-    // Group Book Subscription routes
-//    Route::resource('group-book-subscriptions', GroupBookSubscriptionController::class)->except(['destroy']);
+    // Book Reading Progress Routes
+    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
+    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
+    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
+    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
+    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
 
-    // Book Approval routes
-//    Route::resource('book-approvals', BookApprovalController::class)->except(['destroy']);
-});
+    // Academic Content Routes
+    Route::get('/course-outlines', function () {
+        return view('course-outlines');
+    })->name('course-outlines');
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', App\Livewire\Administrators\Dashboard::class)->name('admin.dashboard');
-});
+    Route::get('/academic-calendar', function () {
+        return view('academic-calendar');
+    })->name('academic-calendar');
 
+    // Media Routes
+    Route::get('/mediapage', [\App\Http\Controllers\Media\MediaController::class, 'index'])->name('media.index');
+    Route::get('/media/download', [\App\Http\Controllers\Media\MediaController::class, 'download'])->name('media.download');
 
-Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
-    Route::get('/essays', function () {
-        $assessments = Assessment::whereHas('responses', fn($q) => $q->whereJsonContains('data->needs_grading', true)
-        )->with('student.user')->get();
+    // Onboarding Routes
+    Route::get('onboarding/school-setup', \App\Livewire\SchoolOnboarding::class)->name('onboarding.school-setup');
 
-        return view('livewire.teachers.essay-dashboard', compact('assessments'));
-    })->name('teacher.essays.index');
-
-    Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
-});
-
-
-
-Route::get('/mail', static function () {
-    \Illuminate\Support\Facades\Mail::raw('This is a test email', static function ($message) {
-        $message->to('me@example.com')
-            ->subject('Test Email');
+    // Educational Chat Routes
+    Route::prefix('academic-chats')->name('academic-chat.')->group(function () {
+        Route::get('/', [AcademicChatController::class, 'index'])->name('index');
+        Route::post('/chat', [AcademicChatController::class, 'chat'])->name('chat');
+        Route::get('/subjects', [AcademicChatController::class, 'subjects'])->name('subjects');
+        Route::post('/recommendations', [AcademicChatController::class, 'recommendations'])->name('recommendations');
+        Route::post('/export', [AcademicChatController::class, 'exportChat'])->name('export');
     });
-})->name('mail.test');
 
+    // Chat Routes
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/chat', ChatInterface::class)->name('chat');
+        Route::get('/chat/{group}', ChatInterface::class)->name('chat.group');
+    });
 
-Route::get('2fa/verify', [SignInController::class, 'show2faForm'])->name('2fa.verify');
-Route::post('2fa/verify', [SignInController::class, 'verify2fa']);
-Route::post('/2fa/resend', [SignInController::class, 'resend2fa'])->name('2fa.resend');
-Route::post('/ping', static function () {
-    // Just touch the session
-    return response()->noContent();
-})->middleware('auth');
+    // Forum Routes
+    Route::get('/forums', ForumManagement::class)->name('forums');
 
-Route::impersonate();
-Route::middleware([])->prefix('admin')->group(function () {
+    // Learning Routes
+    Route::get('/learning/quiz', BookQuizInterface::class)->name('learning.quiz');
+
+    // Dashboard v2
+    Route::get('v2', function () {
+        $contextInfo = SchoolContextService::getContextInfo();
+        $stats = SchoolContextService::getStats();
+
+        // Get students based on current context
+        $students = SchoolContextService::applySchoolContext(Student::query())
+            ->with(['user', 'academicLevel', 'academicGroup'])
+            ->latest()
+            ->paginate(20);
+
+        return view('dashboard-v2', compact('contextInfo', 'stats', 'students'));
+    });
+
+    // Academic Settings
+    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
+
+    // School Settings
+    Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
+});
+
+// Admin Routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', App\Livewire\Administrators\Dashboard::class)->name('admin.dashboard');
 
     // Add this route for logging out all users
@@ -328,83 +372,34 @@ Route::middleware([])->prefix('admin')->group(function () {
         ]);
     })->name('admin.logout-all-users');
 });
-Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
-// Book routes for students
-Route::middleware(['auth'])->group(function () {
-//    Route::get('/books', [BookController::class, 'index'])->name('books.index');
-    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
-//    Route::post('/books/{book}/subscribe', [BookController::class, 'subscribe'])->name('books.subscribe');
-    Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
-//    Route::get('/books/{book}/read', [BookController::class, 'read'])->name('books.read');
-    Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
+
+// Teacher Routes
+Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
+    Route::get('/essays', function () {
+        $assessments = Assessment::whereHas('responses', fn($q) => $q->whereJsonContains('data->needs_grading', true))
+            ->with('student.user')
+            ->get();
+
+        return view('livewire.teachers.essay-dashboard', compact('assessments'));
+    })->name('teacher.essays.index');
+
+    Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
 });
 
-Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-//    Route::get('/notifications', \App\Livewire\Students\Notifications::class)->name('student.notifications.index');
-    Route::get('/notifications/{type}/{id}', [NotificationController::class, 'show'])->name('notifications.show');
-    Route::post('/notifications/{type}/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-
-});
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('books', [BookController::class, 'index'])->name('books.index');
-    Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
-    Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
-    Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])
-        ->name('books.payment-instructions');
-    Route::post('books/{book}/subscribe', [BookSubscriptionController::class, 'store'])
-        ->name('books.subscribe.store');
-    Route::get('subscriptions/{subscription}/payment', [BookSubscriptionController::class, 'showPayment'])
-        ->name('subscriptions.payment.show');
-    Route::post('subscriptions/{subscription}/verify-payment', [BookSubscriptionController::class, 'verifyPayment'])
-        ->name('subscriptions.payment.verify');
-    Route::delete('subscriptions/{subscription}/cancel', [BookSubscriptionController::class, 'cancel'])
-        ->name('subscriptions.cancel');
-
-    Route::post('/books/{book}/reviews/')->name('books.reviews.store');
-    Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
-});
-
-// routes/web.php - Add subscriber routes
+// Subscriber Routes
 Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(function () {
     Route::get('/library', \App\Livewire\Subscribers\Library::class)->name('library');
     Route::get('/assessments', \App\Livewire\Subscribers\Assessments::class)->name('assessments');
     Route::get('/quizzes', \App\Livewire\Subscribers\Quizzes::class)->name('quizzes');
     Route::get('/progress', \App\Livewire\Subscribers\Progress::class)->name('progress');
-    Route::get('/forums', \App\Livewire\Forums\ForumManagement::class)->name('forums');
+    Route::get('/forums', ForumManagement::class)->name('forums');
     Route::get('/groups', \App\Livewire\Subscribers\StudyGroups::class)->name('groups');
     Route::get('/premium', \App\Livewire\Subscribers\Premium::class)->name('premium');
     Route::get('/analytics', \App\Livewire\Subscribers\Analytics::class)->name('analytics');
     Route::get('courses', Courses::class)->name('courses');
 });
 
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
-
-// Book Reading Progress Routes
-Route::middleware(['auth'])->group(function () {
-    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
-    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
-    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
-    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
-    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
-
-
-    Route::get('/course-outlines', function () {
-        return view('course-outlines');
-    })->name('course-outlines');
-
-    Route::get('/academic-calendar', function () {
-        return view('academic-calendar');
-    })->name('academic-calendar');
-});
-
-
+// Include additional route files
 include_once 'student.php';
 include_once 'teacher.php';
 include_once 'author.php';

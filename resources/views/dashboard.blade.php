@@ -2,7 +2,7 @@
 
     @php
         $user = Auth::user();
-        $primaryRole = $user->role; // This is the main role from the role field
+        $primaryRole = $user->role;
         $isImpersonating = session()->has('impersonated_by');
     @endphp
 
@@ -18,7 +18,6 @@
 
     @if($primaryRole === 'student')
         @livewire('students.dashboard')
-
     @elseif($primaryRole === 'teacher')
         @livewire('teachers.dashboard')
 
@@ -101,9 +100,13 @@
                                             Search Courses
                                         </label>
                                         <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                            <div
+                                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <svg class="h-5 w-5 text-gray-400" fill="currentColor"
+                                                     viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                                          clip-rule="evenodd"/>
                                                 </svg>
                                             </div>
                                             <input type="text"
@@ -116,7 +119,8 @@
                                     </div>
 
                                     <div class="lg:w-48">
-                                        <label for="academic_group" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="academic_group"
+                                               class="block text-sm font-medium text-gray-700 mb-2">
                                             Academic Group
                                         </label>
                                         <select name="academic_group"
@@ -125,7 +129,8 @@
                                                 class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
                                             <option value="">All Groups</option>
                                             @foreach($academicGroups as $group)
-                                                <option value="{{ $group->id }}" {{ ($filters['academic_group'] ?? '') == $group->id ? 'selected' : '' }}>
+                                                <option
+                                                    value="{{ $group->id }}" {{ ($filters['academic_group'] ?? '') == $group->id ? 'selected' : '' }}>
                                                     {{ $group->name }}
                                                 </option>
                                             @endforeach
@@ -133,7 +138,8 @@
                                     </div>
 
                                     <div class="lg:w-48">
-                                        <label for="academic_level" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="academic_level"
+                                               class="block text-sm font-medium text-gray-700 mb-2">
                                             Academic Level
                                         </label>
                                         <select name="academic_level"
@@ -143,7 +149,7 @@
                                             @foreach($academicLevels as $level)
                                                 <option value="{{ $level->id }}"
                                                         data-group="{{ $level->academic_group_id }}"
-                                                        {{ ($filters['academic_level'] ?? '') == $level->id ? 'selected' : '' }}>
+                                                    {{ ($filters['academic_level'] ?? '') == $level->id ? 'selected' : '' }}>
                                                     {{ $level->name }} ({{ $level->academicGroup?->name }})
                                                 </option>
                                             @endforeach
@@ -152,40 +158,61 @@
                                 </div>
 
                                 <!-- Sorting and Action Row -->
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
+                                <div
+                                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
                                     <div class="flex flex-col sm:flex-row gap-2">
                                         <div class="flex items-center gap-2">
-                                            <label for="sort_by" class="text-sm font-medium text-gray-700 whitespace-nowrap">Sort by:</label>
-                                            <select name="sort_by" id="sort_by" class="text-sm border border-gray-300 rounded px-2 py-1">
-                                                <option value="name" {{ ($filters['sort_by'] ?? '') == 'name' ? 'selected' : '' }}>Name</option>
-                                                <option value="group" {{ ($filters['sort_by'] ?? '') == 'group' ? 'selected' : '' }}>Group</option>
-                                                <option value="level" {{ ($filters['sort_by'] ?? '') == 'level' ? 'selected' : '' }}>Level</option>
-                                                <option value="quizzes_count" {{ ($filters['sort_by'] ?? '') == 'quizzes_count' ? 'selected' : '' }}>Quiz Count</option>
-                                                <option value="examinations_count" {{ ($filters['sort_by'] ?? '') == 'examinations_count' ? 'selected' : '' }}>Exam Count</option>
+                                            <label for="sort_by"
+                                                   class="text-sm font-medium text-gray-700 whitespace-nowrap">Sort
+                                                by:</label>
+                                            <select name="sort_by" id="sort_by"
+                                                    class="text-sm border border-gray-300 rounded px-2 py-1">
+                                                <option
+                                                    value="name" {{ ($filters['sort_by'] ?? '') == 'name' ? 'selected' : '' }}>
+                                                    Name
+                                                </option>
+                                                <option
+                                                    value="group" {{ ($filters['sort_by'] ?? '') == 'group' ? 'selected' : '' }}>
+                                                    Group
+                                                </option>
+                                                <option
+                                                    value="level" {{ ($filters['sort_by'] ?? '') == 'level' ? 'selected' : '' }}>
+                                                    Level
+                                                </option>
+                                                <option
+                                                    value="quizzes_count" {{ ($filters['sort_by'] ?? '') == 'quizzes_count' ? 'selected' : '' }}>
+                                                    Quiz Count
+                                                </option>
+                                                <option
+                                                    value="examinations_count" {{ ($filters['sort_by'] ?? '') == 'examinations_count' ? 'selected' : '' }}>
+                                                    Exam Count
+                                                </option>
                                             </select>
                                         </div>
 
                                         <div class="flex items-center gap-2">
-                                            <select name="sort_order" id="sort_order" class="text-sm border border-gray-300 rounded px-2 py-1">
-                                                <option value="asc" {{ ($filters['sort_order'] ?? '') == 'asc' ? 'selected' : '' }}>↑ Ascending</option>
-                                                <option value="desc" {{ ($filters['sort_order'] ?? '') == 'desc' ? 'selected' : '' }}>↓ Descending</option>
+                                            <select name="sort_order" id="sort_order"
+                                                    class="text-sm border border-gray-300 rounded px-2 py-1">
+                                                <option
+                                                    value="asc" {{ ($filters['sort_order'] ?? '') == 'asc' ? 'selected' : '' }}>
+                                                    ↑ Ascending
+                                                </option>
+                                                <option
+                                                    value="desc" {{ ($filters['sort_order'] ?? '') == 'desc' ? 'selected' : '' }}>
+                                                    ↓ Descending
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div class="flex gap-2">
-{{--                                        <button type="submit"--}}
-{{--                                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">--}}
-{{--                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">--}}
-{{--                                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />--}}
-{{--                                            </svg>--}}
-{{--                                            Filter--}}
-{{--                                        </button>--}}
 
                                         <x-button.primary type="submit" size="sm">
                                             <x-slot:icon>
                                                 <svg class="w-4 my-auto h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                                    <path fill-rule="evenodd"
+                                                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                                          clip-rule="evenodd"/>
                                                 </svg>
                                             </x-slot:icon>
                                             Filter
@@ -195,7 +222,9 @@
                                             <a href="{{ route('dashboard') }}"
                                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                    <path fill-rule="evenodd"
+                                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                          clip-rule="evenodd"/>
                                                 </svg>
                                                 Clear
                                             </a>
@@ -209,33 +238,45 @@
                                         <span class="text-sm font-medium text-gray-700">Active filters:</span>
 
                                         @if($filters['search'])
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                                                 Search: "{{ $filters['search'] }}"
-                                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" class="ml-1.5">
+                                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
+                                                   class="ml-1.5">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd"
+                                                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                              clip-rule="evenodd"/>
                                                     </svg>
                                                 </a>
                                             </span>
                                         @endif
 
                                         @if($filters['academic_group'])
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                 Group: {{ $academicGroups->find($filters['academic_group'])->name }}
-                                                <a href="{{ request()->fullUrlWithQuery(['academic_group' => null]) }}" class="ml-1.5">
+                                                <a href="{{ request()->fullUrlWithQuery(['academic_group' => null]) }}"
+                                                   class="ml-1.5">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd"
+                                                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                              clip-rule="evenodd"/>
                                                     </svg>
                                                 </a>
                                             </span>
                                         @endif
 
                                         @if($filters['academic_level'])
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 Level: {{ $academicLevels->find($filters['academic_level'])->name }}
-                                                <a href="{{ request()->fullUrlWithQuery(['academic_level' => null]) }}" class="ml-1.5">
+                                                <a href="{{ request()->fullUrlWithQuery(['academic_level' => null]) }}"
+                                                   class="ml-1.5">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd"
+                                                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                              clip-rule="evenodd"/>
                                                     </svg>
                                                 </a>
                                             </span>
@@ -281,7 +322,8 @@
                                             <div class="ml-3">
                                                 <div
                                                     class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <svg class="w-6 h-6 text-white" fill="currentColor"
+                                                         viewBox="0 0 20 20">
                                                         <path
                                                             d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
                                                     </svg>
@@ -401,7 +443,8 @@
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center space-x-4 text-sm text-gray-500">
                                                     <div class="flex items-center">
-                                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <svg class="w-4 h-4 mr-1" fill="currentColor"
+                                                             viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
                                                                   d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                                                                   clip-rule="evenodd"/>
@@ -427,7 +470,8 @@
                                                 <div class="flex items-center space-x-3">
                                                     <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
                                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200">
-                                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <svg class="w-3 h-3 mr-1" fill="currentColor"
+                                                             viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
                                                                   d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                                                                   clip-rule="evenodd"/>
@@ -466,8 +510,10 @@
                     @else
                         <!-- No Results Found -->
                         <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.291-1.267-5.543-3.259M6.343 6.343A8 8 0 0112.001 20a8 8 0 011.498-15.657" />
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.291-1.267-5.543-3.259M6.343 6.343A8 8 0 0112.001 20a8 8 0 011.498-15.657"/>
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No courses found</h3>
                             <p class="mt-1 text-sm text-gray-500">
@@ -482,7 +528,9 @@
                                     <a href="{{ route('dashboard') }}"
                                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            <path fill-rule="evenodd"
+                                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                  clip-rule="evenodd"/>
                                         </svg>
                                         Clear Filters
                                     </a>
@@ -561,7 +609,7 @@
 
                     // Auto-submit form on filter changes (optional)
                     // Load saved preference on page load
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         const savedView = localStorage.getItem('courseViewPreference') || 'grid';
                         toggleView(savedView);
 
@@ -573,7 +621,7 @@
                         autoSubmitElements.forEach(id => {
                             const element = document.getElementById(id);
                             if (element) {
-                                element.addEventListener('change', function() {
+                                element.addEventListener('change', function () {
                                     // Uncomment the next line to enable auto-submit
                                     // document.getElementById('filters-form').submit();
                                 });
@@ -584,7 +632,7 @@
                         const searchInput = document.getElementById('search');
                         if (searchInput) {
                             let searchTimeout;
-                            searchInput.addEventListener('input', function() {
+                            searchInput.addEventListener('input', function () {
                                 clearTimeout(searchTimeout);
                                 searchTimeout = setTimeout(() => {
                                     // Uncomment the next line to enable auto-submit on search

@@ -2,16 +2,15 @@
 
 namespace App\Livewire\Books;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use App\Models\Book;
+use App\Enums\PublishingStatus;
 use App\Models\Author;
+use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\User;
-use App\Enums\PublishingStatus;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class CreateBook extends Component
 {

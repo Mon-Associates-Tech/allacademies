@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('subscription:expired')->dailyAt('09:00');
         $schedule->command('app:update-user-online-status')->everyMinute();
         $schedule->command('sessions:cleanup --timeout=30')->everyFiveMinutes();
+        $schedule->command('messages:send-scheduled')->everyMinute();
 
     }
 

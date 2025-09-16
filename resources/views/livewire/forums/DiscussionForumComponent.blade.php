@@ -193,13 +193,16 @@
                             </div>
 
                             @if($category->latestPost)
+                                @php
+                                    $latestPost = $category->latestPost;
+                                @endphp
                                 <div class="text-right text-sm text-gray-500 dark:text-gray-400 ml-4 flex-shrink-0">
                                     <div class="flex items-center justify-end mb-1">
                                         <div
                                             class="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-2">
                                             {{ substr($category->latestPost->user->name, 0, 1) }}
                                         </div>
-                                        <span class="font-medium">{{ $category->latestPost->user->name }}</span>
+                                        <span class="font-medium">{{ $category->latestPost->user?->name }}</span>
                                     </div>
                                     <div class="text-xs">
                                         <time datetime="{{ $category->latestPost->created_at->toISOString() }}">
@@ -328,9 +331,9 @@
                                     <div class="flex items-center">
                                         <div
                                             class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs mr-2">
-                                            {{ substr($topic->user->name, 0, 1) }}
+                                            {{ substr($topic->user?->name, 0, 1) }}
                                         </div>
-                                        <span>by {{ $topic->user->name }}</span>
+                                        <span>by {{ $topic->user?->name }}</span>
                                     </div>
                                     <span>{{ $topic->created_at->diffForHumans() }}</span>
                                     <span>{{ $topic->posts_count }} {{ Str::plural('reply', $topic->posts_count) }}</span>
@@ -343,9 +346,9 @@
                                     <div class="flex items-center justify-end mb-1">
                                         <div
                                             class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs mr-2">
-                                            {{ substr($topic->latestPost->user->name, 0, 1) }}
+                                            {{ substr($topic->latestPost->user?->name, 0, 1) }}
                                         </div>
-                                        <span class="font-medium">{{ $topic->latestPost->user->name }}</span>
+                                        <span class="font-medium">{{ $topic->latestPost->user?->name }}</span>
                                     </div>
                                     <div class="text-xs">
                                         Latest: {{ $topic->latestPost->created_at->diffForHumans() }}
@@ -418,9 +421,9 @@
                             <div class="flex items-center">
                                 <div
                                     class="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs mr-2">
-                                    {{ substr($topic->user->name, 0, 1) }}
+                                    {{ substr($topic->user?->name, 0, 1) }}
                                 </div>
-                                <span>Started by {{ $topic->user->name }}</span>
+                                <span>Started by {{ $topic->user?->name }}</span>
                             </div>
                             <span>{{ $topic->created_at->diffForHumans() }}</span>
                             <span>{{ $topic->views_count ?? 0 }} {{ Str::plural('view', $topic->views_count ?? 0) }}</span>
@@ -438,7 +441,7 @@
                             <div class="flex-shrink-0">
                                 <div
                                     class="w-12 h-12 bg-gradient-to-br from-violet-400 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                    {{ substr($post->user->name, 0, 1) }}
+                                    {{ substr($post->user?->name, 0, 1) }}
                                 </div>
                             </div>
 
@@ -446,7 +449,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center space-x-2">
-                                        <h4 class="font-semibold text-gray-900 dark:text-white">{{ $post->user->name }}</h4>
+                                        <h4 class="font-semibold text-gray-900 dark:text-white">{{ $post->user?->name }}</h4>
                                         @if($index === 0)
                                             <span
                                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">

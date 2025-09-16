@@ -31,6 +31,11 @@ class ForumPost extends Model
         'edited_at' => 'datetime'
     ];
 
+    protected $with  = [
+       'user',
+
+    ];
+
     public function topic()
     {
         return $this->belongsTo(ForumTopic::class, 'forum_topic_id');

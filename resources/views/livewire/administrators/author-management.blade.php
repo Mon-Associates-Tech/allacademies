@@ -34,8 +34,8 @@
                 </div>
 
                 @if(!$showForm)
-                    <button
-                        wire:click="showCreateForm"
+                    <x-button.primary
+                        onclick="window.Modal.open('author-add-form')"
                         class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg
                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                                transition-colors duration-200 flex items-center space-x-2"
@@ -44,7 +44,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
                         <span>Add Author</span>
-                    </button>
+                    </x-button.primary>
                 @endif
             </div>
         </div>
@@ -73,31 +73,23 @@
         @endif
 
         <!-- Create/Edit Form -->
-        @if($showForm)
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                                {{ $isEditing ? 'Edit Author' : 'Create New Author' }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $isEditing ? 'Update the author information below' : 'Fill in the details to create a new author account' }}
-                            </p>
+        @if(true)
+            <x-modal-component name="author-add-form" size="3xl" position="bottom">
+                <x-slot:header>
+                    <div class="px-6 pb-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                                    {{ $isEditing ? 'Edit Author' : 'Create New Author' }}
+                                </h2>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ $isEditing ? 'Update the author information below' : 'Fill in the details to create a new author account' }}
+                                </p>
+                            </div>
                         </div>
-
-                        <button
-                            wire:click="hideForm"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                        >
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
                     </div>
-                </div>
-
-                <form wire:submit.prevent="{{ $isEditing ? 'update' : 'create' }}" class="p-6">
+                </x-slot:header>
+                <form id="author-add-form" wire:submit.prevent="{{ $isEditing ? 'update' : 'create' }}" class="p-6">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Left Column: Personal Information -->
                         <div class="space-y-6">
@@ -241,17 +233,22 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Form Actions -->
+                </form>
+                <x-slot:footer>
                     <x-form.update.form-buttons
                         :is-editing="$isEditing"
                         submit-text="{{ $isEditing ? 'Update Author' : 'Create Author' }}"
                         loading-text="{{ $isEditing ? 'Updating Author...' : 'Creating Author...' }}"
                         submit-target="{{ $isEditing ? 'update' : 'create' }}"
                         cancel-action="hideForm"
+                        form="author-add-form"
                         reset-action="resetForm"
                     />
-                </form>
+                </x-slot:footer>
+            </x-modal-component>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+
+
             </div>
         @endif
 

@@ -66,7 +66,8 @@
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
                                     <td class="px-6 py-4">
                                         <div class="max-w-md text-gray-900 dark:text-white">
-                                            <span x-html="marked.parse(@js($essayQuestion->question->summary))"></span>
+                                            <x-form.markdown-with-math :content="$essayQuestion->question->summary" />
+{{--                                            <span x-html="marked.parse(@js($essayQuestion->question->summary))"></span>--}}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">

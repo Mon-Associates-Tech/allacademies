@@ -3,12 +3,10 @@
 namespace App\Livewire\Librarians;
 
 use App\Models\BookBorrowing;
-use App\Models\Student;
-use App\Models\Book;
+use Carbon\Carbon;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
-use Carbon\Carbon;
 
 class BookRequests extends Component
 {

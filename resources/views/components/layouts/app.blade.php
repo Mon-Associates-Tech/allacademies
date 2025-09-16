@@ -29,7 +29,7 @@
     @stack('head')
     @livewireStyles
 </head>
-<body class="font-sans antialiased text-gray-600 dark:text-gray-400
+<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar
   bg-[radial-gradient(73%_147%,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
   dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
   bg-blend-screen"
@@ -37,6 +37,9 @@
   x-data="{}"
 >
 <x-alert.impersonation-banner></x-alert.impersonation-banner>
+@if(auth()->check() && auth()->user()->canAccessCrossSchool())
+{{--    <livewire:administrators.school-switcher />--}}
+@endif
     <!-- Page wrapper -->
     <div class="flex h-screen overflow-hidden">
 
@@ -46,7 +49,7 @@
         </aside>
 
         <!-- Content area -->
-        <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
+        <div class="relative flex flex-col thin-scrollbar flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
             <!-- Header -->
             <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"></x-app.header>
 
@@ -77,10 +80,10 @@
                 @endif
 
                 <!-- Page content -->
-                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible overflow-x-hidden">
+                <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible thin-scrollbar overflow-x-hidden">
                     <div
                         x-data="{}"
-                        class="w-full overflow-y-visible sm:px-4 lg:px-6 "
+                        class="w-full overflow-y-visible thin-scrollbar sm:px-4 lg:px-6 "
                     >
                             {{ $slot }}
                     </div>

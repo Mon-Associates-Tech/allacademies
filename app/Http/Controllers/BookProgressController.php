@@ -7,7 +7,6 @@ use App\Models\BookReadingProgress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Spatie\Activitylog\Facades\CauserResolver;
 
 class BookProgressController extends Controller
 {

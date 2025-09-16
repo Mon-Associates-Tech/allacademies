@@ -11,12 +11,14 @@ class SignUpRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'string', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
+            'password_confirmation' => ['required', 'same:password'],
+            'author' => ['sometimes'],
         ];
     }
 }

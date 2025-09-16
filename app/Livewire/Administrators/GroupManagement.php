@@ -32,6 +32,10 @@ class GroupManagement extends Component
         'teacherId' => 'required|exists:teachers,id',
     ];
 
+    protected $listeners = [
+        'update-teacherId' => 'updateTeacherId',
+    ];
+
     public function mount()
     {
         $this->teachers = Teacher::with('user')->get();
@@ -40,6 +44,11 @@ class GroupManagement extends Component
     public function updatedName()
     {
         $this->slug = Str::slug($this->name);
+    }
+
+    public function updateTeacherId($teacherId)
+    {
+        $this->teacherId = $teacherId;
     }
 
     public function create()
@@ -55,6 +64,7 @@ class GroupManagement extends Component
 
         $this->resetForm();
         session()->flash('message', 'Student group created successfully!');
+        $this->js('window.Modal.close("student-group-management-form")');
     }
 
     public function edit($groupId)
@@ -67,6 +77,7 @@ class GroupManagement extends Component
         $this->slug = $group->slug;
         $this->description = $group->description;
         $this->teacherId = $group->teacher_id;
+        $this->js('window.Modal.open("student-group-management-form")');
     }
 
     public function update()
@@ -88,6 +99,7 @@ class GroupManagement extends Component
 
         $this->resetForm();
         session()->flash('message', 'Student group updated successfully!');
+        $this->js('window.Modal.close("student-group-management-form")');
     }
 
     public function delete($groupId)
@@ -159,6 +171,7 @@ class GroupManagement extends Component
         $this->isEditing = false;
         $this->editingGroupId = null;
         $this->resetValidation();
+        $this->js('window.Modal.close("student-group-management-form")');
     }
 
     public function render()

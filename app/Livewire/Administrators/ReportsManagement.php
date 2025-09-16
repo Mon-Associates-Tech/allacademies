@@ -2,17 +2,15 @@
 
 namespace App\Livewire\Administrators;
 
-use Illuminate\Support\Collection;
-use Livewire\Component;
-use App\Models\Student;
-use App\Models\Book;
 use App\Models\BookBorrowing;
 use App\Models\BookSubscription;
+use App\Models\Librarian;
+use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\Teacher;
-use App\Models\Librarian;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class ReportsManagement extends Component
 {

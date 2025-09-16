@@ -2,20 +2,20 @@
 
 namespace App\Livewire\Administrators;
 
-use App\Models\User;
-use App\Models\Student;
-use App\Models\Teacher;
+use App\Models\AcademicSubject;
+use App\Models\Assessment;
 use App\Models\Book;
 use App\Models\BookBorrowing;
-use App\Models\BookSubscription;
-use App\Models\Assessment;
-use App\Models\Team;
-use App\Models\AcademicSubject;
 use App\Models\BookCategory;
+use App\Models\BookSubscription;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\Team;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
-use Carbon\Carbon;
 
 class Overview extends Component
 {
@@ -274,14 +274,17 @@ class Overview extends Component
 
     private function getPopularBookCategories()
     {
-        return BookCategory::withCount(['books' => function($query) {
-            $query->whereHas('borrowings', function($q) {
-                $q->where('created_at', '>=', $this->getPeriodStartDate());
-            });
-        }])
-        ->orderBy('books_count', 'desc')
-        ->take(5)
-        ->get();
+
+        return BookCategory::select('book_categories.id', 'book_categories.name')
+            ->selectRaw('COUNT(book_borrowings.id) as borrowings_count')
+            ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
+            ->join('books', 'book_category.book_id', '=', 'books.id')
+            ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
+            ->where('book_borrowings.created_at', '>=', $this->getPeriodStartDate())
+            ->groupBy('book_categories.id', 'book_categories.name')
+            ->orderBy('borrowings_count', 'desc')
+            ->take(5)
+            ->get();
     }
 
     public function render()
