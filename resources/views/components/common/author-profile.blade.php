@@ -9,7 +9,7 @@
 ])
 
 @php
-    $authorName = $author->name ?: $author->user->name ?: 'Unknown Author';
+    $authorName = $author->name ?: $author->user?->name ?: 'Unknown Author';
     $penName = $author->pen_name ?: null;
     $displayName = $penName ?: $authorName;
     $socialLinks = is_string($author->social_links) ? json_decode($author->social_links, true) : $author->social_links;

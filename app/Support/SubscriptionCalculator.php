@@ -3,11 +3,12 @@
 namespace App\Support;
 
 use App\Enums\SubscriptionPackage;
+use InvalidArgumentException;
 
 class SubscriptionCalculator
 {
     public static function unitSubscriptionPrice(
-        $package = SubscriptionPackage::INDIVIDUAL_FULL,
+        SubscriptionPackage $package = SubscriptionPackage::INDIVIDUAL_FULL,
         int $duration = AcademicDuration::QUARTER,
         string $tag = AcademicGroupTag::BASIC
     ): int
@@ -31,10 +32,10 @@ class SubscriptionCalculator
                 }
                 elseif ($tag === AcademicGroupTag::UNIVERSITY) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_YEAR,
-                        AcademicDuration::HALF => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_HALF,
+                        AcademicDuration::YEAR => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_YEAR,
+                        AcademicDuration::HALF => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_HALF,
                         AcademicDuration::ONE_OFF => SubscriptionAmount::UNIVERSITY_ONE_OFF,
-                        default => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_QUARTER
+                        default => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_QUARTER
                     };
                 }
                 break;
@@ -56,22 +57,35 @@ class SubscriptionCalculator
                 }
                 elseif ($tag === AcademicGroupTag::UNIVERSITY) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
-                        AcademicDuration::HALF => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
+                        AcademicDuration::YEAR => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
+                        AcademicDuration::HALF => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
                         AcademicDuration::ONE_OFF => SubscriptionAmount::UNIVERSITY_ONE_OFF,
-                        default => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
+                        default => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
                     };
                 }
                 break;
             case SubscriptionPackage::INSTITUTION_MID_TERM:
-                return $tag === AcademicGroupTag::BASIC
-                    ? SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE
-                    : SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                if ($tag === AcademicGroupTag::BASIC) {
+                    return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                } elseif ($tag === AcademicGroupTag::SENIOR) {
+                    return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
+                    return SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                }
+                break;
             case SubscriptionPackage::INSTITUTION_MOCK_EXAMS:
-                return $tag === AcademicGroupTag::BASIC
-                    ? SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE
-                    : SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                if ($tag === AcademicGroupTag::BASIC) {
+                    return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                } elseif ($tag === AcademicGroupTag::SENIOR) {
+                    return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
+                    return SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                }
+                break;
+            default:
+                throw new InvalidArgumentException("Invalid subscription package: " . $package->value);
         }
-        return 0;
+
+        throw new InvalidArgumentException("Unsupported combination of package: " . $package->value . ", tag: " . $tag);
     }
 }

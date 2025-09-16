@@ -400,6 +400,37 @@ Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(fu
 });
 
 // Include additional route files
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+// Book Reading Progress Routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
+    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
+    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
+    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
+    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
+
+
+    Route::get('/course-outlines', function () {
+        return view('course-outlines');
+    })->name('course-outlines');
+
+    Route::get('/academic-calendar', function () {
+        return view('academic-calendar');
+    })->name('academic-calendar');
+});
+
+
+// Adding paystack payment routes
+Route::get('/payment', [PaymentController::class, 'showForm'])->name('payment.form');
+Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.initialize');
+Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBook'])->name('payment.book.initialize');
+Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback']) ->name('payment.book.callback');
+
+
+
 include_once 'student.php';
 include_once 'teacher.php';
 include_once 'author.php';

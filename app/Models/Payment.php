@@ -20,6 +20,8 @@ class Payment extends Model
         'currency',
         'reference',
         'status',
+        'subscription_id',
+        'book_subscription_id',
     ];
 
     /**
@@ -33,6 +35,7 @@ class Payment extends Model
     {
         return $this->belongsTo(Subscription::class);
     }
+
 
     public function bookSubscription()
     {

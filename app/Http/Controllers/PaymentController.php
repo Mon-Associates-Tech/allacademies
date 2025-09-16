@@ -17,10 +17,19 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use App\Services\PaystackService;
+
 
 class PaymentController extends Controller
 {
     use HandlesPayments;
+
+     protected $paystack;
+
+    public function __construct(PaystackService $paystack)
+    {
+        $this->paystack = $paystack;
+    }
 
     /**
      * Display a listing of the resource.
@@ -200,4 +209,141 @@ class PaymentController extends Controller
 
         return to_route('payments.index')->with('success', 'Payment for subscription has been manually recorded.');
     }
+
+
+
+
+   public function initialize(Request $request)
+   {
+
+    $subscription = Subscription::findOrFail($request->get('subscription'));
+
+    $data = [
+        'email' => auth()->user()->email,
+        'amount' => (int) $subscription->amount * 100, // Amount in kobo
+        'metadata' => [
+            'subscription_id' => $subscription->id,
+            'name' => auth()->user()->name,
+            'phone' => auth()->user()->phone ?? '0000000000',
+        ],
+        'callback_url' => route('payment.callback'),
+    ];
+
+    $response = $this->paystack->initializeTransaction($data);
+
+    return redirect($response['data']['authorization_url']);
+}
+
+
+
+    /**
+     * Book subscription payment
+     */
+    public function initializeBook($subscriptionId)
+    {
+        $subscription = BookSubscription::findOrFail($subscriptionId);
+
+        $data = [
+            'email' => auth()->user()->email,
+            'amount' => (int) $subscription->annual_fee * 100, // convert to kobo
+            'metadata' => [
+                'subscription_id' => $subscription->id,
+                'type' => 'book',
+                'book_id' => $subscription->book_id,
+                'name' => auth()->user()->name,
+                'phone' => auth()->user()->phone ?? '0000000000',
+            ],
+            'callback_url' => route('payment.book.callback'),
+        ];
+
+        $response = $this->paystack->initializeTransaction($data);
+
+        return redirect($response['data']['authorization_url']);
+    }
+
+
+
+
+public function callback(Request $request)
+{
+    $reference = $request->query('reference');
+    $response = $this->paystack->verifyTransaction($reference);
+
+    if ($response['status'] && $response['data']['status'] === 'success') {
+        $paymentDetails = $response['data'];
+        $subscriptionId = $paymentDetails['metadata']['subscription_id'];
+
+        // Find subscription
+        $subscription = Subscription::findOrFail($subscriptionId);
+
+        DB::transaction(function () use ($subscription, $paymentDetails) {
+            // 1. Update subscription
+            $subscription->update([
+                'status' => 'paid',
+                'expires_at' => now()->addMonths($subscription->duration_in_months),
+            ]);
+
+            // 2. Record payment
+            Payment::create([
+                'reference'       => $paymentDetails['reference'],
+                'amount'          => $subscription->amount,  //$paymentDetails['amount'],
+                'currency'        => $paymentDetails['currency'] ?? 'GHS',
+                'status'          => 'succeeded',
+                'subscription_id' => $subscription->id,
+            ]);
+        });
+
+        return redirect()
+            ->route('subscriptions.index')
+            ->with('success', 'Subscription paid successfully! Ref: ' . $subscription->reference);
+    }
+
+    return redirect()
+        ->route('subscriptions.index')
+        ->with('error', 'Payment failed or was cancelled.');
+}
+
+
+ public function bookCallback(Request $request)
+    {
+        $reference = $request->query('reference');
+        $response = $this->paystack->verifyTransaction($reference);
+
+        if ($response['status'] && $response['data']['status'] === 'success') {
+            $paymentDetails = $response['data'];
+            $subscriptionId = $paymentDetails['metadata']['subscription_id'];
+
+            // Find the BookSubscription
+            $subscription = BookSubscription::findOrFail($subscriptionId);
+
+            DB::transaction(function () use ($subscription, $paymentDetails) {
+                // 1. Update book subscription
+                $subscription->update([
+                    'status' => 'paid',
+                    'payment_completed_at' => now(),
+                    'end_date' => now()->addYear(),
+                ]);
+
+                // 2. Record payment
+                Payment::create([
+                    'reference'            => $paymentDetails['reference'],
+                    'amount'               => $subscription->annual_fee,
+                    'currency'             => $paymentDetails['currency'] ?? 'GHS',
+                    'status'               => 'succeeded',
+                    'subscription_id'      => null, // because this is not a regular subscription
+                    'book_subscription_id' => $subscription->id,
+                    
+                ]);
+            });
+
+            return redirect()
+                ->to("/books/{$subscription->book_id}")
+                ->with('success', 'Book subscription paid successfully! Ref: ' . $subscription->reference);
+        }
+
+        return redirect()
+            ->to("/books/{$subscription->book_id}")
+            ->with('error', 'Book subscription payment failed or was cancelled.');
+    }
+
 }

@@ -58,68 +58,79 @@ class BookSubscriptionController extends Controller
     /**
      * Initialize a new book subscription.
      */
-    public function store(Request $request, Book $book)
-    {
-        // Check for existing subscription
-        $this->checkSubscription($book);
+   public function store(Request $request, Book $book)
+   {
+    // Prevent duplicate subscription for this book
+    $this->checkSubscription($book);
 
-        try {
-            return DB::transaction(function () use ($book, $request) {
-                $reference = 'SUB-' . uniqid();
-                $subscription = BookSubscription::firstOrCreate(
-                    [
-                        'user_id' => auth()->user()->id,
-                        'book_id' => $book->id,
-                    ],
-                    [
-                        'user_id' => auth()->user()->id,
-                        'book_id' => $book->id,
-                        'reference' => $book->is_free ? 'FREE_'.uniqid() : $reference,
-                        'annual_fee' => 0,
-                        'status' => $book->is_free ? 'paid' : 'pending_payment',
-                        'start_date' => now(),
-                        'end_date' => now()->addYear(),
-                        'payment_completed_at' => $book->is_free ? now() : null,
-                    ]
-                );
-                if ($book->is_free) {
+    try {
+        return DB::transaction(function () use ($book, $request) {
+            $reference = 'SUB-' . uniqid();
 
-                    $this->payForBookSubscription([
-                        'book' => $book,
-                        'subscription' => $subscription,
-                        'reference' => $subscription->reference,
-                        'amount' => 0.1,
-                    ], $subscription);
+            // Create or fetch existing subscription
+            $subscription = BookSubscription::firstOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'book_id' => $book->id,
+                ],
+                [
+                    'reference' => $book->is_free ? 'FREE_' . uniqid() : $reference,
+                    'annual_fee' => $book->is_free ? 0 : $book->annual_subscription_fee,
+                    'status' => $book->is_free ? 'paid' : 'pending_payment',
+                    'start_date' => now(),
+                    'end_date' => null,
+                    'payment_completed_at' => $book->is_free ? now() : null,
+                ]
+            );
 
-                }
+            if ($book->is_free) {
+                // Mark subscription as completed
+                $this->payForBookSubscription([
+                    'book' => $book,
+                    'subscription' => $subscription,
+                    'reference' => $subscription->reference,
+                    'amount' => 0.00,
+                ], $subscription);
 
-                // Log the subscription creation
-                activity()
-                    ->performedOn($book)
-                    ->causedBy(auth()->user())
-                    ->withProperties([
-                        'action' => 'book_subscription_created',
-                        'book_id' => $book->id,
-                        'subscription_id' => $subscription->id,
-                        'amount' => $book->annual_subscription_fee,
-                        'reference' => $reference,
-                    ])
-                    ->log('Student initiated book subscription');
+                $redirectRoute = route('books.show', $book);
+            } else {
 
-                return redirect()->route($book->is_free ? 'books.show' : 'books.payment-instructions', $book)
-                    ->with('success', 'Subscription created successfully!');
+                // Redirect to Paystack initialize with type=book
+                // return redirect()->route('payment.initialize', [
+                //     'id' => $subscription->id,
+                //     'type' => 'book',
+                // ]);
 
-            });
-        } catch (\Exception $e) {
-            Log::error('Failed to create book subscription', [
-                'error' => $e->getMessage(),
-                'book_id' => $book->id,
-                'user_id' => auth()->user()->id,
-            ]);
+                return redirect()->route('payment.book.initialize', ['subscription' => $subscription->id]);
+            }
 
-            return back()->with('error', 'Failed to create subscription. Please try again.');
-        }
+            // Log the subscription creation
+            activity()
+                ->performedOn($book)
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'action' => 'book_subscription_created',
+                    'book_id' => $book->id,
+                    'subscription_id' => $subscription->id,
+                    'amount' => $subscription->annual_fee,
+                    'reference' => $subscription->reference,
+                ])
+                ->log('Student initiated book subscription');
+
+            return redirect($redirectRoute)
+                ->with('success', 'Subscription created successfully!');
+        });
+    } catch (\Exception $e) {
+        Log::error('Failed to create book subscription', [
+            'error' => $e->getMessage(),
+            'book_id' => $book->id,
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()->with('error', 'Failed to create subscription. Please try again.');
     }
+}
+
 
     /**
      * Show payment information for a subscription.
