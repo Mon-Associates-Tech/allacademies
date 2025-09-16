@@ -5,7 +5,7 @@
         <div class="mb-8">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Book Quiz Generator</h1>
-                <p class="text-gray-600 dark:text-gray-400">Test your knowledge with AI-generated questions</p>
+                <p class="text-gray-600 dark:text-gray-400">Test your knowledge with  questions from your favorite books.</p>
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
@@ -20,7 +20,7 @@
                                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 <option value="">Choose a book...</option>
                                 @foreach($availableBooks as $book)
-                                    <option value="{{ $book->id }}">{{ $book->title }} by {{ $book->author->name ?? $book->author->user?->name }}</option>
+                                    <option value="{{ $book->id }}">{{ $book->title }} by {{ $book->author_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -28,8 +28,8 @@
                         @if($selectedBook)
                             <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                 <div class="flex items-start space-x-4">
-                                    @if($selectedBook->cover_image_url)
-                                        <img src="{{ $selectedBook->cover_image_url }}"
+                                    @if($selectedBook->cover_image)
+                                        <img src="{{ $selectedBook->cover_image }}"
                                              alt="{{ $selectedBook->title }}"
                                              class="w-20 h-28 object-cover rounded shadow-md">
                                     @else
@@ -41,7 +41,7 @@
                                     @endif
                                     <div>
                                         <h3 class="font-bold text-gray-900 dark:text-white">{{ $selectedBook->title }}</h3>
-                                        <p class="text-gray-600 dark:text-gray-400 text-sm">by {{ $selectedBook->author->name ?? $selectedBook->author->user?->nam }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400 text-sm">by {{ $selectedBook->author_name }}</p>
                                         @if($selectedBook->genre)
                                             <span class="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mt-1">
                                                 {{ $selectedBook->genre }}
@@ -136,7 +136,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Separate topics with commas</p>
                                 </div>
 
-                                <div class="flex items-center">
+                                <div class="flex items-center hidden">
                                     <input type="checkbox" wire:model.live="includeQuotes"
                                            id="includeQuotes"
                                            class="rounded border-gray-300 dark:border-gray-600 text-blue-600">
@@ -151,10 +151,13 @@
 
                 {{-- Generate Quiz Button --}}
                 <div class="pt-6">
-                    <button wire:click="generateQuiz"
-                            wire:loading.attr="disabled"
-                            :disabled="!$wire.selectedBookId || $wire.isGenerating"
-                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl">
+                    <x-button.primary
+                        variant="subtle"
+                        :with-shadow="false"
+                        wire:click="generateQuiz"
+                        x-bind:disabled="!$wire.selectedBookId || $wire.isGenerating"
+                        wire:loading.attr="disabled"
+                        class="w-full justify-center">
                         <span wire:loading.remove wire:target="generateQuiz" class="flex items-center">
                             <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -168,7 +171,7 @@
                             </svg>
                             Generating Quiz...
                         </span>
-                    </button>
+                    </x-button.primary>
                     <p class="text-gray-500 dark:text-gray-500 text-sm mt-2 text-center">This may take 30-60 seconds</p>
                 </div>
             </div>
@@ -610,7 +613,7 @@ id="quiz-section">
         <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 text-center">
             <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Generating Your Quiz</h3>
-            <p class="text-gray-600 dark:text-gray-400">Our AI is creating personalized questions based on your book selection...</p>
+            <p class="text-gray-600 dark:text-gray-400">Hang in there! We are creating personalized questions based on your book selection...</p>
         </div>
     </div>
 
