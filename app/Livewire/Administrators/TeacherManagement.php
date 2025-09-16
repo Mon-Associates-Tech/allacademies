@@ -230,6 +230,8 @@ class TeacherManagement extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to create teacher: ' . $e->getMessage());
         }
+
+        $this->js('window.Modal.close("teacher-form")');
     }
 
     private function autoAssignStudents($teacher)
@@ -289,6 +291,7 @@ class TeacherManagement extends Component
         $this->selectedSubjects = $teacher->subjects->pluck('id')->toArray();
 
         $this->dispatch('scroll-to-form');
+        $this->js('window.Modal.open("teacher-form")');
     }
 
     public function update()
@@ -357,10 +360,12 @@ class TeacherManagement extends Component
             });
 
             $this->resetForm();
-            session()->flash('message', 'Teacher "' . $this->name . '" updated successfully!');
+            session()->flash('message', 'Teacher "' . $teacher->user->name . '" updated successfully!');
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to update teacher: ' . $e->getMessage());
         }
+
+        $this->js('window.Modal.close("teacher-form")');
     }
 
     public function confirmDelete($teacherId)
@@ -400,6 +405,7 @@ class TeacherManagement extends Component
     public function cancelEdit()
     {
         $this->resetForm();
+        $this->js('window.Modal.close("teacher-form")');
     }
 
     public function resetForm()

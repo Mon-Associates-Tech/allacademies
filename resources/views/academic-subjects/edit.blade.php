@@ -56,18 +56,17 @@
 
                 <!-- Name Field -->
                 <div class="space-y-2">
-                    <label for="name" class="block text-sm font-medium text-gray-700">
-                        Subject Name <span class="text-red-500">*</span>
-                    </label>
                     <x-form.input
                         name="name"
                         type="text"
                         :value="$academicSubject->name"
                         placeholder="e.g., Mathematics, English, Science"
                         class="w-full"
+                        label="Subject Name"
+                        info-position="bottom"
+                        info="The full name of the subject as it will appear across the system."
                         required
                     />
-                    <p class="text-xs text-gray-500">The full name of the subject as it will appear across the system.</p>
                     @error('name')
                         <p class="text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -75,18 +74,17 @@
 
                 <!-- Code Field -->
                 <div class="space-y-2">
-                    <label for="code" class="block text-sm font-medium text-gray-700">
-                        Subject Code <span class="text-red-500">*</span>
-                    </label>
                     <x-form.input
                         name="code"
                         type="text"
                         :value="$academicSubject->code"
                         placeholder="e.g., MATH101, ENG201"
                         class="w-full"
+                        label="Subject Code"
+                        info-position="bottom"
+                        info="A unique identifier code for this subject."
                         required
                     />
-                    <p class="text-xs text-gray-500">A unique identifier code for this subject.</p>
                     @error('code')
                         <p class="text-sm text-red-600">{{ $message }}</p>
                     @enderror

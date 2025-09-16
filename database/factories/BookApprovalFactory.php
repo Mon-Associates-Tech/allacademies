@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Book;
 use App\Models\BookApproval;
 use App\Models\Librarian;
-use App\Models\Book;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BookApprovalFactory extends Factory

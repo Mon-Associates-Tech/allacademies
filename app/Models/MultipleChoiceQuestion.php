@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\Mark;
 use App\Traits\HasQuestionAndAnswer;
+use App\Traits\QuestionOwnership;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,7 @@ class MultipleChoiceQuestion extends Model
     use SoftDeletes;
     use Trackable;
     use HasQuestionAndAnswer;
+    use QuestionOwnership;
 
     /**
      * @var array<int, string>
@@ -33,6 +35,8 @@ class MultipleChoiceQuestion extends Model
         'score',
         'difficulty_level',
         'academic_subtopic_id',
+        'added_by',
+        'modified_by'
     ];
 
     /**

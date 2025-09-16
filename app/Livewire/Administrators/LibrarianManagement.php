@@ -42,6 +42,7 @@ class LibrarianManagement extends Component
     public $showBulkActions = false;
     public $selectedLibrarians = [];
     public $selectAll = false;
+    public $showFormModal = false;
 
     protected $queryString = ['searchTerm', 'sortField', 'sortDirection', 'statusFilter', 'departmentFilter', 'positionFilter'];
 
@@ -90,6 +91,14 @@ class LibrarianManagement extends Component
         'hireDate.before_or_equal' => 'Hire date cannot be in the future.',
     ];
 
+    public function openFormModal(): void
+    {
+//        $this->openModal('form-modal', [
+//            'title' => 'Create Newd Librarian',
+//            'size' => 'xl'
+//        ]);
+    }
+
     public function create()
     {
         $this->validate();
@@ -129,6 +138,19 @@ class LibrarianManagement extends Component
         $this->resetForm();
         session()->flash('message', 'Librarian created successfully!');
         $this->dispatch('librarian-created');
+        $this->closeModal();
+    }
+
+//    public function openModal()
+//    {
+//        $this->showFormModal = true;
+//        $this->resetForm();
+//    }
+
+    public function closeModal()
+    {
+        $this->showFormModal = false;
+        $this->resetForm();
     }
 
     public function edit($librarianId)
@@ -136,6 +158,7 @@ class LibrarianManagement extends Component
         $this->resetValidation();
         $this->isEditing = true;
         $this->editingLibrarianId = $librarianId;
+        $this->showFormModal = true;
 
         $librarian = Librarian::with('user')->findOrFail($librarianId);
         $this->name = $librarian->user->name;
@@ -152,6 +175,7 @@ class LibrarianManagement extends Component
         $this->qualifications = $librarian->qualifications ?? '';
         $this->specializations = $librarian->specializations ?? '';
         $this->isActive = $librarian->user->is_active;
+        $this->js('window.Modal.open("librarian-form-modal")');
     }
 
     public function update()
@@ -190,12 +214,14 @@ class LibrarianManagement extends Component
         $this->resetForm();
         session()->flash('message', 'Librarian updated successfully!');
         $this->dispatch('librarian-updated');
+        $this->closeModal();
     }
 
     public function confirmDelete($librarianId)
     {
         $this->deletingLibrarianId = $librarianId;
         $this->showDeleteModal = true;
+        $this->js('window.Modal.open("librarian-delete-modal")');
     }
 
     public function delete()
@@ -218,14 +244,15 @@ class LibrarianManagement extends Component
         $this->showDeleteModal = false;
         session()->flash('message', 'Librarian deleted successfully!');
         $this->dispatch('librarian-deleted');
+        $this->js('window.Modal.close("librarian-delete-modal")');
     }
 
     public function toggleStatus($librarianId)
     {
         $librarian = Librarian::with('user')->findOrFail($librarianId);
-//        $librarian->user->update(['is_active' => !$librarian->user->is_active]);
+        $librarian->user->update(['is_active' => !$librarian->user->is_active]);
 
-//        $status = $librarian->user->is_active ? 'activated' : 'deactivated';
+        $status = $librarian->user->is_active ? 'activated' : 'deactivated';
         session()->flash('message', "Librarian {$status} successfully!");
     }
 
@@ -373,8 +400,8 @@ class LibrarianManagement extends Component
 
         $stats = [
             'total' => Librarian::count(),
-            'active' => 1, //Librarian::whereHas('user', fn($q) => $q->where('is_active', true))->count(),
-            'inactive' => 0, //Librarian::whereHas('user', fn($q) => $q->where('is_active', false))->count(),
+            'active' => Librarian::whereHas('user', fn($q) => $q->where('is_active', true))->count(),
+            'inactive' => Librarian::whereHas('user', fn($q) => $q->where('is_active', false))->count(),
             'this_month' => Librarian::whereMonth('created_at', now()->month)->count(),
         ];
 

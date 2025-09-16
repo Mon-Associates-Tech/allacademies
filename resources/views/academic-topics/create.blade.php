@@ -57,17 +57,17 @@
 
                                 <!-- Name Field -->
                                 <div class="space-y-2">
-                                    <label for="name" class="block text-sm font-medium text-gray-700">
-                                        Topic Name <span class="text-red-500">*</span>
-                                    </label>
                                     <x-form.input
                                         name="name"
                                         type="text"
                                         placeholder="Enter topic name"
                                         class="w-full"
+                                        value="{{ old('name') }}"
+                                        label="Topic Name"
+                                        info="Choose a clear and descriptive name for this topic"
+                                        info-position="bottom"
                                         required
                                     />
-                                    <p class="text-xs text-gray-500">Choose a clear and descriptive name for this topic.</p>
                                     @error('name')
                                         <p class="text-sm text-red-600">{{ $message }}</p>
                                     @enderror

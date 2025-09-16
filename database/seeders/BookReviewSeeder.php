@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Book;
 use App\Models\BookReview;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class BookReviewSeeder extends Seeder
@@ -65,7 +64,7 @@ class BookReviewSeeder extends Seeder
 
                 // Create review with weighted ratings (more 4-5 star reviews)
                 $rating = $this->getWeightedRating();
-                
+
                 BookReview::create([
                     'book_id' => $book->id,
                     'user_id' => $user->id,
@@ -93,7 +92,7 @@ class BookReviewSeeder extends Seeder
             if (rand(1, 100) <= 30) { // 30% chance of having helpful votes
                 $helpfulCount = rand(1, 8);
                 $randomUsers = $users->random($helpfulCount)->pluck('id')->toArray();
-                
+
                 $review->update([
                     'helpful_votes' => $randomUsers,
                     'helpful_count' => count($randomUsers)

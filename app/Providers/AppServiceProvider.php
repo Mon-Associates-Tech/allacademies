@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Livewire\Common\AppModal;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
@@ -10,6 +11,7 @@ use App\Models\AcademicTopic;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
+use App\Models\ChatGroup;
 use App\Models\EssayQuestion;
 use App\Models\Examination;
 use App\Models\Forum\ForumCategory;
@@ -26,9 +28,9 @@ use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,6 +55,9 @@ class AppServiceProvider extends ServiceProvider
             'create' => 'new',
         ]);
 
+        $this->app->singleton(\App\Services\MediaService::class);
+        // In AppServiceProvider boot method
+        Blade::component('app-modal', AppModal::class);
 
         Relation::enforceMorphMap([
             'academic_group' => AcademicGroup::class,
@@ -90,6 +95,13 @@ class AppServiceProvider extends ServiceProvider
             'forum_mention' => \App\Models\Forum\ForumMention::class,
             'user_preference' => \App\Models\UserPreference::class,
             'assignment_submission' => \App\Models\AssignmentSubmission::class,
+            'media_file' => \App\Models\Media\MediaFile::class,
+            'media_folder' => \App\Models\Media\MediaFolder::class,
+            'media_attachment' => \App\Models\Media\MediaAttachment::class,
+            'message' => \App\Models\Message::class,
+            'chat_group' => ChatGroup::class,
+            'school' => \App\Models\School::class,
+            'academic_period' => \App\Models\AcademicPeriod::class,
 
         ]);
     }

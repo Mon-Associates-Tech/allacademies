@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class StudentParent extends Model
 {
+    use BelongsToSchoolEnhanced;
+
     protected $table  = 'parents';
     protected $fillable = [
         'user_id',
@@ -19,7 +22,8 @@ class StudentParent extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function student(){
+    public function student(): BelongsTo
+    {
         return $this->belongsTo(Student::class);
     }
     public function students(): BelongsToMany
@@ -29,4 +33,8 @@ class StudentParent extends Model
             ->withTimestamps();
     }
 
+    public function accessibleStudents(): BelongsToMany
+    {
+        return $this->students()->where('students.school_id', $this->school_id);
+    }
 }

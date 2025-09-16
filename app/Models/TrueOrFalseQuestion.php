@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\Mark;
 use App\Traits\HasQuestionAndAnswer;
+use App\Traits\QuestionOwnership;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ class TrueOrFalseQuestion extends Model
     use SoftDeletes;
     use Trackable;
     use HasQuestionAndAnswer;
+    use QuestionOwnership;
 
     /**
      * @var array<int, string>
@@ -26,7 +28,9 @@ class TrueOrFalseQuestion extends Model
         'score',
         'difficulty_level',
         'academic_topic_id',
-        'academic_subtopic_id'
+        'academic_subtopic_id',
+        'added_by',
+        'modified_by'
     ];
 
     /**

@@ -53,9 +53,6 @@
 
                                 <!-- Name Field -->
                                 <div class="space-y-2">
-                                    <label for="name" class="block text-sm font-medium text-gray-700">
-                                        Level Name <span class="text-red-500">*</span>
-                                    </label>
                                     <x-form.input
                                         name="name"
                                         type="text"
@@ -71,9 +68,6 @@
 
                                 <!-- Label Field -->
                                 <div class="space-y-2">
-                                    <label for="label" class="block text-sm font-medium text-gray-700">
-                                        Display Label <span class="text-red-500">*</span>
-                                    </label>
                                     <x-form.input
                                         name="label"
                                         type="text"

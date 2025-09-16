@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Book;
 use App\Models\BookBorrowing;
 use App\Models\Student;
-use App\Models\Book;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BookBorrowingFactory extends Factory
@@ -16,7 +16,7 @@ class BookBorrowingFactory extends Factory
         $borrowDate = $this->faker->dateTimeBetween('-3 months', 'now');
         $dueDate = $this->faker->dateTimeBetween($borrowDate, '+1 month');
         $returnDate = $this->faker->optional(0.7)->dateTimeBetween($borrowDate, $dueDate);
-        
+
         return [
             'student_id' => Student::factory(),
             'book_id' => Book::factory()->state(function (array $attributes) {

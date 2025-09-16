@@ -77,7 +77,8 @@ export class PDFReader {
                 <!-- Toolbar -->
                 <div class="pdf-toolbar flex items-center justify-between bg-gray-800 p-3 rounded-t-lg">
                     <div class="flex items-center space-x-4">
-                        <span>${this.config.book.title}</span>
+                       <span class="hidden md:block" title="${this.config.book.title}">${this.config.book.title.substring(0, 10)}${this.config.book.title.length > 10 ? '...' : ''}</span>
+
                         ${this.config.showTableOfContents ? `
                         <button id="toggle-toc" class="px-3 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +89,7 @@ export class PDFReader {
                     </div>
 
                     <!-- Page Navigation -->
-                    <div class="flex items-center space-x-4">
+                    <div class="hidden lg:flex items-center space-x-4">
                         <button id="prev-page" class="px-2 py-2 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>

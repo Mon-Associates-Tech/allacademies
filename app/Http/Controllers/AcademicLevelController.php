@@ -61,7 +61,7 @@ class AcademicLevelController extends Controller
 
         $academicLevel = $academicGroup->academicLevels()->create($request->validated());
 
-        return to_route('academic-groups.academic-levels.index', ['academic_group' => $academicGroup])
+        return to_route('academic-groups.index', ['academic_group' => $academicGroup])
             ->with('success', __('status.resource.created', ['name' => $academicLevel->name]));
     }
 

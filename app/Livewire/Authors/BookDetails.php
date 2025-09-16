@@ -5,9 +5,9 @@ namespace App\Livewire\Authors;
 use App\Models\Book;
 use App\Models\BookSubscription;
 use Auth;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class BookDetails extends Component
 {

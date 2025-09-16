@@ -12,38 +12,44 @@ class StudentPolicy
 
     public function viewAny(User $user)
     {
-        return $user->hasRole('administrator') ||
-               $user->hasRole('teacher') ||
-               $user->hasRole('librarian');
+        return $user->hasAnyRole(['admin', 'teacher', 'superadmin', 'owner']);
     }
 
     public function view(User $user, Student $student)
     {
-        return $user->hasRole('administrator') ||
-               $user->hasRole('teacher') ||
-               $user->hasRole('librarian') ||
-               $user->id === $student->user_id;
+        if ($user->canAccessCrossSchool()) {
+            return true;
+        }
+
+        return $user->school_id === $student->school_id;
     }
 
     public function create(User $user)
     {
-        return $user->hasRole('administrator');
+        return $user->hasAnyRole(['admin', 'superadmin', 'owner']);
     }
 
     public function update(User $user, Student $student)
     {
-        return $user->hasRole('administrator') ||
-               $user->id === $student->user_id;
+        if (!$this->view($user, $student)) {
+            return false;
+        }
+
+        return $user->hasAnyRole(['admin', 'superadmin', 'owner']);
     }
 
     public function delete(User $user, Student $student)
     {
-        return $user->hasRole('administrator');
+        if (!$this->view($user, $student)) {
+            return false;
+        }
+
+        return $user->hasAnyRole(['admin', 'superadmin', 'owner']);
     }
 
     public function assignToGroup(User $user, Student $student)
     {
-        return $user->hasRole('administrator') ||
+        return $user->hasRole('admin') ||
                ($user->hasRole('teacher') && $user->teacher->studentGroups->contains('id', $student->student_group_id));
     }
 }

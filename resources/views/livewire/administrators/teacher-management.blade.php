@@ -1,9 +1,23 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Teacher Management</h1>
-            <p class="mt-2 text-gray-600">Manage teachers, their academic assignments, and subject specializations</p>
+        <!-- Replace the Create/Edit Form section with this -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Teacher Management</h1>
+                <p class="mt-2 text-gray-600">Manage teachers, their academic assignments, and subject specializations</p>
+            </div>
+
+            <x-button.primary
+                type="button"
+                onclick="window.Modal.open('teacher-form', {})"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Add Teacher
+            </x-button.primary>
         </div>
 
         <!-- Alert Messages -->
@@ -29,18 +43,8 @@
             </div>
         @endif
 
-        <!-- Create/Edit Form -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-900">
-                    {{ $isEditing ? 'Edit Teacher' : 'Create New Teacher' }}
-                </h2>
-                <p class="mt-1 text-sm text-gray-600">
-                    {{ $isEditing ? 'Update the teacher information below' : 'Fill in the details to create a new teacher account' }}
-                </p>
-            </div>
-
-            <form wire:submit.prevent="{{ $isEditing ? 'update' : 'create' }}" class="p-6">
+        <x-modal-component name="teacher-form"  :title="$isEditing ? 'Edit Teacher' : 'Create New Teacher'" size="2xl" :closable="true">
+            <form id="teacher-form" wire:submit.prevent="{{ $isEditing ? 'update' : 'create' }}" class="">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Personal Information -->
                     <div class="space-y-6">
@@ -275,20 +279,10 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Form Actions -->
-                <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+            </form>
+            <x-slot:footer>
+                <div class="flex place-content-end items-end">
                     <div class="flex space-x-3">
-                        <button
-                            type="submit"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                        >
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            {{ $isEditing ? 'Update Teacher' : 'Create Teacher' }}
-                        </button>
-
                         @if($isEditing)
                             <button
                                 type="button"
@@ -301,10 +295,22 @@
                                 Cancel
                             </button>
                         @endif
+
+                        <x-button.primary
+                            form="teacher-form"
+                            type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {{ $isEditing ? 'Update Teacher' : 'Create Teacher' }}
+                        </x-button.primary>
                     </div>
                 </div>
-            </form>
-        </div>
+            </x-slot:footer>
+
+        </x-modal-component>
 
         <!-- Teachers List -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">

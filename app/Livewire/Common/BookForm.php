@@ -5,7 +5,6 @@ namespace App\Livewire\Common;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -208,7 +207,7 @@ class BookForm extends Component
 
         // Create new author - first check if user already has author record
         $user = Auth::user();
-        
+
         if ($user->author) {
             // Update existing author record with new information
             $user->author->update([
@@ -222,7 +221,7 @@ class BookForm extends Component
                 'author_statement' => $this->author_statement,
                 'pen_name' => $this->author_pen_name,
             ]);
-            
+
             return $user->author->id;
         }
 
@@ -250,7 +249,7 @@ class BookForm extends Component
             if ($this->editingBook && $this->editingBook->cover_image_path && Storage::disk('public')->exists($this->editingBook->cover_image_path)) {
                 Storage::disk('public')->delete($this->editingBook->cover_image_path);
             }
-            
+
             return $this->cover_image->store('book-covers', 'public');
         }
 
@@ -264,7 +263,7 @@ class BookForm extends Component
             if ($this->editingBook && $this->editingBook->pdf_file_path && Storage::disk('public')->exists($this->editingBook->pdf_file_path)) {
                 Storage::disk('public')->delete($this->editingBook->pdf_file_path);
             }
-            
+
             return $this->pdf_file->store('book-pdfs', 'public');
         }
 
@@ -285,7 +284,7 @@ class BookForm extends Component
         $this->annual_subscription_fee = $book->annual_subscription_fee;
         $this->subscription_conditions = $book->subscription_conditions;
         $this->status = $book->status ?? 'draft';
-        
+
         // Set author selection
         $this->author_selection_type = 'existing';
         $this->selected_author_id = $book->author_id;

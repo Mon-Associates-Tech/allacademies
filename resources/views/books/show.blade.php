@@ -60,9 +60,9 @@
                                           d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                                           clip-rule="evenodd"></path>
                                 </svg>
-                                <a href="{{ route('books.index', ['category' =>$book->bookCategory->id]) }}"
+                                <a href="{{ route('books.index', ['category' =>$category->id]) }}"
                                    class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white md:ml-2">
-                                    {{ $book->bookCategory->name }}
+                                    {{ $category->name }}
                                 </a>
                             </div>
                         </li>
@@ -111,7 +111,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                             </svg>
-                            {{ $book->bookCategory->name }}
+                            {{ $category->name }}
                         </div>
                         <div class="flex items-center text-gray-600 dark:text-gray-400">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,9 +134,11 @@
                         <!-- Star Rating -->
                         <div class="flex items-center">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
-                                     fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                <svg
+                                    class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
+                                    fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             @endfor
 
@@ -187,8 +189,9 @@
                                 <!-- Primary Action -->
                                 @if($canRead)
 
-                                    <x-button.primary onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
-                                            class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                                    <x-button.primary
+                                        onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                                        class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -247,7 +250,6 @@
                                             </svg>
                                             <span class="text-sm font-medium">Preview</span>
                                         </button>
-
 
                                     @endif
 
@@ -377,9 +379,11 @@
                                     </p>
                                     <div class="flex items-center space-x-1">
                                         @for($i = 1; $i <= 5; $i++)
-                                            <svg class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
-                                                 fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            <svg
+                                                class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
+                                                fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                             </svg>
                                         @endfor
                                         <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">({{number_format($book->average_rating,1)}} from {{$book->reviews->count()}} reviews)</span>
@@ -407,7 +411,7 @@
                                                   d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                                         </svg>
                                         Contents
-{{--                                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">{{''}}</span>--}}
+                                        {{--                                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">{{''}}</span>--}}
                                     </button>
                                     <button @click="toggleTab('media')"
                                             :class="currentTab === 'media' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
@@ -582,13 +586,118 @@
                                      x-transition:enter="transition ease-out duration-300"
                                      x-transition:enter-start="opacity-0 transform translate-y-4"
                                      x-transition:enter-end="opacity-100 transform translate-y-0"
-                                     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                                    <div class="mt-8 space-y-8">
-                                        @livewire('books.book-media', ['book' => $book])
+                                     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                                     x-data="{ mediaTab: 'audio' }">
 
+                                    <!-- Media Type Tabs -->
+                                    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+                                        <nav class="-mb-px flex space-x-8">
+                                            <!-- Audio Tab -->
+                                            <button @click="mediaTab = 'audio'"
+                                                    :class="{
+                        'border-blue-500 text-blue-600 dark:text-blue-400': mediaTab === 'audio',
+                        'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300': mediaTab !== 'audio'
+                    }"
+                                                    class="group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                                </svg>
+                                                Audio Player
+                                            </button>
+
+                                            <!-- Video Tab -->
+                                            <button @click="mediaTab = 'video'"
+                                                    :class="{
+                        'border-blue-500 text-blue-600 dark:text-blue-400': mediaTab === 'video',
+                        'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300': mediaTab !== 'video'
+                    }"
+                                                    class="group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                </svg>
+                                                Video Player
+                                            </button>
+                                        </nav>
                                     </div>
 
+                                    <!-- Media Content -->
+                                    <div class="space-y-6">
+                                        <!-- Audio Player Tab Content -->
+                                        <div x-show="mediaTab === 'audio'"
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 transform translate-x-4"
+                                             x-transition:enter-end="opacity-100 transform translate-x-0"
+                                             x-transition:leave="transition ease-in duration-150"
+                                             x-transition:leave-start="opacity-100 transform translate-x-0"
+                                             x-transition:leave-end="opacity-0 transform -translate-x-4">
 
+                                            <!-- Audio Player Header -->
+                                            <div class="flex items-center justify-between mb-4">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                  d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Audio Content</h3>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Listen to the audio version</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                        Audio
+                    </span>
+                                                </div>
+                                            </div>
+
+                                            @livewire('media.video-player', [
+                                                'resource' => $book,
+                                                'type' => 'audio'
+                                            ])
+                                        </div>
+
+                                        <!-- Video Player Tab Content -->
+                                        <div x-show="mediaTab === 'video'"
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 transform translate-x-4"
+                                             x-transition:enter-end="opacity-100 transform translate-x-0"
+                                             x-transition:leave="transition ease-in duration-150"
+                                             x-transition:leave-start="opacity-100 transform translate-x-0"
+                                             x-transition:leave-end="opacity-0 transform -translate-x-4">
+
+                                            <!-- Video Player Header -->
+                                            <div class="flex items-center justify-between mb-4">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Video Content</h3>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Watch the video version</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-1.5"></span>
+                        Video
+                    </span>
+                                                </div>
+                                            </div>
+
+                                            @livewire('media.video-player', [
+                                                'resource' => $book,
+                                                'type' => 'video'
+                                            ])
+                                        </div>
+                                    </div>
                                 </div>
                                 <!-- Contents Tab -->
                                 <div x-show="currentTab === 'contents'"
@@ -629,24 +738,35 @@
 
         <!-- Related Books Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user?->name])
+            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
             @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
 
-            <div class="grid hidden grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                @for($i = 1; $i <= 6; $i++)
+
+            <div class="grid  grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @foreach($book->getAuthorBooks(3) as  $b)
                     <div class="group cursor-pointer">
                         <div
-                            class="aspect-[3/4] rounded-lg overflow-hidden shadow-md group-hover:shadow-lg transition-shadow duration-200">
-                            <div
-                                class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                                <span class="text-gray-500 text-sm">Book {{ $i }}</span>
+                            class="relative bg-gradient-to-br h-full from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden transform group-hover:rotate-2 transition-transform duration-300">
+                            @if($b->cover_image)
+                                <img src="{{ $b->cover_image }}" alt="{{ $b->title }} cover"
+                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                     loading="lazy">
+                            @endif
+
+                            <div class="absolute top-1 right-1 flex flex-col gap-1">
+                                @if($b->has_softcopy)
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full shadow-lg"></div>
+                                @endif
+                                @if($b->has_hardcopy)
+                                    <div class="w-2 h-2 bg-amber-500 rounded-full shadow-lg"></div>
+                                @endif
                             </div>
                         </div>
                         <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors duration-200">
-                            Related Book Title {{ $i }}</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Author Name</p>
+                            {{$b->title}}</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{$b->author->user->name}}</p>
                     </div>
-                @endfor
+                @endforeach
             </div>
         </div>
 

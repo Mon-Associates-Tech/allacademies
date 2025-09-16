@@ -116,6 +116,57 @@
             @endif
             @error('pdfFile') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
+
+        <!-- Add this after the PDF File section in the basic information section -->
+        <!-- Sample PDF -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">
+                Sample PDF
+                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full ml-1">Optional</span>
+            </label>
+
+            @if($existingSamplePdfFile && !$removeSamplePdfFile)
+                <div class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="w-8 h-8 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Current Sample PDF</p>
+                            <p class="text-xs text-gray-500">Click "View" to preview</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{{ asset('storage/' . $existingSamplePdfFile) }}" target="_blank"
+                           class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors">
+                            View
+                        </a>
+                        <button type="button" wire:click="removeExistingSamplePdfFile"
+                                class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium hover:bg-red-200 transition-colors">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            @endif
+
+            <div class="relative">
+                <input type="file" wire:model="samplePdfFile"
+                       accept="application/pdf"
+                       class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            @error('samplePdfFile') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+
+            <p class="mt-1 text-xs text-gray-500">
+                Upload a sample PDF of the book (max 10MB). If not provided, the first chapter will be extracted from the full PDF.
+            </p>
+        </div>
+
     </div>
     <div class="mt-8 space-y-8">
         <!-- Audio Content -->
@@ -140,14 +191,14 @@
                     <!-- Single Audio Upload -->
                     <div>
                         <h5 class="text-sm font-medium text-gray-900 mb-4">Main Audio File</h5>
-                        @if($existingSingleAudioFile && !$removeSingleAudioFile)
+                        @if($existingSingleAudio && !$removeSingleAudioFile)
                             <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                                         </svg>
-                                        <span class="text-sm font-medium text-blue-900">{{ basename($existingSingleAudioFile) }}</span>
+                                        <span class="text-sm font-medium text-blue-900">{{ basename($existingSingleAudio) }}</span>
                                     </div>
                                     <button type="button" wire:click="removeExistingSingleAudioFile" class="text-sm text-red-600 hover:text-red-800">Remove</button>
                                 </div>
@@ -162,13 +213,13 @@
                                 <div class="flex text-sm text-gray-600">
                                     <label class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
                                         <span>Upload audio file</span>
-                                        <input type="file" wire:model="singleAudioFile" class="sr-only" accept="audio/*">
+                                        <input type="file" wire:model="singleAudio" class="sr-only" accept="audio/*">
                                     </label>
                                 </div>
                                 <p class="text-xs text-gray-500">MP3, WAV up to 50MB</p>
                             </div>
                         </div>
-                        @error('singleAudioFile') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                        @error('singleAudio') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Chapter Audio Files -->
@@ -181,10 +232,10 @@
                                         <div class="mb-2">
                                             <h6 class="text-sm font-medium text-gray-900">Chapter {{ $chapter['chapter'] }}: {{ $chapter['title'] }}</h6>
                                         </div>
-                                        <input type="file" wire:model="chapterAudioFiles.{{ $index }}"
+                                        <input type="file" wire:model="chapterAudios.{{ $index }}"
                                                accept="audio/*"
                                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                        @error("chapterAudioFiles.$index") <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @error("chapterAudios.$index") <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                 @endforeach
                             </div>
@@ -216,14 +267,14 @@
                     <!-- Single Video Upload -->
                     <div>
                         <h5 class="text-sm font-medium text-gray-900 mb-4">Main Video File</h5>
-                        @if($existingSingleVideoFile && !$removeSingleVideoFile)
+                        @if($existingSingleVideo && !$removeSingleVideoFile)
                             <div class="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                                         </svg>
-                                        <span class="text-sm font-medium text-purple-900">{{ basename($existingSingleVideoFile) }}</span>
+                                        <span class="text-sm font-medium text-purple-900">{{ basename($existingSingleVideo) }}</span>
                                     </div>
                                     <button type="button" wire:click="removeExistingSingleVideoFile" class="text-sm text-red-600 hover:text-red-800">Remove</button>
                                 </div>
@@ -238,13 +289,48 @@
                                 <div class="flex text-sm text-gray-600">
                                     <label class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500">
                                         <span>Upload video file</span>
-                                        <input type="file" wire:model="singleVideoFile" class="sr-only" accept="video/*">
+                                        <input type="file" wire:model="singleVideo" class="sr-only" accept="video/*">
                                     </label>
                                 </div>
                                 <p class="text-xs text-gray-500">MP4, MOV up to 100MB</p>
                             </div>
                         </div>
-                        @error('singleVideoFile') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <!-- Upload Progress for Single Video -->
+                        <div wire:loading wire:target="singleVideo" class="mt-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+                                <span class="text-sm text-gray-600">Uploading video...</span>
+                            </div>
+                            <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                     x-data="{ progress: 0 }"
+                                     x-init="
+                            let interval = setInterval(() => {
+                                if (progress < 90) {
+                                    progress += Math.random() * 10;
+                                    $el.style.width = progress + '%';
+                                } else {
+                                    clearInterval(interval);
+                                }
+                            }, 100);
+                         "></div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Success for Single Video -->
+                        <div wire:loading.remove wire:target="singleVideo" class="mt-4">
+                            @if($singleVideo)
+                                <div class="flex items-center space-x-2 text-green-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    <span class="text-sm">Video uploaded successfully</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        @error('singleVideo') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Chapter Video Files -->
@@ -257,16 +343,62 @@
                                         <div class="mb-2">
                                             <h6 class="text-sm font-medium text-gray-900">Chapter {{ $chapter['chapter'] }}: {{ $chapter['title'] }}</h6>
                                         </div>
-                                        <input type="file" wire:model="chapterVideoFiles.{{ $index }}"
+                                        <input type="file" wire:model="chapterVideos.{{ $index }}"
                                                accept="video/*"
                                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
-                                        @error("chapterVideoFiles.$index") <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                                        <!-- Upload Progress for Chapter Videos -->
+                                        <div wire:loading wire:target="chapterVideos.{{ $index }}" class="mt-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                                                <span class="text-sm text-gray-600">Uploading chapter video...</span>
+                                            </div>
+                                            <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                                <div class="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                                     x-data="{ progress: 0 }"
+                                                     x-init="
+                                            let interval = setInterval(() => {
+                                                if (progress < 90) {
+                                                    progress += Math.random() * 10;
+                                                    $el.style.width = progress + '%';
+                                                } else {
+                                                    clearInterval(interval);
+                                                }
+                                            }, 100);
+                                         "></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Upload Success for Chapter Videos -->
+                                        <div wire:loading.remove wire:target="chapterVideos.{{ $index }}" class="mt-3">
+                                            @if(isset($chapterVideos[$index]) && $chapterVideos[$index])
+                                                <div class="flex items-center space-x-2 text-green-600">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                    <span class="text-sm">Chapter video uploaded successfully</span>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        @error("chapterVideos.$index") <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                 @endforeach
                             </div>
                         </div>
                     @endif
                 </div>
+
+                <style>
+                    @keyframes pulse-upload {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                    }
+
+                    .upload-pulse {
+                        animation: pulse-upload 2s ease-in-out infinite;
+                    }
+                </style>
             @endif
         </div>
     </div>

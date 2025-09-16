@@ -25,6 +25,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrackUserLoginActivity::class,
+
     ];
 
     /**
@@ -41,12 +42,15 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             ApplyUserPreferences::class,
+            \App\Http\Middleware\SchoolContextMiddleware::class,
+            \App\Http\Middleware\AutomaticSchoolScoping::class,
         ],
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\AutomaticSchoolScoping::class,
         ],
     ];
 
@@ -70,5 +74,8 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'parent' => EnsureUserIsParent::class,
+        'school.context' => \App\Http\Middleware\SchoolContextMiddleware::class,
+        'chat.rate.limit' => \App\Http\Middleware\AcademicChatRateLimit::class,
+        'school.scope' => \App\Http\Middleware\AutomaticSchoolScoping::class,
     ];
 }

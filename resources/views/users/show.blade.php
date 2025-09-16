@@ -13,18 +13,7 @@
                 <!-- Avatar Section -->
                 <div class="flex-shrink-0">
                     <div class="relative">
-                        @if($user->avatar)
-                            <img class="w-24 h-24 md:w-32 md:h-32 object-cover rounded-full shadow-lg border-4 border-white"
-                                 src="{{ $user->avatar }}"
-                                 alt="{{ $user->name }}">
-                        @else
-                            <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg border-4 border-white">
-                                <span class="text-white font-bold text-2xl md:text-3xl">
-                                    {{ strtoupper(substr($user->name, 0, 2)) }}
-                                </span>
-                            </div>
-                        @endif
-
+                        <x-avatar name="{{$user->name}}" radius="rounded" avatar="{{$user->avatar}}" class="w-24 h-24" />
                         <!-- Online Status Indicator -->
                         @if($user->is_online)
                             <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-400 border-4 border-white rounded-full"></div>
@@ -37,10 +26,10 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h1>
-                            <p class="text-gray-600 mt-1">{{ $user->email }}</p>
+                            <p class="text-gray-500">{{ $user->email }}</p>
 
                             <!-- Role Badge -->
-                            <div class="mt-3">
+                            <div class="mt-1">
                                 <span class="inline-flex items-center rounded-md px-3 py-1 text-sm font-medium capitalize
                                     {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : '' }}
                                     {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-700' : '' }}
@@ -277,26 +266,79 @@
                         </button>
                     @endif
 
-                    <button class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                        </svg>
-                        Reset Password
-                    </button>
+                        <!-- Reset Password Button -->
+                        <button type="button"
+                                x-data=""
+                                x-on:click="$dispatch('open-modal', { name: 'reset-user-password' })"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                            Reset Password
+                        </button>
 
-                    <button class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
-                        Send Message
-                    </button>
+                        <button type="button"
+                                x-data=""
+                                x-on:click="$dispatch('open-modal', { name: 'send-message-to-user' })"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            Send Message
+                        </button>
 
-                    <button class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 12M6 6l12 12"/>
-                        </svg>
-                        Suspend Account
-                    </button>
+                        <x-modal-component
+                            name="send-message-to-user"
+                            title="Send Message to {{ $user->name }}"
+                            size="lg"
+                            :show="$errors->isNotEmpty()">
+                            @livewire('common.messages.send-message-to-user', ['userId' => $user->id, 'userName' => $user->name])
+                        </x-modal-component>
+
+                        <x-modal-component
+                            name="reset-user-password"
+                            title="Reset Password for {{ $user->name }}"
+                            size="md"
+                            :show="$errors->isNotEmpty()">
+                            <p class="mt-1 text-sm text-gray-600">
+                                Please enter a new password for this user.
+                            </p>
+                            <div class="mt-4">
+                                @livewire('common.users.reset-user-password', ['userId' => $user->id, 'userName' => $user->name])
+                            </div>
+                        </x-modal-component>
+
+                        <!-- Suspend Account Button -->
+                        <button type="button"
+                                x-data=""
+                                x-on:click="$dispatch('open-modal', { name: 'suspend-user' })"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 12M6 6l12 12"/>
+                            </svg>
+                            Suspend Account
+                        </button>
+
+                        <!-- Suspend User Modal -->
+                        <x-modal-component
+                            name="suspend-user"
+                            title="Suspend User Account"
+                            size="md"
+                            :show="$errors->isNotEmpty()">
+                            @livewire('common.users.suspend-user', ['userId' => $user->id, 'userName' => $user->name])
+                        </x-modal-component>
+
+                        <button
+                            type="button"
+                            x-data="{}"
+                            @click="$dispatch('open-delete-modal', {{ $user->id }})"
+                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete Account
+                        </button>
+
                 </div>
             </div>
 
@@ -342,4 +384,16 @@
             @endif
         </div>
     </div>
+
+    @livewire('users.delete-user-modal')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.addEventListener('open-delete-modal', function(event) {
+                // Use the correct Livewire dispatch method
+                Livewire.dispatch('openDeleteModal', { userId: event.detail });
+            });
+        });
+    </script>
+
 </x-layouts.app>

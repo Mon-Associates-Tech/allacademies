@@ -3,14 +3,13 @@
 namespace App\Livewire\Books;
 
 use App\Livewire\AppComponent;
+use App\Models\Book;
+use App\Models\BookBorrowing;
 use App\Models\BookCategory;
 use App\Models\BookReadingProgress;
-use Livewire\WithPagination;
-use App\Models\Book;
 use App\Models\BookSubscription;
-use App\Models\BookBorrowing;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 
 class BookManager extends AppComponent
 {

@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Books;
 
-use Livewire\Component;
 use App\Models\Book;
+use Livewire\Component;
 
 class BookMedia extends Component
 {
