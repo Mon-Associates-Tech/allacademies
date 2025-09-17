@@ -739,17 +739,13 @@
 
         <!-- Related Books Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-<<<<<<<<< Temporary merge branch 1
-            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user?->name])
-            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
-=========
             @if($book->getAuthorBooks()->count())
                 @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
             @endif
             @if($book->getSimilarBooks()->count())
                 @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
             @endif
->>>>>>>>> Temporary merge branch 2
+
 
 
             <div class="grid  grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
