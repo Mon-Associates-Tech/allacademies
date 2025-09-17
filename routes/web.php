@@ -400,6 +400,7 @@ Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(fu
 });
 
 
+
 // Adding paystack payment routes
 Route::get('/payment', [PaymentController::class, 'showForm'])->name('payment.form');
 Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.initialize');
@@ -416,3 +417,5 @@ include_once 'librarian.php';
 include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'academic.php';
+
+// 
