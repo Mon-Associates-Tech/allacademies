@@ -204,8 +204,9 @@
             });
         </script>
 
-        <div class="max-w-7xl hidden mx-auto py-12">
-            @if(!request()->hasAny(['search', 'category', 'format', 'price']))
+
+        <div class="max-w-7xl mx-auto py-12">
+            @if(isset($topCategories) && !request()->hasAny(['search', 'category', 'format', 'price']))
                 {{-- Category Sections - Only show when no filters are applied --}}
                 @foreach($topCategories as $category)
                     <div class="mb-16">

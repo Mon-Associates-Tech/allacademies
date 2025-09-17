@@ -60,9 +60,9 @@
                                           d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                                           clip-rule="evenodd"></path>
                                 </svg>
-                                <a href="{{ route('books.index', ['category' =>$category->id]) }}"
+                                <a href="{{ route('books.index', ['category' =>$book->bookCategory->id]) }}"
                                    class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white md:ml-2">
-                                    {{ $category->name }}
+                                    {{ $book->bookCategory->name }}
                                 </a>
                             </div>
                         </li>
@@ -111,7 +111,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                             </svg>
-                            {{ $category->name }}
+                            {{ $book->bookCategory->name }}
                         </div>
                         <div class="flex items-center text-gray-600 dark:text-gray-400">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,11 +134,9 @@
                         <!-- Star Rating -->
                         <div class="flex items-center">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg
-                                    class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
-                                    fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                <svg class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
+                                     fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             @endfor
 
@@ -189,9 +187,8 @@
                                 <!-- Primary Action -->
                                 @if($canRead)
 
-                                    <x-button.primary
-                                        onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
-                                        class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                                    <x-button.primary onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                                            class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -239,8 +236,10 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <!-- Preview Button -->
                                     @if($book->sample_url)
-                                        <button @click="showPreviewModal = true"
-                                                class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        <button
+                                            x-data="{}"
+                                            @click="$dispatch('open-modal', {name: 'book-preview'})"
+                                            class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
                                             <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
                                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -254,8 +253,10 @@
                                     @endif
 
                                     <!-- Notes Button -->
-                                    <button @click="showNotesModal = true"
-                                            class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                    <button
+                                        x-data="{}"
+                                        @click="$dispatch('open-modal', {name: 'book-notes'})"
+                                        class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
                                         <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none"
                                              stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -337,7 +338,7 @@
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Author:</span>
                                         <span
-                                            class="font-medium text-gray-900 dark:text-white">{{ $book->author->user?->name }}</span>
+                                            class="font-medium text-gray-900 dark:text-white">{{ $book->author_name }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Pages:</span>
@@ -375,7 +376,7 @@
                                 <div class="mt-4 flex flex-wrap items-center gap-4">
                                     <p class="text-xl text-gray-600 dark:text-gray-400">
                                         by <a href="#"
-                                              class="text-blue-600 hover:text-blue-700 font-medium">{{ $book->author->name ?? $book->author->user?->name }}</a>
+                                              class="text-blue-600 hover:text-blue-700 font-medium">{{ $book->author_name }}</a>
                                     </p>
                                     <div class="flex items-center space-x-1">
                                         @for($i = 1; $i <= 5; $i++)
@@ -738,8 +739,17 @@
 
         <!-- Related Books Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
+<<<<<<<<< Temporary merge branch 1
+            @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user?->name])
             @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
+=========
+            @if($book->getAuthorBooks()->count())
+                @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
+            @endif
+            @if($book->getSimilarBooks()->count())
+                @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
+            @endif
+>>>>>>>>> Temporary merge branch 2
 
 
             <div class="grid  grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
@@ -764,92 +774,51 @@
                         </div>
                         <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors duration-200">
                             {{$b->title}}</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{$b->author->user->name}}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{$b->author_name}}</p>
                     </div>
                 @endforeach
             </div>
         </div>
 
+        <x-modal-component name="book-preview" size="4xl" title="{{ $book->title }} - Preview">
+
+                <div class="aspect-video">
+                    <iframe src="{{ $book->sample_url }}"
+                            style="height: 90vh; width: 100%;"
+                            class="w-full h-full rounded-lg"
+                            frameborder="0"></iframe>
+                </div>
+
+            <x-slot name="actions">
+                <button @click="$dispatch('close-modal', {name: 'book-preview'})"
+                        class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Close
+                </button>
+            </x-slot>
+        </x-modal-component>
         <!-- Preview Modal -->
-        <div x-show="showPreviewModal"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 overflow-y-auto"
-             style="display: none;">
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                     @click="showPreviewModal = false"></div>
-                <div
-                    class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $book->title }} -
-                                Preview</h3>
-                            <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-500">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="aspect-video">
-                            <iframe :src="showPreviewModal ? '{{ $book->sample_url }}' : ''"
-                                    style="height: 90vh; width: 100%;" class="w-full h-full rounded-lg"
-                                    frameborder="0"></iframe>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Notes Modal -->
-        <div x-show="showNotesModal"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 overflow-y-auto"
-             style="display: none;">
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                     @click="showNotesModal = false"></div>
-                <div
-                    class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">My Notes
-                                - {{ $book->title }}</h3>
-                            <button @click="showNotesModal = false" class="text-gray-400 hover:text-gray-500">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <textarea x-model="notes"
-                                  class="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white resize-none"
-                                  placeholder="Write your notes about this book here..."></textarea>
-                        <div class="mt-4 flex justify-end space-x-3">
-                            <button @click="showNotesModal = false"
-                                    class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                Cancel
-                            </button>
-                            <button @click="saveNotes()"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                Save Notes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-modal-component name="book-notes" size="2xl" title="My Notes - {{ $book->title }}">
 
+        <textarea
+            x-data="{ notes: localStorage.getItem('notes_{{ $book->id }}') || '' }"
+            x-model="notes"
+            x-init="$watch('notes', value => localStorage.setItem('notes_{{ $book->id }}', value))"
+            class="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+            placeholder="Write your notes about this book here..."></textarea>
+
+
+            <x-slot name="actions">
+                <button @click="$dispatch('close-modal', {name: 'book-notes'})"
+                        class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Cancel
+                </button>
+                <button @click="$dispatch('close-modal', {name: 'book-notes'})"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Save Notes
+                </button>
+            </x-slot>
+        </x-modal-component>
         <!-- Mobile Sticky Action Bar -->
         <div
             class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-40">

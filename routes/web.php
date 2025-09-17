@@ -399,6 +399,27 @@ Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(fu
     Route::get('courses', Courses::class)->name('courses');
 });
 
+// Include additional route files
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+// Book Reading Progress Routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
+    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
+    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
+    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
+    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
+
+
+    Route::get('/course-outlines', function () {
+        return view('course-outlines');
+    })->name('course-outlines');
+
+    Route::get('/academic-calendar', function () {
+        return view('academic-calendar');
+    })->name('academic-calendar');
+});
 
 
 // Adding paystack payment routes
@@ -410,6 +431,7 @@ Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback'])
 
 
 // Include additional route files
+
 include_once 'student.php';
 include_once 'teacher.php';
 include_once 'author.php';

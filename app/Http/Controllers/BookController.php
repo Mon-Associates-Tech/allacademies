@@ -18,51 +18,23 @@ class BookController extends Controller
         $user = Auth::user();
         $student = $user->student;
 
-        // Get all categories for filter dropdown
-        $categories = BookCategory::all();
+        $query = Book::with(['author', 'bookCategory'])->whereStatus(PublishingStatus::PUBLISHED->value);
 
-        // Get top 3 categories with their books (only when no filters are applied)
-        $topCategories = collect();
-        if (!$request->hasAny(['search', 'category', 'format', 'price'])) {
-            $topCategories = BookCategory::with(['books' => function($query) {
-                $query->with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
-                ->whereStatus(PublishingStatus::PUBLISHED->value)
-                    ->latest()
-                    ->limit(4);
-            }])
-                ->withCount('books')
-                ->orderBy('books_count', 'desc')
-                ->limit(3)
-                ->get();
-        }
-
-        // Main books query
-        $query = Book::with(['author', 'categories']);
-
-
-        // Search filter (title, author, or genre)
+        // Search filter (title or author)
         if ($request->query('search')) {
             $searchTerm = $request->query('search');
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('description', 'like', '%' . $searchTerm . '%')
-                    ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
-                        $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
-                    })
-                    ->orWhereHas('categories', function ($categoryQuery) use ($searchTerm) { // Changed from 'bookCategory'
-                        $categoryQuery->where('name', 'like', '%' . $searchTerm . '%');
-                    });
+                  ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
+                      $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
+                  });
             });
         }
 
-        // Category filter
         if ($request->filled('category')) {
-            $query->whereHas('categories', function ($q) use ($request) {
-                $q->where('book_category.id', $request->category);
-            });
+            $query->where('book_category_id', $request->category);
         }
 
-        // Format filter
         if ($request->filled('format')) {
             switch ($request->format) {
                 case 'hardcopy':
@@ -77,27 +49,23 @@ class BookController extends Controller
             }
         }
 
-        // Price filter
         if ($request->filled('price')) {
             if ($request->price === 'free') {
-                $query->where(function($q) {
-                    $q->whereNull('annual_subscription_fee')
-                        ->orWhere('annual_subscription_fee', 0);
-                });
-            } elseif ($request->price === 'subscribed') {
+                $query->whereNull('annual_subscription_fee')->orWhere('annual_subscription_fee', 0);
+            }
+            elseif($request->price === 'subscribed'){
                 $query->whereHas('subscriptions', function ($q) use ($user) {
                     $q->where('user_id', $user->id)
                         ->where('status', 'paid');
                 });
-            } else {
+            }
+            else {
                 $query->where('annual_subscription_fee', '>', 0);
             }
         }
 
-        // Order by latest for better user experience
-        $query->latest();
-
         $books = $query->paginate(12)->appends($request->query());
+        $categories = BookCategory::all();
 
         // Get user's subscriptions and borrowings for status checking
         $subscribedBookIds = $user->bookSubscriptions()
@@ -108,13 +76,7 @@ class BookController extends Controller
             ->where('status', 'borrowed')
             ->pluck('book_id')->toArray() ?: [];
 
-        return view('books.index', compact(
-            'books',
-            'categories',
-            'topCategories',
-            'subscribedBookIds',
-            'borrowedBookIds'
-        ));
+        return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds'));
     }
 
     public function show(Book $book)
@@ -169,29 +131,29 @@ class BookController extends Controller
             $isBorrowed = (bool) $borrowing;
         }
 
-        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user->id === $user->id;
-        $category = $book->categories()->first();
+        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user?->id  === $user->id;
 
         return view('books.show',
-            compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews', 'relatedBooks', 'category')
+            compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
         );
     }
 
     public function create()
     {
-        $categories = BookCategory::all();
-        return view('books.create', compact('categories'));
+        return view('books.create');
     }
 
     public function edit(Book $book)
     {
-        $categories = BookCategory::all();
-        return view('books.edit', compact('book', 'categories'));
+        return view('books.edit', compact('book'));
     }
 
     public function subscribe(Request $request, Book $book)
     {
         $user = Auth::user();
+        $student = $user->student;
+
+
 
         // Check if already subscribed
         $existingSubscription = $user->bookSubscriptions()
@@ -281,7 +243,7 @@ class BookController extends Controller
 
         if (!$book->has_softcopy) {
             // todo: uncomment
-            // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
+           // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
         }
 
         // Check subscription for paid books
