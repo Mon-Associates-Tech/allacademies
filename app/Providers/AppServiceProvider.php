@@ -102,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
             'chat_group' => ChatGroup::class,
             'school' => \App\Models\School::class,
             'academic_period' => \App\Models\AcademicPeriod::class,
+            'quiz_session' => \App\Models\QuizSession::class,
 
         ]);
     }

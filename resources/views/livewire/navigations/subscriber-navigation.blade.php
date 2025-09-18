@@ -19,10 +19,10 @@
 
         <!-- Browse Free Books -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('books.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('books.index')}}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('subscriber.free-books') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                    <svg class="shrink-0 fill-current {{ Route::is('books*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"/>
                     </svg>
                     <span class="text-sm ml-4 sidebar-text duration-200">Books</span>
@@ -58,19 +58,18 @@
             </a>
         </li>
 
-        <!-- My Library -->
-        <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('subscriber.courses') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('subscriber.courses')}}">
-                <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('subscriber.courses') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                        <path d="M4 0h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H4z"/>
-                        <path d="M4.5 4a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1h-7zM4 6.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4z"/>
-                    </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">My Courses</span>
-                </div>
-            </a>
-        </li>
+<li class="mb-0.5 last:mb-0">
+    <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('learning.quiz') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+       href="{{ route('learning.quiz') }}">
+        <div class="flex items-center">
+            <svg class="shrink-0 fill-current {{ Route::is('learning.quiz') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path d="M11.5 5.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V6a.5.5 0 0 0-.5-.5H10a.5.5 0 0 1 0-1h.5a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5H9a1.5 1.5 0 0 1-1.5-1.5v-1A1.5 1.5 0 0 1 9 4h1a1.5 1.5 0 0 1 1.5 1.5v1a.5.5 0 0 0 .5.5v-1a.5.5 0 0 1 .5-.5zM8 12a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 8 12zm-3-3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 9zm6 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 11 9zM8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2z"/>
+            </svg>
+            <span class="text-sm ml-4 sidebar-text duration-200">Self Assessment</span>
+        </div>
+    </a>
+</li>
+
 
         <!-- Forums -->
         <li class="mb-0.5 last:mb-0">

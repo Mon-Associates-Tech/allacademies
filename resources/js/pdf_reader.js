@@ -72,151 +72,153 @@ export class PDFReader {
             throw new Error('Container element not found');
         }
 
-        container.innerHTML = `
-            <div class="pdf-reader bg-gray-900 text-white rounded-lg shadow-lg flex flex-col h-full">
-                <!-- Toolbar -->
-                <div class="pdf-toolbar flex items-center justify-between bg-gray-800 p-3 rounded-t-lg">
-                    <div class="flex items-center space-x-4">
-                       <span class="hidden md:block" title="${this.config.book.title}">${this.config.book.title.substring(0, 10)}${this.config.book.title.length > 10 ? '...' : ''}</span>
+container.innerHTML = `
+    <div class="pdf-reader bg-gray-900 text-white rounded-lg shadow-lg flex flex-col h-full">
+        <!-- Toolbar -->
+        <div class="pdf-toolbar flex flex-wrap items-center justify-between bg-gray-800 p-2 rounded-t-lg gap-2">
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-between">
+                <span class="block sm:hidden truncate max-w-[120px]" title="${this.config.book.title}">${this.config.book.title.substring(0, 15)}${this.config.book.title.length > 15 ? '...' : ''}</span>
+                <span class="hidden sm:block truncate max-w-[150px]" title="${this.config.book.title}">${this.config.book.title.substring(0, 20)}${this.config.book.title.length > 20 ? '...' : ''}</span>
 
-                        ${this.config.showTableOfContents ? `
-                        <button id="toggle-toc" class="px-3 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-                            </svg>
-                        </button>
-                        ` : ''}
-                    </div>
+                ${this.config.showTableOfContents ? `
+                <button id="toggle-toc" class="px-2 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors sm:mr-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                    </svg>
+                </button>
+                ` : ''}
+            </div>
 
-                    <!-- Page Navigation -->
-                    <div class="hidden lg:flex items-center space-x-4">
-                        <button id="prev-page" class="px-2 py-2 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="flex items-center space-x-2">
-                            <input type="number" id="page-input" class="w-16 px-3 py-2 text-center bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-gray-700 outline-none transition-all duration-200 hover:border-gray-500 shadow-sm font-medium text-sm" min="1" value="${this.currentPage}" onwheel="this.blur()">
-                            <span>of</span>
-                            <span id="total-pages">--</span>
-                        </div>
-                        <button id="next-page" class="px-2 py-2 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- View Mode Toggle -->
-                    <div class="flex items-center space-x-2">
-                        <button id="toggle-continuous" class="px-3 py-1 bg-green-600 rounded-md hover:bg-green-700 transition-colors">
-                            <span class="continuous-text">Continuous</span>
-                            <span class="single-text hidden">Single Page</span>
-                        </button>
-                    </div>
-
-                    <!-- Zoom Controls -->
-                    <div class="flex items-center space-x-4">
-                        <button id="zoom-out" class="px-3 py-1 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">-</button>
-                        <span id="zoom-level">${Math.round(this.scale * 100)}%</span>
-                        <button id="zoom-in" class="px-3 py-1 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">+</button>
-                        <button id="fit-width" class="px-3 py-1 bg-gray-700 rounded-md hover:bg-gray-600">Fit Width</button>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-center space-x-2">
-                        <button id="fullscreen" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors" title="Toggle Fullscreen">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <button id="close-reader" class="px-2 py-2 bg-red-600 rounded-md hover:bg-red-700">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                    </div>
+            <!-- Page Navigation -->
+            <div class="flex items-center space-x-2">
+                <button id="prev-page" class="px-2 py-1 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <div class="flex items-center space-x-1">
+                    <input type="number" id="page-input" class="w-12 sm:w-16 px-2 py-1 text-center bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:bg-gray-700 outline-none transition-all duration-200 hover:border-gray-500 shadow-sm text-sm" min="1" value="${this.currentPage}" onwheel="this.blur()">
+                    <span class="text-sm">of</span>
+                    <span id="total-pages" class="text-sm">--</span>
                 </div>
+                <button id="next-page" class="px-2 py-1 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
 
-                <!-- Main Content Area -->
-                <div class="flex flex-1 overflow-hidden">
-                    <!-- Table of Contents Sidebar -->
-                    ${this.config.showTableOfContents ? `
-                    <div id="toc-sidebar" class="hidden w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
-                        <!-- TOC Header -->
-                        <div class="p-4 border-b border-gray-700">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-white">Table of Contents</h3>
-                                <button id="close-toc" class="text-gray-400 hover:text-white">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            </div>
+            <!-- View Mode Toggle -->
+            <div class="flex items-center space-x-1">
+                <button id="toggle-continuous" class="px-2 py-1 text-xs sm:text-sm bg-green-600 rounded-md hover:bg-green-700 transition-colors">
+                    <span class="continuous-text hidden sm:inline">Continuous</span>
+                    <span class="single-text hidden sm:inline">Single Page</span>
+                    <span class="sm:hidden">View</span>
+                </button>
+            </div>
 
-                            <!-- TOC Search -->
-                            <div class="mt-3 relative">
-                                <input type="text" id="toc-search" placeholder="Search chapters..."
-                                       class="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none text-sm">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Zoom Controls -->
+            <div class="flex items-center space-x-1">
+                <button id="zoom-out" class="px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">-</button>
+                <span id="zoom-level" class="text-xs">${Math.round(this.scale * 100)}%</span>
+                <button id="zoom-in" class="px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">+</button>
+                <button id="fit-width" class="hidden sm:block px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600">Fit</button>
+            </div>
 
-                        <!-- TOC Content -->
-                        <div id="toc-content" class="flex-1 overflow-y-auto p-4">
-                            <div class="text-gray-400 text-center py-8">
-                                <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <p>Loading table of contents...</p>
-                            </div>
-                        </div>
+            <!-- Actions -->
+            <div class="flex items-center space-x-1">
+                <button id="fullscreen" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors" title="Toggle Fullscreen">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <button id="close-reader" class="px-2 py-1 bg-red-600 rounded-md hover:bg-red-700">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
 
-                        <!-- TOC Actions -->
-                        <div class="p-4 border-t border-gray-700 space-y-2">
-                            <button id="expand-all-toc" class="w-full px-3 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                                Expand All
-                            </button>
-                            <button id="collapse-all-toc" class="w-full px-3 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                                Collapse All
-                            </button>
-                        </div>
+        <!-- Main Content Area -->
+        <div class="flex flex-1 overflow-hidden relative">
+            <!-- Table of Contents Sidebar -->
+            ${this.config.showTableOfContents ? `
+            <div id="toc-sidebar" class="absolute sm:relative z-10 w-64 sm:w-80 bg-gray-800 border-r border-gray-700 flex flex-col h-full transform transition-transform duration-300 -translate-x-full sm:translate-x-0">
+                <!-- TOC Header -->
+                <div class="p-3 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-white">Contents</h3>
+                        <button id="close-toc" class="text-gray-400 hover:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
-                    ` : ''}
 
-                    <!-- PDF Viewer Area -->
-                    <div class="pdf-viewer-area flex-1 overflow-auto bg-gray-200 relative" id="viewer-container">
-                        <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-10">
-                            <div class="text-gray-800 font-bold text-xl">Loading PDF...</div>
-                        </div>
-
-                        <!-- Single Page Mode Container -->
-                        <div id="single-page-container" class="pdf-container flex justify-center p-4 hidden">
-                            <canvas id="pdf-canvas" class="rounded-md shadow-lg max-w-full"></canvas>
-                        </div>
-
-                        <!-- Continuous Mode Container -->
-                        <div id="continuous-container" class="pdf-pages-container">
-                            <!-- Pages will be dynamically inserted here -->
+                    <!-- TOC Search -->
+                    <div class="mt-2 relative">
+                        <input type="text" id="toc-search" placeholder="Search..."
+                               class="w-full px-2 py-1 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none text-sm">
+                        <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                            <svg class="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Progress Bar -->
-                <div class="pdf-progress hidden p-2 bg-gray-800 rounded-b-lg">
-                    <div class="w-full bg-gray-700 rounded-full h-2">
-                        <div id="progress-bar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                <!-- TOC Content -->
+                <div id="toc-content" class="flex-1 overflow-y-auto p-2">
+                    <div class="text-gray-400 text-center py-4">
+                        <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-xs">Loading contents...</p>
                     </div>
-                    <p class="text-center text-sm mt-2">
-                        Reading Progress: <span id="progress-text">0%</span>
-                    </p>
+                </div>
+
+                <!-- TOC Actions -->
+                <div class="p-2 border-t border-gray-700 space-y-1">
+                    <button id="expand-all-toc" class="w-full px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                        Expand All
+                    </button>
+                    <button id="collapse-all-toc" class="w-full px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                        Collapse All
+                    </button>
                 </div>
             </div>
-        `;
+            ` : ''}
+
+            <!-- PDF Viewer Area -->
+            <div class="pdf-viewer-area flex-1 overflow-auto bg-gray-200 relative" id="viewer-container">
+                <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-10">
+                    <div class="text-gray-800 font-bold">Loading PDF...</div>
+                </div>
+
+                <!-- Single Page Mode Container -->
+                <div id="single-page-container" class="pdf-container flex justify-center p-2 sm:p-4 hidden">
+                    <canvas id="pdf-canvas" class="rounded-md shadow-lg max-w-full"></canvas>
+                </div>
+
+                <!-- Continuous Mode Container -->
+                <div id="continuous-container" class="pdf-pages-container p-2 sm:p-4">
+                    <!-- Pages will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="pdf-progress p-2 bg-gray-800 rounded-b-lg">
+            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                <div id="progress-bar" class="bg-green-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p class="text-center text-xs mt-1">
+                Progress: <span id="progress-text">0%</span>
+            </p>
+        </div>
+    </div>
+`;
 
         this.viewerContainer = document.getElementById('viewer-container');
         this.tocSidebar = document.getElementById('toc-sidebar');

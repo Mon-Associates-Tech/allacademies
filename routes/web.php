@@ -322,7 +322,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/forums', ForumManagement::class)->name('forums');
 
     // Learning Routes
-    Route::get('/learning/quiz', BookQuizInterface::class)->name('learning.quiz');
+    Route::get('/learning/quiz/{bookId?}', BookQuizInterface::class)->name('learning.quiz');
 
     // Dashboard v2
     Route::get('v2', function () {
@@ -386,19 +386,6 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
     Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
 });
 
-// Subscriber Routes
-Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(function () {
-    Route::get('/library', \App\Livewire\Subscribers\Library::class)->name('library');
-    Route::get('/assessments', \App\Livewire\Subscribers\Assessments::class)->name('assessments');
-    Route::get('/quizzes', \App\Livewire\Subscribers\Quizzes::class)->name('quizzes');
-    Route::get('/progress', \App\Livewire\Subscribers\Progress::class)->name('progress');
-    Route::get('/forums', ForumManagement::class)->name('forums');
-    Route::get('/groups', \App\Livewire\Subscribers\StudyGroups::class)->name('groups');
-    Route::get('/premium', \App\Livewire\Subscribers\Premium::class)->name('premium');
-    Route::get('/analytics', \App\Livewire\Subscribers\Analytics::class)->name('analytics');
-    Route::get('courses', Courses::class)->name('courses');
-});
-
 // Include additional route files
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
@@ -438,3 +425,4 @@ include_once 'librarian.php';
 include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'academic.php';
+include_once 'subscriber.php';

@@ -70,7 +70,7 @@ class BookForm extends Component
     public $singleAudioUpload = false;
     public $singleVideoUpload = false;
     public $singleAudio;
-    #[Validate('nullable|file|mimes:mp4,mov,avi|max:524288')]
+    #[Validate('nullable|file|mimes:mp4,mov,avi,mkv,webm|max:524288')]
     public $singleVideo;
     public $chapterAudios = [];
     public $chapterVideos = [];
@@ -133,9 +133,9 @@ class BookForm extends Component
         'hasAudio' => 'boolean',
         'hasVideo' => 'boolean',
         'singleAudio' => 'nullable|file|mimes:mp3,wav,ogg|max:51200', // 50MB max
-        'singleVideo' => 'nullable|file|mimes:mp4,mov,avi|max:524288',
+        'singleVideo' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:524288',
         'chapterAudios.*' => 'nullable|file|mimes:mp3,wav,ogg|max:51200',
-        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
+        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:102400',
 
     ];
 

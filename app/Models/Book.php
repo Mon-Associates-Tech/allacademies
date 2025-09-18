@@ -255,6 +255,46 @@ class Book extends Model
             ->withTimestamps();
     }
 
+    /**
+ * Get the primary category for backward compatibility
+ * Returns the first category if multiple exist, or the old book_category_id fallback
+ */
+public function getPrimaryCategoryAttribute()
+{
+    // First try the new categories relationship
+    if ($this->relationLoaded('categories') && $this->categories->isNotEmpty()) {
+        return $this->categories->first();
+    }
+
+    // Fallback to the old bookCategory relationship
+    if ($this->relationLoaded('bookCategory') && $this->bookCategory) {
+        return $this->bookCategory;
+    }
+
+    // Load and return the first available category
+    return $this->categories()->first() ?? $this->bookCategory()->first();
+}
+
+/**
+ * Get categories with limit for display purposes
+ */
+public function getCategoriesDisplay($limit = null)
+{
+    if ($limit) {
+        return $this->categories()->limit($limit)->get();
+    }
+    return $this->categories;
+}
+
+/**
+ * Get category names as a comma-separated string
+ */
+public function getCategoryNamesAttribute()
+{
+    return $this->categories->pluck('name')->implode(', ');
+}
+
+
     public function getFormattedSubscriptionFeeAttribute(): string
     {
         return 'GHS ' . number_format($this->annual_subscription_fee, 2);
