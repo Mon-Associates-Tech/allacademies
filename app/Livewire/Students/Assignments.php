@@ -29,15 +29,24 @@ class Assignments extends Component
         'sortDirection' => ['except' => 'desc'],
     ];
 
-    public function mount()
-    {
-        $this->student = Auth::user()->load('student')->student;
+public function mount()
+{
+    $user = Auth::user();
 
-        // Check if student record exists
-        if (!$this->student) {
-            $this->unauthorized = true;
-        }
+    // Try the relationship first
+    $this->student = $user->student;
+
+    // If that fails, try direct query
+    if (!$this->student) {
+        $this->student = \App\Models\Student::where('user_id', $user->id)->first();
     }
+
+    // Check if student record exists
+    if (!$this->student) {
+        $this->unauthorized = true;
+    }
+}
+
 
     public function updatingSearch()
     {
