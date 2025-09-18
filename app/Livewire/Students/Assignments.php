@@ -31,7 +31,7 @@ class Assignments extends Component
 
     public function mount()
     {
-        $this->student = Auth::user()->student;
+        $this->student = Auth::user()->load('student')->student;
 
         // Check if student record exists
         if (!$this->student) {
