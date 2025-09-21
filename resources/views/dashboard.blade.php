@@ -643,7 +643,7 @@
                     });
                 </script>
             @else
-                <div class="max-w-md mx-auto my-10 p-8 text-center">
+                <div class="max-w-md mx-auto my-10 hidden p-8 text-center">
                     <!-- Animated Icon -->
                     <div class="relative mb-6">
                         <div class="w-24 h-24 mx-auto relative">

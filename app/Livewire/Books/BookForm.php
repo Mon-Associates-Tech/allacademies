@@ -7,14 +7,16 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Log;
 use setasign\Fpdi\Fpdi;
+use ValueError;
 
 class BookForm extends Component
 {
@@ -44,7 +46,6 @@ class BookForm extends Component
     public $additionalInfo;
     public $coverImage;
     #[Validate('nullable|file|mimes:pdf|max:102400')]
-
     public $pdfFile;
     public $annualSubscriptionFee = 0;
     public $subscriptionConditions;
@@ -177,67 +178,6 @@ class BookForm extends Component
         }
     }
 
-    public function updatedSingleVideo(): void
-    {
-        $this->uploadComplete['singleVideo'] = true;
-        $this->validateOnly('singleVideo');
-    }
-
-    public function updatedChapterVideos($value, $key): void
-    {
-        $this->uploadComplete["chapterVideos.{$key}"] = true;
-        $this->validateOnly("chapterVideos.{$key}");
-    }
-
-    public function updateAuthorId($value): void
-    {
-        $this->authorId = $value;
-    }
-
-    public function updateBookCategoryIds($value): void
-    {
-        $this->bookCategoryIds = is_array($value) ? $value : [$value];
-    }
-
-    private function authorizeBookAccess(): void
-    {
-        $user = auth()->user();
-
-        // Admin and owner can edit any book
-        if (in_array($user->role, ['admin', 'owner'])) {
-            return;
-        }
-
-        // Authors can only edit their own books
-        if ($user->role === 'author' && $this->book->author->user_id === $user->id) {
-            return;
-        }
-
-        // Teachers can edit books if they have permission (you might want to add a specific permission check)
-        if ($user->role === 'teacher') {
-            // Add your teacher permission logic here
-            // For now, allowing all teachers to edit books
-            return;
-        }
-
-        // If none of the above conditions are met, deny access
-        abort(403, 'You are not authorized to edit this book.');
-    }
-
-
-    public function cancel()
-    {
-        $user = auth()->user();
-
-        return match ($user->role) {
-            'admin', 'owner' => redirect()->route('admin.book-management'),
-            'author' => redirect()->route('author.books.index'),
-            'teacher' => redirect()->route('books.index'),
-            default => redirect()->back(),
-        };
-    }
-
-
     public function loadData(): void
     {
         $this->authors = Author::with('user')->orderBy('id')->get();
@@ -286,113 +226,105 @@ class BookForm extends Component
 
     }
 
+    public function initializeTableOfContents(): void
+    {
+        if (empty($this->tableOfContents)) {
+            $this->tableOfContents = [
+                [
+                    'chapter' => 1,
+                    'title' => 'Introduction',
+                    'description' => '',
+                    'page_start' => 1,
+                    'page_end' => 10,
+                    'sections' => []
+                ]
+            ];
+        }
+    }
+
+    private function authorizeBookAccess(): void
+    {
+        $user = auth()->user();
+
+        // Admin and owner can edit any book
+        if (in_array($user->role, ['admin', 'owner'])) {
+            return;
+        }
+
+        // Authors can only edit their own books
+        if ($user->role === 'author' && $this->book->author->user_id === $user->id) {
+            return;
+        }
+
+        // Teachers can edit books if they have permission (you might want to add a specific permission check)
+        if ($user->role === 'teacher') {
+            // Add your teacher permission logic here
+            // For now, allowing all teachers to edit books
+            return;
+        }
+
+        // If none of the above conditions are met, deny access
+        abort(403, 'You are not authorized to edit this book.');
+    }
+
+    public function updatedSingleVideo(): void
+    {
+        $this->uploadComplete['singleVideo'] = true;
+        $this->validateOnly('singleVideo');
+    }
+
+    public function updatedChapterVideos($value, $key): void
+    {
+        $this->uploadComplete["chapterVideos.{$key}"] = true;
+        $this->validateOnly("chapterVideos.{$key}");
+    }
+
+    public function updateAuthorId($value): void
+    {
+        $this->authorId = $value;
+    }
+
+    public function updateBookCategoryIds($value): void
+    {
+        $this->bookCategoryIds = is_array($value) ? $value : [$value];
+    }
+
+    public function cancel()
+    {
+        $user = auth()->user();
+
+        return match ($user->role) {
+            'admin', 'owner' => redirect()->route('admin.book-management'),
+            'author' => redirect()->route('author.books.index'),
+            'teacher' => redirect()->route('books.index'),
+            default => redirect()->back(),
+        };
+    }
+
     public function removeExistingSamplePdfFile(): void
     {
         $this->removeSamplePdfFile = true;
         $this->existingSamplePdfFile = null;
     }
 
-    private function handleSamplePdfFile($book): void
-    {
-        $samplePath = $book->getAttributes()['sample_url'] ?? null;
-
-        if ($this->removeSamplePdfFile && $samplePath) {
-            Storage::disk('public')->delete($samplePath);
-            $samplePath = null;
-        }
-
-        if ($this->samplePdfFile) {
-            if ($samplePath) {
-                Storage::disk('public')->delete($samplePath);
-            }
-            $samplePath = $this->samplePdfFile->store('book-samples', 'public');
-        } else if (!$samplePath && $this->pdfFile && $this->showTableOfContents && !empty($this->tableOfContents)) {
-            // If no sample provided, try to extract a chapter from the full PDF
-            $samplePath = $this->extractChapterAsSample($book);
-        }
-
-        if ($samplePath !== ($book->getAttributes()['sample_url'] ?? null)) {
-            $book->update(['sample_url' => $samplePath]);
-        }
-    }
-
-    private function extractChapterAsSample(Book $book): ?string
-    {
-        // Check if we have a full PDF file and table of contents
-        $contentUrl = $book->getAttributes()['content_url'] ?? null;
-        if (!$contentUrl || empty($this->tableOfContents)) {
-            return null;
-        }
-
-        try {
-            // Get the path to the full PDF
-            $fullPdfPath = Storage::disk('public')->path($contentUrl);
-
-            // Check if the file exists
-            if (!file_exists($fullPdfPath)) {
-                return null;
-            }
-
-            // Create a new FPDI instance
-            $pdf = new Fpdi();
-
-            // Get the first chapter pages
-            $firstChapter = $this->tableOfContents[0] ?? null;
-            if (!$firstChapter) {
-                return null;
-            }
-
-            $startPage = $firstChapter['page_start'] ?? 1;
-            $endPage = $firstChapter['page_end'] ?? min(5, $book->pages ?? 5); // Limit to 5 pages if not specified
-
-            // Import pages from the source PDF
-            $pageCount = $pdf->setSourceFile($fullPdfPath);
-
-            // Make sure page numbers are within bounds
-            $startPage = max(1, min($startPage, $pageCount));
-            $endPage = max($startPage, min($endPage, $pageCount));
-
-            // Add pages to the new PDF
-            for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
-                $templateId = $pdf->importPage($pageNo);
-                $size = $pdf->getTemplateSize($templateId);
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($templateId);
-            }
-
-            // Generate a unique filename for the sample
-            $filename = 'sample_' . $book->id . '_' . time() . '.pdf';
-            $samplePath = 'book-samples/' . $filename;
-
-            // Save the sample PDF
-            $pdfContent = $pdf->Output('', 'S');
-            Storage::disk('public')->put($samplePath, $pdfContent);
-
-            return $samplePath;
-        } catch (\Exception $e) {
-            // Log the error but don't break the flow
-            \Log::error('Error extracting sample PDF: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-
-
-    // Get publishing status options for the view
     public function getPublishingStatusOptionsProperty()
     {
         return PublishingStatus::getOptions();
     }
 
-    // Get current publishing status enum
+
+    // Get publishing status options for the view
+
     public function getCurrentPublishingStatusProperty()
     {
         try {
             return PublishingStatus::from($this->status);
-        } catch (\ValueError $e) {
+        } catch (ValueError $e) {
             return PublishingStatus::default();
         }
     }
+
+    // Get current publishing status enum
 
     public function getPageTitleProperty()
     {
@@ -415,6 +347,25 @@ class BookForm extends Component
     {
         if ($this->pages && !$this->showTableOfContents) {
             $this->generateTableOfContents();
+        }
+    }
+
+    public function generateTableOfContents(): void
+    {
+        if (!$this->pages) return;
+
+        $chaptersCount = max(1, min(15, intval($this->pages / 20)));
+        $this->tableOfContents = [];
+
+        for ($i = 1; $i <= $chaptersCount; $i++) {
+            $this->tableOfContents[] = [
+                'chapter' => $i,
+                'title' => "Chapter {$i}",
+                'description' => "Content for chapter {$i}",
+                'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
+                'page_end' => $i * intval($this->pages / $chaptersCount),
+                'sections' => []
+            ];
         }
     }
 
@@ -441,6 +392,7 @@ class BookForm extends Component
 
         DB::beginTransaction();
         try {
+            // todo don't always create a user for an author
             // Create user for author
             $user = User::create([
                 'name' => $this->newAuthorName,
@@ -467,8 +419,8 @@ class BookForm extends Component
 
             DB::commit();
             session()->flash('message', 'New author created successfully!');
-        } catch (\Exception $e) {
-            logError('Exception in createNewAuthor:'. $e);
+        } catch (Exception $e) {
+            logError('Exception in createNewAuthor:' . $e);
             DB::rollback();
             $this->addError('newAuthorEmail', 'Failed to create author. Please try again.');
         }
@@ -499,8 +451,8 @@ class BookForm extends Component
             $this->reset(['newCategoryName', 'newCategoryDescription']);
 
             session()->flash('message', 'New category created successfully!');
-        } catch (\Exception $e) {
-            logError('Exception in createNewCategory:'. $e);
+        } catch (Exception $e) {
+            logError('Exception in createNewCategory:' . $e);
             $this->addError('newCategoryName', 'Failed to create category. Please try again.');
         }
     }
@@ -519,41 +471,6 @@ class BookForm extends Component
             $this->expandedChapters = array_diff($this->expandedChapters, [$index]);
         } else {
             $this->expandedChapters[] = $index;
-        }
-    }
-
-    public function initializeTableOfContents(): void
-    {
-        if (empty($this->tableOfContents)) {
-            $this->tableOfContents = [
-                [
-                    'chapter' => 1,
-                    'title' => 'Introduction',
-                    'description' => '',
-                    'page_start' => 1,
-                    'page_end' => 10,
-                    'sections' => []
-                ]
-            ];
-        }
-    }
-
-    public function generateTableOfContents(): void
-    {
-        if (!$this->pages) return;
-
-        $chaptersCount = max(1, min(15, intval($this->pages / 20)));
-        $this->tableOfContents = [];
-
-        for ($i = 1; $i <= $chaptersCount; $i++) {
-            $this->tableOfContents[] = [
-                'chapter' => $i,
-                'title' => "Chapter {$i}",
-                'description' => "Content for chapter {$i}",
-                'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
-                'page_end' => $i * intval($this->pages / $chaptersCount),
-                'sections' => []
-            ];
         }
     }
 
@@ -704,147 +621,14 @@ class BookForm extends Component
                 default => redirect()->back(),
             };
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             logError("Exception in {$this->mode}: " . $e);
             DB::rollback();
             $this->addError('general', "Failed to {$this->mode} book. Please try again.");
         }
     }
 
-    private function createBook(): void
-    {
-        // Handle cover image
-        $coverPath = null;
-        if ($this->coverImage) {
-            $coverPath = $this->coverImage->store('book-covers', 'public');
-        }
-
-        // Handle PDF file
-        $pdfPath = null;
-        if ($this->pdfFile) {
-            $pdfPath = $this->pdfFile->store('book-pdfs', 'public');
-        }
-
-        // Prepare table of contents
-        $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
-
-        $mediaData = $this->handleMediaFiles();
-        // Create book
-       $book =  Book::create([
-            'title' => $this->title,
-            'slug' => $this->slug,
-            'author_id' => $this->authorId,
-//            'book_category_id' => $this->bookCategoryId,
-            'edition' => $this->edition,
-            'publisher' => $this->publisher,
-            'pages' => $this->pages,
-            'has_hardcopy' => $this->hasHardcopy,
-            'has_softcopy' => $this->hasSoftcopy,
-            'additional_info' => $this->additionalInfo,
-            'annual_subscription_fee' => $this->annualSubscriptionFee,
-            'subscription_conditions' => $this->subscriptionConditions,
-            'cover_image' => $coverPath,
-            'sample_url' => '',
-            'content_url' => $pdfPath,
-            'table_of_contents' => $tocData,
-            'status' => $this->status,
-            'has_audio' => $mediaData['has_audio'],
-            'has_video' => $mediaData['has_video'],
-           // 'single_audio' => $mediaData['single_audio'],
-           // 'single_video' => $mediaData['single_video'],
-           // 'chapter_audios' => $mediaData['chapter_audios'],
-           // 'chapter_videos' => $mediaData['chapter_videos'],
-
-        ]);
-
-       $book->categories()->attach($this->bookCategoryIds);
-        $this->handleSamplePdfFile($book);
-
-       if($book->has_audio || $book->has_video){
-           $book->media()->create([
-               'single_audio' => $mediaData['single_audio'],
-               'single_video' => $mediaData['single_video'],
-               'chapter_audios' => $mediaData['chapter_audios'],
-               'chapter_videos' => $mediaData['chapter_videos'],
-           ]);
-       }
-    }
-
-private function updateBook(): void
-{
-
-    // Handle cover image update - use the raw database field
-    $coverPath = $this->book->getAttributes()['cover_image'];
-    if ($this->removeCoverImage && $coverPath) {
-        Storage::disk('public')->delete($coverPath);
-        $coverPath = null;
-    }
-    if ($this->coverImage) {
-        if ($coverPath) {
-            Storage::disk('public')->delete($coverPath);
-        }
-        $coverPath = $this->coverImage->store('book-covers', 'public');
-    }
-
-    // Handle PDF file update - use the raw database field
-    $pdfPath = $this->book->getAttributes()['content_url'];
-    if ($this->removePdfFile && $pdfPath) {
-        Storage::disk('public')->delete($pdfPath);
-        $pdfPath = null;
-    }
-    if ($this->pdfFile) {
-        if ($pdfPath) {
-            Storage::disk('public')->delete($pdfPath);
-        }
-        $pdfPath = $this->pdfFile->store('book-pdfs', 'public');
-    }
-
-    // Prepare table of contents
-    $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
-
-
-    $mediaData = $this->handleMediaFiles();
-    // Update book
-    $this->book->update([
-        'title' => $this->title,
-        'slug' => $this->slug,
-        'author_id' => $this->authorId,
-//        'book_category_id' => $this->bookCategoryId,
-        'edition' => $this->edition,
-        'publisher' => $this->publisher,
-        'pages' => $this->pages,
-        'has_hardcopy' => $this->hasHardcopy,
-        'has_softcopy' => $this->hasSoftcopy,
-        'additional_info' => $this->additionalInfo,
-        'annual_subscription_fee' => $this->annualSubscriptionFee,
-        'subscription_conditions' => $this->subscriptionConditions,
-        'cover_image' => $coverPath,
-        'content_url' => $pdfPath,
-        'table_of_contents' => $tocData,
-        'status' => $this->status,
-        'has_audio' => $mediaData['has_audio'],
-        'has_video' => $mediaData['has_video'],
-       // 'single_audio' => $mediaData['single_audio'],
-        //'single_video' => $mediaData['single_video'],
-        //'chapter_audios' => $mediaData['chapter_audios'],
-       // 'chapter_videos' => $mediaData['chapter_videos'],
-
-    ]);
-
-    $this->handleSamplePdfFile($this->book);
-
-    $this->book->categories()->sync($this->bookCategoryIds);
-
-        $this->book->media()->update([
-            'single_audio' => $mediaData['single_audio'],
-            'single_video' => $mediaData['single_video'],
-            'chapter_audios' => $mediaData['chapter_audios'],
-            'chapter_videos' => $mediaData['chapter_videos'],
-        ]);
-
-}
-
-    private function validateTableOfContents()
+    private function validateTableOfContents(): array
     {
         $errors = [];
 
@@ -872,6 +656,319 @@ private function updateBook(): void
 
         return $errors;
     }
+
+    private function createBook(): void
+    {
+        // Handle cover image
+        $coverPath = null;
+        if ($this->coverImage) {
+            $fileName = $this->generateFileName(null, 'cover.' . $this->coverImage->extension());
+            $coverPath = $this->coverImage->storeAs('book-covers', $fileName, 'public');
+        }
+
+        // Handle PDF file
+        $pdfPath = null;
+        if ($this->pdfFile) {
+            $fileName = $this->generateFileName(null, 'full.pdf');
+            $pdfPath = $this->pdfFile->storeAs('book-pdfs', $fileName, 'public');
+        }
+
+        // Prepare table of contents
+        $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
+
+        $mediaData = $this->handleMediaFiles();
+
+        // Create book
+        $book = Book::create([
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'author_id' => $this->authorId,
+            'edition' => $this->edition,
+            'publisher' => $this->publisher,
+            'pages' => $this->pages,
+            'has_hardcopy' => $this->hasHardcopy,
+            'has_softcopy' => $this->hasSoftcopy,
+            'additional_info' => $this->additionalInfo,
+            'annual_subscription_fee' => $this->annualSubscriptionFee,
+            'subscription_conditions' => $this->subscriptionConditions,
+            'cover_image' => $coverPath,
+            'sample_url' => '',
+            'content_url' => $pdfPath,
+            'table_of_contents' => $tocData,
+            'status' => $this->status,
+            'has_audio' => $mediaData['has_audio'],
+            'has_video' => $mediaData['has_video'],
+        ]);
+
+        $book->categories()->attach($this->bookCategoryIds);
+        $this->handleSamplePdfFile($book);
+
+        if ($book->has_audio || $book->has_video) {
+            $book->media()->create([
+                'single_audio' => $mediaData['single_audio'],
+                'single_video' => $mediaData['single_video'],
+                'chapter_audios' => $mediaData['chapter_audios'],
+                'chapter_videos' => $mediaData['chapter_videos'],
+            ]);
+        }
+    }
+
+    private function handleMediaFiles(): array
+    {
+        $mediaData = [
+            'has_audio' => $this->hasAudio,
+            'has_video' => $this->hasVideo,
+            'single_audio' => $this->existingSingleAudio,
+            'single_video' => $this->existingSingleVideo,
+            'chapter_audios' => $this->existingChapterAudios ?? [],
+            'chapter_videos' => $this->existingChapterVideos ?? [],
+        ];
+
+        // Handle single audio file
+        if ($this->removeSingleAudioFile && $this->existingSingleAudio) {
+            Storage::disk('public')->delete($this->existingSingleAudio);
+            $mediaData['single_audio'] = null;
+        }
+        if ($this->singleAudio) {
+            if ($this->existingSingleAudio) {
+                Storage::disk('public')->delete($this->existingSingleAudio);
+            }
+            $fileName = $this->generateFileName($this->book ?? null, 'audio.' . $this->singleAudio->extension());
+            $mediaData['single_audio'] = $this->singleAudio->storeAs('book-audio', $fileName, 'public');
+        }
+
+        // Handle single video file
+        if ($this->removeSingleVideoFile && $this->existingSingleVideo) {
+            Storage::disk('public')->delete($this->existingSingleVideo);
+            $mediaData['single_video'] = null;
+        }
+        if ($this->singleVideo) {
+            if ($this->existingSingleVideo) {
+                Storage::disk('public')->delete($this->existingSingleVideo);
+            }
+            $fileName = $this->generateFileName($this->book ?? null, 'video.' . $this->singleVideo->extension());
+            $mediaData['single_video'] = $this->singleVideo->storeAs('book-video', $fileName, 'public');
+        }
+
+        // Handle chapter audio files
+        if ($this->chapterAudios) {
+            foreach ($this->chapterAudios as $index => $file) {
+                if ($file) {
+                    // Remove existing file if needed
+                    if (isset($this->existingChapterAudios[$index])) {
+                        Storage::disk('public')->delete($this->existingChapterAudios[$index]);
+                    }
+
+                    $fileName = $this->generateFileName($this->book ?? null, "chapter-{$index}-audio." . $file->extension());
+                    $path = $file->storeAs('book-audio/chapters', $fileName, 'public');
+                    $mediaData['chapter_audios'][$index] = $path;
+                }
+            }
+        }
+
+        // Handle chapter video files
+        if ($this->chapterVideos) {
+            foreach ($this->chapterVideos as $index => $file) {
+                if ($file) {
+                    // Remove existing file if needed
+                    if (isset($this->existingChapterVideos[$index])) {
+                        Storage::disk('public')->delete($this->existingChapterVideos[$index]);
+                    }
+
+                    $fileName = $this->generateFileName($this->book ?? null, "chapter-{$index}-video." . $file->extension());
+                    $path = $file->storeAs('book-video/chapters', $fileName, 'public');
+                    $mediaData['chapter_videos'][$index] = $path;
+                }
+            }
+        }
+
+        return $mediaData;
+    }
+
+    private function handleSamplePdfFile($book): void
+    {
+        $samplePath = $book->getAttributes()['sample_url'] ?? null;
+
+        if ($this->removeSamplePdfFile && $samplePath) {
+            Storage::disk('public')->delete($samplePath);
+            $samplePath = null;
+        }
+
+        if ($this->samplePdfFile) {
+            if ($samplePath) {
+                Storage::disk('public')->delete($samplePath);
+            }
+
+            // Create descriptive filename
+            $fileName = $this->generateFileName($book, 'sample.pdf');
+            $samplePath = $this->samplePdfFile->storeAs('book-samples', $fileName, 'public');
+        } else if (!$samplePath && $this->pdfFile && $this->showTableOfContents && !empty($this->tableOfContents)) {
+            // If no sample provided, try to extract a chapter from the full PDF
+            $samplePath = $this->extractChapterAsSample($book);
+        }
+
+        if ($samplePath !== ($book->getAttributes()['sample_url'] ?? null)) {
+            $book->update(['sample_url' => $samplePath]);
+        }
+    }
+
+    /**
+     * Generate a descriptive filename with book ID and slug
+     *
+     * @param Book|null $book
+     * @param string $suffix
+     * @return string
+     */
+    private function generateFileName(?Book $book, string $suffix): string
+    {
+        // Use existing book ID or temporary ID for new books
+        $bookId = $book?->id ?? 'new';
+
+        // Use current title or existing book title
+        $title = $this->title ?? $book?->title ?? 'untitled';
+
+        // Create slug from title
+        $slug = Str::slug(Str::limit($title, 50, ''));
+
+        // Generate filename with ID and slug
+        $fileName = "book-{$bookId}_{$slug}";
+
+        // Add suffix (file extension)
+        if ($suffix) {
+            $fileName .= '_' . $suffix;
+        }
+
+        return $fileName;
+    }
+
+    private function extractChapterAsSample(Book $book): ?string
+    {
+        // Check if we have a full PDF file and table of contents
+        $contentUrl = $book->getAttributes()['content_url'] ?? null;
+        if (!$contentUrl || empty($this->tableOfContents)) {
+            return null;
+        }
+
+        try {
+            // Get the path to the full PDF
+            $fullPdfPath = Storage::disk('public')->path($contentUrl);
+
+            // Check if the file exists
+            if (!file_exists($fullPdfPath)) {
+                return null;
+            }
+
+            // Create a new FPDI instance
+            $pdf = new Fpdi();
+
+            // Get the first chapter pages
+            $firstChapter = $this->tableOfContents[0] ?? null;
+            if (!$firstChapter) {
+                return null;
+            }
+
+            $startPage = $firstChapter['page_start'] ?? 1;
+            $endPage = $firstChapter['page_end'] ?? min(5, $book->pages ?? 5); // Limit to 5 pages if not specified
+
+            // Import pages from the source PDF
+            $pageCount = $pdf->setSourceFile($fullPdfPath);
+
+            // Make sure page numbers are within bounds
+            $startPage = max(1, min($startPage, $pageCount));
+            $endPage = max($startPage, min($endPage, $pageCount));
+
+            // Add pages to the new PDF
+            for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+            }
+
+            // Generate a descriptive filename for the sample
+            $filename = $this->generateFileName($book, 'sample.pdf');
+            $samplePath = 'book-samples/' . $filename;
+
+            // Save the sample PDF
+            $pdfContent = $pdf->Output('', 'S');
+            Storage::disk('public')->put($samplePath, $pdfContent);
+
+            return $samplePath;
+        } catch (Exception $e) {
+            // Log the error but don't break the flow
+            Log::error('Error extracting sample PDF: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function updateBook(): void
+    {
+        // Handle cover image update - use the raw database field
+        $coverPath = $this->book->getAttributes()['cover_image'];
+        if ($this->removeCoverImage && $coverPath) {
+            Storage::disk('public')->delete($coverPath);
+            $coverPath = null;
+        }
+        if ($this->coverImage) {
+            if ($coverPath) {
+                Storage::disk('public')->delete($coverPath);
+            }
+            $fileName = $this->generateFileName($this->book, 'cover.' . $this->coverImage->extension());
+            $coverPath = $this->coverImage->storeAs('book-covers', $fileName, 'public');
+        }
+
+        // Handle PDF file update - use the raw database field
+        $pdfPath = $this->book->getAttributes()['content_url'];
+        if ($this->removePdfFile && $pdfPath) {
+            Storage::disk('public')->delete($pdfPath);
+            $pdfPath = null;
+        }
+        if ($this->pdfFile) {
+            if ($pdfPath) {
+                Storage::disk('public')->delete($pdfPath);
+            }
+            $fileName = $this->generateFileName($this->book, 'full.pdf');
+            $pdfPath = $this->pdfFile->storeAs('book-pdfs', $fileName, 'public');
+        }
+
+        // Prepare table of contents
+        $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
+
+        $mediaData = $this->handleMediaFiles();
+
+        // Update book
+        $this->book->update([
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'author_id' => $this->authorId,
+            'edition' => $this->edition,
+            'publisher' => $this->publisher,
+            'pages' => $this->pages,
+            'has_hardcopy' => $this->hasHardcopy,
+            'has_softcopy' => $this->hasSoftcopy,
+            'additional_info' => $this->additionalInfo,
+            'annual_subscription_fee' => $this->annualSubscriptionFee,
+            'subscription_conditions' => $this->subscriptionConditions,
+            'cover_image' => $coverPath,
+            'content_url' => $pdfPath,
+            'table_of_contents' => $tocData,
+            'status' => $this->status,
+            'has_audio' => $mediaData['has_audio'],
+            'has_video' => $mediaData['has_video'],
+        ]);
+
+        $this->handleSamplePdfFile($this->book);
+
+        $this->book->categories()->sync($this->bookCategoryIds);
+
+        $this->book->media()->update([
+            'single_audio' => $mediaData['single_audio'],
+            'single_video' => $mediaData['single_video'],
+            'chapter_audios' => $mediaData['chapter_audios'],
+            'chapter_videos' => $mediaData['chapter_videos'],
+        ]);
+    }
+
     public function removeExistingSingleAudioFile()
     {
         $this->removeSingleAudioFile = true;
@@ -881,7 +978,7 @@ private function updateBook(): void
     public function removeExistingSingleVideoFile()
     {
         $this->removeSingleVideoFile = true;
-        $this->existingSingleVideo= null;
+        $this->existingSingleVideo = null;
     }
 
     public function removeChapterAudioFile($chapterIndex)
@@ -894,63 +991,6 @@ private function updateBook(): void
     {
         $this->removeChapterVideoFiles[$chapterIndex] = true;
         unset($this->existingChapterVideos[$chapterIndex]);
-    }
-
-    private function handleMediaFiles(): array
-    {
-        $mediaData = [
-            'has_audio' => $this->hasAudio,
-            'has_video' => $this->hasVideo,
-            'single_audio' => $this->existingSingleAudio,
-            'single_video' => $this->existingSingleVideo,
-            'chapter_audios' => [],
-            'chapter_videos' => [],
-        ];
-
-        // Handle single audio file
-        if ($this->removeSingleAudioFile && $this->existingSingleAudio) {
-            Storage::disk('public')->delete($this->existingSingleAudio);
-            $mediaData['single_audio'] = null;
-        }
-        if ($this->singleAudio) {
-            if ($this->existingSingleAudio) {
-                Storage::disk('public')->delete($this->existingSingleAudio);
-            }
-            $mediaData['single_audio'] = $this->singleAudio->store('book-audio', 'public');
-        }
-
-        // Handle single video file
-        if ($this->removeSingleVideoFile && $this->existingSingleVideo) {
-            Storage::disk('public')->delete($this->existingSingleVideo);
-            $mediaData['single_video'] = null;
-        }
-        if ($this->singleVideo) {
-            if ($this->existingSingleVideo) {
-                Storage::disk('public')->delete($this->existingSingleVideo);
-            }
-            $mediaData['single_video'] = $this->singleVideo->store('book-video', 'public');
-        }
-
-        // Handle chapter audio files
-        if ($this->chapterAudios) {
-            foreach ($this->chapterAudios as $index => $file) {
-                if ($file) {
-                    $path = $file->store('book-audio/chapters', 'public');
-                    $mediaData['chapter_audios'][$index] = $path;
-                }
-            }
-        }
-
-        // Handle chapter video files
-        if ($this->chapterVideos) {
-            foreach ($this->chapterVideos as $index => $file) {
-                if ($file) {
-                    $path = $file->store('book-video/chapters', 'public');
-                    $mediaData['chapter_videos'][$index] = $path;
-                }
-            }
-        }
-        return $mediaData;
     }
 
     public function redirectIntended($default = '/', $navigate = false)

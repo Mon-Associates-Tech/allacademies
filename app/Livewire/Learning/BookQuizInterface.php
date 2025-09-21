@@ -28,6 +28,7 @@ class BookQuizInterface extends Component
 
     #[Rule('required|integer|min:5|max:20')]
     public $questionCount = 10;
+    public $customQuestionCount = 10;
 
     #[Rule('required|in:easy,medium,hard')]
     public $difficulty = 'medium';
@@ -49,6 +50,7 @@ class BookQuizInterface extends Component
     protected $bookLearningService;
     public $showDetailedResults = false;
     public $showDetailedResultsModal = false;
+
     public function boot(
         AcademicChatService      $chatService,
         BookBasedLearningService $bookLearningService
@@ -103,6 +105,16 @@ class BookQuizInterface extends Component
     {
         $this->showDetailedResults = false;
         $this->showDetailedResultsModal = false;
+    }
+
+    public function getActualQuestionCount()
+    {
+        if ($this->questionCount === 'custom') {
+            // Validate custom value is within range
+            return max(1, min(50, (int) $this->customQuestionCount));
+        }
+
+        return (int) $this->questionCount;
     }
     public function updatedSelectedBookId()
     {
@@ -162,7 +174,7 @@ public function viewResults($quizSessionId)
         ->with('book')
         ->first();
 
-    logInfo('view quiz results '. json_encode($quizSession));
+
     if ($quizSession && $quizSession->results) {
         // Load the book if it exists
         $book = $quizSession->book;
@@ -358,10 +370,25 @@ public function viewResults($quizSessionId)
 
     public function generateQuiz()
     {
+        $this->reset(['quizResults', 'activeTab']);
         $this->validate();
+        $this->validate([
+            'selectedBookId' => 'required|exists:books,id',
+            'questionType' => 'required|in:multiple_choice,true_false,essay,mixed',
+            'difficulty' => 'required|in:easy,medium,hard',
+        ]);
 
         if (!$this->selectedBook) {
             $this->addError('selectedBookId', 'Please select a book first.');
+            return;
+        }
+
+        $actualQuestionCount = $this->getActualQuestionCount();
+
+        // Validate question count
+        if ($actualQuestionCount < 1 || $actualQuestionCount > 50) {
+            $this->addError('questionCount', 'Number of questions must be between 1 and 50.');
+            $this->isGenerating = false;
             return;
         }
 
@@ -410,6 +437,8 @@ public function viewResults($quizSessionId)
             ]);
 
             $this->addError('generation', 'Unable to generate quiz. Please try different parameters or try again later.');
+        } finally {
+            $this->isGenerating = false;
         }
 
         $this->isGenerating = false;

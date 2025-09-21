@@ -124,14 +124,53 @@
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('learning.quiz') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{ route('learning.quiz') }}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('learning.quiz') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                        <path d="M11.5 5.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V6a.5.5 0 0 0-.5-.5H10a.5.5 0 0 1 0-1h.5a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5H9a1.5 1.5 0 0 1-1.5-1.5v-1A1.5 1.5 0 0 1 9 4h1a1.5 1.5 0 0 1 1.5 1.5v1a.5.5 0 0 0 .5.5v-1a.5.5 0 0 1 .5-.5zM8 12a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 8 12zm-3-3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 9zm6 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 11 9zM8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2z"/>
-                    </svg>
+                   <svg class="shrink-0 fill-current {{ Route::is('learning.quiz') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+</svg>
+
                     <span class="text-sm ml-4 sidebar-text duration-200">Self Assessment</span>
                 </div>
             </a>
         </li>
 
+        <li class="mb-0.5 last:mb-0" title="Messages">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.messages.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('admin.messages.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('admin.messages.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                    </svg>
+
+                    <span class="text-sm ml-4 sidebar-text duration-200">Messages</span>
+                </div>
+            </a>
+        </li>
+
+        <li class="mb-0.5 last:mb-0" title="Academic Assistant">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('academic-chat.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('academic-chat*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                    </svg>
+
+                    <span class="text-sm ml-4 sidebar-text duration-200">Academic Assistant</span>
+                </div>
+            </a>
+        </li>
+
+        <li class="mb-0.5 last:mb-0" title="Chat Groups">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('chat') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('chat*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                    </svg>
+
+                    <span class="text-sm ml-4 sidebar-text duration-200">Chat Groups</span>
+                </div>
+            </a>
+        </li>
 
         <!-- Performance -->
         <li class="mb-0.5 last:mb-0">

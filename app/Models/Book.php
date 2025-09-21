@@ -150,67 +150,73 @@ class Book extends Model
             && !$this->attributes['sample_url'];
     }
 
-    /**
-     * Generate a sample PDF from the full PDF using the first chapter
-     */
-    private function generateSampleFromFullPdf(): ?string
-    {
-        // Check if we have what we need
-        if (!$this->shouldGenerateSample()) {
-            return null;
-        }
-
-        try {
-            // Get the path to the full PDF
-            $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
-
-            // Check if the file exists
-            if (!file_exists($fullPdfPath)) {
-                return null;
-            }
-
-            // Create a new FPDI instance
-            $pdf = new Fpdi();
-
-            // Get the first chapter pages
-            $firstChapter = $this->table_of_contents[0] ?? null;
-            if (!$firstChapter) {
-                return null;
-            }
-
-            $startPage = $firstChapter['page_start'] ?? 1;
-            $endPage = $firstChapter['page_end'] ?? min(5, $this->pages ?? 5); // Limit to 5 pages if not specified
-
-            // Import pages from the source PDF
-            $pageCount = $pdf->setSourceFile($fullPdfPath);
-
-            // Make sure page numbers are within bounds
-            $startPage = max(1, min($startPage, $pageCount));
-            $endPage = max($startPage, min($endPage, $pageCount));
-
-            // Add pages to the new PDF
-            for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
-                $templateId = $pdf->importPage($pageNo);
-                $size = $pdf->getTemplateSize($templateId);
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($templateId);
-            }
-
-            // Generate a unique filename for the sample
-            $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
-            $samplePath = 'book-samples/' . $filename;
-
-            // Save the sample PDF
-            $pdfContent = $pdf->Output('', 'S');
-            Storage::disk('public')->put($samplePath, $pdfContent);
-
-            return $samplePath;
-        } catch (\Exception $e) {
-            // Log the error but don't break the flow
-            \Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
-            return null;
-        }
+/**
+ * Generate a sample PDF from the full PDF using the first chapter
+ */
+private function generateSampleFromFullPdf(): ?string
+{
+    // Check if we have what we need
+    if (!$this->shouldGenerateSample()) {
+        return null;
     }
+
+    try {
+        // Get the path to the full PDF
+        $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
+
+        // Check if the file exists
+        if (!file_exists($fullPdfPath)) {
+            return null;
+        }
+
+        // Create a new FPDI instance
+        $pdf = new Fpdi();
+
+        // Get the first chapter pages
+        $firstChapter = $this->table_of_contents[0] ?? null;
+        if (!$firstChapter) {
+            return null;
+        }
+
+        $startPage = $firstChapter['page_start'] ?? 1;
+        $endPage = $firstChapter['page_end'] ?? min(5, $this->pages ?? 5); // Limit to 5 pages if not specified
+
+        // Import pages from the source PDF
+        $pageCount = $pdf->setSourceFile($fullPdfPath);
+
+        // Make sure page numbers are within bounds
+        $startPage = max(1, min($startPage, $pageCount));
+        $endPage = max($startPage, min($endPage, $pageCount));
+
+        // Add pages to the new PDF
+        for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
+            $templateId = $pdf->importPage($pageNo);
+            $size = $pdf->getTemplateSize($templateId);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($templateId);
+        }
+
+        // Generate a unique filename for the sample
+        $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
+        $samplePath = 'book-samples/' . $filename;
+
+        // Save the sample PDF
+        $pdfContent = $pdf->Output('', 'S');
+        Storage::disk('public')->put($samplePath, $pdfContent);
+
+        return $samplePath;
+    } catch (\Exception $e) {
+        // Log the error but don't break the flow
+        \Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+
+        // Return null to indicate failure, but don't throw exception
+        return asset('sample.pdf');
+    } catch (\Throwable $e) {
+        // Catch any other errors (like parse errors)
+        \Log::error('Critical error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+        return null;
+    }
+}
 
 
     public function bookCategory(): BelongsTo
@@ -289,7 +295,7 @@ public function getCategoriesDisplay($limit = null)
 /**
  * Get category names as a comma-separated string
  */
-public function getCategoryNamesAttribute()
+public function getCategoryNamesAttribute(): string
 {
     return $this->categories->pluck('name')->implode(', ');
 }

@@ -1,15 +1,18 @@
 <?php
 
+use App\Livewire\Teachers\Messages\ComposeMessage;
+use App\Livewire\Teachers\Messages\MessageIndex;
+use App\Livewire\Teachers\Messages\MessageShow;
 use App\Livewire\Teachers\Activities;
 use App\Livewire\Teachers\Assignments;
 use App\Livewire\Teachers\Attendance\AttendanceHistory;
 use App\Livewire\Teachers\Attendance\AttendanceList;
 use App\Livewire\Teachers\Attendance\TakeAttendance;
+use App\Livewire\Teachers\Messages\SendMessageToStudents;
 use App\Livewire\Teachers\Schedules;
 use App\Livewire\Teachers\StudentPerformances;
 use App\Livewire\Teachers\Students;
 use App\Livewire\Teachers\Subjects;
-use App\Livewire\Teachers\TeacherNotifications;
 use App\Livewire\Teachers\TeacherProfile;
 use App\Livewire\Teachers\ViewAssignment;
 use App\Livewire\Teachers\ViewAssignmentSubmission;
@@ -42,4 +45,19 @@ Route::middleware(['auth'])->name('teachers.')->group(function () {
         Route::get('/attendance/{attendance}/edit', TakeAttendance::class)->name('attendance.edit');
     Route::get('/attendance/{student}/history', AttendanceHistory::class)
         ->name('attendance.history');
+
+
+
+        // Message index - view all sent messages
+        Route::get('/messagess', MessageIndex::class)->name('messages.index');
+
+        // Compose new message
+        Route::get('messagess/compose', ComposeMessage::class)->name('messages.compose');
+
+        // View specific message
+        Route::get('messagess/{message}', MessageShow::class)->name('messages.show');
+
+        // Send message to students (simplified interface)
+        Route::get('messagess/students/send', SendMessageToStudents::class)->name('messages.students.send');
+
 });

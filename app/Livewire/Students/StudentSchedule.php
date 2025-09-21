@@ -2,13 +2,12 @@
 
 namespace App\Livewire\Students;
 
-use App\Models\AssignmentSubmission;
-use App\Models\Student;
 use App\Models\Assessment;
 use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 use App\Models\BookReadingProgress;
 use App\Models\Lesson;
-use App\Models\Quiz;
+use App\Models\Student;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -32,10 +31,9 @@ class StudentSchedule extends Component
     public function mount(?Student $student, $date = null)
     {
 //        $this->student = $student;
-        if(!$student ||  !auth()->user()->student) {
+        if (!$student || !auth()->user()->student) {
             $this->authorized = true;
-        }
-        else{
+        } else {
             $this->student = auth()->user()->student;
         }
 
@@ -47,7 +45,7 @@ class StudentSchedule extends Component
     public function render()
     {
 
-        if($this->authorized){
+        if ($this->authorized) {
             return view('livewire.students.unauthorized');
         }
 
@@ -96,35 +94,35 @@ class StudentSchedule extends Component
             $activities = $activities->merge($assessments);
         }
 
-        // Get assignments (if Assignment model exists)
-        if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
-            $assignments = Assignment::whereHas('students', function ($query) {
-                $query->where('student_id', $this->student->id);
-            })
-                ->with(['subject', 'submissions' => function ($query) {
-                    $query->where('student_id', $this->student->id);
-                }])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get()
-                ->map(function ($assignment) {
-                    $submission = $assignment->submissions->first();
-                    return [
-                        'id' => $assignment->id,
-                        'type' => 'assignment',
-                        'title' => $assignment->title,
-                        'subject' => $assignment->subject?->name,
-                        'date' => $assignment->due_date ?? $assignment->created_at,
-                        'status' => $submission ? $submission->status : 'not_submitted',
-                        'submitted_at' => $submission?->submitted_at,
-                        'grade' => $submission?->grade,
-                        'model' => $assignment,
-                        'submission' => $submission,
-                        'icon' => 'fas fa-tasks',
-                        'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
-                    ];
-                });
-            $activities = $activities->merge($assignments);
-        }
+// Get assignments (if Assignment model exists)
+if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
+    $assignments = Assignment::whereHas('students', function ($query) {
+            $query->where('students.id', $this->student->id);
+        })
+        ->with(['academicSubject', 'submissions' => function ($query) {
+            $query->where('assignment_submissions.student_id', $this->student->id);
+        }])
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->get()
+        ->map(function ($assignment) {
+            $submission = $assignment->submissions->first();
+            return [
+                'id' => $assignment->id,
+                'type' => 'assignment',
+                'title' => $assignment->title,
+                'subject' => $assignment->academicSubject?->name,
+                'date' => $assignment->ends_at ?? $assignment->created_at,
+                'status' => $submission ? $submission->status : 'not_submitted',
+                'submitted_at' => $submission?->submitted_at,
+                'grade' => $submission?->grade,
+                'model' => $assignment,
+                'submission' => $submission,
+                'icon' => 'fas fa-tasks',
+                'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
+            ];
+        });
+    $activities = $activities->merge($assignments);
+}
 
         // Get reading progress
         if ($this->filterType === 'all' || $this->filterType === 'reading') {
@@ -158,6 +156,67 @@ class StudentSchedule extends Component
         }
 
         return $activities->sortByDesc('date');
+    }
+
+    private function getStartDate()
+    {
+        switch ($this->viewMode) {
+            case 'week':
+                return $this->selectedDate->copy()->startOfWeek();
+            case 'calendar':
+                return Carbon::create($this->currentYear, $this->currentMonth, 1);
+            default:
+                return $this->selectedDate->copy()->startOfDay();
+        }
+    }
+
+    private function getEndDate()
+    {
+        switch ($this->viewMode) {
+            case 'week':
+                return $this->selectedDate->copy()->endOfWeek();
+            case 'calendar':
+                return Carbon::create($this->currentYear, $this->currentMonth, 1)->endOfMonth();
+            default:
+                return $this->selectedDate->copy()->endOfDay();
+        }
+    }
+
+    private function calculateDuration($startTime, $endTime)
+    {
+        if (!$startTime || !$endTime) {
+            return null;
+        }
+        return Carbon::parse($startTime)->diffForHumans(Carbon::parse($endTime), true);
+    }
+
+    private function getStatusColor($status, $type)
+    {
+        $colors = [
+            'assessment' => [
+                'completed' => 'green',
+                'in_progress' => 'yellow',
+                'graded' => 'blue',
+                'default' => 'gray',
+            ],
+            'assignment' => [
+                'submitted' => 'green',
+                'graded' => 'blue',
+                'late' => 'red',
+                'not_submitted' => 'gray',
+                'default' => 'gray',
+            ],
+        ];
+
+        return $colors[$type][$status] ?? $colors[$type]['default'];
+    }
+
+    private function getProgressColor($percentage)
+    {
+        if ($percentage >= 80) return 'green';
+        if ($percentage >= 60) return 'blue';
+        if ($percentage >= 40) return 'yellow';
+        return 'red';
     }
 
     public function getCalendarData()
@@ -236,12 +295,6 @@ class StudentSchedule extends Component
         $this->showActivityModal = true;
     }
 
-    public function closeActivityModal()
-    {
-        $this->showActivityModal = false;
-        $this->selectedActivity = null;
-    }
-
     private function getActivityById($id, $type)
     {
         switch ($type) {
@@ -261,68 +314,14 @@ class StudentSchedule extends Component
         return null;
     }
 
-    private function getStartDate()
+    public function closeActivityModal()
     {
-        switch ($this->viewMode) {
-            case 'week':
-                return $this->selectedDate->copy()->startOfWeek();
-            case 'calendar':
-                return Carbon::create($this->currentYear, $this->currentMonth, 1);
-            default:
-                return $this->selectedDate->copy()->startOfDay();
-        }
-    }
-
-    private function getEndDate()
-    {
-        switch ($this->viewMode) {
-            case 'week':
-                return $this->selectedDate->copy()->endOfWeek();
-            case 'calendar':
-                return Carbon::create($this->currentYear, $this->currentMonth, 1)->endOfMonth();
-            default:
-                return $this->selectedDate->copy()->endOfDay();
-        }
-    }
-
-    private function calculateDuration($startTime, $endTime)
-    {
-        if (!$startTime || !$endTime) {
-            return null;
-        }
-        return Carbon::parse($startTime)->diffForHumans(Carbon::parse($endTime), true);
-    }
-
-    private function getStatusColor($status, $type)
-    {
-        $colors = [
-            'assessment' => [
-                'completed' => 'green',
-                'in_progress' => 'yellow',
-                'graded' => 'blue',
-                'default' => 'gray',
-            ],
-            'assignment' => [
-                'submitted' => 'green',
-                'graded' => 'blue',
-                'late' => 'red',
-                'not_submitted' => 'gray',
-                'default' => 'gray',
-            ],
-        ];
-
-        return $colors[$type][$status] ?? $colors[$type]['default'];
-    }
-
-    private function getProgressColor($percentage)
-    {
-        if ($percentage >= 80) return 'green';
-        if ($percentage >= 60) return 'blue';
-        if ($percentage >= 40) return 'yellow';
-        return 'red';
+        $this->showActivityModal = false;
+        $this->selectedActivity = null;
     }
 
     // Statistics methods
+
     public function getWeeklyStats()
     {
         $startOfWeek = now()->startOfWeek();

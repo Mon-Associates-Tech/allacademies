@@ -127,19 +127,39 @@
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <label
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Number of Questions
-                                            </label>
-                                            <select wire:model.live="questionCount"
-                                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                                <option value="5">5 questions</option>
-                                                <option value="10" selected>10 questions</option>
-                                                <option value="15">15 questions</option>
-                                                <option value="20">20 questions</option>
-                                            </select>
-                                        </div>
+<div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Number of Questions
+    </label>
+    <div class="flex space-x-2" x-data="{
+        isCustom: @js($this->questionCount === 'custom'),
+        updateCustomState(value) {
+            this.isCustom = value === 'custom';
+        }
+    }"
+    x-init="$watch('$wire.questionCount', value => updateCustomState(value))">
+        <select wire:model.live="questionCount"
+                class="w-1/2 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                x-on:change="updateCustomState($event.target.value)">
+            <option value="5">5 questions</option>
+            <option value="10" selected>10 questions</option>
+            <option value="15">15 questions</option>
+            <option value="20">20 questions</option>
+            <option value="custom">Custom</option>
+        </select>
+
+        <div class="w-1/2" x-show="isCustom" x-transition>
+            <input type="number"
+                   wire:model.live.debounce.500ms="customQuestionCount"
+                   min="1"
+                   max="50"
+                   placeholder="Enter number (1-50)"
+                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+    </div>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Select from presets or choose "Custom" for your own value (1-50)</p>
+</div>
+
 
                                         <div>
                                             <label
