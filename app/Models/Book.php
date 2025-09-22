@@ -607,4 +607,9 @@ public function getCategoryNamesAttribute(): string
     {
         return $this->hasMany(QuizSession::class);
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'book_subscription_id');
+    }
 }

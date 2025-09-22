@@ -1,15 +1,17 @@
 <?php
 
-use App\Livewire\Teachers\Messages\ComposeMessage;
-use App\Livewire\Teachers\Messages\MessageIndex;
-use App\Livewire\Teachers\Messages\MessageShow;
 use App\Livewire\Teachers\Activities;
 use App\Livewire\Teachers\Assignments;
 use App\Livewire\Teachers\Attendance\AttendanceHistory;
 use App\Livewire\Teachers\Attendance\AttendanceList;
 use App\Livewire\Teachers\Attendance\TakeAttendance;
+use App\Livewire\Teachers\CreateAssignment;
+use App\Livewire\Teachers\Messages\ComposeMessage;
+use App\Livewire\Teachers\Messages\MessageIndex;
+use App\Livewire\Teachers\Messages\MessageShow;
 use App\Livewire\Teachers\Messages\SendMessageToStudents;
 use App\Livewire\Teachers\Schedules;
+use App\Livewire\Teachers\StudentDetails;
 use App\Livewire\Teachers\StudentPerformances;
 use App\Livewire\Teachers\Students;
 use App\Livewire\Teachers\Subjects;
@@ -21,13 +23,12 @@ use App\Livewire\Teachers\VirtualClassroom;
 Route::middleware(['auth'])->name('teachers.')->group(function () {
     Route::get('assignments', Assignments::class)->name('assignments.index');
     Route::get('assignments/{assignment}', ViewAssignment::class)->name('assignments.show');
-    Route::get('/create-assignment', \App\Livewire\Teachers\CreateAssignment::class)->name('assignments.create');
+    Route::get('/create-assignment', CreateAssignment::class)->name('assignments.create');
     Route::get('/assignments/{assignment}/edit', App\Livewire\Teachers\EditAssignment::class)->name('assignments.edit');
 
 
-
     Route::get('students', Students::class)->name('students.index');
-    Route::get('/students/{student}', \App\Livewire\Teachers\StudentDetails::class)
+    Route::get('/students/{student}', StudentDetails::class)
         ->name('student.details');
     Route::get('subjects', Subjects::class)->name('subjects.index');
     Route::get('performance', StudentPerformances::class)->name('performance');
@@ -40,24 +41,23 @@ Route::middleware(['auth'])->name('teachers.')->group(function () {
         ->name('submissions.view');
 
 
-        Route::get('/attendance', AttendanceList::class)->name('attendance.index');
-        Route::get('/attendance/take', TakeAttendance::class)->name('attendance.take');
-        Route::get('/attendance/{attendance}/edit', TakeAttendance::class)->name('attendance.edit');
+    Route::get('/attendance', AttendanceList::class)->name('attendance.index');
+    Route::get('/attendance/take', TakeAttendance::class)->name('attendance.take');
+    Route::get('/attendance/{attendance}/edit', TakeAttendance::class)->name('attendance.edit');
     Route::get('/attendance/{student}/history', AttendanceHistory::class)
         ->name('attendance.history');
 
 
+    // Message index - view all sent messages
+    Route::get('/messages', MessageIndex::class)->name('messages.index');
 
-        // Message index - view all sent messages
-        Route::get('/messages', MessageIndex::class)->name('messages.index');
+    // Compose new message
+    Route::get('messages/compose', ComposeMessage::class)->name('messages.compose');
 
-        // Compose new message
-        Route::get('messagess/compose', ComposeMessage::class)->name('messages.compose');
+    // View specific message
+    Route::get('messages/{message}', MessageShow::class)->name('messages.show');
 
-        // View specific message
-        Route::get('messagess/{message}', MessageShow::class)->name('messages.show');
-
-        // Send message to students (simplified interface)
-        Route::get('messagess/students/send', SendMessageToStudents::class)->name('messages.students.send');
+    // Send message to students (simplified interface)
+    Route::get('messages/students/send', SendMessageToStudents::class)->name('messages.students.send');
 
 });

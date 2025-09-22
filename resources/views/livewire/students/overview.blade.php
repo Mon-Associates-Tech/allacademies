@@ -43,7 +43,7 @@
     @endif
 
     <!-- Account Completeness Section -->
-    @if($accountCompleteness['percentage'] < 100)
+    @if(isset($accountCompleteness) && $accountCompleteness['percentage'] < 100)
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
@@ -55,7 +55,7 @@
                     </h3>
                     <div class="flex items-center space-x-2">
                     <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {{ $accountCompleteness['completed_items'] }} of {{ $accountCompleteness['total_items'] }} completed
+                        {{ $accountCompleteness['completed_items']?? 0 }} of {{ $accountCompleteness['total_items'] ?? 1 }} completed
                     </span>
                         <div class="flex items-center">
                             <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ $accountCompleteness['percentage'] }}%</div>

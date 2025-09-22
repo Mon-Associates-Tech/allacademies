@@ -30,11 +30,12 @@ class StudentSchedule extends Component
 
     public function mount(?Student $student, $date = null)
     {
-//        $this->student = $student;
-        if (!$student || !auth()->user()->student) {
+
+        if(!$student?->id) {
+            $this->student = auth()->user()->student ?: Student::withoutGlobalScopes()->where('user_id', auth()->user()->id)->first();
+        }
+        else{
             $this->authorized = true;
-        } else {
-            $this->student = auth()->user()->student;
         }
 
         $this->selectedDate = $date ? Carbon::parse($date) : now();

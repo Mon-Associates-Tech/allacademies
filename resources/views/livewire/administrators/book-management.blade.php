@@ -1,6 +1,6 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gray-50 rounded-xl">
     <!-- Clean Header -->
-    <div class="bg-white shadow-sm border-b border-gray-200 mb-8">
+    <div class="bg-white shadow-sm rounded-t-xl  border-b border-gray-200 mb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-6">
                 <div>
@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto mb-4 px-4 pb-4 sm:px-6 lg:px-8">
         <!-- Notifications -->
         @if (session()->has('message'))
             <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
@@ -56,9 +56,8 @@
                 </div>
             </div>
         @endif
-        <!-- Enhanced Book Form -->
+
         @if($showForm)
-{{--            <livewire:common.book-form />--}}
             <div class="mb-8 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
                 <!-- Form Header with Progress -->
                 <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
@@ -436,22 +435,20 @@
         @endif
 
         <!-- Books List -->
-        <div class="bg-white shadow rounded-lg">
+        <div class="bg-white shadow rounded-lg mb-4">
             <!-- Filters -->
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                    <h2 class="text-lg font-medium text-gray-900">Books</h2>
-
-                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </div>
-                            <input type="text" wire:model.debounce.300ms="searchTerm" placeholder="Search books..."
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
-                        </div>
+            <div class="px-6 py-4 border-b mb-4 border-gray-200">
+                <div class="relative mt-2 mb-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" wire:model.debounce.300ms="searchTerm" placeholder="Search books..."
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex flex-col w-full lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <div class="flex flex-col w-full sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
 
                         <select wire:model="filterCategory"
                                 class="block w-full border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
@@ -486,8 +483,8 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+            <div class="overflow-x-auto  mb-4">
+                <table class="min-w-full divide-y divide-gray-200 thin-scrollbar">
                     <thead class="bg-gray-50">
                     <tr>
                         <th class="w-8 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -512,7 +509,7 @@
                         <th class="w-32 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-200 thin-scrollbar">
                     @forelse($books as $book)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -525,7 +522,7 @@
                                         <div class="flex-shrink-0 mr-3">
                                             @if($book->cover_image)
                                                 <img src="{{$book->cover_image }}" alt="{{ $book->title }}"
-                                                     class="h-16 w-12 object-cover rounded shadow-sm border">
+                                                     class="h-16 w-12 object-cover overflow-hidden rounded shadow-sm border">
                                             @else
                                                 <div class="h-16 w-12 bg-gray-200 rounded flex items-center justify-center border">
                                                     <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -537,7 +534,7 @@
                                         <div class="min-w-0 flex-1">
                                             <div class="text-sm font-semibold text-gray-900 leading-5">{{ $book->title }}</div>
                                             <div class="text-xs text-gray-500 mt-1">
-                                                <div class="text-sm font-medium text-gray-900">{{ $book->author->user?->name }}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $book->author_name }}</div>
                                                 @if($book->edition)Edition {{ $book->edition }}@endif
                                                 @if($book->edition && $book->publisher) • @endif
                                                 @if($book->publisher){{ $book->publisher }}@endif
@@ -623,8 +620,8 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </a>
-                                    @if($book->has_softcopy && $book->pdf_file_path)
-                                        <a href="{{ Storage::url($book->pdf_file_path) }}" target="_blank"
+                                    @if($book->has_softcopy && $book->pdf_file)
+                                        <a href="{{ Storage::url($book->pdf_file) }}" target="_blank"
                                            class="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-50 rounded transition-colors"
                                            title="View PDF">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

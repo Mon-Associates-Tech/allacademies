@@ -3,6 +3,7 @@
 namespace App\Livewire\Students;
 
 use App\Models\Assignment;
+use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -33,15 +34,14 @@ public function mount()
 {
     $user = Auth::user();
 
-    // Try the relationship first
+
     $this->student = $user->student;
 
-    // If that fails, try direct query
     if (!$this->student) {
-        $this->student = \App\Models\Student::where('user_id', $user->id)->first();
+        $this->student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
     }
 
-    // Check if student record exists
+
     if (!$this->student) {
         $this->unauthorized = true;
     }
