@@ -39,7 +39,7 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
-    Route::get('datamanager', \App\Livewire\Common\DataManager::class)->name('data-manager');
+    Route::get('datamanager', [\App\Http\Controllers\Student\StudentManagementController::class, 'index'])->name('data-manager');
 
     // Main activity trail page
     Route::get('/admin/activity-trail', [ActivityTrailController::class, 'index'])

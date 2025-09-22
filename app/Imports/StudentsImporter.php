@@ -2,32 +2,31 @@
 
 namespace App\Imports;
 
-use App\Models\User;
-use App\Models\Student;
-use App\Models\AcademicLevel;
-use App\Models\AcademicGroup;
-use App\Models\School;
-use App\Models\StudentGroup;
 use App\Enums\UserRole;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\School;
+use App\Models\Student;
+use App\Models\StudentGroup;
+use App\Models\User;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
 class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading
 {
-    protected $importedCount = 0;
-    protected $skippedCount = 0;
-    protected $errorCount = 0;
-    protected $errors = [];
-    protected $defaultSchoolId;
-    protected $defaultPassword;
+    protected int $importedCount = 0;
+    protected int $skippedCount = 0;
+    protected int $errorCount = 0;
+    protected array $errors = [];
+    protected mixed $defaultSchoolId;
+    protected mixed $defaultPassword;
 
     public function __construct($defaultSchoolId = null, $defaultPassword = 'password123')
     {
@@ -38,13 +37,13 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
     /**
      * @param Collection $collection
      */
-    public function collection(Collection $collection)
+    public function collection(Collection $collection): void
     {
         foreach ($collection as $row) {
             try {
                 $this->processStudentRow($row->toArray());
                 $this->importedCount++;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->errorCount++;
                 $this->errors[] = [
                     'row' => $row->toArray(),
@@ -55,7 +54,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         Log::error($this->errors);
     }
 
-    protected function processStudentRow(array $row)
+    protected function processStudentRow(array $row): void
     {
         // Clean and validate data
         $studentData = $this->cleanRowData($row);
@@ -66,13 +65,11 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         if (!$user) {
             // Create new user
             $user = User::create([
-                'name' => $studentData['name'],
-                'first_name' => $studentData['first_name'],
-                'last_name' => $studentData['last_name'],
+                'name' => trim($studentData['first_name'] . ' ' . $studentData['last_name']),
                 'email' => $studentData['email'],
                 'password' => Hash::make($studentData['password'] ?? $this->defaultPassword),
-                'email_verified_at' => now(),
                 'role' => UserRole::STUDENT,
+                'phone' => $studentData['phone'] ?? null,
             ]);
         }
 
@@ -84,19 +81,49 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
             return;
         }
 
-        // Find or create related entities
-        $academicLevel = $this->findOrCreateAcademicLevel($studentData);
-        $academicGroup = $this->findOrCreateAcademicGroup($studentData);
+        // Validate academic level and group IDs if provided
+        $academicLevel = null;
+        $academicGroup = null;
+
+        if (!empty($studentData['academic_level_id'])) {
+            $academicLevel = AcademicLevel::find($studentData['academic_level_id']);
+            if (!$academicLevel) {
+                throw new Exception("Academic level with ID {$studentData['academic_level_id']} not found");
+            }
+        }
+
+        if (!empty($studentData['academic_group_id'])) {
+            $academicGroup = AcademicGroup::find($studentData['academic_group_id']);
+            if (!$academicGroup) {
+                throw new Exception("Academic group with ID {$studentData['academic_group_id']} not found");
+            }
+        }
+
+        // Find or create school
         $school = $this->findOrCreateSchool($studentData);
-        $studentGroup = $this->findOrCreateStudentGroup($studentData);
+
+        // Find or create student group
+//        $studentGroup = $this->findOrCreateStudentGroup($studentData);
 
         // Create student record
         $student = Student::create([
             'user_id' => $user->id,
             'academic_level_id' => $academicLevel?->id,
             'academic_group_id' => $academicGroup?->id,
-            'school_id' => $school?->id,
-            'student_group_id' => $studentGroup?->id,
+            'school_id' => $school?->id ?? $this->defaultSchoolId,
+            'student_group_id' => null,
+            // Include additional fields
+            'date_of_birth' => $studentData['date_of_birth'] ?? null,
+            'phone' => $studentData['phone'] ?? null,
+            'address' => $studentData['address'] ?? null,
+            'gender' => $studentData['gender'] ?? null,
+            'parent_name' => $studentData['parent_name'] ?? null,
+            'parent_phone' => $studentData['parent_phone'] ?? null,
+            'parent_email' => $studentData['parent_email'] ?? null,
+            'emergency_contact' => $studentData['emergency_contact'] ?? null,
+            'blood_group' => $studentData['blood_group'] ?? null,
+            'admission_date' => $studentData['admission_date'] ?? now(),
+            'student_id' => $studentData['student_id'] ?? Student::generateStudentId(),
         ]);
 
         // Handle additional relationships if needed
@@ -111,45 +138,23 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
             'last_name' => trim($row['last_name'] ?? implode(' ', array_slice(explode(' ', $row['name'] ?? ''), 1)) ?? ''),
             'email' => strtolower(trim($row['email'] ?? '')),
             'password' => $row['password'] ?? null,
-            'academic_level_name' => trim($row['academic_level'] ?? $row['level'] ?? ''),
-            'academic_group_name' => trim($row['academic_group'] ?? $row['group'] ?? ''),
+            'academic_level_id' => $row['academic_level_id'] ?? null,
+            'academic_group_id' => $row['academic_group_id'] ?? null,
             'school_name' => trim($row['school'] ?? $row['school_name'] ?? ''),
             'student_group_name' => trim($row['student_group'] ?? $row['class'] ?? ''),
             'student_id' => $row['student_id'] ?? null,
             'date_of_birth' => $row['date_of_birth'] ?? $row['dob'] ?? null,
             'phone' => $row['phone'] ?? $row['mobile'] ?? null,
             'address' => $row['address'] ?? null,
+            // Additional fields
+            'gender' => $row['gender'] ?? null,
+            'parent_name' => $row['parent_name'] ?? null,
+            'parent_phone' => $row['parent_phone'] ?? null,
+            'parent_email' => $row['parent_email'] ?? null,
+            'emergency_contact' => $row['emergency_contact'] ?? null,
+            'blood_group' => $row['blood_group'] ?? null,
+            'admission_date' => $row['admission_date'] ?? now(),
         ];
-    }
-
-    protected function findOrCreateAcademicLevel(array $studentData): ?AcademicLevel
-    {
-        if (empty($studentData['academic_level_name'])) {
-            return null;
-        }
-
-        return AcademicLevel::firstOrCreate(
-            ['name' => $studentData['academic_level_name']],
-            [
-                'description' => "Imported academic level: {$studentData['academic_level_name']}",
-                'is_active' => true,
-            ]
-        );
-    }
-
-    protected function findOrCreateAcademicGroup(array $studentData): ?AcademicGroup
-    {
-        if (empty($studentData['academic_group_name'])) {
-            return null;
-        }
-
-        return AcademicGroup::firstOrCreate(
-            ['name' => $studentData['academic_group_name']],
-            [
-                'description' => "Imported academic group: {$studentData['academic_group_name']}",
-                'is_active' => true,
-            ]
-        );
     }
 
     protected function findOrCreateSchool(array $studentData): ?School
@@ -197,6 +202,8 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         return [
             '*.email' => 'required|email',
             '*.name' => 'required|string|min:2',
+            '*.academic_level_id' => 'nullable|exists:academic_levels,id',
+            '*.academic_group_id' => 'nullable|exists:academic_groups,id',
         ];
     }
 
@@ -206,6 +213,8 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
             '*.email.required' => 'Email is required for each student',
             '*.email.email' => 'Email must be a valid email address',
             '*.name.required' => 'Name is required for each student',
+            '*.academic_level_id.exists' => 'The specified academic level does not exist',
+            '*.academic_group_id.exists' => 'The specified academic group does not exist',
         ];
     }
 

@@ -22,7 +22,17 @@ class Student extends Model
     protected $fillable = [
         'school_id', 'user_id', 'student_id', 'student_group_id',
         'academic_level_id', 'academic_group_id', 'admission_date',
-        'graduation_date', 'status', 'metadata'
+        'graduation_date', 'status', 'metadata',
+        //
+        'date_of_birth',
+        'blood_group',
+        'address',
+        'phone',
+        'parent_name',
+        'parent_phone',
+        'emergency_contact',
+        'id_card_issue_date',
+        'id_card_expiry_date'
     ];
 
     protected $casts = [
@@ -355,16 +365,18 @@ class Student extends Model
     }
 
 // Generate school-specific student ID
-public static function generateStudentId($schoolId): string
+public static function generateStudentId($schoolId = null): string
 {
-    $school = School::find($schoolId);
+    $school = null;
+    if(!empty($schoolId)){
+        $school = School::find($schoolId);
+    }
+
 
     // Handle case where school doesn't exist or doesn't have proper attributes
-    if (!$school) {
-        $schoolCode = 'SCH';
-    } else {
+    $schoolCode = 'SCH';
+    if ($school) {
         // Try to get school code, fallback to name, then to generic code
-        $schoolCode = 'SCH';
         if (!empty($school->code)) {
             $schoolCode = substr(strtoupper($school->code), 0, 3);
         } elseif (!empty($school->name)) {
@@ -410,5 +422,24 @@ public static function generateStudentId($schoolId): string
         }
 
         return $query->where('school_id', $user->school_id);
+    }
+
+public function academicProgression(): Student|HasMany
+{
+    return $this->hasMany(StudentAcademicProgression::class)->orderBy('start_date');
+}
+
+public function currentAcademicLevel(): BelongsTo
+{
+    return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
+}
+
+    public function reportCards()
+    {
+        return $this->hasMany(ReportCard::class);
+    }
+
+    public function idCards(){
+        return $this->hasMany(StudentIdCard::class);
     }
 }

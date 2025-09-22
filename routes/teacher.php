@@ -49,7 +49,7 @@ Route::middleware(['auth'])->name('teachers.')->group(function () {
 
 
         // Message index - view all sent messages
-        Route::get('/messagess', MessageIndex::class)->name('messages.index');
+        Route::get('/messages', MessageIndex::class)->name('messages.index');
 
         // Compose new message
         Route::get('messagess/compose', ComposeMessage::class)->name('messages.compose');
