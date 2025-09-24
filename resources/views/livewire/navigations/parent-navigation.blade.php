@@ -16,6 +16,21 @@
                 </div>
             </a>
         </li>
+        <!-- Academic Chat -->
+        <li class="mb-0.5 last:mb-0" title="Academic Assistant">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('academic-chat.index')}}">
+                <div class="flex items-center">
+                    <!-- Chat bubble with spark -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 {{ Route::is('academic-chat*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10"/>
+                        <path d="M17 3l1.5 3L22 8l-3.5 2L17 13l-1.5-3L12 8l3.5-2L17 3z"/>
+                    </svg>
+
+                    <span class="text-sm ml-4 sidebar-text duration-200">Academic Assistant</span>
+                </div>
+            </a>
+        </li>
 
         <!-- Wards Management -->
         <li class="mb-0.5 last:mb-0">

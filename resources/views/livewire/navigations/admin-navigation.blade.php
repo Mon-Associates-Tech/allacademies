@@ -404,17 +404,16 @@
         </li>
 
         <!-- Academic Chat -->
-        <li class="mb-0.5 last:mb-0" title="Academic Chat">
+        <li class="mb-0.5 last:mb-0" title="Academic Assistant">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('academic-chat.index')}}">
                 <div class="flex items-center">
-                    <svg
-                        class="shrink-0 fill-current {{ Route::is('academic-chat*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
-                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                        <path
-                            d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917l-7.5-3.5Z"/>
-                        <path
-                            d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466 4.176 9.032Z"/>
+                    <!-- Chat bubble with spark -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         class="shrink-0 {{ Route::is('academic-chat*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10"/>
+                        <path d="M17 3l1.5 3L22 8l-3.5 2L17 13l-1.5-3L12 8l3.5-2L17 3z"/>
                     </svg>
                     <span class="text-sm ml-4 sidebar-text duration-200">Academic Assistant</span>
                 </div>
@@ -462,12 +461,14 @@
                 <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.change-log*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                    href="{{route('admin.change-log.index')}}">
                     <div class="flex items-center">
-                 <svg
-    class="shrink-0 fill-current {{ Route::is('admin.change-log*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
-    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-    <path d="M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm0 13c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z"/>
-    <path d="M8 4c.3 0 .5.2.5.5v3.6l2.4 1.5c.2.1.3.4.1.6-.1.2-.4.3-.6.1l-2.6-1.6c-.2-.1-.3-.3-.3-.5V4.5c0-.3.2-.5.5-.5z"/>
-</svg>
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('admin.change-log*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path
+                                d="M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm0 13c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z"/>
+                            <path
+                                d="M8 4c.3 0 .5.2.5.5v3.6l2.4 1.5c.2.1.3.4.1.6-.1.2-.4.3-.6.1l-2.6-1.6c-.2-.1-.3-.3-.3-.5V4.5c0-.3.2-.5.5-.5z"/>
+                        </svg>
 
                         <span class="text-sm ml-4 sidebar-text duration-200">Change  Log</span>
                     </div>

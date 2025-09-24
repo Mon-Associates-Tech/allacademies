@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 <div x-data="{
     darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches),
     newSubtopic: '',
@@ -34,6 +35,11 @@
      :class="{ 'dark': darkMode }"
      class="min-h-screen h-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
 
+    <!-- Overlay for mobile when sidebars are open -->
+    <div x-show="showHistory || $wire.showParameters"
+         @click="showHistory = false; $wire.showParameters = false;"
+         class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"></div>
+
     <!-- Header -->
     <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,7 +64,8 @@
                         @click="toggleHistory()"
                         class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                         <svg class="h-4 w-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         History
                     </button>
@@ -104,53 +111,60 @@
     </header>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 gap-6">
             <!-- Conversation History Sidebar -->
             <div x-show="showHistory"
                  x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 transform -translate-x-full"
-                 x-transition:enter-end="opacity-100 transform translate-x-0"
+                 x-transition:enter-start="opacity-0 -translate-x-full"
+                 x-transition:enter-end="opacity-100 translate-x-0"
                  x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 transform translate-x-0"
-                 x-transition:leave-end="opacity-0 transform -translate-x-full"
-                 class="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-y-auto h-[calc(100vh-8rem)]">
+                 x-transition:leave-start="opacity-100 translate-x-0"
+                 x-transition:leave-end="opacity-0 -translate-x-full"
+                 class="fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white dark:bg-gray-800 rounded-r-lg shadow-xl lg:shadow-none border-r border-gray-200 dark:border-gray-700 overflow-y-auto h-[calc(100vh-5rem)] transform lg:translate-x-0 lg:opacity-100 lg:z-auto lg:rounded-none lg:border-0">
                 <div class="p-4">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Chat History</h2>
-                        <button @click="toggleHistory()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <button @click="toggleHistory()"
+                                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
 
                     <div class="space-y-2">
                         @forelse($conversationHistory as $conversation)
-                            <div class="group flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                 wire:click="loadConversation('{{ $conversation['id'] }}')">
+                            <div
+                                class="group flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                                wire:click="loadConversation('{{ $conversation['id'] }}')">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
                                         {{ $conversation['title'] }}
                                     </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ \Carbon\Carbon::parse($conversation['created_at'])->format('M j, Y g:i A') }}
+                                        {{ Carbon::parse($conversation['created_at'])->format('M j, Y g:i A') }}
                                     </p>
                                 </div>
                                 <button wire:click.stop="deleteConversation('{{ $conversation['id'] }}')"
                                         wire:confirm="Are you sure you want to delete this conversation?"
                                         class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
                                 </button>
                             </div>
                         @empty
                             <div class="text-center py-8">
-                                <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none"
+                                     stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                 </svg>
                                 <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No conversations</h3>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Start a new chat to see it here</p>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Start a new chat to see it
+                                    here</p>
                             </div>
                         @endforelse
                     </div>
@@ -160,13 +174,12 @@
             <!-- Parameters Panel -->
             <div x-show="$wire.showParameters"
                  x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 transform -translate-x-full"
-                 x-transition:enter-end="opacity-100 transform translate-x-0"
+                 x-transition:enter-start="opacity-0 -translate-x-full"
+                 x-transition:enter-end="opacity-100 translate-x-0"
                  x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 transform translate-x-0"
-                 x-transition:leave-end="opacity-0 transform -translate-x-full"
-                 class="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-y-auto">
-
+                 x-transition:leave-start="opacity-100 translate-x-0"
+                 x-transition:leave-end="opacity-0 -translate-x-full"
+                 class="fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white dark:bg-gray-800 rounded-r-lg shadow-xl lg:shadow-none border-r border-gray-200 dark:border-gray-700 overflow-y-auto h-[calc(100vh-5rem)] transform lg:translate-x-0 lg:opacity-100 lg:z-auto lg:rounded-none lg:border-0">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Learning Parameters</h2>
@@ -395,8 +408,7 @@
 
             <!-- Chat Area -->
             <div
-                class="lg:col-span-3 flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative">
-
+                class="flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative">
                 <!-- Error Messages -->
                 @if(!empty($errors))
                     <div class="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
@@ -475,7 +487,7 @@
                                         </div>
                                         <div
                                             class="mt-1 text-xs text-gray-500 dark:text-gray-400 {{ $message['role'] === 'user' ? 'text-right' : '' }}">
-                                            {{ \Carbon\Carbon::parse($message['timestamp'])->diffForHumans() }}
+                                            {{ Carbon::parse($message['timestamp'])->diffForHumans() }}
                                         </div>
                                     </div>
 
@@ -536,19 +548,40 @@
                 <div class="border-t border-gray-200 dark:border-gray-700 p-4">
                     <div class="flex space-x-3">
                         <div class="flex-1">
-                            <textarea
-                                wire:model="message"
-                                @keydown.enter.prevent.stop="if (!$event.shiftKey) { $wire.sendMessage(); }"
-                                rows="3"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                                placeholder="Ask me anything about your learning topic... (Press Enter to send, Shift+Enter for new line)"
-                                :disabled="$wire.isLoading"></textarea>
+            <textarea
+                wire:model="message"
+                @keydown.enter.prevent.stop="if (!$event.shiftKey) { $wire.sendMessage(); }"
+                rows="3"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                placeholder="Ask me anything about your learning topic or uploaded file... (Press Enter to send, Shift+Enter for new line)"
+                :disabled="$wire.isLoading"></textarea>
                         </div>
-                        <div class="flex flex-col justify-end">
+                        <div class="flex flex-col justify-end space-y-2">
+                            <!-- Hidden file input -->
+                            <input
+                                type="file"
+                                wire:model="uploadedFile"
+                                x-ref="fileInput"
+                                class="hidden"
+                            >
+
+                            <!-- File upload button with paperclip icon -->
+                            <button
+                                type="button"
+                                x-on:click="$refs.fileInput.click()"
+                                class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                title="Upload file for evaluation">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Send button with paper airplane icon -->
                             <button
                                 wire:click="sendMessage"
-                                :disabled="$wire.isLoading || !$wire.message.trim()"
-                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+                                :disabled="$wire.isLoading || (!$wire.message.trim() && !$wire.fileContent)"
+                                class="p-2 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-blue-600">
                                 <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5" fill="none"
                                      stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -564,6 +597,30 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Display file info when uploaded -->
+                    @if($fileName)
+                        <div
+                            class="mt-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="h-5 w-5 text-blue-500 dark:text-blue-400 mr-2" fill="none"
+                                         stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span
+                                        class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ $fileName }}</span>
+                                </div>
+                                <span class="text-xs text-blue-600 dark:text-blue-400">Ready for evaluation</span>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- File upload error message -->
+                    {{--    @if($errors->has('uploadedFile'))
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ $errors->first('uploadedFile') }}</p>
+                        @endif--}}
                 </div>
             </div>
         </div>

@@ -8,9 +8,12 @@ use Livewire\Component;
 use Livewire\Attributes\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\WithFileUploads;
 
 class AcademicChat extends Component
 {
+    use WithFileUploads;
+
     // Chat parameters
     #[Rule('required|string|max:1000')]
     public $message = '';
@@ -47,6 +50,12 @@ class AcademicChat extends Component
     #[Rule('nullable|integer|min:100|max:2000')]
     public $response_length = 1000;
 
+    #[Rule('nullable|file|max:10240')] // 10MB limit
+    public $uploadedFile = null;
+
+    public $fileContent = '';
+    public $fileName = '';
+
     // Component state
     public $messages = [];
     public $isLoading = false;
@@ -78,7 +87,7 @@ class AcademicChat extends Component
         $this->response_length = 1000;
     }
 
-    public function sendMessage()
+    public function sendMessage(): void
     {
         $this->validate();
 
@@ -98,6 +107,10 @@ class AcademicChat extends Component
         $parameters = $this->getParameters();
         $parameters['message'] = $this->message;
 
+        if (!empty($this->fileContent)) {
+            $parameters['file_content'] = $this->fileContent;
+        }
+
         // Validate parameters
         $validationErrors = $this->chatService->validateParameters($parameters);
         if (!empty($validationErrors)) {
@@ -106,10 +119,22 @@ class AcademicChat extends Component
             return;
         }
 
+        // Process uploaded file if present
+        if ($this->uploadedFile) {
+            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
+            $this->fileName = $this->uploadedFile->getClientOriginalName();
+            $this->uploadedFile = null; // Reset file input
+        }
+
+        // Add user message to chat and database
+        $userMessageContent = $this->message;
+        if (!empty($this->fileContent)) {
+            $userMessageContent .= "\n\nFile: " . $this->fileName . "\nFile Content:\n" . $this->fileContent;
+        }
         // Add user message to chat and database
         $userMessage = [
             'role' => 'user',
-            'content' => $this->message,
+            'content' => $userMessageContent,
             'timestamp' => now()->toISOString()
         ];
         $this->messages[] = $userMessage;
@@ -156,12 +181,23 @@ class AcademicChat extends Component
 
         // Clear message and reset loading
         $this->message = '';
+        $this->fileContent = '';
+        $this->fileName = '';
         $this->isLoading = false;
 
         // Refresh conversation history
         $this->loadConversationHistory();
     }
 
+    public function updatedUploadedFile()
+    {
+        $this->validateOnly('uploadedFile');
+
+        if ($this->uploadedFile) {
+            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
+            $this->fileName = $this->uploadedFile->getClientOriginalName();
+        }
+    }
     public function clearChat()
     {
         $this->messages = [];
