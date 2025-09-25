@@ -229,8 +229,19 @@ class BookBasedLearningService
     /**
      * Generate adaptive quiz based on user's performance
      */
-    public function generateAdaptiveQuiz(User $user, Book $book, array $parameters): array
-    {
+public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters): array
+{
+    // Check if we're working with file content instead of a book
+    $isFileBased = !empty($parameters['file_content']);
+
+    if ($isFileBased) {
+        // For file-based quizzes, we don't have previous performance or focus areas
+        $previousQuizzes = collect();
+        $adaptiveDifficulty = $parameters['difficulty'] ?? 'medium';
+        $weakAreas = [];
+        $focusAreas = [];
+        $userPerformanceHistory = [];
+    } else {
         // Analyze user's previous performance with this book
         $previousQuizzes = QuizSession::where('user_id', $user->id)
             ->where('book_id', $book->id)
@@ -246,16 +257,20 @@ class BookBasedLearningService
         // Focus on chapters/sections where user struggled
         $focusAreas = $this->identifyFocusAreas($user, $book, $weakAreas);
 
-        // Build context with adaptive parameters
-        $adaptiveContext = array_merge($parameters, [
-            'adaptive_difficulty' => $adaptiveDifficulty,
-            'focus_areas' => $focusAreas,
-            'weak_concepts' => $weakAreas,
-            'user_performance_history' => $this->getUserPerformanceHistory($user, $book)
-        ]);
-
-        return $this->generateQuizWithContext($book, $adaptiveContext, $user);
+        // Get user performance history
+        $userPerformanceHistory = $this->getUserPerformanceHistory($user, $book);
     }
+
+    // Build context with adaptive parameters
+    $adaptiveContext = array_merge($parameters, [
+        'adaptive_difficulty' => $adaptiveDifficulty,
+        'focus_areas' => $focusAreas,
+        'weak_concepts' => $weakAreas,
+        'user_performance_history' => $userPerformanceHistory
+    ]);
+
+    return $this->generateQuizWithContext($book, $adaptiveContext, $user);
+}
 
     /**
      * Calculate adaptive difficulty based on previous performance
@@ -360,8 +375,12 @@ class BookBasedLearningService
     /**
      * Identify focus areas for adaptive learning
      */
-    protected function identifyFocusAreas(User $user, Book $book, array $weakAreas): array
+    protected function identifyFocusAreas(User $user, ?Book $book, array $weakAreas): array
     {
+
+        if (!$book) {
+            return [];
+        }
         $focusAreas = [];
 
         // Focus on chapters where user had difficulties
@@ -426,8 +445,12 @@ class BookBasedLearningService
     /**
      * Get user's performance history with a book
      */
-    protected function getUserPerformanceHistory(User $user, Book $book): array
+    protected function getUserPerformanceHistory(User $user, ?Book $book): array
     {
+        if (!$book) {
+            return [];
+        }
+
         $quizzes = QuizSession::where('user_id', $user->id)
             ->where('book_id', $book->id)
             ->where('status', 'completed')
@@ -448,7 +471,7 @@ class BookBasedLearningService
     /**
      * Generate quiz with adaptive context
      */
-    protected function generateQuizWithContext(Book $book, array $context, User $user): array
+    protected function generateQuizWithContext(?Book $book, array $context, User $user): array
     {
         $prompt = $this->buildAdaptiveQuizPrompt($book, $context, $user);
 
@@ -477,19 +500,31 @@ class BookBasedLearningService
     /**
      * Build enhanced adaptive quiz prompt with comprehensive context
      */
-    protected function buildAdaptiveQuizPrompt(Book $book, array $context, User $user): string
+    protected function buildAdaptiveQuizPrompt(?Book $book, array $context, User $user): string
     {
-        $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
+        $prompt = '';
+        if (!empty($context['file_content'])) {
+            $prompt = "Generate a quiz based on the following content:\n\n";
+            // Limit content to prevent token overflow
+            $prompt .= substr($context['file_content'], 0, 3000) . "\n\n";
+            $prompt .= "CONTENT DETAILS:\n";
 
-        $prompt .= "BOOK DETAILS:\n";
-        $prompt .= "- Title: {$book->title}\n";
-        $prompt .= "- Author: {$book->author}\n";
-        $prompt .= "- Genre: {$book->genre}\n";
-        $prompt .= "- Difficulty Score: {$book->difficulty_score}/10\n";
-        $prompt .= "- Estimated Reading Time: {$book->estimated_reading_time} hours\n";
+            if (!empty($context['file_name'])) {
+                $prompt .= "- File Name: {$context['file_name']}\n";
+            }
+        } else if($book !== null && isset($book->id)){
 
-        if (!empty($book->themes)) {
-            $prompt .= "- Themes: " . implode(', ', $book->themes) . "\n";
+            $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
+
+            $prompt .= "BOOK DETAILS:\n";
+            $prompt .= "- Title: {$book->title}\n";
+            $prompt .= "- Author: {$book->author}\n";
+            $prompt .= "- Genre: {$book->genre}\n";
+            $prompt .= "- Difficulty Score: {$book->difficulty_score}/10\n";
+            $prompt .= "- Estimated Reading Time: {$book->estimated_reading_time} hours\n";
+            if (!empty($book->themes)) {
+                $prompt .= "- Themes: " . implode(', ', $book->themes) . "\n";
+            }
         }
 
         $prompt .= "\nUSER PROFILE:\n";

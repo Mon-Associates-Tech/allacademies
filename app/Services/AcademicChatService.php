@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use DOMDocument;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use ZipArchive;
 
 class AcademicChatService
 {
@@ -12,11 +15,11 @@ class AcademicChatService
     protected string $endpoint = 'https://api.openai.com/v1/chat/completions';
     protected string $model = '';
 
-public function __construct($model = null)
-{
-    $this->apiKey = config('openai.openai.api_key');
-    $this->model = $model ?? config('openai.openai.default_model');
-}
+    public function __construct($model = null)
+    {
+        $this->apiKey = config('openai.openai.api_key');
+        $this->model = $model ?? config('openai.openai.default_model');
+    }
 
 
     /**
@@ -48,8 +51,8 @@ public function __construct($model = null)
         $requestData = [
             'model' => $this->model,
             'messages' => $formattedMessages,
-            'temperature' => (float) $parameters['creativity_level'] ?? 0.7,
-            'max_tokens' => (int) $parameters['response_length'] ?? 1000,
+            'temperature' => (float)$parameters['creativity_level'] ?? 0.7,
+            'max_tokens' => (int)$parameters['response_length'] ?? 1000,
         ];
 
         // Add additional OpenAI parameters if specified
@@ -78,7 +81,7 @@ public function __construct($model = null)
                 'error' => "API Error: " . $response->body()
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Educational Chat Service Error', ['error' => $e->getMessage()]);
             return [
                 'success' => false,
@@ -255,182 +258,204 @@ public function __construct($model = null)
     }
 
     /**
- * Extract text content from uploaded file
- */
+     * Extract text content from uploaded file
+     */
 public function extractFileContent(UploadedFile $file): string
 {
     $mimeType = $file->getMimeType();
-    $content = '';
+    $originalName = $file->getClientOriginalName();
 
     try {
         // Handle different file types
         if (str_starts_with($mimeType, 'text/')) {
             // Plain text files
             $content = $file->getContent();
+            if (empty(trim($content))) {
+                return "The uploaded text file appears to be empty.";
+            }
+            return $content;
         } elseif ($mimeType === 'application/pdf') {
             // PDF files
             $content = $this->extractPdfContent($file);
+            if (str_contains($content, 'requires pdftotext')) {
+                throw new Exception("PDF content extraction failed. Please ensure pdftotext is installed on the server.");
+            }
+            return $content;
         } elseif (in_array($mimeType, [
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ])) {
             // Word documents
             $content = $this->extractWordContent($file);
+            if (str_contains($content, 'requires the phpoffice/phpword library')) {
+                throw new Exception("Word document content extraction failed. Please install the phpoffice/phpword library.");
+            }
+            return $content;
         } elseif (in_array($mimeType, [
             'application/vnd.ms-excel',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ])) {
             // Excel documents
             $content = $this->extractExcelContent($file);
+            if (str_contains($content, 'requires the phpoffice/phpspreadsheet library')) {
+                throw new Exception("Excel document content extraction failed. Please install the phpoffice/phpspreadsheet library.");
+            }
+            return $content;
         } else {
-            // For other file types, just get basic file info
-            $content = "File uploaded:\n" .
-                "- Name: " . $file->getClientOriginalName() . "\n" .
+            // For other file types, try to get basic content
+            $content = $file->getContent();
+            if (!empty($content) && strlen($content) < 10000) { // Reasonable limit
+                return $content;
+            }
+
+            // If all else fails, return file info
+            return "File uploaded:\n" .
+                "- Name: " . $originalName . "\n" .
                 "- Size: " . $file->getSize() . " bytes\n" .
-                "- Type: " . $mimeType . "\n";
+                "- Type: " . $mimeType . "\n" .
+                "Note: Content could not be automatically extracted from this file type.";
         }
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         \Log::error('File extraction error', [
             'error' => $e->getMessage(),
-            'file' => $file->getClientOriginalName(),
+            'file' => $originalName,
             'mime_type' => $mimeType
         ]);
 
-        $content = "File uploaded: " . $file->getClientOriginalName() . "\n" .
-            "Error processing file: " . $e->getMessage() . "\n" .
-            "File type: " . $mimeType . "\n";
+        // Return a more informative error message
+        return "Error processing file: " . $originalName . "\n" .
+            "Issue: " . $e->getMessage() . "\n" .
+            "Please try uploading a plain text file (.txt) or ensure the required extraction tools are installed.";
     }
-
-    return $content;
 }
 
-/**
- * Extract content from PDF files
- */
-protected function extractPdfContent(UploadedFile $file): string
-{
-    // Check if pdftotext is available
-    if (function_exists('exec') && $this->isCommandAvailable('pdftotext')) {
-        $tmpFile = $file->getRealPath();
-        $outputFile = tempnam(sys_get_temp_dir(), 'pdf_output');
+    /**
+     * Extract content from PDF files
+     */
+    protected function extractPdfContent(UploadedFile $file): string
+    {
+        // Check if pdftotext is available
+        if (function_exists('exec') && $this->isCommandAvailable('pdftotext')) {
+            $tmpFile = $file->getRealPath();
+            $outputFile = tempnam(sys_get_temp_dir(), 'pdf_output');
 
-        // Use pdftotext command line tool
-        $command = "pdftotext -layout " . escapeshellarg($tmpFile) . " " . escapeshellarg($outputFile);
-        exec($command, $output, $returnCode);
+            // Use pdftotext command line tool
+            $command = "pdftotext -layout " . escapeshellarg($tmpFile) . " " . escapeshellarg($outputFile);
+            exec($command, $output, $returnCode);
 
-        if ($returnCode === 0 && file_exists($outputFile)) {
-            $content = file_get_contents($outputFile);
-            unlink($outputFile);
-            return trim($content);
-        }
-
-        // Fallback if pdftotext fails
-        unlink($outputFile);
-    }
-
-    // If pdftotext is not available or fails, try to use the simple approach
-    return "PDF file content extraction requires pdftotext to be installed on the server.\n" .
-        "File name: " . $file->getClientOriginalName() . "\n" .
-        "File size: " . $file->getSize() . " bytes\n";
-}
-
-/**
- * Extract content from Word documents
- */
-protected function extractWordContent(UploadedFile $file): string
-{
-    // For .doc files
-    if ($file->getMimeType() === 'application/msword') {
-        return "Word document (.doc) uploaded.\n" .
-            "Full content extraction for .doc files requires the phpoffice/phpword library.\n" .
-            "File name: " . $file->getClientOriginalName() . "\n" .
-            "File size: " . $file->getSize() . " bytes\n";
-    }
-
-    // For .docx files
-    if ($file->getMimeType() === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        $tmpFile = $file->getRealPath();
-
-        // Try to extract basic text content from DOCX (XML-based format)
-        $zip = new \ZipArchive();
-        if ($zip->open($tmpFile) === TRUE) {
-            $content = '';
-            // Read document.xml which contains the main text
-            if ($zip->locateName('word/document.xml') !== false) {
-                $xml = $zip->getFromName('word/document.xml');
-                $dom = new \DOMDocument();
-                $dom->loadXML($xml, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
-                $content = strip_tags($dom->textContent);
-            }
-            $zip->close();
-
-            if (!empty($content)) {
+            if ($returnCode === 0 && file_exists($outputFile)) {
+                $content = file_get_contents($outputFile);
+                unlink($outputFile);
                 return trim($content);
             }
+
+            // Fallback if pdftotext fails
+            unlink($outputFile);
         }
 
-        // Fallback if XML parsing fails
-        return "Word document (.docx) uploaded.\n" .
+        // If pdftotext is not available or fails, try to use the simple approach
+        return "PDF file content extraction requires pdftotext to be installed on the server.\n" .
             "File name: " . $file->getClientOriginalName() . "\n" .
             "File size: " . $file->getSize() . " bytes\n";
     }
 
-    return "Unsupported Word document format.\n";
-}
-
-/**
- * Extract content from Excel documents
- */
-protected function extractExcelContent(UploadedFile $file): string
-{
-    // For .xls files
-    if ($file->getMimeType() === 'application/vnd.ms-excel') {
-        return "Excel document (.xls) uploaded.\n" .
-            "Full content extraction for .xls files requires the phpoffice/phpspreadsheet library.\n" .
-            "File name: " . $file->getClientOriginalName() . "\n" .
-            "File size: " . $file->getSize() . " bytes\n";
+    /**
+     * Check if a command is available on the system
+     */
+    protected function isCommandAvailable(string $command): bool
+    {
+        $returnCode = null;
+        $output = [];
+        exec("which $command", $output, $returnCode);
+        return $returnCode === 0;
     }
 
-    // For .xlsx files
-    if ($file->getMimeType() === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        $tmpFile = $file->getRealPath();
-
-        // Try to extract basic information from XLSX (XML-based format)
-        $zip = new \ZipArchive();
-        if ($zip->open($tmpFile) === TRUE) {
-            $content = '';
-            // Read sharedStrings.xml which contains cell values
-            if ($zip->locateName('xl/sharedStrings.xml') !== false) {
-                $xml = $zip->getFromName('xl/sharedStrings.xml');
-                $dom = new \DOMDocument();
-                $dom->loadXML($xml, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
-                $content = strip_tags($dom->textContent);
-            }
-            $zip->close();
-
-            if (!empty($content)) {
-                return "Excel spreadsheet content (text values only):\n" . trim($content);
-            }
+    /**
+     * Extract content from Word documents
+     */
+    protected function extractWordContent(UploadedFile $file): string
+    {
+        // For .doc files
+        if ($file->getMimeType() === 'application/msword') {
+            return "Word document (.doc) uploaded.\n" .
+                "Full content extraction for .doc files requires the phpoffice/phpword library.\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
         }
 
-        // Fallback if XML parsing fails
-        return "Excel document (.xlsx) uploaded.\n" .
-            "File name: " . $file->getClientOriginalName() . "\n" .
-            "File size: " . $file->getSize() . " bytes\n";
+        // For .docx files
+        if ($file->getMimeType() === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            $tmpFile = $file->getRealPath();
+
+            // Try to extract basic text content from DOCX (XML-based format)
+            $zip = new ZipArchive();
+            if ($zip->open($tmpFile) === TRUE) {
+                $content = '';
+                // Read document.xml which contains the main text
+                if ($zip->locateName('word/document.xml') !== false) {
+                    $xml = $zip->getFromName('word/document.xml');
+                    $dom = new DOMDocument();
+                    $dom->loadXML($xml, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
+                    $content = strip_tags($dom->textContent);
+                }
+                $zip->close();
+
+                if (!empty($content)) {
+                    return trim($content);
+                }
+            }
+
+            // Fallback if XML parsing fails
+            return "Word document (.docx) uploaded.\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
+        }
+
+        return "Unsupported Word document format.\n";
     }
 
-    return "Unsupported Excel document format.\n";
-}
+    /**
+     * Extract content from Excel documents
+     */
+    protected function extractExcelContent(UploadedFile $file): string
+    {
+        // For .xls files
+        if ($file->getMimeType() === 'application/vnd.ms-excel') {
+            return "Excel document (.xls) uploaded.\n" .
+                "Full content extraction for .xls files requires the phpoffice/phpspreadsheet library.\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
+        }
 
-/**
- * Check if a command is available on the system
- */
-protected function isCommandAvailable(string $command): bool
-{
-    $returnCode = null;
-    $output = [];
-    exec("which $command", $output, $returnCode);
-    return $returnCode === 0;
-}
+        // For .xlsx files
+        if ($file->getMimeType() === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+            $tmpFile = $file->getRealPath();
+
+            // Try to extract basic information from XLSX (XML-based format)
+            $zip = new ZipArchive();
+            if ($zip->open($tmpFile) === TRUE) {
+                $content = '';
+                // Read sharedStrings.xml which contains cell values
+                if ($zip->locateName('xl/sharedStrings.xml') !== false) {
+                    $xml = $zip->getFromName('xl/sharedStrings.xml');
+                    $dom = new DOMDocument();
+                    $dom->loadXML($xml, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
+                    $content = strip_tags($dom->textContent);
+                }
+                $zip->close();
+
+                if (!empty($content)) {
+                    return "Excel spreadsheet content (text values only):\n" . trim($content);
+                }
+            }
+
+            // Fallback if XML parsing fails
+            return "Excel document (.xlsx) uploaded.\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
+        }
+
+        return "Unsupported Excel document format.\n";
+    }
 
 }

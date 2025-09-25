@@ -1,7 +1,14 @@
 <section>
     <div>
+        <div class="">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Book Quiz Generator</h1>
+                <p class="text-gray-600 dark:text-gray-400">Test your knowledge with questions from your
+                    favorite books or from your uploads</p>
+            </div>
+        </div>
         {{-- Tab Navigation --}}
-        <div class="mb-8">
+        <div class="mb-8r">
             <div class="border-b border-gray-200 dark:border-gray-700">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                     @if($activeTab === 'results')
@@ -47,14 +54,8 @@
             <div x-transition>
                 {{-- Quiz Setup Phase --}}
                 <div x-data="{ showAdvanced: false }" x-show="!$wire.quizData && !$wire.quizResults" x-transition>
-                    <div class="mb-8">
-                        <div class="text-center mb-8">
-                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Book Quiz Generator</h1>
-                            <p class="text-gray-600 dark:text-gray-400">Test your knowledge with questions from your
-                                favorite books.</p>
-                        </div>
-
-                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <div class="">
+                        <div class="bg-white dark:bg-gray-800 rounded-b-xl shadow-lg p-6">
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {{-- Book Selection --}}
                                 <div class="space-y-6">
@@ -105,14 +106,59 @@
                                                         {{ Str::limit($selectedBook->description, 100) }}
                                                     </p>
                                                 </div>
+
+
                                             </div>
                                         </div>
                                     @endif
+
+                                    @if(!$selectedBookId)
+                                    <div class="mt-4">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Or Upload Your Own Content
+                                        </label>
+                                        <div class="flex items-center space-x-2">
+                                            <input
+                                                type="file"
+                                                wire:model="uploadedFile"
+                                                class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                                accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                                            <button
+                                                type="button"
+                                                wire:click="$refresh"
+                                                class="px-4 hidden py-3 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">
+                                                Upload
+                                            </button>
+                                        </div>
+                                        @if($fileName)
+                                            <div
+                                                class="mt-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center">
+                                                        <svg class="h-5 w-5 text-blue-500 dark:text-blue-400 mr-2"
+                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                        </svg>
+                                                        <span
+                                                            class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ $fileName }}</span>
+                                                    </div>
+                                                    <span
+                                                        class="text-xs text-blue-600 dark:text-blue-400">Uploaded</span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        {{--    @error('uploadedFile')
+                                                <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                                            @enderror--}}
+                                    </div>
+                                        @endif
                                 </div>
 
                                 {{-- Quiz Settings --}}
                                 <div class="space-y-6">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="flex flex-col flex-1 gap-4">
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -127,38 +173,40 @@
                                             </select>
                                         </div>
 
-<div>
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Number of Questions
-    </label>
-    <div class="flex space-x-2" x-data="{
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Number of Questions
+                                            </label>
+                                            <div class="flex space-x-2" x-data="{
         isCustom: @js($this->questionCount === 'custom'),
         updateCustomState(value) {
             this.isCustom = value === 'custom';
         }
     }"
-    x-init="$watch('$wire.questionCount', value => updateCustomState(value))">
-        <select wire:model.live="questionCount"
-                class="w-1/2 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                x-on:change="updateCustomState($event.target.value)">
-            <option value="5">5 questions</option>
-            <option value="10" selected>10 questions</option>
-            <option value="15">15 questions</option>
-            <option value="20">20 questions</option>
-            <option value="custom">Custom</option>
-        </select>
+                                                 x-init="$watch('$wire.questionCount', value => updateCustomState(value))">
+                                                <select wire:model.live="questionCount"
+                                                        class="px-4 w-full py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                                        x-on:change="updateCustomState($event.target.value)">
+                                                    <option value="5">5 questions</option>
+                                                    <option value="10" selected>10 questions</option>
+                                                    <option value="15">15 questions</option>
+                                                    <option value="20">20 questions</option>
+                                                    <option value="custom">Custom</option>
+                                                </select>
 
-        <div class="w-1/2" x-show="isCustom" x-transition>
-            <input type="number"
-                   wire:model.live.debounce.500ms="customQuestionCount"
-                   min="1"
-                   max="50"
-                   placeholder="Enter number (1-50)"
-                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-        </div>
-    </div>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Select from presets or choose "Custom" for your own value (1-50)</p>
-</div>
+                                                <div class="w-1/2" x-show="isCustom" x-transition>
+                                                    <input type="number"
+                                                           wire:model.live.debounce.500ms="customQuestionCount"
+                                                           min="1"
+                                                           max="50"
+                                                           placeholder="Enter number (1-50)"
+                                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                                </div>
+                                            </div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Select from presets
+                                                or choose "Custom" for your own value (1-50)</p>
+                                        </div>
 
 
                                         <div>
@@ -219,7 +267,7 @@
                                                     with commas</p>
                                             </div>
 
-                                            <div class="flex items-center hidden">
+                                            <div class=" items-center hidden">
                                                 <input type="checkbox" wire:model.live="includeQuotes"
                                                        id="includeQuotes"
                                                        class="rounded border-gray-300 dark:border-gray-600 text-blue-600">
@@ -239,7 +287,7 @@
                                     variant="subtle"
                                     :with-shadow="false"
                                     wire:click="generateQuiz"
-                                    x-bind:disabled="!$wire.selectedBookId || $wire.isGenerating"
+                                    x-bind:disabled="!$wire.selectedBookId || $wire.isGenerating !$wire.fileContent"
                                     wire:loading.attr="disabled"
                                     class="w-full justify-center">
                                 <span wire:loading.remove wire:target="generateQuiz" class="flex items-center">
@@ -880,16 +928,9 @@
             </x-slot>
         </x-modal-component>
 
-        {{-- Quiz History Tab --}}
         @if($activeTab === 'history')
             <div x-transition>
                 <div class="mb-8">
-                    <div class="text-center mb-8">
-                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Quiz History</h1>
-                        <p class="text-gray-600 dark:text-gray-400">Review your past quizzes and track your
-                            progress.</p>
-                    </div>
-
                     @if($previousQuizzes->isEmpty())
                         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
@@ -985,7 +1026,6 @@
             </div>
         @endif
 
-        <!-- Replace the results section with this modern list layout -->
         <div x-data="{ showExplanations: false }">
             @if($activeTab === 'results' && $quizResults)
                 <div class="max-w-3xl mx-auto">

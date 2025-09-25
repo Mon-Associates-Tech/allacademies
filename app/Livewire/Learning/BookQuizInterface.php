@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class BookQuizInterface extends Component
 {
+    use WithFileUploads;
 // Quiz setup properties
     #[Rule('required|exists:books,id')]
     public $selectedBookId = '';
@@ -46,10 +48,13 @@ class BookQuizInterface extends Component
     public $isGenerating = false;
     public $errors = [];
     public $previousQuizzes = [];
-    protected $chatService;
-    protected $bookLearningService;
     public $showDetailedResults = false;
     public $showDetailedResultsModal = false;
+    public $uploadedFile = null;
+    public $fileContent = '';
+    public $fileName = '';
+    protected $chatService;
+    protected $bookLearningService;
 
     public function boot(
         AcademicChatService      $chatService,
@@ -91,31 +96,6 @@ class BookQuizInterface extends Component
             ->get();
     }
 
-    public function showResults(): void
-    {
-        if (!$this->quizResults) {
-            return;
-        }
-
-        $this->showDetailedResults = true;
-        $this->showDetailedResultsModal = true;
-    }
-
-    public function closeDetailedResults(): void
-    {
-        $this->showDetailedResults = false;
-        $this->showDetailedResultsModal = false;
-    }
-
-    public function getActualQuestionCount()
-    {
-        if ($this->questionCount === 'custom') {
-            // Validate custom value is within range
-            return max(1, min(50, (int) $this->customQuestionCount));
-        }
-
-        return (int) $this->questionCount;
-    }
     public function updatedSelectedBookId()
     {
         if ($this->selectedBookId) {
@@ -152,7 +132,33 @@ class BookQuizInterface extends Component
         $this->pageEnd = '';
     }
 
-    // Add a method to continue a previous quiz
+    public function updatedUploadedFile()
+    {
+        $this->validateOnly('uploadedFile');
+
+        if ($this->uploadedFile) {
+            // Extract content from uploaded file
+            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
+            $this->fileName = $this->uploadedFile->getClientOriginalName();
+        }
+    }
+
+    public function showResults(): void
+    {
+        if (!$this->quizResults) {
+            return;
+        }
+
+        $this->showDetailedResults = true;
+        $this->showDetailedResultsModal = true;
+    }
+
+    public function closeDetailedResults(): void
+    {
+        $this->showDetailedResults = false;
+        $this->showDetailedResultsModal = false;
+    }
+
     public function continueQuiz($quizSessionId)
     {
         $quizSession = QuizSession::where('user_id', Auth::id())
@@ -166,55 +172,52 @@ class BookQuizInterface extends Component
         }
     }
 
-    // Add a method to view quiz results
-public function viewResults($quizSessionId)
-{
-    $quizSession = QuizSession::where('user_id', Auth::id())
-        ->where('id', $quizSessionId)
-        ->with('book')
-        ->first();
+    // Add a method to continue a previous quiz
+
+    public function viewResults($quizSessionId)
+    {
+        $quizSession = QuizSession::where('user_id', Auth::id())
+            ->where('id', $quizSessionId)
+            ->with('book')
+            ->first();
 
 
-    if ($quizSession && $quizSession->results) {
-        // Load the book if it exists
-        $book = $quizSession->book;
+        if ($quizSession && $quizSession->results) {
+            // Load the book if it exists
+            $book = $quizSession->book;
 
-        $this->quizResults = [
-            'results' => $quizSession->results,
-            'detailed_feedback' => $this->generateDetailedFeedback($quizSession->results, $quizSession),
-            'question_breakdown' => $quizSession->results['question_details'] ?? [],
-            'improvement_suggestions' => $this->getImprovementSuggestions($quizSession->results),
-            'badges_earned' => []
-        ];
+            $this->quizResults = [
+                'results' => $quizSession->results,
+                'detailed_feedback' => $this->generateDetailedFeedback($quizSession->results, $quizSession),
+                'question_breakdown' => $quizSession->results['question_details'] ?? [],
+                'improvement_suggestions' => $this->getImprovementSuggestions($quizSession->results),
+                'badges_earned' => []
+            ];
 
-        // Try to get next steps if method exists and book is available
-        if ($book && method_exists($this->bookLearningService, 'getNextLearningSteps')) {
-            try {
-                $this->quizResults['next_steps'] = $this->bookLearningService->getNextLearningSteps(
-                    Auth::user(),
-                    $book,
-                    $quizSession->results
-                );
-            } catch (Exception $e) {
-                Log::warning('Next learning steps failed', [
-                    'user_id' => Auth::id(),
-                    'error' => $e->getMessage()
-                ]);
+            // Try to get next steps if method exists and book is available
+            if ($book && method_exists($this->bookLearningService, 'getNextLearningSteps')) {
+                try {
+                    $this->quizResults['next_steps'] = $this->bookLearningService->getNextLearningSteps(
+                        Auth::user(),
+                        $book,
+                        $quizSession->results
+                    );
+                } catch (Exception $e) {
+                    Log::warning('Next learning steps failed', [
+                        'user_id' => Auth::id(),
+                        'error' => $e->getMessage()
+                    ]);
+                    $this->quizResults['next_steps'] = [];
+                }
+            } else {
                 $this->quizResults['next_steps'] = [];
             }
-        } else {
-            $this->quizResults['next_steps'] = [];
+            $this->activeTab = 'results';
         }
-        $this->activeTab = 'results';
+
     }
 
-}
-
-    public function backToHistory()
-    {
-        $this->activeTab = 'history';
-        $this->quizResults = null;
-    }
+    // Add a method to view quiz results
 
     protected function generateDetailedFeedback(array $results, QuizSession $session): array
     {
@@ -301,7 +304,9 @@ public function viewResults($quizSessionId)
     {
         $suggestions = [];
         $percentage = $results['percentage'];
-        $author = $book->author_name;
+
+        // Handle both book objects and file uploads
+        $author = $book ? ($book->author_name ?? 'the author') : 'the author';
 
         if ($percentage < 70) {
             $suggestions[] = "Re-read key chapters focusing on main themes and character development";
@@ -313,17 +318,25 @@ public function viewResults($quizSessionId)
             $suggestions[] = "Research the historical context of the book's setting";
         } else {
             $suggestions[] = "Explore critical essays about this work for deeper insights";
-            $suggestions[] = "Read other books by {$author} for comparison";
+            if ($author !== 'the author') {
+                $suggestions[] = "Read other books by {$author} for comparison";
+            }
             $suggestions[] = "Consider the book's influence on later literature";
         }
 
-// Add book-specific suggestions
-        if ($book->has_audio) {
-            $suggestions[] = "Listen to the audio version to improve comprehension";
-        }
+        // Add book-specific suggestions only if we have a book object
+        if ($book) {
+            if ($book->has_audio) {
+                $suggestions[] = "Listen to the audio version to improve comprehension";
+            }
 
-        if ($book->bookCategory && str_contains(strtolower($book->bookCategory->name), 'classic')) {
-            $suggestions[] = "Research the time period when this classic was written";
+            if ($book->bookCategory && str_contains(strtolower($book->bookCategory->name), 'classic')) {
+                $suggestions[] = "Research the time period when this classic was written";
+            }
+        } else {
+            // General suggestions for file uploads
+            $suggestions[] = "Take notes while reading to track important information";
+            $suggestions[] = "Look up unfamiliar words or concepts";
         }
 
         return $suggestions;
@@ -368,19 +381,33 @@ public function viewResults($quizSessionId)
         return $suggestions;
     }
 
+    public function backToHistory()
+    {
+        $this->activeTab = 'history';
+        $this->quizResults = null;
+    }
+
     public function generateQuiz()
     {
         $this->reset(['quizResults', 'activeTab']);
-        $this->validate();
+
+        // Validate common fields first
         $this->validate([
-            'selectedBookId' => 'required|exists:books,id',
             'questionType' => 'required|in:multiple_choice,true_false,essay,mixed',
             'difficulty' => 'required|in:easy,medium,hard',
         ]);
 
-        if (!$this->selectedBook) {
-            $this->addError('selectedBookId', 'Please select a book first.');
+        // Check if either a book is selected or a file is uploaded
+        if (!$this->selectedBookId && empty($this->fileContent)) {
+            $this->addError('selectedBookId', 'Please select a book or upload a file first.');
             return;
+        }
+
+        // Only validate book exists if a book is selected (not for file uploads)
+        if ($this->selectedBookId) {
+            $this->validate([
+                'selectedBookId' => 'required|exists:books,id',
+            ]);
         }
 
         $actualQuestionCount = $this->getActualQuestionCount();
@@ -395,53 +422,73 @@ public function viewResults($quizSessionId)
         $this->isGenerating = true;
         $this->errors = [];
 
-        try {
-            $parameters = [
-                'book_id' => $this->selectedBookId,
-                'chapter_id' => $this->selectedChapterId ?: null,
-                'page_start' => $this->pageStart ?: null,
-                'page_end' => $this->pageEnd ?: null,
-                'question_type' => $this->questionType,
-                'question_count' => $this->questionCount,
-                'difficulty' => $this->difficulty,
-                'focus_topics' => $this->parseFocusTopics(),
-                'include_quotes' => $this->includeQuotes,
+        //  try {
+        $parameters = [
+            'book_id' => $this->selectedBookId,
+            'chapter_id' => $this->selectedChapterId ?: null,
+            'page_start' => $this->pageStart ?: null,
+            'page_end' => $this->pageEnd ?: null,
+            'question_type' => $this->questionType,
+            'question_count' => $this->getActualQuestionCount(),
+            'difficulty' => $this->difficulty,
+            'focus_topics' => $this->parseFocusTopics(),
+            'include_quotes' => $this->includeQuotes,
+            'file_content' => $this->fileContent,
+            'file_name' => $this->fileName,
+        ];
+
+// Only include book-related parameters if a book is selected
+        if ($this->selectedBook) {
+            $parameters = array_merge($parameters, [
                 'book_title' => $this->selectedBook->title,
                 'author' => $this->selectedBook->author_name,
                 'genre' => $this->selectedBook->genre,
                 'themes' => $this->selectedBook->themes ?? [],
-                'difficulty_score' => $this->selectedBook->difficulty_score
-            ];
-
-            // Generate adaptive quiz using the book learning service
-            $quizData = $this->bookLearningService->generateAdaptiveQuiz(
-                Auth::user(),
-                $this->selectedBook,
-                $parameters
-            );
-
-            if ($quizData && !empty($quizData['questions'])) {
-                // Create quiz session
-                $this->createQuizSession($quizData, $parameters);
-                $this->quizData = $quizData;
-                $this->dispatch('quiz-generated');
-            } else {
-                $this->addError('generation', 'Failed to generate quiz questions. Please try again.');
-            }
-
-        } catch (Exception $e) {
-            Log::error('Quiz generation failed', [
-                'user_id' => Auth::id(),
-                'book_id' => $this->selectedBookId,
-                'error' => $e->getMessage()
+                'difficulty_score' => $this->selectedBook->difficulty_score,
             ]);
-
-            $this->addError('generation', 'Unable to generate quiz. Please try different parameters or try again later.');
-        } finally {
-            $this->isGenerating = false;
         }
 
+
+        // Generate adaptive quiz using the book learning service
+        $quizData = $this->bookLearningService->generateAdaptiveQuiz(
+            Auth::user(),
+            $this->selectedBook,
+            $parameters
+        );
+
+        if ($quizData && !empty($quizData['questions'])) {
+            // Create quiz session
+            $this->createQuizSession($quizData, $parameters);
+            $this->quizData = $quizData;
+            $this->dispatch('quiz-generated');
+        } else {
+            $this->addError('generation', 'Failed to generate quiz questions. Please try again.');
+        }
+
+        // } catch (Exception $e) {
+        //  Log::error('Quiz generation failed', [
+        //     'user_id' => Auth::id(),
+        //     'book_id' => $this->selectedBookId,
+        //     'error' => $e->getMessage()
+        // ]);
+
+        //  $this->addError('generation', 'Unable to generate quiz. Please try different parameters or try again later.');
+        //} finally {
         $this->isGenerating = false;
+        // }
+
+        $this->isGenerating = false;
+    }
+
+    public function getActualQuestionCount()
+    {
+        if ($this->questionCount === 'custom') {
+            // Validate custom value is within range
+            return (int) $this->customQuestionCount;
+            return max(1, min(50, (int)$this->customQuestionCount));
+        }
+
+        return (int)$this->questionCount;
     }
 
     protected function parseFocusTopics(): array
@@ -458,6 +505,10 @@ public function viewResults($quizSessionId)
         // Ensure questions data is properly formatted
         $questions = $quizData['questions'] ?? [];
 
+
+        // Randomize question options if they are multiple choice
+        $questions = $this->randomizeQuestionOptions($questions);
+
         // Validate and clean questions data
         $cleanedQuestions = [];
         foreach ($questions as $question) {
@@ -465,10 +516,12 @@ public function viewResults($quizSessionId)
                 $cleanedQuestions[] = $question;
             }
         }
+        // Create a unique session start time
+        $sessionStartTime = now();
 
-        QuizSession::create([
+        // Only set book_id if a book is selected, otherwise leave it null for file uploads
+        $quizSessionData = [
             'user_id' => Auth::id(),
-            'book_id' => $this->selectedBookId,
             'chapter_id' => $parameters['chapter_id'] ?? null,
             'page_start' => $parameters['page_start'] ?? null,
             'page_end' => $parameters['page_end'] ?? null,
@@ -478,20 +531,64 @@ public function viewResults($quizSessionId)
             'questions' => $cleanedQuestions,
             'context' => $this->buildQuizContext($parameters),
             'status' => 'active',
-            'started_at' => now()
-        ]);
+            'started_at' => $sessionStartTime
+        ];
+
+        // Only include book_id if it exists (for book-based quizzes)
+        if ($this->selectedBookId) {
+            $quizSessionData['book_id'] = $this->selectedBookId;
+        }
+
+        $session = QuizSession::create($quizSessionData);
+        if ($this->quizData) {
+            $this->quizData['session_id'] = $session->id;
+            $this->quizData['session_started_at'] = $sessionStartTime;
+        }
+    }
+
+    protected function randomizeQuestionOptions(array $questions): array
+    {
+        foreach ($questions as &$question) {
+            if (isset($question['type']) && $question['type'] === 'multiple_choice' && isset($question['options'])) {
+                // Store the correct answer
+                $correctAnswer = $question['correct_answer'];
+
+                // Shuffle the options
+                shuffle($question['options']);
+
+                // Update the correct answer index if needed
+                $question['correct_answer'] = $correctAnswer;
+            }
+        }
+
+        return $questions;
     }
 
     protected function buildQuizContext(array $parameters): array
     {
-        $context = [
-            'book_title' => $this->selectedBook->title,
-            'author' => $this->selectedBook->author_name,
-            'book_category' => $this->selectedBook->bookCategory->name ?? 'General',
-            'genre' => $this->selectedBook->genre,
-            'difficulty_score' => $this->selectedBook->difficulty_score,
-            'themes' => $this->selectedBook->themes ?? []
-        ];
+        $context = [];
+
+        // Only include book-related context if a book is selected
+        if ($this->selectedBook) {
+            $context = [
+                'book_title' => $this->selectedBook->title,
+                'author' => $this->selectedBook->author_name,
+                'book_category' => $this->selectedBook->bookCategory->name ?? 'General',
+                'genre' => $this->selectedBook->genre,
+                'difficulty_score' => $this->selectedBook->difficulty_score,
+                'themes' => $this->selectedBook->themes ?? []
+            ];
+        } else {
+            // For file uploads, use file name as the title
+            $context = [
+                'book_title' => $this->fileName ?? 'Uploaded Content',
+                'author' => 'User Uploaded',
+                'book_category' => 'Uploaded Content',
+                'genre' => 'General',
+                'difficulty_score' => 5,
+                'themes' => []
+            ];
+        }
 
         if ($parameters['chapter_id']) {
             $chapter = $this->bookChapters->firstWhere('id', $parameters['chapter_id']);
@@ -530,8 +627,16 @@ public function viewResults($quizSessionId)
         try {
             $quizSession = QuizSession::where('user_id', Auth::id())
                 ->where('status', 'active')
-                ->latest()
+                ->where('started_at', $this->quizData['session_started_at'] ?? now())
                 ->first();
+
+// Fallback to the original method if the specific query fails:
+            if (!$quizSession) {
+                $quizSession = QuizSession::where('user_id', Auth::id())
+                    ->where('status', 'active')
+                    ->latest()
+                    ->first();
+            }
 
             if (!$quizSession) {
                 \Log::warning('Quiz session not found', ['user_id' => Auth::id()]);
@@ -712,13 +817,15 @@ public function viewResults($quizSessionId)
         $gradingPrompt = "Grade this essay answer for the book '{$bookTitle}':\n\n";
         $gradingPrompt .= "Question: " . ($question['question'] ?? 'No question text provided') . "\n\n";
         $gradingPrompt .= "Student Answer: {$answer}\n\n";
+        $gradingPrompt .= "Expected Answer: " . ($question['correct_answer'] ?? 'No expected answer provided') . "\n\n";
         $gradingPrompt .= "GRADING CRITERIA:\n";
         $gradingPrompt .= "1. Content Understanding (40%): Does the answer demonstrate understanding of the text?\n";
         $gradingPrompt .= "2. Analysis Depth (30%): Does the answer provide thoughtful analysis?\n";
         $gradingPrompt .= "3. Textual Evidence (20%): Are specific examples from the text included?\n";
         $gradingPrompt .= "4. Writing Clarity (10%): Is the answer well-organized and clearly written?\n\n";
+        $gradingPrompt .= "Compare the student's answer with the expected answer and provide a similarity score.\n";
         $gradingPrompt .= "PROVIDE:\n";
-        $gradingPrompt .= "- A score from 0-100\n";
+        $gradingPrompt .= "- A score from 0-100 based on similarity and quality\n";
         $gradingPrompt .= "- Specific feedback on each grading criterion\n";
         $gradingPrompt .= "- Suggestions for improvement\n";
         $gradingPrompt .= "- Overall assessment\n\n";
@@ -751,10 +858,13 @@ public function viewResults($quizSessionId)
             return $this->parseEssayGradingResult($result['content']);
         }
 
-        // Fallback grading
+        // Fallback grading with similarity matching if AI fails
+        $expectedAnswer = $question['correct_answer'] ?? '';
+        $similarityScore = $this->calculateTextSimilarity($answer, $expectedAnswer);
+
         return [
-            'score' => 75,
-            'feedback' => 'Your answer shows good understanding. Consider adding more specific examples from the text.'
+            'score' => $similarityScore,
+            'feedback' => 'Your answer shows ' . ($similarityScore >= 70 ? 'good' : ($similarityScore >= 40 ? 'moderate' : 'limited')) . ' similarity to the expected answer.'
         ];
     }
 
@@ -800,6 +910,45 @@ public function viewResults($quizSessionId)
             'score' => min(100, max(0, $score)),
             'feedback' => $feedback
         ];
+    }
+
+    protected function calculateTextSimilarity(string $text1, string $text2): int
+    {
+        // Convert to lowercase and remove extra whitespace
+        $text1 = strtolower(trim(preg_replace('/\s+/', ' ', $text1)));
+        $text2 = strtolower(trim(preg_replace('/\s+/', ' ', $text2)));
+
+        // If either text is empty, return 0
+        if (empty($text1) || empty($text2)) {
+            return 0;
+        }
+
+        // Split into words
+        $words1 = explode(' ', $text1);
+        $words2 = explode(' ', $text2);
+
+        // Calculate Jaccard similarity (intersection over union)
+        $intersection = count(array_intersect($words1, $words2));
+        $union = count(array_unique(array_merge($words1, $words2)));
+
+        if ($union == 0) {
+            return 0;
+        }
+
+        $jaccard = $intersection / $union;
+
+        // Also check if one text is contained in the other
+        $containment = 0;
+        if (strlen($text1) > 0 && strlen($text2) > 0) {
+            if (strpos($text1, $text2) !== false || strpos($text2, $text1) !== false) {
+                $containment = min(strlen($text1), strlen($text2)) / max(strlen($text1), strlen($text2));
+            }
+        }
+
+        // Combine both metrics
+        $similarity = ($jaccard * 0.7) + ($containment * 0.3);
+
+        return (int)($similarity * 100);
     }
 
     protected function updateReadingProgress(array $results): void

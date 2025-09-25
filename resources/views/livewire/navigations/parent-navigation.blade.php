@@ -71,19 +71,6 @@
             </a>
         </li>
 
-        <!-- Terminal Reports -->
-        <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('parent.terminal-reports*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{ route('parent.terminal-reports') }}">
-                <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('parent.terminal-reports*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
-                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
-                    </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Terminal Reports</span>
-                </div>
-            </a>
-        </li>
-
         <!-- Notifications -->
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('parent.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"

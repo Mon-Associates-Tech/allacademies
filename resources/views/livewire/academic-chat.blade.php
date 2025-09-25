@@ -35,11 +35,6 @@
      :class="{ 'dark': darkMode }"
      class="min-h-screen h-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
 
-    <!-- Overlay for mobile when sidebars are open -->
-    <div x-show="showHistory || $wire.showParameters"
-         @click="showHistory = false; $wire.showParameters = false;"
-         class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"></div>
-
     <!-- Header -->
     <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -110,8 +105,14 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="grid grid-cols-1 gap-6">
+    <div class="max-w-7xl mx-auto relative px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Overlay for mobile when sidebars are open -->
+        <div x-show="showHistory || $wire.showParameters"
+             style="z-index: 10!important"
+             @click="showHistory = false; $wire.showParameters = false;"
+             class="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"></div>
+
+        <div class="relative">
             <!-- Conversation History Sidebar -->
             <div x-show="showHistory"
                  x-transition:enter="transition ease-out duration-300"
@@ -120,7 +121,8 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 translate-x-0"
                  x-transition:leave-end="opacity-0 -translate-x-full"
-                 class="fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white dark:bg-gray-800 rounded-r-lg shadow-xl lg:shadow-none border-r border-gray-200 dark:border-gray-700 overflow-y-auto h-[calc(100vh-5rem)] transform lg:translate-x-0 lg:opacity-100 lg:z-auto lg:rounded-none lg:border-0">
+                 class="absolute inset-y-0 left-0 z-20 w-80 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto h-[calc(100vh-5rem)] transform lg:translate-x-0 lg:opacity-100 lg:z-auto lg:shadow-none lg:rounded-r-lg lg:border-r lg:border-gray-200 dark:lg:border-gray-700"
+                 style="top: 5rem; z-index: 20!important">
                 <div class="p-4">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Chat History</h2>
@@ -179,7 +181,8 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 translate-x-0"
                  x-transition:leave-end="opacity-0 -translate-x-full"
-                 class="fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white dark:bg-gray-800 rounded-r-lg shadow-xl lg:shadow-none border-r border-gray-200 dark:border-gray-700 overflow-y-auto h-[calc(100vh-5rem)] transform lg:translate-x-0 lg:opacity-100 lg:z-auto lg:rounded-none lg:border-0">
+                 class="absolute inset-y-0 left-0 z-40 w-80 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto h-[calc(100vh-5rem)] transform lg:translate-x-0 lg:opacity-100 lg:z-auto lg:shadow-none lg:rounded-r-lg lg:border-r lg:border-gray-200 dark:lg:border-gray-700"
+                 style="top: 5rem; z-index: 20!important">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Learning Parameters</h2>
@@ -407,10 +410,10 @@
             </div>
 
             <!-- Chat Area -->
-            <div
-                class="flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative">
+            <div style="z-index: 0!important"
+                class="!z-0 flex-1 flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative">
                 <!-- Error Messages -->
-                @if(!empty($errors))
+                @if($errors !== null)
                     <div class="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
                         <div class="flex">
                             <svg class="h-5 w-5 text-red-400 dark:text-red-300" fill="none" stroke="currentColor"

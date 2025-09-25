@@ -4,14 +4,17 @@ namespace App\Models;
 
 use App\Models\Book\BookMedia;
 use App\Models\Book\BookTableOfContent;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Log;
 use setasign\Fpdi\Fpdi;
 use Storage;
+use Throwable;
 
 class Book extends Model
 {
@@ -150,83 +153,72 @@ class Book extends Model
             && !$this->attributes['sample_url'];
     }
 
-/**
- * Generate a sample PDF from the full PDF using the first chapter
- */
-private function generateSampleFromFullPdf(): ?string
-{
-    // Check if we have what we need
-    if (!$this->shouldGenerateSample()) {
-        return null;
-    }
-
-    try {
-        // Get the path to the full PDF
-        $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
-
-        // Check if the file exists
-        if (!file_exists($fullPdfPath)) {
+    /**
+     * Generate a sample PDF from the full PDF using the first chapter
+     */
+    private function generateSampleFromFullPdf(): ?string
+    {
+        // Check if we have what we need
+        if (!$this->shouldGenerateSample()) {
             return null;
         }
 
-        // Create a new FPDI instance
-        $pdf = new Fpdi();
+        try {
+            // Get the path to the full PDF
+            $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
 
-        // Get the first chapter pages
-        $firstChapter = $this->table_of_contents[0] ?? null;
-        if (!$firstChapter) {
+            // Check if the file exists
+            if (!file_exists($fullPdfPath)) {
+                return null;
+            }
+
+            // Create a new FPDI instance
+            $pdf = new Fpdi();
+
+            // Get the first chapter pages
+            $firstChapter = $this->table_of_contents[0] ?? null;
+            if (!$firstChapter) {
+                return null;
+            }
+
+            $startPage = $firstChapter['page_start'] ?? 1;
+            $endPage = $firstChapter['page_end'] ?? min(5, $this->pages ?? 5); // Limit to 5 pages if not specified
+
+            // Import pages from the source PDF
+            $pageCount = $pdf->setSourceFile($fullPdfPath);
+
+            // Make sure page numbers are within bounds
+            $startPage = max(1, min($startPage, $pageCount));
+            $endPage = max($startPage, min($endPage, $pageCount));
+
+            // Add pages to the new PDF
+            for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+            }
+
+            // Generate a unique filename for the sample
+            $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
+            $samplePath = 'book-samples/' . $filename;
+
+            // Save the sample PDF
+            $pdfContent = $pdf->Output('', 'S');
+            Storage::disk('public')->put($samplePath, $pdfContent);
+
+            return $samplePath;
+        } catch (Exception $e) {
+            // Log the error but don't break the flow
+            Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+
+            // Return null to indicate failure, but don't throw exception
+            return asset('sample.pdf');
+        } catch (Throwable $e) {
+            // Catch any other errors (like parse errors)
+            Log::error('Critical error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
             return null;
         }
-
-        $startPage = $firstChapter['page_start'] ?? 1;
-        $endPage = $firstChapter['page_end'] ?? min(5, $this->pages ?? 5); // Limit to 5 pages if not specified
-
-        // Import pages from the source PDF
-        $pageCount = $pdf->setSourceFile($fullPdfPath);
-
-        // Make sure page numbers are within bounds
-        $startPage = max(1, min($startPage, $pageCount));
-        $endPage = max($startPage, min($endPage, $pageCount));
-
-        // Add pages to the new PDF
-        for ($pageNo = $startPage; $pageNo <= $endPage; $pageNo++) {
-            $templateId = $pdf->importPage($pageNo);
-            $size = $pdf->getTemplateSize($templateId);
-            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            $pdf->useTemplate($templateId);
-        }
-
-        // Generate a unique filename for the sample
-        $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
-        $samplePath = 'book-samples/' . $filename;
-
-        // Save the sample PDF
-        $pdfContent = $pdf->Output('', 'S');
-        Storage::disk('public')->put($samplePath, $pdfContent);
-
-        return $samplePath;
-    } catch (\Exception $e) {
-        // Log the error but don't break the flow
-        \Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
-
-        // Return null to indicate failure, but don't throw exception
-        return asset('sample.pdf');
-    } catch (\Throwable $e) {
-        // Catch any other errors (like parse errors)
-        \Log::error('Critical error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
-        return null;
-    }
-}
-
-
-    public function bookCategory(): BelongsTo
-    {
-        return $this->belongsTo(BookCategory::class, 'book_category_id');
-    }
-
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(BookCategory::class, 'book_category', 'book_id', 'category_id');
     }
 
     public function borrowings(): HasMany
@@ -262,43 +254,53 @@ private function generateSampleFromFullPdf(): ?string
     }
 
     /**
- * Get the primary category for backward compatibility
- * Returns the first category if multiple exist, or the old book_category_id fallback
- */
-public function getPrimaryCategoryAttribute()
-{
-    // First try the new categories relationship
-    if ($this->relationLoaded('categories') && $this->categories->isNotEmpty()) {
-        return $this->categories->first();
+     * Get the primary category for backward compatibility
+     * Returns the first category if multiple exist, or the old book_category_id fallback
+     */
+    public function getPrimaryCategoryAttribute()
+    {
+        // First try the new categories relationship
+        if ($this->relationLoaded('categories') && $this->categories->isNotEmpty()) {
+            return $this->categories->first();
+        }
+
+        // Fallback to the old bookCategory relationship
+        if ($this->relationLoaded('bookCategory') && $this->bookCategory) {
+            return $this->bookCategory;
+        }
+
+        // Load and return the first available category
+        return $this->categories()->first() ?? $this->bookCategory()->first();
     }
 
-    // Fallback to the old bookCategory relationship
-    if ($this->relationLoaded('bookCategory') && $this->bookCategory) {
-        return $this->bookCategory;
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(BookCategory::class, 'book_category', 'book_id', 'category_id');
     }
 
-    // Load and return the first available category
-    return $this->categories()->first() ?? $this->bookCategory()->first();
-}
-
-/**
- * Get categories with limit for display purposes
- */
-public function getCategoriesDisplay($limit = null)
-{
-    if ($limit) {
-        return $this->categories()->limit($limit)->get();
+    public function bookCategory(): BelongsTo
+    {
+        return $this->belongsTo(BookCategory::class, 'book_category_id');
     }
-    return $this->categories;
-}
 
-/**
- * Get category names as a comma-separated string
- */
-public function getCategoryNamesAttribute(): string
-{
-    return $this->categories->pluck('name')->implode(', ');
-}
+    /**
+     * Get categories with limit for display purposes
+     */
+    public function getCategoriesDisplay($limit = null)
+    {
+        if ($limit) {
+            return $this->categories()->limit($limit)->get();
+        }
+        return $this->categories;
+    }
+
+    /**
+     * Get category names as a comma-separated string
+     */
+    public function getCategoryNamesAttribute(): string
+    {
+        return $this->categories->pluck('name')->implode(', ');
+    }
 
 
     public function getFormattedSubscriptionFeeAttribute(): string
