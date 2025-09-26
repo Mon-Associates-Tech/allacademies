@@ -215,8 +215,7 @@
                     <source src="{{ asset('media/video/header-background-video.mp4') }}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
-                <div
-                    class="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-indigo-900/80 to-green-900/70 dark:from-blue-950/95 dark:via-indigo-950/90 dark:to-green-950/85"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-400/50 via-indigo-400/50 to-green-400/40 dark:from-blue-400/55 dark:via-indigo-400/50 dark:to-green-400/50"></div>
             </div>
 
             <!-- Animated Background Elements (kept for visual enhancement) -->
