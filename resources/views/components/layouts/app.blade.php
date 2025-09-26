@@ -63,7 +63,7 @@
 
 
                 <!-- Alerts -->
-                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
+                <div class="max-w-5xl ml-auto px-4 sm:px-6 lg:px-8 print:hidden">
                     <x-alert.success></x-alert.success>
                     <x-alert.danger></x-alert.danger>
                 </div>

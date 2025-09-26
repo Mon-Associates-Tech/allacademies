@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="max-w-7xl mx-auto overflow-x-hidden">
     <!-- Welcome Section -->
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -92,7 +92,7 @@
     </div>
 
     <!-- CTA Section -->
-    <div class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg shadow-lg p-8 text-center">
+    <div class="bg-gradient-to-r hidden from-violet-600 to-indigo-600 rounded-lg shadow-lg p-8 text-center">
         <h2 class="text-2xl font-bold text-white mb-4">Ready to Access All Content?</h2>
         <p class="text-violet-100 mb-6">Subscribe to All Academies for unlimited access to our entire library of books and exclusive content.</p>
         <a href="{{route('subscriptions.create')}}" class="bg-white text-violet-600 hover:bg-gray-100 font-medium py-3 px-6 rounded-md transition-colors">

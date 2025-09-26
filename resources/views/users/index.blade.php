@@ -99,6 +99,9 @@
                                 <div class="min-w-0 flex-1">
                                     <p class="font-medium text-gray-900 truncate">{{ $user->name }}</p>
                                     <p class="text-sm text-gray-500 truncate">{{ $user->email }}</p>
+                                    @if(Auth::user()->hasRole('owner'))
+                                    <p class="text-sm text-gray-500 truncate">{{ $user->school?->name }}</p>
+                                        @endif
                                 </div>
                             </div>
                         </x-table.td>
