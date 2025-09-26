@@ -246,10 +246,10 @@
                             </div>
 
                             <h1 class="text-4xl font-extrabold pt-2 tracking-tight text-white sm:text-5xl md:text-6xl">
-                                <span class="block">Transform Your</span>
+                                <span class="block">Transform Your Learning Journey</span>
                                 <span
-                                    class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">Learning Journey</span>
-                                <span class="block text-3xl sm:text-4xl md:text-5xl mt-2">with All Academies</span>
+                                    class="hidden text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">Learning Journey</span>
+                                <span class="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">With All Academies</span>
                             </h1>
                         </div>
 
