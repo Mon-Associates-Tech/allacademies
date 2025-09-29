@@ -5,8 +5,10 @@ namespace App\Livewire\Students;
 use App\Models\AcademicSubject as Subject;
 use App\Models\Activity;
 use App\Models\Assessment;
+use App\Models\Assignment;
 use App\Models\Book;
 use App\Models\BookSubscription;
+use App\Models\QuizSession;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -467,21 +469,32 @@ public function accountCompleteness()
             $query->where('user_id', auth()->user()->id);
         })->latest()->take(5)->get();
 
-        $recentAssessments = Assessment::where('student_id', $student->id)
+      /*  $recentAssessments = Assessment::where('student_id', $student->id)
             ->with(['subject', 'topic'])
+            ->latest()
+            ->take(5)
+            ->get();*/
+
+        $recentAssessments = QuizSession::where('user_id', $student->user?->id)
             ->latest()
             ->take(5)
             ->get();
 
-        $upcomingActivities = Activity::forStudent($student->id)
-            ->upcoming()
-            ->with(['subject', 'group'])
+        $upcomingActivities = Assignment::join('teacher_student', function($join) use ($student) {
+            $join->on('teacher_student.teacher_id', '=', 'assignments.teacher_id')
+                ->where('teacher_student.student_id', '=', $student->id);
+        })->where('assignments.ends_at', '>=', now())
             ->take(5)
             ->get();
 
-        $upcomingActivitiesCount = Activity::forStudent($student->id)
+       /* $upcomingActivitiesCount = Activity::forStudent($student->id)
             ->upcoming()
-            ->count();
+            ->count();*/
+
+        $upcomingActivitiesCount = Assignment::join('teacher_student', function($join) use ($student) {
+            $join->on('teacher_student.teacher_id', '=', 'assignments.teacher_id')
+                ->where('teacher_student.student_id', '=', $student->id);
+        })->count();
 
         $overallScore = Assessment::where('student_id', $student->id)
             ->where('status', 'completed')

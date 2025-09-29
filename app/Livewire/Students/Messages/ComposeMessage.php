@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Teachers\Messages;
+namespace App\Livewire\Students\Messages;
 
 use App\Models\Message;
 use App\Models\User;
@@ -16,19 +16,15 @@ class ComposeMessage extends Component
 
     public $subject = '';
     public $body = '';
-    public $targetType = 'role';
+    public $targetType = 'teacher'; // Default to teachers
     public $isUrgent = false;
     public $scheduledAt = '';
     public $sendNow = true;
 
-    // Target criteria
-    public $selectedRoles = [];
-    public $selectedAcademicGroups = [];
-    public $selectedAcademicLevels = [];
-    public $selectedSubjects = [];
-    public $selectedUsers = [];
-    public $includeStudents = true;
-    public $includeTeachers = false; // Teachers typically message students
+    // Target criteria specific to students
+    public $selectedTeachers = []; // Only assigned teachers
+    public $selectedParents = [];  // Parents/guardians
+    public $selectedUsers = [];    // Individual selection
 
     // File uploads
     public $attachments = [];
@@ -41,25 +37,26 @@ class ComposeMessage extends Component
     public $userSearch = '';
     public $searchedUsers = [];
     public $selectedUsersList = [];
+
     protected $rules = [
         'subject' => 'required|string|max:255',
         'body' => 'required|string',
-        'targetType' => 'required|in:role,academic_group,academic_level,subject,individual,custom',
+        'targetType' => 'required|in:teacher,parent,individual',
         'scheduledAt' => 'nullable|date|after:now',
         'attachments.*' => 'file|max:10240',
     ];
+
     protected $messages = [
         'subject.required' => 'Please enter a subject for your message.',
         'body.required' => 'Please enter the message content.',
         'attachments.*.max' => 'Each attachment must be smaller than 10MB.',
     ];
+
     private $fileCache = [];
 
     public function mount()
     {
         $this->scheduledAt = now()->addMinutes(5)->format('Y-m-d\TH:i');
-        // Teachers typically message students by default
-        $this->selectedRoles = ['student'];
     }
 
     public function updatedAttachments()
@@ -69,7 +66,6 @@ class ComposeMessage extends Component
 
     public function updated($propertyName)
     {
-        // Only validate when sending, not on every update
         if ($propertyName === 'subject' || $propertyName === 'body') {
             $this->validateOnly($propertyName);
         }
@@ -77,7 +73,6 @@ class ComposeMessage extends Component
 
     public function send()
     {
-        // Custom validation based on target type
         $this->validateBaseFields();
 
         if (!$this->sendNow && empty($this->scheduledAt)) {
@@ -85,7 +80,6 @@ class ComposeMessage extends Component
             return;
         }
 
-        // Validate target criteria based on target type
         $this->validateTargetCriteria();
 
         $messageService = app(MessageService::class);
@@ -114,7 +108,7 @@ class ComposeMessage extends Component
             session()->flash('success', 'Message scheduled successfully!');
         }
 
-        return redirect()->route('teacher.messages.index'); // Fixed route name
+        return redirect()->route('students.messages.index');
     }
 
     protected function validateBaseFields()
@@ -122,7 +116,7 @@ class ComposeMessage extends Component
         $this->validate([
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
-            'targetType' => 'required|in:role,academic_group,academic_level,subject,individual,custom',
+            'targetType' => 'required|in:teacher,parent,individual',
         ]);
     }
 
@@ -131,36 +125,17 @@ class ComposeMessage extends Component
         $rules = [];
 
         switch ($this->targetType) {
-            case 'role':
-                $rules['selectedRoles'] = 'required|array|min:1';
-                $rules['selectedRoles.*'] = 'string';
+            case 'teacher':
+                $rules['selectedTeachers'] = 'required|array|min:1';
+                $rules['selectedTeachers.*'] = 'integer';
                 break;
-            case 'academic_group':
-                $rules['selectedAcademicGroups'] = 'required|array|min:1';
-                $rules['selectedAcademicGroups.*'] = 'integer';
-                break;
-            case 'academic_level':
-                $rules['selectedAcademicLevels'] = 'required|array|min:1';
-                $rules['selectedAcademicLevels.*'] = 'integer';
-                break;
-            case 'subject':
-                $rules['selectedSubjects'] = 'required|array|min:1';
-                $rules['selectedSubjects.*'] = 'integer';
+            case 'parent':
+                $rules['selectedParents'] = 'required|array|min:1';
+                $rules['selectedParents.*'] = 'integer';
                 break;
             case 'individual':
                 $rules['selectedUsers'] = 'required|array|min:1';
                 $rules['selectedUsers.*'] = 'integer';
-                break;
-            case 'custom':
-                // For custom, at least one criteria should be selected
-                if (empty($this->selectedRoles) &&
-                    empty($this->selectedAcademicGroups) &&
-                    empty($this->selectedAcademicLevels) &&
-                    empty($this->selectedSubjects) &&
-                    empty($this->selectedUsers)) {
-                    $this->addError('targetType', 'Please select at least one targeting criteria for custom targeting.');
-                    return;
-                }
                 break;
         }
 
@@ -235,7 +210,9 @@ class ComposeMessage extends Component
     public function updatedUserSearch()
     {
         if (strlen($this->userSearch) >= 2) {
+            // Students can only search among their assigned teachers and parents
             $this->searchedUsers = User::where('is_active', true)
+                ->whereIn('id', $this->getAllowedRecipients()?->pluck('id'))
                 ->where(function ($query) {
                     $query->where('name', 'like', '%' . $this->userSearch . '%')
                         ->orWhere('email', 'like', '%' . $this->userSearch . '%');
@@ -285,10 +262,8 @@ class ComposeMessage extends Component
 
     public function resetTargetCriteria()
     {
-        $this->selectedRoles = [];
-        $this->selectedAcademicGroups = [];
-        $this->selectedAcademicLevels = [];
-        $this->selectedSubjects = [];
+        $this->selectedTeachers = [];
+        $this->selectedParents = [];
         $this->selectedUsers = [];
     }
 
@@ -299,95 +274,49 @@ class ComposeMessage extends Component
         }
     }
 
-    public function toggleRole($role)
+    public function toggleTeacher($teacherId)
     {
-        if (in_array($role, $this->selectedRoles)) {
-            $this->removeRole($role);
+        if (in_array($teacherId, $this->selectedTeachers)) {
+            $this->removeTeacher($teacherId);
         } else {
-            $this->addRole($role);
+            $this->addTeacher($teacherId);
         }
         $this->showPreview = false;
     }
 
-    public function removeRole($role)
+    public function removeTeacher($teacherId)
     {
-        $this->selectedRoles = array_filter($this->selectedRoles, fn($r) => $r !== $role);
-        $this->selectedRoles = array_values($this->selectedRoles);
+        $this->selectedTeachers = array_filter($this->selectedTeachers, fn($id) => $id != $teacherId);
+        $this->selectedTeachers = array_values($this->selectedTeachers);
     }
 
-    public function addRole($role)
+    public function addTeacher($teacherId)
     {
-        if (!in_array($role, $this->selectedRoles)) {
-            $this->selectedRoles[] = $role;
+        if (!in_array($teacherId, $this->selectedTeachers)) {
+            $this->selectedTeachers[] = $teacherId;
         }
     }
 
-    public function toggleAcademicGroup($groupId)
+    public function toggleParent($parentId)
     {
-        if (in_array($groupId, $this->selectedAcademicGroups)) {
-            $this->removeAcademicGroup($groupId);
+        if (in_array($parentId, $this->selectedParents)) {
+            $this->removeParent($parentId);
         } else {
-            $this->addAcademicGroup($groupId);
+            $this->addParent($parentId);
         }
         $this->showPreview = false;
     }
 
-    public function removeAcademicGroup($groupId)
+    public function removeParent($parentId)
     {
-        $this->selectedAcademicGroups = array_filter($this->selectedAcademicGroups, fn($id) => $id != $groupId);
-        $this->selectedAcademicGroups = array_values($this->selectedAcademicGroups);
+        $this->selectedParents = array_filter($this->selectedParents, fn($id) => $id != $parentId);
+        $this->selectedParents = array_values($this->selectedParents);
     }
 
-    public function addAcademicGroup($groupId)
+    public function addParent($parentId)
     {
-        if (!in_array($groupId, $this->selectedAcademicGroups)) {
-            $this->selectedAcademicGroups[] = $groupId;
-        }
-    }
-
-    public function toggleAcademicLevel($levelId)
-    {
-        if (in_array($levelId, $this->selectedAcademicLevels)) {
-            $this->removeAcademicLevel($levelId);
-        } else {
-            $this->addAcademicLevel($levelId);
-        }
-        $this->showPreview = false;
-    }
-
-    public function removeAcademicLevel($levelId)
-    {
-        $this->selectedAcademicLevels = array_filter($this->selectedAcademicLevels, fn($id) => $id != $levelId);
-        $this->selectedAcademicLevels = array_values($this->selectedAcademicLevels);
-    }
-
-    public function addAcademicLevel($levelId)
-    {
-        if (!in_array($levelId, $this->selectedAcademicLevels)) {
-            $this->selectedAcademicLevels[] = $levelId;
-        }
-    }
-
-    public function toggleSubject($subjectId)
-    {
-        if (in_array($subjectId, $this->selectedSubjects)) {
-            $this->removeSubject($subjectId);
-        } else {
-            $this->addSubject($subjectId);
-        }
-        $this->showPreview = false;
-    }
-
-    public function removeSubject($subjectId)
-    {
-        $this->selectedSubjects = array_filter($this->selectedSubjects, fn($id) => $id != $subjectId);
-        $this->selectedSubjects = array_values($this->selectedSubjects);
-    }
-
-    public function addSubject($subjectId)
-    {
-        if (!in_array($subjectId, $this->selectedSubjects)) {
-            $this->selectedSubjects[] = $subjectId;
+        if (!in_array($parentId, $this->selectedParents)) {
+            $this->selectedParents[] = $parentId;
         }
     }
 
@@ -401,79 +330,39 @@ class ComposeMessage extends Component
         $this->showPreview = true;
     }
 
+    protected function getAllowedRecipients()
+    {
+        // Get the student's assigned teachers and parents
+        $student = auth()->user();
+
+        // Get assigned teachers (primary and level teachers)
+        $teachers = $student->academicGroups?->flatMap(function ($group) {
+            return $group->teachers;
+        })->unique('id');
+
+        // Get parents/guardians
+        $parents = $student->parents;
+
+        return $teachers?->merge($parents);
+    }
+
     protected function getTargetCriteria(): array
     {
-        $criteria = [
-            'include_students' => $this->includeStudents,
-            'include_teachers' => $this->includeTeachers,
-        ];
+        $criteria = [];
 
         switch ($this->targetType) {
-            case 'role':
-                $criteria['roles'] = $this->selectedRoles;
+            case 'teacher':
+                $criteria['teacher_ids'] = $this->selectedTeachers;
                 break;
-            case 'academic_group':
-                $criteria['academic_group_ids'] = $this->selectedAcademicGroups;
-                break;
-            case 'academic_level':
-                $criteria['academic_level_ids'] = $this->selectedAcademicLevels;
-                break;
-            case 'subject':
-                $criteria['subject_ids'] = $this->selectedSubjects;
+            case 'parent':
+                $criteria['parent_ids'] = $this->selectedParents;
                 break;
             case 'individual':
                 $criteria['user_ids'] = $this->selectedUsers;
                 break;
-            case 'custom':
-                $criteria = array_merge($criteria, [
-                    'roles' => $this->selectedRoles,
-                    'academic_group_ids' => $this->selectedAcademicGroups,
-                    'academic_level_ids' => $this->selectedAcademicLevels,
-                    'subject_ids' => $this->selectedSubjects,
-                    'user_ids' => $this->selectedUsers,
-                ]);
-                break;
         }
 
         return $criteria;
-    }
-
-    public function sendDeprecated()
-    {
-        $this->validate();
-
-        if (!$this->sendNow && empty($this->scheduledAt)) {
-            $this->addError('scheduledAt', 'Please select a scheduled time or choose to send now.');
-            return;
-        }
-
-        $messageService = app(MessageService::class);
-
-        $message = Message::create([
-            'sender_id' => auth()->id(),
-            'subject' => $this->subject,
-            'body' => $this->body,
-            'target_type' => $this->targetType,
-            'target_criteria' => $this->getTargetCriteria(),
-            'is_urgent' => $this->isUrgent,
-            'scheduled_at' => $this->sendNow ? null : $this->scheduledAt,
-            'status' => $this->sendNow ? Message::STATUS_SENDING : Message::STATUS_SCHEDULED,
-        ]);
-
-        $this->saveAttachments($message);
-
-        if ($this->sendNow) {
-            try {
-                $messageService->sendMessage($message);
-                session()->flash('success', 'Message sent successfully!');
-            } catch (\Exception $e) {
-                session()->flash('error', 'Failed to send message. Please try again.');
-            }
-        } else {
-            session()->flash('success', 'Message scheduled successfully!');
-        }
-
-        return redirect()->route('teachers.messages.index');
     }
 
     protected function saveAttachments(Message $message)
@@ -503,13 +392,19 @@ class ComposeMessage extends Component
 
     public function render()
     {
-        $messageService = app(MessageService::class);
+        $allowedRecipients = $this->getAllowedRecipients();
 
-        return view('livewire.teacher.messages.compose-message', [
-            'availableRoles' => $messageService->getAvailableRoles(),
-            'academicGroups' => $messageService->getAcademicGroups(),
-            'academicLevels' => $messageService->getAcademicLevels(),
-            'academicSubjects' => $messageService->getAcademicSubjects(),
+        $teachers = $allowedRecipients?->filter(function ($user) {
+            return $user->hasRole('teacher');
+        });
+
+        $parents = $allowedRecipients?->filter(function ($user) {
+            return $user->hasRole('parent');
+        });
+
+        return view('livewire.students.messages.compose-message', [
+            'teachers' => $teachers,
+            'parents' => $parents,
         ]);
     }
 }

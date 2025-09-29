@@ -115,7 +115,7 @@
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div class="bg-white border border-gray-200 rounded-lg p-6">
                             <h5 class="text-md font-medium text-gray-900 mb-4">Promote Student</h5>
-                            <form action="{{ route('student.promote', $student) }}" method="POST">
+                            <form action="{{ route('students.promote', $student) }}" method="POST">
                                 @csrf
                                 <div class="mb-4">
                                     <label for="new_academic_level_id" class="block text-sm font-medium text-gray-700 mb-1">
@@ -154,7 +154,7 @@
                         <div class="bg-white border border-gray-200 rounded-lg p-6">
                             <h5 class="text-md font-medium text-gray-900 mb-4">Generate Documents</h5>
                             <div class="space-y-4">
-                                <form action="{{ route('student.generate-report-card', $student) }}" method="POST" class="space-y-4">
+                                <form action="{{ route('students.generate-report-card', $student) }}" method="POST" class="space-y-4">
                                     @csrf
                                     <div>
                                         <label for="academic_year_id" class="block text-sm font-medium text-gray-700 mb-1">
@@ -181,7 +181,7 @@
                                     </button>
                                 </form>
 
-                                <form action="{{ route('student.generate-id-card', $student) }}" method="POST">
+                                <form action="{{ route('students.generate-id-card', $student) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -258,7 +258,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $reportCard->term }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $reportCard->generated_at ? $reportCard->generated_at->format('M d, Y') : 'N/A' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <a href="{{ route('student.print-report-card', $reportCard) }}" class="text-indigo-600 hover:text-indigo-900">
+                                            <a href="{{ route('students.print-report-card', $reportCard) }}" class="text-indigo-600 hover:text-indigo-900">
                                                 Print
                                             </a>
                                         </td>
@@ -305,7 +305,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             @if($idCard->status === 'active')
-                                            <a href="{{ route('student.print-id-card', $student) }}" class="text-indigo-600 hover:text-indigo-900">
+                                            <a href="{{ route('students.print-id-card', $student) }}" class="text-indigo-600 hover:text-indigo-900">
                                                 Print
                                             </a>
                                             @endif

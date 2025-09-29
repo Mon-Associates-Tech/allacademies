@@ -273,8 +273,8 @@
         <div class="field-group">
             <span class="label">Newsletter Subscription</span>
             <div class="value">
-                    <span class="newsletter-badge {{ $data['newsletter'] ? 'yes' : 'no' }}">
-                        {{ $data['newsletter'] ? '✓ Subscribed' : '✗ Not Subscribed' }}
+                    <span class="newsletter-badge {{ isset($data['newsletter']) ? 'yes' : 'no' }}">
+                        {{ isset($data['newsletter']) ? '✓ Subscribed' : '✗ Not Subscribed' }}
                     </span>
             </div>
         </div>

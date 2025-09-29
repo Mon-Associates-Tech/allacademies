@@ -7,7 +7,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\RateLimiter;
 use Throwable;
 
-class Handler extends ExceptionHandler
+class ErrorExceptionHandler extends ExceptionHandler
 {
     /**
      * A list of the exception types that are not reported.

@@ -2,8 +2,8 @@
     <div class="bg-white shadow-lg rounded-lg">
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200">
-            <h1 class="text-2xl font-bold text-gray-900">Compose Message to Students</h1>
-            <p class="text-sm text-gray-600 mt-1">Send messages to your students</p>
+            <h1 class="text-2xl font-bold text-gray-900">Compose Message</h1>
+            <p class="text-sm text-gray-600 mt-1">Send messages to your teachers or parents</p>
         </div>
 
         <form wire:submit.prevent="send" class="p-6">
@@ -25,84 +25,92 @@
             <!-- Target Selection -->
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Target Audience <span class="text-red-500">*</span>
+                    Send To <span class="text-red-500">*</span>
                 </label>
 
                 <!-- Target Type Selection -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                     <label class="relative">
-                        <input type="radio" wire:model.live="targetType" value="academic_group" class="sr-only peer">
+                        <input type="radio" wire:model.live="targetType" value="teacher" class="sr-only peer">
                         <div class="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                            <div class="text-sm font-medium text-gray-900">Academic Group</div>
-                            <div class="text-xs text-gray-500">Grade levels, classes</div>
+                            <div class="text-sm font-medium text-gray-900">Teachers</div>
+                            <div class="text-xs text-gray-500">Your assigned teachers</div>
                         </div>
                     </label>
 
                     <label class="relative">
-                        <input type="radio" wire:model.live="targetType" value="academic_level" class="sr-only peer">
+                        <input type="radio" wire:model.live="targetType" value="parent" class="sr-only peer">
                         <div class="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                            <div class="text-sm font-medium text-gray-900">Academic Level</div>
-                            <div class="text-xs text-gray-500">Specific levels</div>
+                            <div class="text-sm font-medium text-gray-900">Parents</div>
+                            <div class="text-xs text-gray-500">Your parents/guardians</div>
                         </div>
                     </label>
 
                     <label class="relative">
                         <input type="radio" wire:model.live="targetType" value="individual" class="sr-only peer">
                         <div class="p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                            <div class="text-sm font-medium text-gray-900">Individual Students</div>
-                            <div class="text-xs text-gray-500">Specific students</div>
+                            <div class="text-sm font-medium text-gray-900">Individual</div>
+                            <div class="text-xs text-gray-500">Specific person</div>
                         </div>
                     </label>
                 </div>
 
                 <!-- Target Criteria Based on Selection -->
-                @if($targetType === 'academic_group')
+                @if($targetType === 'teacher')
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-3">Select Academic Groups</h3>
+                        <h3 class="font-medium text-gray-900 mb-3">Select Teachers</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                            @foreach($academicGroups as $group)
+                            @if($teachers !== null &&  count($teachers))
+                            @forelse($teachers as $teacher)
                                 <label class="flex items-center cursor-pointer">
                                     <input type="checkbox"
-                                           wire:click="toggleAcademicGroup({{ $group->id }})"
-                                           {{ in_array($group->id, $selectedAcademicGroups) ? 'checked' : '' }}
+                                           wire:click="toggleTeacher({{ $teacher->id }})"
+                                           {{ in_array($teacher->id, $selectedTeachers) ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">{{ $group->name }}</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $teacher->name }}</span>
                                 </label>
-                            @endforeach
+                            @empty
+                                <p class="text-sm text-gray-500">You don't have any assigned teachers.</p>
+                            @endforelse
+                                @endif
                         </div>
                     </div>
                 @endif
 
-                @if($targetType === 'academic_level')
+                @if($targetType === 'parent')
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-3">Select Academic Levels</h3>
+                        <h3 class="font-medium text-gray-900 mb-3">Select Parents/Guardians</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                            @foreach($academicLevels as $level)
+                            @if($parents !== null &&  count($parents))
+                            @forelse($parents as $parent)
                                 <label class="flex items-center cursor-pointer">
                                     <input type="checkbox"
-                                           wire:click="toggleAcademicLevel({{ $level->id }})"
-                                           {{ in_array($level->id, $selectedAcademicLevels) ? 'checked' : '' }}
+                                           wire:click="toggleParent({{ $parent->id }})"
+                                           {{ in_array($parent->id, $selectedParents) ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">{{ $level->name }} @if($level->label)({{ $level->label }})@endif</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $parent->name }}</span>
                                 </label>
-                            @endforeach
+                            @empty
+                                <p class="text-sm text-gray-500">No parents/guardians found.</p>
+                            @endforelse
+                                @endif
                         </div>
                     </div>
                 @endif
 
                 @if($targetType === 'individual')
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-gray-900 mb-3">Select Individual Students</h3>
+                        <h3 class="font-medium text-gray-900 mb-3">Select Recipient</h3>
                         <div class="mb-3">
                             <input type="text"
                                    wire:model.live.debounce.300ms="userSearch"
-                                   placeholder="Search students by name or email..."
+                                   placeholder="Search teachers or parents by name or email..."
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         @if(!empty($userSearch))
                             <div class="max-h-40 overflow-y-auto border border-gray-200 rounded-md">
-                                @foreach($searchedUsers as $user)
+                                @forelse($searchedUsers as $user)
                                     <div class="flex items-center justify-between p-2 hover:bg-gray-50">
                                         <div class="flex items-center">
                                             <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
@@ -114,13 +122,15 @@
                                             {{ in_array($user->id, $selectedUsers) ? 'Remove' : 'Add' }}
                                         </button>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="p-2 text-sm text-gray-500">No matching users found.</div>
+                                @endforelse
                             </div>
                         @endif
 
                         @if(!empty($selectedUsers))
                             <div class="mt-3">
-                                <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Students:</h4>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Recipients:</h4>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($selectedUsersList as $user)
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -266,7 +276,7 @@
             <!-- Action Buttons -->
             <div class="flex justify-between">
                 <div class="flex space-x-3">
-                    <a href="{{ route('teachers.messages.index') }}"
+                    <a href="{{ route('students.messages.index') }}"
                        class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50">
                         Cancel
                     </a>

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class SchoolScope implements Scope
 {
@@ -13,6 +14,11 @@ class SchoolScope implements Scope
     {
         // Skip scoping for User model to avoid circular references
         if ($model instanceof \App\Models\User) {
+            return;
+        }
+
+        // Only apply scoping if the model's table has a school_id column
+        if (!Schema::hasColumn($model->getTable(), 'school_id')) {
             return;
         }
 

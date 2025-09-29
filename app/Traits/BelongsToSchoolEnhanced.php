@@ -4,7 +4,7 @@ namespace App\Traits;
 
 use App\Scopes\SchoolScope;
 use Illuminate\Support\Facades\Auth;
-use Schema;
+use Illuminate\Support\Facades\Schema;
 
 trait BelongsToSchoolEnhanced
 {
@@ -54,6 +54,11 @@ trait BelongsToSchoolEnhanced
         ];
 
         if (in_array(static::class, $globalModels)) {
+            return false;
+        }
+
+        // Don't apply school scope if model doesn't have school_id column
+        if (!Schema::hasColumn((new static)->getTable(), 'school_id')) {
             return false;
         }
 

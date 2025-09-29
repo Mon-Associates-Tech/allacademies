@@ -19,6 +19,17 @@ class Message extends Model
 {
     use HasFactory, SoftDeletes, Trackable;
 
+    const STATUS_DRAFT = 'draft';
+    const STATUS_SCHEDULED = 'scheduled';
+    const STATUS_SENDING = 'sending';
+    const STATUS_SENT = 'sent';
+    const STATUS_FAILED = 'failed';
+    const TARGET_ROLE = 'role';
+    const TARGET_ACADEMIC_GROUP = 'academic_group';
+    const TARGET_ACADEMIC_LEVEL = 'academic_level';
+    const TARGET_SUBJECT = 'subject';
+    const TARGET_INDIVIDUAL = 'individual';
+    const TARGET_CUSTOM = 'custom';
     protected $fillable = [
         'sender_id',
         'subject',
@@ -30,7 +41,6 @@ class Message extends Model
         'sent_at',
         'status'
     ];
-
     protected $casts = [
         'target_criteria' => 'array',
         'is_urgent' => 'boolean',
@@ -38,27 +48,9 @@ class Message extends Model
         'sent_at' => 'datetime'
     ];
 
-    const STATUS_DRAFT = 'draft';
-    const STATUS_SCHEDULED = 'scheduled';
-    const STATUS_SENDING = 'sending';
-    const STATUS_SENT = 'sent';
-    const STATUS_FAILED = 'failed';
-
-    const TARGET_ROLE = 'role';
-    const TARGET_ACADEMIC_GROUP = 'academic_group';
-    const TARGET_ACADEMIC_LEVEL = 'academic_level';
-    const TARGET_SUBJECT = 'subject';
-    const TARGET_INDIVIDUAL = 'individual';
-    const TARGET_CUSTOM = 'custom';
-
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
-    }
-
-    public function recipients(): HasMany
-    {
-        return $this->hasMany(MessageRecipient::class);
     }
 
     public function attachments(): MorphMany
@@ -69,6 +61,11 @@ class Message extends Model
     public function getRecipientCountAttribute(): int
     {
         return $this->recipients()->count();
+    }
+
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(MessageRecipient::class);
     }
 
     public function getReadCountAttribute(): int
@@ -110,4 +107,36 @@ class Message extends Model
     {
         return $this->status === self::STATUS_SENT;
     }
+
+    public function readByUser($user)
+    {
+        // Check if user is sender (sender messages are always considered "read")
+        if ($this->sender_id === $user->id) {
+            return true;
+        }
+
+        // Check if there's a read receipt for this user
+        return $this->readReceipts()
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    public function readReceipts()
+    {
+        return $this->hasMany(MessageReadReceipt::class, 'message_id');
+    }
+
+    public function markAsReadByUser($user)
+    {
+        // Don't mark sender's own messages as read
+        if ($this->sender_id === $user->id) {
+            return;
+        }
+
+        $this->readReceipts()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['read_at' => now()]
+        );
+    }
+
 }

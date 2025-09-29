@@ -20,7 +20,7 @@ use App\Livewire\Teachers\ViewAssignment;
 use App\Livewire\Teachers\ViewAssignmentSubmission;
 use App\Livewire\Teachers\VirtualClassroom;
 
-Route::middleware(['auth'])->name('teachers.')->group(function () {
+Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->group(function () {
     Route::get('assignments', Assignments::class)->name('assignments.index');
     Route::get('assignments/{assignment}', ViewAssignment::class)->name('assignments.show');
     Route::get('/create-assignment', CreateAssignment::class)->name('assignments.create');

@@ -234,7 +234,7 @@ class Student extends Model
     {
         // First check if student's user belongs to a team
         if ($this->user) {
-            return $this->user->currentTeam;
+           // return $this->user->currentTeam;
         }
 
         // Fallback to actual school if no team exists

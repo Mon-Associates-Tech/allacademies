@@ -174,17 +174,18 @@ class AssignmentTakingComponent extends Component
 
         // Check academic groups
         if ($this->assignment->academicGroups->isNotEmpty()) {
-            $studentAcademicGroupIds = $student->academicGroups->pluck('id')->toArray();
-            $assignmentAcademicGroupIds = $this->assignment->academicGroups->pluck('id')->toArray();
+            $studentAcademicGroupIds = $student->academicGroups?->pluck('id')->toArray();
+            $assignmentAcademicGroupIds = $this->assignment->academicGroups?->pluck('id')->toArray();
 
-            if (array_intersect($studentAcademicGroupIds, $assignmentAcademicGroupIds)) {
+            if(is_array($studentAcademicGroupIds) && is_array($assignmentAcademicGroupIds) && array_intersect($studentAcademicGroupIds, $assignmentAcademicGroupIds)) {
                 $isEligible = true;
             }
+
         }
 
         // Check academic levels
-        if (!$isEligible && $this->assignment->academicLevels->isNotEmpty()) {
-            $assignmentAcademicLevelIds = $this->assignment->academicLevels->pluck('id')->toArray();
+        if (!$isEligible && $this->assignment->academicLevels?->isNotEmpty()) {
+            $assignmentAcademicLevelIds = $this->assignment->academicLevels?->pluck('id')->toArray();
 
             if (in_array($student->academic_level_id, $assignmentAcademicLevelIds)) {
                 $isEligible = true;
@@ -193,8 +194,8 @@ class AssignmentTakingComponent extends Component
 
         // Check student groups
         if (!$isEligible && $this->assignment->studentGroups->isNotEmpty()) {
-            $studentGroupIds = $student->studentGroups->pluck('id')->toArray();
-            $assignmentStudentGroupIds = $this->assignment->studentGroups->pluck('id')->toArray();
+            $studentGroupIds = $student->studentGroups?->pluck('id')->toArray();
+            $assignmentStudentGroupIds = $this->assignment->studentGroups?->pluck('id')->toArray();
 
             if (array_intersect($studentGroupIds, $assignmentStudentGroupIds)) {
                 $isEligible = true;

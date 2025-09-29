@@ -125,7 +125,7 @@
 
                                                     <!-- Action Buttons - Absolutely positioned -->
                                                     <div class="absolute top-4 right-4 flex items-center space-x-1">
-                                                        <a href="{{ route('student.show', $student) }}"
+                                                        <a href="{{ route('students.show', $student) }}"
                                                            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-gray-50 dark:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200"
                                                            title="View Details">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,7 +354,7 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div class="flex justify-end space-x-2">
-                                                        <a href="{{ route('student.show', $student) }}"
+                                                        <a href="{{ route('students.show', $student) }}"
                                                            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-gray-50 dark:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200"
                                                            title="View Details">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

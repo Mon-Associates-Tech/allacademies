@@ -26,6 +26,7 @@ use App\Models\Teacher;
 use App\Models\Team;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
+use App\Services\ErrorNotificationService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Blade;
@@ -41,7 +42,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(ErrorNotificationService::class, function ($app) {
+            return new ErrorNotificationService();
+        });
     }
 
     /**
