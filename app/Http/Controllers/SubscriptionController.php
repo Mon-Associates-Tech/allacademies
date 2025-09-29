@@ -328,4 +328,24 @@ public function store(SubscriptionRequest $request): RedirectResponse
         return to_route('subscriptions.index')
             ->with('success', __('status.resource.deleted', ['name' => $subscription->reference]));
     }
+
+public function toggleTestMode(Request $request)
+{
+
+    if (!in_array(auth()->user()->email, special_access_emails())) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    // Toggle the test mode
+    $currentMode = session('TESTING_SUBSCRIPTIONS', false);
+    session(['TESTING_SUBSCRIPTIONS' => !$currentMode]);
+    session()->flash('message', !$currentMode ? 'Test mode enabled' : 'Test mode disabled');
+
+    return response()->json([
+        'success' => true,
+        'testing_mode' => !$currentMode,
+        'message' => !$currentMode ? 'Test mode enabled' : 'Test mode disabled'
+    ]);
+}
+
 }

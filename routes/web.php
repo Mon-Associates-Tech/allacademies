@@ -416,7 +416,9 @@ Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBoo
 Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
 Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback']) ->name('payment.book.callback');
 
-
+Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])
+    ->name('subscriptions.toggle-test-mode')
+    ->middleware('auth');
 
 include_once 'student.php';
 include_once 'teacher.php';
