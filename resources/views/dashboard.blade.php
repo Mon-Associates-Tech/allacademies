@@ -45,6 +45,23 @@
         </div>
     @endif
 
+    <div class="mb-4">
+        <livewire:chats.token-usage-monitor />
+    </div>
+
+    <div class="w-64">
+        <livewire:chats.token-usage-horizontal />
+    </div>
+
+    {{-- Use Vertical Compact in sidebar --}}
+    <div class="w-16">
+        <livewire:chats.token-usage-vertical />
+    </div>
+
+    {{-- Use Circular in dashboard widget --}}
+    <div class="w-full max-w-xs">
+        <livewire:chats.token-usage-circular />
+    </div>
 
     @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>

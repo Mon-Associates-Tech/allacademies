@@ -97,7 +97,7 @@ public function mount()
 
     public function startAssignment(Assignment $assignment)
     {
-        return redirect()->route('student.assignment.take', ['assignment' => $assignment]);
+        return redirect()->route('students.assignment.take', ['assignment' => $assignment]);
     }
 
     public function getAssignmentsProperty()

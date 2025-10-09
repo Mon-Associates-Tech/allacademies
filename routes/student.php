@@ -62,7 +62,6 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('/messages', MessageIndex::class)->name('messages.index');
     Route::get('/messages/{message}', MessageShow::class)->name('messages.show');
 
-
 });
 
 // entities should be given our academic structure to correctly map the students, teachers, librarians, etc to their respective roles and permissions within the system.

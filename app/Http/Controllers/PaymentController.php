@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\SubscriptionStatus;
 use App\Http\Requests\PaymentRequest;
+use App\Models\Chat\UserTokenSubscription;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\BookSubscription;
 use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
+use App\Services\TokenSubscriptionService;
 use App\Traits\HandlesPayments;
 use Brick\Money\Money;
 use Illuminate\Http\RedirectResponse;
@@ -25,10 +27,12 @@ class PaymentController extends Controller
     use HandlesPayments;
 
      protected $paystack;
+     protected $subscriptionService;
 
-    public function __construct(PaystackService $paystack)
+    public function __construct(PaystackService $paystack, TokenSubscriptionService $subscriptionService)
     {
         $this->paystack = $paystack;
+        $this->subscriptionService = $subscriptionService;
     }
 
     /**
@@ -332,7 +336,7 @@ public function callback(Request $request)
                     'status'               => 'succeeded',
                     'subscription_id'      => null, // because this is not a regular subscription
                     'book_subscription_id' => $subscription->id,
-                    
+
                 ]);
             });
 
@@ -346,4 +350,91 @@ public function callback(Request $request)
             ->with('error', 'Book subscription payment failed or was cancelled.');
     }
 
+    /**
+     * Initialize token subscription payment
+     */
+    public function initializeTokenSubscription($subscriptionId)
+    {
+        $subscription = UserTokenSubscription::findOrFail($subscriptionId);
+
+        // Check if it's a free package
+        if ($subscription->package->isFree()) {
+            // Activate immediately for free packages
+            $subscription->update([
+                'status' => 'active',
+                'purchased_at' => now(),
+            ]);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('success', 'Free token package activated successfully!');
+        }
+
+        $data = [
+            'email' => auth()->user()->email,
+            'amount' => (int) ($subscription->package->price * 100), // convert to kobo
+            'reference' => $subscription->reference,
+            'metadata' => [
+                'subscription_id' => $subscription->id,
+                'type' => 'token_subscription',
+                'package_name' => $subscription->package->name,
+                'name' => auth()->user()->name,
+                'phone' => auth()->user()->phone ?? '0000000000',
+            ],
+            'callback_url' => route('payment.token.callback'),
+        ];
+
+        $response = $this->paystack->initializeTransaction($data);
+
+        return redirect($response['data']['authorization_url']);
+    }
+
+    /**
+     * Handle token subscription payment callback
+     */
+    public function tokenCallback(Request $request)
+    {
+        $reference = $request->query('reference');
+        $response = $this->paystack->verifyTransaction($reference);
+
+        if ($response['status'] && $response['data']['status'] === 'success') {
+            $paymentDetails = $response['data'];
+            $subscriptionId = $paymentDetails['metadata']['subscription_id'];
+
+            $subscription = UserTokenSubscription::findOrFail($subscriptionId);
+
+            DB::transaction(function () use ($subscription, $paymentDetails) {
+                // 1. Record payment
+                Payment::create([
+                    'reference' => $paymentDetails['reference'],
+                    'amount' => $subscription->package->price,
+                    'currency' => $paymentDetails['currency'] ?? 'GHS',
+                    'status' => 'succeeded',
+                    'token_subscription_id' => $subscription->id,
+                ]);
+
+                // 2. Activate subscription (handles both top-ups and regular subscriptions)
+                $this->subscriptionService->activateSubscription($subscription);
+            });
+
+            // Check if it was a top-up (linked to another active subscription)
+            if ($subscription->replaced_by_id) {
+                $mainSubscription = UserTokenSubscription::find($subscription->replaced_by_id);
+
+                if ($mainSubscription && $mainSubscription->status === 'active') {
+                    return redirect()
+                        ->route('token-subscriptions.show', $mainSubscription)
+                        ->with('success', 'Tokens added successfully! New balance: ' . number_format($mainSubscription->tokens_remaining) . ' tokens');
+                }
+            }
+
+            return redirect()
+                ->route('token-subscriptions.show', $subscription)
+                ->with('success', 'Token subscription activated successfully! Ref: ' . $subscription->reference);
+        }
+
+        return redirect()
+            ->route('token-subscriptions.index')
+            ->with('error', 'Token subscription payment failed or was cancelled.');
+    }
 }

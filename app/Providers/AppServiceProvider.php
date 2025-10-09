@@ -8,6 +8,7 @@ use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
+use App\Models\Attendance\AttendanceRecord;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
@@ -106,6 +107,8 @@ class AppServiceProvider extends ServiceProvider
             'school' => \App\Models\School::class,
             'academic_period' => \App\Models\AcademicPeriod::class,
             'quiz_session' => \App\Models\QuizSession::class,
+            'attendance_record' => AttendanceRecord::class,
+            'open_ai_token_package' => \App\Models\Chat\OpenAiTokenPackage::class,
 
         ]);
     }

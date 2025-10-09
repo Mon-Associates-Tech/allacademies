@@ -7,6 +7,7 @@ use App\Models\QuizSession;
 use App\Models\ReadingAchievement;
 use App\Models\ReadingProgress;
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -229,48 +230,48 @@ class BookBasedLearningService
     /**
      * Generate adaptive quiz based on user's performance
      */
-public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters): array
-{
-    // Check if we're working with file content instead of a book
-    $isFileBased = !empty($parameters['file_content']);
+    public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters): array
+    {
+        // Check if we're working with file content instead of a book
+        $isFileBased = !empty($parameters['file_content']);
 
-    if ($isFileBased) {
-        // For file-based quizzes, we don't have previous performance or focus areas
-        $previousQuizzes = collect();
-        $adaptiveDifficulty = $parameters['difficulty'] ?? 'medium';
-        $weakAreas = [];
-        $focusAreas = [];
-        $userPerformanceHistory = [];
-    } else {
-        // Analyze user's previous performance with this book
-        $previousQuizzes = QuizSession::where('user_id', $user->id)
-            ->where('book_id', $book->id)
-            ->where('status', 'completed')
-            ->get();
+        if ($isFileBased) {
+            // For file-based quizzes, we don't have previous performance or focus areas
+            $previousQuizzes = collect();
+            $adaptiveDifficulty = $parameters['difficulty'] ?? 'medium';
+            $weakAreas = [];
+            $focusAreas = [];
+            $userPerformanceHistory = [];
+        } else {
+            // Analyze user's previous performance with this book
+            $previousQuizzes = QuizSession::where('user_id', $user->id)
+                ->where('book_id', $book->id)
+                ->where('status', 'completed')
+                ->get();
 
-        // Determine adaptive difficulty
-        $adaptiveDifficulty = $this->calculateAdaptiveDifficulty($previousQuizzes, $parameters['difficulty'] ?? 'medium');
+            // Determine adaptive difficulty
+            $adaptiveDifficulty = $this->calculateAdaptiveDifficulty($previousQuizzes, $parameters['difficulty'] ?? 'medium');
 
-        // Identify weak areas from previous quizzes
-        $weakAreas = $this->identifyWeakAreas($previousQuizzes);
+            // Identify weak areas from previous quizzes
+            $weakAreas = $this->identifyWeakAreas($previousQuizzes);
 
-        // Focus on chapters/sections where user struggled
-        $focusAreas = $this->identifyFocusAreas($user, $book, $weakAreas);
+            // Focus on chapters/sections where user struggled
+            $focusAreas = $this->identifyFocusAreas($user, $book, $weakAreas);
 
-        // Get user performance history
-        $userPerformanceHistory = $this->getUserPerformanceHistory($user, $book);
+            // Get user performance history
+            $userPerformanceHistory = $this->getUserPerformanceHistory($user, $book);
+        }
+
+        // Build context with adaptive parameters
+        $adaptiveContext = array_merge($parameters, [
+            'adaptive_difficulty' => $adaptiveDifficulty,
+            'focus_areas' => $focusAreas,
+            'weak_concepts' => $weakAreas,
+            'user_performance_history' => $userPerformanceHistory
+        ]);
+
+        return $this->generateQuizWithContext($book, $adaptiveContext, $user);
     }
-
-    // Build context with adaptive parameters
-    $adaptiveContext = array_merge($parameters, [
-        'adaptive_difficulty' => $adaptiveDifficulty,
-        'focus_areas' => $focusAreas,
-        'weak_concepts' => $weakAreas,
-        'user_performance_history' => $userPerformanceHistory
-    ]);
-
-    return $this->generateQuizWithContext($book, $adaptiveContext, $user);
-}
 
     /**
      * Calculate adaptive difficulty based on previous performance
@@ -484,14 +485,14 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
             'learning_style' => $user->learning_style,
             'response_format' => 'structured',
             'difficulty' => $context['adaptive_difficulty'],
-            'creativity_level' => 0.6,
+            'creativity_level' => 1,
             'response_length' => 2000
         ];
 
         $result = $this->chatService->chat($chatParameters);
 
         if (!$result['success']) {
-            throw new \Exception('Failed to generate adaptive quiz: ' . $result['error']);
+            throw new Exception('Failed to generate adaptive quiz: ' . $result['error']);
         }
 
         return $this->parseAdaptiveQuizResponse($result['content'], $context);
@@ -512,7 +513,7 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
             if (!empty($context['file_name'])) {
                 $prompt .= "- File Name: {$context['file_name']}\n";
             }
-        } else if($book !== null && isset($book->id)){
+        } else if ($book !== null && isset($book->id)) {
 
             $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
 
@@ -563,37 +564,48 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
         }
 
         $prompt .= "\nQUIZ REQUIREMENTS:\n";
-        $prompt .= "- Generate {$context['question_count']} questions\n";
+        $prompt .= "- Generate EXACTLY {$context['question_count']} questions\n";
         $prompt .= "- Question type: {$context['question_type']}\n";
         $prompt .= "- Adapt question complexity based on user's weak areas\n";
         $prompt .= "- Include scaffolding questions if user is struggling\n";
         $prompt .= "- Provide detailed explanations for learning\n";
+        $prompt .= "- Randomize options so that the correct answer is not always the first option\n";
+        $prompt .= "- Do not make the correct answer too obvious\n";
 
         if ($context['include_quotes'] ?? false) {
             $prompt .= "- Include relevant book quotes in questions where appropriate\n";
         }
 
-        $prompt .= "\nOUTPUT FORMAT:\n";
-        $prompt .= "Return a JSON object with the following structure:\n";
+        $prompt .= "\nCRITICAL - OUTPUT FORMAT:\n";
+        $prompt .= "You MUST respond with VALID JSON ONLY. No additional text before or after.\n";
+        $prompt .= "Return a JSON object with this EXACT structure:\n\n";
+        $prompt .= "```json\n";
         $prompt .= "{\n";
         $prompt .= "  \"quiz_session\": {\n";
-        $prompt .= "    \"book_title\": \"string\",\n";
-        $prompt .= "    \"author\": \"string\",\n";
-        $prompt .= "    \"context\": \"string\"\n";
+        $prompt .= "    \"book_title\": \"Book Title\",\n";
+        $prompt .= "    \"author\": \"Author Name\",\n";
+        $prompt .= "    \"context\": \"Quiz context description\"\n";
         $prompt .= "  },\n";
         $prompt .= "  \"questions\": [\n";
         $prompt .= "    {\n";
-        $prompt .= "      \"question\": \"string\",\n";
-        $prompt .= "      \"type\": \"multiple_choice|true_false|essay\",\n";
-        $prompt .= "      \"options\": [\"string\"],\n";
-        $prompt .= "      \"correct_answer\": \"string\",\n";
-        $prompt .= "      \"explanation\": \"string\",\n";
-        $prompt .= "      \"difficulty\": \"easy|medium|hard\",\n";
-        $prompt .= "      \"points\": \"integer\",\n";
-        $prompt .= "      \"learning_objective\": \"string\"\n";
+        $prompt .= "      \"question\": \"Full question text here?\",\n";
+        $prompt .= "      \"type\": \"multiple_choice\",\n";
+        $prompt .= "      \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n";
+        $prompt .= "      \"correct_answer\": \"Option B\",\n";
+        $prompt .= "      \"explanation\": \"Detailed explanation of why this is correct\",\n";
+        $prompt .= "      \"difficulty\": \"medium\",\n";
+        $prompt .= "      \"points\": 1,\n";
+        $prompt .= "      \"learning_objective\": \"What this question tests\"\n";
         $prompt .= "    }\n";
         $prompt .= "  ]\n";
         $prompt .= "}\n";
+        $prompt .= "```\n\n";
+        $prompt .= "IMPORTANT: \n";
+        $prompt .= "- Generate {$context['question_count']} questions in the questions array\n";
+        $prompt .= "- For true_false questions, options should be [\"True\", \"False\"]\n";
+        $prompt .= "- For essay questions, omit the options field and correct_answer can be a detailed expected answer\n";
+        $prompt .= "- Ensure all JSON is properly formatted with correct commas and brackets\n";
+        $prompt .= "- Do NOT include any text outside the JSON structure\n";
 
         return $prompt;
     }
@@ -603,19 +615,90 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
      */
     protected function parseAdaptiveQuizResponse(string $content, array $context): array
     {
-        // Try to extract JSON from the response
+        Log::info('Parsing quiz response', [
+            'content_length' => strlen($content),
+            'content_preview' => substr($content, 0, 200)
+        ]);
+
+        // Try to extract JSON from the response - look for both { and [ starts
         $jsonStart = strpos($content, '{');
-        $jsonEnd = strrpos($content, '}');
+        $arrayStart = strpos($content, '[');
 
-        if ($jsonStart !== false && $jsonEnd !== false) {
-            $jsonString = substr($content, $jsonStart, $jsonEnd - $jsonStart + 1);
+        // Determine which comes first
+        if ($jsonStart === false && $arrayStart === false) {
+            Log::error('No JSON found in response', ['content' => $content]);
+            return $this->parseQuizManually($content, $context);
+        }
 
-            try {
-                $parsed = json_decode($jsonString, true);
+        $start = $jsonStart;
+        if ($arrayStart !== false && ($jsonStart === false || $arrayStart < $jsonStart)) {
+            $start = $arrayStart;
+            $endChar = ']';
+            $startChar = '[';
+        } else {
+            $endChar = '}';
+            $startChar = '{';
+        }
 
-                if (is_array($parsed) && isset($parsed['questions'])) {
+        // Find matching closing bracket/brace
+        $jsonEnd = $this->findMatchingBracket($content, $start, $startChar, $endChar);
+
+        if ($jsonEnd === false) {
+            Log::error('No matching closing bracket found');
+            return $this->parseQuizManually($content, $context);
+        }
+
+        $jsonString = substr($content, $start, $jsonEnd - $start + 1);
+
+        Log::info('Extracted JSON string', [
+            'json_length' => strlen($jsonString),
+            'json_preview' => substr($jsonString, 0, 500)
+        ]);
+
+        try {
+            $parsed = json_decode($jsonString, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('JSON decode error', [
+                    'error' => json_last_error_msg(),
+                    'json' => substr($jsonString, 0, 1000)
+                ]);
+                return $this->parseQuizManually($content, $context);
+            }
+
+            // Handle different response structures
+            if (is_array($parsed)) {
+                // Check if questions are at root level (array of questions)
+                if (isset($parsed[0]) && is_array($parsed[0]) && isset($parsed[0]['question'])) {
+                    Log::info('Found questions at root level', ['count' => count($parsed)]);
                     return [
-                        'quiz_session' => $parsed['quiz_session'] ?? [],
+                        'quiz_session' => [
+                            'book_title' => $context['book_title'] ?? 'Quiz',
+                            'author' => $context['author'] ?? 'Unknown',
+                            'context' => 'Generated quiz'
+                        ],
+                        'questions' => $parsed,
+                        'adaptive_features' => [
+                            'difficulty_adjusted' => $context['adaptive_difficulty'],
+                            'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                            'scaffolding_included' => true
+                        ],
+                        'metadata' => [
+                            'generation_type' => 'adaptive',
+                            'user_level' => $context['user_level'] ?? 'intermediate'
+                        ]
+                    ];
+                }
+
+                // Check if questions are nested
+                if (isset($parsed['questions']) && is_array($parsed['questions'])) {
+                    Log::info('Found nested questions', ['count' => count($parsed['questions'])]);
+                    return [
+                        'quiz_session' => $parsed['quiz_session'] ?? [
+                                'book_title' => $context['book_title'] ?? 'Quiz',
+                                'author' => $context['author'] ?? 'Unknown',
+                                'context' => 'Generated quiz'
+                            ],
                         'questions' => $parsed['questions'],
                         'adaptive_features' => [
                             'difficulty_adjusted' => $context['adaptive_difficulty'],
@@ -628,16 +711,46 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
                         ]
                     ];
                 }
-            } catch (\Exception $e) {
-                Log::warning('Failed to parse quiz JSON', [
-                    'content' => $content,
-                    'error' => $e->getMessage()
-                ]);
+            }
+
+            Log::warning('Parsed JSON but no questions found', [
+                'parsed_keys' => array_keys($parsed),
+                'structure' => json_encode(array_keys($parsed))
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to parse quiz JSON', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+
+        return $this->parseQuizManually($content, $context);
+    }
+
+    /**
+     * Find matching closing bracket for a given opening bracket
+     */
+    protected function findMatchingBracket(string $content, int $start, string $openChar, string $closeChar): int|false
+    {
+        $depth = 0;
+        $length = strlen($content);
+
+        for ($i = $start; $i < $length; $i++) {
+            $char = $content[$i];
+
+            if ($char === $openChar) {
+                $depth++;
+            } elseif ($char === $closeChar) {
+                $depth--;
+
+                if ($depth === 0) {
+                    return $i;
+                }
             }
         }
 
-        // Fallback parsing - extract questions manually
-        return $this->parseQuizManually($content, $context);
+        return false;
     }
 
     /**
@@ -645,24 +758,64 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
      */
     protected function parseQuizManually(string $content, array $context): array
     {
-        // This would implement a more sophisticated parsing algorithm
-        // to extract questions from unstructured text
+        Log::warning('Using manual parsing fallback');
+
+        // Try to extract questions using regex patterns
+        $questions = [];
+
+        // Pattern 1: Look for numbered questions
+        if (preg_match_all('/(?:Question\s+)?(\d+)[\.\)]\s*(.+?)(?=(?:Question\s+)?\d+[\.\)]|\Z)/si', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $questionText = trim($match[2]);
+
+                // Try to extract options if it's multiple choice
+                $options = [];
+                if (preg_match_all('/(?:[A-D][\.\)]|[a-d][\.\)])\s*(.+?)(?=[A-D][\.\)]|[a-d][\.\)]|\n\n|\Z)/s', $questionText, $optionMatches)) {
+                    $options = array_map('trim', $optionMatches[1]);
+                }
+
+                if (!empty($questionText)) {
+                    $questions[] = [
+                        'question' => $questionText,
+                        'type' => !empty($options) ? 'multiple_choice' : 'essay',
+                        'options' => $options,
+                        'correct_answer' => !empty($options) ? $options[0] : '',
+                        'explanation' => 'Review the material for the answer.',
+                        'difficulty' => $context['difficulty'] ?? 'medium',
+                        'points' => 1
+                    ];
+                }
+            }
+        }
+
+        Log::info('Manual parsing result', ['questions_found' => count($questions)]);
+
+        if (empty($questions)) {
+            // Generate fallback error result
+            return [
+                'success' => false,
+                'error' => 'Failed to parse quiz questions from AI response. Please try again.',
+                'error_code' => 'PARSE_ERROR',
+                'questions' => []
+            ];
+        }
 
         return [
             'quiz_session' => [
-                'book_title' => $context['book_title'] ?? '',
-                'author' => $context['author'] ?? '',
-                'context' => 'Adaptive quiz based on user performance'
+                'book_title' => $context['book_title'] ?? 'Quiz',
+                'author' => $context['author'] ?? 'Unknown',
+                'context' => 'Generated quiz'
             ],
-            'questions' => [],
+            'questions' => $questions,
             'adaptive_features' => [
-                'difficulty_adjusted' => $context['adaptive_difficulty'],
+                'difficulty_adjusted' => $context['adaptive_difficulty'] ?? 'medium',
                 'focus_areas_addressed' => $context['focus_areas'] ?? [],
                 'scaffolding_included' => true
             ],
             'metadata' => [
                 'generation_type' => 'adaptive',
-                'user_level' => $context['user_level'] ?? 'intermediate'
+                'user_level' => $context['user_level'] ?? 'intermediate',
+                'parsing_method' => 'manual'
             ]
         ];
     }
@@ -848,7 +1001,7 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
             'subject' => 'language_arts',
             'topics' => ['discussion', 'literary_analysis', 'critical_thinking'],
             'response_format' => 'structured',
-            'creativity_level' => 0.7,
+            'creativity_level' => 1,
             'response_length' => 1200
         ];
 
@@ -1088,7 +1241,7 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
             'subject' => 'language_arts',
             'topics' => ['vocabulary', 'reading_comprehension'],
             'response_format' => 'structured',
-            'creativity_level' => 0.4,
+            'creativity_level' => 1,
             'response_length' => 1000
         ];
 
@@ -1122,6 +1275,193 @@ public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters)
 
         return $suggestions;
     }
+
+
+    /**
+     * Generate quiz based on book context with graceful error handling
+     */
+    public function generateBookQuiz(array $parameters, ?Book $book = null): array
+    {
+        $user = auth()->user();
+
+        // Check token availability first
+        if ($user && !$user->hasOpenAiTokens()) {
+            Log::warning('Insufficient tokens for book quiz', ['user_id' => $user->id]);
+            return [
+                'success' => false,
+                'error' => 'Insufficient tokens. Please purchase a token package to continue.'
+            ];
+        }
+
+        // Validate book context if book_id is provided
+        if (isset($parameters['book_id'])) {
+            if (!$book) {
+                // Try to load the book if not provided
+                $book = \App\Models\Book::with(['chapters', 'sections', 'author'])->find($parameters['book_id']);
+            }
+
+            if (!$book) {
+                Log::warning('Book not found for quiz generation', [
+                    'user_id' => $user?->id,
+                    'book_id' => $parameters['book_id']
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'The selected book could not be found. Please select a different book or try uploading your own content.',
+                    'error_code' => 'BOOK_NOT_FOUND',
+                    'fallback_available' => !empty($parameters['file_content'])
+                ];
+            }
+
+            // Validate book has sufficient content
+            if ($this->bookHasInsufficientContent($book, $parameters)) {
+                Log::warning('Book has insufficient content for quiz', [
+                    'user_id' => $user?->id,
+                    'book_id' => $book->id,
+                    'has_chapters' => $book->chapters->isNotEmpty(),
+                    'chapter_id' => $parameters['chapter_id'] ?? null
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'The selected book or chapter does not have enough content to generate a quiz. Please select a different range or upload your own content.',
+                    'error_code' => 'INSUFFICIENT_CONTENT',
+                    'suggestions' => $this->getBookContentSuggestions($book)
+                ];
+            }
+        }
+
+        // If we have file content as fallback, use that instead
+        if (!$book && !empty($parameters['file_content'])) {
+            Log::info('Using uploaded file content instead of book', [
+                'user_id' => $user?->id,
+                'file_name' => $parameters['file_name'] ?? 'unknown'
+            ]);
+
+            $parameters['message'] = $this->buildQuizPromptFromFile($parameters);
+        } else {
+            // Build quiz prompt with book context
+            $parameters['message'] = $this->buildQuizPromptFromBook($book, $parameters);
+        }
+
+        // Use existing chat method for actual generation
+        return $this->chat($parameters);
+    }
+
+    /**
+     * Check if book has insufficient content for quiz generation
+     */
+    protected function bookHasInsufficientContent(?Book $book, array $parameters): bool
+    {
+        if (!$book) {
+            return true;
+        }
+
+        // Check if specific chapter is requested
+        if (isset($parameters['chapter_id'])) {
+            $chapter = $book->chapters()->find($parameters['chapter_id']);
+
+            if (!$chapter) {
+                return true;
+            }
+
+            // Check if chapter has content (adjust threshold as needed)
+            $contentLength = strlen($chapter->content ?? '');
+            return $contentLength < 100; // Minimum 100 characters
+        }
+
+        // Check if book has any chapters or sections
+        if ($book->chapters->isEmpty() && $book->sections->isEmpty()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get suggestions for book content issues
+     */
+    protected function getBookContentSuggestions(Book $book): array
+    {
+        $suggestions = [];
+
+        if ($book->chapters->isNotEmpty()) {
+            $suggestions[] = "Try selecting one of the available chapters: " .
+                $book->chapters->pluck('title')->take(3)->implode(', ');
+        }
+
+        if ($book->sections->isNotEmpty()) {
+            $suggestions[] = "Try selecting from available sections";
+        }
+
+        $suggestions[] = "Upload a text file or document with content from this book";
+        $suggestions[] = "Select a different book from the library";
+
+        return $suggestions;
+    }
+
+    /**
+     * Build quiz prompt from book context
+     */
+    protected function buildQuizPromptFromBook(Book $book, array $parameters): string
+    {
+        $prompt = "Generate a {$parameters['difficulty']} difficulty quiz with {$parameters['question_count']} questions ";
+        $prompt .= "of type {$parameters['question_type']} based on the following book:\n\n";
+        $prompt .= "Book Title: {$book->title}\n";
+        $prompt .= "Author: " . ($book->author->name ?? 'Unknown') . "\n";
+
+        if (isset($parameters['chapter_id']) && $book->chapters->isNotEmpty()) {
+            $chapter = $book->chapters()->find($parameters['chapter_id']);
+            if ($chapter) {
+                $prompt .= "Chapter: {$chapter->title}\n";
+                $prompt .= "Chapter Content:\n{$chapter->content}\n\n";
+            }
+        } elseif ($book->description) {
+            $prompt .= "Book Description: {$book->description}\n\n";
+        }
+
+        if (!empty($parameters['focus_topics'])) {
+            $prompt .= "Focus on these topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+        }
+
+        if (!empty($parameters['page_start']) && !empty($parameters['page_end'])) {
+            $prompt .= "Focus on pages {$parameters['page_start']} to {$parameters['page_end']}\n";
+        }
+
+        $prompt .= "\nGenerate questions that test comprehension and understanding of the material.";
+
+        if ($parameters['include_quotes'] ?? false) {
+            $prompt .= " Include relevant quotes from the book in the questions where appropriate.";
+        }
+
+        return $prompt;
+    }
+
+    /**
+     * Build quiz prompt from uploaded file
+     */
+    protected function buildQuizPromptFromFile(array $parameters): string
+    {
+        $prompt = "Generate a {$parameters['difficulty']} difficulty quiz with {$parameters['question_count']} questions ";
+        $prompt .= "of type {$parameters['question_type']} based on the following content:\n\n";
+
+        if (!empty($parameters['file_name'])) {
+            $prompt .= "Source: {$parameters['file_name']}\n\n";
+        }
+
+        $prompt .= "Content:\n{$parameters['file_content']}\n\n";
+
+        if (!empty($parameters['focus_topics'])) {
+            $prompt .= "Focus on these topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+        }
+
+        $prompt .= "\nGenerate questions that test comprehension and understanding of the material.";
+
+        return $prompt;
+    }
+
+
 
 
     /**

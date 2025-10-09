@@ -1,12 +1,46 @@
 <section>
     <div>
-        <div class="">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Book Quiz Generator</h1>
-                <p class="text-gray-600 dark:text-gray-400">Test your knowledge with questions from your
-                    favorite books or from your uploads</p>
+        <div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-900 dark:to-purple-900">
+            <!-- Subtle background decoration -->
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+            </div>
+
+            <!-- Compact Content -->
+            <div class="relative px-6 py-8">
+                <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <!-- Left: Icon & Title -->
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 flex items-center justify-center w-14 h-14 bg-white/20 backdrop-blur-lg rounded-xl ring-2 ring-white/30 shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+
+                        <div class="text-left">
+                            <h1 class="text-2xl sm:text-3xl font-bold text-white">
+                                 Quiz Generator
+                            </h1>
+                            <p class="text-white/80 text-sm mt-0.5">AI-powered learning</p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Actions -->
+                    <div class="flex items-center gap-3">
+                        <button
+                            class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-lg transition-all border border-white/30 shadow-lg text-sm font-medium">
+                            <a href="{{route('quiz.performance')}}" class="inline-flex">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>View Analytics</span>
+                            </a>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
         {{-- Tab Navigation --}}
         <div class="mb-8r">
             <div class="border-b border-gray-200 dark:border-gray-700">

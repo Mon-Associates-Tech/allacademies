@@ -17,6 +17,7 @@ use Livewire\WithFileUploads;
 class BookQuizInterface extends Component
 {
     use WithFileUploads;
+
 // Quiz setup properties
     #[Rule('required|exists:books,id')]
     public $selectedBookId = '';
@@ -422,69 +423,106 @@ class BookQuizInterface extends Component
         $this->isGenerating = true;
         $this->errors = [];
 
-        //  try {
-        $parameters = [
-            'book_id' => $this->selectedBookId,
-            'chapter_id' => $this->selectedChapterId ?: null,
-            'page_start' => $this->pageStart ?: null,
-            'page_end' => $this->pageEnd ?: null,
-            'question_type' => $this->questionType,
-            'question_count' => $this->getActualQuestionCount(),
-            'difficulty' => $this->difficulty,
-            'focus_topics' => $this->parseFocusTopics(),
-            'include_quotes' => $this->includeQuotes,
-            'file_content' => $this->fileContent,
-            'file_name' => $this->fileName,
-        ];
+        try {
+            $parameters = [
+                'book_id' => $this->selectedBookId,
+                'chapter_id' => $this->selectedChapterId ?: null,
+                'page_start' => $this->pageStart ?: null,
+                'page_end' => $this->pageEnd ?: null,
+                'question_type' => $this->questionType,
+                'question_count' => $this->getActualQuestionCount(),
+                'difficulty' => $this->difficulty,
+                'focus_topics' => $this->parseFocusTopics(),
+                'include_quotes' => $this->includeQuotes,
+                'file_content' => $this->fileContent,
+                'file_name' => $this->fileName,
+                'request_type' => 'quiz_generation',
+            ];
 
-// Only include book-related parameters if a book is selected
-        if ($this->selectedBook) {
-            $parameters = array_merge($parameters, [
-                'book_title' => $this->selectedBook->title,
-                'author' => $this->selectedBook->author_name,
-                'genre' => $this->selectedBook->genre,
-                'themes' => $this->selectedBook->themes ?? [],
-                'difficulty_score' => $this->selectedBook->difficulty_score,
+            // Only include book-related parameters if a book is selected
+            if ($this->selectedBook) {
+                $parameters = array_merge($parameters, [
+                    'book_title' => $this->selectedBook->title,
+                    'author' => $this->selectedBook->author_name,
+                    'genre' => $this->selectedBook->genre,
+                    'themes' => $this->selectedBook->themes ?? [],
+                    'difficulty_score' => $this->selectedBook->difficulty_score,
+                ]);
+            }
+
+            // Generate adaptive quiz using the book learning service
+            $quizData = $this->bookLearningService->generateAdaptiveQuiz(
+                Auth::user(),
+                $this->selectedBook,
+                $parameters
+            );
+
+
+            // Handle book not found or insufficient content errors
+            if (!$quizData || (isset($quizData['success']) && $quizData['success'] === false)) {
+                $errorMessage = $quizData['error'] ?? 'Failed to generate quiz questions.';
+                $errorCode = $quizData['error_code'] ?? null;
+
+                // Provide specific error messages based on error type
+                if ($errorCode === 'BOOK_NOT_FOUND') {
+                    $this->addError('selectedBookId', 'The selected book could not be found. Please try a different book or upload your own content.');
+
+                    // Clear the selected book if it's not found
+                    $this->selectedBookId = null;
+                    $this->selectedBook = null;
+                } elseif ($errorCode === 'INSUFFICIENT_CONTENT') {
+                    $this->addError('generation', $errorMessage);
+
+                    // Show suggestions if available
+                    if (!empty($quizData['suggestions'])) {
+                        foreach ($quizData['suggestions'] as $suggestion) {
+                            $this->addError('suggestions', $suggestion);
+                        }
+                    }
+                } else {
+                    $this->addError('generation', $errorMessage);
+                }
+
+                // Log the error for debugging
+                Log::warning('Quiz generation failed gracefully', [
+                    'user_id' => Auth::id(),
+                    'book_id' => $this->selectedBookId,
+                    'error_code' => $errorCode,
+                    'has_file_fallback' => !empty($this->fileContent)
+                ]);
+
+                $this->isGenerating = false;
+                return;
+            }
+
+            if (!empty($quizData['questions'])) {
+                // Create quiz session
+                $this->createQuizSession($quizData, $parameters);
+                $this->quizData = $quizData;
+                $this->dispatch('quiz-generated');
+            } else {
+                $this->addError('generation', 'Failed to generate quiz questions. Please try again with different parameters.');
+            }
+
+        } catch (Exception $e) {
+            Log::error('Quiz generation failed with exception', [
+                'user_id' => Auth::id(),
+                'book_id' => $this->selectedBookId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
+
+            $this->addError('generation', 'Unable to generate quiz. Please try different parameters or try again later.');
+        } finally {
+            $this->isGenerating = false;
         }
-
-
-        // Generate adaptive quiz using the book learning service
-        $quizData = $this->bookLearningService->generateAdaptiveQuiz(
-            Auth::user(),
-            $this->selectedBook,
-            $parameters
-        );
-
-        if ($quizData && !empty($quizData['questions'])) {
-            // Create quiz session
-            $this->createQuizSession($quizData, $parameters);
-            $this->quizData = $quizData;
-            $this->dispatch('quiz-generated');
-        } else {
-            $this->addError('generation', 'Failed to generate quiz questions. Please try again.');
-        }
-
-        // } catch (Exception $e) {
-        //  Log::error('Quiz generation failed', [
-        //     'user_id' => Auth::id(),
-        //     'book_id' => $this->selectedBookId,
-        //     'error' => $e->getMessage()
-        // ]);
-
-        //  $this->addError('generation', 'Unable to generate quiz. Please try different parameters or try again later.');
-        //} finally {
-        $this->isGenerating = false;
-        // }
-
-        $this->isGenerating = false;
     }
 
     public function getActualQuestionCount()
     {
         if ($this->questionCount === 'custom') {
             // Validate custom value is within range
-            return (int) $this->customQuestionCount;
+            return (int)$this->customQuestionCount;
             return max(1, min(50, (int)$this->customQuestionCount));
         }
 

@@ -94,15 +94,18 @@ class Student extends Model
             ->withPivot('is_primary', 'notes');
     }
 
-    public function primaryTeacher()
+    public function primaryTeacher(): BelongsToMany
     {
         return $this->belongsToMany(Teacher::class, 'teacher_student')
             ->withTimestamps()
             ->withPivot('is_primary', 'notes')
-            ->wherePivot('is_primary', true)
-            ->first();
+            ->wherePivot('is_primary', true);
     }
 
+    public function getPrimaryTeacherAttribute()
+    {
+        return $this->primaryTeacher()->first();
+    }
     public function secondaryTeachers()
     {
         return $this->belongsToMany(Teacher::class, 'teacher_student')

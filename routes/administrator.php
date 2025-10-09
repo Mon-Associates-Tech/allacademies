@@ -77,11 +77,16 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
 
     Route::get('/admin/school-switcher', SchoolSwitcherPage::class)
         ->name('school-switcher');
+    Route::get('/school/configuration', \App\Livewire\School\SchoolConfigurationManager::class)
+        ->name('school.configuration');
 
     Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
         ->name('school-details');
 
     Route::get('/change-log', CreateChangelog::class)->name('change-log');
     Route::get('/changelog', ChangelogList::class)->name('change-log.index');
+
+    Route::get('students/{student}/documents', \App\Livewire\Students\DocumentGenerator::class)
+        ->name('students.documents');
 
 });

@@ -83,7 +83,7 @@
                 <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible thin-scrollbar overflow-x-hidden">
                     <div
                         x-data="{}"
-                        class="w-full overflow-y-visible thin-scrollbar sm:px-4 lg:px-6 "
+                        class="w-full overflow-y-visible thin-scrollbar sm:px-4 lg:px-4 "
                     >
                             {{ $slot }}
                     </div>

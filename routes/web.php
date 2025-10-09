@@ -36,6 +36,7 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TokenSubscriptionController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
@@ -419,6 +420,22 @@ Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback'])
 Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])
     ->name('subscriptions.toggle-test-mode')
     ->middleware('auth');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
+    Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
+    Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
+    Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
+
+    Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
+
+    // View specific user's performance (for parents/teachers)
+    Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
+
+    // Token Payment Routes
+    Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
+    Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
+});
 
 include_once 'student.php';
 include_once 'teacher.php';

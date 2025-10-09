@@ -72,7 +72,7 @@
         </li>
 
         <!-- All Academies Subscription -->
-        <li class="mb-0.5 last:mb-0">
+        <li class="mb-0.5 hidden last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('subscriber.academy-subscription') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{ route('subscriptions.index') }}">
                 <div class="flex items-center">
@@ -100,6 +100,21 @@
                             d="M11.5 5.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V6a.5.5 0 0 0-.5-.5H10a.5.5 0 0 1 0-1h.5a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5H9a1.5 1.5 0 0 1-1.5-1.5v-1A1.5 1.5 0 0 1 9 4h1a1.5 1.5 0 0 1 1.5 1.5v1a.5.5 0 0 0 .5.5v-1a.5.5 0 0 1 .5-.5zM8 12a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 8 12zm-3-3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 9zm6 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 11 9zM8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2z"/>
                     </svg>
                     <span class="text-sm ml-4 sidebar-text duration-200">Self Assessment</span>
+                </div>
+            </a>
+        </li>
+
+
+        <li class="mb-0.5 last:mb-0" title="Performance">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('quiz.performance*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('quiz.performance') }}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('quiz.performance*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+                    </svg>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Performance</span>
                 </div>
             </a>
         </li>

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Chat\UserTokenSubscription;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Team;
@@ -9,6 +10,7 @@ use App\Enums\UserRole;
 use App\Models\AcademicSubject;
 use App\Enums\SubscriptionStatus;
 use App\Policies\RolePolicy;
+use App\Policies\UserTokenSubscriptionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -38,6 +40,8 @@ class AuthServiceProvider extends ServiceProvider
         LessonNote::class => LessonNotePolicy::class,
         Subject::class => SubjectPolicy::class,
         Topic::class => TopicPolicy::class,
+        UserTokenSubscription::class => UserTokenSubscriptionPolicy::class,
+
     ];
 
     /**
