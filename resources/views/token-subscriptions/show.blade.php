@@ -65,7 +65,7 @@
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                         </svg>
-                                        {{ $subscription->package->model }}
+                                        {{ $subscription->package->name === 'Premium' ? 'Advanced' : 'Basic' }}
                                     </div>
                                     <h2 class="text-3xl font-bold text-white mb-1">{{ $subscription->package->name }}</h2>
                                     <p class="text-white/80">
@@ -162,7 +162,7 @@
                                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Package</p>
                                             <p class="font-semibold text-gray-900 dark:text-white">{{ $subscription->package->name }}</p>
                                         </div>
-                                        <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                        <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg hidden">
                                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">AI Model</p>
                                             <p class="font-semibold text-gray-900 dark:text-white">{{ $subscription->package->model }}</p>
                                         </div>
@@ -371,7 +371,7 @@
                                                         <svg class="w-4 h-4 mr-1.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                                         </svg>
-                                                        {{ $log->model }}
+                                                        {{ $log->name === 'Premium' ? 'Advanced' : 'Basic' }}
                                                     </div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
@@ -399,7 +399,7 @@
                                     </div>
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Usage History Yet</h3>
                                     <p class="text-gray-500 dark:text-gray-400">
-                                        Start using AI features to see your token usage appear here.
+                                        Start using Messenger features to see your token usage appear here.
                                     </p>
                                 </div>
                             @endif

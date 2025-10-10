@@ -6,8 +6,8 @@
                 <div class="mb-8">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">AI Token Subscriptions</h1>
-                            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your OpenAI token packages and usage</p>
+                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Messenger Subscriptions</h1>
+                            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your messenger packages and usage</p>
                         </div>
 
                         @if($activeSubscription)
@@ -160,7 +160,7 @@
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                             </svg>
-                                            <span>{{ $activeSubscription->package->model }}</span>
+                                            <span>{{ $activeSubscription->package->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</span>
                                         </div>
                                         @if($activeSubscription->expires_at)
                                             <p class="text-sm text-white/80 mt-2 flex items-center">
@@ -308,7 +308,7 @@
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $sub->package->name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $sub->package->model }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $sub->package->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full

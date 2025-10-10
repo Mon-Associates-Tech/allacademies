@@ -45,21 +45,21 @@
         </div>
     @endif
 
-    <div class="mb-4">
+    <div class="mb-4 hidden">
         <livewire:chats.token-usage-monitor />
     </div>
 
-    <div class="w-64">
+    <div class="w-64 hidden">
         <livewire:chats.token-usage-horizontal />
     </div>
 
     {{-- Use Vertical Compact in sidebar --}}
-    <div class="w-16">
+    <div class="w-16 hidden">
         <livewire:chats.token-usage-vertical />
     </div>
 
     {{-- Use Circular in dashboard widget --}}
-    <div class="w-full max-w-xs">
+    <div class="w-full max-w-xs hidden">
         <livewire:chats.token-usage-circular />
     </div>
 

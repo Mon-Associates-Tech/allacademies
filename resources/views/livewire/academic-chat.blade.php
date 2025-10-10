@@ -591,7 +591,7 @@
 
                                     <!-- Message -->
                                     <div class="flex-1 group">
-                                        <div class="px-5 py-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow {{ $message['role'] === 'user'
+                                        <div class=" px-4 py-1 rounded-xl shadow-sm hover:shadow-md transition-shadow {{ $message['role'] === 'user'
         ? 'bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 text-gray-900 dark:text-gray-100 border border-purple-200 dark:border-purple-800'
         : 'bg-white dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600' }}">
                                             <div class="prose prose-sm max-w-none
@@ -693,7 +693,7 @@
                             <button
                                 type="button"
                                 x-on:click="$refs.fileInput.click()"
-                                class="group p-3 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                                class="group hidden p-3 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                                 title="Upload file for evaluation"
                                 {{ !$canSendMessage ? 'disabled' : '' }}>
                                 <svg class="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

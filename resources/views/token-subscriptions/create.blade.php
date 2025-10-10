@@ -156,7 +156,7 @@
                                                     <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                                     </svg>
-                                                    {{ $pkg->model }}
+                                                    {{ $pkg->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}
                                                 </div>
                                             </div>
 
@@ -165,7 +165,7 @@
                                                 <div class="text-4xl font-bold text-gray-900 dark:text-white">
                                                     GH₵ {{ number_format($pkg->price, 2) }}
                                                 </div>
-                                                <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                <div class="text-sm hidden text-gray-500 dark:text-gray-400 mt-1">
                                                     One-time payment
                                                 </div>
                                             </div>
@@ -343,7 +343,7 @@
                                 What's the difference between models?
                             </h4>
                             <p class="text-gray-600 dark:text-gray-400 text-sm ml-11">
-                                GPT-4 Nano is great for most tasks. GPT-5 offers advanced capabilities and better understanding for complex queries.
+                                The Basic model is great for most tasks. Premium model offers advanced capabilities and better understanding for complex queries.
                             </p>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\AcademicSubject as Subject;
 use Carbon\Carbon;
@@ -17,6 +18,8 @@ class PerformanceOverview extends Component
     public $overallStats = [];
     public $trendData = [];
     public $insights = [];
+    public $upcomingAssignments = [];
+    public $pendingAssignments = [];
 
     protected $listeners = ['refreshPerformanceData' => 'loadPerformanceData'];
 
@@ -77,30 +80,108 @@ class PerformanceOverview extends Component
         $student = Auth::user()->student;
         if (!$student) return;
 
-        $query = AssignmentSubmission::with(['assignment.academicSubject', 'assignment'])
-            ->where('student_id', $student->id)
-            ->whereIn('status', ['graded']); // Only include graded submissions
+        // Get all assignments targeted to this student
+        $allAssignments = $this->getStudentAssignments($student);
 
-        // Apply period filter
+        // Get submissions for these assignments
+        $submissions = AssignmentSubmission::with(['assignment.academicSubject', 'assignment'])
+            ->where('student_id', $student->id)
+            ->whereIn('assignment_id', $allAssignments->pluck('id'))
+            ->get();
+
+        // Apply period filter to submissions
         if ($this->selectedPeriod !== 'all') {
             $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
-            $query->where('submitted_at', '>=', $startDate);
+            $submissions = $submissions->where('submitted_at', '>=', $startDate);
         }
 
         // Apply subject filter
         if ($this->selectedSubject) {
-            $query->whereHas('assignment', function ($q) {
-                $q->where('academic_subject_id', $this->selectedSubject);
+            $submissions = $submissions->filter(function ($submission) {
+                return $submission->assignment->academic_subject_id == $this->selectedSubject;
             });
+
+            // Filter assignments too
+            $allAssignments = $allAssignments->where('academic_subject_id', $this->selectedSubject);
         }
 
-        $submissions = $query->orderBy('submitted_at', 'desc')->get();
+        // Calculate metrics only for graded submissions
+        $gradedSubmissions = $submissions->where('status', 'graded');
 
-        $this->calculatePerformanceMetrics($submissions);
-        $this->calculateOverallStats($submissions);
-        $this->calculateTrendData($submissions);
+        $this->calculatePerformanceMetrics($gradedSubmissions);
+        $this->calculateOverallStats($submissions, $allAssignments);
+        $this->calculateTrendData($gradedSubmissions);
     }
 
+    /**
+     * Get all assignments targeted to a student through various relationships
+     */
+    private function getStudentAssignments($student)
+    {
+        return Assignment::where('status', 'published')
+            ->where(function ($query) use ($student) {
+                // Direct assignment to student
+                $query->whereHas('students', function ($q) use ($student) {
+                    $q->where('students.id', $student->id);
+                })
+                    // Assignment through academic level
+                    ->orWhereHas('academicLevels', function ($q) use ($student) {
+                        $q->where('academic_levels.id', $student->academic_level_id);
+                    })
+                    // Assignment through academic group
+                    ->orWhereHas('academicGroups', function ($q) use ($student) {
+                        $q->where('academic_groups.id', $student->academic_group_id);
+                    })
+                    // Assignment through student groups
+                    ->orWhereHas('studentGroups', function ($q) use ($student) {
+                        $q->whereHas('students', function ($sq) use ($student) {
+                            $sq->where('students.id', $student->id);
+                        });
+                    });
+            })
+            ->with('academicSubject')
+            ->get();
+    }
+
+    /**
+     * Load upcoming and pending assignments for the student
+     */
+    private function loadUpcomingAndPendingAssignments($allAssignments, $submissions)
+    {
+        $submittedAssignmentIds = $submissions->pluck('assignment_id')->unique();
+
+        // Upcoming assignments (not started, starts in the future)
+        $this->upcomingAssignments = $allAssignments
+            ->whereNotIn('id', $submittedAssignmentIds)
+            ->where('starts_at', '>', now())
+            ->sortBy('starts_at')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        // Pending assignments (available now, not completed)
+        $this->pendingAssignments = $allAssignments
+            ->filter(function ($assignment) use ($submissions) {
+                $submission = $submissions->firstWhere('assignment_id', $assignment->id);
+
+                return $assignment->starts_at <= now()
+                    && $assignment->ends_at > now()
+                    && (!$submission || !in_array($submission->status, ['graded', 'submitted']));
+            })
+            ->sortBy('ends_at')
+            ->take(5)
+            ->map(function ($assignment) use ($submissions) {
+                $submission = $submissions->firstWhere('assignment_id', $assignment->id);
+
+                return [
+                    'assignment' => $assignment,
+                    'status' => $submission ? $submission->status : 'not_started',
+                    'time_remaining' => now()->diffInHours($assignment->ends_at),
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
     private function getStartDateForPeriod($period)
     {
         return match ($period) {
@@ -187,7 +268,7 @@ class PerformanceOverview extends Component
             ->toArray();
     }
 
-    private function calculateOverallStats($submissions)
+    private function calculateOverallStats($submissions, $allAssignments)
     {
         $student = Auth::user()->student;
         if (!$student) {
@@ -195,40 +276,37 @@ class PerformanceOverview extends Component
             return;
         }
 
-        // Get all assignment submissions for this student
-        $allSubmissionsQuery = AssignmentSubmission::where('student_id', $student->id);
-
+        // Apply period filter to assignments
         if ($this->selectedPeriod !== 'all') {
             $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
-            $allSubmissionsQuery->where('submitted_at', '>=', $startDate);
+            $allAssignments = $allAssignments->where('starts_at', '>=', $startDate);
         }
 
-        if ($this->selectedSubject) {
-            $allSubmissionsQuery->whereHas('assignment', function ($q) {
-                $q->where('academic_subject_id', $this->selectedSubject);
-            });
-        }
+        $totalAssignments = $allAssignments->count();
 
-        $totalAssignments = $allSubmissionsQuery->count();
-        $gradedSubmissions = $submissions->count();
-        $pendingSubmissions = $allSubmissionsQuery->whereIn('status', ['submitted', 'in_progress'])->count();
+        // Count by submission status
+        $gradedSubmissions = $submissions->where('status', 'graded');
+        $submittedSubmissions = $submissions->whereIn('status', ['submitted', 'in_progress']);
+        $notStartedCount = $totalAssignments - $submissions->count();
 
-        if ($submissions->isEmpty()) {
+        if ($gradedSubmissions->isEmpty()) {
             $this->overallStats = [
                 'total_assignments' => $totalAssignments,
+                'available_assignments' => $allAssignments->where('ends_at', '>', now())->count(),
                 'average_percentage' => 0,
                 'overall_grade' => 'N/A',
-                'completed_assignments' => $gradedSubmissions,
-                'pending_assignments' => $pendingSubmissions,
-                'completion_rate' => $totalAssignments > 0 ? round(($gradedSubmissions / $totalAssignments) * 100, 2) : 0,
+                'completed_assignments' => $gradedSubmissions->count(),
+                'submitted_assignments' => $submittedSubmissions->count(),
+                'pending_assignments' => $notStartedCount,
+                'completion_rate' => $totalAssignments > 0 ? round(($gradedSubmissions->count() / $totalAssignments) * 100, 2) : 0,
                 'study_streak' => $this->calculateStudyStreak($student),
                 'total_subjects' => 0,
             ];
             return;
         }
 
-        // Calculate scores only from graded submissions
-        $scores = $submissions->filter(function($submission) {
+        // Calculate scores only from graded submissions with valid scores
+        $scores = $gradedSubmissions->filter(function($submission) {
             return $submission->score !== null && $submission->total_marks !== null && $submission->total_marks > 0;
         });
 
@@ -238,13 +316,15 @@ class PerformanceOverview extends Component
 
         $this->overallStats = [
             'total_assignments' => $totalAssignments,
+            'available_assignments' => $allAssignments->where('ends_at', '>', now())->count(),
             'average_percentage' => round($overallPercentage, 2),
             'overall_grade' => $this->calculateGrade($overallPercentage),
-            'completed_assignments' => $gradedSubmissions,
-            'pending_assignments' => $pendingSubmissions,
-            'completion_rate' => $totalAssignments > 0 ? round(($gradedSubmissions / $totalAssignments) * 100, 2) : 0,
+            'completed_assignments' => $gradedSubmissions->count(),
+            'submitted_assignments' => $submittedSubmissions->count(),
+            'pending_assignments' => $notStartedCount,
+            'completion_rate' => $totalAssignments > 0 ? round(($gradedSubmissions->count() / $totalAssignments) * 100, 2) : 0,
             'study_streak' => $this->calculateStudyStreak($student),
-            'total_subjects' => $submissions->map(function($s) {
+            'total_subjects' => $gradedSubmissions->map(function($s) {
                 return $s->assignment->academic_subject_id;
             })->unique()->count(),
         ];
