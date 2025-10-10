@@ -49,6 +49,12 @@ class Student extends Model
             ->dontSubmitEmptyLogs();
     }
 
+    
+    public function schoolFees()
+   {
+    return $this->hasMany(\App\Models\SchoolFee::class, 'student_id');
+   }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -120,6 +126,8 @@ class Student extends Model
     {
         return $this->belongsTo(AcademicGroup::class);
     }
+
+    
 
     public function academicSubjects(): BelongsToMany
     {

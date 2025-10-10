@@ -55,6 +55,12 @@ class School extends Model
 
     // Relationships
 
+    public function subaccount()
+    {
+       return $this->hasOne(Subaccount::class);
+    }
+
+
     protected static function boot()
     {
         parent::boot();

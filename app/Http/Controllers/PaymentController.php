@@ -18,13 +18,18 @@ use Illuminate\Validation\ValidationException;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use App\Services\PaystackService;
+use App\Models\Student;
+use App\Models\StudentPayment;
+use App\Models\SchoolFee;
+use App\Models\School;
+use Illuminate\Support\Facades\Auth;
 
 
 class PaymentController extends Controller
 {
     use HandlesPayments;
 
-     protected $paystack;
+    protected $paystack;
 
     public function __construct(PaystackService $paystack)
     {
@@ -115,7 +120,6 @@ class PaymentController extends Controller
             if ($bookSubscription) {
                 $this->payForBookSubscription($request, $bookSubscription); // $this->processBookSubscriptionPayment($request, $bookSubscription);
                 return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
-
             } else {
                 throw ValidationException::withMessages([
                     'reference' => 'The provided reference is invalid.',
@@ -129,7 +133,6 @@ class PaymentController extends Controller
         if ($subscription) {
             $this->payForSubscription($request, $subscription);
             return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
-
         } else {
             throw ValidationException::withMessages([
                 'reference' => 'The provided reference is invalid.',
@@ -178,7 +181,8 @@ class PaymentController extends Controller
      */
     private function processSubscriptionPayment(PaymentRequest $request, Subscription $subscription)
     {
-        if ($subscription->status === SubscriptionStatus::PAID
+        if (
+            $subscription->status === SubscriptionStatus::PAID
         ) {
             throw ValidationException::withMessages([
                 'reference' => 'This subscription has already been paid for.',
@@ -213,26 +217,26 @@ class PaymentController extends Controller
 
 
 
-   public function initialize(Request $request)
-   {
+    public function initialize(Request $request)
+    {
 
-    $subscription = Subscription::findOrFail($request->get('subscription'));
+        $subscription = Subscription::findOrFail($request->get('subscription'));
 
-    $data = [
-        'email' => auth()->user()->email,
-        'amount' => (int) $subscription->amount * 100, // Amount in kobo
-        'metadata' => [
-            'subscription_id' => $subscription->id,
-            'name' => auth()->user()->name,
-            'phone' => auth()->user()->phone ?? '0000000000',
-        ],
-        'callback_url' => route('payment.callback'),
-    ];
+        $data = [
+            'email' => auth()->user()->email,
+            'amount' => (int) $subscription->amount * 100, // Amount in kobo
+            'metadata' => [
+                'subscription_id' => $subscription->id,
+                'name' => auth()->user()->name,
+                'phone' => auth()->user()->phone ?? '0000000000',
+            ],
+            'callback_url' => route('payment.callback'),
+        ];
 
-    $response = $this->paystack->initializeTransaction($data);
+        $response = $this->paystack->initializeTransaction($data);
 
-    return redirect($response['data']['authorization_url']);
-}
+        return redirect($response['data']['authorization_url']);
+    }
 
 
 
@@ -264,47 +268,47 @@ class PaymentController extends Controller
 
 
 
-public function callback(Request $request)
-{
-    $reference = $request->query('reference');
-    $response = $this->paystack->verifyTransaction($reference);
+    public function callback(Request $request)
+    {
+        $reference = $request->query('reference');
+        $response = $this->paystack->verifyTransaction($reference);
 
-    if ($response['status'] && $response['data']['status'] === 'success') {
-        $paymentDetails = $response['data'];
-        $subscriptionId = $paymentDetails['metadata']['subscription_id'];
+        if ($response['status'] && $response['data']['status'] === 'success') {
+            $paymentDetails = $response['data'];
+            $subscriptionId = $paymentDetails['metadata']['subscription_id'];
 
-        // Find subscription
-        $subscription = Subscription::findOrFail($subscriptionId);
+            // Find subscription
+            $subscription = Subscription::findOrFail($subscriptionId);
 
-        DB::transaction(function () use ($subscription, $paymentDetails) {
-            // 1. Update subscription
-            $subscription->update([
-                'status' => 'paid',
-                'expires_at' => now()->addMonths($subscription->duration_in_months),
-            ]);
+            DB::transaction(function () use ($subscription, $paymentDetails) {
+                // 1. Update subscription
+                $subscription->update([
+                    'status' => 'paid',
+                    'expires_at' => now()->addMonths($subscription->duration_in_months),
+                ]);
 
-            // 2. Record payment
-            Payment::create([
-                'reference'       => $paymentDetails['reference'],
-                'amount'          => $subscription->amount,  //$paymentDetails['amount'],
-                'currency'        => $paymentDetails['currency'] ?? 'GHS',
-                'status'          => 'succeeded',
-                'subscription_id' => $subscription->id,
-            ]);
-        });
+                // 2. Record payment
+                Payment::create([
+                    'reference'       => $paymentDetails['reference'],
+                    'amount'          => $subscription->amount,  //$paymentDetails['amount'],
+                    'currency'        => $paymentDetails['currency'] ?? 'GHS',
+                    'status'          => 'succeeded',
+                    'subscription_id' => $subscription->id,
+                ]);
+            });
+
+            return redirect()
+                ->route('subscriptions.index')
+                ->with('success', 'Subscription paid successfully! Ref: ' . $subscription->reference);
+        }
 
         return redirect()
             ->route('subscriptions.index')
-            ->with('success', 'Subscription paid successfully! Ref: ' . $subscription->reference);
+            ->with('error', 'Payment failed or was cancelled.');
     }
 
-    return redirect()
-        ->route('subscriptions.index')
-        ->with('error', 'Payment failed or was cancelled.');
-}
 
-
- public function bookCallback(Request $request)
+    public function bookCallback(Request $request)
     {
         $reference = $request->query('reference');
         $response = $this->paystack->verifyTransaction($reference);
@@ -332,7 +336,7 @@ public function callback(Request $request)
                     'status'               => 'succeeded',
                     'subscription_id'      => null, // because this is not a regular subscription
                     'book_subscription_id' => $subscription->id,
-                    
+
                 ]);
             });
 
@@ -345,5 +349,170 @@ public function callback(Request $request)
             ->to("/books/{$subscription->book_id}")
             ->with('error', 'Book subscription payment failed or was cancelled.');
     }
+
+
+    //Sub Account
+    public function initializeSubAccount(Request $request)
+    {
+        $data = [
+            'email' => auth()->user()->email,
+            'amount' => (int) $subscription->amount * 100, // Amount in kobo
+            'metadata' => [
+                'subscription_id' => $subscription->id,
+                'name' => auth()->user()->name,
+                'phone' => auth()->user()->phone ?? '0000000000',
+            ],
+            'callback_url' => route('payment.callback'),
+        ];
+
+        $response = $this->paystack->initializeTransaction($data);
+
+        return redirect($response['data']['authorization_url']);
+    }
+
+    public function showPaymentForm(Student $student)
+    {
+        // Here, Laravel automatically fetches the student record using route-model binding
+        $student->load('user');
+        return view('payments.school-fees.feepayment', compact('student'));
+    }
+
+
+    /**
+     * Process the fee payment (initialize Paystack transaction)
+     */
+public function processPayment(Request $request)
+{
+    $request->validate([
+        'student_id' => 'required|exists:students,id',
+        'amount'     => 'required|numeric|min:1',
+    ]);
+
+    $student = Student::with('user')->findOrFail($request->student_id);
+    $school  = School::with('subaccount')->find($student->school_id);
+
+    if (!$school) {
+        return back()->with('error', 'This student is not linked to any school.');
+    }
+
+    if (!$school->subaccount) {
+        return back()->with('error', 'This school has no subaccount set up for payments.');
+    }
+
+    $amountInPesewas = $request->amount * 100;
+
+    $data = [
+        'email'        => $student->user->email ?? $school->email ?? 'no-email@school.com',
+        'amount'       => $amountInPesewas,
+        'subaccount'   => $school->subaccount->subaccount_code,
+        'metadata'     => [
+            'student_id' => $student->id,
+            'school_id'  => $school->id,
+            'student'    => $student->user->name ?? 'Unknown Student',
+            'school'     => $school->name ?? 'Unknown School',
+        ],
+        'callback_url' => route('feepayment.callback') . '?student_id=' . $student->id,
+    ];
+
+    $response = $this->paystack->initializeTransaction($data);
+
+    if (!isset($response['status']) || !$response['status']) {
+        return back()->with('error', $response['message'] ?? 'Payment initialization failed.');
+    }
+
+    $payer = Auth::user();
+
+    // Save record with status = "initialized"
+    SchoolFee::create([
+        'student_id'        => $student->id,
+        'school_id'         => $school->id,
+        'school_name'       => $school->name,
+        'payer_id'          => $payer->id ?? null,
+        'payer_type'        => get_class($payer),
+        'amount'            => $request->amount,
+        'currency'          => 'GHS',
+        'status'            => 'success',
+        'reference'         => $response['data']['reference'],
+        'authorization_url' => $response['data']['authorization_url'] ?? null,
+    ]);
+
+    // return redirect($response['data']['authorization_url']);
+    return redirect()->route('feepayment.thankyou', $student->id);
+}
+
+
+
+
+    /**
+     * Handle Paystack callback after payment
+     */
+/**
+ * Handle Paystack callback after payment
+ */
+public function paymentCallback(Request $request)
+{
+    $reference = $request->query('reference');
+
+    // 1️⃣ Verify the transaction with Paystack
+    $response = $this->paystack->verifyTransaction($reference);
+
+    if (!$response['status'] || $response['data']['status'] !== 'success') {
+        return redirect()
+            ->route('feepayment.form', 1) // fallback route if verification fails
+            ->with('error', 'Payment failed or was cancelled.');
+    }
+
+    // 2️⃣ Extract payment and metadata info
+    $paymentDetails = $response['data'];
+    $metadata = $paymentDetails['metadata'] ?? [];
+    $studentId = $metadata['student_id'] ?? null;
+
+    $student = Student::find($studentId);
+
+    if (!$student) {
+        return redirect()
+            ->route('feepayment.form', 1)
+            ->with('error', 'Invalid student in payment metadata.');
+    }
+
+    // 3️⃣ Record or update payment info safely
+    DB::transaction(function () use ($student, $paymentDetails) {
+        SchoolFee::updateOrCreate(
+            ['reference' => $paymentDetails['reference']],
+            [
+                'student_id'   => $student->id,
+                'school_id'    => $student->school_id,
+                'amount'       => $paymentDetails['amount'] / 100,
+                'currency'     => $paymentDetails['currency'] ?? 'GHS',
+                'status'       => 'success', // ✅ explicitly set to success
+                'paid_at'      => now(),
+            ]
+        );
+    });
+
+    // 4️⃣ Redirect to thank-you page with success message
+    return redirect()
+        ->route('feepayment.thankyou', $student->id)
+        ->with('success', 'Payment successful! Reference: ' . $paymentDetails['reference']);
+}
+
+
+
+
+public function thankYou(Student $student)
+{
+    $latestPayment = $student->schoolFees()->latest()->first();
+
+    return view('payments.school-fees.thankyou', [
+        'student'   => $student,
+        'amount'    => $latestPayment->amount ?? null,
+        'reference' => $latestPayment->reference ?? null,
+    ]);
+
+   // return view('payments.school-fees.thankyou', compact('student', 'latestPayment'));
+}
+
+
+
 
 }

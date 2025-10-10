@@ -428,6 +428,26 @@ Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.init
 Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBook'])->name('payment.book.initialize');
 Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
 Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback']) ->name('payment.book.callback');
+Route::get('/createSubAccount', [PaymentController::class, 'createSubAccount'])->name('payment.subAccount');
+
+Route::get('/feepayment/{student}', [PaymentController::class, 'showPaymentForm'])->name('feepayment.form');
+Route::post('/feepayment', [PaymentController::class, 'processPayment'])->name('feepayment.process');
+Route::get('/feepayment/callback', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
+Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
+
+
+
+use App\Http\Controllers\SchoolController;
+
+Route::prefix('schools')->group(function () {
+    Route::get('/create', [SchoolController::class, 'create'])->name('schools.create');
+    Route::post('/store', [SchoolController::class, 'store'])->name('schools.store');
+    Route::post('/{school}/collect-fees', [SchoolController::class, 'collectFees'])->name('schools.collectFees');
+});
+Route::get('/payment/callback/school-fees', [SchoolController::class, 'schoolFeesCallback'])->name('schoolfees.callback');
+
+
+
 
 
 // Include additional route files

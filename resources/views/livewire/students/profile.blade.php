@@ -130,13 +130,94 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Member Since</h3>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Member Since++</h3>
                     <p class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ $profileStats['member_since'] }}</p>
                 </div>
             </div>
         </div>
     </div>
     @endif
+    {{-- school fees payement details --}}
+
+<div class="w-full bg-white shadow-md rounded-xl p-6 mt-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">School Fees Payment Details</h3>
+
+        <a href="{{ route('feepayment.form', $student->id) }}"
+           class="flex items-center px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            Pay Fees
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-lg">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Academic Group</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Academic Level</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Total Amount</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Amount Paid</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Remaining Amount</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment Method</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t hover:bg-gray-50 transition">
+                    {{-- Academic Group --}}
+                    <td class="px-4 py-3 text-gray-700">{{ $student->academicGroup->name ?? 'N/A' }}</td>
+
+                    {{-- Academic Level --}}
+                    <td class="px-4 py-3 text-gray-700">{{ $student->academicLevel->name ?? 'N/A' }}</td>
+
+                    {{-- Total Amount --}}
+                    <td class="px-4 py-3 text-gray-700 font-semibold">
+                        ₵{{ number_format($student->total_fees ?? 0, 2) }}
+                    </td>
+
+                    {{-- Amount Paid --}}
+                    <td class="px-4 py-3 text-gray-700">
+                        ₵{{ number_format($student->amount_paid ?? 0, 2) }}
+                    </td>
+
+                    {{-- Remaining Amount --}}
+                    <td class="px-4 py-3 text-gray-700">
+                        ₵{{ number_format(($student->total_fees ?? 0) - ($student->amount_paid ?? 0), 2) }}
+                    </td>
+
+                    {{-- Status --}}
+                    <td class="px-4 py-3">
+                        <span class="px-3 py-1 rounded-full text-sm
+                            {{ ($student->fee_status ?? 'Pending') === 'Paid'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-yellow-100 text-yellow-700' }}">
+                            {{ $student->fee_status ?? 'Pending' }}
+                        </span>
+                    </td>
+
+                    {{-- Payment Method --}}
+                    <td class="px-4 py-3 text-gray-700">
+                        {{ $student->payment_method ?? 'Momo' }}
+                    </td>
+
+                    {{-- Payment Due Date --}}
+                    <td class="px-4 py-3 text-gray-700">
+                        {{ $student->payment_due_date
+                            ? \Carbon\Carbon::parse($student->payment_due_date)->format('M d, Y')
+                            : 'N/A' }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Profile Form - 2 columns -->
