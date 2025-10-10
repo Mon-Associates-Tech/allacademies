@@ -30,7 +30,10 @@
         "stevebauman/location": "^7.5",
         "symfony/console": "^7.2.0",
         "symfony/mailgun-mailer": "^6.3",
-        "tinymce/tinymce": "^7.8"
+        "tinymce/tinymce": "^7.8",
+        "ext-zip": "*",
+        "ext-dom": "*",
+        "ext-libxml": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",

@@ -398,6 +398,7 @@ class StudentManagement extends Component
                 'student_group_id' => $this->studentGroupId,
                 'academic_group_id' => $this->academicGroupId,
                 'academic_level_id' => $this->academicLevelId,
+                'student_id' => Student::generateStudentId(),
             ]);
 
             // Assign teachers to student

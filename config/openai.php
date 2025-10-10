@@ -13,6 +13,7 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-4'),
+        'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-4-turbo'),
         'timeout' => env('OPENAI_TIMEOUT', 30),
         'max_tokens' => env('OPENAI_MAX_TOKENS', 2000),
     ],

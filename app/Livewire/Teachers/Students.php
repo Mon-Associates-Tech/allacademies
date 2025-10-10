@@ -33,7 +33,7 @@ class Students extends Component
     {
 
 
-        return $this->teacher->getStudentsWithDetails();
+        return $this->teacher?->getStudentsWithDetails();
         $query = collect();
 
         // Get students from direct assignments
@@ -176,17 +176,17 @@ class Students extends Component
 
     public function render()
     {
-        $students = $this->getStudentsQuery();
-        $totalStudents = $students->count();
+        $students = $this->getStudentsQuery() ?? collect();
+        $totalStudents = $students?->count();
 
         // Manual pagination
         $currentPage = $this->getPage();
         $offset = ($currentPage - 1) * $this->perPage;
-        $studentsForPage = $students->slice($offset, $this->perPage)->values();
+        $studentsForPage = $students?->slice($offset, $this->perPage)->values();
 
-        $groups = $this->teacher->academicGroups;
-        $levels = $this->teacher->academicLevels;
-        $sources = $students->pluck('source')->unique()->sort()->values();
+        $groups = $this->teacher?->academicGroups ?? [];
+        $levels = $this->teacher?->academicLevels ?? [];
+        $sources = $students?->pluck('source')->unique()->sort()->values() ?? [];
 
         return view('livewire.teachers.students', [
             'students' => $studentsForPage,

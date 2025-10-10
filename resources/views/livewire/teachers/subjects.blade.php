@@ -28,7 +28,7 @@
         </div>
 
         <!-- Teacher Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- Academic Groups Card -->
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 overflow-hidden">
                 <div class="flex items-center justify-between">
@@ -88,7 +88,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-lg text-nowrap font-semibold text-gray-900 dark:text-gray-100">Total Subjects</h3>
-                        <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ auth()->user()->teacher->subjects()->count() }}</p>
+                        <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ $teacher->subjects()->count() }}</p>
                     </div>
                     <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
                         <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@
             </div>
 
             <!-- Active Content Card -->
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+            <div class="bg-white dark:bg-gray-800 shadow-sm hidden rounded-lg p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Active Content</h3>
@@ -117,7 +117,7 @@
         </div>
 
         <!-- Search and filters -->
-        <div class="mb-6">
+        <div class="mb-6 bg-white p-4 rounded-lg">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <!-- Search Bar -->
                 <div class="flex-1">

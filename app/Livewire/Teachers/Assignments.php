@@ -33,7 +33,7 @@ class Assignments extends Component
 
     public function mount()
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
+        $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', Auth::id())->first();
     }
 
     public function updatingSearch()

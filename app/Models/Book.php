@@ -4,14 +4,17 @@ namespace App\Models;
 
 use App\Models\Book\BookMedia;
 use App\Models\Book\BookTableOfContent;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Log;
 use setasign\Fpdi\Fpdi;
 use Storage;
+use Throwable;
 
 class Book extends Model
 {
@@ -205,22 +208,17 @@ class Book extends Model
             Storage::disk('public')->put($samplePath, $pdfContent);
 
             return $samplePath;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log the error but don't break the flow
-            \Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+            Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+
+            // Return null to indicate failure, but don't throw exception
+            return asset('sample.pdf');
+        } catch (Throwable $e) {
+            // Catch any other errors (like parse errors)
+            Log::error('Critical error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
             return null;
         }
-    }
-
-
-    public function bookCategory(): BelongsTo
-    {
-        return $this->belongsTo(BookCategory::class, 'book_category_id');
-    }
-
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(BookCategory::class, 'book_category', 'book_id', 'category_id');
     }
 
     public function borrowings(): HasMany
@@ -254,6 +252,56 @@ class Book extends Model
         return $this->belongsToMany(Teacher::class)
             ->withTimestamps();
     }
+
+    /**
+     * Get the primary category for backward compatibility
+     * Returns the first category if multiple exist, or the old book_category_id fallback
+     */
+    public function getPrimaryCategoryAttribute()
+    {
+        // First try the new categories relationship
+        if ($this->relationLoaded('categories') && $this->categories->isNotEmpty()) {
+            return $this->categories->first();
+        }
+
+        // Fallback to the old bookCategory relationship
+        if ($this->relationLoaded('bookCategory') && $this->bookCategory) {
+            return $this->bookCategory;
+        }
+
+        // Load and return the first available category
+        return $this->categories()->first() ?? $this->bookCategory()->first();
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(BookCategory::class, 'book_category', 'book_id', 'category_id');
+    }
+
+    public function bookCategory(): BelongsTo
+    {
+        return $this->belongsTo(BookCategory::class, 'book_category_id');
+    }
+
+    /**
+     * Get categories with limit for display purposes
+     */
+    public function getCategoriesDisplay($limit = null)
+    {
+        if ($limit) {
+            return $this->categories()->limit($limit)->get();
+        }
+        return $this->categories;
+    }
+
+    /**
+     * Get category names as a comma-separated string
+     */
+    public function getCategoryNamesAttribute(): string
+    {
+        return $this->categories->pluck('name')->implode(', ');
+    }
+
 
     public function getFormattedSubscriptionFeeAttribute(): string
     {
@@ -560,5 +608,10 @@ class Book extends Model
     public function quizSessions()
     {
         return $this->hasMany(QuizSession::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'book_subscription_id');
     }
 }

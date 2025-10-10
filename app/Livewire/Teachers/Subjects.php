@@ -26,7 +26,7 @@ class Subjects extends Component
         $this->teacher = Auth::user()->teacher;
 
         if (!$this->teacher) {
-            abort(403, 'Access denied. Teacher profile not found.');
+            $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
     }
 

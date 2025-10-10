@@ -36,6 +36,7 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TokenSubscriptionController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
@@ -322,7 +323,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/forums', ForumManagement::class)->name('forums');
 
     // Learning Routes
-    Route::get('/learning/quiz', BookQuizInterface::class)->name('learning.quiz');
+    Route::get('/learning/quiz/{bookId?}', BookQuizInterface::class)->name('learning.quiz');
 
     // Dashboard v2
     Route::get('v2', function () {
@@ -386,19 +387,6 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
     Route::get('/essays/{id}', EssayGrader::class)->name('teacher.essay.grade');
 });
 
-// Subscriber Routes
-Route::middleware(['auth'])->prefix('subscriber')->name('subscriber.')->group(function () {
-    Route::get('/library', \App\Livewire\Subscribers\Library::class)->name('library');
-    Route::get('/assessments', \App\Livewire\Subscribers\Assessments::class)->name('assessments');
-    Route::get('/quizzes', \App\Livewire\Subscribers\Quizzes::class)->name('quizzes');
-    Route::get('/progress', \App\Livewire\Subscribers\Progress::class)->name('progress');
-    Route::get('/forums', ForumManagement::class)->name('forums');
-    Route::get('/groups', \App\Livewire\Subscribers\StudyGroups::class)->name('groups');
-    Route::get('/premium', \App\Livewire\Subscribers\Premium::class)->name('premium');
-    Route::get('/analytics', \App\Livewire\Subscribers\Analytics::class)->name('analytics');
-    Route::get('courses', Courses::class)->name('courses');
-});
-
 // Include additional route files
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
@@ -435,7 +423,25 @@ Route::post('/feepayment', [PaymentController::class, 'processPayment'])->name('
 Route::get('/feepayment/callback', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
 Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
 
+Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])
+    ->name('subscriptions.toggle-test-mode')
+    ->middleware('auth');
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
+    Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
+    Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
+    Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
+
+    Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
+
+    // View specific user's performance (for parents/teachers)
+    Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
+
+    // Token Payment Routes
+    Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
+    Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
+});
 
 use App\Http\Controllers\SchoolController;
 
@@ -461,3 +467,4 @@ include_once 'administrator.php';
 include_once 'academic.php';
 
 // 
+include_once 'subscriber.php';

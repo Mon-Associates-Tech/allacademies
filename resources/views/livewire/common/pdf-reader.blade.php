@@ -1,7 +1,7 @@
 <div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+{{--    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>--}}
 
-    <div
+{{--    <div
         x-data="pdfViewer({
             url: '{{ $pdfUrl }}',
             initialPage: {{ $currentPage }},
@@ -11,58 +11,7 @@
         @beforeunload.window="saveProgress()"
         class="bg-gray-900 text-white p-4 rounded-lg shadow-lg flex flex-col h-[90vh]"
     >
-        {{-- Toolbar --}}
-        <div class="flex items-center justify-between bg-gray-800 p-3 rounded-t-lg mb-4 flex-wrap gap-4">
-            {{-- Page Navigation --}}
-            <div class="flex items-center space-x-4">
-                <button @click="prevPage" :disabled="pageNum <= 1" class="px-4 py-2 bg-blue-600 rounded-md disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors">
-                    Previous
-                </button>
-                <span x-text="`Page ${pageNum} of ${totalPages > 0 ? totalPages : '...'}`" class="font-semibold"></span>
-                <button @click="nextPage" :disabled="totalPages === 0 || pageNum >= totalPages" class="px-4 py-2 bg-blue-600 rounded-md disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors">
-                    Next
-                </button>
-            </div>
-            {{-- Zoom Controls --}}
-            <div class="flex items-center space-x-4">
-                <span class="font-semibold">Zoom:</span>
-                <button @click="zoomOut" :disabled="scale <= 0.5" class="px-3 py-1 bg-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-600">-</button>
-                <span x-text="`${Math.round(scale * 100)}%`"></span>
-                <button @click="zoomIn" :disabled="scale >= 3.0" class="px-3 py-1 bg-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-600">+</button>
-            </div>
-            {{-- Width Control --}}
-            <div class="flex items-center space-x-4">
-                <span class="font-semibold">Width:</span>
-                <input type="range" min="50" max="100" x-model="viewerWidth" class="w-32">
-            </div>
-        </div>
-
-        {{-- PDF Viewer Area --}}
-        <div class="flex-grow overflow-auto bg-gray-200 rounded-b-lg p-4" style="position: relative;">
-            <div
-                x-show="loading"
-                x-transition.opacity
-                class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-10 pointer-events-none"
-            >
-                <div class="text-gray-800 font-bold text-xl">Loading PDF...</div>
-            </div>
-            <div :style="`width: ${viewerWidth}%; margin: auto;`" class="pdf-container">
-                <canvas
-                    id="pdf-canvas"
-                    class="rounded-md shadow-md block mx-auto"
-                    style="display: block; margin: 0 auto;"
-                ></canvas>
-            </div>
-        </div>
-
-        {{-- Progress Bar --}}
-        <div class="mt-4">
-            <div class="w-full bg-gray-700 rounded-full h-2.5">
-                <div class="bg-green-500 h-2.5 rounded-full" :style="`width: ${progressPercentage}%`" x-ref="progressBar"></div>
-            </div>
-            <p class="text-center text-sm mt-1" x-text="`Reading Progress: ${progressPercentage}%`"></p>
-        </div>
-    </div>
+    </div>--}}
 
     <script>
         // Wait for PDF.js to be fully loaded

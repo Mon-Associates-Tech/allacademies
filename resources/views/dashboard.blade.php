@@ -45,6 +45,23 @@
         </div>
     @endif
 
+    <div class="mb-4 hidden">
+        <livewire:chats.token-usage-monitor />
+    </div>
+
+    <div class="w-64 hidden">
+        <livewire:chats.token-usage-horizontal />
+    </div>
+
+    {{-- Use Vertical Compact in sidebar --}}
+    <div class="w-16 hidden">
+        <livewire:chats.token-usage-vertical />
+    </div>
+
+    {{-- Use Circular in dashboard widget --}}
+    <div class="w-full max-w-xs hidden">
+        <livewire:chats.token-usage-circular />
+    </div>
 
     @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>
@@ -643,7 +660,7 @@
                     });
                 </script>
             @else
-                <div class="max-w-md mx-auto my-10 p-8 text-center">
+                <div class="max-w-md mx-auto my-10 hidden p-8 text-center">
                     <!-- Animated Icon -->
                     <div class="relative mb-6">
                         <div class="w-24 h-24 mx-auto relative">

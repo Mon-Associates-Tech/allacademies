@@ -30,14 +30,14 @@ class BookMedia extends Model
     {
         return $this->attributes['single_audio']
             ? asset('storage/' . $this->attributes['single_audio'])
-            : asset('/media/audio/great-expectations-sample.mp3');
+            : null; // asset('/media/audio/great-expectations-sample.mp3');
     }
 
     public function getSingleVideoAttribute(): ?string
     {
         return $this->attributes['single_video']
             ? asset('storage/' . $this->attributes['single_video'])
-            : asset('/media/video/the_ultimate_gift.mp4');
+            : null; // asset('/media/video/the_ultimate_gift.mp4');
     }
 
     public function getChapterAudiosAttribute(): array

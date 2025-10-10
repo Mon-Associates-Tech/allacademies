@@ -99,6 +99,9 @@
                                 <div class="min-w-0 flex-1">
                                     <p class="font-medium text-gray-900 truncate">{{ $user->name }}</p>
                                     <p class="text-sm text-gray-500 truncate">{{ $user->email }}</p>
+                                    @if(Auth::user()->hasRole('owner'))
+                                    <p class="text-sm text-gray-500 truncate">{{ $user->school?->name }}</p>
+                                        @endif
                                 </div>
                             </div>
                         </x-table.td>
@@ -295,9 +298,9 @@
                             x-model="modalData.role"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="subscriber">Subscriber</option>
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="librarian">Librarian</option>
+{{--                        <option value="student">Student</option>--}}
+{{--                        <option value="teacher">Teacher</option>--}}
+{{--                        <option value="librarian">Librarian</option>--}}
                         <option value="author">Author</option>
                         <option value="parent">Parent</option>
                         <option value="moderator">Moderator</option>

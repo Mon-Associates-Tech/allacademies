@@ -63,7 +63,7 @@
 
 
                 <!-- Alerts -->
-                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:hidden">
+                <div class="max-w-5xl ml-auto px-4 sm:px-6 lg:px-8 print:hidden">
                     <x-alert.success></x-alert.success>
                     <x-alert.danger></x-alert.danger>
                 </div>
@@ -83,7 +83,7 @@
                 <div class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible thin-scrollbar overflow-x-hidden">
                     <div
                         x-data="{}"
-                        class="w-full overflow-y-visible thin-scrollbar sm:px-4 lg:px-6 "
+                        class="w-full overflow-y-visible thin-scrollbar sm:px-4 lg:px-4 "
                     >
                             {{ $slot }}
                     </div>

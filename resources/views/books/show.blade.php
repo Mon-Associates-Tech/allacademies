@@ -60,9 +60,9 @@
                                           d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                                           clip-rule="evenodd"></path>
                                 </svg>
-                                <a href="{{ route('books.index', ['category' =>$book->bookCategory->id]) }}"
+                                <a href="{{ route('books.index', ['category' => $book->primaryCategory->id]) }}"
                                    class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white md:ml-2">
-                                    {{ $book->bookCategory->name }}
+                                    {{ $book->primaryCategory->name }}
                                 </a>
                             </div>
                         </li>
@@ -111,7 +111,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                             </svg>
-                            {{ $book->bookCategory->name }}
+                            {{ $book->primaryCategory->name }}
                         </div>
                         <div class="flex items-center text-gray-600 dark:text-gray-400">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,9 +134,11 @@
                         <!-- Star Rating -->
                         <div class="flex items-center">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
-                                     fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                <svg
+                                    class="w-5 h-5 {{ $i <= $book->average_rating ? 'text-yellow-400' : 'text-gray-300' }}"
+                                    fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             @endfor
 
@@ -148,7 +150,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
-                            {{ rand(120, 500) }} readers
+                            {{ random_int(120, 500) }} readers
                         </div>
                     </div>
                 </div>
@@ -187,8 +189,9 @@
                                 <!-- Primary Action -->
                                 @if($canRead)
 
-                                    <x-button.primary onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
-                                            class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
+                                    <x-button.primary
+                                        onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                                        class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -227,7 +230,12 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
                                             </svg>
-                                            <span>Subscribe - GHS {{ number_format($book->annual_subscription_fee, 2) }}/year</span>
+                                            @if($book->is_free)
+                                                <span>Add to Reading List</span>
+                                            @else
+                                                <span>Subscribe - GHS {{ number_format($book->annual_subscription_fee, 2) }}/year</span>
+                                            @endif
+
                                         </button>
                                     </form>
                                 @endif
@@ -321,13 +329,23 @@
 
                                 <!-- Add to Reading List -->
                                 <button
-                                    class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
+                                    class="flex hidden items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
                                     Add to Reading List
                                 </button>
+
+                                <a href="{{ route('learning.quiz') }}?bookId={{$book->id}}"
+                                   class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                    <svg class="w-5 h-5 mr-2 text-blue-500 group-hover:scale-110 transition-transform"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                    </svg>
+                                    <span class="font-medium">Take Quiz</span>
+                                </a>
                             </div>
 
                             <!-- Quick Facts Card -->
@@ -600,8 +618,10 @@
                         'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300': mediaTab !== 'audio'
                     }"
                                                     class="group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
-                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                     viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2"
                                                           d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                                                 </svg>
                                                 Audio Player
@@ -614,8 +634,10 @@
                         'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300': mediaTab !== 'video'
                     }"
                                                     class="group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
-                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                     viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2"
                                                           d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                                                 </svg>
                                                 Video Player
@@ -637,19 +659,25 @@
                                             <!-- Audio Player Header -->
                                             <div class="flex items-center justify-between mb-4">
                                                 <div class="flex items-center space-x-3">
-                                                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center">
-                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    <div
+                                                        class="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-white" fill="none"
+                                                             stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
                                                                   d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                                                         </svg>
                                                     </div>
                                                     <div>
-                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Audio Content</h3>
-                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Listen to the audio version</p>
+                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                                            Audio Content</h3>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Listen to
+                                                            the audio version</p>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center space-x-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                         <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
                         Audio
                     </span>
@@ -674,19 +702,25 @@
                                             <!-- Video Player Header -->
                                             <div class="flex items-center justify-between mb-4">
                                                 <div class="flex items-center space-x-3">
-                                                    <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    <div
+                                                        class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-white" fill="none"
+                                                             stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
                                                                   d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                                                         </svg>
                                                     </div>
                                                     <div>
-                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Video Content</h3>
-                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Watch the video version</p>
+                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                                            Video Content</h3>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Watch the
+                                                            video version</p>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center space-x-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                         <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-1.5"></span>
                         Video
                     </span>
@@ -778,12 +812,12 @@
 
         <x-modal-component name="book-preview" size="4xl" title="{{ $book->title }} - Preview">
 
-                <div class="aspect-video">
-                    <iframe src="{{ $book->sample_url }}"
-                            style="height: 90vh; width: 100%;"
-                            class="w-full h-full rounded-lg"
-                            frameborder="0"></iframe>
-                </div>
+            <div class="aspect-video">
+                <iframe src="{{ $book->sample_url }}"
+                        style="height: 90vh; width: 100%;"
+                        class="w-full h-full rounded-lg"
+                        frameborder="0"></iframe>
+            </div>
 
             <x-slot name="actions">
                 <button @click="$dispatch('close-modal', {name: 'book-preview'})"
