@@ -43,7 +43,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                            Educational Messenger
+                            Self Assessment Assistant
                         </h1>
                         <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">Personalized learning support</p>
                     </div>
@@ -676,7 +676,7 @@
                 @keydown.enter.prevent.stop="if (!$event.shiftKey && {{ $canSendMessage ? 'true' : 'false' }}) { $wire.sendMessage(); }"
                 rows="3"
                 class="w-full px-5 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none transition-all shadow-sm hover:shadow-md placeholder-gray-400 dark:placeholder-gray-500"
-                placeholder="{{ $canSendMessage ? 'Ask me anything about your learning topic or uploaded file... (Press Enter to send, Shift+Enter for new line)' : 'Please activate or top up your token subscription to continue...' }}"
+                placeholder="{{ $canSendMessage ? 'Ask me anything about your learning topic (Press Enter to send, Shift+Enter for new line)' : 'Please activate or top up your token subscription to continue...' }}"
                 :disabled="$wire.isLoading || !{{ $canSendMessage ? 'true' : 'false' }}"></textarea>
                         </div>
                         <div class="flex flex-col justify-center space-y-2 my-auto">

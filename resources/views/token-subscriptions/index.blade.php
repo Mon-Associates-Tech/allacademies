@@ -197,7 +197,7 @@
                                 {{-- Progress Bar --}}
                                 <div class="mb-4">
                                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                        <span>Token Usage</span>
+                                        <span>Messenger Usage</span>
                                         <span class="font-semibold">{{ number_format($activeSubscription->remaining_percentage, 1) }}% remaining</span>
                                     </div>
                                     <div class="relative w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">

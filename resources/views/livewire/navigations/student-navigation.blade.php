@@ -15,7 +15,7 @@
             </a>
         </li>
         <!-- Academic Chat -->
-        <li class="mb-0.5 last:mb-0" title="Academic Messenger">
+        <li class="mb-0.5 last:mb-0" title="Self Assessment Assistant">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('academic-chat.index')}}">
                 <div class="flex items-center">
@@ -27,7 +27,7 @@
                         <path d="M17 3l1.5 3L22 8l-3.5 2L17 13l-1.5-3L12 8l3.5-2L17 3z"/>
                     </svg>
 
-                    <span class="text-sm ml-4 sidebar-text duration-200">Academic Messenger</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Assessment Assistant</span>
                 </div>
             </a>
         </li>
@@ -42,13 +42,13 @@
                         width="16" height="16" viewBox="0 0 24 24">
                         <path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/>
                     </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Learning Center</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Quiz Generator</span>
                 </div>
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0" title="Performance">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('quiz.performance*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+        <li class="mb-0.5 last:mb-0" title="Assessment Performance">
+            <a class="block pl-4 pr-3 py-2 text-nowrap overflow-ellipsis rounded-lg transition {{ Route::is('quiz.performance*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{ route('quiz.performance') }}">
                 <div class="flex items-center">
                     <svg
@@ -57,7 +57,7 @@
                         <path
                             d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
                     </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Performance</span>
+                    <span class="text-sm text-nowrap overflow-ellipsis ml-4 sidebar-text duration-200">Assessment Performance</span>
                 </div>
             </a>
         </li>
