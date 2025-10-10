@@ -43,7 +43,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                            Educational AI Assistant
+                            Educational Messenger
                         </h1>
                         <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">Personalized learning support</p>
                     </div>
