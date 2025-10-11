@@ -9,61 +9,57 @@ use Illuminate\Support\Facades\DB;
 
 class TokenSubscriptionService
 {
-    /**
-     * Add tokens to user's account (top-up or replace)
-     */
-    public function changeSubscription(User $user, OpenAiTokenPackage $newPackage, bool $isTopUp = true): UserTokenSubscription
-    {
-        return DB::transaction(function () use ($user, $newPackage, $isTopUp) {
-            // Get current active subscription
-            $currentSubscription = $user->activeTokenSubscription;
+/**
+ * Add tokens to user's account (top-up or replace)
+ */
+public function changeSubscription(User $user, OpenAiTokenPackage $newPackage, bool $isTopUp = true): UserTokenSubscription
+{
+    return DB::transaction(function () use ($user, $newPackage, $isTopUp) {
+        // Get current active subscription
+        $currentSubscription = $user->activeTokenSubscription;
 
-            // If topping up and current subscription is active and usable
-            if ($isTopUp && $currentSubscription &&
-                $currentSubscription->status === 'active' &&
-                !$currentSubscription->isExpired() &&
-                $currentSubscription->tokens_remaining > 0) {
+        // If topping up and current subscription is active and usable
+        if ($isTopUp && $currentSubscription &&
+            $currentSubscription->status === 'active' &&
+            !$currentSubscription->isExpired() &&
+            $currentSubscription->tokens_remaining > 0 &&
+            $currentSubscription->action_type !== 'trial') { // Add this condition to exclude trials
 
-                // Simply add tokens to existing subscription
-                $currentSubscription->tokens_purchased += $newPackage->token_limit;
-                $currentSubscription->tokens_remaining += $newPackage->token_limit;
-                $currentSubscription->save();
+            // Simply add tokens to existing subscription
+            $currentSubscription->tokens_purchased += $newPackage->token_limit;
+            $currentSubscription->tokens_remaining += $newPackage->token_limit;
+            $currentSubscription->save();
 
-                // Create a pending "purchase" record for payment tracking
-                $purchaseRecord = UserTokenSubscription::create([
-                    'user_id' => $user->id,
-                    'package_id' => $newPackage->id,
-                    'tokens_purchased' => $newPackage->token_limit,
-                    'tokens_used' => 0,
-                    'tokens_remaining' => 0, // Will be merged
-                    'status' => $newPackage->isFree() ? 'active' : 'pending',
-                    'purchased_at' => $newPackage->isFree() ? now() : null,
-                    'action_type' => 'purchase',
-                    'replaced_by_id' => $currentSubscription->id, // Links to main subscription
-                ]);
+            // Create a pending "purchase" record for payment tracking
+            $purchaseRecord = UserTokenSubscription::create([
+                'user_id' => $user->id,
+                'package_id' => $newPackage->id,
+                'tokens_purchased' => $newPackage->token_limit,
+                'tokens_used' => 0,
+                'tokens_remaining' => 0, // Will be merged
+                'status' =>  'pending',
+                'purchased_at' =>  null,
+                'action_type' => 'purchase',
+                'replaced_by_id' => $currentSubscription->id, // Links to main subscription
+            ]);
 
-                if ($newPackage->isFree()) {
-                    $purchaseRecord->activated_at = now();
-                    $purchaseRecord->save();
-                }
+            return $purchaseRecord;
+        }
 
-                return $purchaseRecord;
-            }
-
-            // Otherwise, create new subscription and replace old one
-            return $this->replaceSubscription($user, $currentSubscription, $newPackage);
-        });
-    }
+        // Otherwise, create new subscription and replace old one
+        return $this->replaceSubscription($user, $currentSubscription, $newPackage);
+    });
+}
 
     /**
-     * Replace existing subscription with a new one
+     * Replace an existing subscription with a new one
      */
     protected function replaceSubscription(User $user, ?UserTokenSubscription $currentSubscription, OpenAiTokenPackage $newPackage): UserTokenSubscription
     {
         // Determine action type
         $actionType = $this->determineActionType($currentSubscription, $newPackage);
 
-        // Create new subscription
+        // Create a new subscription
         $newSubscription = UserTokenSubscription::create([
             'user_id' => $user->id,
             'package_id' => $newPackage->id,
@@ -84,10 +80,7 @@ class TokenSubscriptionService
             $currentSubscription->save();
         }
 
-        // If free package, activate immediately
-        if ($newPackage->isFree()) {
-            $newSubscription->activate();
-        }
+
 
         return $newSubscription;
     }

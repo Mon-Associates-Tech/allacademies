@@ -322,6 +322,8 @@ class AcademicChatService
         $systemPrompt .= "- If asked about inappropriate content, redirect to educational topics\n";
         $systemPrompt .= "- Encourage critical thinking and curiosity\n";
         $systemPrompt .= "- Provide sources or suggest further reading when appropriate";
+        $systemPrompt .= "- No greetings is required or acknowledgement of a valid question";
+        $systemPrompt .= "- Avoid phrases such as 'That's a great question!' or similar";
 
         return $systemPrompt;
     }

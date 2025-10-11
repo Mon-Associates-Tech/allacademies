@@ -111,8 +111,8 @@ public function mount()
 
         // Start with basic query
         $query = \App\Models\Assignment::where('status', 'published')
-//            ->where('starts_at', '<=', now())
-            ->where('ends_at', '>', now());
+            ->where('starts_at', '<=', now());
+//            ->where('ends_at', '>', now());
 
         // Log the basic query count
         $basicCount = $query->count();

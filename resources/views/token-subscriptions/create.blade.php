@@ -31,9 +31,9 @@
 
                     <div class="text-center">
                         <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                            Choose Your Messenger Token Package
+                            Choose Your Messenger Package
                         </h1>
-                        <p class="text-gray-600 dark:text-gray-400 text-lg">
+                        <p class="text-gray-600 dark:text-gray-400 text-lg max-w-3xl mx-auto">
                             Unlock powerful Messenger features to enhance your learning experience
                         </p>
                     </div>
@@ -81,7 +81,7 @@
                                     </h3>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                                         <div>
-                                            <span class="text-gray-600 dark:text-gray-400">Remaining Tokens:</span>
+                                            <span class="text-gray-600 dark:text-gray-400">Remaining Messengers:</span>
                                             <span class="ml-2 font-semibold text-gray-900 dark:text-white">
                                                 {{ number_format($currentSubscription->remaining_tokens) }}
                                             </span>
@@ -100,25 +100,16 @@
                                         </div>
                                     </div>
                                     <p class="mt-3 text-sm text-indigo-700 dark:text-indigo-300">
-                                        💡 Purchasing a new package will add tokens to your account. Your existing tokens will be preserved.
+                                        💡 Purchasing a new package will add messengers to your account. Your existing messengers will be preserved.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     @endif
-
-                    {{-- Package Cards --}}
-                    <div class="mb-8">
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                            </svg>
-                            Available Packages
-                        </h2>
-
-                        <div class="grid md:grid-cols-2 max-w-3xl gap-6 justify-center justify-items-center mx-auto">
+                        {{-- Package Cards --}}
+                        <div class="grid md:grid-cols-2 max-w-3xl mb-6 gap-6 justify-center justify-items-center mx-auto">
                             @foreach($packages as $pkg)
-                                <div class="relative">
+                                <div class="relative min-w-96">
                                     <input
                                         type="radio"
                                         name="package_radio"
@@ -176,7 +167,7 @@
                                                     {{ number_format($pkg->token_limit) }}
                                                 </div>
                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                    Messenger Tokens
+                                                    Messengers
                                                 </div>
                                             </div>
 
@@ -186,7 +177,7 @@
                                                     <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                                     </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Tokens never expire</span>
+                                                    <span class="text-gray-700 dark:text-gray-300">Messengers never expire</span>
                                                 </li>
                                                 <li class="flex items-start text-sm">
                                                     <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -237,13 +228,13 @@
                     </div>
 
                     {{-- Token Usage Guide --}}
-                    <div class="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                    <div class="mb-10 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
                         <div class="flex items-center mb-4">
                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                             </svg>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                💡 Token Usage Guide
+                                💡 How to Use Your Messengers
                             </h3>
                         </div>
                         <div class="grid md:grid-cols-3 gap-6">
@@ -254,7 +245,7 @@
                                     </svg>
                                     <span class="font-semibold text-gray-900 dark:text-white">Chat Messages</span>
                                 </div>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">~100-500 tokens per conversation</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">~100-500 messengers per conversation</p>
                             </div>
                             <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
                                 <div class="flex items-center mb-2">
@@ -263,7 +254,7 @@
                                     </svg>
                                     <span class="font-semibold text-gray-900 dark:text-white">Quiz Generation</span>
                                 </div>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">~500-2000 tokens per quiz</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">~500-2000 messengers per quiz</p>
                             </div>
                             <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
                                 <div class="flex items-center mb-2">
@@ -272,13 +263,13 @@
                                     </svg>
                                     <span class="font-semibold text-gray-900 dark:text-white">Content Analysis</span>
                                 </div>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">~200-1000 tokens per document</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">~200-1000 messengers per document</p>
                             </div>
                         </div>
                     </div>
 
                     {{-- Action Buttons --}}
-                    <div class="sticky bottom-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="sticky bottom-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 z-10">
                         <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
                             <a href="{{ route('token-subscriptions.index') }}"
                                class="w-full sm:w-auto px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-center font-medium transition-colors flex items-center justify-center">
@@ -311,7 +302,7 @@
                 </form>
 
                 {{-- FAQ Section --}}
-                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <div class="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
                     <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center flex items-center justify-center">
                         <svg class="w-7 h-7 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -322,10 +313,10 @@
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
                             <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
                                 <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 mr-3 text-sm font-bold">Q</span>
-                                Do tokens expire?
+                                Do messengers expire?
                             </h4>
                             <p class="text-gray-600 dark:text-gray-400 text-sm ml-11">
-                                No! Your tokens never expire. Use them at your own pace and top up whenever you need more.
+                                No! Your messengers never expire. Use them at your own pace and top up whenever you need more.
                             </p>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
@@ -334,7 +325,7 @@
                                 Can I upgrade my package?
                             </h4>
                             <p class="text-gray-600 dark:text-gray-400 text-sm ml-11">
-                                Yes! You can purchase additional token packages at any time. Your tokens will stack together.
+                                Yes! You can purchase additional messenger packages at any time. Your messengers will stack together.
                             </p>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">

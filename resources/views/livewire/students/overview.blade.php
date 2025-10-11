@@ -153,7 +153,7 @@
             <!-- Upcoming Due Assignments -->
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Upcoming Due</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Upcoming Assignments</h3>
                     <a href="{{ route('students.assignments') }}" class="text-sm text-indigo-600 hover:text-indigo-800">View All</a>
                 </div>
                 <div class="space-y-3">

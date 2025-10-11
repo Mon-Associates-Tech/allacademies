@@ -89,7 +89,7 @@ class TokenSubscriptionController extends Controller
                 ->with('error', 'Free trial is automatically assigned to new users.');
         }
 
-        // Create new subscription (will replace current one)
+        // Create a new subscription (will replace the current one)
         $subscription = $this->subscriptionService->changeSubscription($user, $package);
 
         // Redirect to payment
