@@ -217,6 +217,7 @@
             <div class="px-6 flex justify-between py-4 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-lg font-medium text-gray-900">Subscription History</h3>
                 <div class="flex space-x-3">
+                    @if(!auth()->user()->hasAnyRole(['subscriber', 'student']))
                     <x-link.primary :to="route('subscriptions.create')">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -224,6 +225,7 @@
                         </svg>
                         New Course Subscription
                     </x-link.primary>
+                    @endif
 
                     @if(in_array(Auth::user()->email, special_access_emails()))
                         <button
