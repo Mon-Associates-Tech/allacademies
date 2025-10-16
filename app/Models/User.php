@@ -167,9 +167,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Create a free trial subscription for new users
+     * Only applies to users with 'subscriber' role
      */
     public function createFreeTrialSubscription(): void
     {
+        // Only subscribers need token subscriptions
+        if ($this->role !== 'subscriber') {
+            return;
+        }
 
         if (!$this->hasVerifiedEmail()) {
             return;
@@ -204,7 +209,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'action_type' => 'trial',
         ]);
     }
-
     public function tokenSubscriptions(): HasMany
     {
         return $this->hasMany(UserTokenSubscription::class);
@@ -519,11 +523,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(OpenAiTokenUsageLog::class);
     }
 
+
     /**
-     * Check if user has sufficient tokens
+     * Check if a user has sufficient tokens
+     * Only applies to users with 'subscriber' role
      */
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
+        // Non-subscribers have unlimited access
+        if ($this->role !== 'subscriber') {
+            return true;
+        }
+
         $subscription = $this->activeTokenSubscription;
 
         if (!$subscription) {
@@ -541,9 +552,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user needs to upgrade
+     * Only applies to users with 'subscriber' role
      */
     public function needsTokenUpgrade(): bool
     {
+        // Non-subscribers don't need to upgrade
+        if ($this->role !== 'subscriber') {
+            return false;
+        }
+
         $subscription = $this->activeTokenSubscription;
 
         if (!$subscription) {
@@ -556,17 +573,24 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the OpenAI model based on user's active subscription package
+     * Get the OpenAI model based on user's role and subscription
+     * Subscribers use token-based packages, others get premium by default
      */
     public function getOpenAiModel(): string
     {
+        // Non-subscribers always get premium model
+        if ($this->role !== 'subscriber') {
+            return config('openai.openai.premium_model', 'gpt-4');
+        }
+
+        // For subscribers, check their subscription package
         $subscription = $this->activeTokenSubscription;
 
         if (!$subscription || !$subscription->package) {
-            return config('openai.openai.default_model');
+            return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
-        // Get model from package, fallback to config based on package type
+        // Get model from package
         $packageModel = $subscription->package->model;
 
         if ($packageModel) {
@@ -575,10 +599,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Fallback: determine by package price or is_free flag
         if ($subscription->package->is_free || $subscription->package->price == 0) {
-            return config('openai.openai.default_model');
+            return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
-        return config('openai.openai.premium_model');
+        return config('openai.openai.premium_model', 'gpt-4');
+    }
+
+    /**
+     * Check if user should be tracked for token usage
+     */
+    public function shouldTrackTokenUsage(): bool
+    {
+        return $this->role === 'subscriber';
     }
 
 }

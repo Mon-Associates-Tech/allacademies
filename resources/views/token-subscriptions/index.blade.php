@@ -97,7 +97,7 @@
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Tokens Purchased</p>
+                                <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Messengers Purchased</p>
                                 <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total_tokens_purchased']) }}</p>
                             </div>
                             <div class="flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -111,7 +111,7 @@
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Tokens Used</p>
+                                <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Messengers Used</p>
                                 <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total_tokens_used']) }}</p>
                             </div>
                             <div class="flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
@@ -297,7 +297,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Package</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tokens Used</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Messengers Used</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Active Period</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>

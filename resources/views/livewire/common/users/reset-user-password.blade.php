@@ -30,13 +30,13 @@
 
             <!-- Password Confirmation -->
             <div>
-                <label for="passwordConfirmation" class="block text-sm font-medium text-gray-700 mb-1">
+                <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
                     Confirm Password <span class="text-red-500">*</span>
                 </label>
                 <input
                     type="password"
-                    id="passwordConfirmation"
-                    wire:model="passwordConfirmation"
+                    id="password_confirmation"
+                    wire:model="password_confirmation"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Confirm new password"
                 >

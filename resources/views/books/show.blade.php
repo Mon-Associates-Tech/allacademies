@@ -337,15 +337,17 @@
                                     Add to Reading List
                                 </button>
 
-                                <a href="{{ route('learning.quiz') }}?bookId={{$book->id}}"
-                                   class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
-                                    <svg class="w-5 h-5 mr-2 text-blue-500 group-hover:scale-110 transition-transform"
-                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                    </svg>
-                                    <span class="font-medium">Take Quiz</span>
-                                </a>
+                                @if($canRead)
+                                    <a href="{{ route('learning.quiz') }}?bookId={{$book->id}}"
+                                       class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        <svg class="w-5 h-5 mr-2 text-blue-500 group-hover:scale-110 transition-transform"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                        </svg>
+                                        <span class="font-medium">Take Quiz</span>
+                                    </a>
+                                @endif
                             </div>
 
                             <!-- Quick Facts Card -->
