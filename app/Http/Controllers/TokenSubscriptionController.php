@@ -15,6 +15,15 @@ class TokenSubscriptionController extends Controller
     public function __construct(TokenSubscriptionService $subscriptionService)
     {
         $this->subscriptionService = $subscriptionService;
+
+/*        // Only subscribers can access token subscription management
+        $this->middleware(function ($request, $next) {
+            if (auth()->user()->role !== 'subscriber') {
+                return redirect()->route('dashboard')
+                    ->with('info', 'Token subscriptions are only available for subscriber accounts.');
+            }
+            return $next($request);
+        });*/
     }
 
     public function index()
@@ -89,7 +98,7 @@ class TokenSubscriptionController extends Controller
                 ->with('error', 'Free trial is automatically assigned to new users.');
         }
 
-        // Create new subscription (will replace current one)
+        // Create a new subscription (will replace the current one)
         $subscription = $this->subscriptionService->changeSubscription($user, $package);
 
         // Redirect to payment

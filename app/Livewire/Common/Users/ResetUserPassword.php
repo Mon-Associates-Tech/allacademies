@@ -15,7 +15,7 @@ class ResetUserPassword extends Component
     public $userId;
     public $userName;
     public $password = '';
-    public $passwordConfirmation = '';
+    public $password_confirmation = '';
 
     protected $rules = [
         'password' => ['required', 'string', 'confirmed'],
@@ -47,7 +47,7 @@ class ResetUserPassword extends Component
             ]);
 
             session()->flash('success', 'Password for ' . $this->userName . ' has been reset successfully!');
-            $this->reset(['password', 'passwordConfirmation']);
+            $this->reset(['password', 'password_confirmation']);
             $this->dispatch('passwordReset');
             $this->dispatch('close-modal', name: 'reset-user-password');
         } catch (\Exception $e) {

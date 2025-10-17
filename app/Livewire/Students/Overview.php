@@ -140,6 +140,7 @@ class Overview extends Component
 
         return Assignment::where('status', 'published')
             ->where('starts_at', '<=', now())
+            // Removed the ends_at filter to include overdue assignments
             ->where(function ($query) use ($student) {
                 // Check academic groups
                 $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
@@ -172,7 +173,6 @@ class Overview extends Component
             ->with(['academicSubject', 'teacher.user'])
             ->get();
     }
-
     protected function loadSelfAssessmentStats()
     {
         $student = $this->student;

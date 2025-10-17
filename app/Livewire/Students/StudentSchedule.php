@@ -277,8 +277,46 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
                 $this->currentYear--;
             }
         }
+
+        // Update selectedDate to match the new month for consistency
+        $this->selectedDate = Carbon::create($this->currentYear, $this->currentMonth, 1);
     }
 
+    // Add new method for week navigation
+    public function changeWeek($direction)
+    {
+        if ($direction === 'next') {
+            $this->selectedDate = $this->selectedDate->copy()->addWeek();
+        } else {
+            $this->selectedDate = $this->selectedDate->copy()->subWeek();
+        }
+
+        // Update current month/year to stay in sync
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
+    }
+
+    // Add new method for day navigation (for list view)
+    public function changeDay($direction)
+    {
+        if ($direction === 'next') {
+            $this->selectedDate = $this->selectedDate->copy()->addDay();
+        } else {
+            $this->selectedDate = $this->selectedDate->copy()->subDay();
+        }
+
+        // Update current month/year to stay in sync
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
+    }
+
+    // Add method to go to today
+    public function goToToday()
+    {
+        $this->selectedDate = now();
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
+    }
     public function setViewMode($mode)
     {
         $this->viewMode = $mode;

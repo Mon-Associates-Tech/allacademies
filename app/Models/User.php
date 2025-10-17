@@ -96,17 +96,17 @@ class User extends Authenticatable implements MustVerifyEmail
             'librarian' => Librarian::class,
             'parent' => StudentParent::class,
         ];
-
-        if (isset($roleModels[$this->role])) {
-            $modelClass = $roleModels[$this->role];
+        $role = $this->role->value;
+        if (isset($roleModels[$role])) {
+            $modelClass = $roleModels[$role];
             $data = ['user_id' => $this->id];
 
             // Add school_id for school-specific roles
-            if (in_array($this->role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
+            if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
                 $data['school_id'] = $this->school_id;
 
                 // Generate IDs and set defaults based on role
-                switch ($this->role) {
+                switch ($role) {
                     case 'teacher':
                         if (method_exists($modelClass, 'generateEmployeeId')) {
                             $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
@@ -141,12 +141,12 @@ class User extends Authenticatable implements MustVerifyEmail
             }
 
             // Ensure required fields have values
-            if ($this->role === 'student' && empty($data['student_id'])) {
+            if ($role === 'student' && empty($data['student_id'])) {
                 $data['student_id'] = 'STU' . $this->id . time();
             }
 
-            if (in_array($this->role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
-                $data['employee_id'] = strtoupper(substr($this->role, 0, 3)) . $this->id . time();
+            if (in_array($role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
+                $data['employee_id'] = strtoupper(substr($role, 0, 3)) . $this->id . time();
             }
 
             try {
@@ -154,7 +154,7 @@ class User extends Authenticatable implements MustVerifyEmail
             } catch (Exception $e) {
                 Log::error('Failed to create role model', [
                     'user_id' => $this->id,
-                    'role' => $this->role,
+                    'role' => $role,
                     'data' => $data,
                     'error' => $e->getMessage()
                 ]);
@@ -167,9 +167,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Create a free trial subscription for new users
+     * Only applies to users with 'subscriber' role
      */
     public function createFreeTrialSubscription(): void
     {
+        // Only subscribers need token subscriptions
+        if ($this->role->value !== 'subscriber') {
+            return;
+        }
 
         if (!$this->hasVerifiedEmail()) {
             return;
@@ -204,7 +209,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'action_type' => 'trial',
         ]);
     }
-
     public function tokenSubscriptions(): HasMany
     {
         return $this->hasMany(UserTokenSubscription::class);
@@ -264,7 +268,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canImpersonate(): bool
     {
         return $this->isSuperAdmin() ||
-            in_array($this->role, ['owner', 'admin', 'administrator', 'superadmin']);
+            in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']);
     }
 
     // Get user's primary role in current school context
@@ -278,7 +282,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return true;
         return !$this->isSuperAdmin() &&
-            !in_array($this->role, ['owner', 'admin', 'administrator', 'superadmin']) &&
+            !in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
             ($this->is_active ?? true);
     }
 
@@ -519,11 +523,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(OpenAiTokenUsageLog::class);
     }
 
+
     /**
-     * Check if user has sufficient tokens
+     * Check if a user has sufficient tokens
+     * Only applies to users with 'subscriber' role
      */
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
+        // Non-subscribers have unlimited access
+        if ($this->role !== 'subscriber') {
+            return true;
+        }
+
         $subscription = $this->activeTokenSubscription;
 
         if (!$subscription) {
@@ -541,6 +552,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user needs to upgrade
+     * Only applies to users with 'subscriber' role
      */
     public function needsTokenUpgrade(): bool
     {
@@ -556,17 +568,24 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the OpenAI model based on user's active subscription package
+     * Get the OpenAI model based on user's role and subscription
+     * Subscribers use token-based packages, others get premium by default
      */
     public function getOpenAiModel(): string
     {
+        // Non-subscribers always get premium model
+        if ($this->role !== 'subscriber') {
+            return config('openai.openai.premium_model', 'gpt-4');
+        }
+
+        // For subscribers, check their subscription package
         $subscription = $this->activeTokenSubscription;
 
         if (!$subscription || !$subscription->package) {
-            return config('openai.openai.default_model');
+            return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
-        // Get model from package, fallback to config based on package type
+        // Get model from package
         $packageModel = $subscription->package->model;
 
         if ($packageModel) {
@@ -575,10 +594,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Fallback: determine by package price or is_free flag
         if ($subscription->package->is_free || $subscription->package->price == 0) {
-            return config('openai.openai.default_model');
+            return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
-        return config('openai.openai.premium_model');
+        return config('openai.openai.premium_model', 'gpt-4');
+    }
+
+    /**
+     * Check if a user should be tracked for token usage
+     */
+    public function shouldTrackTokenUsage(): bool
+    {
+        return $this->hasAnyRoleRole('subscriber',  'admin', 'student', 'teacher', 'author', 'librarian');
     }
 
 }

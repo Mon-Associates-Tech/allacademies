@@ -76,7 +76,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                           <a href="{{ route('student.show', $student) }}"
+                                           <a href="{{ route('students.show', $student) }}"
                                                class="text-indigo-600 hover:text-indigo-900">
                                                 View Details
                                             </a>
@@ -135,7 +135,7 @@
                             Import Students
                         </h3>
                         <div class="mt-2">
-                            <form id="import-form" action="{{ route('student.import') }}" method="POST" enctype="multipart/form-data">
+                            <form id="import-form" action="{{ route('students.import') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">

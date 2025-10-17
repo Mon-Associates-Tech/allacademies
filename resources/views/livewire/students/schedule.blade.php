@@ -126,21 +126,30 @@
         @if($viewMode === 'calendar')
             <!-- Calendar View -->
             <div class="p-6">
-                <!-- Calendar Header -->
+                <!-- Calendar Header with Navigation -->
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $monthName }}</h2>
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $monthName }}</h2>
+                        <button wire:click="goToToday"
+                                class="px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200">
+                            Today
+                        </button>
+                    </div>
                     <div class="flex space-x-2">
                         <button wire:click="changeMonth('prev')"
                                 class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
-                            <i class="fas fa-chevron-left"></i>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
                         </button>
                         <button wire:click="changeMonth('next')"
                                 class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
-                            <i class="fas fa-chevron-right"></i>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
-
                 <!-- Calendar Grid -->
                 <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
                     <!-- Week Day Headers -->
@@ -189,9 +198,32 @@
         @elseif($viewMode === 'list')
             <!-- List View -->
             <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                    Activities for {{ $selectedDate->format('F j, Y') }}
-                </h2>
+                <!-- List Header with Navigation -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Activities for {{ $selectedDate->format('F j, Y') }}
+                        </h2>
+                        <button wire:click="goToToday"
+                                class="px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200">
+                            Today
+                        </button>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button wire:click="changeDay('prev')"
+                                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button wire:click="changeDay('next')"
+                                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
                 @if($activities->isEmpty())
                     <div class="text-center py-12">
@@ -259,9 +291,32 @@
         @elseif($viewMode === 'week')
             <!-- Week View -->
             <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                    Week of {{ $selectedDate->startOfWeek()->format('M j') }} - {{ $selectedDate->endOfWeek()->format('M j, Y') }}
-                </h2>
+                <!-- Week Header with Navigation -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Week of {{ $selectedDate->copy()->startOfWeek()->format('M j') }} - {{ $selectedDate->copy()->endOfWeek()->format('M j, Y') }}
+                        </h2>
+                        <button wire:click="goToToday"
+                                class="px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200">
+                            This Week
+                        </button>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button wire:click="changeWeek('prev')"
+                                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button wire:click="changeWeek('next')"
+                                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-7 gap-4">
                     @php
