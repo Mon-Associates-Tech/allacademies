@@ -268,7 +268,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canImpersonate(): bool
     {
         return $this->isSuperAdmin() ||
-            in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']);
+            in_array($this->role, ['owner', 'admin', 'administrator', 'superadmin']);
     }
 
     // Get user's primary role in current school context
