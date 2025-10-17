@@ -96,7 +96,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'librarian' => Librarian::class,
             'parent' => StudentParent::class,
         ];
-        $role = $this->role->value;
+        if($this->role instanceof  Role){
+            $role = $this->role->value;
+        } else{
+            $role = $this->role;
+        }
+
         if (isset($roleModels[$role])) {
             $modelClass = $roleModels[$role];
             $data = ['user_id' => $this->id];
