@@ -557,7 +557,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function needsTokenUpgrade(): bool
     {
         // Non-subscribers don't need to upgrade
-        if ($this->role->role !== 'subscriber') {
+        if ($this->role->value !== 'subscriber') {
           //  return false;
         }
 
