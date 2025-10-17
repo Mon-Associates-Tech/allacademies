@@ -4,6 +4,7 @@ namespace App\Livewire\Students;
 
 use App\Models\Assessment;
 use App\Models\Activity;
+use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -50,6 +51,7 @@ class StudentProfile extends Component
     public function mount()
     {
         $this->student = Auth::user()->student;
+        $this->student = Student::withoutGlobalScopes()->where("user_id", Auth::id())->first();
 
         if ($this->student) {
             $user = $this->student->user;

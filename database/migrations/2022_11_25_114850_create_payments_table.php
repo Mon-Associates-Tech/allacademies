@@ -22,11 +22,14 @@ return new class extends Migration
             // $table->foreignId('subscription_id')->nullable()->constrained();
               // Regular subscriptions
     $table->foreignId('subscription_id')->nullable()->constrained();
+    $table->bigInteger('book_subscription_id');
 
     // Book subscriptions
-    $table->foreignId('book_subscription_id')->nullable()->constrained();
-            $table->timestamps();
-        });
+    // $table->foreignId('book_subscription_id')->nullable()->constrained();
+    //         $table->timestamps();
+    //     }
+    });
+
     }
 
     /**

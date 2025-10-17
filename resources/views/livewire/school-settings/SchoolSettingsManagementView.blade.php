@@ -29,6 +29,16 @@
                         Add New Setting
                     </button>
                 </div>
+                 <div class="mt-4 sm:mt-0 sm:ml-4">
+                    <button type="button"
+                            wire:click="showCreateModal"
+                            class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        School Fees Settings
+                    </button>
+                </div>
             </div>
         </div>
 

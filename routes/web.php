@@ -468,3 +468,10 @@ include_once 'academic.php';
 
 // 
 include_once 'subscriber.php';
+
+
+/*
+fees(academic_group_id,academic_level_id,current_term_id,Amount,due_date,payment_method,school_id)
+academic_periods
+pending, inprogress,completed
+*/
