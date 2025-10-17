@@ -531,7 +531,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
         // Non-subscribers have unlimited access
-        if ($this->role->value !== 'subscriber') {
+        if ($this->role !== 'subscriber') {
             return true;
         }
 
@@ -574,7 +574,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getOpenAiModel(): string
     {
         // Non-subscribers always get premium model
-        if ($this->role->value !== 'subscriber') {
+        if ($this->role !== 'subscriber') {
             return config('openai.openai.premium_model', 'gpt-4');
         }
 

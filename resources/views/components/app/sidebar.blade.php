@@ -127,7 +127,6 @@
 
             @endauth
             <ul>
-                @if(auth()->user()->hasAnyRole(['subscriber']))
                 <li class="mb-0.5 last:mb-0" title="Messenger Subscriptions">
                     <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                        href="{{route('token-subscriptions.index')}}">
@@ -145,7 +144,6 @@
                         </div>
                     </a>
                 </li>
-                @endif
 
                 <li class="mb-0.5 last:mb-0" title="Shared Resources">
                     <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('user-books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"

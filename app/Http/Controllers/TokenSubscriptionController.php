@@ -16,14 +16,14 @@ class TokenSubscriptionController extends Controller
     {
         $this->subscriptionService = $subscriptionService;
 
-        // Only subscribers can access token subscription management
+/*        // Only subscribers can access token subscription management
         $this->middleware(function ($request, $next) {
             if (auth()->user()->role !== 'subscriber') {
                 return redirect()->route('dashboard')
                     ->with('info', 'Token subscriptions are only available for subscriber accounts.');
             }
             return $next($request);
-        });
+        });*/
     }
 
     public function index()
