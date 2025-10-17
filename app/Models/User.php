@@ -96,17 +96,17 @@ class User extends Authenticatable implements MustVerifyEmail
             'librarian' => Librarian::class,
             'parent' => StudentParent::class,
         ];
-
-        if (isset($roleModels[$this->role])) {
-            $modelClass = $roleModels[$this->role];
+        $role = $this->role->value;
+        if (isset($roleModels[$role])) {
+            $modelClass = $roleModels[$role];
             $data = ['user_id' => $this->id];
 
             // Add school_id for school-specific roles
-            if (in_array($this->role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
+            if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
                 $data['school_id'] = $this->school_id;
 
                 // Generate IDs and set defaults based on role
-                switch ($this->role) {
+                switch ($role) {
                     case 'teacher':
                         if (method_exists($modelClass, 'generateEmployeeId')) {
                             $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
@@ -141,12 +141,12 @@ class User extends Authenticatable implements MustVerifyEmail
             }
 
             // Ensure required fields have values
-            if ($this->role === 'student' && empty($data['student_id'])) {
+            if ($role === 'student' && empty($data['student_id'])) {
                 $data['student_id'] = 'STU' . $this->id . time();
             }
 
-            if (in_array($this->role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
-                $data['employee_id'] = strtoupper(substr($this->role, 0, 3)) . $this->id . time();
+            if (in_array($role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
+                $data['employee_id'] = strtoupper(substr($role, 0, 3)) . $this->id . time();
             }
 
             try {
@@ -154,7 +154,7 @@ class User extends Authenticatable implements MustVerifyEmail
             } catch (Exception $e) {
                 Log::error('Failed to create role model', [
                     'user_id' => $this->id,
-                    'role' => $this->role,
+                    'role' => $role,
                     'data' => $data,
                     'error' => $e->getMessage()
                 ]);
@@ -172,7 +172,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function createFreeTrialSubscription(): void
     {
         // Only subscribers need token subscriptions
-        if ($this->role !== 'subscriber') {
+        if ($this->role->value !== 'subscriber') {
             return;
         }
 
@@ -268,7 +268,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canImpersonate(): bool
     {
         return $this->isSuperAdmin() ||
-            in_array($this->role, ['owner', 'admin', 'administrator', 'superadmin']);
+            in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']);
     }
 
     // Get user's primary role in current school context
@@ -282,7 +282,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return true;
         return !$this->isSuperAdmin() &&
-            !in_array($this->role, ['owner', 'admin', 'administrator', 'superadmin']) &&
+            !in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
             ($this->is_active ?? true);
     }
 
@@ -531,7 +531,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
         // Non-subscribers have unlimited access
-        if ($this->role !== 'subscriber') {
+        if ($this->role->value !== 'subscriber') {
             return true;
         }
 
@@ -557,8 +557,8 @@ class User extends Authenticatable implements MustVerifyEmail
     public function needsTokenUpgrade(): bool
     {
         // Non-subscribers don't need to upgrade
-        if ($this->role !== 'subscriber') {
-            return false;
+        if ($this->role->role !== 'subscriber') {
+          //  return false;
         }
 
         $subscription = $this->activeTokenSubscription;
@@ -579,7 +579,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getOpenAiModel(): string
     {
         // Non-subscribers always get premium model
-        if ($this->role !== 'subscriber') {
+        if ($this->role->value !== 'subscriber') {
             return config('openai.openai.premium_model', 'gpt-4');
         }
 
@@ -606,11 +606,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user should be tracked for token usage
+     * Check if a user should be tracked for token usage
      */
     public function shouldTrackTokenUsage(): bool
     {
-        return $this->role === 'subscriber';
+        return $this->hasAnyRoleRole('subscriber',  'admin', 'student', 'teacher', 'author', 'librarian');
     }
 
 }
