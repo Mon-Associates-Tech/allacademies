@@ -50,6 +50,17 @@ class UserTokenSubscription extends Model
         'remaining_percentage',
     ];
 
+    // Add this to ensure proper status values
+    public static $validStatuses = ['active', 'pending', 'expired', 'depleted', 'replaced'];
+
+    public function setStatusAttribute($value)
+    {
+        if (in_array($value, self::$validStatuses)) {
+            $this->attributes['status'] = $value;
+        } else {
+            $this->attributes['status'] = 'pending';
+        }
+    }
     protected static function boot()
     {
         parent::boot();

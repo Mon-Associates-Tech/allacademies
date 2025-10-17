@@ -74,36 +74,43 @@ class TokenSubscriptionController extends Controller
         return view('token-subscriptions.create', compact('packages', 'package', 'currentSubscription'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'package_id' => 'required|exists:openai_token_packages,id',
-        ]);
 
-        $user = Auth::user();
-        $package = OpenAiTokenPackage::findOrFail($request->package_id);
+public function store(Request $request)
+{
+    $request->validate([
+        'package_id' => 'required|exists:openai_token_packages,id',
+    ]);
 
-        // Check if user has pending subscription
-        $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
-        if ($pendingSubscription) {
-            return redirect()
-                ->route('payment.token.initialize', $pendingSubscription->id)
-                ->with('info', 'Complete your pending payment first.');
-        }
+    $user = Auth::user();
+    $package = OpenAiTokenPackage::findOrFail($request->package_id);
 
-        // Don't allow selecting free trial manually
-        if ($package->isFree()) {
-            return redirect()
-                ->route('token-subscriptions.create')
-                ->with('error', 'Free trial is automatically assigned to new users.');
-        }
-
-        // Create a new subscription (will replace the current one)
-        $subscription = $this->subscriptionService->changeSubscription($user, $package);
-
-        // Redirect to payment
-        return redirect()->route('payment.token.initialize', $subscription->id);
+    // Check if user has pending subscription
+    $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
+    if ($pendingSubscription) {
+        return redirect()
+            ->route('payment.token.initialize', $pendingSubscription->id)
+            ->with('info', 'Complete your pending payment first.');
     }
+
+    // Don't allow selecting free trial manually
+    if ($package->isFree()) {
+        return redirect()
+            ->route('token-subscriptions.create')
+            ->with('error', 'Free trial is automatically assigned to new users.');
+    }
+
+    // Check if this is an upgrade (different package) or top-up (same package)
+    $currentSubscription = $user->activeTokenSubscription;
+    $isTopUp = $currentSubscription &&
+               $currentSubscription->package_id == $package->id &&
+               $currentSubscription->action_type !== 'trial';
+
+    // Create a new subscription (will replace or top-up the current one)
+    $subscription = $this->subscriptionService->changeSubscription($user, $package, $isTopUp);
+
+    // Redirect to payment
+    return redirect()->route('payment.token.initialize', $subscription->id);
+}
 
     public function show(UserTokenSubscription $subscription)
     {
