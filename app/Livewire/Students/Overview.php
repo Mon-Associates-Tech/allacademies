@@ -2,515 +2,363 @@
 
 namespace App\Livewire\Students;
 
-use App\Models\AcademicSubject as Subject;
-use App\Models\Activity;
+use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 use App\Models\Assessment;
-use App\Models\Book;
-use App\Models\BookSubscription;
-use App\Models\Student;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
+use App\Models\QuizSession;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Overview extends Component
 {
-    #[Url]
-    public $activeTab = 'overview';
+    public $student;
 
-    protected $listeners = ['studentTabChanged' => 'setActiveTab'];
+    // Assignment Stats
+    public $totalAssignments = 0;
+    public $completedAssignments = 0;
+    public $ongoingAssignments = 0;
+    public $overdueAssignments = 0;
+    public $upcomingAssignments = 0;
 
-    public function setActiveTab($tab): void
+    // Self-Assessment (Book-based) Stats
+    public $totalSelfAssessments = 0;
+    public $recentSelfAssessments = [];
+    public $averageSelfAssessmentScore = 0;
+
+    // Performance Stats
+    public $averageAssignmentScore = 0;
+    public $assignmentsThisWeek = 0;
+    public $assignmentsThisMonth = 0;
+
+    // Recent Data
+    public $recentAssignments = [];
+    public $upcomingDueAssignments = [];
+
+    // Subject Performance
+    public $subjectPerformance = [];
+
+    // Charts data
+    public $performanceChartData = [];
+    public $subjectChartData = [];
+
+    public function mount()
     {
-        $this->activeTab = $tab;
-        $this->dispatch('tabChanged', $tab);
+        $user = Auth::user();
+        $this->student = $user->student;
+
+        if (!$this->student) {
+            $this->student = \App\Models\Student::withoutGlobalScopes()
+                ->where('user_id', $user->id)
+                ->first();
+        }
+
+        if ($this->student) {
+            $this->loadAssignmentStats();
+            $this->loadSelfAssessmentStats();
+            $this->loadPerformanceData();
+            $this->loadRecentData();
+            $this->loadSubjectPerformance();
+        }
     }
 
-    public function mount(): void
+    protected function loadAssignmentStats()
     {
-        if(!$this->activeTab){
-            $this->activeTab = 'overview';
+        $student = $this->student;
+
+        // Get all assignments available to student
+        $availableAssignments = $this->getAvailableAssignments();
+
+        $this->totalAssignments = $availableAssignments->count();
+
+        // Get student's submissions
+        $submissions = AssignmentSubmission::where('student_id', $student->id)
+            ->with('assignment')
+            ->get();
+
+        // Completed assignments
+        $this->completedAssignments = $submissions
+            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->count();
+
+        // Ongoing assignments
+        $this->ongoingAssignments = $submissions
+            ->where('status', 'in_progress')
+            ->count();
+
+        // Overdue assignments
+        $this->overdueAssignments = $availableAssignments
+            ->filter(function ($assignment) use ($submissions) {
+                $submission = $submissions->where('assignment_id', $assignment->id)->first();
+
+                return $assignment->ends_at < now() &&
+                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+            })
+            ->count();
+
+        // Upcoming assignments (due within 7 days)
+        $this->upcomingAssignments = $availableAssignments
+            ->filter(function ($assignment) use ($submissions) {
+                $submission = $submissions->where('assignment_id', $assignment->id)->first();
+
+                return $assignment->ends_at >= now() &&
+                    $assignment->ends_at <= now()->addDays(7) &&
+                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+            })
+            ->count();
+
+        // Average assignment score
+        $gradedSubmissions = $submissions->whereIn('status', ['graded', 'completed']);
+
+        if ($gradedSubmissions->count() > 0) {
+            $this->averageAssignmentScore = round(
+                $gradedSubmissions->avg(function ($submission) {
+                    if ($submission->total_marks > 0) {
+                        return ($submission->score / $submission->total_marks) * 100;
+                    }
+                    return 0;
+                }),
+                1
+            );
+        }
+
+        // Assignments this week
+        $this->assignmentsThisWeek = $submissions
+            ->where('submitted_at', '>=', now()->startOfWeek())
+            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->count();
+
+        // Assignments this month
+        $this->assignmentsThisMonth = $submissions
+            ->where('submitted_at', '>=', now()->startOfMonth())
+            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->count();
+    }
+
+    protected function getAvailableAssignments()
+    {
+        $student = $this->student;
+
+        return Assignment::where('status', 'published')
+            ->where('starts_at', '<=', now())
+            // Removed the ends_at filter to include overdue assignments
+            ->where(function ($query) use ($student) {
+                // Check academic groups
+                $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
+                if (!empty($academicGroupIds)) {
+                    $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
+                        $q->whereIn('academic_groups.id', $academicGroupIds);
+                    });
+                }
+
+                // Check academic level
+                if ($student->academic_level_id) {
+                    $query->orWhereHas('academicLevels', function ($q) use ($student) {
+                        $q->where('academic_levels.id', $student->academic_level_id);
+                    });
+                }
+
+                // Check student groups
+                $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
+                if (!empty($studentGroupIds)) {
+                    $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
+                        $q->whereIn('student_groups.id', $studentGroupIds);
+                    });
+                }
+
+                // Check direct assignment
+                $query->orWhereHas('students', function ($q) use ($student) {
+                    $q->where('students.id', $student->id);
+                });
+            })
+            ->with(['academicSubject', 'teacher.user'])
+            ->get();
+    }
+    protected function loadSelfAssessmentStats()
+    {
+        $student = $this->student;
+
+        // Self-assessments are book-based quizzes
+        $selfAssessments = QuizSession::where('user_id', $student->user_id)
+            ->where('status', 'completed')
+            ->whereNotNull('book_id') // Only book-based assessments
+            ->get();
+
+        $this->totalSelfAssessments = $selfAssessments->count();
+
+        // Recent self-assessments
+        $this->recentSelfAssessments = QuizSession::where('user_id', $student->user_id)
+            ->where('status', 'completed')
+            ->whereNotNull('book_id')
+            ->with('book')
+            ->orderBy('completed_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'id' => $session->id,
+                    'book_title' => $session->book->title ?? 'Unknown Book',
+                    'score' => $session->results['percentage'] ?? 0,
+                    'completed_at' => $session->completed_at,
+                    'questions_count' => $session->question_count ?? 0,
+                ];
+            });
+
+        // Average self-assessment score
+        if ($selfAssessments->count() > 0) {
+            $this->averageSelfAssessmentScore = round(
+                $selfAssessments->avg(function ($session) {
+                    return $session->results['percentage'] ?? 0;
+                }),
+                1
+            );
         }
     }
 
-    #[Computed]
-    public function accountAlerts()
+    protected function loadPerformanceData()
     {
-        $alerts = [];
-        $student = auth()->user()->student;
+        $student = $this->student;
 
-        if (!$student) {
-            return $alerts;
-        }
+        // Get assignment submissions for the last 30 days
+        $submissions = AssignmentSubmission::where('student_id', $student->id)
+            ->where('submitted_at', '>=', now()->subDays(30))
+            ->whereIn('status', ['graded', 'completed'])
+            ->orderBy('submitted_at')
+            ->get();
 
-        // Check for missing academic group
-        if (!$student->academic_group_id) {
-            $alerts[] = [
-                'type' => 'error',
-                'title' => 'No Academic Group Assigned',
-                'message' => 'You are not assigned to any academic group. This may limit your access to resources and activities.',
-                'icon' => '👥',
-                'priority' => 1,
-                'action' => 'Contact Administrator',
-                'actionType' => 'admin_contact'
+        // Prepare chart data
+        $chartData = [];
+        $submissions->groupBy(function ($submission) {
+            return $submission->submitted_at->format('Y-m-d');
+        })->each(function ($daySubmissions, $date) use (&$chartData) {
+            $avgScore = $daySubmissions->avg(function ($submission) {
+                if ($submission->total_marks > 0) {
+                    return ($submission->score / $submission->total_marks) * 100;
+                }
+                return 0;
+            });
+
+            $chartData[] = [
+                'date' => $date,
+                'score' => round($avgScore, 1),
             ];
-        }
-
-        // Check for missing academic level
-        if (!$student->academic_level_id) {
-            $alerts[] = [
-                'type' => 'error',
-                'title' => 'No Academic Level Assigned',
-                'message' => 'You are not assigned to any academic level. This affects subject availability and learning materials.',
-                'icon' => '📚',
-                'priority' => 1,
-                'action' => 'Contact Administrator',
-                'actionType' => 'admin_contact'
-            ];
-        }
-
-        // Check for missing both (critical)
-        if (!$student->academic_group_id && !$student->academic_level_id) {
-            $alerts[] = [
-                'type' => 'error',
-                'title' => 'Account Setup Incomplete',
-                'message' => 'Your account is missing critical academic assignments. Please contact your administrator immediately to complete your profile setup.',
-                'icon' => '⚠️',
-                'priority' => 0, // Highest priority
-                'action' => 'Contact Administrator Urgently',
-                'actionType' => 'urgent_admin_contact'
-            ];
-        }
-
-        // Check if student has no accessible subjects
-        $accessibleSubjects = $student->getAllAccessibleSubjects();
-        if ($accessibleSubjects->isEmpty()) {
-            $alerts[] = [
-                'type' => 'warning',
-                'title' => 'No Academic Subjects Available',
-                'message' => 'You currently have no academic subjects assigned. This may affect your ability to take assessments and access learning materials.',
-                'icon' => '📖',
-                'priority' => 2,
-                'action' => 'View Subject Details',
-                'actionType' => 'subjects_tab'
-            ];
-        }
-
-        // Check if student has no primary teacher
-        if (!$student->primaryTeacher()) {
-            $alerts[] = [
-                'type' => 'info',
-                'title' => 'No Primary Teacher Assigned',
-                'message' => 'You don\'t have a primary teacher assigned. A primary teacher helps guide your learning journey.',
-                'icon' => '👨‍🏫',
-                'priority' => 3,
-                'action' => 'View Teachers',
-                'actionType' => 'teachers_info'
-            ];
-        }
-
-        // Check if student has no active library card
-        if (!$student->activeLibraryCard) {
-            $alerts[] = [
-                'type' => 'info',
-                'title' => 'No Active Library Card',
-                'message' => 'You don\'t have an active library card. This limits your ability to borrow books and access library resources.',
-                'icon' => '📚',
-                'priority' => 4,
-                'action' => 'Request Library Card',
-                'actionType' => 'library_card_request'
-            ];
-        }
-
-        // Check for incomplete profile information
-        $user = auth()->user();
-        $incompleteFields = [];
-
-        if (!$user->email_verified_at) {
-            $incompleteFields[] = 'Email verification';
-        }
-
-        if (!$student->school_id) {
-            $incompleteFields[] = 'School assignment';
-        }
-
-        if (!empty($incompleteFields)) {
-            $alerts[] = [
-                'type' => 'warning',
-                'title' => 'Profile Incomplete',
-                'message' => 'Your profile is missing: ' . implode(', ', $incompleteFields) . '. Complete your profile for full access.',
-                'icon' => '👤',
-                'priority' => 5,
-                'action' => 'Complete Profile',
-                'actionType' => 'profile_completion'
-            ];
-        }
-
-        // Sort alerts by priority (lower number = higher priority)
-        usort($alerts, function($a, $b) {
-            return $a['priority'] <=> $b['priority'];
         });
 
-        return $alerts;
+        $this->performanceChartData = $chartData;
     }
 
-    #[Computed]
-    public function accountCompleteness()
+    protected function loadRecentData()
     {
-        $student = auth()->user()->student;
-        if (!$student) {
-            return ['percentage' => 0, 'missing' => []];
-        }
+        $student = $this->student;
 
-        $checklist = [
-            'academic_group' => [
-                'label' => 'Academic Group',
-                'completed' => !is_null($student->academic_group_id),
-                'weight' => 20
-            ],
-            'academic_level' => [
-                'label' => 'Academic Level',
-                'completed' => !is_null($student->academic_level_id),
-                'weight' => 20
-            ],
-            'school_assignment' => [
-                'label' => 'School Assignment',
-                'completed' => !is_null($student->school_id),
-                'weight' => 15
-            ],
-            'email_verified' => [
-                'label' => 'Email Verified',
-                'completed' => !is_null(auth()->user()->email_verified_at),
-                'weight' => 10
-            ],
-            'library_card' => [
-                'label' => 'Active Library Card',
-                'completed' => !is_null($student->activeLibraryCard),
-                'weight' => 10
-            ],
-            'primary_teacher' => [
-                'label' => 'Primary Teacher',
-                'completed' => !is_null($student->primaryTeacher()),
-                'weight' => 10
-            ],
-            'accessible_subjects' => [
-                'label' => 'Available Subjects',
-                'completed' => $student->getAllAccessibleSubjects()->isNotEmpty(),
-                'weight' => 15
-            ]
-        ];
+        // Recent assignments (completed)
+        $this->recentAssignments = AssignmentSubmission::where('student_id', $student->id)
+            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->with(['assignment.academicSubject', 'assignment.teacher.user'])
+            ->orderBy('submitted_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($submission) {
+                $percentage = 0;
+                if ($submission->total_marks > 0) {
+                    $percentage = ($submission->score / $submission->total_marks) * 100;
+                }
 
-        $totalWeight = array_sum(array_column($checklist, 'weight'));
-        $completedWeight = array_sum(array_map(function($item) {
-            return $item['completed'] ? $item['weight'] : 0;
-        }, $checklist));
+                return [
+                    'id' => $submission->assignment_id,
+                    'title' => $submission->assignment->title,
+                    'subject' => $submission->assignment->academicSubject->name ?? 'N/A',
+                    'score' => $submission->score,
+                    'total_marks' => $submission->total_marks,
+                    'percentage' => round($percentage, 1),
+                    'submitted_at' => $submission->submitted_at,
+                    'status' => $submission->status,
+                ];
+            });
 
-        $percentage = $totalWeight > 0 ? round(($completedWeight / $totalWeight) * 100) : 0;
-        $missing = array_filter($checklist, function($item) {
-            return !$item['completed'];
-        });
+        // Upcoming due assignments
+        $availableAssignments = $this->getAvailableAssignments();
+        $submissions = AssignmentSubmission::where('student_id', $student->id)->get();
 
-        return [
-            'percentage' => $percentage,
-            'checklist' => $checklist,
-            'missing' => $missing,
-            'total_items' => count($checklist),
-            'completed_items' => count(array_filter($checklist, function($item) {
-                return $item['completed'];
-            }))
-        ];
+        $this->upcomingDueAssignments = $availableAssignments
+            ->filter(function ($assignment) use ($submissions) {
+                $submission = $submissions->where('assignment_id', $assignment->id)->first();
+
+                return $assignment->ends_at >= now() &&
+                    $assignment->ends_at <= now()->addDays(7) &&
+                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+            })
+            ->sortBy('ends_at')
+            ->take(5)
+            ->map(function ($assignment) {
+                return [
+                    'id' => $assignment->id,
+                    'title' => $assignment->title,
+                    'subject' => $assignment->academicSubject->name ?? 'N/A',
+                    'due_date' => $assignment->ends_at,
+                    'days_until_due' => now()->diffInDays($assignment->ends_at, false),
+                ];
+            })
+            ->values();
     }
 
-    #[Computed]
-    public function academicStatus()
+    protected function loadSubjectPerformance()
     {
-        $student = auth()->user()->student;
-        if (!$student) {
-            return null;
-        }
+        $student = $this->student;
 
-        if(!$student->user->currentTeam){
-           $currentTeam = $student->user->currentTeam()->create([
-                'name' => $student->user->name . ' School',
-                'owner_id' => $student->user->id
-            ]);
-            $student->user->current_team_id  = $currentTeam->id;
-            $student->user->save();
+        // Get submissions grouped by subject
+        $submissions = AssignmentSubmission::where('student_id', $student->id)
+            ->whereIn('status', ['graded', 'completed'])
+            ->with('assignment.academicSubject')
+            ->get();
 
-        }
+        $subjectStats = [];
 
-        $status = [
-            'academic_group' => $student->academicGroup ? [
-                'name' => $student->academicGroup->name,
-                'id' => $student->academicGroup->id,
-                'teachers_count' => $student->academicGroup->teachers()->count(),
-                'primary_teachers_count' => $student->academicGroup->primaryTeachers()->count()
-            ] : null,
-            'academic_level' => $student->academicLevel ? [
-                'name' => $student->academicLevel->name,
-                'label' => $student->academicLevel->label,
-                'id' => $student->academicLevel->id,
-                'subjects_count' => $student->academicLevel->academicSubjects()->count()
-            ] : null,
-            'school' => $student->school ? [
-                'name' => $student->school->name,
-                'id' => $student->school->id
-            ] : null,
-            'subjects_summary' => [
-                'total_accessible' => $student->getAllAccessibleSubjects()->count(),
-                'from_level' => $student->academicLevel ? $student->academicLevel->academicSubjects()->count() : 0,
-                'individually_assigned' => $student->getIndividuallyAssignedSubjects()->count(),
-                'removed_from_level' => $student->getRemovedLevelSubjects()->count()
-            ]
-        ];
+        $submissions->groupBy('assignment.academic_subject_id')->each(function ($subjectSubmissions, $subjectId) use (&$subjectStats) {
+            $subject = $subjectSubmissions->first()->assignment->academicSubject;
 
-        return $status;
-    }
-
-    private function getTimeBasedGreeting(): string
-    {
-        $hour = Carbon::now()->hour;
-
-        if ($hour < 12) {
-            return 'Good morning';
-        } elseif ($hour < 17) {
-            return 'Good afternoon';
-        } else {
-            return 'Good evening';
-        }
-    }
-
-    private function getStudyStreak($student): int
-    {
-        // Calculate consecutive days with assessment activity
-        $streak = 0;
-        $currentDate = Carbon::today();
-
-        while ($currentDate->greaterThan(Carbon::today()->subDays(30))) {
-            $hasActivity = Assessment::where('student_id', $student->id)
-                ->whereDate('created_at', $currentDate)
-                ->exists();
-
-            if ($hasActivity) {
-                $streak++;
-                $currentDate->subDay();
-            } else {
-                break;
+            if (!$subject) {
+                return;
             }
-        }
 
-        return $streak;
-    }
+            $totalScore = 0;
+            $totalPossible = 0;
 
-    private function getRecentAchievements($student): array
-    {
-        $achievements = [];
+            foreach ($subjectSubmissions as $submission) {
+                $totalScore += $submission->score;
+                $totalPossible += $submission->total_marks;
+            }
 
-        // Check for perfect scores in last 7 days
-        $perfectScores = Assessment::where('student_id', $student->id)
-            ->where('created_at', '>=', Carbon::now()->subDays(7))
-            ->where('score', '>=', 90)
-            ->count();
+            $percentage = $totalPossible > 0 ? ($totalScore / $totalPossible) * 100 : 0;
 
-        if ($perfectScores > 0) {
-            $achievements[] = [
-                'type' => 'perfect_score',
-                'message' => "🎯 {$perfectScores} excellent score(s) this week!",
-                'color' => 'text-green-600'
+            $subjectStats[] = [
+                'subject' => $subject->name,
+                'assignments_count' => $subjectSubmissions->count(),
+                'average_score' => round($percentage, 1),
+                'total_score' => $totalScore,
+                'total_possible' => $totalPossible,
             ];
-        }
+        });
 
-        // Check for consistency (assessments on multiple days)
-        $activeDays = Assessment::where('student_id', $student->id)
-            ->where('created_at', '>=', Carbon::now()->subDays(7))
-            ->selectRaw('DATE(created_at) as date')
-            ->groupBy('created_at')
-            ->count();
+        // Sort by average score descending
+        usort($subjectStats, function ($a, $b) {
+            return $b['average_score'] <=> $a['average_score'];
+        });
 
-        if ($activeDays >= 5) {
-            $achievements[] = [
-                'type' => 'consistency',
-                'message' => "🔥 Great consistency - active {$activeDays} days this week!",
-                'color' => 'text-blue-600'
-            ];
-        }
+        $this->subjectPerformance = $subjectStats;
 
-        return $achievements;
-    }
-
-    private function getPerformanceTrend($student): array
-    {
-        $thisWeekAvg = Assessment::where('student_id', $student->id)
-            ->where('created_at', '>=', Carbon::now()->startOfWeek())
-            ->where('status', 'completed')
-            ->avg('score') ?? 0;
-
-        $lastWeekAvg = Assessment::where('student_id', $student->id)
-            ->whereBetween('created_at', [
-                Carbon::now()->subWeek()->startOfWeek(),
-                Carbon::now()->subWeek()->endOfWeek()
-            ])
-            ->where('status', 'completed')
-            ->avg('score') ?? 0;
-
-        $difference = $thisWeekAvg - $lastWeekAvg;
-
-        return [
-            'current' => round($thisWeekAvg, 1),
-            'previous' => round($lastWeekAvg, 1),
-            'difference' => round($difference, 1),
-            'trend' => $difference > 0 ? 'up' : ($difference < 0 ? 'down' : 'stable')
-        ];
-    }
-
-    private function getQuickStats($student): array
-    {
-        $todayAssessments = Assessment::where('student_id', $student->id)
-            ->whereDate('created_at', Carbon::today())
-            ->count();
-
-        $weeklyAssessments = Assessment::where('student_id', $student->id)
-            ->where('created_at', '>=', Carbon::now()->startOfWeek())
-            ->count();
-
-        $pendingActivities = Activity::forStudent($student->id)
-            ->where('due_date', '>=', Carbon::now())
-            ->where('due_date', '<=', Carbon::now()->addDays(3))
-            ->count();
-
-        return [
-            'today_assessments' => $todayAssessments,
-            'weekly_assessments' => $weeklyAssessments,
-            'pending_activities' => $pendingActivities,
-            'study_streak' => $this->getStudyStreak($student)
-        ];
-    }
-
-    private function getSubjectProgress($student): array
-    {
-        return Subject::whereIn('id', function($query) use ($student) {
-            $query->select('subject_id')
-                ->from('assessments')
-                ->where('student_id', $student->id)
-                ->whereNotNull('subject_id');
-        })
-        ->get()
-        ->map(function($subject) use ($student) {
-            $assessments = Assessment::where('student_id', $student->id)
-                ->where('subject_id', $subject->id)
-                ->where('status', 'completed');
-
-            $totalAssessments = $assessments->count();
-            $averageScore = $assessments->avg('score') ?? 0;
-            $recentAssessments = $assessments->where('created_at', '>=', Carbon::now()->subDays(7))->count();
-
-            // Calculate progress (simplified - based on number of completed assessments)
-            $targetAssessments = 20; // Could be configurable
-            $progress = min(($totalAssessments / $targetAssessments) * 100, 100);
-
-            return [
-                'name' => $subject->name,
-                'average_score' => round($averageScore, 1),
-                'total_assessments' => $totalAssessments,
-                'recent_activity' => $recentAssessments,
-                'progress_percentage' => round($progress, 1),
-                'color' => $this->getSubjectColor($subject->name)
-            ];
-        })
-        ->sortByDesc('recent_activity')
-        ->take(5)
-        ->values()
-        ->toArray();
-    }
-
-    private function getSubjectColor($subjectName): string
-    {
-        $colors = [
-            'Mathematics' => 'blue',
-            'Science' => 'green',
-            'English' => 'purple',
-            'History' => 'yellow',
-            'Geography' => 'indigo',
-        ];
-
-        return $colors[$subjectName] ?? 'gray';
+        // Prepare chart data
+        $this->subjectChartData = collect($subjectStats)
+            ->map(function ($stat) {
+                return [
+                    'subject' => $stat['subject'],
+                    'score' => $stat['average_score'],
+                ];
+            })
+            ->toArray();
     }
 
     public function render()
     {
-        $user = auth()->user();
-        if (!$user){
-            return;
-        }
-        $student = $user->student;
-        if(!$student) return view('livewire.students.overview-no-student');
-
-        // Existing data
-        $bookSubscriptions = BookSubscription::whereHas('user', function($query) use ($student) {
-            $query->where('user_id', auth()->user()->id);
-        })->latest()->take(5)->get();
-
-        $recentAssessments = Assessment::where('student_id', $student->id)
-            ->with(['subject', 'topic'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $upcomingActivities = Activity::forStudent($student->id)
-            ->upcoming()
-            ->with(['subject', 'group'])
-            ->take(5)
-            ->get();
-
-        $upcomingActivitiesCount = Activity::forStudent($student->id)
-            ->upcoming()
-            ->count();
-
-        $overallScore = Assessment::where('student_id', $student->id)
-            ->where('status', 'completed')
-            ->avg('score') ?? 0;
-
-        $overallScore = round($overallScore, 1);
-
-        $subjectPerformance = Assessment::where('student_id', $student->id)
-            ->where('status', 'completed')
-            ->select('subject_id', DB::raw('AVG(score) as average_score'))
-            ->groupBy('subject_id')
-            ->with('subject')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'name' => $item->subject->name,
-                    'score' => round($item->average_score, 1)
-                ];
-            });
-
-        // New enhanced data
-        $greeting = $this->getTimeBasedGreeting();
-        $achievements = $this->getRecentAchievements($student);
-        $performanceTrend = $this->getPerformanceTrend($student);
-        $quickStats = $this->getQuickStats($student);
-        $subjectProgress = $this->getSubjectProgress($student);
-
-        return view('livewire.students.overview', [
-            'bookSubscriptions' => $bookSubscriptions,
-            'bookCount' => 0,
-            'recentAssessments' => $recentAssessments,
-            'upcomingActivities' => $upcomingActivities,
-            'upcomingActivitiesCount' => $upcomingActivitiesCount,
-            'overallScore' => $overallScore,
-            'subjectPerformance' => $subjectPerformance,
-            // Enhanced data
-            'greeting' => $greeting,
-            'achievements' => $achievements,
-            'performanceTrend' => $performanceTrend,
-            'quickStats' => $quickStats,
-            'subjectProgress' => $subjectProgress,
-            // New comprehensive data
-            'accountAlerts' => $this->accountAlerts,
-            'accountCompleteness' => $this->accountCompleteness,
-            'academicStatus' => $this->academicStatus,
-        ]);
+        return view('livewire.students.overview');
     }
 }

@@ -39,7 +39,7 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
-    Route::get('datamanager', \App\Livewire\Common\DataManager::class)->name('data-manager');
+    Route::get('datamanager', [\App\Http\Controllers\Student\StudentManagementController::class, 'index'])->name('data-manager');
 
     // Main activity trail page
     Route::get('/admin/activity-trail', [ActivityTrailController::class, 'index'])
@@ -77,11 +77,16 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
 
     Route::get('/admin/school-switcher', SchoolSwitcherPage::class)
         ->name('school-switcher');
+    Route::get('/school/configuration', \App\Livewire\School\SchoolConfigurationManager::class)
+        ->name('school.configuration');
 
     Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
         ->name('school-details');
 
     Route::get('/change-log', CreateChangelog::class)->name('change-log');
     Route::get('/changelog', ChangelogList::class)->name('change-log.index');
+
+    Route::get('students/{student}/documents', \App\Livewire\Students\DocumentGenerator::class)
+        ->name('students.documents');
 
 });

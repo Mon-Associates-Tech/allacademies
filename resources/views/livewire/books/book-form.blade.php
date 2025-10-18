@@ -151,7 +151,7 @@
                                         [
                                             'selected' => $authorId ? [$authorId] : [],
                                              'multiple' => false,
-                                              'items' => $authors->map(fn($author) => ['id' => $author->id, 'name' => $author->user->name])->toArray(),
+                                              'items' => $authors->map(fn($author) => ['id' => $author->id, 'name' => $author->user?->name])->toArray(),
                                                'labelKey' => 'name',
                                                'placeholder' => 'Choose or search an author',
                                                 'valueKey' => 'id',

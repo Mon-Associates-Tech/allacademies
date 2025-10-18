@@ -16,7 +16,6 @@ trait HasSubtopic
             }
             else{
                 $subtopic = AcademicSubtopic::firstOrCreate(
-                    ['name' => $request->subtopic],
                     ['name' => $request->subtopic, 'academic_topic_id' => $question->academic_topic_id]
                 );
                 $subtopicId = $subtopic->id;

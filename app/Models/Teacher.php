@@ -6,6 +6,7 @@ use App\Models\Attendance\Attendance;
 use App\Traits\BelongsToSchool;
 use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\HasStudents;
+use App\Traits\ShouldScopeSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -15,7 +16,8 @@ class Teacher extends Model
 {
     use HasFactory;
     use HasStudents;
-    use BelongsToSchoolEnhanced;
+//    use BelongsToSchoolEnhanced;
+    use ShouldScopeSchool;
 
     protected $fillable = [
         'school_id', 'user_id', 'employee_id', 'department',
@@ -155,7 +157,7 @@ class Teacher extends Model
         }
 
         // Check direct assignments
-        if ($this->assignedStudents()->where('student_id', $student->id)->exists()) {
+        if ($this->assignedStudents()->where('teacher_student.student_id', $student->id)->exists()) {
             return true;
         }
 

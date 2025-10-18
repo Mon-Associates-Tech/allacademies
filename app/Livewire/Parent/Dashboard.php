@@ -33,7 +33,7 @@ class Dashboard extends AppComponent
     #[Computed]
     public function wards()
     {
-        $students = StudentParent::where('user_id', Auth::id())
+        $students = StudentParent::withoutGlobalScopes()->where('user_id', Auth::id())
             ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
             ->get()
             ->flatMap(function($parent) {

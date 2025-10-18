@@ -115,7 +115,7 @@ trait HandlesPayments
      *
      * @param FormRequest|Request|array|PaymentRequest $request
      * @return array
-     * @throws ValidationException
+     * @throws ValidationException|Exception
      */
     private function extractAndValidatePaymentData(FormRequest|Request|array|PaymentRequest $request): array
     {
@@ -139,7 +139,7 @@ trait HandlesPayments
             return $this->validatePaymentRequest($request);
         }
 
-        throw new Exception('Invalid request type provided');
+        throw new \RuntimeException('Invalid request type provided');
     }
 
     /**

@@ -2,13 +2,12 @@
 
 namespace App\Livewire\Students;
 
-use App\Models\AssignmentSubmission;
-use App\Models\Student;
 use App\Models\Assessment;
 use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 use App\Models\BookReadingProgress;
 use App\Models\Lesson;
-use App\Models\Quiz;
+use App\Models\Student;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -31,12 +30,12 @@ class StudentSchedule extends Component
 
     public function mount(?Student $student, $date = null)
     {
-//        $this->student = $student;
-        if(!$student ||  !auth()->user()->student) {
-            $this->authorized = true;
+
+        if(!$student?->id) {
+            $this->student = auth()->user()->student ?: Student::withoutGlobalScopes()->where('user_id', auth()->user()->id)->first();
         }
         else{
-            $this->student = auth()->user()->student;
+            $this->authorized = true;
         }
 
         $this->selectedDate = $date ? Carbon::parse($date) : now();
@@ -47,7 +46,7 @@ class StudentSchedule extends Component
     public function render()
     {
 
-        if($this->authorized){
+        if ($this->authorized) {
             return view('livewire.students.unauthorized');
         }
 
@@ -96,35 +95,35 @@ class StudentSchedule extends Component
             $activities = $activities->merge($assessments);
         }
 
-        // Get assignments (if Assignment model exists)
-        if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
-            $assignments = Assignment::whereHas('students', function ($query) {
-                $query->where('student_id', $this->student->id);
-            })
-                ->with(['subject', 'submissions' => function ($query) {
-                    $query->where('student_id', $this->student->id);
-                }])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get()
-                ->map(function ($assignment) {
-                    $submission = $assignment->submissions->first();
-                    return [
-                        'id' => $assignment->id,
-                        'type' => 'assignment',
-                        'title' => $assignment->title,
-                        'subject' => $assignment->subject?->name,
-                        'date' => $assignment->due_date ?? $assignment->created_at,
-                        'status' => $submission ? $submission->status : 'not_submitted',
-                        'submitted_at' => $submission?->submitted_at,
-                        'grade' => $submission?->grade,
-                        'model' => $assignment,
-                        'submission' => $submission,
-                        'icon' => 'fas fa-tasks',
-                        'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
-                    ];
-                });
-            $activities = $activities->merge($assignments);
-        }
+// Get assignments (if Assignment model exists)
+if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
+    $assignments = Assignment::whereHas('students', function ($query) {
+            $query->where('students.id', $this->student->id);
+        })
+        ->with(['academicSubject', 'submissions' => function ($query) {
+            $query->where('assignment_submissions.student_id', $this->student->id);
+        }])
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->get()
+        ->map(function ($assignment) {
+            $submission = $assignment->submissions->first();
+            return [
+                'id' => $assignment->id,
+                'type' => 'assignment',
+                'title' => $assignment->title,
+                'subject' => $assignment->academicSubject?->name,
+                'date' => $assignment->ends_at ?? $assignment->created_at,
+                'status' => $submission ? $submission->status : 'not_submitted',
+                'submitted_at' => $submission?->submitted_at,
+                'grade' => $submission?->grade,
+                'model' => $assignment,
+                'submission' => $submission,
+                'icon' => 'fas fa-tasks',
+                'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
+            ];
+        });
+    $activities = $activities->merge($assignments);
+}
 
         // Get reading progress
         if ($this->filterType === 'all' || $this->filterType === 'reading') {
@@ -158,107 +157,6 @@ class StudentSchedule extends Component
         }
 
         return $activities->sortByDesc('date');
-    }
-
-    public function getCalendarData()
-    {
-        $startOfMonth = Carbon::create($this->currentYear, $this->currentMonth, 1);
-        $endOfMonth = $startOfMonth->copy()->endOfMonth();
-
-        // Get all activities for the month
-        $activities = $this->student->assessments()
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-            ->get()
-            ->groupBy(function ($assessment) {
-                return $assessment->created_at->format('Y-m-d');
-            });
-
-        // Add other activity types here...
-
-        $calendar = [];
-        $currentDate = $startOfMonth->copy()->startOfWeek(Carbon::SUNDAY);
-
-
-        for ($week = 0; $week < 6; $week++) {
-            for ($day = 0; $day < 7; $day++) {
-                $dateKey = $currentDate->format('Y-m-d');
-                $calendar[$week][$day] = [
-                    'date' => $currentDate->copy(),
-                    'isCurrentMonth' => $currentDate->month === $this->currentMonth,
-                    'isToday' => $currentDate->isToday(),
-                    'activities' => $activities->get($dateKey, collect()),
-                    'activityCount' => $activities->get($dateKey, collect())->count(),
-                ];
-                $currentDate->addDay();
-            }
-        }
-
-        return $calendar;
-    }
-
-    public function selectDate($date)
-    {
-        $this->selectedDate = Carbon::parse($date);
-        $this->viewMode = 'list';
-    }
-
-    public function changeMonth($direction)
-    {
-        if ($direction === 'next') {
-            $this->currentMonth++;
-            if ($this->currentMonth > 12) {
-                $this->currentMonth = 1;
-                $this->currentYear++;
-            }
-        } else {
-            $this->currentMonth--;
-            if ($this->currentMonth < 1) {
-                $this->currentMonth = 12;
-                $this->currentYear--;
-            }
-        }
-    }
-
-    public function setViewMode($mode)
-    {
-        $this->viewMode = $mode;
-    }
-
-    public function setFilterType($type)
-    {
-        $this->filterType = $type;
-        $this->resetPage();
-    }
-
-    public function showActivityDetails($activityId, $activityType)
-    {
-        $this->selectedActivity = $this->getActivityById($activityId, $activityType);
-        $this->showActivityModal = true;
-    }
-
-    public function closeActivityModal()
-    {
-        $this->showActivityModal = false;
-        $this->selectedActivity = null;
-    }
-
-    private function getActivityById($id, $type)
-    {
-        switch ($type) {
-            case 'assessment':
-                return Assessment::with(['subject', 'topic', 'subtopic', 'book', 'responses'])
-                    ->find($id);
-            case 'assignment':
-                if (class_exists('App\Models\Assignment')) {
-                    return Assignment::with(['subject', 'submissions' => function ($query) {
-                        $query->where('student_id', $this->student->id);
-                    }])->find($id);
-                }
-                break;
-            case 'reading':
-                return BookReadingProgress::with(['book', 'book.subject'])->find($id);
-        }
-        return null;
     }
 
     private function getStartDate()
@@ -322,7 +220,147 @@ class StudentSchedule extends Component
         return 'red';
     }
 
+    public function getCalendarData()
+    {
+        $startOfMonth = Carbon::create($this->currentYear, $this->currentMonth, 1);
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        // Get all activities for the month
+        $activities = $this->student->assessments()
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->groupBy(function ($assessment) {
+                return $assessment->created_at->format('Y-m-d');
+            });
+
+        // Add other activity types here...
+
+        $calendar = [];
+        $currentDate = $startOfMonth->copy()->startOfWeek(Carbon::SUNDAY);
+
+
+        for ($week = 0; $week < 6; $week++) {
+            for ($day = 0; $day < 7; $day++) {
+                $dateKey = $currentDate->format('Y-m-d');
+                $calendar[$week][$day] = [
+                    'date' => $currentDate->copy(),
+                    'isCurrentMonth' => $currentDate->month === $this->currentMonth,
+                    'isToday' => $currentDate->isToday(),
+                    'activities' => $activities->get($dateKey, collect()),
+                    'activityCount' => $activities->get($dateKey, collect())->count(),
+                ];
+                $currentDate->addDay();
+            }
+        }
+
+        return $calendar;
+    }
+
+    public function selectDate($date)
+    {
+        $this->selectedDate = Carbon::parse($date);
+        $this->viewMode = 'list';
+    }
+
+    public function changeMonth($direction)
+    {
+        if ($direction === 'next') {
+            $this->currentMonth++;
+            if ($this->currentMonth > 12) {
+                $this->currentMonth = 1;
+                $this->currentYear++;
+            }
+        } else {
+            $this->currentMonth--;
+            if ($this->currentMonth < 1) {
+                $this->currentMonth = 12;
+                $this->currentYear--;
+            }
+        }
+
+        // Update selectedDate to match the new month for consistency
+        $this->selectedDate = Carbon::create($this->currentYear, $this->currentMonth, 1);
+    }
+
+    // Add new method for week navigation
+    public function changeWeek($direction)
+    {
+        if ($direction === 'next') {
+            $this->selectedDate = $this->selectedDate->copy()->addWeek();
+        } else {
+            $this->selectedDate = $this->selectedDate->copy()->subWeek();
+        }
+
+        // Update current month/year to stay in sync
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
+    }
+
+    // Add new method for day navigation (for list view)
+    public function changeDay($direction)
+    {
+        if ($direction === 'next') {
+            $this->selectedDate = $this->selectedDate->copy()->addDay();
+        } else {
+            $this->selectedDate = $this->selectedDate->copy()->subDay();
+        }
+
+        // Update current month/year to stay in sync
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
+    }
+
+    // Add method to go to today
+    public function goToToday()
+    {
+        $this->selectedDate = now();
+        $this->currentMonth = $this->selectedDate->month;
+        $this->currentYear = $this->selectedDate->year;
+    }
+    public function setViewMode($mode)
+    {
+        $this->viewMode = $mode;
+    }
+
+    public function setFilterType($type)
+    {
+        $this->filterType = $type;
+        $this->resetPage();
+    }
+
+    public function showActivityDetails($activityId, $activityType)
+    {
+        $this->selectedActivity = $this->getActivityById($activityId, $activityType);
+        $this->showActivityModal = true;
+    }
+
+    private function getActivityById($id, $type)
+    {
+        switch ($type) {
+            case 'assessment':
+                return Assessment::with(['subject', 'topic', 'subtopic', 'book', 'responses'])
+                    ->find($id);
+            case 'assignment':
+                if (class_exists('App\Models\Assignment')) {
+                    return Assignment::with(['subject', 'submissions' => function ($query) {
+                        $query->where('student_id', $this->student->id);
+                    }])->find($id);
+                }
+                break;
+            case 'reading':
+                return BookReadingProgress::with(['book', 'book.subject'])->find($id);
+        }
+        return null;
+    }
+
+    public function closeActivityModal()
+    {
+        $this->showActivityModal = false;
+        $this->selectedActivity = null;
+    }
+
     // Statistics methods
+
     public function getWeeklyStats()
     {
         $startOfWeek = now()->startOfWeek();

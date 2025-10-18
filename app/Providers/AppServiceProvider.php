@@ -8,6 +8,7 @@ use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
+use App\Models\Attendance\AttendanceRecord;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
@@ -26,6 +27,7 @@ use App\Models\Teacher;
 use App\Models\Team;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
+use App\Services\ErrorNotificationService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Blade;
@@ -41,7 +43,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(ErrorNotificationService::class, function ($app) {
+            return new ErrorNotificationService();
+        });
     }
 
     /**
@@ -102,6 +106,9 @@ class AppServiceProvider extends ServiceProvider
             'chat_group' => ChatGroup::class,
             'school' => \App\Models\School::class,
             'academic_period' => \App\Models\AcademicPeriod::class,
+            'quiz_session' => \App\Models\QuizSession::class,
+            'attendance_record' => AttendanceRecord::class,
+            'open_ai_token_package' => \App\Models\Chat\OpenAiTokenPackage::class,
 
         ]);
     }

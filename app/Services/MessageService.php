@@ -3,21 +3,89 @@
 namespace App\Services;
 
 use App\Mail\MessageNotificationMail;
-use App\Models\Message;
-use App\Models\MessageRecipient;
-use App\Models\User;
-use App\Models\Teacher;
-use App\Models\Student;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
+use App\Models\Message;
+use App\Models\MessageRecipient;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\User;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MessageService
 {
+    public function sendMessage(Message $message): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $recipients = $this->getRecipientsForMessage($message);
+
+            Log::info('Sending message to recipients', [
+                'message_id' => $message->id,
+                'recipient_count' => $recipients->count(),
+                'target_type' => $message->target_type,
+                'target_criteria' => $message->target_criteria
+            ]);
+
+            if ($recipients->isEmpty()) {
+                Log::warning('No recipients found for message', ['message_id' => $message->id]);
+                throw new Exception('No recipients found for this message.');
+            }
+
+            // Create recipient records and send emails
+            foreach ($recipients as $recipient) {
+                MessageRecipient::create([
+                    'message_id' => $message->id,
+                    'user_id' => $recipient->id,
+                ]);
+
+
+                Mail::to($recipient->email)->send(new MessageNotificationMail($message, $recipient));
+
+                Log::info('Email sent to recipient', [
+                    'message_id' => $message->id,
+                    'recipient_id' => $recipient->id,
+                    'recipient_email' => $recipient->email
+                ]);
+            }
+
+            // Update message status
+            $message->update([
+                'status' => Message::STATUS_SENT,
+                'sent_at' => now(),
+            ]);
+
+            DB::commit();
+
+            Log::info('Message sent successfully', [
+                'message_id' => $message->id,
+                'recipients_sent' => $recipients->count()
+            ]);
+
+            return true;
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to send message', [
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $message->update([
+                'status' => Message::STATUS_FAILED,
+            ]);
+
+            throw $e;
+        }
+    }
+
     public function getRecipientsForMessage(Message $message): Collection
     {
         return $this->resolveRecipients($message->target_type, $message->target_criteria);
@@ -65,7 +133,7 @@ class MessageService
         $includeStudents = $criteria['include_students'] ?? true;
         $includeTeachers = $criteria['include_teachers'] ?? true;
 
-        $recipients = collect();
+        $userIds = collect();
 
         if ($includeStudents) {
             $students = Student::whereIn('academic_group_id', $groupIds)
@@ -74,7 +142,7 @@ class MessageService
                 ->pluck('user')
                 ->filter();
 
-            $recipients = $recipients->merge($students);
+            $userIds = $userIds->merge($students->pluck('id'));
         }
 
         if ($includeTeachers) {
@@ -86,10 +154,11 @@ class MessageService
                 ->pluck('user')
                 ->filter();
 
-            $recipients = $recipients->merge($teachers);
+            $userIds = $userIds->merge($teachers->pluck('id'));
         }
 
-        return $recipients->unique('id');
+        // Return an Eloquent Collection directly
+        return User::whereIn('id', $userIds->unique())->get();
     }
 
     protected function getRecipientsByAcademicLevel(array $criteria): Collection
@@ -98,7 +167,7 @@ class MessageService
         $includeStudents = $criteria['include_students'] ?? true;
         $includeTeachers = $criteria['include_teachers'] ?? true;
 
-        $recipients = collect();
+        $userIds = collect();
 
         if ($includeStudents) {
             $students = Student::whereIn('academic_level_id', $levelIds)
@@ -107,7 +176,7 @@ class MessageService
                 ->pluck('user')
                 ->filter();
 
-            $recipients = $recipients->merge($students);
+            $userIds = $userIds->merge($students->pluck('id'));
         }
 
         if ($includeTeachers) {
@@ -119,10 +188,11 @@ class MessageService
                 ->pluck('user')
                 ->filter();
 
-            $recipients = $recipients->merge($teachers);
+            $userIds = $userIds->merge($teachers->pluck('id'));
         }
 
-        return $recipients->unique('id');
+        // Return an Eloquent Collection directly
+        return User::whereIn('id', $userIds->unique())->get();
     }
 
     protected function getRecipientsBySubject(array $criteria): Collection
@@ -131,7 +201,7 @@ class MessageService
         $includeStudents = $criteria['include_students'] ?? true;
         $includeTeachers = $criteria['include_teachers'] ?? true;
 
-        $recipients = collect();
+        $userIds = collect();
 
         if ($includeTeachers) {
             $teachers = Teacher::whereHas('academicSubjects', function ($query) use ($subjectIds) {
@@ -142,7 +212,7 @@ class MessageService
                 ->pluck('user')
                 ->filter();
 
-            $recipients = $recipients->merge($teachers);
+            $userIds = $userIds->merge($teachers->pluck('id'));
         }
 
         if ($includeStudents) {
@@ -157,10 +227,11 @@ class MessageService
                 ->pluck('user')
                 ->filter();
 
-            $recipients = $recipients->merge($students);
+            $userIds = $userIds->merge($students->pluck('id'));
         }
 
-        return $recipients->unique('id');
+        // Return an Eloquent Collection directly
+        return User::whereIn('id', $userIds->unique())->get();
     }
 
     protected function getRecipientsByIndividual(array $criteria): Collection
@@ -209,73 +280,6 @@ class MessageService
         }
 
         return $recipients->unique('id');
-    }
-
-    public function sendMessage(Message $message): bool
-    {
-        try {
-            DB::beginTransaction();
-
-            $recipients = $this->getRecipientsForMessage($message);
-
-            Log::info('Sending message to recipients', [
-                'message_id' => $message->id,
-                'recipient_count' => $recipients->count(),
-                'target_type' => $message->target_type,
-                'target_criteria' => $message->target_criteria
-            ]);
-
-            if ($recipients->isEmpty()) {
-                Log::warning('No recipients found for message', ['message_id' => $message->id]);
-                throw new \Exception('No recipients found for this message.');
-            }
-
-            // Create recipient records and send emails
-            foreach ($recipients as $recipient) {
-                MessageRecipient::create([
-                    'message_id' => $message->id,
-                    'user_id' => $recipient->id,
-                ]);
-
-
-                Mail::to($recipient->email)->send(new MessageNotificationMail($message, $recipient));
-
-                Log::info('Email sent to recipient', [
-                    'message_id' => $message->id,
-                    'recipient_id' => $recipient->id,
-                    'recipient_email' => $recipient->email
-                ]);
-            }
-
-            // Update message status
-            $message->update([
-                'status' => Message::STATUS_SENT,
-                'sent_at' => now(),
-            ]);
-
-            DB::commit();
-
-            Log::info('Message sent successfully', [
-                'message_id' => $message->id,
-                'recipients_sent' => $recipients->count()
-            ]);
-
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Failed to send message', [
-                'message_id' => $message->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $message->update([
-                'status' => Message::STATUS_FAILED,
-            ]);
-
-            throw $e;
-        }
     }
 
     public function getAvailableRoles(): array

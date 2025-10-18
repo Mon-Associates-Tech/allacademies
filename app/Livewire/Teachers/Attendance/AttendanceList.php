@@ -5,6 +5,7 @@ namespace App\Livewire\Teachers\Attendance;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\Attendance\Attendance;
+use App\Models\Teacher;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -25,6 +26,7 @@ class AttendanceList extends Component
     public $selectedSession = '';
     public $attendanceRate;
     public $academicLevels;
+    public ?Teacher $teacher;
 
     // Available Options
     public $subjects;
@@ -82,12 +84,17 @@ class AttendanceList extends Component
 
     public function mount()
     {
+        $this->teacher = auth()->user()->teacher;
+
+        if(!$this->teacher){
+            $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', auth()->user()->id)->first();
+        }
         // Set default date range to current month
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->endOfMonth()->format('Y-m-d');
 
         // Load academic levels assigned to the teacher
-        $this->academicLevels = auth()->user()->teacher->academicLevels;
+        $this->academicLevels = $this->teacher->academicLevels;
 
         // Initialize subjects as empty collection
         $this->subjects = collect();
@@ -101,7 +108,7 @@ class AttendanceList extends Component
     public function loadSubjectsForLevel($levelId)
     {
         // Get subjects that are both assigned to the teacher and belong to the selected level
-        $this->subjects = auth()->user()->teacher
+        $this->subjects = $this->teacher
             ->academicSubjects()
             ->where('academic_level_id', $levelId)
             ->orderBy('name')
@@ -121,7 +128,7 @@ class AttendanceList extends Component
 
     public function render()
     {
-        $query = Attendance::where('teacher_id', auth()->user()->teacher->id)
+        $query = Attendance::where('teacher_id', $this->teacher->id)
             ->with([
                 'academicLevel',
                 'academicSubject',

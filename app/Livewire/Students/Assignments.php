@@ -3,6 +3,7 @@
 namespace App\Livewire\Students;
 
 use App\Models\Assignment;
+use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -29,15 +30,23 @@ class Assignments extends Component
         'sortDirection' => ['except' => 'desc'],
     ];
 
-    public function mount()
-    {
-        $this->student = Auth::user()->student;
+public function mount()
+{
+    $user = Auth::user();
 
-        // Check if student record exists
-        if (!$this->student) {
-            $this->unauthorized = true;
-        }
+
+    $this->student = $user->student;
+
+    if (!$this->student) {
+        $this->student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
     }
+
+
+    if (!$this->student) {
+        $this->unauthorized = true;
+    }
+}
+
 
     public function updatingSearch()
     {
@@ -88,7 +97,7 @@ class Assignments extends Component
 
     public function startAssignment(Assignment $assignment)
     {
-        return redirect()->route('student.assignment.take', ['assignment' => $assignment]);
+        return redirect()->route('students.assignment.take', ['assignment' => $assignment]);
     }
 
     public function getAssignmentsProperty()
@@ -102,8 +111,8 @@ class Assignments extends Component
 
         // Start with basic query
         $query = \App\Models\Assignment::where('status', 'published')
-//            ->where('starts_at', '<=', now())
-            ->where('ends_at', '>', now());
+            ->where('starts_at', '<=', now());
+//            ->where('ends_at', '>', now());
 
         // Log the basic query count
         $basicCount = $query->count();

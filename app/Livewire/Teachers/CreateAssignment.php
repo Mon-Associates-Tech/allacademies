@@ -10,6 +10,7 @@ use App\Models\StudentGroup;
 use App\Models\AcademicSubtopic;
 use App\Models\Teacher;
 use App\Services\AssignmentNotificationService;
+use App\Services\QuestionAvailabilityChecker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -66,6 +67,10 @@ class CreateAssignment extends Component
         'is_randomized' => 'boolean',
         'instructions' => 'nullable|string',
         'total_marks' => 'required|integer|min:1',
+    ];
+
+    protected $messages = [
+     //   'question_count_validation' => 'The selected topics/subtopics do not have enough questions to fulfill the assignment requirements.',
     ];
     public function mount()
     {
@@ -158,9 +163,26 @@ class CreateAssignment extends Component
         }
     }
 
+    public function validateQuestionCounts()
+    {
+        $checker = new QuestionAvailabilityChecker();
+        $questionsConfig = $this->buildQuestionsConfiguration();
+
+        $result = $checker->checkQuestionAvailability(
+            $questionsConfig,
+            $this->academic_subject_id,
+            $this->selectedTopics,
+            $this->selectedSubtopics
+        );
+
+        return $result;
+    }
+
     public function createAssignment()
     {
-        $this->validate();
+
+        session()->flash('success', 'Creating assignment...');
+//        $this->validate();
 
         // Validate that at least one question type is enabled
         $hasQuestions = false;
@@ -174,6 +196,14 @@ class CreateAssignment extends Component
         if (!$hasQuestions) {
             session()->flash('error', 'Please enable at least one question type with a count greater than 0.');
             return;
+        }
+
+        // Validate question availability
+        logError(json_encode($this->validateQuestionCounts()));
+        if (!$this->validateQuestionCounts()) {
+            logError('Question availability check failed');
+           // session()->flash('error', 'The selected topics/subtopics do not have enough questions to fulfill the assignment requirements.');
+           // return;
         }
 
         try {
@@ -235,9 +265,10 @@ class CreateAssignment extends Component
 
             session()->flash('success', 'Assignment created successfully and notifications sent!');
 
-            return redirect()->route('teacher.assignments.index');
+            return redirect()->route('teachers.assignments.index');
 
         } catch (\Exception $e) {
+            logError('Assignment Creation Error: ' . $e->getMessage());
             DB::rollBack();
             session()->flash('error', 'Failed to create assignment: ' . $e->getMessage());
         }

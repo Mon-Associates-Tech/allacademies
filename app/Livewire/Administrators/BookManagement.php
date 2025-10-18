@@ -6,6 +6,8 @@ use App\Enums\PublishingStatus;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
+use App\Models\Payment;
+use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -97,9 +99,131 @@ class BookManagement extends Component
 
             session()->flash('success', "Book status updated to {$newStatus->getLabel()} successfully!");
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             session()->flash('error', 'Failed to update book status. Please try again.');
         }
+    }
+
+    public function update()
+    {
+        $book = Book::findOrFail($this->editingBookId);
+
+        $this->validate();
+
+        // Validate that at least one format is selected
+        if (!$this->hasHardcopy && !$this->hasSoftcopy) {
+            $this->addError('hasHardcopy', 'Please select at least one format (hardcopy or softcopy).');
+            return;
+        }
+
+        // Handle cover image
+        $coverPath = $book->cover_image;
+        if ($this->coverImage) {
+            // Delete old cover if exists
+            if ($coverPath && Storage::disk('public')->exists($coverPath)) {
+                Storage::disk('public')->delete($coverPath);
+            }
+            $coverPath = $this->coverImage->store('book-covers', 'public');
+        }
+
+        // Handle PDF file
+        $pdfPath = $book->pdf_file;
+        if ($this->pdfFile) {
+            // Delete old PDF if exists
+            if ($pdfPath && Storage::disk('public')->exists($pdfPath)) {
+                Storage::disk('public')->delete($pdfPath);
+            }
+            $pdfPath = $this->pdfFile->store('book-pdfs', 'public');
+        }
+
+        // Update book
+        $book->update([
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'author_id' => $this->authorId,
+            'book_category_id' => $this->bookCategoryId,
+            'edition' => $this->edition,
+            'publisher' => $this->publisher,
+            'pages' => $this->pages,
+            'status' => $this->status,
+            'has_hardcopy' => $this->hasHardcopy,
+            'has_softcopy' => $this->hasSoftcopy,
+            'additional_info' => $this->additionalInfo,
+            'annual_subscription_fee' => $this->annualSubscriptionFee,
+            'subscription_conditions' => $this->subscriptionConditions,
+            'cover_image' => $coverPath,
+            'content_url' => $pdfPath,
+        ]);
+
+        $this->resetForm();
+        $this->showForm = false;
+        session()->flash('message', 'Book updated successfully!');
+        $this->dispatch('refreshBooks');
+    }
+
+    public function delete($bookId): void
+    {
+        $book = Book::findOrFail($bookId);
+
+        if ($book->borrowings()->count() > 0 || $book->subscriptions()->count() > 0) {
+            session()->flash('error', 'Cannot delete book with active borrowings or subscriptions.');
+            // return;
+        }
+
+
+        $subscriptionIds = $book->subscriptions()->pluck('id');
+
+        if ($subscriptionIds->isNotEmpty()) {
+            Payment::whereIn('book_subscription_id', $subscriptionIds)->delete();
+        }
+
+        $book->subscriptions()->delete();
+
+        $book->borrowings()->delete();
+
+        $this->deleteBookFiles($book);
+
+        $book->delete();
+
+        session()->flash('message', 'Book deleted successfully!');
+        $this->dispatch('refreshBooks');
+    }
+
+    private function deleteBookFiles($book)
+    {
+        // Delete cover image
+        if ($book->cover_image && Storage::disk('public')->exists($book->cover_image)) {
+            Storage::disk('public')->delete($book->cover_image);
+        }
+
+        // Delete PDF file
+        if ($book->pdf_file && Storage::disk('public')->exists($book->pdf_file)) {
+            Storage::disk('public')->delete($book->pdf_file);
+        }
+    }
+
+    public function resetForm()
+    {
+        $this->title = '';
+        $this->slug = '';
+        $this->authorId = '';
+        $this->bookCategoryId = '';
+        $this->edition = '';
+        $this->publisher = '';
+        $this->pages = null;
+        $this->status = '';
+        $this->hasHardcopy = false;
+        $this->hasSoftcopy = false;
+        $this->additionalInfo = '';
+        $this->annualSubscriptionFee = 0;
+        $this->subscriptionConditions = '';
+        $this->coverImage = null;
+        $this->pdfFile = null;
+        $this->existingCover = null;
+        $this->existingPdf = null;
+        $this->isEditing = false;
+        $this->editingBookId = null;
+        $this->resetValidation();
     }
 
     public function updatedTitle()
@@ -196,7 +320,7 @@ class BookManagement extends Component
         $this->resetForm();
         $this->showForm = false;
         session()->flash('message', 'Book created successfully!');
-        $this->emit('refreshBooks');
+        $this->dispatch('refreshBooks');
     }
 
     public function edit($bookId)
@@ -223,80 +347,6 @@ class BookManagement extends Component
         $this->status = $book->status ?? 'draft';
     }
 
-    public function update()
-    {
-        $book = Book::findOrFail($this->editingBookId);
-
-        $this->validate();
-
-        // Validate that at least one format is selected
-        if (!$this->hasHardcopy && !$this->hasSoftcopy) {
-            $this->addError('hasHardcopy', 'Please select at least one format (hardcopy or softcopy).');
-            return;
-        }
-
-        // Handle cover image
-        $coverPath = $book->cover_image_path;
-        if ($this->coverImage) {
-            // Delete old cover if exists
-            if ($coverPath && Storage::disk('public')->exists($coverPath)) {
-                Storage::disk('public')->delete($coverPath);
-            }
-            $coverPath = $this->coverImage->store('book-covers', 'public');
-        }
-
-        // Handle PDF file
-        $pdfPath = $book->pdf_file_path;
-        if ($this->pdfFile) {
-            // Delete old PDF if exists
-            if ($pdfPath && Storage::disk('public')->exists($pdfPath)) {
-                Storage::disk('public')->delete($pdfPath);
-            }
-            $pdfPath = $this->pdfFile->store('book-pdfs', 'public');
-        }
-
-        // Update book
-        $book->update([
-            'title' => $this->title,
-            'slug' => $this->slug,
-            'author_id' => $this->authorId,
-            'book_category_id' => $this->bookCategoryId,
-            'edition' => $this->edition,
-            'publisher' => $this->publisher,
-            'pages' => $this->pages,
-            'status' => $this->status,
-            'has_hardcopy' => $this->hasHardcopy,
-            'has_softcopy' => $this->hasSoftcopy,
-            'additional_info' => $this->additionalInfo,
-            'annual_subscription_fee' => $this->annualSubscriptionFee,
-            'subscription_conditions' => $this->subscriptionConditions,
-            'cover_image' => $coverPath,
-            'content_url' => $pdfPath,
-        ]);
-
-        $this->resetForm();
-        $this->showForm = false;
-        session()->flash('message', 'Book updated successfully!');
-//        $this->emit('refreshBooks');
-    }
-
-    public function delete($bookId)
-    {
-        $book = Book::findOrFail($bookId);
-
-        // Check if book has borrowings or subscriptions
-        if ($book->borrowings()->count() > 0 || $book->subscriptions()->count() > 0) {
-            session()->flash('error', 'Cannot delete book with active borrowings or subscriptions.');
-            return;
-        }
-
-//        $this->deleteBookFiles($book);
-//        $book->delete();
-
-        session()->flash('message', 'Book deleted successfully!');
-        $this->dispatch('refreshBooks');
-    }
-
     public function bulkDelete()
     {
         if (empty($this->selectedBooks)) {
@@ -316,6 +366,8 @@ class BookManagement extends Component
             }
 
             $this->deleteBookFiles($book);
+            $book->subscriptions()->delete();
+            $book->borrowings()->delete();
             $book->delete();
             $deletedCount++;
         }
@@ -333,19 +385,6 @@ class BookManagement extends Component
         $this->dispatch('refreshBooks');
     }
 
-    private function deleteBookFiles($book)
-    {
-        // Delete cover image
-        if ($book->cover_image_path && Storage::disk('public')->exists($book->cover_image_path)) {
-            Storage::disk('public')->delete($book->cover_image_path);
-        }
-
-        // Delete PDF file
-        if ($book->pdf_file_path && Storage::disk('public')->exists($book->pdf_file_path)) {
-            Storage::disk('public')->delete($book->pdf_file_path);
-        }
-    }
-
     public function resetFilters()
     {
         $this->searchTerm = '';
@@ -357,30 +396,6 @@ class BookManagement extends Component
         $this->resetPage();
     }
 
-    public function resetForm()
-    {
-        $this->title = '';
-        $this->slug = '';
-        $this->authorId = '';
-        $this->bookCategoryId = '';
-        $this->edition = '';
-        $this->publisher = '';
-        $this->pages = null;
-        $this->status = '';
-        $this->hasHardcopy = false;
-        $this->hasSoftcopy = false;
-        $this->additionalInfo = '';
-        $this->annualSubscriptionFee = 0;
-        $this->subscriptionConditions = '';
-        $this->coverImage = null;
-        $this->pdfFile = null;
-        $this->existingCover = null;
-        $this->existingPdf = null;
-        $this->isEditing = false;
-        $this->editingBookId = null;
-        $this->resetValidation();
-    }
-
     public function getBooksProperty()
     {
         $query = Book::query()
@@ -388,15 +403,15 @@ class BookManagement extends Component
 
         // Apply search filter
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'like', '%'.$this->searchTerm.'%')
-                  ->orWhere('publisher', 'like', '%'.$this->searchTerm.'%')
-                  ->orWhereHas('author.user', function($subQuery) {
-                      $subQuery->where('name', 'like', '%'.$this->searchTerm.'%');
-                  })
-                  ->orWhereHas('bookCategory', function($subQuery) {
-                      $subQuery->where('name', 'like', '%'.$this->searchTerm.'%');
-                  });
+            $query->where(function ($q) {
+                $q->where('title', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('publisher', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhereHas('author.user', function ($subQuery) {
+                        $subQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+                    })
+                    ->orWhereHas('bookCategory', function ($subQuery) {
+                        $subQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+                    });
             });
         }
 
@@ -426,13 +441,13 @@ class BookManagement extends Component
             $query->orderBy('title', $this->sortDirection);
         } elseif ($this->sortBy === 'author') {
             $query->join('authors', 'books.author_id', '=', 'authors.id')
-                  ->join('users', 'authors.user_id', '=', 'users.id')
-                  ->orderBy('users.name', $this->sortDirection)
-                  ->select('books.*');
+                ->join('users', 'authors.user_id', '=', 'users.id')
+                ->orderBy('users.name', $this->sortDirection)
+                ->select('books.*');
         } elseif ($this->sortBy === 'category') {
             $query->join('book_categories', 'books.book_category_id', '=', 'book_categories.id')
-                  ->orderBy('book_categories.name', $this->sortDirection)
-                  ->select('books.*');
+                ->orderBy('book_categories.name', $this->sortDirection)
+                ->select('books.*');
         } else {
             $query->orderBy($this->sortBy, $this->sortDirection);
         }

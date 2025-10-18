@@ -8,9 +8,12 @@ use Livewire\Component;
 use Livewire\Attributes\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\WithFileUploads;
 
 class AcademicChat extends Component
 {
+    use WithFileUploads;
+
     // Chat parameters
     #[Rule('required|string|max:1000')]
     public $message = '';
@@ -41,11 +44,17 @@ class AcademicChat extends Component
     #[Rule('nullable|string')]
     public $response_format = 'detailed';
 
-    #[Rule('nullable|numeric|min:0|max:1')]
-    public $creativity_level = 0.7;
+    #[Rule('nullable|numeric|min:1|max:2')]
+    public $creativity_level = 1;
 
     #[Rule('nullable|integer|min:100|max:2000')]
     public $response_length = 1000;
+
+    #[Rule('nullable|file|max:10240')] // 10MB limit
+    public $uploadedFile = null;
+
+    public $fileContent = '';
+    public $fileName = '';
 
     // Component state
     public $messages = [];
@@ -60,6 +69,9 @@ class AcademicChat extends Component
 
     protected $chatService;
 
+    public $canSendMessage = true;
+    public $tokenWarningMessage = null;
+
     public function boot(AcademicChatService $chatService)
     {
         $this->chatService = $chatService;
@@ -67,6 +79,7 @@ class AcademicChat extends Component
 
     public function mount()
     {
+        $this->checkTokenAvailability();
         $this->availableSubjects = $this->chatService->getAvailableSubjects();
         $this->loadConversationHistory();
         $this->loadChatHistory();
@@ -74,12 +87,56 @@ class AcademicChat extends Component
         // Set default values
         $this->difficulty = 'medium';
         $this->response_format = 'detailed';
-        $this->creativity_level = 0.7;
+        $this->creativity_level = 1;
         $this->response_length = 1000;
     }
 
-    public function sendMessage()
+    public function checkTokenAvailability()
     {
+
+        $user = auth()->user();
+        $subscription = $user->activeTokenSubscription;
+
+        if (!$subscription) {
+            $this->canSendMessage = false;
+            $this->tokenWarningMessage = 'no_subscription';
+            return;
+        }
+
+        if ($subscription->status === 'depleted' || $subscription->tokens_remaining <= 0) {
+            $this->canSendMessage = false;
+            $this->tokenWarningMessage = 'depleted';
+            return;
+        }
+
+        if ($subscription->isExpired()) {
+            $this->canSendMessage = false;
+            $this->tokenWarningMessage = 'expired';
+            $subscription->deactivate('expired');
+            return;
+        }
+
+        // Check if user has at least minimum tokens (e.g., 100 tokens for a basic chat)
+        if (!$user->hasOpenAiTokens(100)) {
+            $this->canSendMessage = false;
+            $this->tokenWarningMessage = 'insufficient';
+            return;
+        }
+
+        $this->canSendMessage = true;
+        $this->tokenWarningMessage = null;
+    }
+
+    public function sendMessage(): void
+    {
+
+        $this->checkTokenAvailability();
+
+        if (!$this->canSendMessage) {
+            $this->dispatch('tokenCheckFailed');
+            return;
+        }
+
         $this->validate();
 
         if (empty(trim($this->message))) {
@@ -98,6 +155,10 @@ class AcademicChat extends Component
         $parameters = $this->getParameters();
         $parameters['message'] = $this->message;
 
+        if (!empty($this->fileContent)) {
+            $parameters['file_content'] = $this->fileContent;
+        }
+
         // Validate parameters
         $validationErrors = $this->chatService->validateParameters($parameters);
         if (!empty($validationErrors)) {
@@ -106,10 +167,22 @@ class AcademicChat extends Component
             return;
         }
 
+        // Process uploaded file if present
+        if ($this->uploadedFile) {
+            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
+            $this->fileName = $this->uploadedFile->getClientOriginalName();
+            $this->uploadedFile = null; // Reset file input
+        }
+
+        // Add user message to chat and database
+        $userMessageContent = $this->message;
+        if (!empty($this->fileContent)) {
+            $userMessageContent .= "\n\nFile: " . $this->fileName . "\nFile Content:\n" . $this->fileContent;
+        }
         // Add user message to chat and database
         $userMessage = [
             'role' => 'user',
-            'content' => $this->message,
+            'content' => $userMessageContent,
             'timestamp' => now()->toISOString()
         ];
         $this->messages[] = $userMessage;
@@ -128,7 +201,8 @@ class AcademicChat extends Component
         $conversationHistory = $this->getConversationHistory();
 
         // Send to AI service
-        $response = $this->chatService->chat($parameters, $conversationHistory, 'gpt-4.1-nano');
+        $response = $this->chatService->chat($parameters, $conversationHistory);
+
 
         if ($response['success']) {
             // Add AI response to chat
@@ -156,12 +230,23 @@ class AcademicChat extends Component
 
         // Clear message and reset loading
         $this->message = '';
+        $this->fileContent = '';
+        $this->fileName = '';
         $this->isLoading = false;
 
         // Refresh conversation history
         $this->loadConversationHistory();
     }
 
+    public function updatedUploadedFile()
+    {
+        $this->validateOnly('uploadedFile');
+
+        if ($this->uploadedFile) {
+            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
+            $this->fileName = $this->uploadedFile->getClientOriginalName();
+        }
+    }
     public function clearChat()
     {
         $this->messages = [];
@@ -316,7 +401,7 @@ class AcademicChat extends Component
         // Reset to defaults
         $this->difficulty = 'medium';
         $this->response_format = 'detailed';
-        $this->creativity_level = 0.7;
+        $this->creativity_level = 1;
         $this->response_length = 1000;
     }
 

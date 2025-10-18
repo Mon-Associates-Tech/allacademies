@@ -288,4 +288,12 @@ if (!function_exists('getTimeRemaining')) {
 
         return implode(', ', $parts) . ' remaining';
     }
+
+    if (!function_exists('special_access_emails')) {
+        function special_access_emails(): array
+        {
+            $emails = config('access.owner.special_access_emails', '');
+            return array_map('trim', explode(',', $emails));
+        }
+    }
 }

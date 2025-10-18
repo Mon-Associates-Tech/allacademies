@@ -35,38 +35,38 @@
             <div x-show="$store.sidebar.expanded" class="sidebar-text">
                 <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>
                 <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">{{ auth()->user()->email }}</h2>
-              @if(auth()->check())
-    @php
-        $user = auth()->user();
-        $currentSchool = null;
+                @if(auth()->check())
+                    @php
+                        $user = auth()->user();
+                        $currentSchool = null;
 
-        // For owners, show the switched school context
-        if ($user->hasRole('owner') || $user->isSuperAdmin()) {
-            // Check if we're in "all schools" view (current_school_id is explicitly null)
-            if (session()->has('current_school_id') && session('current_school_id') === null) {
-                $currentSchool = null; // Don't show school name when viewing all schools
-            }
-            // Check if we have a specific school context
-            elseif (app()->bound('current_school')) {
-                try {
-                    $currentSchool = app('current_school');
-                } catch (\Exception $e) {
-                    $currentSchool = null;
-                }
-            }
-            // Default to user's school if no context is set
-            elseif ($user->school) {
-                $currentSchool = $user->school;
-            }
-        }
-        // For regular users, show their own school
-        elseif ($user->school) {
-            $currentSchool = $user->school;
-        }
-    @endphp
+                        // For owners, show the switched school context
+                        if ($user->hasRole('owner') || $user->isSuperAdmin()) {
+                            // Check if we're in "all schools" view (current_school_id is explicitly null)
+                            if (session()->has('current_school_id') && session('current_school_id') === null) {
+                                $currentSchool = null; // Don't show school name when viewing all schools
+                            }
+                            // Check if we have a specific school context
+                            elseif (app()->bound('current_school')) {
+                                try {
+                                    $currentSchool = app('current_school');
+                                } catch (Exception $e) {
+                                    $currentSchool = null;
+                                }
+                            }
+                            // Default to user's school if no context is set
+                            elseif ($user->school) {
+                                $currentSchool = $user->school;
+                            }
+                        }
+                        // For regular users, show their own school
+                        elseif ($user->school) {
+                            $currentSchool = $user->school;
+                        }
+                    @endphp
 
-    @if($currentSchool)
-        <div class="mt-1 text-center">
+                    @if($currentSchool)
+                        <div class="mt-1 text-center">
             <span
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
@@ -74,9 +74,9 @@
                 </svg>
                 {{ $currentSchool->name }}
             </span>
-        </div>
-    @elseif($user->hasRole('owner') || $user->isSuperAdmin())
-        <div class="mt-1 text-center">
+                        </div>
+                    @elseif($user->hasRole('owner') || $user->isSuperAdmin())
+                        <div class="mt-1 text-center">
             <span
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
@@ -84,66 +84,99 @@
                 </svg>
                 All Schools
             </span>
-        </div>
-    @endif
-@endif
+                        </div>
+                    @endif
+                @endif
 
             </div>
-        <div class="border-b rounded-lg border-gray-200 border-2 mt-6"></div>
-    </div>
-
-    <div class="space-y-8 p-4">
-
-        @auth
-            @if(in_array(auth()->user()->role, ['admin', 'owner']))
-                @livewire('administrators.admin-navigation', [
-                    'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                ])
-            @elseif(auth()->user()->role === 'student' )
-                @livewire('students.student-navigation', [
-                    'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                ])
-            @elseif(auth()->user()->role === 'teacher')
-                @include('livewire.navigations.teacher-navigation')
-            @elseif(auth()->user()->role === 'parent')
-                @include('livewire.navigations.parent-navigation')
-            @elseif(auth()->user()->role === 'librarian')
-                @include('livewire.navigations.librarian-navigation', [
-                    'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                ])
-            @elseif(auth()->user()->role === 'author')
-                @include('livewire.navigations.author-navigation', [
-                    'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                ])
-            @elseif(auth()->user()->role === 'subscriber')
-                @include('livewire.navigations.subscriber-navigation', [
-                    'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                ])
-            @elseif(auth()->user()->role === 'moderator')
-                @include('livewire.navigations.moderator-navigation', [
-                    'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                ])
-            @endif
-
-        @endauth
-    </div>
-
-    <!-- Expand / collapse button -->
-    <div class="pt-3 hidden lg:inline-flex 2xl:hidden justify-end mt-auto">
-        <div class="w-12 pl-4 pr-3 py-2">
-            <button
-                class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
-                @click="$store.sidebar.toggleExpanded()">
-                <span class="sr-only">Expand / collapse sidebar</span>
-                <svg class="shrink-0 fill-current text-gray-400 dark:text-gray-500 transition-transform duration-200"
-                     :class="{ 'rotate-180': $store.sidebar.expanded }"
-                     xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                    <path
-                        d="M15 16a1 1 0 0 1-1-1V1a1 1 0 1 1 2 0v14a1 1 0 0 1-1 1ZM8.586 7H1a1 1 0 1 0 0 2h7.586l-2.793 2.793a1 1 0 1 0 1.414 1.414l4.5-4.5A.997.997 0 0 0 12 8.01M11.924 7.617a.997.997 0 0 0-.217-.324l-4.5-4.5a1 1 0 0 0-1.414 1.414L8.586 7M12 7.99a.996.996 0 0 0-.076-.373Z"/>
-                </svg>
-            </button>
+            <div class="border-b rounded-lg border-gray-200 border-2 mt-6"></div>
         </div>
-    </div>
 
-</div>
+        <div class="space-y-8 p-4">
+
+            @auth
+                @if(in_array(auth()->user()->role, ['admin', 'owner']))
+                    @livewire('administrators.admin-navigation', [
+                        'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @elseif(auth()->user()->role === 'student' )
+                    @livewire('students.student-navigation', [
+                        'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @elseif(auth()->user()->role === 'teacher')
+                    @include('livewire.navigations.teacher-navigation')
+                @elseif(auth()->user()->role === 'parent')
+                    @include('livewire.navigations.parent-navigation')
+                @elseif(auth()->user()->role === 'librarian')
+                    @include('livewire.navigations.librarian-navigation', [
+                        'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @elseif(auth()->user()->role === 'author')
+                    @include('livewire.navigations.author-navigation', [
+                        'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @elseif(auth()->user()->role === 'subscriber')
+                    @include('livewire.navigations.subscriber-navigation', [
+                        'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @elseif(auth()->user()->role === 'moderator')
+                    @include('livewire.navigations.moderator-navigation', [
+                        'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                    ])
+                @endif
+
+            @endauth
+            <ul>
+                <li class="mb-0.5 last:mb-0" title="Messenger Subscriptions">
+                    <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                       href="{{route('token-subscriptions.index')}}">
+                        <div class="flex items-center">
+                            <svg
+                                class="shrink-0 fill-current {{ Route::is('token-subscriptions*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                                <path
+                                    d="M2 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2zm11 2v2H3V4h10zM6 8h5v1H6V8zm-1 2h6v1H5v-1zm-1 2h7v1H4v-1z"/>
+                                <path
+                                    d="M3 4h10v6H3V4zm0-1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3z"/>
+                            </svg>
+
+                            <span class="text-sm ml-4 sidebar-text duration-200">Messenger Subscriptions</span>
+                        </div>
+                    </a>
+                </li>
+
+                <li class="mb-0.5 last:mb-0" title="Shared Resources">
+                    <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('user-books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                       href="{{route('user-books.index')}}">
+                        <div class="flex items-center">
+                            <svg class="shrink-0 fill-current {{ Route::is('user-books*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>
+                            </svg>
+
+                            <span class="text-sm ml-4 sidebar-text duration-200">Shared Resources</span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Expand / collapse button -->
+        <div class="pt-3 hidden lg:inline-flex 2xl:hidden justify-end mt-auto">
+            <div class="w-12 pl-4 pr-3 py-2">
+                <button
+                    class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
+                    @click="$store.sidebar.toggleExpanded()">
+                    <span class="sr-only">Expand / collapse sidebar</span>
+                    <svg
+                        class="shrink-0 fill-current text-gray-400 dark:text-gray-500 transition-transform duration-200"
+                        :class="{ 'rotate-180': $store.sidebar.expanded }"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path
+                            d="M15 16a1 1 0 0 1-1-1V1a1 1 0 1 1 2 0v14a1 1 0 0 1-1 1ZM8.586 7H1a1 1 0 1 0 0 2h7.586l-2.793 2.793a1 1 0 1 0 1.414 1.414l4.5-4.5A.997.997 0 0 0 12 8.01M11.924 7.617a.997.997 0 0 0-.217-.324l-4.5-4.5a1 1 0 0 0-1.414 1.414L8.586 7M12 7.99a.996.996 0 0 0-.076-.373Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
 </div>
