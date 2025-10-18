@@ -81,12 +81,48 @@ class BookQuizInterface extends Component
 
     protected function loadAvailableBooks()
     {
-        $this->availableBooks = Book::published()
-            ->with(['author', 'bookCategory'])
-            ->orderBy('title')
-            ->get();
-    }
+        $user = Auth::user();
 
+        // Admins and owners can see all books
+        if (in_array($user->role, ['admin', 'owner'])) {
+            $this->availableBooks = Book::published()
+                ->with(['author', 'bookCategory'])
+                ->orderBy('title')
+                ->get();
+            return;
+        }
+
+        $student = $user->student ?? $user;
+
+        // Start with published books
+        $query = Book::published()
+            ->with(['author', 'bookCategory']);
+
+        // Filter to only include accessible books
+        $query->where(function ($q) use ($user, $student) {
+            // Free books
+            $q->where(function ($freeQuery) {
+                $freeQuery->whereNull('annual_subscription_fee')
+                    ->orWhere('annual_subscription_fee', 0);
+            });
+
+            // Books with individual subscriptions
+            $q->orWhereHas('subscriptions', function ($subQuery) use ($user) {
+                $subQuery->where('user_id', $user->id)
+                    ->where('status', \App\Enums\SubscriptionStatus::PAID->value);
+            });
+
+            // Books with group subscriptions (if applicable)
+            if ($student && method_exists($student, 'studentGroup') && $student->studentGroup) {
+                $q->orWhereHas('groupSubscriptions', function ($groupQuery) use ($student) {
+                    $groupQuery->where('student_group_id', $student->studentGroup->id)
+                        ->where('status', \App\Enums\SubscriptionStatus::PAID->value);
+                });
+            }
+        });
+
+        $this->availableBooks = $query->orderBy('title')->get();
+    }
     protected function loadPreviousQuizzes()
     {
         $this->previousQuizzes = QuizSession::where('user_id', Auth::id())

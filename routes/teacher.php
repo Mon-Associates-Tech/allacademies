@@ -60,4 +60,7 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
     // Send message to students (simplified interface)
     Route::get('messages/students/send', SendMessageToStudents::class)->name('messages.students.send');
 
+    // New route for book-based assignments
+    Route::get('/book-assignments/create', \App\Livewire\Teachers\BookBasedAssignment::class)->name('book-assignments.create');
+
 });

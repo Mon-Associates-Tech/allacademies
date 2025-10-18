@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\OpenAiTokenUsageLog;
 use App\Models\Chat\UserTokenSubscription;
@@ -96,7 +97,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'librarian' => Librarian::class,
             'parent' => StudentParent::class,
         ];
-        if($this->role instanceof  Role){
+        if($this->role instanceof  UserRole || !is_string($this->role)){
             $role = $this->role->value;
         } else{
             $role = $this->role;

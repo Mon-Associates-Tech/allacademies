@@ -50,15 +50,27 @@ class UserTokenSubscription extends Model
         'remaining_percentage',
     ];
 
-    // Add this to ensure proper status values
-    public static $validStatuses = ['active', 'pending', 'expired', 'depleted', 'replaced'];
+    // Define valid status values
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_DEPLETED = 'depleted';
+    public const STATUS_REPLACED = 'replaced';
 
-    public function setStatusAttribute($value)
+    public static array $validStatuses = [
+        self::STATUS_ACTIVE,
+        self::STATUS_PENDING,
+        self::STATUS_EXPIRED,
+        self::STATUS_DEPLETED,
+        self::STATUS_REPLACED
+    ];
+    public function setStatusAttribute($value): void
     {
         if (in_array($value, self::$validStatuses)) {
             $this->attributes['status'] = $value;
         } else {
-            $this->attributes['status'] = 'pending';
+            // Default to pending if invalid value provided
+            $this->attributes['status'] = self::STATUS_PENDING;
         }
     }
     protected static function boot()
@@ -171,7 +183,13 @@ class UserTokenSubscription extends Model
      */
     public function deactivate(string $reason = 'replaced'): void
     {
-        $this->status = $reason;
+        // Validate reason is a valid status
+        if (in_array($reason, self::$validStatuses)) {
+            $this->status = $reason;
+        } else {
+            $this->status = self::STATUS_REPLACED; // Default to 'replaced'
+        }
+
         $this->deactivated_at = now();
         $this->save();
     }
