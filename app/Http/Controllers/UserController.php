@@ -91,6 +91,7 @@ class UserController extends Controller
 
         // Create associated model based on role
         $user->handleRoleChange();
+        $user->createFreeTrialSubscription(true);
 
         return redirect()->route('users.index')->with('success',
             "User '{$user->name}' has been created successfully with the role of {$request->role}."

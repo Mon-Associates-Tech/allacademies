@@ -93,8 +93,16 @@ class AcademicChat extends Component
 
     public function checkTokenAvailability()
     {
-
         $user = auth()->user();
+
+        // Non-subscribers have unlimited access
+        if ($user->role !== 'subscriber') {
+            $this->canSendMessage = true;
+            $this->tokenWarningMessage = null;
+            return;
+        }
+
+        // For subscribers, check their token subscription
         $subscription = $user->activeTokenSubscription;
 
         if (!$subscription) {
@@ -126,7 +134,6 @@ class AcademicChat extends Component
         $this->canSendMessage = true;
         $this->tokenWarningMessage = null;
     }
-
     public function sendMessage(): void
     {
 
