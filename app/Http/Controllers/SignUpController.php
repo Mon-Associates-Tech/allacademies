@@ -59,6 +59,7 @@ class SignUpController extends Controller
             ]);
 
             $user->currentTeam()->associate($team)->save();
+            $user->createFreeTrialSubscription();
 
             return $user;
         });

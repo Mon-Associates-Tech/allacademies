@@ -71,7 +71,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         static::created(static function ($user) {
             $user->handleRoleChange();
-            // $user->createFreeTrialSubscription();
+             $user->createFreeTrialSubscription();
         });
 
         static::updated(static function ($user) {
@@ -173,16 +173,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Create a free trial subscription for new users
-     * Only applies to users with 'subscriber' role
+     *
      */
-    public function createFreeTrialSubscription(): void
+    public function createFreeTrialSubscription(bool $force = false): void
     {
-        // Only subscribers need token subscriptions
-        if ($this->role->value !== 'subscriber') {
-            return;
-        }
 
-        if (!$this->hasVerifiedEmail()) {
+        // Only check email verification if not forcing creation
+        if (!$force && !$this->hasVerifiedEmail()) {
             return;
         }
 
