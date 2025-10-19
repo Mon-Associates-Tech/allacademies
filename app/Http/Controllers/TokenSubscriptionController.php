@@ -58,9 +58,9 @@ class TokenSubscriptionController extends Controller
         // Check for pending payment
         $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
         if ($pendingSubscription) {
-            return redirect()
-                ->route('payment.token.initialize', $pendingSubscription->id)
-                ->with('info', 'You have a pending payment. Complete it to activate your new subscription.');
+           // return redirect()
+           //     ->route('payment.token.initialize', $pendingSubscription->id)
+           //     ->with('info', 'You have a pending payment. Complete it to activate your new subscription.');
         }
 
         $packageId = $request->get('package');
