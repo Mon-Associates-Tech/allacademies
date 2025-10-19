@@ -282,7 +282,7 @@
                     <div>
                         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Associate Students</h2>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Select students to associate with {{ $selectedParent->user->name }}
+                            Select students to associate with {{ $selectedParent->user?->name }}
                         </p>
                     </div>
                     <button @click="$wire.closeAssociateModal()"

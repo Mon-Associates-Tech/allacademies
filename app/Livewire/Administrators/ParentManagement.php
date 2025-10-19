@@ -356,34 +356,36 @@ class ParentManagement extends AppComponent
 
     public function getParentsProperty()
     {
-        return StudentParent::with(['user', 'students'])
-            ->whereHas('user', function (Builder $query) {
-                if ($this->search) {
-                    $query->where(function ($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%')
-                            ->orWhere('email', 'like', '%' . $this->search . '%')
-                            ->orWhere('phone', 'like', '%' . $this->search . '%');
-                    });
-                }
+        //dd(StudentParent::with(['user', 'students'])->get());
+        return StudentParent::withoutGlobalScopes()->with(['user', 'students'])->get();
+        
+            // ->whereHas('user', function (Builder $query) {
+            //     if ($this->search) {
+            //         $query->where(function ($q) {
+            //             $q->where('name', 'like', '%' . $this->search . '%')
+            //                 ->orWhere('email', 'like', '%' . $this->search . '%')
+            //                 ->orWhere('phone', 'like', '%' . $this->search . '%');
+            //         });
+            //     }
 
-                if ($this->statusFilter !== 'all') {
-                    $isActive = $this->statusFilter === 'active';
-                    $query->where('is_active', $isActive);
-                }
-            })
-            ->when($this->sortBy === 'name', function ($query) {
-                $query->join('users', 'parents.user_id', '=', 'users.id')
-                    ->orderBy('users.name', $this->sortDirection)
-                    ->select('parents.*');
-            })
-            ->when($this->sortBy === 'students_count', function ($query) {
-                $query->withCount('students')
-                    ->orderBy('students_count', $this->sortDirection);
-            })
-            ->when(!in_array($this->sortBy, ['name', 'students_count']), function ($query) {
-                $query->orderBy($this->sortBy, $this->sortDirection);
-            })
-            ->paginate($this->perPage);
+            //     if ($this->statusFilter !== 'all') {
+            //         $isActive = $this->statusFilter === 'active';
+            //         $query->where('is_active', $isActive);
+            //     }
+            // })
+            // ->when($this->sortBy === 'name', function ($query) {
+            //     $query->join('users', 'parents.user_id', '=', 'users.id')
+            //         ->orderBy('users.name', $this->sortDirection)
+            //         ->select('parents.*');
+            // })
+            // ->when($this->sortBy === 'students_count', function ($query) {
+            //     $query->withCount('students')
+            //         ->orderBy('students_count', $this->sortDirection);
+            // })
+            // ->when(!in_array($this->sortBy, ['name', 'students_count']), function ($query) {
+            //     $query->orderBy($this->sortBy, $this->sortDirection);
+            // })
+            // ->paginate($this->perPage);
     }
 
     public function getParentStatsProperty()
