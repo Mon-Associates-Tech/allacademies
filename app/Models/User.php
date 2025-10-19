@@ -510,8 +510,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function activeTokenSubscription()
     {
         return $this->hasOne(UserTokenSubscription::class)
-            ->where('status', 'active')
-            ->latest('activated_at');
+            ->where('status', 'active')->latest('activated_at');
+    }
+
+    /**
+     * Get all token purchases for this user (including top-ups)
+     */
+    public function tokenPurchases()
+    {
+        return $this->hasMany(UserTokenSubscription::class)
+            ->whereNotNull('purchased_at')
+            ->orderBy('purchased_at', 'desc');
     }
 
     public function subscriptionHistory()

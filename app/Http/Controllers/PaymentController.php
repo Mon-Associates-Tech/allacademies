@@ -389,9 +389,6 @@ public function callback(Request $request)
         return redirect($response['data']['authorization_url']);
     }
 
-    /**
-     * Handle token subscription payment callback
-     */
     public function tokenCallback(Request $request)
     {
         $reference = $request->query('reference');
@@ -419,14 +416,21 @@ public function callback(Request $request)
 
             // Check if it was a top-up (linked to another active subscription)
             if ($subscription->replaced_by_id) {
+                // Refresh the main subscription to get updated token counts
                 $mainSubscription = UserTokenSubscription::find($subscription->replaced_by_id);
 
                 if ($mainSubscription && $mainSubscription->status === 'active') {
+                    // Refresh to get the latest data from database
+                    $mainSubscription->refresh();
+
                     return redirect()
                         ->route('token-subscriptions.show', $mainSubscription)
                         ->with('success', 'Tokens added successfully! New balance: ' . number_format($mainSubscription->tokens_remaining) . ' tokens');
                 }
             }
+
+            // For regular subscriptions (not top-ups), refresh the subscription
+            $subscription->refresh();
 
             return redirect()
                 ->route('token-subscriptions.show', $subscription)
