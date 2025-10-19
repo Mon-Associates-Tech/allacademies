@@ -86,8 +86,8 @@ class UserBook extends Model
     {
 
         if ($this->attributes['content_url']) {
-            return $this->attributes['content_url'];
-          //  return asset('/storage/' . $this->attributes['content_url']);
+            //return $this->attributes['content_url'];
+            return asset('/storage/' . $this->attributes['content_url']);
         }
 
         return null;
