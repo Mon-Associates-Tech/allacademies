@@ -68,5 +68,12 @@ class UserBookShare extends Model
             );
         }
     }
+
+   public function sharedWith()
+   {
+       return $this->belongsTo(User::class, 'shared_with_id');
+   }
+
+
 }
 

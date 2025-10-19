@@ -150,7 +150,7 @@ public function loadUserBookData(): void
 
     // Pre-fill emails with existing shares
     $existingShares = $this->userBook->shares()->where('status', 'pending')->get();
-    dd($this->userBook->with('shares')->get());
+
     if ($existingShares->isNotEmpty()) {
         $this->emails = $existingShares->pluck('shared_to_email')->implode(', ');
     }

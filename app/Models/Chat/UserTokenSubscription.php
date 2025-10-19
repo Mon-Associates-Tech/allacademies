@@ -4,6 +4,7 @@ namespace App\Models\Chat;
 
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\TokenSubscriptionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,7 @@ class UserTokenSubscription extends Model
         'expires_at' => 'datetime',
         'activated_at' => 'datetime',
         'deactivated_at' => 'datetime',
+        'status' => TokenSubscriptionStatus::class,
     ];
 
     protected $appends = [
@@ -64,15 +66,7 @@ class UserTokenSubscription extends Model
         self::STATUS_DEPLETED,
         self::STATUS_REPLACED
     ];
-    public function setStatusAttribute($value): void
-    {
-        if (in_array($value, self::$validStatuses)) {
-            $this->attributes['status'] = $value;
-        } else {
-            // Default to pending if invalid value provided
-            $this->attributes['status'] = self::STATUS_PENDING;
-        }
-    }
+
     protected static function boot()
     {
         parent::boot();
@@ -183,11 +177,12 @@ class UserTokenSubscription extends Model
      */
     public function deactivate(string $reason = 'replaced'): void
     {
-        // Validate reason is a valid status
-        if (in_array($reason, self::$validStatuses)) {
-            $this->status = $reason;
+        $validReasons = ['replaced', 'expired', 'depleted'];
+
+        if (in_array($reason, $validReasons)) {
+            $this->status = TokenSubscriptionStatus::from($reason);
         } else {
-            $this->status = self::STATUS_REPLACED; // Default to 'replaced'
+            $this->status = TokenSubscriptionStatus::REPLACED;
         }
 
         $this->deactivated_at = now();
@@ -199,7 +194,7 @@ class UserTokenSubscription extends Model
      */
     public function activate(): void
     {
-        $this->status = 'active';
+        $this->status = TokenSubscriptionStatus::ACTIVE;
         $this->activated_at = now();
         $this->purchased_at = $this->purchased_at ?? now();
         $this->save();
@@ -207,16 +202,20 @@ class UserTokenSubscription extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', TokenSubscriptionStatus::ACTIVE->value);
     }
 
     public function scopePending($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', TokenSubscriptionStatus::PENDING->value);
     }
 
     public function scopeHistory($query)
     {
-        return $query->whereIn('status', ['expired', 'depleted', 'replaced']);
+        return $query->whereIn('status', [
+            TokenSubscriptionStatus::EXPIRED->value,
+            TokenSubscriptionStatus::DEPLETED->value,
+            TokenSubscriptionStatus::REPLACED->value,
+        ]);
     }
 }

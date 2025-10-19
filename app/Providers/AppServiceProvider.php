@@ -111,6 +111,7 @@ class AppServiceProvider extends ServiceProvider
             'attendance_record' => AttendanceRecord::class,
             'open_ai_token_package' => \App\Models\Chat\OpenAiTokenPackage::class,
             'user_book' => UserBook::class,
+            'user_book_share' => \App\Models\UserBookShare::class,
 
         ]);
     }

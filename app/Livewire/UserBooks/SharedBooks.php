@@ -9,7 +9,7 @@ use Livewire\Component;
 class SharedBooks extends Component
 {
     public $activeTab = 'pending'; // Define the property with default value
-
+    public $sharedByMe;
     public function acceptShare(UserBookShare $share): void
     {
         if ($share->shared_to_user_id !== auth()->id()) {
@@ -54,7 +54,9 @@ class SharedBooks extends Component
 
         // Add a user's own uploaded books
         $myBooks = UserBook::where('user_id', auth()->id())->get();
-
+        $this->sharedByMe = UserBookShare::where('shared_by_user_id', auth()->id())
+            ->with(['userBook', 'sharedWith'])
+            ->get();
 
         return view('livewire.user-books.shared-books', compact('pendingShares', 'acceptedShares', 'myBooks'));
     }
