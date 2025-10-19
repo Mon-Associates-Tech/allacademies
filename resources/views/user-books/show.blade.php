@@ -171,7 +171,7 @@
                                         <span>Read Now</span>
                                     </x-button.primary>
 
-                                        <a href="{{ route('learning.quiz') }}?bookId={{$book->id}}"
+                                        <a href="{{ route('learning.quiz') }}?bookId={{$userBook->id}}"
                                        class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
                                         <svg class="w-5 h-5 mr-2 text-blue-500 group-hover:scale-110 transition-transform"
                                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
