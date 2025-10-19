@@ -2,7 +2,7 @@
 
     @php
         $user = Auth::user();
-        $primaryRole = $user->role;
+        $primaryRole = $user->role->value;
         $isImpersonating = session()->has('impersonated_by');
     @endphp
 

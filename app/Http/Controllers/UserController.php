@@ -197,7 +197,7 @@ class UserController extends Controller
             ]);
         }
 
-        $oldRole = $user->role;
+        $oldRole = $user->role->value;
         $user->role = UserRole::from($request->role);
         $user->save();
         $user->assignRole($request->role);

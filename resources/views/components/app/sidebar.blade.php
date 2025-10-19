@@ -93,39 +93,46 @@
         </div>
 
         <div class="space-y-8 p-4">
+            @php
+                use App\Enums\UserRole;
+
+                // Get role value for comparison
+                $userRole = auth()->user()->role;
+                $roleValue = $userRole instanceof UserRole ? $userRole->value : $userRole;
+            @endphp
 
             @auth
-                @if(in_array(auth()->user()->role, ['admin', 'owner']))
+                @if($userRole === UserRole::ADMIN || $userRole === UserRole::OWNER || in_array($roleValue, ['admin', 'owner']))
                     @livewire('administrators.admin-navigation', [
                         'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
-                @elseif(auth()->user()->role === 'student' )
+                @elseif($userRole === UserRole::STUDENT || $roleValue === 'student')
                     @livewire('students.student-navigation', [
                         'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
-                @elseif(auth()->user()->role === 'teacher')
+                @elseif($userRole === UserRole::TEACHER || $roleValue === 'teacher')
                     @include('livewire.navigations.teacher-navigation')
-                @elseif(auth()->user()->role === 'parent')
+                @elseif($userRole === UserRole::PARENT || $roleValue === 'parent')
                     @include('livewire.navigations.parent-navigation')
-                @elseif(auth()->user()->role === 'librarian')
+                @elseif($userRole === UserRole::LIBRARIAN || $roleValue === 'librarian')
                     @include('livewire.navigations.librarian-navigation', [
                         'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
-                @elseif(auth()->user()->role === 'author')
+                @elseif($userRole === UserRole::AUTHOR || $roleValue === 'author')
                     @include('livewire.navigations.author-navigation', [
                         'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
-                @elseif(auth()->user()->role === 'subscriber')
+                @elseif($userRole === UserRole::SUBSCRIBER || $roleValue === 'subscriber')
                     @include('livewire.navigations.subscriber-navigation', [
                         'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
-                @elseif(auth()->user()->role === 'moderator')
+                @elseif($userRole === UserRole::MODERATOR || $roleValue === 'moderator')
                     @include('livewire.navigations.moderator-navigation', [
                         'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                     ])
                 @endif
-
             @endauth
+
             <ul>
                 <li class="mb-0.5 last:mb-0" title="Messenger Subscriptions">
                     <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
