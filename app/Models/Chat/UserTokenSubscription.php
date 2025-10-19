@@ -4,6 +4,7 @@ namespace App\Models\Chat;
 
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\TokenSubscriptionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,11 +44,27 @@ class UserTokenSubscription extends Model
         'expires_at' => 'datetime',
         'activated_at' => 'datetime',
         'deactivated_at' => 'datetime',
+        'status' => TokenSubscriptionStatus::class,
     ];
 
     protected $appends = [
         'usage_percentage',
         'remaining_percentage',
+    ];
+
+    // Define valid status values
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_DEPLETED = 'depleted';
+    public const STATUS_REPLACED = 'replaced';
+
+    public static array $validStatuses = [
+        self::STATUS_ACTIVE,
+        self::STATUS_PENDING,
+        self::STATUS_EXPIRED,
+        self::STATUS_DEPLETED,
+        self::STATUS_REPLACED
     ];
 
     protected static function boot()
@@ -160,7 +177,14 @@ class UserTokenSubscription extends Model
      */
     public function deactivate(string $reason = 'replaced'): void
     {
-        $this->status = $reason;
+        $validReasons = ['replaced', 'expired', 'depleted'];
+
+        if (in_array($reason, $validReasons)) {
+            $this->status = TokenSubscriptionStatus::from($reason);
+        } else {
+            $this->status = TokenSubscriptionStatus::REPLACED;
+        }
+
         $this->deactivated_at = now();
         $this->save();
     }
@@ -170,7 +194,7 @@ class UserTokenSubscription extends Model
      */
     public function activate(): void
     {
-        $this->status = 'active';
+        $this->status = TokenSubscriptionStatus::ACTIVE;
         $this->activated_at = now();
         $this->purchased_at = $this->purchased_at ?? now();
         $this->save();
@@ -178,16 +202,20 @@ class UserTokenSubscription extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', TokenSubscriptionStatus::ACTIVE->value);
     }
 
     public function scopePending($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', TokenSubscriptionStatus::PENDING->value);
     }
 
     public function scopeHistory($query)
     {
-        return $query->whereIn('status', ['expired', 'depleted', 'replaced']);
+        return $query->whereIn('status', [
+            TokenSubscriptionStatus::EXPIRED->value,
+            TokenSubscriptionStatus::DEPLETED->value,
+            TokenSubscriptionStatus::REPLACED->value,
+        ]);
     }
 }

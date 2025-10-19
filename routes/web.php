@@ -435,12 +435,30 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
 
-    // View specific user's performance (for parents/teachers)
+    // View a specific user's performance (for parents/teachers)
     Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
 
     // Token Payment Routes
     Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
     Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
+
+    Route::get('/user-books/create', fn() => view('user-books/create'))->name('user-books.create');
+    Route::get('/user-books/shared', fn() => view('user-books.shared'))->name('user-books.shared');
+
+    Route::get('/user-books', \App\Livewire\UserBooks\UserBooksIndex::class)->name('user-books.index');
+
+    Route::get('/user-books/{userBook}', function (App\Models\UserBook $userBook) {
+        // Ensure user can access this book (either owns it or it's shared with them)
+        if ($userBook->user_id !== auth()->id() &&
+            !$userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
+            abort(403);
+        }
+
+        $userBook->load('user');
+        return view('user-books.show', compact('userBook'));
+    })->name('user-books.show');
+    Route::get('/user-books/{userBook}/edit', \App\Livewire\UserBooks\UserBookForm::class)->name('user-books.edit');
+
 });
 
 use App\Http\Controllers\SchoolController;

@@ -27,6 +27,7 @@ use App\Models\Teacher;
 use App\Models\Team;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
+use App\Models\UserBook;
 use App\Services\ErrorNotificationService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
@@ -109,6 +110,8 @@ class AppServiceProvider extends ServiceProvider
             'quiz_session' => \App\Models\QuizSession::class,
             'attendance_record' => AttendanceRecord::class,
             'open_ai_token_package' => \App\Models\Chat\OpenAiTokenPackage::class,
+            'user_book' => UserBook::class,
+            'user_book_share' => \App\Models\UserBookShare::class,
 
         ]);
     }

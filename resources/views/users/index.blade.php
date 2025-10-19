@@ -100,21 +100,35 @@
                                     <p class="font-medium text-gray-900 truncate">{{ $user->name }}</p>
                                     <p class="text-sm text-gray-500 truncate">{{ $user->email }}</p>
                                     @if(Auth::user()->hasRole('owner'))
-                                    <p class="text-sm text-gray-500 truncate">{{ $user->school?->name }}</p>
-                                        @endif
+                                        <p class="text-sm text-gray-500 truncate">{{ $user->school?->name }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </x-table.td>
 
                         <x-table.td>
-                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium capitalize
-                    {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : '' }}
-                    {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-700' : '' }}
-                    {{ $user->role === 'student' ? 'bg-green-100 text-green-700' : '' }}
-                    {{ $user->role === 'librarian' ? 'bg-purple-100 text-purple-700' : '' }}
-                    {{ !in_array($user->role, ['admin', 'teacher', 'student', 'librarian']) ? 'bg-gray-100 text-gray-700' : '' }}">
-                    {{ $user->role ?? 'User' }}
-                </span>
+                            @php
+                                $roleValue = $user->role instanceof App\Enums\UserRole ? $user->role->value : $user->role;
+ // Define role color mapping
+                                                            $roleColors = [
+                                                                'admin' => 'bg-red-100 text-red-700',
+                                                                'teacher' => 'bg-blue-100 text-blue-700',
+                                                                'student' => 'bg-green-100 text-green-700',
+                                                                'librarian' => 'bg-purple-100 text-purple-700',
+                                                                'author' => 'bg-yellow-100 text-yellow-700',
+                                                                'parent' => 'bg-pink-100 text-pink-700',
+                                                                'subscriber' => 'bg-indigo-100 text-indigo-700',
+                                                                'moderator' => 'bg-orange-100 text-orange-700',
+                                                                'owner' => 'bg-violet-100 text-violet-700',
+                                                            ];
+
+                                                            $colorClass = $roleColors[$roleValue] ?? 'bg-gray-100 text-gray-700';
+                            @endphp
+
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium capitalize {{ $colorClass }}">
+                                        {{ $roleValue ?? 'User' }}
+                                    </span>
                         </x-table.td>
 
                         <x-table.td>
@@ -174,7 +188,7 @@
                                     <!-- Dropdown Content -->
                                     <x-slot name="content">
                                         @can('own')
-                                            @if($user->role !== 'owner')
+                                            @if($roleValue !== 'owner')
                                                 <x-dropdown.item
                                                     onclick="window.Modal.open('change-role-form', { userName:  '{{$user->name}}', email: '{{$user->email}}', role: '{{$user->role}}', id: '{{$user->id}}' })">
                                                     <x-slot name="icon">
@@ -205,14 +219,17 @@
                                             View Details
                                         </x-dropdown.item>
 
-                                            <x-dropdown.item click="$dispatch('open-delete-modal', {{ $user->id }})">
-                                                <x-slot name="icon">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </x-slot>
-                                                Delete User
-                                            </x-dropdown.item>
+                                        <x-dropdown.item click="$dispatch('open-delete-modal', {{ $user->id }})">
+                                            <x-slot name="icon">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                     viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2"
+                                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </x-slot>
+                                            Delete User
+                                        </x-dropdown.item>
                                     </x-slot>
                                 </x-dropdown>
                             </div>
@@ -298,9 +315,9 @@
                             x-model="modalData.role"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="subscriber">Subscriber</option>
-{{--                        <option value="student">Student</option>--}}
-{{--                        <option value="teacher">Teacher</option>--}}
-{{--                        <option value="librarian">Librarian</option>--}}
+                        {{--                        <option value="student">Student</option>--}}
+                        {{--                        <option value="teacher">Teacher</option>--}}
+                        {{--                        <option value="librarian">Librarian</option>--}}
                         <option value="author">Author</option>
                         <option value="parent">Parent</option>
                         <option value="moderator">Moderator</option>
@@ -406,10 +423,10 @@
     @livewire('users.delete-user-modal')
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            window.addEventListener('open-delete-modal', function(event) {
+        document.addEventListener('DOMContentLoaded', function () {
+            window.addEventListener('open-delete-modal', function (event) {
                 // Use the correct Livewire dispatch method
-                Livewire.dispatch('openDeleteModal', { userId: event.detail });
+                Livewire.dispatch('openDeleteModal', {userId: event.detail});
             });
         });
     </script>

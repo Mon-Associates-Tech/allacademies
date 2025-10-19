@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Enums\UserRole;
 use App\Models\AcademicChatMessage;
 use App\Services\AcademicChatService;
+use App\Support\TokenSubscriptionStatus;
 use Livewire\Component;
 use Livewire\Attributes\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -93,8 +95,17 @@ class AcademicChat extends Component
 
     public function checkTokenAvailability()
     {
-
         $user = auth()->user();
+
+        // Non-subscribers have unlimited access - use enum comparison
+        // Commenting this out as per your code, but keeping the proper comparison for reference
+        // if ($user->role !== UserRole::SUBSCRIBER) {
+        //     $this->canSendMessage = true;
+        //     $this->tokenWarningMessage = null;
+        //     return;
+        // }
+
+        // For all users, check their token subscription
         $subscription = $user->activeTokenSubscription;
 
         if (!$subscription) {
@@ -103,7 +114,8 @@ class AcademicChat extends Component
             return;
         }
 
-        if ($subscription->status === 'depleted' || $subscription->tokens_remaining <= 0) {
+        // Use enum comparison for status
+        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'depleted';
             return;
@@ -129,7 +141,6 @@ class AcademicChat extends Component
 
     public function sendMessage(): void
     {
-
         $this->checkTokenAvailability();
 
         if (!$this->canSendMessage) {
@@ -179,6 +190,7 @@ class AcademicChat extends Component
         if (!empty($this->fileContent)) {
             $userMessageContent .= "\n\nFile: " . $this->fileName . "\nFile Content:\n" . $this->fileContent;
         }
+
         // Add user message to chat and database
         $userMessage = [
             'role' => 'user',
@@ -202,7 +214,6 @@ class AcademicChat extends Component
 
         // Send to AI service
         $response = $this->chatService->chat($parameters, $conversationHistory);
-
 
         if ($response['success']) {
             // Add AI response to chat
@@ -247,6 +258,7 @@ class AcademicChat extends Component
             $this->fileName = $this->uploadedFile->getClientOriginalName();
         }
     }
+
     public function clearChat()
     {
         $this->messages = [];

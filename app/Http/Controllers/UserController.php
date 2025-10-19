@@ -91,6 +91,7 @@ class UserController extends Controller
 
         // Create associated model based on role
         $user->handleRoleChange();
+        $user->createFreeTrialSubscription(true);
 
         return redirect()->route('users.index')->with('success',
             "User '{$user->name}' has been created successfully with the role of {$request->role}."
@@ -196,7 +197,7 @@ class UserController extends Controller
             ]);
         }
 
-        $oldRole = $user->role;
+        $oldRole = $user->role->value;
         $user->role = UserRole::from($request->role);
         $user->save();
         $user->assignRole($request->role);

@@ -16,14 +16,14 @@ class TokenSubscriptionController extends Controller
     {
         $this->subscriptionService = $subscriptionService;
 
-/*        // Only subscribers can access token subscription management
-        $this->middleware(function ($request, $next) {
-            if (auth()->user()->role !== 'subscriber') {
-                return redirect()->route('dashboard')
-                    ->with('info', 'Token subscriptions are only available for subscriber accounts.');
-            }
-            return $next($request);
-        });*/
+        /*        // Only subscribers can access token subscription management
+                $this->middleware(function ($request, $next) {
+                    if (auth()->user()->role !== 'subscriber') {
+                        return redirect()->route('dashboard')
+                            ->with('info', 'Token subscriptions are only available for subscriber accounts.');
+                    }
+                    return $next($request);
+                });*/
     }
 
     public function index()
@@ -58,9 +58,9 @@ class TokenSubscriptionController extends Controller
         // Check for pending payment
         $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
         if ($pendingSubscription) {
-            return redirect()
-                ->route('payment.token.initialize', $pendingSubscription->id)
-                ->with('info', 'You have a pending payment. Complete it to activate your new subscription.');
+           // return redirect()
+           //     ->route('payment.token.initialize', $pendingSubscription->id)
+           //     ->with('info', 'You have a pending payment. Complete it to activate your new subscription.');
         }
 
         $packageId = $request->get('package');
@@ -73,6 +73,7 @@ class TokenSubscriptionController extends Controller
 
         return view('token-subscriptions.create', compact('packages', 'package', 'currentSubscription'));
     }
+
 
     public function store(Request $request)
     {
@@ -98,8 +99,20 @@ class TokenSubscriptionController extends Controller
                 ->with('error', 'Free trial is automatically assigned to new users.');
         }
 
-        // Create a new subscription (will replace the current one)
-        $subscription = $this->subscriptionService->changeSubscription($user, $package);
+        // Get current active subscription
+        $currentSubscription = $user->activeTokenSubscription;
+
+        // Determine if this is a top-up or upgrade
+        // It's a top-up if:
+        // 1. User has an active subscription
+        // 2. It's the same package OR they want to add tokens
+        // 3. It's not a trial
+        $isTopUp = $currentSubscription &&
+            $currentSubscription->package_id == $package->id &&
+            $currentSubscription->action_type !== 'trial';
+
+        // Create a new subscription (will replace or top-up the current one)
+        $subscription = $this->subscriptionService->changeSubscription($user, $package, $isTopUp);
 
         // Redirect to payment
         return redirect()->route('payment.token.initialize', $subscription->id);

@@ -2,7 +2,7 @@
 
     @php
         $user = Auth::user();
-        $primaryRole = $user->role;
+        $primaryRole = $user->role->value;
         $isImpersonating = session()->has('impersonated_by');
     @endphp
 
@@ -63,7 +63,7 @@
         <livewire:chats.token-usage-circular />
     </div>
 
-    @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
+    @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>
             @if ($academicSubjects->count() || request()->hasAny(['search', 'academic_group', 'academic_level']))
                 <section class="mt-10 w-full mx-auto">

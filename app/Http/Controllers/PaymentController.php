@@ -410,154 +410,6 @@ class PaymentController extends Controller
         return redirect($response['data']['authorization_url']);
     }
 
-    public function showPaymentForm(Student $student)
-    {
-        // Here, Laravel automatically fetches the student record using route-model binding
-        $student->load('user');
-        return view('payments.school-fees.feepayment', compact('student'));
-    }
-
-
-    /**
-     * Process the fee payment (initialize Paystack transaction)
-     */
-public function processPayment(Request $request)
-{
-    $request->validate([
-        'student_id' => 'required|exists:students,id',
-        'amount'     => 'required|numeric|min:1',
-    ]);
-
-    $student = Student::with('user')->findOrFail($request->student_id);
-    $school  = School::with('subaccount')->find($student->school_id);
-
-    if (!$school) {
-        return back()->with('error', 'This student is not linked to any school.');
-    }
-
-    if (!$school->subaccount) {
-        return back()->with('error', 'This school has no subaccount set up for payments.');
-    }
-
-    $amountInPesewas = $request->amount * 100;
-
-    $data = [
-        'email'        => $student->user->email ?? $school->email ?? 'no-email@school.com',
-        'amount'       => $amountInPesewas,
-        'subaccount'   => $school->subaccount->subaccount_code,
-        'metadata'     => [
-            'student_id' => $student->id,
-            'school_id'  => $school->id,
-            'student'    => $student->user->name ?? 'Unknown Student',
-            'school'     => $school->name ?? 'Unknown School',
-        ],
-        'callback_url' => route('feepayment.callback') . '?student_id=' . $student->id,
-    ];
-
-    $response = $this->paystack->initializeTransaction($data);
-
-    if (!isset($response['status']) || !$response['status']) {
-        return back()->with('error', $response['message'] ?? 'Payment initialization failed.');
-    }
-
-    $payer = Auth::user();
-
-    // Save record with status = "initialized"
-    SchoolFee::create([
-        'student_id'        => $student->id,
-        'school_id'         => $school->id,
-        'school_name'       => $school->name,
-        'payer_id'          => $payer->id ?? null,
-        'payer_type'        => get_class($payer),
-        'amount'            => $request->amount,
-        'currency'          => 'GHS',
-        'status'            => 'success',
-        'reference'         => $response['data']['reference'],
-        'authorization_url' => $response['data']['authorization_url'] ?? null,
-    ]);
-
-    // return redirect($response['data']['authorization_url']);
-    return redirect()->route('feepayment.thankyou', $student->id);
-}
-
-
-
-
-    /**
-     * Handle Paystack callback after payment
-     */
-/**
- * Handle Paystack callback after payment
- */
-public function paymentCallback(Request $request)
-{
-    $reference = $request->query('reference');
-
-    // 1️⃣ Verify the transaction with Paystack
-    $response = $this->paystack->verifyTransaction($reference);
-
-    if (!$response['status'] || $response['data']['status'] !== 'success') {
-        return redirect()
-            ->route('feepayment.form', 1) // fallback route if verification fails
-            ->with('error', 'Payment failed or was cancelled.');
-    }
-
-    // 2️⃣ Extract payment and metadata info
-    $paymentDetails = $response['data'];
-    $metadata = $paymentDetails['metadata'] ?? [];
-    $studentId = $metadata['student_id'] ?? null;
-
-    $student = Student::find($studentId);
-
-    if (!$student) {
-        return redirect()
-            ->route('feepayment.form', 1)
-            ->with('error', 'Invalid student in payment metadata.');
-    }
-
-    // 3️⃣ Record or update payment info safely
-    DB::transaction(function () use ($student, $paymentDetails) {
-        SchoolFee::updateOrCreate(
-            ['reference' => $paymentDetails['reference']],
-            [
-                'student_id'   => $student->id,
-                'school_id'    => $student->school_id,
-                'amount'       => $paymentDetails['amount'] / 100,
-                'currency'     => $paymentDetails['currency'] ?? 'GHS',
-                'status'       => 'success', // ✅ explicitly set to success
-                'paid_at'      => now(),
-            ]
-        );
-    });
-
-    // 4️⃣ Redirect to thank-you page with success message
-    return redirect()
-        ->route('feepayment.thankyou', $student->id)
-        ->with('success', 'Payment successful! Reference: ' . $paymentDetails['reference']);
-}
-
-
-
-
-public function thankYou(Student $student)
-{
-    $latestPayment = $student->schoolFees()->latest()->first();
-
-    return view('payments.school-fees.thankyou', [
-        'student'   => $student,
-        'amount'    => $latestPayment->amount ?? null,
-        'reference' => $latestPayment->reference ?? null,
-    ]);
-
-   // return view('payments.school-fees.thankyou', compact('student', 'latestPayment'));
-}
-
-
-
-
-    /**
-     * Handle token subscription payment callback
-     */
     public function tokenCallback(Request $request)
     {
         $reference = $request->query('reference');
@@ -585,14 +437,21 @@ public function thankYou(Student $student)
 
             // Check if it was a top-up (linked to another active subscription)
             if ($subscription->replaced_by_id) {
+                // Refresh the main subscription to get updated token counts
                 $mainSubscription = UserTokenSubscription::find($subscription->replaced_by_id);
 
                 if ($mainSubscription && $mainSubscription->status === 'active') {
+                    // Refresh to get the latest data from database
+                    $mainSubscription->refresh();
+
                     return redirect()
                         ->route('token-subscriptions.show', $mainSubscription)
                         ->with('success', 'Tokens added successfully! New balance: ' . number_format($mainSubscription->tokens_remaining) . ' tokens');
                 }
             }
+
+            // For regular subscriptions (not top-ups), refresh the subscription
+            $subscription->refresh();
 
             return redirect()
                 ->route('token-subscriptions.show', $subscription)
