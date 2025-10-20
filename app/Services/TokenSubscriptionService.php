@@ -191,6 +191,12 @@ class TokenSubscriptionService
         OpenAiTokenPackage $newPackage,
         bool $preserveTokens = true
     ): UserTokenSubscription {
+        // Free packages should NEVER go through this method
+        // They should be created directly via User::createFreeTrialSubscription()
+        if ($newPackage->isFree()) {
+            throw new \Exception('Free trial packages should not go through payment flow. Use User::createFreeTrialSubscription() instead.');
+        }
+
         $actionType = $this->determineActionType($currentSubscription, $newPackage);
         $newTokens = $newPackage->token_limit;
         $carryOverTokens = 0;
@@ -213,17 +219,17 @@ class TokenSubscriptionService
             'action_type' => $actionType,
         ]);
 
-        // Create new subscription
+        // Create new subscription with PENDING status (will be activated after payment)
         $newSubscription = UserTokenSubscription::create([
             'user_id' => $user->id,
             'package_id' => $newPackage->id,
             'tokens_purchased' => $totalTokens,
             'tokens_used' => 0,
             'tokens_remaining' => $totalTokens,
-            'status' => $newPackage->isFree() ? TokenSubscriptionStatus::ACTIVE : TokenSubscriptionStatus::PENDING,
-            'purchased_at' => $newPackage->isFree() ? now() : null,
-            'activated_at' => $newPackage->isFree() ? now() : null,
-            'expires_at' => $newPackage->isFree() ? now()->addWeek() : null,
+            'status' => TokenSubscriptionStatus::PENDING, // Always PENDING for paid packages
+            'purchased_at' => null, // Will be set after payment
+            'activated_at' => null, // Will be set after payment
+            'expires_at' => null, // Will be set after payment
             'action_type' => $actionType,
         ]);
 
@@ -245,7 +251,6 @@ class TokenSubscriptionService
 
         return $newSubscription;
     }
-
     protected function determineActionType(?UserTokenSubscription $current, OpenAiTokenPackage $new): string
     {
         if (!$current || $current->action_type === 'trial') {

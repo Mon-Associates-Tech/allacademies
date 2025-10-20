@@ -113,7 +113,7 @@ class UserTokenSubscription extends Model
      */
     public function hasTokens(int $requiredTokens = 1): bool
     {
-        return $this->status === 'active' && $this->tokens_remaining >= $requiredTokens;
+        return $this->status->value === 'active' && $this->tokens_remaining >= $requiredTokens;
     }
 
     /**

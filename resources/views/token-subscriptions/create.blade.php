@@ -60,7 +60,7 @@
                                         <div>
                                             <span class="text-gray-600 dark:text-gray-400">Remaining Messengers:</span>
                                             <span class="ml-2 font-semibold text-gray-900 dark:text-white">
-                                                {{ number_format($currentSubscription->remaining_tokens) }}
+                                                {{ number_format($currentSubscription->tokens_remaining) }}
                                             </span>
                                         </div>
                                         <div>
@@ -83,126 +83,266 @@
                             </div>
                         </div>
                     @endif
-                        {{-- Package Cards --}}
-                        <div class="grid md:grid-cols-2 max-w-3xl mb-6 gap-6 justify-center justify-items-center mx-auto">
-                            @foreach($packages as $pkg)
-                                <div class="relative min-w-96">
-                                    <input
-                                        type="radio"
-                                        name="package_radio"
-                                        id="package_{{ $pkg->id }}"
-                                        value="{{ $pkg->id }}"
-                                        class="peer hidden"
-                                        {{ ($package && $package->id === $pkg->id) ? 'checked' : '' }}
-                                    >
-                                    <label
-                                        for="package_{{ $pkg->id }}"
-                                        class="block cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden
-                                       border-2 transition-all duration-200 h-full
-                                       peer-checked:border-blue-500 peer-checked:shadow-2xl peer-checked:scale-[1.02]
-                                       hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-600
-                                       border-gray-200 dark:border-gray-700">
 
-                                        {{-- Badge --}}
-                                        @if($pkg->name === 'Basic')
-                                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wide">
-                                                ⭐ Most Popular
-                                            </div>
-                                        @elseif($pkg->name === 'Premium')
-                                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wide">
-                                                👑 Best Value
-                                            </div>
-                                        @endif
+                    {{-- Trial Eligibility Banner --}}
+                    @if($isEligibleForTrial && $trialPackage)
+                        <div class="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border-2 border-green-300 dark:border-green-700">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="text-xl font-bold text-green-900 dark:text-green-100 mb-2">
+                                        🎉 You're Eligible for a FREE Trial!
+                                    </h3>
+                                    <p class="text-green-800 dark:text-green-200 text-sm">
+                                        Get <strong>{{ number_format($trialPackage->token_limit) }} free messengers</strong> for 7 days!
+                                        No credit card required. Start using Messenger features immediately.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @elseif(!$isEligibleForTrial)
+                        <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                            <p class="text-blue-800 dark:text-blue-200 text-sm flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                <strong>Note:</strong> You've already used your free trial. Choose a package below to continue.
+                            </p>
+                        </div>
+                    @endif
 
-                                        <div class="p-6">
-                                            {{-- Package Header --}}
-                                            <div class="text-center mb-6">
-                                                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                                    {{ $pkg->name }}
-                                                </h3>
-                                                <div class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
-                                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                                    </svg>
-                                                    {{ $pkg->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}
-                                                </div>
-                                            </div>
+                    {{-- Package Cards --}}
+                    <div class="grid md:grid-cols-2 {{ $isEligibleForTrial && $trialPackage ? 'lg:grid-cols-3' : '' }} max-w-5xl mb-6 gap-6 justify-center justify-items-center mx-auto">
+                        {{-- Free Trial Package --}}
+                        @if($isEligibleForTrial && $trialPackage)
+                            <div class="relative min-w-96">
+                                <input
+                                    type="radio"
+                                    name="package_radio"
+                                    id="package_{{ $trialPackage->id }}"
+                                    value="{{ $trialPackage->id }}"
+                                    class="peer hidden"
+                                    {{ ($package && $package->id === $trialPackage->id) ? 'checked' : '' }}
+                                >
+                                <label
+                                    for="package_{{ $trialPackage->id }}"
+                                    class="block cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden
+                                   border-2 transition-all duration-200 h-full
+                                   peer-checked:border-green-500 peer-checked:shadow-2xl peer-checked:scale-[1.02]
+                                   hover:shadow-xl hover:border-green-300 dark:hover:border-green-600
+                                   border-green-200 dark:border-green-700">
 
-                                            {{-- Price --}}
-                                            <div class="text-center mb-6 py-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                                                <div class="text-4xl font-bold text-gray-900 dark:text-white">
-                                                    GH₵ {{ number_format($pkg->price, 2) }}
-                                                </div>
-                                                <div class="text-sm hidden text-gray-500 dark:text-gray-400 mt-1">
-                                                    One-time payment
-                                                </div>
-                                            </div>
+                                    {{-- Badge --}}
+                                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wide">
+                                        🎁 FREE TRIAL - LIMITED TIME
+                                    </div>
 
-                                            {{-- Token Amount - Highlighted --}}
-                                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 text-center">
-                                                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                                    {{ number_format($pkg->token_limit) }}
-                                                </div>
-                                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                    Messengers
-                                                </div>
-                                            </div>
-
-                                            {{-- Features --}}
-                                            <ul class="space-y-3 mb-6">
-                                                <li class="flex items-start text-sm">
-                                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Messengers never expire</span>
-                                                </li>
-                                                <li class="flex items-start text-sm">
-                                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">All messenger features included</span>
-                                                </li>
-                                                <li class="flex items-start text-sm">
-                                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Top-up anytime</span>
-                                                </li>
-                                                <li class="flex items-start text-sm">
-                                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Secure payment via Paystack</span>
-                                                </li>
-                                            </ul>
-
-                                            {{-- Description --}}
-                                            <p class="text-xs text-gray-600 dark:text-gray-400 text-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                                                {{ $pkg->description }}
-                                            </p>
-
-                                            {{-- Selection Indicator --}}
-                                            <div class="text-center">
-                                                <div class="hidden peer-checked:flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
-                                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    ✓ Selected
-                                                </div>
-                                                <div class="peer-checked:hidden text-gray-500 dark:text-gray-400 text-sm">
-                                                    Click to select
-                                                </div>
+                                    <div class="p-6">
+                                        {{-- Package Header --}}
+                                        <div class="text-center mb-6">
+                                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                                {{ $trialPackage->name }}
+                                            </h3>
+                                            <div class="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
+                                                <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                7 Days Access
                                             </div>
                                         </div>
-                                    </label>
-                                </div>
-                            @endforeach
-                        </div>
 
-                        @error('package_id')
-                        <p class="mt-4 text-red-600 dark:text-red-400 text-sm text-center">{{ $message }}</p>
-                        @enderror
+                                        {{-- Price --}}
+                                        <div class="text-center mb-6 py-4 bg-green-50 dark:bg-green-900/30 rounded-lg border-2 border-green-200 dark:border-green-700">
+                                            <div class="text-5xl font-bold text-green-600 dark:text-green-400">
+                                                FREE
+                                            </div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                No payment required
+                                            </div>
+                                        </div>
+
+                                        {{-- Token Amount - Highlighted --}}
+                                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6 text-center">
+                                            <div class="text-3xl font-bold text-green-600 dark:text-green-400">
+                                                {{ number_format($trialPackage->token_limit) }}
+                                            </div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                Free Messengers
+                                            </div>
+                                        </div>
+
+                                        {{-- Features --}}
+                                        <ul class="space-y-3 mb-6">
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">Instant activation</span>
+                                            </li>
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">No credit card required</span>
+                                            </li>
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">All messenger features</span>
+                                            </li>
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">7 days full access</span>
+                                            </li>
+                                        </ul>
+
+                                        {{-- Description --}}
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 text-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                                            Perfect for trying out our Messenger features risk-free!
+                                        </p>
+
+                                        {{-- Selection Indicator --}}
+                                        <div class="text-center">
+                                            <div class="hidden peer-checked:flex items-center justify-center text-green-600 dark:text-green-400 font-semibold text-sm">
+                                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                ✓ Selected
+                                            </div>
+                                            <div class="peer-checked:hidden text-gray-500 dark:text-gray-400 text-sm">
+                                                Click to select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        @endif
+
+                        {{-- Paid Packages --}}
+                        @foreach($packages as $pkg)
+                            <div class="relative min-w-96">
+                                <input
+                                    type="radio"
+                                    name="package_radio"
+                                    id="package_{{ $pkg->id }}"
+                                    value="{{ $pkg->id }}"
+                                    class="peer hidden"
+                                    {{ ($package && $package->id === $pkg->id) ? 'checked' : '' }}
+                                >
+                                <label
+                                    for="package_{{ $pkg->id }}"
+                                    class="block cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden
+                                   border-2 transition-all duration-200 h-full
+                                   peer-checked:border-blue-500 peer-checked:shadow-2xl peer-checked:scale-[1.02]
+                                   hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-600
+                                   border-gray-200 dark:border-gray-700">
+
+                                    {{-- Badge --}}
+                                    @if($pkg->name === 'Basic')
+                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wide">
+                                            ⭐ Most Popular
+                                        </div>
+                                    @elseif($pkg->name === 'Premium')
+                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wide">
+                                            👑 Best Value
+                                        </div>
+                                    @endif
+
+                                    <div class="p-6">
+                                        {{-- Package Header --}}
+                                        <div class="text-center mb-6">
+                                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                                {{ $pkg->name }}
+                                            </h3>
+                                            <div class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
+                                                <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                </svg>
+                                                {{ $pkg->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}
+                                            </div>
+                                        </div>
+
+                                        {{-- Price --}}
+                                        <div class="text-center mb-6 py-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                            <div class="text-4xl font-bold text-gray-900 dark:text-white">
+                                                GH₵ {{ number_format($pkg->price, 2) }}
+                                            </div>
+                                            <div class="text-sm hidden text-gray-500 dark:text-gray-400 mt-1">
+                                                One-time payment
+                                            </div>
+                                        </div>
+
+                                        {{-- Token Amount - Highlighted --}}
+                                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 text-center">
+                                            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                                {{ number_format($pkg->token_limit) }}
+                                            </div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                Messengers
+                                            </div>
+                                        </div>
+
+                                        {{-- Features --}}
+                                        <ul class="space-y-3 mb-6">
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">Messengers never expire</span>
+                                            </li>
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">All messenger features included</span>
+                                            </li>
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">Top-up anytime</span>
+                                            </li>
+                                            <li class="flex items-start text-sm">
+                                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-gray-700 dark:text-gray-300">Secure payment via Paystack</span>
+                                            </li>
+                                        </ul>
+
+                                        {{-- Description --}}
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 text-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                                            {{ $pkg->description }}
+                                        </p>
+
+                                        {{-- Selection Indicator --}}
+                                        <div class="text-center">
+                                            <div class="hidden peer-checked:flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
+                                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                ✓ Selected
+                                            </div>
+                                            <div class="peer-checked:hidden text-gray-500 dark:text-gray-400 text-sm">
+                                                Click to select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        @endforeach
                     </div>
+
+                    @error('package_id')
+                    <p class="mt-4 text-red-600 dark:text-red-400 text-sm text-center">{{ $message }}</p>
+                    @enderror
 
                     {{-- Token Usage Guide --}}
                     <div class="mb-10 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
@@ -264,7 +404,7 @@
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                                     </svg>
-                                    Continue to Payment
+                                    <span id="btnTextContent">Continue to Payment</span>
                                 </span>
                                 <span id="btnLoader" class="hidden">
                                     <svg class="inline animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -293,7 +433,7 @@
                                 Do messengers expire?
                             </h4>
                             <p class="text-gray-600 dark:text-gray-400 text-sm ml-11">
-                                No! Your messengers never expire. Use them at your own pace and top up whenever you need more.
+                                No! Your messengers never expire (except trial tokens which last 7 days). Use them at your own pace and top up whenever you need more.
                             </p>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
@@ -335,12 +475,24 @@
                 const radioButtons = document.querySelectorAll('input[name="package_radio"]');
                 const submitBtn = document.getElementById('submitBtn');
                 const btnText = document.getElementById('btnText');
+                const btnTextContent = document.getElementById('btnTextContent');
                 const btnLoader = document.getElementById('btnLoader');
 
                 // Update hidden input when radio selection changes
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', function () {
                         hiddenInput.value = this.value;
+
+                        // Check if trial package is selected
+                        const selectedLabel = document.querySelector(`label[for="package_${this.value}"]`);
+                        const isTrial = selectedLabel && selectedLabel.textContent.includes('FREE');
+
+                        // Update button text
+                        if (isTrial) {
+                            btnTextContent.textContent = 'Activate Free Trial';
+                        } else {
+                            btnTextContent.textContent = 'Continue to Payment';
+                        }
                     });
                 });
 

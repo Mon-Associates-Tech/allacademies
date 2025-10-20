@@ -129,7 +129,7 @@ class AcademicChat extends Component
         }
 
         // Check if user has at least minimum tokens (e.g., 100 tokens for a basic chat)
-        if (!$user->hasOpenAiTokens(100)) {
+        if (!$user->hasOpenAiTokens(200)) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'insufficient';
             return;

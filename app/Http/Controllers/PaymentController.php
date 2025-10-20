@@ -357,23 +357,42 @@ public function callback(Request $request)
     {
         $subscription = UserTokenSubscription::findOrFail($subscriptionId);
 
-        // Check if it's a free package
+        // Check if it's a free package - this should NOT reach here for free packages
         if ($subscription->package->isFree()) {
-            // Activate immediately for free packages
-            $subscription->update([
-                'status' => 'active',
-                'purchased_at' => now(),
+            \Log::warning('Free package reached payment initialization', [
+                'subscription_id' => $subscription->id,
+                'user_id' => auth()->id()
             ]);
 
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('success', 'Free token package activated successfully!');
+                ->with('error', 'Free trials do not require payment. Please contact support if you see this message.');
         }
+
+        // Check if reference already exists in a completed payment
+        $existingPayment = Payment::where('reference', $subscription->reference)
+            ->where('status', 'succeeded')
+            ->first();
+
+        if ($existingPayment) {
+            \Log::warning('Duplicate payment attempt', [
+                'subscription_id' => $subscription->id,
+                'reference' => $subscription->reference,
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('error', 'This subscription has already been paid for.');
+        }
+
+        // Generate a fresh unique reference for Paystack
+        $paystackReference = 'TOKEN-' . $subscription->id . '-' . time() . '-' . strtoupper(Str::random(6));
 
         $data = [
             'email' => auth()->user()->email,
             'amount' => (int) ($subscription->package->price * 100), // convert to kobo
-            'reference' => $subscription->reference,
+            'reference' => $paystackReference, // Use fresh reference
             'metadata' => [
                 'subscription_id' => $subscription->id,
                 'type' => 'token_subscription',
@@ -384,11 +403,25 @@ public function callback(Request $request)
             'callback_url' => route('payment.token.callback'),
         ];
 
-        $response = $this->paystack->initializeTransaction($data);
+        try {
+            $response = $this->paystack->initializeTransaction($data);
 
-        return redirect($response['data']['authorization_url']);
+            // Store the Paystack reference for verification later
+            $subscription->update(['reference' => $paystackReference]);
+
+            return redirect($response['data']['authorization_url']);
+        } catch (\Exception $e) {
+            \Log::error('Paystack initialization failed', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('error', 'Failed to initialize payment. Please try again or contact support.');
+        }
     }
-
     public function tokenCallback(Request $request)
     {
         $reference = $request->query('reference');

@@ -34,10 +34,21 @@ class TokenSubscriptionController extends Controller
         $subscriptionHistory = $user->subscriptionHistory;
         $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
 
+        // Get paid packages only
         $packages = OpenAiTokenPackage::active()
-            ->where('is_free', false) // Don't show free trial in upgrade options
+            ->where('is_free', false)
             ->orderBy('price')
             ->get();
+
+        // Check if user is eligible for trial
+        $isEligibleForTrial = !$user->hasEverHadTrial();
+        $trialPackage = null;
+
+        if ($isEligibleForTrial) {
+            $trialPackage = OpenAiTokenPackage::active()
+                ->where('is_free', true)
+                ->first();
+        }
 
         $stats = $this->subscriptionService->getUserSubscriptionStats($user);
 
@@ -46,10 +57,11 @@ class TokenSubscriptionController extends Controller
             'subscriptionHistory',
             'pendingSubscription',
             'packages',
-            'stats'
+            'stats',
+            'trialPackage',
+            'isEligibleForTrial'
         ));
     }
-
     public function create(Request $request)
     {
         $user = Auth::user();
@@ -71,7 +83,24 @@ class TokenSubscriptionController extends Controller
             ->orderBy('price')
             ->get();
 
-        return view('token-subscriptions.create', compact('packages', 'package', 'currentSubscription'));
+        // Get trial package if user has never had one
+        $trialPackage = null;
+        $isEligibleForTrial = !$user->hasEverHadTrial();
+
+        if ($isEligibleForTrial) {
+            $trialPackage = OpenAiTokenPackage::active()
+                ->where('is_free', true)
+                ->first();
+        }
+
+        return view('token-subscriptions.create', compact(
+                'packages',
+                'package',
+                'currentSubscription',
+                'trialPackage',
+                'isEligibleForTrial'
+            )
+        );
     }
 
 
@@ -84,29 +113,69 @@ class TokenSubscriptionController extends Controller
         $user = Auth::user();
         $package = OpenAiTokenPackage::findOrFail($request->package_id);
 
-        // Check if user has pending subscription
-        $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
-        if ($pendingSubscription) {
-            return redirect()
-                ->route('payment.token.initialize', $pendingSubscription->id)
-                ->with('info', 'Complete your pending payment first.');
+        // Handle FREE TRIAL activation FIRST (before any other checks)
+        if ($package->isFree()) {
+            // Check if user has already used their trial
+            if ($user->hasEverHadTrial()) {
+                return redirect()
+                    ->route('token-subscriptions.create')
+                    ->with('error', 'You have already used your free trial.');
+            }
+
+            // Check if user already has any active subscription
+            if ($user->activeTokenSubscription) {
+                return redirect()
+                    ->route('token-subscriptions.index')
+                    ->with('info', 'You already have an active subscription. Trial cannot be activated.');
+            }
+
+            // Activate trial immediately WITHOUT creating pending record
+            try {
+                \Log::info('Activating free trial', [
+                    'user_id' => $user->id,
+                    'package_id' => $package->id
+                ]);
+
+                $user->createFreeTrialSubscription(true);
+
+                return redirect()
+                    ->route('token-subscriptions.index')
+                    ->with('success', '🎉 Free trial activated successfully! You have ' . number_format($package->token_limit) . ' tokens for 7 days.');
+            } catch (\Exception $e) {
+                \Log::error('Trial activation failed', [
+                    'user_id' => $user->id,
+                    'package_id' => $package->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                return redirect()
+                    ->route('token-subscriptions.create')
+                    ->with('error', 'Failed to activate free trial. Please try again or contact support.');
+            }
         }
 
-        // Don't allow selecting free trial manually
-        if ($package->isFree()) {
-            return redirect()
-                ->route('token-subscriptions.create')
-                ->with('error', 'Free trial is automatically assigned to new users.');
+        // For PAID packages, continue with normal flow
+        // Check if user has pending subscription
+        $pendingSubscription = $user->tokenSubscriptions()
+            ->where('status', 'pending')
+            ->where('package_id', $package->id)
+            ->first();
+
+        if ($pendingSubscription) {
+            // Reuse existing pending subscription
+            \Log::info('Reusing existing pending subscription', [
+                'subscription_id' => $pendingSubscription->id,
+                'user_id' => $user->id
+            ]);
+
+            return redirect()->route('payment.token.initialize', $pendingSubscription->id);
         }
 
         // Get current active subscription
         $currentSubscription = $user->activeTokenSubscription;
 
         // Determine if this is a top-up or upgrade
-        // It's a top-up if:
-        // 1. User has an active subscription
-        // 2. It's the same package OR they want to add tokens
-        // 3. It's not a trial
         $isTopUp = $currentSubscription &&
             $currentSubscription->package_id == $package->id &&
             $currentSubscription->action_type !== 'trial';
@@ -117,7 +186,6 @@ class TokenSubscriptionController extends Controller
         // Redirect to payment
         return redirect()->route('payment.token.initialize', $subscription->id);
     }
-
     public function show(UserTokenSubscription $subscription)
     {
         $this->authorize('view', $subscription);
