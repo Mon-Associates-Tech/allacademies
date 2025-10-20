@@ -18,8 +18,21 @@ class UserTokenSubscription extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $table = 'user_token_subscriptions';
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_DEPLETED = 'depleted';
 
+    // Define valid status values
+    public const STATUS_REPLACED = 'replaced';
+    public static array $validStatuses = [
+        self::STATUS_ACTIVE,
+        self::STATUS_PENDING,
+        self::STATUS_EXPIRED,
+        self::STATUS_DEPLETED,
+        self::STATUS_REPLACED
+    ];
+    protected $table = 'user_token_subscriptions';
     protected $fillable = [
         'user_id',
         'package_id',
@@ -35,7 +48,6 @@ class UserTokenSubscription extends Model
         'action_type',
         'replaced_by_id',
     ];
-
     protected $casts = [
         'tokens_purchased' => 'integer',
         'tokens_used' => 'integer',
@@ -46,25 +58,9 @@ class UserTokenSubscription extends Model
         'deactivated_at' => 'datetime',
         'status' => TokenSubscriptionStatus::class,
     ];
-
     protected $appends = [
         'usage_percentage',
         'remaining_percentage',
-    ];
-
-    // Define valid status values
-    public const STATUS_ACTIVE = 'active';
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_EXPIRED = 'expired';
-    public const STATUS_DEPLETED = 'depleted';
-    public const STATUS_REPLACED = 'replaced';
-
-    public static array $validStatuses = [
-        self::STATUS_ACTIVE,
-        self::STATUS_PENDING,
-        self::STATUS_EXPIRED,
-        self::STATUS_DEPLETED,
-        self::STATUS_REPLACED
     ];
 
     protected static function boot()
@@ -109,14 +105,6 @@ class UserTokenSubscription extends Model
     }
 
     /**
-     * Check if subscription has enough tokens
-     */
-    public function hasTokens(int $requiredTokens = 1): bool
-    {
-        return $this->status->value === 'active' && $this->tokens_remaining >= $requiredTokens;
-    }
-
-    /**
      * Check if subscription is expired
      */
     public function isExpired(): bool
@@ -142,6 +130,14 @@ class UserTokenSubscription extends Model
         }
 
         return $this->save();
+    }
+
+    /**
+     * Check if subscription has enough tokens
+     */
+    public function hasTokens(int $requiredTokens = 1): bool
+    {
+        return $this->status->value === 'active' && $this->tokens_remaining >= $requiredTokens;
     }
 
     /**
@@ -175,25 +171,13 @@ class UserTokenSubscription extends Model
     /**
      * Deactivate this subscription
      */
-    public function deactivate(string $reason = 'replaced'): void
+    public function deactivate(TokenSubscriptionStatus $reason = TokenSubscriptionStatus::REPLACED): void
     {
-        // Map string reasons to enum cases
-        $statusMap = [
-            'replaced' => TokenSubscriptionStatus::REPLACED,
-            'expired' => TokenSubscriptionStatus::EXPIRED,
-            'depleted' => TokenSubscriptionStatus::DEPLETED,
-        ];
-
-        // Set status to the appropriate enum value
-        if (isset($statusMap[$reason])) {
-            $this->status = $statusMap[$reason];
-        } else {
-            $this->status = TokenSubscriptionStatus::REPLACED;
-        }
-
+        $this->status = $reason;
         $this->deactivated_at = now();
         $this->save();
     }
+
     /**
      * Activate this subscription
      */
