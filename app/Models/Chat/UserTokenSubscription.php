@@ -137,7 +137,7 @@ class UserTokenSubscription extends Model
         $this->tokens_remaining = $this->tokens_purchased - $this->tokens_used;
 
         if ($this->tokens_remaining <= 0) {
-            $this->status = 'depleted';
+            $this->status = TokenSubscriptionStatus::DEPLETED;
             $this->deactivated_at = now();
         }
 
@@ -177,10 +177,16 @@ class UserTokenSubscription extends Model
      */
     public function deactivate(string $reason = 'replaced'): void
     {
-        $validReasons = ['replaced', 'expired', 'depleted'];
+        // Map string reasons to enum cases
+        $statusMap = [
+            'replaced' => TokenSubscriptionStatus::REPLACED,
+            'expired' => TokenSubscriptionStatus::EXPIRED,
+            'depleted' => TokenSubscriptionStatus::DEPLETED,
+        ];
 
-        if (in_array($reason, $validReasons)) {
-            $this->status = TokenSubscriptionStatus::from($reason);
+        // Set status to the appropriate enum value
+        if (isset($statusMap[$reason])) {
+            $this->status = $statusMap[$reason];
         } else {
             $this->status = TokenSubscriptionStatus::REPLACED;
         }
@@ -188,7 +194,6 @@ class UserTokenSubscription extends Model
         $this->deactivated_at = now();
         $this->save();
     }
-
     /**
      * Activate this subscription
      */
