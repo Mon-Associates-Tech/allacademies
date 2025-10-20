@@ -239,7 +239,7 @@ class TokenSubscriptionService
 
         // Deactivate old subscription
         if ($currentSubscription) {
-            $currentSubscription->deactivate('replaced');
+            $currentSubscription->deactivate(TokenSubscriptionStatus::REPLACED);
             $currentSubscription->replaced_by_id = $newSubscription->id;
             $currentSubscription->save();
 
@@ -276,7 +276,7 @@ class TokenSubscriptionService
             ->get();
 
         foreach ($expiredSubscriptions as $subscription) {
-            $subscription->deactivate('expired');
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
             $expiredCount++;
         }
 
