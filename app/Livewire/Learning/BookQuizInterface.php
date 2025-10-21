@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Learning;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\Book;
 use App\Models\BookReadingProgress;
 use App\Models\QuizSession;
 use App\Services\AcademicChatService;
 use App\Services\BookBasedLearningService;
+use App\Support\TokenSubscriptionStatus;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +56,8 @@ class BookQuizInterface extends Component
     public $uploadedFile = null;
     public $fileContent = '';
     public $fileName = '';
+    public $canGenerateQuiz = true;
+    public $tokenWarningMessage = null;
     protected $chatService;
     protected $bookLearningService;
 
@@ -68,6 +72,7 @@ class BookQuizInterface extends Component
 
     public function mount()
     {
+        $this->checkTokenAvailability();
         $this->loadAvailableBooks();
         $this->loadPreviousQuizzes();
         $bookId = request()->query('bookId');
@@ -77,6 +82,44 @@ class BookQuizInterface extends Component
             $this->selectedBookId = $bookId;
             $this->updatedSelectedBookId();
         }
+    }
+
+    public function checkTokenAvailability()
+    {
+        $user = auth()->user();
+
+        // For all users, check their token subscription
+        $subscription = $user->activeTokenSubscription;
+
+        if (!$subscription) {
+            $this->canGenerateQuiz = false;
+            $this->tokenWarningMessage = 'no_subscription';
+            return;
+        }
+
+        // Use enum comparison for status
+        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
+            $this->canGenerateQuiz = false;
+            $this->tokenWarningMessage = 'depleted';
+            return;
+        }
+
+        if ($subscription->isExpired()) {
+            $this->canGenerateQuiz = false;
+            $this->tokenWarningMessage = 'expired';
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
+            return;
+        }
+
+        // Check if user has at least minimum tokens for quiz generation (e.g., 500 tokens)
+        if (!$user->hasOpenAiTokens(500)) {
+            $this->canGenerateQuiz = false;
+            $this->tokenWarningMessage = 'insufficient';
+            return;
+        }
+
+        $this->canGenerateQuiz = true;
+        $this->tokenWarningMessage = null;
     }
 
     protected function loadAvailableBooks()
@@ -109,20 +152,21 @@ class BookQuizInterface extends Component
             // Books with individual subscriptions
             $q->orWhereHas('subscriptions', function ($subQuery) use ($user) {
                 $subQuery->where('user_id', $user->id)
-                    ->where('status', \App\Enums\SubscriptionStatus::PAID->value);
+                    ->where('status', SubscriptionStatus::PAID->value);
             });
 
             // Books with group subscriptions (if applicable)
             if ($student && method_exists($student, 'studentGroup') && $student->studentGroup) {
                 $q->orWhereHas('groupSubscriptions', function ($groupQuery) use ($student) {
                     $groupQuery->where('student_group_id', $student->studentGroup->id)
-                        ->where('status', \App\Enums\SubscriptionStatus::PAID->value);
+                        ->where('status', SubscriptionStatus::PAID->value);
                 });
             }
         });
 
         $this->availableBooks = $query->orderBy('title')->get();
     }
+
     protected function loadPreviousQuizzes()
     {
         $this->previousQuizzes = QuizSession::where('user_id', Auth::id())
@@ -426,6 +470,13 @@ class BookQuizInterface extends Component
 
     public function generateQuiz()
     {
+        $this->checkTokenAvailability();
+
+        if (!$this->canGenerateQuiz) {
+            $this->dispatch('tokenCheckFailed');
+            return;
+        }
+
         $this->reset(['quizResults', 'activeTab']);
 
         // Validate common fields first

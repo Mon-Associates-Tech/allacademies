@@ -573,7 +573,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Check if expired
         if ($subscription->isExpired()) {
-            $subscription->deactivate('expired');
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
             return false;
         }
 
