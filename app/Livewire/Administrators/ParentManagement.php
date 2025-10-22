@@ -10,8 +10,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\WithPagination;
+use App\Models\AcademicFeeStructure;
+use Illuminate\Support\Facades\Auth;
 
-class ParentManagement extends AppComponent
+class ParentManagement extends AppComponent ///
 {
     use WithPagination;
 
@@ -387,6 +389,39 @@ class ParentManagement extends AppComponent
             // })
             // ->paginate($this->perPage);
     }
+
+public function getParentsProperty_old()
+{
+    return StudentParent::with(['user', 'students.academicLevel', 'students.academicGroup'])
+        ->get()
+        ->map(function ($parent) {
+            $wards = $parent->students->map(function ($student) {
+                $feeStructure = AcademicFeeStructure::where('school_id', $student->school_id)
+                    ->where('academic_group_id', $student->academic_group_id)
+                    ->where('academic_level_id', $student->academic_level_id)
+                    ->latest()
+                    ->first();
+
+                return [
+                    'student' => $student,
+                    'totalAmount' => $feeStructure->amount ?? 0,
+                    'paymentMethod' => $feeStructure->payment_method ?? 'Momo',
+                    'dueDate' => $feeStructure->due_date,
+                    'amountPaid' => $student->amount_paid ?? 0,
+                    'remainingAmount' => ($feeStructure->amount ?? 0) - ($student->amount_paid ?? 0),
+                    'feeStatus' => $student->fee_status ?? 'Pending',
+                ];
+            });
+
+            return [
+                'parent' => $parent,
+                'wards' => $wards
+            ];
+        });
+}
+
+
+
 
     public function getParentStatsProperty()
     {

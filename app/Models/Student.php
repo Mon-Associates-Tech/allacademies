@@ -141,6 +141,7 @@ class Student extends Model
     }
 
     
+    
 
     public function academicSubjects(): BelongsToMany
     {

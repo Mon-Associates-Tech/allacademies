@@ -373,26 +373,31 @@
 
                     <!-- Submit Button -->
                     <div class="flex items-center gap-3">
-                        <button id="subscriptionButton" type="submit"
-                                class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-300 text-gray-500 cursor-not-allowed">
+    <button
+    type="submit"
+    wire:loading.attr="disabled"
+    wire:target="createSubscription"
+    @disabled($this->subjects_count == 0)
+    class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+        {{ $this->subjects_count == 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-violet-600 hover:bg-violet-700 text-white' }}">
+    
+    {{-- Icon + Text --}}
+    @if($this->subjects_count == 0)
+        {{-- Disabled State --}}
+        <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Select Subjects First</span>
+    @else
+        {{-- Enabled State --}}
+        <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Create Subscription</span>
+    @endif
+</button>
 
-                            <!-- Loading/Disabled State -->
-                            <svg id="iconDisabled" class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 4v16m8-8H4"/>
-                            </svg>
 
-                            <!-- Success Icon -->
-                            <svg id="iconEnabled" class="w-5 h-5 mr-2 text-white hidden" fill="none"
-                                 stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M5 13l4 4L19 7"/>
-                            </svg>
-
-                            <span id="textDisabled">Select Subjects First</span>
-                            <span id="textEnabled" class="hidden">Create Subscription</span>
-                        </button>
                     </div>
                 </div>
                 @if ($errors->any())

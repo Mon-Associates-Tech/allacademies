@@ -14,7 +14,7 @@
             <p class="text-gray-600 mb-6">Thank you for completing your payment.</p>
 
             <!-- Payment Details Card -->
-            <div class="bg-gray-100 rounded-xl p-4 mb-6 text-left">
+            {{-- <div class="bg-gray-100 rounded-xl p-4 mb-6 text-left">
                 <p class="text-sm text-gray-700 mb-1">
                     <span class="font-semibold">Student:</span>
                     {{ $student->user->name ?? 'Unknown Student' }}
@@ -27,7 +27,7 @@
                     <span class="font-semibold">Reference:</span>
                     {{ $reference ?? 'N/A' }}
                 </p>
-            </div>
+            </div> --}}
 
             <!-- Go Back Button -->
             <a href="{{ url('/dashboard') }}"

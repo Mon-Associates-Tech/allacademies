@@ -198,6 +198,8 @@ public function createSchool(): void
         );
 
         $school = $this->createdSchool;
+        $user = Auth::user();
+        $user->update(['role' => 'admin']); 
 
         if (!empty($this->bank_code)) {
             $subaccountData = [

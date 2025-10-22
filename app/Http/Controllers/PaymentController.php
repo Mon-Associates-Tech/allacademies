@@ -10,6 +10,7 @@ use App\Models\Subscription;
 use App\Models\BookSubscription;
 use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
+use App\Models\AcademicFeeStructure;
 use App\Services\TokenSubscriptionService;
 use App\Traits\HandlesPayments;
 use Brick\Money\Money;
@@ -24,6 +25,7 @@ use App\Models\Student;
 use App\Models\StudentPayment;
 use App\Models\SchoolFee;
 use App\Models\School;
+use App\Models\Subaccount;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -31,8 +33,8 @@ class PaymentController extends Controller
 {
     use HandlesPayments;
 
-     protected $paystack;
-     protected $subscriptionService;
+    protected $paystack;
+    protected $subscriptionService;
 
     public function __construct(PaystackService $paystack, TokenSubscriptionService $subscriptionService)
     {
@@ -461,5 +463,163 @@ class PaymentController extends Controller
         return redirect()
             ->route('token-subscriptions.index')
             ->with('error', 'Token subscription payment failed or was cancelled.');
+    }
+
+
+    public function showPaymentForm_old(Student $student)
+    {
+        // Load any related data you need for the view, e.g. school, fees, etc.
+        return view('payments.school-fees.feepayment', compact('student'));
+    }
+
+    public function showPaymentForm(Student $student)
+    {
+        // Fetch the fee structure based on student's group and level
+        $feeStructure = AcademicFeeStructure::where('school_id', $student->school_id)
+            ->where('academic_group_id', $student->academic_group_id)
+            ->where('academic_level_id', $student->academic_level_id)
+            ->latest() // optional, get the most recent if multiple exist
+            ->first();
+
+        $totalAmount = $feeStructure->amount ?? 0;
+        $paymentMethod = $feeStructure->payment_method ?? 'Momo';
+        $dueDate = $feeStructure->due_date;
+
+        return view('payments.school-fees.feepayment', [
+            'student' => $student,
+            'totalAmount' => $totalAmount,
+            'paymentMethod' => $paymentMethod,
+            'dueDate' => $dueDate,
+        ]);
+    }
+
+
+
+    public function processPayment(Request $request, PaystackService $paystack)
+    {
+        // 1️⃣ Validate request input
+        $validated = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'amount'     => 'required|numeric|min:1',
+        ]);
+
+        // 2️⃣ Get student and related school
+        $student = Student::with(['school', 'academicGroup', 'academicLevel'])->findOrFail($validated['student_id']);
+        $school  = $student->school;
+
+        if (!$school) {
+            return back()->withErrors(['school' => 'Student is not linked to any school.']);
+        }
+
+        // 3️⃣ Get school’s Paystack subaccount info
+        $subaccount = Subaccount::where('school_id', $school->id)->first();
+
+        if (!$subaccount || !$subaccount->subaccount_code) {
+            return back()->withErrors(['payment' => 'This school does not have a registered Paystack subaccount.']);
+        }
+
+        // 4️⃣ Determine payer info (student or parent)
+        $payer = Auth::user();
+        $payer_id   = $payer->id ?? null;
+        $payer_type = $payer ? get_class($payer) : null;
+
+        // 5️⃣ Get the current term (academic period)
+        $currentTerm = \App\Models\AcademicPeriod::where('is_current', 1)->first();
+        $currentTermId = $currentTerm->id ?? null;
+
+        // 6️⃣ Pull the total fee amount for this student’s group, level, and current term
+        $feeStructure = \App\Models\AcademicFeeStructure::where('school_id', $school->id)
+            ->where('academic_group_id', $student->academic_group_id)
+            ->where('academic_level_id', $student->academic_level_id)
+            ->where('current_term_id', $currentTermId)
+            ->first();
+
+        $termTotalAmount = $feeStructure->amount ?? 0;
+
+        // 7️⃣ Prepare callback URL — include student id
+        $callbackUrl = route('feepayment.callback', ['student' => $student->id]);
+
+        // 8️⃣ Prepare Paystack transaction payload
+        $paymentData = [
+            'email'        => $payer->email ?? 'guest@example.com',
+            'amount'       => $validated['amount'] * 100, // Paystack expects amount in pesewas
+            'currency'     => 'GHS',
+            'callback_url' => $callbackUrl,
+            'subaccount'   => $subaccount->subaccount_code,
+        ];
+
+        // 9️⃣ Initialize transaction via Paystack API
+        $response = $paystack->initializeTransaction($paymentData);
+
+        if (empty($response['status']) || !$response['status'] || empty($response['data']['authorization_url'])) {
+            return back()->withErrors(['payment' => 'Unable to initialize payment. Please try again.']);
+        }
+
+        // ✅ Extract Paystack reference
+        $reference = $response['data']['reference'];
+
+        // 🔟 Record payment in DB (now includes term_total_amount and current_term_id)
+        SchoolFee::create([
+            'school_id'          => $school->id,
+            'student_id'         => $student->id,
+            'payer_id'           => $payer_id,
+            'payer_type'         => $payer_type,
+            'school_name'        => $school->name,
+            'amount'             => $validated['amount'],
+            'term_total_amount'  => $termTotalAmount,
+            'term_id'    => $currentTermId,
+            'currency'           => 'GHS',
+            'status'             => 'pending',
+            'reference'          => $reference,
+            'authorization_url'  => $response['data']['authorization_url'],
+            'paystack_response'  => json_encode($response),
+        ]);
+
+        // 1️⃣1️⃣ Redirect user to Paystack for payment
+        return redirect($response['data']['authorization_url']);
+    }
+
+
+
+
+    public function paymentCallback(Request $request, PaystackService $paystack, Student $student)
+    {
+        $reference = $request->query('reference');
+
+        if (!$reference) {
+            return redirect()->route('feepayment.form')
+                ->withErrors(['payment' => 'Missing payment reference.']);
+        }
+
+        // ✅ Verify transaction with Paystack
+        $response = $paystack->verifyTransaction($reference);
+
+        if (empty($response['status']) || !$response['status']) {
+            return redirect()->route('feepayment.form')
+                ->withErrors(['payment' => 'Payment verification failed.']);
+        }
+
+        $data = $response['data'] ?? [];
+
+        // ✅ Update payment record in DB
+        $payment = SchoolFee::where('reference', $reference)->first();
+
+        if ($payment) {
+            $payment->update([
+                'status' => 'succeeded',
+                'paystack_response' => json_encode($response),
+            ]);
+        }
+
+        // ✅ Redirect to Thank You page for the student
+        return redirect()
+            ->route('feepayment.thankyou', ['student' => $student->id])
+            ->with('success', 'Payment successful!');
+    }
+
+
+    public function thankYou(Student $student)
+    {
+        return view('payments.school-fees.thankyou', compact('student'));
     }
 }

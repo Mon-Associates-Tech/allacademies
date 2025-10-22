@@ -4,7 +4,7 @@
     <div class="bg-white shadow-sm border-b">
         <div class="max-w-4xl mx-auto px-6 py-4">
             <div class="flex items-center justify-between mb-2">
-                <h1 class="text-lg font-semibold text-gray-900">School Registration++</h1>
+                <h1 class="text-lg font-semibold text-gray-900">School Registration</h1>
                 <span class="text-sm text-gray-500">Step <span x-text="currentStep"></span> of {{ $totalSteps }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -408,7 +408,7 @@
 
                                 {{-- Academic Levels Selection --}}
                                 <div x-show="$wire.selectedAcademicGroups.length > 0" x-transition>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Academic Levels++</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Academic Levels</h3>
                                     <p class="text-sm text-gray-600 mb-4">Select specific levels within your chosen
                                         academic groups</p>
 
@@ -841,7 +841,7 @@
                                 <div class="grid grid-cols-2 gap-4 text-center">
                                     <div class="bg-blue-50 rounded-lg p-4">
                                         <i class="fas fa-graduation-cap text-blue-600 text-xl mb-2"></i>
-                                        <p class="text-sm font-medium text-gray-700">Academic Groups++</p>
+                                        <p class="text-sm font-medium text-gray-700">Academic Groups</p>
                                         <p class="text-lg font-bold text-blue-600">{{
                                             $createdSchool->academicGroups()->count() }}</p>
                                     </div>

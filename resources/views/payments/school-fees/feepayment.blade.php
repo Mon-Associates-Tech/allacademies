@@ -43,12 +43,28 @@
             <form action="{{ route('feepayment.process') }}" method="POST" class="space-y-5">
                 @csrf
 
+                {{-- Total Amount --}}
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Total Amount to Pay</label>
-                    <input type="text" value="₵{{ number_format($student->total_fees ?? 0, 2) }}" readonly
+                    <input type="text" value="₵{{ number_format($totalAmount ?? 0, 2) }}" readonly
                         class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500">
                 </div>
 
+                {{-- Payment Method --}}
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Payment Method</label>
+                    <input type="text" value="{{ $paymentMethod }}" readonly
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500">
+                </div>
+
+                {{-- Due Date --}}
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Payment Due Date</label>
+                    <input type="text" value="{{ $dueDate ? \Carbon\Carbon::parse($dueDate)->format('M d, Y') : 'N/A' }}" readonly
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500">
+                </div>
+
+                {{-- Amount Being Paid Now --}}
                 <div>
                     <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
                         Amount You Are Paying Now <span class="text-red-500">*</span>
@@ -58,6 +74,7 @@
                         class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500">
                 </div>
 
+                {{-- Hidden student ID --}}
                 <input type="hidden" name="student_id" value="{{ $student->id }}">
 
                 <div class="flex justify-center">

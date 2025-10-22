@@ -20,8 +20,11 @@ class SignUpController extends Controller
     {
         $user = DB::transaction(static function () use ($request) {
             $validated = $request->validated();
-            $isAuthor = $request->boolean('author'); // Get the author checkbox value
-            // Determine which role to assign based on checkbox
+
+            $isAuthor = $request->boolean('author'); // Check if user selected 'author'
+            $isNewSchool = $request->boolean('newschool'); // Check if user wants to onboard a school
+
+            // Determine which role to assign
             $roleName = $isAuthor ? 'author' : 'subscriber';
             $userRoleEnum = $isAuthor ? UserRole::AUTHOR : UserRole::SUBSCRIBER;
 
@@ -30,7 +33,7 @@ class SignUpController extends Controller
                 ->orWhere('slug', $roleName)
                 ->first();
 
-            // If the role doesn't exist, fall back to subscriber
+            // Fallback to subscriber if role missing
             if (!$role) {
                 $role = Role::where('name', 'subscriber')
                     ->orWhere('slug', 'subscriber')
@@ -43,11 +46,11 @@ class SignUpController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => bcrypt($validated['password']),
-                'role' => $userRoleEnum, // Keep the enum for backward compatibility
-                'role_id' => $role?->id, // Set the role_id from the roles table
+                'role' => $userRoleEnum,
+                'role_id' => $role?->id,
             ]);
 
-            // Attach the role via many-to-many relationship for consistency
+            // Attach role relationship
             if ($role) {
                 $user->roles()->attach($role->id);
             }
@@ -55,10 +58,12 @@ class SignUpController extends Controller
             // Create personal team
             $team = $user->ownedTeams()->create([
                 'name' => "{$user->name}'s Team",
-                'is_personal' => true
+                'is_personal' => true,
             ]);
 
             $user->currentTeam()->associate($team)->save();
+
+            // Give free trial
             $user->createFreeTrialSubscription();
 
             return $user;
@@ -66,14 +71,21 @@ class SignUpController extends Controller
 
         event(new Registered($user));
 
-        // Store the user's email in session for the verification notice page
+        // Store verification email in session
         $request->session()->put('verification_email', $user->email);
+        if ($request->boolean('newschool')) {
+           $request->session()->put('redirect_after_verification', 'onboarding');
+           //dd($request->session()->all());
+         }
 
-        // Create success message based on role
+        // Build success message
         $roleMessage = $request->boolean('author') ? 'author' : 'subscriber';
         $successMessage = "Registration successful as {$roleMessage}! Please check your email to verify your account before signing in.";
 
-        // Redirect to email verification notice
+        // ✅ Check if the "Onboard a new school" checkbox was selected
+       
+
+        // Default redirect to verification notice
         return redirect()->route('verification.notice')
             ->with('success', $successMessage);
     }

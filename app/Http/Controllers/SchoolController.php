@@ -7,7 +7,13 @@ use App\Models\Subaccount;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\SchoolFee; 
+use App\Models\SchoolFee;
+use App\Models\AcademicGroup;;
+
+use App\Models\AcademicLevel;
+use App\Models\AcademicPeriod;
+use App\Models\AcademicFeeStructure;
+use Illuminate\Support\Facades\Auth;
 
 class SchoolController extends Controller
 {
@@ -150,6 +156,42 @@ class SchoolController extends Controller
         return redirect()
             ->route('schools.create')
             ->with('success', 'School fees payment successful! Ref: ' . $paymentDetails['reference']);
+    }
+
+
+    public function showFeeSetupForm()
+    {
+        $schoolId = Auth::user()->school_id;
+
+        // Fetch groups and levels that belong to the logged-in admin’s school
+        $academicGroups = AcademicGroup::where('school_id', $schoolId)->get();
+        $academicLevels = AcademicLevel::where('school_id', $schoolId)->get();
+
+        // Academic periods (terms) are global — no school_id column
+        $academicTerms = AcademicPeriod::orderBy('start_date', 'asc')->get();
+
+        return view('payments.school-fees.setup', compact('academicGroups', 'academicLevels', 'academicTerms'));
+    }
+
+
+    public function storeFeeStructure(Request $request)
+    {
+        $validated = $request->validate([
+            'academic_group_id' => 'required|exists:academic_groups,id',
+            'academic_level_id' => 'required|exists:academic_levels,id',
+            'current_term_id'   => 'required|exists:academic_periods,id',
+            'amount'            => 'required|numeric|min:0',
+            'due_date'          => 'required|date',
+            'payment_method'    => 'nullable|string|max:50',
+        ]);
+
+        $validated['school_id'] = Auth::user()->school_id;
+
+        AcademicFeeStructure::create($validated);
+
+        return redirect()
+            ->route('school.fee-setup')
+            ->with('success', 'Fee structure created successfully!');
     }
 }
 

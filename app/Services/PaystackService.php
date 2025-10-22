@@ -73,6 +73,8 @@ class PaystackService
     // 🔹 Create Subaccount
     public function createSubAccount(array $data): array
     {
+        $this->initialize(); 
+        
         $response = $this->client->post('/subaccount', [
             'json' => $data
         ]);
