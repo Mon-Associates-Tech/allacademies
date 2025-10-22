@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\BookSubscription;
 use App\Models\User;
 use App\Support\AcademicGroupTag;
@@ -44,9 +45,9 @@ class SubscriptionController extends Controller
         $user->ensureUserHasTeam();
 
         // Check if user has subscriber or student role
-        $isSubscriberOrStudent = $user->hasRole('subscriber') || $user->hasRole('student');
+        $isStudent =   $user->hasRole('student');
 
-        if ($isSubscriberOrStudent) {
+        if ($isStudent) {
             // Only show book subscriptions for subscribers and students
             $bookSubscriptions = BookSubscription::query()
                 ->where('user_id', $user->id)
@@ -182,15 +183,24 @@ class SubscriptionController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
+
     public function create()
     {
         /** @var User $user */
         $user = auth()->user();
         $user->load('currentTeam');
-        // Make sure academic groups are loaded with their levels and subjects
-        $academicGroups = AcademicGroup::with([
-            'academicLevels.academicSubjects' // or 'academicLevels.subjects' based on your relationship
-        ])->get()->map(function ($group) {
+
+        // Filter academic groups based on user role
+        $academicGroupsQuery = AcademicGroup::with([
+            'academicLevels.academicSubjects'
+        ]);
+
+        // Restrict subscribers to only groups 9 and 10
+        if ($user->role === UserRole::SUBSCRIBER) {
+            $academicGroupsQuery->whereIn('id', [9, 10]);
+        }
+
+        $academicGroups = $academicGroupsQuery->get()->map(function ($group) {
             return [
                 'id' => $group->id,
                 'name' => $group->name,
@@ -203,7 +213,6 @@ class SubscriptionController extends Controller
                                 'id' => $subject->id,
                                 'name' => $subject->name,
                                 'code' => $subject->code,
-                                // add other subject properties as needed
                             ];
                         })->toArray()
                     ];

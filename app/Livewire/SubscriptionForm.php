@@ -27,9 +27,11 @@ class SubscriptionForm extends Component
     public $academicSubjects;
 
     public $academicGroupTag;
+    public $currentTeam;
 
     public function mount($academicGroups, $currentTeam): void
     {
+        $this->currentTeam = $currentTeam;
         $this->package = $currentTeam->is_personal ? SubscriptionPackage::INDIVIDUAL_FULL->value : SubscriptionPackage::INSTITUTION_FULL->value;
         $this->academicGroups = $academicGroups;
         $this->academicGroupId = $academicGroups[0]['id'];
