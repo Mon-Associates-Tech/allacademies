@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Teachers;
 
+use App\Models\Assignment;
 use App\Models\Book;
 use App\Models\AcademicSubject;
+use App\Services\AssignmentNotificationService;
 use App\Services\BookBasedLearningService;
 use App\Services\AcademicChatService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
@@ -261,10 +264,12 @@ class BookBasedAssignment extends Component
         }
 
         try {
-            // Create the assignment - following the existing structure
-            $assignment = new \App\Models\Assignment();
+            DB::beginTransaction();
+
+
+            $assignment = new Assignment();
             $assignment->teacher_id = $teacher->id;
-            $assignment->academic_subject_id = $this->selectedSubjectId; // Now properly set
+            $assignment->academic_subject_id = $this->selectedSubjectId;
             $assignment->title = $this->title;
             $assignment->description = $this->description;
             $assignment->type = 'quiz';
@@ -272,7 +277,7 @@ class BookBasedAssignment extends Component
             $assignment->starts_at = $this->startDate;
             $assignment->ends_at = $this->endDate;
             $assignment->is_randomized = $this->isRandomized;
-            $assignment->status = 'draft';
+            $assignment->status = 'published';
             $assignment->total_marks = $this->questionCount;
             $assignment->questions = $this->formatQuestionsForAssignment();
             $assignment->save();
@@ -294,19 +299,28 @@ class BookBasedAssignment extends Component
                 $assignment->students()->attach($this->selectedStudents);
             }
 
+            DB::commit();
+
+            // Send notifications to students
+            app(AssignmentNotificationService::class)->sendAssignmentNotifications($assignment);
+
             $this->dispatch('assignment-created', ['id' => $assignment->id]);
-            session()->flash('success', 'Assignment created successfully!');
+            session()->flash('success', 'Assignment created successfully and notifications sent!');
+
+            return redirect()->route('teachers.assignments.index');
 
         } catch (\Exception $e) {
+            DB::rollBack();
+
             \Log::error('Assignment creation failed', [
                 'user_id' => Auth::id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             $this->addError('creation', 'Failed to create assignment. Please try again.');
         }
     }
-
     protected function formatQuestionsForAssignment(): array
     {
         $questionsConfig = [];
@@ -315,20 +329,105 @@ class BookBasedAssignment extends Component
         $questionsByType = collect($this->generatedQuestions)->groupBy('type');
 
         foreach ($questionsByType as $type => $questions) {
+            // Convert questions to proper format
+            $formattedQuestions = $questions->map(function ($question) use ($type) {
+                return $this->normalizeQuestionFormat($question, $type);
+            })->toArray();
+
             $questionsConfig[] = [
                 'type' => $this->mapQuestionType($type),
-                'count' => count($questions),
+                'count' => count($formattedQuestions),
                 'difficulty' => $this->difficulty,
-                'questions' => $questions->toArray()
+                'questions' => $formattedQuestions
             ];
         }
 
         return $questionsConfig;
     }
+    /**
+     * Normalize question format to match system expectations
+     */
+    protected function normalizeQuestionFormat($question, $type): array
+    {
+        $normalized = [
+            'id' => $question['id'] ?? uniqid('book_'),
+            'question' => $question['question'] ?? '',
+            'difficulty' => $question['difficulty'] ?? $this->difficulty,
+            'points' => $question['points'] ?? 1,
+            'explanation' => $question['explanation'] ?? null,
+            'learning_objective' => $question['learning_objective'] ?? null,
+        ];
+
+        // Handle multiple choice questions - convert 0-indexed to A-E
+        if ($type === 'multiple_choice') {
+            $options = $question['options'] ?? [];
+            $correctAnswerText = $question['correct_answer'] ?? null;
+
+            // Convert numeric indices to letter indices
+            $convertedOptions = [];
+            $letters = ['A', 'B', 'C', 'D', 'E'];
+            $correctAnswerLetter = null;
+
+            foreach ($options as $index => $optionText) {
+                // Determine the letter index
+                if (is_string($index) && in_array($index, $letters)) {
+                    $letterIndex = $index;
+                } else {
+                    $letterIndex = is_numeric($index) ? $letters[$index] : $letters[0];
+                }
+
+                $convertedOptions[$letterIndex] = $optionText;
+
+                // Find which letter corresponds to the correct answer text
+                if ($correctAnswerText && trim($optionText) === trim($correctAnswerText)) {
+                    $correctAnswerLetter = $letterIndex;
+                }
+            }
+
+            // If correct answer is already a letter, use it
+            if ($correctAnswerText && in_array(strtoupper($correctAnswerText), $letters)) {
+                $correctAnswerLetter = strtoupper($correctAnswerText);
+            }
+
+            // If we still don't have a correct answer letter, try to find it by matching text
+            if (!$correctAnswerLetter && $correctAnswerText) {
+                foreach ($convertedOptions as $letter => $optionText) {
+                    if (strcasecmp(trim($optionText), trim($correctAnswerText)) === 0) {
+                        $correctAnswerLetter = $letter;
+                        break;
+                    }
+                }
+            }
+
+            $normalized['options'] = $convertedOptions;
+            $normalized['correct_answer'] = $correctAnswerLetter;
+            $normalized['answer'] = $correctAnswerLetter; // Add both for compatibility
+
+            // Log warning if we couldn't find the correct answer
+            if (!$correctAnswerLetter) {
+                \Log::warning('Could not determine correct answer letter for question', [
+                    'question_id' => $normalized['id'],
+                    'correct_answer_text' => $correctAnswerText,
+                    'options' => $convertedOptions
+                ]);
+            }
+        }
+        // Handle true/false questions
+        elseif ($type === 'true_false') {
+            $normalized['correct_answer'] = $question['correct_answer'] ?? $question['answer'] ?? null;
+            $normalized['answer'] = $normalized['correct_answer'];
+        }
+        // Handle essay questions
+        else {
+            $normalized['sample_answer'] = $question['sample_answer'] ?? null;
+            $normalized['rubric'] = $question['rubric'] ?? null;
+        }
+
+        return $normalized;
+    }
     protected function mapQuestionType($type): string
     {
         return match($type) {
-            'multiple_choice' => 'multiple_choice_question',
             'true_false' => 'true_or_false_question',
             'essay' => 'essay_question',
             default => 'multiple_choice_question'
