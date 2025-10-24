@@ -17,6 +17,7 @@ use Livewire\WithFileUploads;
 use Log;
 use setasign\Fpdi\Fpdi;
 use ValueError;
+use App\Enums\UserRole;
 
 class BookForm extends Component
 {
