@@ -31,6 +31,7 @@ class AcademicPeriod extends Model
         'registration_end',
         'exam_start',
         'exam_end',
+        'is_current',
     ];
 
     protected $casts = [
