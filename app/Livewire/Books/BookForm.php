@@ -247,17 +247,17 @@ class BookForm extends Component
         $user = auth()->user();
 
         // Admin and owner can edit any book
-        if (in_array($user->role, ['admin', 'owner'])) {
+        if (in_array($user->role, [UserRole::ADMIN, UserRole::OWNER])) {
             return;
         }
 
         // Authors can only edit their own books
-        if ($user->role === 'author' && $this->book->author->user_id === $user->id) {
+        if ($user->role === UserRole::AUTHOR && $this->book->author->user_id === $user->id) {
             return;
         }
 
         // Teachers can edit books if they have permission (you might want to add a specific permission check)
-        if ($user->role === 'teacher') {
+        if ($user->role === UserRole::TEACHER) {
             // Add your teacher permission logic here
             // For now, allowing all teachers to edit books
             return;
