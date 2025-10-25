@@ -16,6 +16,8 @@ use App\Livewire\Students\Messages\MessageShow;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
+use App\Livewire\Students\VirtualClassroom\MyVirtualSessions;
+use App\Livewire\Students\VirtualClassroom\ViewSessionRecordings;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->group(function () {
@@ -61,6 +63,12 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('/messages/compose', ComposeMessage::class)->name('messages.compose');
     Route::get('/messages', MessageIndex::class)->name('messages.index');
     Route::get('/messages/{message}', MessageShow::class)->name('messages.show');
+
+
+    Route::prefix('classroom')->name('classroom.')->group(function () {
+        Route::get('/sessions', MyVirtualSessions::class)->name('sessions');
+        Route::get('/recordings', ViewSessionRecordings::class)->name('recordings');
+    });
 
 });
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Students\VirtualClassroom\MyVirtualSessions;
+use App\Livewire\Students\VirtualClassroom\ViewSessionRecordings;
 use App\Livewire\Teachers\Activities;
 use App\Livewire\Teachers\Assignments;
 use App\Livewire\Teachers\Attendance\AttendanceHistory;
@@ -19,6 +21,12 @@ use App\Livewire\Teachers\TeacherProfile;
 use App\Livewire\Teachers\ViewAssignment;
 use App\Livewire\Teachers\ViewAssignmentSubmission;
 use App\Livewire\Teachers\VirtualClassroom;
+use App\Livewire\Teachers\VirtualClassroom\CreateVirtualSession;
+use App\Livewire\Teachers\VirtualClassroom\EditSession;
+use App\Livewire\Teachers\VirtualClassroom\SessionDetails;
+use App\Livewire\Teachers\VirtualClassroom\SessionManager;
+use App\Livewire\Teachers\VirtualClassroom\StartSession;
+use App\Livewire\Teachers\VirtualClassroom\VirtualSessionRecordings;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->group(function () {
@@ -63,5 +71,15 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
 
     // New route for book-based assignments
     Route::get('/book-assignments/create', \App\Livewire\Teachers\BookBasedAssignment::class)->name('book-assignments.create');
+
+    Route::prefix('classroom')->name('classroom.')->group(function () {
+        Route::get('/', SessionManager::class)->name('index');
+        Route::get('/create', CreateVirtualSession::class)->name('create');
+        Route::get('/sessions/{session}', SessionDetails::class)->name('show');
+        Route::get('/sessions/{session}/start', StartSession::class)->name('start');
+        Route::get('/sessions/{session}/edit', EditSession::class)->name('edit');
+        Route::get('/sessions/{session}/recordings', VirtualSessionRecordings::class)->name('recordings');
+        Route::get('/sessions/{session}/participants', App\Livewire\Teachers\VirtualClassroom\VirtualSessionParticipants::class)->name('participants');
+    });
 
 });

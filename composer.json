@@ -6,8 +6,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "ext-dom": "*",
         "ext-imagick": "*",
+        "ext-libxml": "*",
+        "ext-zip": "*",
         "barryvdh/laravel-dompdf": "^3.1",
+        "bigbluebutton/bigbluebutton-api-php": "^2.3",
         "brick/money": "^0.7.0",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
@@ -30,10 +34,7 @@
         "stevebauman/location": "^7.5",
         "symfony/console": "^7.2.0",
         "symfony/mailgun-mailer": "^6.3",
-        "tinymce/tinymce": "^7.8",
-        "ext-zip": "*",
-        "ext-dom": "*",
-        "ext-libxml": "*"
+        "tinymce/tinymce": "^7.8"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
