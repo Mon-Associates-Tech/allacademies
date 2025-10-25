@@ -1,6 +1,5 @@
 <?php
 
-
 use App\Http\Controllers\AcademicGroupController;
 use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AcademicSubjectController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\SubtopicController;
 use App\Livewire\AcademicManagement\AcademicHierarchy;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
 

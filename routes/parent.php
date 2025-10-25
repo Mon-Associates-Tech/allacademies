@@ -3,11 +3,6 @@
 use App\Livewire\Parent\Dashboard;
 use App\Livewire\Parent\Wards;
 use App\Livewire\Parent\ParentWardPerformance;
-use App\Livewire\Parent\Reports;
-use App\Livewire\Parent\TerminalReports;
-use App\Livewire\Parent\Notifications;
-use App\Livewire\Parent\Books;
-use App\Livewire\Parent\Library;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'parent'])->prefix('parent')->name('parent.')->group(function () {

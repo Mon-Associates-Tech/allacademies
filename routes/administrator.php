@@ -20,9 +20,9 @@ use App\Livewire\Common\Messages\MessageEdit;
 use App\Livewire\Common\Messages\MessageIndex;
 use App\Livewire\Common\Messages\MessageShow;
 use App\Livewire\School\SchoolDetails;
-
 use App\Livewire\Changelogs\ChangelogList;
 use App\Livewire\Changelogs\CreateChangelog;
+use Illuminate\Support\Facades\Route;
 
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
