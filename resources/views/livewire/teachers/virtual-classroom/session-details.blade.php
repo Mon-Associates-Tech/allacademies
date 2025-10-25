@@ -226,11 +226,11 @@
         @endif
 
         @if($activeTab === 'participants')
-            <livewire:teachers.virtual-classroom.session-participants :session="$session" :key="'participants-'.$session->id" />
+            <livewire:teachers.virtual-classroom.virtual-session-participants :session="$session" :key="'participants-'.$session->id" />
         @endif
 
         @if($activeTab === 'recordings')
-            <livewire:teachers.virtual-classroom.session-recordings :session="$session" :key="'recordings-'.$session->id" />
+            <livewire:teachers.virtual-classroom.virtual-session-recordings :session="$session" :key="'recordings-'.$session->id" />
         @endif
 
         @if($activeTab === 'settings')

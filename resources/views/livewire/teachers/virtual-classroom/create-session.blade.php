@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="px-4 py-8 mx-auto max-w-4xl sm:px-6 lg:px-8">
         <!-- Header -->
@@ -13,29 +14,35 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center flex-1">
                     <div class="flex items-center">
-                        <div class="flex items-center justify-center w-10 h-10 {{ $currentStep >= 1 ? 'bg-violet-600' : 'bg-gray-300' }} rounded-full">
+                        <div
+                            class="flex items-center justify-center w-10 h-10 {{ $currentStep >= 1 ? 'bg-violet-600' : 'bg-gray-300' }} rounded-full">
                             <span class="text-sm font-medium text-white">1</span>
                         </div>
-                        <span class="ml-2 text-sm font-medium {{ $currentStep >= 1 ? 'text-violet-600' : 'text-gray-500' }}">Details</span>
+                        <span
+                            class="ml-2 text-sm font-medium {{ $currentStep >= 1 ? 'text-violet-600' : 'text-gray-500' }}">Details</span>
                     </div>
                     <div class="flex-1 h-1 mx-4 {{ $currentStep >= 2 ? 'bg-violet-600' : 'bg-gray-300' }}"></div>
                 </div>
 
                 <div class="flex items-center flex-1">
                     <div class="flex items-center">
-                        <div class="flex items-center justify-center w-10 h-10 {{ $currentStep >= 2 ? 'bg-violet-600' : 'bg-gray-300' }} rounded-full">
+                        <div
+                            class="flex items-center justify-center w-10 h-10 {{ $currentStep >= 2 ? 'bg-violet-600' : 'bg-gray-300' }} rounded-full">
                             <span class="text-sm font-medium text-white">2</span>
                         </div>
-                        <span class="ml-2 text-sm font-medium {{ $currentStep >= 2 ? 'text-violet-600' : 'text-gray-500' }}">Settings</span>
+                        <span
+                            class="ml-2 text-sm font-medium {{ $currentStep >= 2 ? 'text-violet-600' : 'text-gray-500' }}">Settings</span>
                     </div>
                     <div class="flex-1 h-1 mx-4 {{ $currentStep >= 3 ? 'bg-violet-600' : 'bg-gray-300' }}"></div>
                 </div>
 
                 <div class="flex items-center">
-                    <div class="flex items-center justify-center w-10 h-10 {{ $currentStep >= 3 ? 'bg-violet-600' : 'bg-gray-300' }} rounded-full">
+                    <div
+                        class="flex items-center justify-center w-10 h-10 {{ $currentStep >= 3 ? 'bg-violet-600' : 'bg-gray-300' }} rounded-full">
                         <span class="text-sm font-medium text-white">3</span>
                     </div>
-                    <span class="ml-2 text-sm font-medium {{ $currentStep >= 3 ? 'text-violet-600' : 'text-gray-500' }}">Participants</span>
+                    <span
+                        class="ml-2 text-sm font-medium {{ $currentStep >= 3 ? 'text-violet-600' : 'text-gray-500' }}">Participants</span>
                 </div>
             </div>
         </div>
@@ -64,27 +71,32 @@
                             </label>
                             <textarea wire:model="description" id="description" rows="3"
                                       class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"></textarea>
-                            @error('description') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                            @error('description') <span
+                                class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
                         </div>
 
                         <!-- Date and Time -->
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <div>
-                                <label for="scheduled_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="scheduled_date"
+                                       class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Date <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:model="scheduled_date" type="date" id="scheduled_date"
                                        class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
-                                @error('scheduled_date') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                                @error('scheduled_date') <span
+                                    class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label for="scheduled_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="scheduled_time"
+                                       class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Time <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:model="scheduled_time" type="time" id="scheduled_time"
                                        class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
-                                @error('scheduled_time') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                                @error('scheduled_time') <span
+                                    class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -105,10 +117,164 @@
                             @error('duration') <span class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
                         </div>
 
+                        <!-- Recurring Section -->
+                        <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input wire:model.live="is_recurring" type="checkbox" id="is_recurring"
+                                           class="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500">
+                                </div>
+                                <div class="ml-3">
+                                    <label for="is_recurring"
+                                           class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Make this a recurring session
+                                    </label>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Automatically create multiple sessions based on a schedule
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if($is_recurring)
+                                <div
+                                    class="p-4 mt-4 space-y-4 border border-violet-200 rounded-lg bg-violet-50 dark:bg-violet-900/20 dark:border-violet-800">
+                                    <!-- Recurrence Pattern -->
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div>
+                                            <label for="recurrence_pattern"
+                                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Repeat <span class="text-red-500">*</span>
+                                            </label>
+                                            <select wire:model.live="recurrence_pattern" id="recurrence_pattern"
+                                                    class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly">Monthly</option>
+                                            </select>
+                                            @error('recurrence_pattern') <span
+                                                class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                                        </div>
+
+                                        <div>
+                                            <label for="recurrence_interval"
+                                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Every <span class="text-red-500">*</span>
+                                            </label>
+                                            <div class="flex items-center mt-1">
+                                                <input wire:model="recurrence_interval" type="number"
+                                                       id="recurrence_interval" min="1" max="12"
+                                                       class="block w-20 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $recurrence_pattern === 'daily' ? 'day(s)' : ($recurrence_pattern === 'weekly' ? 'week(s)' : 'month(s)') }}
+                                                </span>
+                                            </div>
+                                            @error('recurrence_interval') <span
+                                                class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Days of Week (for weekly recurrence) -->
+                                    @if($recurrence_pattern === 'weekly')
+                                        <div>
+                                            <label
+                                                class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Repeat on <span class="text-red-500">*</span>
+                                            </label>
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach(['Monday' => 1, 'Tuesday' => 2, 'Wednesday' => 3, 'Thursday' => 4, 'Friday' => 5, 'Saturday' => 6, 'Sunday' => 7] as $day => $value)
+                                                    <label class="inline-flex items-center px-3 py-2 border rounded-lg cursor-pointer
+                                                        {{ in_array($value, $recurrence_days ?? []) ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600' }}">
+                                                        <input type="checkbox" wire:model="recurrence_days"
+                                                               value="{{ $value }}" class="sr-only">
+                                                        <span
+                                                            class="text-sm font-medium">{{ substr($day, 0, 3) }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                            @error('recurrence_days') <span
+                                                class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                                        </div>
+                                    @endif
+
+                                    <!-- End Date Options -->
+                                    <div>
+                                        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Ends
+                                        </label>
+                                        <div class="space-y-2">
+                                            <!-- Never -->
+                                            <label class="flex items-center">
+                                                <input wire:model.live="recurrence_end_type" type="radio" value="never"
+                                                       class="w-4 h-4 text-violet-600 border-gray-300 focus:ring-violet-500">
+                                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Never</span>
+                                            </label>
+
+                                            <!-- On Date -->
+                                            <label class="flex items-center">
+                                                <input wire:model.live="recurrence_end_type" type="radio"
+                                                       value="on_date"
+                                                       class="w-4 h-4 text-violet-600 border-gray-300 focus:ring-violet-500">
+                                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">On</span>
+                                                <input wire:model="recurrence_end_date" type="date"
+                                                       {{ $recurrence_end_type !== 'on_date' ? 'disabled' : '' }}
+                                                       class="ml-2 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                                            </label>
+                                            @error('recurrence_end_date') <span
+                                                class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+
+                                            <!-- After Occurrences -->
+                                            <label class="flex items-center">
+                                                <input wire:model.live="recurrence_end_type" type="radio"
+                                                       value="after_occurrences"
+                                                       class="w-4 h-4 text-violet-600 border-gray-300 focus:ring-violet-500">
+                                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">After</span>
+                                                <input wire:model="recurrence_occurrences" type="number" min="1"
+                                                       max="52"
+                                                       {{ $recurrence_end_type !== 'after_occurrences' ? 'disabled' : '' }}
+                                                       class="w-20 ml-2 border-gray-300 rounded-lg shadow-sm focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                                                <span
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300">occurrences</span>
+                                            </label>
+                                            @error('recurrence_occurrences') <span
+                                                class="mt-1 text-sm text-red-600">{{ $message }}</span> @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Recurrence Summary -->
+                                    <div class="p-3 rounded-lg bg-violet-100 dark:bg-violet-900/30">
+                                        <p class="text-sm font-medium text-violet-900 dark:text-violet-300">
+                                            📅 Summary:
+                                            @if($recurrence_pattern === 'daily')
+                                                Every {{ $recurrence_interval > 1 ? $recurrence_interval : '' }}
+                                                day{{ $recurrence_interval > 1 ? 's' : '' }}
+                                            @elseif($recurrence_pattern === 'weekly')
+                                                Every {{ $recurrence_interval > 1 ? $recurrence_interval : '' }}
+                                                week{{ $recurrence_interval > 1 ? 's' : '' }}
+                                                @if(!empty($recurrence_days))
+                                                    on {{ collect($recurrence_days)->map(fn($d) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][$d-1])->implode(', ') }}
+                                                @endif
+                                            @else
+                                                Every {{ $recurrence_interval > 1 ? $recurrence_interval : '' }}
+                                                month{{ $recurrence_interval > 1 ? 's' : '' }}
+                                            @endif
+                                            @if($recurrence_end_type === 'on_date' && $recurrence_end_date)
+                                                until {{ Carbon::parse($recurrence_end_date)->format('M d, Y') }}
+                                            @elseif($recurrence_end_type === 'after_occurrences')
+                                                for {{ $recurrence_occurrences }} occurrences
+                                            @else
+                                                (no end date)
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+
                         <!-- Academic Context -->
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div>
-                                <label for="academic_level_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="academic_level_id"
+                                       class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Academic Level
                                 </label>
                                 <select wire:model.live="academic_level_id" id="academic_level_id"
@@ -121,7 +287,8 @@
                             </div>
 
                             <div>
-                                <label for="academic_group_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="academic_group_id"
+                                       class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Academic Group
                                 </label>
                                 <select wire:model.live="academic_group_id" id="academic_group_id"
@@ -135,7 +302,8 @@
                             </div>
 
                             <div>
-                                <label for="academic_subject_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="academic_subject_id"
+                                       class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Subject
                                 </label>
                                 <select wire:model="academic_subject_id" id="academic_subject_id"
@@ -192,11 +360,13 @@
                         <!-- Webcams Only for Moderator -->
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
-                                <input wire:model="webcams_only_for_moderator" type="checkbox" id="webcams_only_for_moderator"
+                                <input wire:model="webcams_only_for_moderator" type="checkbox"
+                                       id="webcams_only_for_moderator"
                                        class="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500">
                             </div>
                             <div class="ml-3">
-                                <label for="webcams_only_for_moderator" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="webcams_only_for_moderator"
+                                       class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Webcams only for moderator
                                 </label>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -212,7 +382,8 @@
                                        class="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500">
                             </div>
                             <div class="ml-3">
-                                <label for="allow_guest_login" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="allow_guest_login"
+                                       class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Allow guest login
                                 </label>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -223,7 +394,8 @@
 
                         <!-- Guest Policy -->
                         <div>
-                            <label for="guest_policy" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label for="guest_policy"
+                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Guest Policy
                             </label>
                             <select wire:model="guest_policy" id="guest_policy"
@@ -239,7 +411,8 @@
 
                         <!-- Max Participants -->
                         <div>
-                            <label for="max_participants" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label for="max_participants"
+                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Maximum Participants
                             </label>
                             <input wire:model="max_participants" type="number" id="max_participants" min="1" max="500"
@@ -262,7 +435,8 @@
                                        class="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500">
                             </div>
                             <div class="ml-3">
-                                <label for="inviteAllStudents" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="inviteAllStudents"
+                                       class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Invite all eligible students
                                 </label>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -277,10 +451,12 @@
                                 <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Select Students
                                 </label>
-                                <div class="max-h-64 overflow-y-auto border border-gray-300 rounded-lg dark:border-gray-600">
+                                <div
+                                    class="max-h-64 overflow-y-auto border border-gray-300 rounded-lg dark:border-gray-600">
                                     @foreach($students as $student)
                                         <label class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <input wire:model="selectedStudents" type="checkbox" value="{{ $student->id }}"
+                                            <input wire:model="selectedStudents" type="checkbox"
+                                                   value="{{ $student->id }}"
                                                    class="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500">
                                             <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                                 {{ $student->user->name }}
@@ -294,7 +470,8 @@
                         @if($inviteAllStudents)
                             <div class="p-4 rounded-lg bg-violet-50 dark:bg-violet-900/20">
                                 <p class="text-sm text-violet-800 dark:text-violet-300">
-                                    All eligible students will be invited to this session based on your academic context selection.
+                                    All eligible students will be invited to this session based on your academic context
+                                    selection.
                                 </p>
                             </div>
                         @endif

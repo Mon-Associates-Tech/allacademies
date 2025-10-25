@@ -80,6 +80,17 @@ class EditSession extends Component
         $this->guest_policy = $session->guest_policy;
     }
 
+    public function updatedAcademicGroupId($value)
+    {
+        $this->academic_level_id = null;
+        $this->academic_subject_id = null;
+    }
+
+    public function updatedAcademicLevelId($value)
+    {
+        $this->academic_subject_id = null;
+    }
+
     public function updateSession()
     {
         $this->validate();
@@ -116,21 +127,53 @@ class EditSession extends Component
 
     public function render()
     {
-        $academicLevels = AcademicLevel::where('school_id', Auth::user()->school_id)
+        $teacher = Auth::user()->teacher;
+        $schoolId = Auth::user()->school_id;
+
+        // Get academic groups that this teacher is assigned to through the school
+        $academicGroups = $teacher->academicGroups()
+            ->whereHas('schools', function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId)
+                    ->where('is_active', true);
+            })
             ->orderBy('name')
             ->get();
 
-        $academicGroups = AcademicGroup::where('school_id', Auth::user()->school_id)
-            ->orderBy('name')
-            ->get();
+        // Get academic levels based on selected group or teacher's assigned levels
+        $academicLevels = collect();
+        if ($this->academic_group_id) {
+            $academicLevels = AcademicLevel::where('academic_group_id', $this->academic_group_id)
+                ->whereHas('schools', function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId)
+                        ->where('is_active', true);
+                })
+                ->orderBy('name')
+                ->get();
+        } else {
+            $academicLevels = $teacher->academicLevels()
+                ->whereHas('schools', function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId)
+                        ->where('is_active', true);
+                })
+                ->orderBy('name')
+                ->get();
+        }
 
-        $academicSubjects = AcademicSubject::where('school_id', Auth::user()->school_id)
-            ->orderBy('name')
-            ->get();
+        // Get academic subjects based on selected level or teacher's assigned subjects
+        $academicSubjects = collect();
+        if ($this->academic_level_id) {
+            $academicSubjects = AcademicSubject::where('academic_level_id', $this->academic_level_id)
+                ->orderBy('name')
+                ->get();
+        } else {
+            $academicSubjects = $teacher->subjects()
+                ->orderBy('name')
+                ->get();
+        }
 
         return view('livewire.teachers.virtual-classroom.edit-session', [
-            'academicLevels' => $academicLevels,
             'academicGroups' => $academicGroups,
+            'academicLevels' => $academicLevels,
             'academicSubjects' => $academicSubjects,
         ]);
     }

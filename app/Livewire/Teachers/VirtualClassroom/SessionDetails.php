@@ -46,6 +46,43 @@ class SessionDetails extends Component
         return redirect()->route('teachers.classroom');
     }
 
+    public function stopRecurrence()
+    {
+        if (!$this->session->isParentSession()) {
+            $this->dispatch('error', 'This is not a recurring session.');
+            return;
+        }
+
+        $this->session->stopRecurrence();
+        $this->session->refresh();
+
+        $this->dispatch('success', 'Recurring session stopped. Future sessions have been cancelled.');
+    }
+
+    public function deleteRecurringSeries()
+    {
+        if (!$this->session->isParentSession() && !$this->session->isChildSession()) {
+            $this->dispatch('error', 'This is not a recurring session.');
+            return;
+        }
+
+        $parent = $this->session->isChildSession()
+            ? $this->session->parentSession
+            : $this->session;
+
+        // Delete all future child sessions
+        $parent->childSessions()
+            ->where('status', 'scheduled')
+            ->where('scheduled_start', '>', now())
+            ->delete();
+
+        // Delete parent
+        $parent->delete();
+
+        session()->flash('success', 'Recurring session series deleted successfully.');
+        return redirect()->route('teachers.classroom.index');
+    }
+
     public function render()
     {
         return view('livewire.teachers.virtual-classroom.session-details');
