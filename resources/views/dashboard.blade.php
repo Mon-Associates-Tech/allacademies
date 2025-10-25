@@ -63,6 +63,11 @@
         <livewire:chats.token-usage-circular />
     </div>
 
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Full version for prominent display -->
+        <livewire:subscription-features-banner placement="dashboard" />
+    </div>
+
     @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
         <section>
             @if ($academicSubjects->count() || request()->hasAny(['search', 'academic_group', 'academic_level']))
