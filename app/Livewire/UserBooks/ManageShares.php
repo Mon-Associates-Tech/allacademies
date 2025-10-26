@@ -2,6 +2,7 @@
 
 namespace App\Livewire\UserBooks;
 
+use App\Jobs\NotifyUsersAboutBookShareJob;
 use App\Models\UserBook;
 use App\Models\UserBookShare;
 use App\Models\AcademicGroup;
@@ -119,6 +120,11 @@ class ManageShares extends Component
                 'individual' => $this->addIndividualShareData($shareData),
             };
 
+            if($this->selectedAcademicLevelId){
+                $this->selectedAcademicGroupId = AcademicLevel::find($this->selectedAcademicLevelId)?->academic_group_id;
+                $shareData['academic_group_id'] = $this->selectedAcademicGroupId;
+            }
+
             $share = UserBookShare::create($shareData);
 
             // Send notifications if enabled
@@ -157,7 +163,7 @@ class ManageShares extends Component
             }
         } else {
             // For group/level shares, dispatch job to handle bulk notifications
-            UserBookSharedNotification::dispatch($share);
+            NotifyUsersAboutBookShareJob::dispatch($share);
         }
     }
 
