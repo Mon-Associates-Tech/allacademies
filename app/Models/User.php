@@ -182,6 +182,11 @@ class User extends Authenticatable implements MustVerifyEmail
             return;
         }
 
+        // Check if user has ever had a trial subscription
+        if ($this->hasEverHadTrial()) {
+            return;
+        }
+
         // Check if user already has any subscription
         if ($this->tokenSubscriptions()->count() > 0) {
             return;
@@ -517,6 +522,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user has ever had a trial subscription
+     */
+    public function hasEverHadTrial(): bool
+    {
+        return $this->tokenSubscriptions()
+            ->where('action_type', 'trial')
+            ->exists();
+    }
+
+    /**
      * Get all token purchases for this user (including top-ups)
      */
     public function tokenPurchases()
@@ -549,10 +564,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
-        // Non-subscribers have unlimited access - use enum comparison
-        if ($this->role !== UserRole::SUBSCRIBER) {
-            return true;
-        }
 
         $subscription = $this->activeTokenSubscription;
 
@@ -562,7 +573,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Check if expired
         if ($subscription->isExpired()) {
-            $subscription->deactivate('expired');
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
             return false;
         }
 

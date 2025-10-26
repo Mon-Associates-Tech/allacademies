@@ -500,6 +500,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('user-books.show');
     Route::get('/user-books/{userBook}/edit', \App\Livewire\UserBooks\UserBookForm::class)->name('user-books.edit');
 
+    Route::get('/{userBook}/manage-shares', \App\Livewire\UserBooks\ManageShares::class)
+        ->name('user-books.manage-shares');
 });
 
 use App\Http\Controllers\SchoolController;

@@ -42,8 +42,47 @@
             </div>
         </div>
 
+        <div class="rounded-md bg-blue-50 p-4 mb-6 mx-auto justify-center place-items-center">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+                              clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3 flex-1 md:flex  md:justify-between">
+                    <p class="text-sm text-blue-700">This subscription will apply to
+                        <strong>{{ $this->currentTeam->name }}</strong>. You can change the team if this not your intended
+                        team.</p>
+                    <p class="my-auto text-sm md:ml-6">
+                        <a href="{{ route('teams.index') }}"
+                           class="whitespace-nowrap font-medium text-blue-700 hover:text-blue-600">
+                            Change Team
+                            <span aria-hidden="true"> &rarr;</span>
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
 
         <div class="p-8">
+            @if(auth()->user()->role === \App\Enums\UserRole::SUBSCRIBER)
+                <div class="rounded-md bg-amber-50 p-4 mb-6 mx-auto">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-amber-800">
+                                As a subscriber, you have access to select academic groups only. Contact support if you need access to additional groups.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="grid lg:grid-cols-5 gap-4">
                 <!-- Left Column - Form Fields -->
                 <div class="lg:col-span-3 space-y-8">
@@ -119,7 +158,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                                         </svg>
-                                        Academic Level
+                                        Academic Group
                                     </span>
                                     <select wire:model.live="academicGroupId" id="academic_group"
                                             class="-ml-px border-0 rounded-r-lg ring-1 ring-inset ring-gray-300 bg-white pl-3 pr-8 py-2 focus:ring-2 focus:ring-blue-500 text-sm font-medium text-gray-600">

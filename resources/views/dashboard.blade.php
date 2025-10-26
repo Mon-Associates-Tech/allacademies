@@ -8,13 +8,21 @@
 
 
     @if(config('app.debug'))
-        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+        <div class="container bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 mx-auto rounded mb-4">
             <strong>Debug:</strong>
             Primary Role: {{ $primaryRole }} |
             All Roles: {{ implode(', ', $user->getRoleNames()) }} |
             Is Impersonating: {{ $isImpersonating ? 'Yes' : 'No' }}
         </div>
     @endif
+
+    <div class="container mx-auto px-4 py-4">
+        @auth
+            <livewire:trial-expiration-banner />
+        @endauth
+
+        <!-- Rest of your content -->
+    </div>
 
     @if($primaryRole === 'student')
         @livewire('students.dashboard')
@@ -45,6 +53,7 @@
         </div>
     @endif
 
+    {{-- some useful components  --}}
     <div class="mb-4 hidden">
         <livewire:chats.token-usage-monitor />
     </div>
@@ -61,6 +70,11 @@
     {{-- Use Circular in dashboard widget --}}
     <div class="w-full max-w-xs hidden">
         <livewire:chats.token-usage-circular />
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 hidden lg:px-8 py-6">
+        <!-- Full version for prominent display -->
+        <livewire:subscription-features-banner placement="dashboard" />
     </div>
 
     @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
