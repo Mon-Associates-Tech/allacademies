@@ -129,7 +129,7 @@ class QuestionGenerator
             }
 
 
-            $sectionQuestions = $questions;
+           // $sectionQuestions = $questions;
 
 
             // Add questions to the tracking array for duplicate prevention

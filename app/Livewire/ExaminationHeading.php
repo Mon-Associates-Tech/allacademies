@@ -35,10 +35,10 @@ class ExaminationHeading extends Component
     public function mount($metadata)
     {
         $this->metadata = $metadata;
-        $this->template = old('heading.template', 'twig');
-        $this->title = old('heading.title', '');
-        $this->duration = old('heading.duration', '');
-        $this->instructions = old('heading.instructions', '');
+        $this->template = old('heading.template', session('examination_form_data.heading.template', 'twig'));
+        $this->title = old('heading.title', session('examination_form_data.heading.title', ''));
+        $this->duration = old('heading.duration', session('examination_form_data.heading.duration', ''));
+        $this->instructions = old('heading.instructions', session('examination_form_data.heading.instructions', ''));
 
         $this->compile();
     }

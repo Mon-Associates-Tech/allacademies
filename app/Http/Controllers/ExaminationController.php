@@ -204,6 +204,7 @@ class ExaminationController extends Controller
     /**
      * Generate a preview of the examination without saving to a database
      */
+
     public function generatePreview(AcademicGroup $academicGroup, AcademicLevel $academicLevel, HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
     {
         try {
@@ -212,11 +213,16 @@ class ExaminationController extends Controller
             $this->authorize('subscribed', $academicSubject);
             $this->authorize('privileged', $currentTeam);
 
+            // Store form data in session before processing
+            session(['examination_form_data' => [
+                'heading' => $request['heading'],
+                'sections' => $request['sections']
+            ]]);
+
             $metadata = json_decode(base64_decode($request['metadata']), true, 512, JSON_THROW_ON_ERROR);
 
             $preprocessedSections = QuestionGenerator::preprocessSections($request['sections']);
 
-//            $previewData = QuestionGenerator::generate($request['heading'], $request['sections'], $metadata);
             $previewData = QuestionGenerator::generate($request['heading'], $preprocessedSections, $metadata);
 
             $previewData['sections'] = array_filter($previewData['sections'], static function ($data) {
@@ -228,6 +234,9 @@ class ExaminationController extends Controller
             $previewData['metadata'] = $metadata;
 
             session(['examination_preview' => $previewData]);
+
+            // Clear form data on success
+            session()->forget('examination_form_data');
 
             return redirect()->route('examinations.preview', [
                 'academic_subject' => $academicSubject,
@@ -241,7 +250,9 @@ class ExaminationController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return back()->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
+            return back()
+                ->withInput($request->all())
+                ->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
         }
     }
 

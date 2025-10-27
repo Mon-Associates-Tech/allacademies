@@ -42,9 +42,9 @@ class ExaminationSections extends Component
     {
         $this->topics = $topics;
 
-        $this->sections = old('sections') ?? [
+        $this->sections = old('sections', session('examination_form_data.sections', [
             ['name' => '', 'type' => '', 'count' => '', 'topics' => [], 'instructions' => '', 'subtopics' => [], 'metafields' => []],
-        ];
+        ]));
     }
 
     public function render()
