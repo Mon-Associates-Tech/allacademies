@@ -16,9 +16,13 @@ use App\Models\Lesson;
 use App\Models\LessonNote;
 use App\Models\Librarian;
 use App\Models\Role;
+use App\Models\Student;
 use App\Models\StudentGroup;
+use App\Models\Teacher;
 use App\Models\User;
+use Database\Factories\AcademicLevelFactory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class DatabaseSeeder extends Seeder
@@ -38,19 +42,19 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($roles as $role) {
-          //  Role::create($role);
+           // Role::create($role);
         }
 
         // Create admin user
-//        $adminUser = User::create([
-//            'name' => 'Admin User',
-//            'email' => 'admin@example.com',
-//            'password' => Hash::make('password'),
-//            'role' => 'admin',
-//            'email_verified_at' => now(),
-//        ]);
+     //   $adminUser = User::create([
+      //      'name' => 'Admin User',
+      //      'email' => 'admin@example.com',
+      //      'password' => Hash::make('password'),
+       //     'role' => 'admin',
+        //    'email_verified_at' => now(),
+        //]);
 
-       // $adminUser->roles()->attach(Role::where('name', 'admin')->first());
+      //  $adminUser->roles()->attach(Role::where('name', 'admin')->first());
 
       //  Administrator::create(['user_id' => $adminUser->id]);
 
@@ -63,10 +67,10 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-//          //  BookCategory::create([
+//            BookCategory::create([
 //                'name' => $category,
 //                'description' => "Books in the {$category} category"
-//          //  ]);
+//            ]);
         }
 
         // Create subjects
@@ -78,20 +82,20 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($subjects as $subject) {
-//            AcademicSubject::create([
-//                'name' => $subject,
-//                'academic_level_id' => AcademicLevelFactory::new()->create()->id,
-//                'code' => strtoupper(substr($subject, 0, 3)),
-//                'description' => "The study of {$subject}"
-//            ]);
+            AcademicSubject::create([
+                'name' => $subject,
+                'academic_level_id' => AcademicLevelFactory::new()->create()->id,
+                'code' => strtoupper(substr($subject, 0, 3)),
+                'description' => "The study of {$subject}"
+]);
         }
 
         // Create teachers (20)
         $teachers = [];
         for ($i = 0; $i < 20; $i++) {
-           // $user = User::factory()->create();
-          //  $user->roles()->attach(Role::where('name', 'teacher')->first());
-          //  $teachers[] = Teacher::create(['user_id' => $user->id]);
+            $user = User::factory()->create();
+            $user->roles()->attach(Role::where('name', 'teacher')->first());
+            $teachers[] = Teacher::create(['user_id' => $user->id]);
         }
             Log::info('Teachers created');
         // Create student groups (20)
@@ -104,11 +108,11 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($groupNames as $index => $name) {
-          //  $studentGroups[] = StudentGroup::create([
-         //       'name' => $name,
-         //       'teacher_id' => $teachers[$index % count($teachers)]->id,
-         //       'description' => "A group for {$name} students"
-          //  ]);
+            $studentGroups[] = StudentGroup::create([
+                'name' => $name,
+                'teacher_id' => $teachers[$index % count($teachers)]->id,
+                'description' => "A group for {$name} students"
+            ]);
         }
         Log::info('student groups created');;
 
@@ -116,12 +120,12 @@ class DatabaseSeeder extends Seeder
         $allStudents = [];
         foreach ($studentGroups as $group) {
             for ($i = 0; $i < 20; $i++) {
-              //  $user = User::factory()->create();
-              //  $user->roles()->attach(Role::where('name', 'student')->first());
-             //   $allStudents[] = Student::create([
-             //       'user_id' => $user->id,
-             //       'student_group_id' => $group->id
-             //   ]);
+                $user = User::factory()->create();
+                $user->roles()->attach(Role::where('name', 'student')->first());
+                $allStudents[] = Student::create([
+                    'user_id' => $user->id,
+                    'student_group_id' => $group->id
+                ]);
             }
         }
 
@@ -132,7 +136,7 @@ class DatabaseSeeder extends Seeder
         for ($i = 0; $i < 10; $i++) {
             $user = User::factory()->create();
             $user->roles()->attach(Role::where('name', 'librarian')->first());
-            $librarians[] = Librarian::create(['user_id' => $user->id]);
+            $librarians[] = Librarian::create(['user_id' => $user->id, 'employee_id' => rand(1000, 9999)]);
         }
 
         Log::info('librarians created');;
@@ -144,7 +148,7 @@ class DatabaseSeeder extends Seeder
             $user->roles()->attach(Role::where('name', 'author')->first());
             $authors[] = Author::create([
                 'user_id' => $user->id,
-//                'biography' => "Biography of author {$user->name}"
+                'biography' => "Biography of author {$user->name}"
             ]);
         }
 

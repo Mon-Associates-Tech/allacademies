@@ -48,6 +48,7 @@ use App\Models\Assessment;
 use App\Models\Student;
 use App\Services\SchoolContextService;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SchoolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -344,6 +345,8 @@ Route::middleware(['auth'])->group(function () {
 
     // School Settings
     Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
+    Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)
+        ->name('school-settings.fee-structure.setup');
 });
 
 // Admin Routes
@@ -427,43 +430,6 @@ Route::get('/feepayment/callback/{student}', [PaymentController::class, 'payment
 Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
 
 
-
-
-
-Route::get('mailtest', function () {
-    try {
-        $testEmail = auth()->check() ? auth()->user()->email : 'test@example.com';
-
-        Mail::raw('This is a test email from ' . config('app.name'), function ($message) use ($testEmail) {
-            $message->to($testEmail)
-                ->subject('Test Email - ' . now()->format('Y-m-d H:i:s'));
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Test email sent successfully to ' . $testEmail,
-            'mail_driver' => config('mail.default'),
-            'from_address' => config('mail.from.address'),
-            'timestamp' => now()->toDateTimeString()
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'mail_driver' => config('mail.default'),
-            'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode for trace'
-        ], 500);
-    }
-});
-
-
-
-
-
-
-
-
 Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])
     ->name('subscriptions.toggle-test-mode')
     ->middleware('auth');
@@ -504,7 +470,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('user-books.manage-shares');
 });
 
-use App\Http\Controllers\SchoolController;
+
 
 Route::prefix('schools')->group(function () {
     Route::get('/create', [SchoolController::class, 'create'])->name('schools.create');
@@ -512,9 +478,6 @@ Route::prefix('schools')->group(function () {
     Route::post('/{school}/collect-fees', [SchoolController::class, 'collectFees'])->name('schools.collectFees');
 });
 Route::get('/payment/callback/school-fees', [SchoolController::class, 'schoolFeesCallback'])->name('schoolfees.callback');
-
-
-
 
 
 // School fees setup routes (inside SchoolController)
@@ -534,7 +497,6 @@ Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])
 })->name('academic.term.switch');
 
 
-
 // Include additional route files
 
 include_once 'student.php';
@@ -545,7 +507,7 @@ include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'academic.php';
 
-// 
+//
 include_once 'subscriber.php';
 
 

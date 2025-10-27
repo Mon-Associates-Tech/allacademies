@@ -158,7 +158,6 @@
     </div>
     @endif
     {{-- school fees payement details --}}
-
     <div class="w-full bg-white shadow-md rounded-xl p-6 mt-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-gray-800">School Fees Payment Details</h3>
@@ -206,7 +205,7 @@
                             <td class="px-4 py-2">₵{{ number_format($feeDetails->total_paid ?? 0, 2) }}</td>
                             <td class="px-4 py-2">₵{{ number_format($feeDetails->remaining ?? 0, 2) }}</td>
                             <td class="px-4 py-2">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold 
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold
                             @if(strtolower($feeDetails->status) === 'completed')
                                 bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100
                             @elseif(strtolower($feeDetails->status) === 'part payment')
@@ -252,7 +251,7 @@
                             </td>
                             <td class="px-4 py-2">{{ $payment->currency ?? 'GHS' }}</td>
                            <td class="px-4 py-2">
-    <span class="px-3 py-1 rounded-full text-xs font-semibold 
+    <span class="px-3 py-1 rounded-full text-xs font-semibold
         @if(strtolower($payment->status) === 'completed' || strtolower($payment->status) === 'succeeded')
             bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100
         @elseif(strtolower($payment->status) === 'pending')

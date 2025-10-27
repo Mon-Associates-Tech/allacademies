@@ -60,6 +60,20 @@ class School extends Model
        return $this->hasOne(Subaccount::class);
     }
 
+    public function settings(): HasMany
+    {
+        return $this->hasMany(SchoolSetting::class);
+    }
+
+    public function getSetting($key, $default = null)
+    {
+        return SchoolSetting::getForSchool($this->id, $key, $default);
+    }
+
+    public function setSetting($key, $value)
+    {
+        return SchoolSetting::setForSchool($this->id, $key, $value);
+    }
 
     protected static function boot()
     {

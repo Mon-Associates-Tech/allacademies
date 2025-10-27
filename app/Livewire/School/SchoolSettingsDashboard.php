@@ -118,6 +118,12 @@ class SchoolSettingsDashboard extends Component
     public function mount()
     {
         $this->school = Auth::user()->school;
+
+        if (!$this->school) {
+            session()->flash('error', 'No school associated with your account.');
+            return;
+        }
+
         $this->loadSchoolData();
         $this->loadAcademicPeriods();
         $this->loadSettings();
@@ -142,8 +148,8 @@ class SchoolSettingsDashboard extends Component
         $this->schoolType = $this->school->type;
         $this->schoolDescription = $this->school->description;
         $this->studentCapacity = $this->school->student_capacity;
-        $this->timezone = $this->school->timezone;
-        $this->currency = $this->school->currency;
+        $this->timezone = $this->school->timezone ?? 'UTC';
+        $this->currency = $this->school->currency ?? 'USD';
     }
 
     public function loadAcademicPeriods()
@@ -152,15 +158,57 @@ class SchoolSettingsDashboard extends Component
             ->orderBy('academic_year', 'desc')
             ->orderBy('year_sequence', 'asc')
             ->orderBy('sequence', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($period) {
+                return [
+                    'id' => $period->id,
+                    'title' => $period->getDisplayName(),
+                    'type' => $period->type,
+                    'sequence' => $period->sequence,
+                    'academic_year' => $period->academic_year,
+                    'start_date' => $period->start_date->format('Y-m-d'),
+                    'end_date' => $period->end_date->format('Y-m-d'),
+                    'status' => $period->status,
+                    'is_current' => $period->is_current,
+                    'progress' => round($period->getProgressPercentage()),
+                    'weeks' => $period->total_weeks ?? $period->getDurationInWeeks(),
+                    'description' => $period->description,
+                    'registration_start' => $period->registration_start?->format('Y-m-d'),
+                    'registration_end' => $period->registration_end?->format('Y-m-d'),
+                    'exam_start' => $period->exam_start?->format('Y-m-d'),
+                    'exam_end' => $period->exam_end?->format('Y-m-d'),
+                ];
+            })
+            ->toArray();
 
         $this->currentPeriod = $this->school->getCurrentPeriod();
     }
 
     public function loadSettings()
     {
-        $this->settingGroups = SchoolSetting::getGrouped();
-        $this->settings = SchoolSetting::pluck('value', 'key')->toArray();
+        $this->settingGroups = SchoolSetting::forSchool($this->school->id)
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('group')
+            ->map(function ($group) {
+                return $group->mapWithKeys(function ($setting) {
+                    return [
+                        $setting->key => [
+                            'key' => $setting->key,
+                            'type' => $setting->type,
+                            'label' => $setting->label,
+                            'value' => $setting->value,
+                            'options' => $setting->options ?? [],
+                            'description' => $setting->description,
+                        ]
+                    ];
+                });
+            })
+            ->toArray();
+
+        $this->settings = SchoolSetting::forSchool($this->school->id)
+            ->pluck('value', 'key')
+            ->toArray();
     }
 
     public function loadStats()
@@ -207,12 +255,18 @@ class SchoolSettingsDashboard extends Component
         ]);
 
         if ($this->logoFile) {
+            // Delete old logo if exists
+            if ($this->school->logo) {
+                Storage::disk('public')->delete($this->school->logo);
+            }
+
             $logoPath = $this->logoFile->store('school-logos', 'public');
             $this->school->update(['logo' => $logoPath]);
         }
 
-        $this->dispatch('notify', 'School information updated successfully!');
+        session()->flash('success', 'School information updated successfully!');
         $this->loadStats();
+        $this->loadSchoolData();
     }
 
     public function createAcademicPeriod()
@@ -224,7 +278,8 @@ class SchoolSettingsDashboard extends Component
 
     public function editAcademicPeriod($periodId)
     {
-        $period = AcademicPeriod::findOrFail($periodId);
+        $period = AcademicPeriod::where('school_id', $this->school->id)
+            ->findOrFail($periodId);
 
         $this->editingPeriod = $period;
         $this->periodTitle = $period->title;
@@ -269,48 +324,65 @@ class SchoolSettingsDashboard extends Component
 
         if ($this->editingPeriod) {
             $this->editingPeriod->update($data);
-            $this->dispatch('notify', 'Academic period updated successfully!');
+            session()->flash('success', 'Academic period updated successfully!');
         } else {
             $this->school->createAcademicPeriod($data);
-            $this->dispatch('notify', 'Academic period created successfully!');
+            session()->flash('success', 'Academic period created successfully!');
         }
 
         $this->loadAcademicPeriods();
         $this->loadStats();
         $this->showPeriodModal = false;
+        $this->resetPeriodForm();
     }
 
     public function deleteAcademicPeriod($periodId)
     {
-        $period = AcademicPeriod::findOrFail($periodId);
+        $period = AcademicPeriod::where('school_id', $this->school->id)
+            ->findOrFail($periodId);
+
         $period->delete();
 
         $this->loadAcademicPeriods();
         $this->loadStats();
-        $this->dispatch('notify', 'Academic period deleted successfully!');
+        session()->flash('success', 'Academic period deleted successfully!');
     }
 
     public function setCurrentPeriod($periodId)
     {
-        AcademicPeriod::where('school_id', $this->school->id)->update(['is_current' => false]);
-        AcademicPeriod::findOrFail($periodId)->update(['is_current' => true]);
+        AcademicPeriod::where('school_id', $this->school->id)
+            ->update(['is_current' => false]);
+
+        AcademicPeriod::where('school_id', $this->school->id)
+            ->findOrFail($periodId)
+            ->update(['is_current' => true]);
 
         $this->loadAcademicPeriods();
         $this->loadStats();
-        $this->dispatch('notify', 'Current academic period updated!');
+        session()->flash('success', 'Current academic period updated!');
     }
 
-    public function updateSetting($key, $value)
+    public function updateSetting($key, $value, $group)
     {
-        SchoolSetting::set($key, $value);
-        $this->settings[$key] = $value;
-        $this->dispatch('notify', 'Setting updated successfully!');
+        SchoolSetting::updateOrCreate(
+            [
+                'school_id' => $this->school->id,
+                'key' => $key,
+            ],
+            [
+                'value' => $value,
+                'group' => $group,
+            ]
+        );
+
+        $this->loadSettings();
+        session()->flash('success', 'Setting updated successfully!');
     }
 
     private function resetPeriodForm()
     {
         $this->periodTitle = '';
-        $this->periodType = '';
+        $this->periodType = 'semester';
         $this->periodSequence = 1;
         $this->periodStartDate = '';
         $this->periodEndDate = '';
@@ -320,10 +392,23 @@ class SchoolSettingsDashboard extends Component
         $this->registrationEnd = '';
         $this->examStart = '';
         $this->examEnd = '';
+        $this->editingPeriod = null;
     }
 
     public function render()
     {
-        return view('livewire.school.school-settings-dashboard');
+        return view('livewire.school.school-settings-dashboard', [
+            'schoolInitials' => $this->getSchoolInitials(),
+            'schoolLogo' => $this->school->logo ? Storage::url($this->school->logo) : null,
+        ]);
+    }
+
+    private function getSchoolInitials()
+    {
+        $words = explode(' ', $this->school->name);
+        if (count($words) >= 2) {
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+        }
+        return strtoupper(substr($this->school->name, 0, 2));
     }
 }
