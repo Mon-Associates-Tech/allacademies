@@ -128,10 +128,6 @@ class QuestionGenerator
                 $sectionQuestions = $questions;
             }
 
-
-           // $sectionQuestions = $questions;
-
-
             // Add questions to the tracking array for duplicate prevention
             $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
 
@@ -147,19 +143,35 @@ class QuestionGenerator
                 'original_path' => $section['original_path'] ?? null,
                 'instructions' => $section['instructions'],
             ];
+
         });
         $sections = array_slice($sections, 1);
 
-        if (($heading['instructions']['up'] !== null) && isset($heading['template']) && $heading['template'] === 'twig') {
-            $heading['up'] = TemplateRenderer::renderTwig($heading['instructions']['up'], $heading['duration'], $heading['title'], $metadata);
+        // Fix: Handle instructions safely whether it's a string or array
+        $instructionsUp = null;
+        $instructionsDown = null;
+
+        if (isset($heading['instructions'])) {
+            if (is_array($heading['instructions'])) {
+                $instructionsUp = $heading['instructions']['up'] ?? null;
+                $instructionsDown = $heading['instructions']['down'] ?? null;
+            } else {
+                // If instructions is a string, use it as both up and down
+                $instructionsUp = $heading['instructions'];
+                $instructionsDown = $heading['instructions'];
+            }
         }
 
-        if ($heading['instructions']['down'] !== null) {
+        if ($instructionsUp !== null && isset($heading['template']) && $heading['template'] === 'twig') {
+            $heading['up'] = TemplateRenderer::renderTwig($instructionsUp, $heading['duration'], $heading['title'], $metadata);
+        }
+
+        if ($instructionsDown !== null) {
             if (isset($heading['template']) && $heading['template'] === 'twig') {
-                $heading['down'] = TemplateRenderer::renderTwig($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+                $heading['down'] = TemplateRenderer::renderTwig($instructionsDown, $heading['duration'], $heading['title'], $metadata);
             }
             if (isset($heading['template']) && $heading['template'] === 'pug') {
-                $heading['down'] = TemplateRenderer::renderPug($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+                $heading['down'] = TemplateRenderer::renderPug($instructionsDown, $heading['duration'], $heading['title'], $metadata);
             }
         }
 
@@ -193,7 +205,7 @@ class QuestionGenerator
             // First, ensure the directory exists
             $documentsPath = storage_path('app/public/documents');
             if (!file_exists($documentsPath) && !mkdir($documentsPath, 0755, true) && !is_dir($documentsPath)) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $documentsPath));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $documentsPath));
             }
 
             // Try the standard store method first
@@ -534,19 +546,19 @@ class QuestionGenerator
         try {
             switch (strtolower($questionType)) {
                 case 'essay':
-                    $questions = \App\Models\EssayQuestion::whereIn('id', $questionIds)
+                    $questions = EssayQuestion::whereIn('id', $questionIds)
                         ->with(['subtopic.academicTopic'])
                         ->get();
                     break;
 
                 case 'multiple_choice':
-                    $questions = \App\Models\MultipleChoiceQuestion::whereIn('id', $questionIds)
+                    $questions = MultipleChoiceQuestion::whereIn('id', $questionIds)
                         ->with(['subtopic.academicTopic'])
                         ->get();
                     break;
 
                 case 'true_or_false':
-                    $questions = \App\Models\TrueOrFalseQuestion::whereIn('id', $questionIds)
+                    $questions = TrueOrFalseQuestion::whereIn('id', $questionIds)
                         ->with(['subtopic.academicTopic'])
                         ->get();
                     break;

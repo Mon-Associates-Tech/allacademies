@@ -38,7 +38,16 @@ class ExaminationHeading extends Component
         $this->template = old('heading.template', session('examination_form_data.heading.template', 'twig'));
         $this->title = old('heading.title', session('examination_form_data.heading.title', ''));
         $this->duration = old('heading.duration', session('examination_form_data.heading.duration', ''));
-        $this->instructions = old('heading.instructions', session('examination_form_data.heading.instructions', ''));
+
+        // Fix: Handle instructions that might be a string or array
+        $oldInstructions = old('heading.instructions', session('examination_form_data.heading.instructions', ''));
+        if (is_array($oldInstructions)) {
+            // If it's an array, get the 'down' key or the first value
+            $this->instructions = $oldInstructions['down'] ?? $oldInstructions['up'] ?? '';
+        } else {
+            // If it's a string, use it directly
+            $this->instructions = $oldInstructions;
+        }
 
         $this->compile();
     }
@@ -46,7 +55,7 @@ class ExaminationHeading extends Component
     private function compile()
     {
         if ('twig' === $this->template) {
-          $this->down =   TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
+            $this->down =   TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
         }
 
         if ('pug' === $this->template) {

@@ -214,10 +214,18 @@ class ExaminationController extends Controller
             $this->authorize('privileged', $currentTeam);
 
             // Store form data in session before processing
+            // Normalize the heading instructions to handle both string and array formats
+            $headingData = $request['heading'];
+            if (isset($headingData['instructions']) && is_array($headingData['instructions'])) {
+                // Store only the 'down' value as a string for easier restoration
+                $headingData['instructions'] = $headingData['instructions']['down'] ?? $headingData['instructions']['up'] ?? '';
+            }
+
             session(['examination_form_data' => [
-                'heading' => $request['heading'],
+                'heading' => $headingData,
                 'sections' => $request['sections']
             ]]);
+
 
             $metadata = json_decode(base64_decode($request['metadata']), true, 512, JSON_THROW_ON_ERROR);
 

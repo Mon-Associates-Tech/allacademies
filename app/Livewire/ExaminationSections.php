@@ -74,7 +74,6 @@ class ExaminationSections extends Component
 
     public function __construct($id = null)
     {
-//        parent::__construct($id);
         $this->metafields[] = [
             'option' => null,
             'pages_count' => 1,
@@ -82,17 +81,5 @@ class ExaminationSections extends Component
             'file' => null,
         ];
     }
-
-//    public function save()
-//    {
-//        foreach ($this->sections as $i => &$section) {
-//            if (isset($section['document']) && $section['document'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
-//                $section['document'] = $section['document']->store('documents', 'public');
-//            }
-//        }
-//
-//        // Pass the processed data to controller or save to DB
-//    }
-
 
 }
