@@ -54,9 +54,15 @@ class UserBookShare extends Model
     {
         return match($this->share_type) {
             'individual' => collect([$this->sharedTo]),
-            'academic_group' => $this->academicGroup?->students()->with('user')->get()->pluck('user'),
-            'academic_level' => $this->academicLevel?->students()->with('user')->get()->pluck('user'),
-            'student_group' => $this->studentGroup?->students()->with('user')->get()->pluck('user'),
+            'academic_group' => $this->attributes['academic_group_id']
+                ? AcademicGroup::find($this->attributes['academic_group_id'])?->students()->with('user')->get()->pluck('user') ?? collect([])
+                : collect([]),
+            'academic_level' => $this->attributes['academic_level_id']
+                ? AcademicLevel::find($this->attributes['academic_level_id'])?->students()->with('user')->get()->pluck('user') ?? collect([])
+                : collect([]),
+            'student_group' => $this->attributes['student_group_id']
+                ? StudentGroup::find($this->attributes['student_group_id'])?->students()->with('user')->get()->pluck('user') ?? collect([])
+                : collect([]),
             default => collect([]),
         };
     }

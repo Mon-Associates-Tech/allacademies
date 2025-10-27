@@ -16,6 +16,7 @@ use App\Livewire\Students\Messages\MessageShow;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->group(function () {
 
@@ -47,15 +48,14 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
         ->middleware(['auth', 'role:student']);
 
 
-
-        Route::get('/students', [StudentManagementController::class, 'index'])->name('index');
-        Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
-        Route::post('/{student}/promote', [StudentManagementController::class, 'promote'])->name('promote');
-        Route::post('{student}/generate-report-card', [StudentManagementController::class, 'generateReportCard'])->name('generate-report-card');
-        Route::post('/{student}/generate-id-card', [StudentManagementController::class, 'generateIdCard'])->name('generate-id-card');
-        Route::get('/{student}/print-id-card', [StudentManagementController::class, 'printIdCard'])->name('print-id-card');
-        Route::get('/report-cards/{reportCard}/print', [StudentManagementController::class, 'printReportCard'])->name('print-report-card');
-        Route::post('/import', [StudentManagementController::class, 'import'])->name('import');
+    Route::get('/students', [StudentManagementController::class, 'index'])->name('index');
+    Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
+    Route::post('/{student}/promote', [StudentManagementController::class, 'promote'])->name('promote');
+    Route::post('{student}/generate-report-card', [StudentManagementController::class, 'generateReportCard'])->name('generate-report-card');
+    Route::post('/{student}/generate-id-card', [StudentManagementController::class, 'generateIdCard'])->name('generate-id-card');
+    Route::get('/{student}/print-id-card', [StudentManagementController::class, 'printIdCard'])->name('print-id-card');
+    Route::get('/report-cards/{reportCard}/print', [StudentManagementController::class, 'printReportCard'])->name('print-report-card');
+    Route::post('/import', [StudentManagementController::class, 'import'])->name('import');
 //        Route::post('students/', [StudentManagementController::class, 'import'])->name('import');
 
     Route::get('/messages/compose', ComposeMessage::class)->name('messages.compose');

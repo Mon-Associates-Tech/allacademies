@@ -9,6 +9,7 @@ use App\Livewire\Subscribers\Premium;
 use App\Livewire\Subscribers\Progress;
 use App\Livewire\Subscribers\Quizzes;
 use App\Livewire\Subscribers\StudyGroups;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
 
