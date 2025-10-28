@@ -176,7 +176,8 @@
                                              style="display: none;"
                                              class="mt-4 pl-7 space-y-3 border-l-2 border-blue-100">
                                             @foreach ($topic['subtopics'] as $subIndex => $subtopic)
-                                                <div class="bg-blue-50 rounded-lg p-3 space-y-3">
+                                                <div class="bg-blue-50 rounded-lg p-3 space-y-3"
+                                                     x-data="{ isChecked: {{ in_array($subtopic['id'], $section['subtopics'] ?? []) ? 'true' : 'false' }} }">
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex items-center space-x-3">
                                                             <input
@@ -185,7 +186,8 @@
                                                                 name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
                                                                 value="{{ $subtopic['id'] }}"
                                                                 type="checkbox"
-                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
+                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                                                                @change="isChecked = $event.target.checked">
                                                             <label
                                                                 class="text-sm font-medium text-gray-800 capitalize cursor-pointer">
                                                                 {{ $subtopic['name'] }}
@@ -204,25 +206,22 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="flex items-center space-x-3"
-                                                         x-data="{ subtopicChecked: false }"
-                                                         x-init="subtopicChecked = $el.parentElement.querySelector('input[type=checkbox]').checked"
-                                                         @change.window="subtopicChecked = $el.parentElement.querySelector('input[type=checkbox]')?.checked || false">
-                                                        <label
-                                                            class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
-                                                            Questions to include:
-                                                        </label>
-                                                        <x-form.input :has-label="false"
-                                                                      class="max-w-[120px]"
-                                                                      name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
-                                                                      wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
-                                                                      type="number"
-                                                                      min="0"
-                                                                      max="{{ $subcount($subtopic, $section['type']) }}"
-                                                                      placeholder="0"
-                                                                      x-bind:required="subtopicChecked"
-                                                                      x-bind:disabled="!subtopicChecked"/>
-                                                    </div>
+                                                    <template x-if="isChecked">
+                                                        <div class="flex items-center space-x-3">
+                                                            <label
+                                                                class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
+                                                                Questions to include:
+                                                            </label>
+                                                            <x-form.input :has-label="false"
+                                                                          class="max-w-[120px]"
+                                                                          name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
+                                                                          wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
+                                                                          type="number"
+                                                                          min="0"
+                                                                          max="{{ $subcount($subtopic, $section['type']) }}"
+                                                                          placeholder="0"/>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             @endforeach
                                         </div>
