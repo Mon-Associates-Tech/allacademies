@@ -205,6 +205,7 @@ class ExaminationController extends Controller
      * Generate a preview of the examination without saving to a database
      */
 
+
     public function generatePreview(AcademicGroup $academicGroup, AcademicLevel $academicLevel, HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
     {
         try {
@@ -214,10 +215,8 @@ class ExaminationController extends Controller
             $this->authorize('privileged', $currentTeam);
 
             // Store form data in session before processing
-            // Normalize the heading instructions to handle both string and array formats
             $headingData = $request['heading'];
             if (isset($headingData['instructions']) && is_array($headingData['instructions'])) {
-                // Store only the 'down' value as a string for easier restoration
                 $headingData['instructions'] = $headingData['instructions']['down'] ?? $headingData['instructions']['up'] ?? '';
             }
 
@@ -225,7 +224,6 @@ class ExaminationController extends Controller
                 'heading' => $headingData,
                 'sections' => $request['sections']
             ]]);
-
 
             $metadata = json_decode(base64_decode($request['metadata']), true, 512, JSON_THROW_ON_ERROR);
 
@@ -252,8 +250,22 @@ class ExaminationController extends Controller
                 'academic_group' => getRouteParameter('academic_group'),
             ]);
 
+        } catch (\App\Exceptions\NotEnoughQuestionsException $e) {
+            return back()
+                ->withInput($request->all())
+                ->withErrors([
+                    'questions' => 'Not enough questions available. Please reduce the number of questions or select additional topics.',
+                    'details' => $e->getMessage()
+                ]);
+        } catch (\App\Exceptions\NoTopicsException $e) {
+            return back()
+                ->withInput($request->all())
+                ->withErrors([
+                    'topics' => 'No topics selected. Please select at least one topic for each section.',
+                    'details' => $e->getMessage()
+                ]);
         } catch (Exception $e) {
-            Log::error('Preview generation failed', [
+            \Illuminate\Support\Facades\Log::error('Preview generation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -263,6 +275,7 @@ class ExaminationController extends Controller
                 ->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
         }
     }
+
 
     /**
      * Show the examination preview

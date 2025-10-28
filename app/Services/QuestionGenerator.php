@@ -22,131 +22,166 @@ use RuntimeException;
 
 class QuestionGenerator
 {
-    public static function generate(
+
+ public static function generate(
         array $heading,
         array $sections,
         array $metadata = []
     ): array
     {
-
         // Ensure file uploads are handled first
         $sections = static::preprocessSections($sections);
+
         $usedQuestions = [
             'multiple_choice_questions' => [],
             'true_or_false_questions' => [],
             'essay_questions' => []
         ];
 
-        collect($sections)->each(/**
-         * @throws NoTopicsException
-         * @throws NotEnoughQuestionsException
-         */ function ($section, $index) use (
-            &$sections,
-            &$usedQuestions
-        ) {
-            $table = $section['type'];
-            if (empty($section['topics']) || !is_array($section['topics'])) {
-                throw new NoTopicsException();
+        $processedSections = [];
+
+        foreach ($sections as $index => $section) {
+            try {
+                $processedSection = (new static())->processSection($section, $usedQuestions);
+                $processedSections[] = $processedSection;
+            } catch (NoTopicsException | NotEnoughQuestionsException $e) {
+                Log::warning('Section processing failed', [
+                    'section_index' => $index,
+                    'section_name' => $section['name'] ?? 'Unnamed',
+                    'error' => $e->getMessage()
+                ]);
+                throw $e;
             }
-            $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
-            $subtopics = $section['subtopics'] ?? [];
-            $sectionQuestions = [];
+        }
 
+        $processedHeading = (new static())->processHeading($heading, $metadata);
 
-            // Process document if present (a file should already be stored as a path)
-            if (isset($section['document'])) {
-                $sections[$index] = (new QuestionGenerator())->processDocument($section, $sections[$index]);
-            }
+        return [
+            'title' => $heading['title'],
+            'heading' => $processedHeading,
+            'sections' => $processedSections,
+        ];
+    }
 
+    /**
+     * Process a single section - extracted from generate method
+     */
+    private function processSection(array $section, array &$usedQuestions): array
+    {
+        $table = $section['type'];
 
-            if (!empty($subtopics) && !empty($subtopics['count'])) {
-                // Handle questions with subtopics
-                collect($subtopics)->each(/**
-                 * @throws NotEnoughQuestionsException
-                 */ function ($subtopic) use ($table, &$sectionQuestions, &$usedQuestions) {
-                    $count = (int)$subtopic['count'];
+        if (empty($section['topics']) || !is_array($section['topics'])) {
+            throw new NoTopicsException();
+        }
 
-                    $topic_id = AcademicSubtopic::find($subtopic['id'])->academic_topic_id;
-                    if ($topic_id == null) {
-                        return;
-                    }
+        $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
+        $subtopics = $section['subtopics'] ?? [];
 
-                    $questions = DB::table($table)
-                        ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                        ->where('academic_subtopics.academic_topic_id', $topic_id)
-                        ->where('academic_subtopics.id', $subtopic['id'])
-                        ->whereNotIn($table . '.id', $usedQuestions[$table])
-                        ->inRandomOrder()
-                        ->take($count)
-                        ->pluck('' . $table . '.id')
-                        ->all();
+        // Get questions for this section
+        $sectionQuestions = $this->selectQuestionsForSection(
+            $table,
+            $topicIds,
+            $subtopics,
+            (int)$section['count'],
+            $usedQuestions[$table]
+        );
 
-                    if (count($questions) < $count) {
-                        throw new NotEnoughQuestionsException();
-                    }
+        // Add questions to the tracking array for duplicate prevention
+        $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
 
-                    $sectionQuestions = array_merge($sectionQuestions, $questions);
-                });
+        // Process document if present
+        $documentData = [];
+        if (isset($section['document'])) {
+            $documentData = $this->processDocument($section, []);
+        }
 
-                // Calculate remaining questions needed
-                $subtopicQuestionCount = count($sectionQuestions);
-                $remainingQuestionsNeeded = $section['count'] - $subtopicQuestionCount;
+        // Build section
+        return array_merge([
+            'name' => $section['name'],
+            'type' => $table,
+            'questions' => $sectionQuestions,
+            'page' => $section['page'] ?? null,
+            'instructions' => $section['instructions'],
+        ], $documentData);
+    }
 
-                // If we still need more questions, get them from topic level
-                if ($remainingQuestionsNeeded > 0) {
-                    $topicQuestions = DB::table($table)
-                        ->whereIn('academic_topic_id', $topicIds)
-                        ->whereNull('academic_subtopic_id')
-                        ->whereNotIn('id', $usedQuestions[$table])
-                        ->inRandomOrder()
-                        ->take($remainingQuestionsNeeded)
-                        ->pluck('' . $table . '.id')
-                        ->all();
+    /**
+     * Select questions for a section based on topics and subtopics
+     */
+    private function selectQuestionsForSection(
+        string $table,
+        array $topicIds,
+        array $subtopics,
+        int $requiredCount,
+        array $usedQuestions
+    ): array {
+        $sectionQuestions = [];
 
-                    if (count($topicQuestions) < $remainingQuestionsNeeded) {
-                        throw new NotEnoughQuestionsException();
-                    }
-
-                    $sectionQuestions = array_merge($sectionQuestions, $topicQuestions);
+        // First, handle subtopic-specific questions if subtopics are specified
+        if (!empty($subtopics)) {
+            foreach ($subtopics as $subtopic) {
+                // Skip if no count specified or count is 0
+                if (!isset($subtopic['count']) || (int)$subtopic['count'] === 0) {
+                    continue;
                 }
-            } else {
-                // Handle questions without subtopics (topic-level questions only)
-                // This handles the case where subtopics array is empty []
+
+                $count = (int)$subtopic['count'];
+                $subtopicId = $subtopic['id'];
+
+                $topic_id = AcademicSubtopic::find($subtopicId)->academic_topic_id ?? null;
+
+                if ($topic_id === null) {
+                    continue;
+                }
+
                 $questions = DB::table($table)
-                    ->whereIn('academic_topic_id', $topicIds)
-                    ->whereNull('academic_subtopic_id')
-                    ->whereNotIn('id', $usedQuestions[$table])
+                    ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
+                    ->where('academic_subtopics.academic_topic_id', $topic_id)
+                    ->where('academic_subtopics.id', $subtopicId)
+                    ->whereNotIn($table . '.id', $usedQuestions)
+                    ->whereNotIn($table . '.id', $sectionQuestions) // Avoid duplicates within section
                     ->inRandomOrder()
-                    ->take($section['count'])
-                    ->pluck('' . $table . '.id')
+                    ->take($count)
+                    ->pluck($table . '.id')
                     ->all();
 
-                if (count($questions) < $section['count']) {
+                if (count($questions) < $count) {
                     throw new NotEnoughQuestionsException();
                 }
 
-                $sectionQuestions = $questions;
+                $sectionQuestions = array_merge($sectionQuestions, $questions);
+            }
+        }
+
+        // Calculate remaining questions needed from topic level
+        $remainingQuestionsNeeded = $requiredCount - count($sectionQuestions);
+
+        if ($remainingQuestionsNeeded > 0) {
+            $topicQuestions = DB::table($table)
+                ->whereIn('academic_topic_id', $topicIds)
+                ->whereNull('academic_subtopic_id')
+                ->whereNotIn('id', $usedQuestions)
+                ->whereNotIn('id', $sectionQuestions) // Avoid duplicates within section
+                ->inRandomOrder()
+                ->take($remainingQuestionsNeeded)
+                ->pluck('id')
+                ->all();
+
+            if (count($topicQuestions) < $remainingQuestionsNeeded) {
+                throw new NotEnoughQuestionsException();
             }
 
-            // Add questions to the tracking array for duplicate prevention
-            $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
+            $sectionQuestions = array_merge($sectionQuestions, $topicQuestions);
+        }
 
-            // Build section
-            $sections[] = [
-                'name' => $section['name'],
-                'type' => $table,
-                'questions' => $sectionQuestions,
-                'page' => $section['page'] ?? null,
-                'document' => $section['document'] ?? null,
-                'pdf_images' => $section['pdf_images'] ?? [],
-                'extension' => $section['extension'] ?? null,
-                'original_path' => $section['original_path'] ?? null,
-                'instructions' => $section['instructions'],
-            ];
+        return $sectionQuestions;
+    }
 
-        });
-        $sections = array_slice($sections, 1);
-
+    /**
+     * Process heading template rendering - extracted from generate method
+     */
+    private function processHeading(array $heading, array $metadata): array
+    {
         // Fix: Handle instructions safely whether it's a string or array
         $instructionsUp = null;
         $instructionsDown = null;
@@ -175,13 +210,9 @@ class QuestionGenerator
             }
         }
 
-        return [
-            'title' => $heading['title'],
-            'heading' => $heading,
-            'sections' => $sections,
-        ];
-
+        return $heading;
     }
+
 
     /**
      * Preprocess sections to handle file uploads before any serialization
