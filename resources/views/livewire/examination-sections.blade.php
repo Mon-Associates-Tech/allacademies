@@ -180,13 +180,13 @@
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex items-center space-x-3"
                                                              x-data="{
-                                     checked: false,
-                                     inputId: 'subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subIndex }}'
-                                 }"
+                                         checked: false,
+                                         inputId: 'subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}'
+                                     }"
                                                              x-init="$nextTick(() => {
-                                     const checkbox = document.getElementById(inputId);
-                                     if (checkbox) checked = checkbox.checked;
-                                 })">
+                                         const checkbox = document.getElementById(inputId);
+                                         if (checkbox) checked = checkbox.checked;
+                                     })">
                                                             <input
                                                                 :id="inputId"
                                                                 wire:key="subtopic-{{ $sectionIndex }}-{{ $topicIndex }}-{{ $subtopic['id'] }}"
@@ -217,18 +217,18 @@
 
                                                     <div class="flex items-center space-x-3"
                                                          x-data="{
-                                 isChecked: false,
-                                 checkboxId: 'subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subIndex }}'
-                             }"
+                                     isChecked: false,
+                                     checkboxId: 'subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}'
+                                 }"
                                                          x-init="$nextTick(() => {
-                                 const checkbox = document.getElementById(checkboxId);
-                                 if (checkbox) {
-                                     isChecked = checkbox.checked;
-                                     checkbox.addEventListener('change', (e) => {
-                                         isChecked = e.target.checked;
-                                     });
-                                 }
-                             })">
+                                     const checkbox = document.getElementById(checkboxId);
+                                     if (checkbox) {
+                                         isChecked = checkbox.checked;
+                                         checkbox.addEventListener('change', (e) => {
+                                             isChecked = e.target.checked;
+                                         });
+                                     }
+                                 })">
                                                         <template x-if="isChecked">
                                                             <div class="flex items-center space-x-3 w-full">
                                                                 <label
@@ -248,6 +248,7 @@
                                                     </div>
                                                 </div>
                                             @endforeach
+
                                         </div>
                                     </div>
                                 </div>
