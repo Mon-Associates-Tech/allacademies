@@ -196,15 +196,18 @@
                                                             @can('administrate')
                                                                 <span
                                                                     class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
-                                                                    {{ $subcount($subtopic, $section['type']) }} available
-                                                                </span>
+                        {{ $subcount($subtopic, $section['type']) }} available
+                    </span>
                                                             @endcan
                                                             <div
                                                                 class="w-2 h-2 rounded-full {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="flex items-center space-x-3">
+                                                    <div class="flex items-center space-x-3"
+                                                         x-data="{ subtopicChecked: false }"
+                                                         x-init="subtopicChecked = $el.parentElement.querySelector('input[type=checkbox]').checked"
+                                                         @change.window="subtopicChecked = $el.parentElement.querySelector('input[type=checkbox]')?.checked || false">
                                                         <label
                                                             class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
                                                             Questions to include:
@@ -216,7 +219,9 @@
                                                                       type="number"
                                                                       min="0"
                                                                       max="{{ $subcount($subtopic, $section['type']) }}"
-                                                                      placeholder="0"/>
+                                                                      placeholder="0"
+                                                                      x-bind:required="subtopicChecked"
+                                                                      x-bind:disabled="!subtopicChecked"/>
                                                     </div>
                                                 </div>
                                             @endforeach
