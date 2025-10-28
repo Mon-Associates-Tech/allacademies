@@ -35,19 +35,11 @@ class ExaminationHeading extends Component
     public function mount($metadata)
     {
         $this->metadata = $metadata;
-        $this->template = old('heading.template', session('examination_form_data.heading.template', 'twig'));
-        $this->title = old('heading.title', session('examination_form_data.heading.title', ''));
-        $this->duration = old('heading.duration', session('examination_form_data.heading.duration', ''));
+        $this->template = old('heading.template',  'twig');
+        $this->title = old('heading.title', '');
+        $this->duration = old('heading.duration', '');
 
-        // Fix: Handle instructions that might be a string or array
-        $oldInstructions = old('heading.instructions', session('examination_form_data.heading.instructions', ''));
-        if (is_array($oldInstructions)) {
-            // If it's an array, get the 'down' key or the first value
-            $this->instructions = $oldInstructions['down'] ?? $oldInstructions['up'] ?? '';
-        } else {
-            // If it's a string, use it directly
-            $this->instructions = $oldInstructions;
-        }
+
 
         $this->compile();
     }
