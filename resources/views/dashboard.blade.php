@@ -21,7 +21,6 @@
             <livewire:trial-expiration-banner />
         @endauth
 
-        <!-- Rest of your content -->
     </div>
 
     @if($primaryRole === 'student')
