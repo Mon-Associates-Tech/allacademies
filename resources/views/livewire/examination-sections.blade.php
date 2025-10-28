@@ -148,16 +148,16 @@
                                                 @can('administrate')
                                                     <span
                                                         class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                                                        {{ $topic['questions_count'] }} total
-                                                    </span>
+                            {{ $topic['questions_count'] }} total
+                        </span>
                                                 @endcan
 
                                                 <div class="flex items-center space-x-2">
                                                     @can('administrate')
                                                         <span
                                                             class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $count($topic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                                        {{ $count($topic, $section['type']) }} available
-                                                    </span>
+                            {{ $count($topic, $section['type']) }} available
+                        </span>
                                                     @endcan
                                                     <div
                                                         class="w-2 h-2 rounded-full {{ $count($topic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
@@ -176,20 +176,29 @@
                                              style="display: none;"
                                              class="mt-4 pl-7 space-y-3 border-l-2 border-blue-100">
                                             @foreach ($topic['subtopics'] as $subIndex => $subtopic)
-                                                <div class="bg-blue-50 rounded-lg p-3 space-y-3"
-                                                     x-data="{ isChecked: {{ in_array($subtopic['id'], $section['subtopics'] ?? []) ? 'true' : 'false' }} }">
+                                                <div class="bg-blue-50 rounded-lg p-3 space-y-3">
                                                     <div class="flex items-center justify-between">
-                                                        <div class="flex items-center space-x-3">
+                                                        <div class="flex items-center space-x-3"
+                                                             x-data="{
+                                     checked: false,
+                                     inputId: 'subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subIndex }}'
+                                 }"
+                                                             x-init="$nextTick(() => {
+                                     const checkbox = document.getElementById(inputId);
+                                     if (checkbox) checked = checkbox.checked;
+                                 })">
                                                             <input
-                                                                wire:key="subtopic-{{ $sectionIndex }}-{{ $subtopic['id'] }}"
+                                                                :id="inputId"
+                                                                wire:key="subtopic-{{ $sectionIndex }}-{{ $topicIndex }}-{{ $subtopic['id'] }}"
                                                                 wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
                                                                 name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
                                                                 value="{{ $subtopic['id'] }}"
                                                                 type="checkbox"
                                                                 class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                                                                @change="isChecked = $event.target.checked">
+                                                                @change="checked = $event.target.checked">
                                                             <label
-                                                                class="text-sm font-medium text-gray-800 capitalize cursor-pointer">
+                                                                class="text-sm font-medium text-gray-800 capitalize cursor-pointer"
+                                                                :for="inputId">
                                                                 {{ $subtopic['name'] }}
                                                             </label>
                                                         </div>
@@ -198,30 +207,45 @@
                                                             @can('administrate')
                                                                 <span
                                                                     class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
-                        {{ $subcount($subtopic, $section['type']) }} available
-                    </span>
+                                        {{ $subcount($subtopic, $section['type']) }} available
+                                    </span>
                                                             @endcan
                                                             <div
                                                                 class="w-2 h-2 rounded-full {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
                                                         </div>
                                                     </div>
 
-                                                    <template x-if="isChecked">
-                                                        <div class="flex items-center space-x-3">
-                                                            <label
-                                                                class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
-                                                                Questions to include:
-                                                            </label>
-                                                            <x-form.input :has-label="false"
-                                                                          class="max-w-[120px]"
-                                                                          name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
-                                                                          wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
-                                                                          type="number"
-                                                                          min="0"
-                                                                          max="{{ $subcount($subtopic, $section['type']) }}"
-                                                                          placeholder="0"/>
-                                                        </div>
-                                                    </template>
+                                                    <div class="flex items-center space-x-3"
+                                                         x-data="{
+                                 isChecked: false,
+                                 checkboxId: 'subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subIndex }}'
+                             }"
+                                                         x-init="$nextTick(() => {
+                                 const checkbox = document.getElementById(checkboxId);
+                                 if (checkbox) {
+                                     isChecked = checkbox.checked;
+                                     checkbox.addEventListener('change', (e) => {
+                                         isChecked = e.target.checked;
+                                     });
+                                 }
+                             })">
+                                                        <template x-if="isChecked">
+                                                            <div class="flex items-center space-x-3 w-full">
+                                                                <label
+                                                                    class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
+                                                                    Questions to include:
+                                                                </label>
+                                                                <x-form.input :has-label="false"
+                                                                              class="max-w-[120px]"
+                                                                              name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
+                                                                              wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
+                                                                              type="number"
+                                                                              min="0"
+                                                                              max="{{ $subcount($subtopic, $section['type']) }}"
+                                                                              placeholder="0"/>
+                                                            </div>
+                                                        </template>
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>
