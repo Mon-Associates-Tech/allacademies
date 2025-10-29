@@ -204,6 +204,8 @@ class ExaminationController extends Controller
     /**
      * Generate a preview of the examination without saving to a database
      */
+
+
     public function generatePreview(AcademicGroup $academicGroup, AcademicLevel $academicLevel, HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
     {
         try {
@@ -212,11 +214,21 @@ class ExaminationController extends Controller
             $this->authorize('subscribed', $academicSubject);
             $this->authorize('privileged', $currentTeam);
 
+            // Store form data in session before processing
+            $headingData = $request['heading'];
+            if (isset($headingData['instructions']) && is_array($headingData['instructions'])) {
+                $headingData['instructions'] = $headingData['instructions']['down'] ?? $headingData['instructions']['up'] ?? '';
+            }
+
+            session(['examination_form_data' => [
+                'heading' => $headingData,
+                'sections' => $request['sections']
+            ]]);
+
             $metadata = json_decode(base64_decode($request['metadata']), true, 512, JSON_THROW_ON_ERROR);
 
             $preprocessedSections = QuestionGenerator::preprocessSections($request['sections']);
 
-//            $previewData = QuestionGenerator::generate($request['heading'], $request['sections'], $metadata);
             $previewData = QuestionGenerator::generate($request['heading'], $preprocessedSections, $metadata);
 
             $previewData['sections'] = array_filter($previewData['sections'], static function ($data) {
@@ -229,21 +241,41 @@ class ExaminationController extends Controller
 
             session(['examination_preview' => $previewData]);
 
+            // Clear form data on success
+            session()->forget('examination_form_data');
+
             return redirect()->route('examinations.preview', [
                 'academic_subject' => $academicSubject,
                 'academic_level' => getRouteParameter('academic_level'),
                 'academic_group' => getRouteParameter('academic_group'),
             ]);
 
+        } catch (\App\Exceptions\NotEnoughQuestionsException $e) {
+            return back()
+                ->withInput($request->all())
+                ->withErrors([
+                    'questions' => 'Not enough questions available. Please reduce the number of questions or select additional topics.',
+                    'details' => $e->getMessage()
+                ]);
+        } catch (\App\Exceptions\NoTopicsException $e) {
+            return back()
+                ->withInput($request->all())
+                ->withErrors([
+                    'topics' => 'No topics selected. Please select at least one topic for each section.',
+                    'details' => $e->getMessage()
+                ]);
         } catch (Exception $e) {
-            Log::error('Preview generation failed', [
+            \Illuminate\Support\Facades\Log::error('Preview generation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return back()->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
+            return back()
+                ->withInput($request->all())
+                ->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
         }
     }
+
 
     /**
      * Show the examination preview

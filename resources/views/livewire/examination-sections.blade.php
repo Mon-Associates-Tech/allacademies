@@ -122,7 +122,11 @@
                     <div class="border border-gray-200 rounded-lg bg-gray-50">
                         <div class="max-h-80 overflow-y-auto">
                             @foreach ($topics as $topicIndex => $topic)
-                                <div class="border-b border-gray-200 last:border-b-0" x-data="{ showSubtopics: false }">
+                                <div class="border-b border-gray-200 last:border-b-0"
+                                     x-data="{
+                                         showSubtopics_{{ $sectionIndex }}_{{ $topicIndex }}: false,
+                                         topicChecked: false
+                                     }">
                                     <!-- Topic Row -->
                                     <div class="p-4 hover:bg-white transition-colors duration-150">
                                         <div class="flex items-center justify-between">
@@ -135,7 +139,8 @@
                                                            {{ $topic['questions_count'] < 1 ? 'disabled' : '' }}
                                                            type="checkbox"
                                                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                                                           @change="showSubtopics = $event.target.checked">
+                                                           x-model="topicChecked"
+                                                           @change="showSubtopics_{{ $sectionIndex }}_{{ $topicIndex }} = $event.target.checked">
                                                 </div>
                                                 <div class="min-w-0 flex-1">
                                                     <label class="text-sm font-medium text-gray-900 cursor-pointer">
@@ -146,27 +151,24 @@
 
                                             <div class="flex items-center space-x-3">
                                                 @can('administrate')
-                                                    <span
-                                                        class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
                                                         {{ $topic['questions_count'] }} total
                                                     </span>
                                                 @endcan
 
                                                 <div class="flex items-center space-x-2">
                                                     @can('administrate')
-                                                        <span
-                                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $count($topic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                                        {{ $count($topic, $section['type']) }} available
-                                                    </span>
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $count($topic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                                            {{ $count($topic, $section['type']) }} available
+                                                        </span>
                                                     @endcan
-                                                    <div
-                                                        class="w-2 h-2 rounded-full {{ $count($topic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
+                                                    <div class="w-2 h-2 rounded-full {{ $count($topic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <!-- Subtopics -->
-                                        <div x-show="showSubtopics"
+                                        <div x-show="showSubtopics_{{ $sectionIndex }}_{{ $topicIndex }}"
                                              x-transition:enter="transition ease-out duration-200"
                                              x-transition:enter-start="opacity-0 transform -translate-y-2"
                                              x-transition:enter-end="opacity-100 transform translate-y-0"
@@ -176,47 +178,55 @@
                                              style="display: none;"
                                              class="mt-4 pl-7 space-y-3 border-l-2 border-blue-100">
                                             @foreach ($topic['subtopics'] as $subIndex => $subtopic)
-                                                <div class="bg-blue-50 rounded-lg p-3 space-y-3">
+                                                <div class="bg-blue-50 rounded-lg p-3 space-y-3"
+                                                     x-data="{
+                                                         subtopicChecked_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}: false,
+                                                         subtopicCount_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}: 0
+                                                     }">
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex items-center space-x-3">
                                                             <input
-                                                                wire:key="subtopic-{{ $sectionIndex }}-{{ $subtopic['id'] }}"
-                                                                wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.id"
-                                                                name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][id]"
+                                                                id="subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}"
+                                                                wire:key="subtopic-{{ $sectionIndex }}-{{ $topicIndex }}-{{ $subtopic['id'] }}"
+                                                                name="sections[{{ $sectionIndex }}][subtopics][{{ $subtopic['id'] }}][id]"
                                                                 value="{{ $subtopic['id'] }}"
                                                                 type="checkbox"
-                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
+                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                                                                x-model="subtopicChecked_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}">
                                                             <label
-                                                                class="text-sm font-medium text-gray-800 capitalize cursor-pointer">
+                                                                class="text-sm font-medium text-gray-800 capitalize cursor-pointer"
+                                                                for="subtopic_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}">
                                                                 {{ $subtopic['name'] }}
                                                             </label>
                                                         </div>
 
                                                         <div class="flex items-center space-x-2">
                                                             @can('administrate')
-                                                                <span
-                                                                    class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
+                                                                <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
                                                                     {{ $subcount($subtopic, $section['type']) }} available
                                                                 </span>
                                                             @endcan
-                                                            <div
-                                                                class="w-2 h-2 rounded-full {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
+                                                            <div class="w-2 h-2 rounded-full {{ $subcount($subtopic, $section['type']) > 0 ? 'bg-green-400' : 'bg-red-400' }}"></div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="flex items-center space-x-3">
-                                                        <label
-                                                            class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
+                                                    <div x-show="subtopicChecked_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}"
+                                                         x-transition:enter="transition ease-out duration-150"
+                                                         x-transition:enter-start="opacity-0"
+                                                         x-transition:enter-end="opacity-100"
+                                                         class="flex items-center space-x-3">
+                                                        <label class="text-xs text-gray-600 font-medium min-w-0 flex-shrink-0">
                                                             Questions to include:
                                                         </label>
-                                                        <x-form.input :has-label="false"
-                                                                      class="max-w-[120px]"
-                                                                      name="sections[{{ $sectionIndex }}][subtopics][{{ $subIndex }}][count]"
-                                                                      wire:model.live="sections.{{ $sectionIndex }}.subtopics.{{ $subIndex }}.count"
-                                                                      type="number"
-                                                                      min="0"
-                                                                      max="{{ $subcount($subtopic, $section['type']) }}"
-                                                                      placeholder="0"/>
+                                                        <x-form.input
+                                                            :has-label="false"
+                                                            class="max-w-[120px]"
+                                                            name="sections[{{ $sectionIndex }}][subtopics][{{ $subtopic['id'] }}][count]"
+                                                            type="number"
+                                                            min="0"
+                                                            max="{{ $subcount($subtopic, $section['type']) }}"
+                                                            placeholder="0"
+                                                            x-model="subtopicCount_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}"/>
                                                     </div>
                                                 </div>
                                             @endforeach

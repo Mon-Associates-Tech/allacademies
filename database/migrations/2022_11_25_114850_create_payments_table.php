@@ -19,17 +19,9 @@ return new class extends Migration
             $table->string('amount');
             $table->string('currency')->default('GHS');
             $table->string('status')->default('pending');
-            // $table->foreignId('subscription_id')->nullable()->constrained();
-              // Regular subscriptions
-    $table->foreignId('subscription_id')->nullable()->constrained();
-    $table->bigInteger('book_subscription_id');
-
-    // Book subscriptions
-    // $table->foreignId('book_subscription_id')->nullable()->constrained();
-    //         $table->timestamps();
-    //     }
-    });
-
+            $table->foreignId('subscription_id')->nullable()->constrained();
+            $table->timestamps();
+        });
     }
 
     /**
