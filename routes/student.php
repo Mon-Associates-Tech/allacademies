@@ -62,6 +62,13 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('/messages', MessageIndex::class)->name('messages.index');
     Route::get('/messages/{message}', MessageShow::class)->name('messages.show');
 
+    Route::get('fees', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('fees.index');
+        Route::get('fees/payment', [\App\Http\Controllers\StudentFeeController::class, 'payment'])->name('fees.payment');
+        Route::post('fees/initialize', [\App\Http\Controllers\StudentFeeController::class, 'initializePayment'])->name('fees.initialize');
+        Route::get('fees/callback', [\App\Http\Controllers\StudentFeeController::class, 'callback'])->name('fees.callback');
+        Route::get('fees/receipt/{payment}', [\App\Http\Controllers\StudentFeeController::class, 'receipt'])->name('fees.receipt');
+
+
 });
 
 // entities should be given our academic structure to correctly map the students, teachers, librarians, etc to their respective roles and permissions within the system.
