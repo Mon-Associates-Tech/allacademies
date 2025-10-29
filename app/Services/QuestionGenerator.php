@@ -116,67 +116,106 @@ class QuestionGenerator
         array $usedQuestions
     ): array {
         $sectionQuestions = [];
+        $subtopicQuestionCount = 0;
 
         // First, handle subtopic-specific questions if subtopics are specified
         if (!empty($subtopics)) {
+            // Group subtopics by their actual IDs to avoid duplicates
+            $uniqueSubtopics = [];
             foreach ($subtopics as $subtopic) {
-                // Skip if no count specified or count is 0
-                if (!isset($subtopic['count']) || (int)$subtopic['count'] === 0) {
+                if (isset($subtopic['id']) && isset($subtopic['count'])) {
+                    $subtopicId = (int)$subtopic['id'];
+                    $count = (int)$subtopic['count'];
+
+                    // Only process if count is greater than 0
+                    if ($count > 0) {
+                        // If this subtopic ID already exists, take the maximum count
+                        if (isset($uniqueSubtopics[$subtopicId])) {
+                            $uniqueSubtopics[$subtopicId] = max($uniqueSubtopics[$subtopicId], $count);
+                        } else {
+                            $uniqueSubtopics[$subtopicId] = $count;
+                        }
+                    }
+                }
+            }
+
+            // Now process each unique subtopic
+            foreach ($uniqueSubtopics as $subtopicId => $count) {
+                $subtopicModel = AcademicSubtopic::find($subtopicId);
+
+                if (!$subtopicModel) {
+                    Log::warning('Subtopic not found', ['subtopic_id' => $subtopicId]);
                     continue;
                 }
 
-                $count = (int)$subtopic['count'];
-                $subtopicId = $subtopic['id'];
-
-                $topic_id = AcademicSubtopic::find($subtopicId)->academic_topic_id ?? null;
-
-                if ($topic_id === null) {
-                    continue;
-                }
+                $topicId = $subtopicModel->academic_topic_id;
 
                 $questions = DB::table($table)
-                    ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                    ->where('academic_subtopics.academic_topic_id', $topic_id)
-                    ->where('academic_subtopics.id', $subtopicId)
-                    ->whereNotIn($table . '.id', $usedQuestions)
-                    ->whereNotIn($table . '.id', $sectionQuestions) // Avoid duplicates within section
+                    ->where('academic_subtopic_id', $subtopicId)
+                    ->where('academic_topic_id', $topicId)
+                    ->whereNotIn('id', $usedQuestions)
+                    ->whereNotIn('id', $sectionQuestions)
                     ->inRandomOrder()
                     ->take($count)
-                    ->pluck($table . '.id')
+                    ->pluck('id')
                     ->all();
 
-                if (count($questions) < $count) {
-                    throw new NotEnoughQuestionsException();
+                $fetchedCount = count($questions);
+
+                if ($fetchedCount < $count) {
+                    Log::error('Not enough questions in subtopic', [
+                        'subtopic_id' => $subtopicId,
+                        'subtopic_name' => $subtopicModel->name,
+                        'requested' => $count,
+                        'available' => $fetchedCount,
+                        'table' => $table
+                    ]);
+
+                    throw new NotEnoughQuestionsException(
+                        "Not enough questions in subtopic '{$subtopicModel->name}'. Requested: {$count}, Available: {$fetchedCount}"
+                    );
                 }
 
                 $sectionQuestions = array_merge($sectionQuestions, $questions);
+                $subtopicQuestionCount += $fetchedCount;
             }
         }
 
         // Calculate remaining questions needed from topic level
-        $remainingQuestionsNeeded = $requiredCount - count($sectionQuestions);
+        $remainingQuestionsNeeded = $requiredCount - $subtopicQuestionCount;
 
         if ($remainingQuestionsNeeded > 0) {
             $topicQuestions = DB::table($table)
                 ->whereIn('academic_topic_id', $topicIds)
                 ->whereNull('academic_subtopic_id')
                 ->whereNotIn('id', $usedQuestions)
-                ->whereNotIn('id', $sectionQuestions) // Avoid duplicates within section
+                ->whereNotIn('id', $sectionQuestions)
                 ->inRandomOrder()
                 ->take($remainingQuestionsNeeded)
                 ->pluck('id')
                 ->all();
 
-            if (count($topicQuestions) < $remainingQuestionsNeeded) {
-                throw new NotEnoughQuestionsException();
+            $fetchedCount = count($topicQuestions);
+
+            if ($fetchedCount < $remainingQuestionsNeeded) {
+                Log::error('Not enough questions at topic level', [
+                    'topic_ids' => $topicIds,
+                    'requested' => $remainingQuestionsNeeded,
+                    'available' => $fetchedCount,
+                    'table' => $table,
+                    'subtopic_questions_count' => $subtopicQuestionCount
+                ]);
+
+                throw new NotEnoughQuestionsException(
+                    "Not enough questions at topic level. Requested: {$remainingQuestionsNeeded}, Available: {$fetchedCount}"
+                );
             }
 
             $sectionQuestions = array_merge($sectionQuestions, $topicQuestions);
         }
 
-        return $sectionQuestions;
+        return array_unique($sectionQuestions);
     }
-
     /**
      * Process heading template rendering - extracted from generate method
      */
