@@ -1,10 +1,12 @@
-<div class="min-h-screen rounded-xl bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+<div
+    class="min-h-screen rounded-xl bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Enhanced Header Section -->
         <div class="relative mb-8 overflow-hidden rounded-2xl">
             <div class="absolute inset-0 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 opacity-90"></div>
             <div class="absolute inset-0 bg-black opacity-20"></div>
-            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Cg fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"></div>
+            <div class="absolute inset-0"
+                 style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Cg fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"></div>
 
             <div class="relative px-8 py-12">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -28,12 +30,17 @@
                         <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-emerald-100 text-sm font-medium">Total Revenue</p>
-                                    <p class="text-2xl font-bold text-white">GHS {{ number_format($revenueData['total_revenue'], 2) }}</p>
+                                    <p class="text-emerald-100 text-sm font-medium">Your Net Revenue (98%)</p>
+                                    <p class="text-2xl font-bold text-white">
+                                        GHS {{ number_format($revenueData['total_net_revenue'], 2) }}</p>
+                                    <p class="text-xs text-emerald-100 mt-1">Gross:
+                                        GHS {{ number_format($revenueData['total_gross_revenue'], 2) }}</p>
                                 </div>
                                 <div class="p-2 bg-white/20 rounded-lg">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                                     </svg>
                                 </div>
                             </div>
@@ -42,12 +49,17 @@
                         <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-emerald-100 text-sm font-medium">Monthly Growth</p>
-                                    <p class="text-2xl font-bold text-white">{{ $revenueData['growth_percentage'] > 0 ? '+' : '' }}{{ $revenueData['growth_percentage'] }}%</p>
+                                    <p class="text-emerald-100 text-sm font-medium">Platform Fee (2%)</p>
+                                    <p class="text-2xl font-bold text-white">
+                                        GHS {{ number_format($revenueData['total_platform_fees'], 2) }}</p>
+                                    <p class="text-xs text-emerald-100 mt-1">{{ $revenueData['total_payments'] }}
+                                        payments</p>
                                 </div>
                                 <div class="p-2 bg-white/20 rounded-lg">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                     </svg>
                                 </div>
                             </div>
@@ -58,11 +70,14 @@
         </div>
 
         <!-- Filters Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 mb-8 overflow-hidden">
-            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 mb-8 overflow-hidden">
+            <div
+                class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                     <svg class="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
                     </svg>
                     Revenue Controls
                 </h3>
@@ -122,76 +137,38 @@
         </div>
 
         <!-- Revenue Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Total Revenue -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-                        <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                        </svg>
-                    </div>
-                    @if($revenueData['growth_percentage'] > 0)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            ↗️ {{ $revenueData['growth_percentage'] }}%
-                        </span>
-                    @elseif($revenueData['growth_percentage'] < 0)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            ↘️ {{ abs($revenueData['growth_percentage']) }}%
-                        </span>
-                    @endif
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
+                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
                 </div>
-                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revenue</h3>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">GHS {{ number_format($revenueData['total_revenue'], 2) }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">All time earnings</p>
+                @if($revenueData['growth_percentage'] > 0)
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                ↗️ {{ $revenueData['growth_percentage'] }}%
+            </span>
+                @elseif($revenueData['growth_percentage'] < 0)
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                ↘️ {{ abs($revenueData['growth_percentage']) }}%
+            </span>
+                @endif
             </div>
-
-            <!-- Monthly Revenue -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Revenue</h3>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">GHS {{ number_format($revenueData['monthly_revenue'], 2) }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Current month</p>
-            </div>
-
-            <!-- Active Subscriptions -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Subscriptions</h3>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $revenueData['active_subscriptions'] }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Paying subscribers</p>
-            </div>
-
-            <!-- Average Revenue -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
-                        <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg. Revenue per User</h3>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">GHS {{ number_format($revenueData['average_revenue'], 2) }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Per subscriber</p>
-            </div>
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Net Revenue (98%)</h3>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                GHS {{ number_format($revenueData['total_net_revenue'], 2) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Gross:
+                GHS {{ number_format($revenueData['total_gross_revenue'], 2) }}</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Revenue Chart -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Revenue Trend</h3>
                     <div class="flex items-center space-x-2">
@@ -205,23 +182,30 @@
             </div>
 
             <!-- Top Performing Books -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Top Performing Books</h3>
                 <div class="space-y-4">
                     @foreach($topBooks as $bookData)
                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                                    <img src="{{$bookData['book']->cover_image}}" alt="">
+                                <div class="w-10 h-10 rounded-lg overflow-hidden">
+                                    <img src="{{$bookData['book']->cover_image}}" alt="{{ $bookData['book']->title }}"
+                                         class="w-full h-full object-cover">
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $bookData['book']->title }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $bookData['subscriptions'] }} subscriptions</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $bookData['subscriptions'] }}
+                                        subscriptions</p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm font-bold text-gray-900 dark:text-white">GHS {{ number_format($bookData['revenue'], 2) }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Avg: GHS {{ number_format($bookData['average_price'], 2) }}</p>
+                                <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                    GHS {{ number_format($bookData['net_revenue'], 2) }}
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    Avg: GHS {{ number_format($bookData['average_price'], 2) }}
+                                </p>
                             </div>
                         </div>
                     @endforeach
@@ -230,62 +214,89 @@
         </div>
 
         <!-- Revenue Projections -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Revenue Projections</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">GHS {{ number_format($projections['next_month_projection'], 2) }}</div>
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        GHS {{ number_format($projections['next_month_projection'], 2) }}</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">Next Month</div>
                 </div>
                 <div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                    <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">GHS {{ number_format($projections['quarterly_projection'], 2) }}</div>
+                    <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        GHS {{ number_format($projections['quarterly_projection'], 2) }}</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">Next Quarter</div>
                 </div>
                 <div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">GHS {{ number_format($projections['yearly_projection'], 2) }}</div>
+                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        GHS {{ number_format($projections['yearly_projection'], 2) }}</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">Next Year</div>
                 </div>
             </div>
         </div>
 
         <!-- Recent Transactions -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div
+                class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Book</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                        </tr>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Customer
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Book
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Amount
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Date
+                        </th>
+                    </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($recentTransactions as $transaction)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <x-avatar :name="$transaction->user->name" avatar="{{ $transaction->user->avatar }}" class="mr-3 h-8 w-8" />
-                                        <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $transaction->user->name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $transaction->user->email }}</div>
+                    @foreach($recentTransactions as $transactionData)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <x-avatar :name="$transactionData['payment']->bookSubscription->user->name"
+                                              avatar="{{ $transactionData['payment']->bookSubscription->user->avatar }}"
+                                              class="mr-3 h-8 w-8"/>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ $transactionData['payment']->bookSubscription->user->name }}
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ $transactionData['payment']->bookSubscription->user->email }}
                                         </div>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">{{ $transaction->book->title }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">GHS {{ number_format($transaction->annual_fee, 2) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $transaction->payment_completed_at->format('M j, Y') }}
-                                </td>
-                            </tr>
-                        @endforeach
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 dark:text-white">
+                                    {{ $transactionData['payment']->bookSubscription->book->title }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                    GHS {{ number_format($transactionData['net_amount'], 2) }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    Gross: GHS {{ number_format($transactionData['gross_amount'], 2) }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {{ $transactionData['payment']->created_at->format('M j, Y') }}
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>
@@ -294,42 +305,42 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    const chartData = @json($chartData);
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const chartData = @json($chartData);
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Revenue',
-                data: chartData.revenues,
-                borderColor: 'rgb(16, 185, 129)',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: chartData.revenues,
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'GHS ' + value.toFixed(2);
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return 'GHS ' + value.toFixed(2);
+                            }
                         }
                     }
                 }
             }
-        }
+        });
     });
-});
 </script>

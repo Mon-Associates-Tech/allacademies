@@ -3,6 +3,7 @@
 namespace App\Livewire\Authors;
 
 use App\Livewire\AppComponent;
+use App\Models\Payment;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -106,12 +107,73 @@ class Settings extends AppComponent
             'integrations' => $this->getIntegrations(),
             'themes' => $this->getThemes(),
             'supportTickets' => $this->getSupportTickets(),
+            'revenueStats' => $this->getRevenueStats(), // Add this
         ];
 
         return view('livewire.authors.settings', $data);
     }
 
-    private function loadCurrentSettings()
+    /**
+     * Get revenue statistics for billing tab
+     */
+    private function getRevenueStats()
+    {
+        $author = Auth::user()->author;
+
+        if (!$author) {
+            return [
+                'this_month_revenue' => 0,
+                'this_month_payments' => 0,
+                'total_revenue' => 0,
+                'total_payments' => 0,
+                'average_per_sale' => 0,
+                'has_subaccount' => false,
+            ];
+        }
+
+        // Get all payments for this author
+        $allPayments = Payment::query()
+            ->where('status', 'succeeded')
+            ->whereHas('bookSubscription.book', function ($query) use ($author) {
+                $query->where('author_id', $author->id);
+            })
+            ->get();
+
+        // Calculate total revenue (98% author share)
+        $totalRevenue = $allPayments->sum(function($payment) {
+            return $payment->author_amount ?: ($payment->amount * 0.98);
+        });
+
+        // This month's payments
+        $thisMonthPayments = Payment::query()
+            ->where('status', 'succeeded')
+            ->whereHas('bookSubscription.book', function ($query) use ($author) {
+                $query->where('author_id', $author->id);
+            })
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->get();
+
+        $thisMonthRevenue = $thisMonthPayments->sum(function($payment) {
+            return $payment->author_amount ?: ($payment->amount * 0.98);
+        });
+
+        // Average per sale
+        $totalPaymentCount = $allPayments->count();
+        $averagePerSale = $totalPaymentCount > 0 ? $totalRevenue / $totalPaymentCount : 0;
+
+        return [
+            'this_month_revenue' => $thisMonthRevenue,
+            'this_month_payments' => $thisMonthPayments->count(),
+            'total_revenue' => $totalRevenue,
+            'total_payments' => $totalPaymentCount,
+            'average_per_sale' => $averagePerSale,
+            'has_subaccount' => $author->subaccount !== null,
+        ];
+    }
+
+
+    private function loadCurrentSettings(): void
     {
         $user = Auth::user();
         $author = $user->author;

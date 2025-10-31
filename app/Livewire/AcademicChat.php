@@ -93,7 +93,7 @@ class AcademicChat extends Component
         $this->response_length = 1000;
     }
 
-    public function checkTokenAvailability()
+    public function checkTokenAvailability(): void
     {
         $user = auth()->user();
 
@@ -124,7 +124,7 @@ class AcademicChat extends Component
         if ($subscription->isExpired()) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'expired';
-            $subscription->deactivate('expired');
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
             return;
         }
 

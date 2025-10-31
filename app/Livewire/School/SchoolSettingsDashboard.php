@@ -2,6 +2,7 @@
 
 namespace App\Livewire\School;
 
+use App\Constants\GhanaBanks;
 use App\Models\School;
 use App\Models\SchoolSetting;
 use App\Models\AcademicPeriod;
@@ -196,7 +197,7 @@ class SchoolSettingsDashboard extends Component
             ->toArray();
     }
 
-    public function loadAcademicPeriods()
+    public function loadAcademicPeriods(): void
     {
         $this->periods = $this->school->academicPeriods()
             ->with('academicYear')
@@ -228,7 +229,7 @@ class SchoolSettingsDashboard extends Component
         $this->currentPeriod = $this->school->getCurrentPeriod();
     }
 
-    public function loadSettings()
+    public function loadSettings(): void
     {
         $this->settingGroups = SchoolSetting::forSchool($this->school->id)
             ->orderBy('sort_order')
@@ -255,12 +256,12 @@ class SchoolSettingsDashboard extends Component
             ->toArray();
     }
 
-    public function loadStats()
+    public function loadStats(): void
     {
         $this->stats = $this->school->getStats();
     }
 
-    public function loadAccountInformation()
+    public function loadAccountInformation(): void
     {
         // Load existing subaccount if available
         $subaccount = $this->school->subaccount;
@@ -273,13 +274,13 @@ class SchoolSettingsDashboard extends Component
         }
     }
 
-    public function createAccount()
+    public function createAccount(): void
     {
         $this->resetAccountForm();
         $this->showAccountModal = true;
     }
 
-    public function editAccount()
+    public function editAccount(): void
     {
         $subaccount = $this->school->subaccount;
 
@@ -293,7 +294,7 @@ class SchoolSettingsDashboard extends Component
         }
     }
 
-    public function saveAccount()
+    public function saveAccount(): void
     {
         $this->validate([
             'accountBankCode' => 'required|string',
@@ -374,7 +375,7 @@ class SchoolSettingsDashboard extends Component
        // }
     }
 
-    public function deleteAccount()
+    public function deleteAccount(): void
     {
         try {
             $subaccount = $this->school->subaccount;
@@ -392,7 +393,7 @@ class SchoolSettingsDashboard extends Component
         }
     }
 
-    private function resetAccountForm()
+    private function resetAccountForm(): void
     {
         $this->accountBank = '';
         $this->accountBankCode = '';
@@ -405,44 +406,8 @@ class SchoolSettingsDashboard extends Component
 
     private function getBankNameFromCode(string $code): string
     {
-        $banks = [
-            '030100' => 'Absa Bank Ghana Limited',
-            '280100' => 'Access Bank (Ghana) Plc',
-            '080100' => 'Agricultural Development Bank Plc',
-            '300341' => 'Affinity Ghana Savings and Loans',
-            'ATL'    => 'AirtelTigo Money',
-            '070101' => 'ARB Apex Bank',
-            '210100' => 'Bank of Africa Ghana Limited',
-            '010100' => 'Bank of Ghana',
-            '300335' => 'Best Point Savings and Loans',
-            '140100' => 'CalBank PLC',
-            '340100' => 'Consolidated Bank Ghana Limited',
-            '130100' => 'Ecobank Ghana Plc',
-            '200100' => 'FBNBank Ghana Limited',
-            '240100' => 'Fidelity Bank Ghana Limited',
-            '170100' => 'First Atlantic Bank Limited',
-            '330100' => 'First National Bank Ghana Limited',
-            '040100' => 'GCB Bank Limited',
-            '230100' => 'Guaranty Trust Bank (Ghana) Limited',
-            'MTN'    => 'MTN Mobile Money',
-            '050100' => 'National Investment Bank Limited',
-            '360100' => 'OmniBSIC Bank Ghana Limited',
-            '300457' => 'Paystack Limited',
-            '180100' => 'Prudential Bank Limited',
-            '110100' => 'Republic Bank (Ghana) PLC',
-            '300361' => 'Services Integrity Savings and Loans',
-            '090100' => 'Société Générale Ghana Plc',
-            '190100' => 'Stanbic Bank Ghana Limited',
-            '020100' => 'Standard Chartered Bank Ghana Plc',
-            '060100' => 'United Bank for Africa Ghana Limited',
-            '100100' => 'Universal Merchant Bank Ghana Limited',
-            'VOD'    => 'Vodafone Cash',
-            '120100' => 'Zenith Bank Ghana',
-        ];
-
-        return $banks[$code] ?? $code;
+        return GhanaBanks::getNameFromCode($code);
     }
-
     public function toggleDarkMode()
     {
         $this->darkMode = !$this->darkMode;
@@ -595,14 +560,14 @@ class SchoolSettingsDashboard extends Component
     }
 
     // Academic Period Management Methods
-    public function createAcademicPeriod()
+    public function createAcademicPeriod(): void
     {
         $this->resetPeriodForm();
         $this->showPeriodModal = true;
         $this->editingPeriod = null;
     }
 
-    public function editAcademicPeriod($periodId)
+    public function editAcademicPeriod($periodId): void
     {
         $period = AcademicPeriod::where('school_id', $this->school->id)
             ->with('academicYear')
@@ -625,7 +590,7 @@ class SchoolSettingsDashboard extends Component
         $this->showPeriodModal = true;
     }
 
-    public function saveAcademicPeriod()
+    public function saveAcademicPeriod(): void
     {
         $this->validate([
             'periodAcademicYearId' => 'required|exists:academic_years,id',
@@ -668,7 +633,7 @@ class SchoolSettingsDashboard extends Component
         $this->resetPeriodForm();
     }
 
-    public function deleteAcademicPeriod($periodId)
+    public function deleteAcademicPeriod($periodId): void
     {
         $period = AcademicPeriod::where('school_id', $this->school->id)
             ->findOrFail($periodId);
@@ -680,7 +645,7 @@ class SchoolSettingsDashboard extends Component
         session()->flash('success', 'Academic period deleted successfully!');
     }
 
-    public function setCurrentPeriod($periodId)
+    public function setCurrentPeriod($periodId): void
     {
         AcademicPeriod::where('school_id', $this->school->id)
             ->update(['is_current' => false]);
@@ -694,7 +659,7 @@ class SchoolSettingsDashboard extends Component
         session()->flash('success', 'Current academic period updated!');
     }
 
-    public function updateSetting($key, $value, $group)
+    public function updateSetting($key, $value, $group): void
     {
         SchoolSetting::updateOrCreate(
             [
@@ -711,7 +676,7 @@ class SchoolSettingsDashboard extends Component
         session()->flash('success', 'Setting updated successfully!');
     }
 
-    private function resetPeriodForm()
+    private function resetPeriodForm(): void
     {
         $this->periodAcademicYearId = '';
         $this->periodName = '';
@@ -736,7 +701,7 @@ class SchoolSettingsDashboard extends Component
         ]);
     }
 
-    private function getSchoolInitials()
+    private function getSchoolInitials(): string
     {
         $words = explode(' ', $this->school->name);
         if (count($words) >= 2) {

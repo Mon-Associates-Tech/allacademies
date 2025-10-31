@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
 
 class School extends Model
@@ -55,9 +56,13 @@ class School extends Model
 
     // Relationships
 
-    public function subaccount()
+
+    /**
+     * Get the school's subaccount (polymorphic)
+     */
+    public function subaccount(): MorphOne
     {
-       return $this->hasOne(Subaccount::class);
+        return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 
     public function settings(): HasMany
