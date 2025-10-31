@@ -121,7 +121,7 @@ class School extends Model
     public function getActiveAcademicLevels(): BelongsToMany
     {
         return $this->academicLevels()->wherePivot('is_active', true)
-            ->orderBy('school_academic_level.sort_order');
+            ->orderBy('academic_level.sort_order');
     }
 
     // Scopes
@@ -129,7 +129,7 @@ class School extends Model
     public function academicLevels(): BelongsToMany
     {
         return $this->belongsToMany(AcademicLevel::class, 'school_academic_level')
-            ->withPivot('is_active', 'sort_order', 'custom_settings', 'school_academic_group_id')
+            ->withPivot('is_active', 'sort_order', 'custom_settings', 'academic_group_id')
             ->withTimestamps();
     }
 

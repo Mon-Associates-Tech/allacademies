@@ -80,7 +80,7 @@ class AcademicLevel extends Model
     public function schools(): BelongsToMany
     {
         return $this->belongsToMany(School::class, 'school_academic_level')
-            ->withPivot('is_active', 'sort_order', 'custom_settings', 'academic_group_id')
+            ->withPivot('is_active', 'sort_order', 'custom_settings',)
             ->withTimestamps();
     }
 

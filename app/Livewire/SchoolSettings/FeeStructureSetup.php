@@ -6,11 +6,16 @@ use App\Models\AcademicFeeStructure;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class FeeStructureSetup extends Component
 {
+    use WithPagination;
+
+    public $academic_year_id = '';
     public $academic_group_id = '';
     public $academic_level_id = '';
     public $current_term_id = '';
@@ -18,11 +23,18 @@ class FeeStructureSetup extends Component
     public $due_date = '';
     public $payment_method = 'Momo';
 
+    public $academicYears = [];
     public $academicGroups = [];
     public $academicLevels = [];
     public $academicPeriods = [];
 
+    public $showFormModal = false;
+    public $formMode = 'create';
+    public $editingFeeId = null;
+    public $viewingFee = null;
+
     protected $rules = [
+        'academic_year_id' => 'required|exists:academic_years,id',
         'academic_group_id' => 'required|exists:academic_groups,id',
         'academic_level_id' => 'required|exists:academic_levels,id',
         'current_term_id' => 'required|exists:academic_periods,id',
@@ -32,6 +44,7 @@ class FeeStructureSetup extends Component
     ];
 
     protected $messages = [
+        'academic_year_id.required' => 'Please select an academic year',
         'academic_group_id.required' => 'Please select an academic group',
         'academic_level_id.required' => 'Please select an academic level',
         'current_term_id.required' => 'Please select a term',
@@ -44,8 +57,15 @@ class FeeStructureSetup extends Component
 
     public function mount()
     {
+        $this->loadAcademicYears();
         $this->loadAcademicGroups();
-        $this->loadAcademicPeriods();
+    }
+
+    public function loadAcademicYears()
+    {
+        $this->academicYears = AcademicYear::where('school_id', Auth::user()->school_id)
+            ->orderBy('start_date', 'desc')
+            ->get();
     }
 
     public function loadAcademicGroups()
@@ -59,12 +79,23 @@ class FeeStructureSetup extends Component
         }
     }
 
-    public function loadAcademicPeriods(): void
+    public function updatedAcademicYearId($value)
     {
-        $this->academicPeriods = AcademicPeriod::where('school_id', Auth::user()->school_id)
-            ->whereIn('status', ['active', 'upcoming'])
-            ->orderBy('start_date', 'desc')
-            ->get();
+        $this->current_term_id = '';
+        $this->loadAcademicPeriods();
+    }
+
+    public function loadAcademicPeriods()
+    {
+        if ($this->academic_year_id) {
+            $this->academicPeriods = AcademicPeriod::where('school_id', Auth::user()->school_id)
+                ->where('academic_year_id', $this->academic_year_id)
+                ->whereIn('status', ['active', 'upcoming'])
+                ->orderBy('sequence')
+                ->get();
+        } else {
+            $this->academicPeriods = [];
+        }
     }
 
     public function updatedAcademicGroupId($value)
@@ -84,32 +115,134 @@ class FeeStructureSetup extends Component
         }
     }
 
+    public function showCreateForm()
+    {
+        $this->resetForm();
+        $this->showFormModal = true;
+        $this->formMode = 'create';
+    }
+
+    public function resetForm()
+    {
+        $this->reset([
+            'academic_year_id',
+            'academic_group_id',
+            'academic_level_id',
+            'current_term_id',
+            'amount',
+            'due_date',
+            'payment_method',
+            'editingFeeId'
+        ]);
+        $this->payment_method = 'Momo';
+        $this->academicLevels = [];
+        $this->academicPeriods = [];
+        $this->resetErrorBag();
+    }
+
+    public function closeModal()
+    {
+        $this->showFormModal = false;
+        $this->resetForm();
+    }
+
+    public function view($id)
+    {
+        $this->viewingFee = AcademicFeeStructure::with([
+            'academicGroup',
+            'academicLevel',
+            'currentTerm',
+            'currentTerm.academicYear'
+        ])->findOrFail($id);
+    }
+
+    public function closeViewModal()
+    {
+        $this->viewingFee = null;
+    }
+
+    public function edit($id)
+    {
+        $fee = AcademicFeeStructure::with('currentTerm')->findOrFail($id);
+
+        $this->editingFeeId = $fee->id;
+        $this->academic_year_id = $fee->currentTerm->academic_year_id ?? '';
+        $this->academic_group_id = $fee->academic_group_id;
+        $this->academic_level_id = $fee->academic_level_id;
+        $this->current_term_id = $fee->current_term_id;
+        $this->amount = $fee->amount;
+        $this->due_date = $fee->due_date;
+        $this->payment_method = $fee->payment_method;
+
+        $this->loadAcademicPeriods();
+        $this->loadAcademicLevels();
+
+        $this->formMode = 'edit';
+        $this->showFormModal = true;
+    }
+
     public function save()
     {
         $this->validate();
 
         try {
-            AcademicFeeStructure::create([
-                'school_id' => Auth::user()->school_id,
-                'academic_group_id' => $this->academic_group_id,
-                'academic_level_id' => $this->academic_level_id,
-                'current_term_id' => $this->current_term_id,
-                'amount' => $this->amount,
-                'due_date' => $this->due_date,
-                'payment_method' => $this->payment_method,
-            ]);
+            if ($this->formMode === 'edit' && $this->editingFeeId) {
+                // Update existing fee structure
+                $fee = AcademicFeeStructure::findOrFail($this->editingFeeId);
+                $fee->update([
+                    'academic_group_id' => $this->academic_group_id,
+                    'academic_level_id' => $this->academic_level_id,
+                    'current_term_id' => $this->current_term_id,
+                    'amount' => $this->amount,
+                    'due_date' => $this->due_date,
+                    'payment_method' => $this->payment_method,
+                ]);
 
-            session()->flash('success', 'Fee structure created successfully!');
+                session()->flash('success', 'Fee structure updated successfully!');
+            } else {
+                // Create new fee structure
+                AcademicFeeStructure::create([
+                    'school_id' => Auth::user()->school_id,
+                    'academic_group_id' => $this->academic_group_id,
+                    'academic_level_id' => $this->academic_level_id,
+                    'current_term_id' => $this->current_term_id,
+                    'amount' => $this->amount,
+                    'due_date' => $this->due_date,
+                    'payment_method' => $this->payment_method,
+                ]);
 
-            return redirect()->route('school-settings.index');
+                session()->flash('success', 'Fee structure created successfully!');
+            }
+
+            $this->closeModal();
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to create fee structure. Please try again.');
-            \Log::error('Fee structure creation error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to save fee structure. Please try again.');
+            \Log::error('Fee structure save error: ' . $e->getMessage());
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $fee = AcademicFeeStructure::findOrFail($id);
+            $fee->delete();
+
+            session()->flash('success', 'Fee structure deleted successfully!');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to delete fee structure. Please try again.');
+            \Log::error('Fee structure deletion error: ' . $e->getMessage());
         }
     }
 
     public function render()
     {
-        return view('livewire.school-settings.fee-structure-setup');
+        $feeStructures = AcademicFeeStructure::where('school_id', Auth::user()->school_id)
+            ->with(['academicGroup', 'academicLevel', 'currentTerm.academicYear'])
+            ->latest()
+            ->paginate(10);
+
+        return view('livewire.school-settings.fee-structure-setup', [
+            'feeStructures' => $feeStructures
+        ]);
     }
 }

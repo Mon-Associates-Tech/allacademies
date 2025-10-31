@@ -5,6 +5,7 @@ namespace App\Livewire\School;
 use App\Models\School;
 use App\Models\SchoolSetting;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -69,17 +70,40 @@ class SchoolSettingsDashboard extends Component
     #[Validate('nullable|image|max:2048')]
     public $logoFile;
 
+    // Academic Year Management
+    public $academicYears = [];
+    public $showAcademicYearModal = false;
+    public $editingYearId = null;
+
+    #[Validate('required|string|max:255')]
+    public $yearName = '';
+
+    #[Validate('required|date')]
+    public $yearStartDate = '';
+
+    #[Validate('required|date|after:yearStartDate')]
+    public $yearEndDate = '';
+
+    #[Validate('required|in:upcoming,active,completed')]
+    public $yearStatus = 'upcoming';
+
+    #[Validate('nullable|string|max:1000')]
+    public $yearDescription = '';
+
     // Academic Period Management
     public $periods = [];
     public $currentPeriod = null;
     public $showPeriodModal = false;
     public $editingPeriod = null;
 
+    #[Validate('required|exists:academic_years,id')]
+    public $periodAcademicYearId = '';
+
     #[Validate('required|string|max:255')]
-    public $periodTitle = '';
+    public $periodName = '';
 
     #[Validate('required|in:semester,term,quarter,trimester,session')]
-    public $periodType = '';
+    public $periodType = 'term';
 
     #[Validate('required|integer|min:1|max:10')]
     public $periodSequence = 1;
@@ -115,6 +139,16 @@ class SchoolSettingsDashboard extends Component
     // Stats
     public $stats = [];
 
+    // Account Information Management
+    public $showAccountModal = false;
+    public $editingAccountId = null;
+    public $accountBank = '';
+    public $accountBankCode = '';
+    public $accountNumber = '';
+    public $accountName = '';
+    public $accountType = 'bank'; // bank, mobile_money
+    public $isPrimaryAccount = false;
+
     public function mount()
     {
         $this->school = Auth::user()->school;
@@ -125,9 +159,11 @@ class SchoolSettingsDashboard extends Component
         }
 
         $this->loadSchoolData();
+        $this->loadAcademicYears();
         $this->loadAcademicPeriods();
         $this->loadSettings();
         $this->loadStats();
+        $this->loadAccountInformation();
 
         // Check for saved theme preference
         $this->darkMode = session('dark_mode', false);
@@ -152,20 +188,28 @@ class SchoolSettingsDashboard extends Component
         $this->currency = $this->school->currency ?? 'USD';
     }
 
+    public function loadAcademicYears()
+    {
+        $this->academicYears = AcademicYear::where('school_id', $this->school->id)
+            ->orderBy('start_date', 'desc')
+            ->get()
+            ->toArray();
+    }
+
     public function loadAcademicPeriods()
     {
         $this->periods = $this->school->academicPeriods()
-            ->orderBy('academic_year', 'desc')
-            ->orderBy('year_sequence', 'asc')
-            ->orderBy('sequence', 'asc')
+            ->with('academicYear')
+            ->orderBy('start_date', 'desc')
             ->get()
             ->map(function ($period) {
                 return [
                     'id' => $period->id,
-                    'title' => $period->getDisplayName(),
+                    'name' => $period->getDisplayName(),
                     'type' => $period->type,
                     'sequence' => $period->sequence,
                     'academic_year' => $period->academic_year,
+                    'academic_year_name' => $period->academicYear?->getDisplayName() ?? 'N/A',
                     'start_date' => $period->start_date->format('Y-m-d'),
                     'end_date' => $period->end_date->format('Y-m-d'),
                     'status' => $period->status,
@@ -214,6 +258,189 @@ class SchoolSettingsDashboard extends Component
     public function loadStats()
     {
         $this->stats = $this->school->getStats();
+    }
+
+    public function loadAccountInformation()
+    {
+        // Load existing subaccount if available
+        $subaccount = $this->school->subaccount;
+
+        if ($subaccount) {
+            $this->accountBank = $subaccount->settlement_bank ?? '';
+            $this->accountBankCode = $subaccount->bank_code ?? '';
+            $this->accountNumber = $subaccount->account_number ?? '';
+            $this->accountName = $subaccount->business_name ?? '';
+        }
+    }
+
+    public function createAccount()
+    {
+        $this->resetAccountForm();
+        $this->showAccountModal = true;
+    }
+
+    public function editAccount()
+    {
+        $subaccount = $this->school->subaccount;
+
+        if ($subaccount) {
+            $this->editingAccountId = $subaccount->id;
+            $this->accountBank = $subaccount->settlement_bank ?? '';
+            $this->accountBankCode = $subaccount->bank_code ?? '';
+            $this->accountNumber = $subaccount->account_number ?? '';
+            $this->accountName = $subaccount->business_name ?? $this->school->name;
+            $this->showAccountModal = true;
+        }
+    }
+
+    public function saveAccount()
+    {
+        $this->validate([
+            'accountBankCode' => 'required|string',
+            'accountNumber' => 'required|string',
+            'accountName' => 'nullable|string|max:255',
+        ]);
+
+       // try {
+            // Get bank name from code
+            $this->accountBank = $this->getBankNameFromCode($this->accountBankCode);
+
+            $paystack = app(\App\Services\PaystackService::class);
+
+            if ($this->editingAccountId) {
+                // Update existing subaccount
+                $subaccount = $this->school->subaccount;
+
+                $updateData = [
+                    'business_name' => $this->accountName ?: $this->school->name,
+                    'bank_code' => $this->accountBankCode,
+                    'account_number' => $this->accountNumber,
+                ];
+
+                $response = $paystack->updateSubAccount($subaccount->subaccount_code, $updateData);
+
+                if (isset($response['status']) && $response['status']) {
+                    $subaccount->update([
+                        'business_name' => $this->accountName ?: $this->school->name,
+                        'settlement_bank' => $this->accountBank,
+                        'bank_code' => $this->accountBankCode,
+                        'account_number' => $this->accountNumber,
+                        'paystack_response' => $response['data'] ?? null,
+                    ]);
+
+                    session()->flash('success', 'Account information updated successfully!');
+                } else {
+                    throw new \Exception($response['message'] ?? 'Failed to update account');
+                }
+            } else {
+                // Create new subaccount
+                $subaccountData = [
+                    'business_name' => $this->accountName ?: $this->school->name,
+                    'bank_code' => $this->accountBankCode,
+                    'account_number' => $this->accountNumber,
+                    'percentage_charge' => 0,
+                    'description' => "Payment account for {$this->school->name}",
+                    'primary_contact_name' => $this->school->name,
+                    'primary_contact_email' => $this->school->email,
+                    'primary_contact_phone' => $this->school->phone,
+                ];
+
+                $response = $paystack->createSubAccount($subaccountData);
+
+                if (isset($response['status']) && $response['status']) {
+                    $this->school->subaccount()->create([
+                        'subaccount_code' => $response['data']['subaccount_code'],
+                        'business_name' => $this->accountName ?: $this->school->name,
+                        'settlement_bank' => $this->accountBank,
+                        'bank_code' => $this->accountBankCode,
+                        'account_number' => $this->accountNumber,
+                        'percentage_charge' => $response['data']['percentage_charge'] ?? 0,
+                        'description' => $response['data']['description'] ?? null,
+                        'paystack_response' => $response['data'],
+                    ]);
+
+                    session()->flash('success', 'Account information added successfully!');
+                } else {
+                    throw new \Exception($response['message'] ?? 'Failed to create account');
+                }
+            }
+
+            $this->showAccountModal = false;
+            $this->resetAccountForm();
+            $this->loadAccountInformation();
+        //} catch (\Exception $e) {
+         //   $errorMessage = 'Failed to save account: ' . $e->getMessage();
+        //    session()->flash('error', $errorMessage);
+       // }
+    }
+
+    public function deleteAccount()
+    {
+        try {
+            $subaccount = $this->school->subaccount;
+
+            if ($subaccount) {
+                // Note: Paystack doesn't allow deleting subaccounts via API
+                // You may want to mark it as inactive instead
+                $subaccount->delete();
+
+                session()->flash('success', 'Account information removed successfully!');
+                $this->loadAccountInformation();
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to delete account: ' . $e->getMessage());
+        }
+    }
+
+    private function resetAccountForm()
+    {
+        $this->accountBank = '';
+        $this->accountBankCode = '';
+        $this->accountNumber = '';
+        $this->accountName = '';
+        $this->accountType = 'bank';
+        $this->isPrimaryAccount = false;
+        $this->editingAccountId = null;
+    }
+
+    private function getBankNameFromCode(string $code): string
+    {
+        $banks = [
+            '030100' => 'Absa Bank Ghana Limited',
+            '280100' => 'Access Bank (Ghana) Plc',
+            '080100' => 'Agricultural Development Bank Plc',
+            '300341' => 'Affinity Ghana Savings and Loans',
+            'ATL'    => 'AirtelTigo Money',
+            '070101' => 'ARB Apex Bank',
+            '210100' => 'Bank of Africa Ghana Limited',
+            '010100' => 'Bank of Ghana',
+            '300335' => 'Best Point Savings and Loans',
+            '140100' => 'CalBank PLC',
+            '340100' => 'Consolidated Bank Ghana Limited',
+            '130100' => 'Ecobank Ghana Plc',
+            '200100' => 'FBNBank Ghana Limited',
+            '240100' => 'Fidelity Bank Ghana Limited',
+            '170100' => 'First Atlantic Bank Limited',
+            '330100' => 'First National Bank Ghana Limited',
+            '040100' => 'GCB Bank Limited',
+            '230100' => 'Guaranty Trust Bank (Ghana) Limited',
+            'MTN'    => 'MTN Mobile Money',
+            '050100' => 'National Investment Bank Limited',
+            '360100' => 'OmniBSIC Bank Ghana Limited',
+            '300457' => 'Paystack Limited',
+            '180100' => 'Prudential Bank Limited',
+            '110100' => 'Republic Bank (Ghana) PLC',
+            '300361' => 'Services Integrity Savings and Loans',
+            '090100' => 'Société Générale Ghana Plc',
+            '190100' => 'Stanbic Bank Ghana Limited',
+            '020100' => 'Standard Chartered Bank Ghana Plc',
+            '060100' => 'United Bank for Africa Ghana Limited',
+            '100100' => 'Universal Merchant Bank Ghana Limited',
+            'VOD'    => 'Vodafone Cash',
+            '120100' => 'Zenith Bank Ghana',
+        ];
+
+        return $banks[$code] ?? $code;
     }
 
     public function toggleDarkMode()
@@ -269,6 +496,105 @@ class SchoolSettingsDashboard extends Component
         $this->loadSchoolData();
     }
 
+    // Academic Year Management Methods
+    public function createAcademicYear()
+    {
+        $this->resetAcademicYearForm();
+        $this->showAcademicYearModal = true;
+    }
+
+    public function editAcademicYear($yearId)
+    {
+        $year = AcademicYear::where('school_id', $this->school->id)
+            ->findOrFail($yearId);
+
+        $this->editingYearId = $yearId;
+        $this->yearName = $year->name;
+        $this->yearStartDate = $year->start_date->format('Y-m-d');
+        $this->yearEndDate = $year->end_date->format('Y-m-d');
+        $this->yearStatus = $year->status ?? 'active';
+        $this->yearDescription = $year->description;
+
+        $this->showAcademicYearModal = true;
+    }
+
+    public function saveAcademicYear()
+    {
+        $this->validate([
+            'yearName' => 'required|string|max:255',
+            'yearStartDate' => 'required|date',
+            'yearEndDate' => 'required|date|after:yearStartDate',
+            'yearStatus' => 'required|in:upcoming,active,completed',
+        ]);
+
+        $data = [
+            'school_id' => $this->school->id,
+            'name' => $this->yearName,
+            'start_date' => $this->yearStartDate,
+            'end_date' => $this->yearEndDate,
+            'status' => $this->yearStatus,
+            'description' => $this->yearDescription,
+        ];
+
+        if ($this->editingYearId) {
+            $year = AcademicYear::findOrFail($this->editingYearId);
+            $year->update($data);
+            session()->flash('success', 'Academic year updated successfully!');
+        } else {
+            AcademicYear::create($data);
+            session()->flash('success', 'Academic year created successfully!');
+        }
+
+        $this->loadAcademicYears();
+        $this->loadStats();
+        $this->showAcademicYearModal = false;
+        $this->resetAcademicYearForm();
+    }
+
+    public function deleteAcademicYear($yearId)
+    {
+        $year = AcademicYear::where('school_id', $this->school->id)
+            ->findOrFail($yearId);
+
+        // Check if there are periods associated with this year
+        $periodsCount = $year->academicPeriods()->count();
+
+        if ($periodsCount > 0) {
+            session()->flash('error', "Cannot delete academic year. It has {$periodsCount} academic period(s) associated with it.");
+            return;
+        }
+
+        $year->delete();
+
+        $this->loadAcademicYears();
+        $this->loadStats();
+        session()->flash('success', 'Academic year deleted successfully!');
+    }
+
+    public function setCurrentAcademicYear($yearId)
+    {
+        AcademicYear::where('school_id', $this->school->id)
+            ->update(['is_current' => false]);
+
+        AcademicYear::where('school_id', $this->school->id)
+            ->findOrFail($yearId)
+            ->update(['is_current' => true]);
+
+        $this->loadAcademicYears();
+        session()->flash('success', 'Current academic year updated!');
+    }
+
+    private function resetAcademicYearForm()
+    {
+        $this->yearName = '';
+        $this->yearStartDate = '';
+        $this->yearEndDate = '';
+        $this->yearStatus = 'upcoming';
+        $this->yearDescription = '';
+        $this->editingYearId = null;
+    }
+
+    // Academic Period Management Methods
     public function createAcademicPeriod()
     {
         $this->resetPeriodForm();
@@ -279,10 +605,12 @@ class SchoolSettingsDashboard extends Component
     public function editAcademicPeriod($periodId)
     {
         $period = AcademicPeriod::where('school_id', $this->school->id)
+            ->with('academicYear')
             ->findOrFail($periodId);
 
         $this->editingPeriod = $period;
-        $this->periodTitle = $period->title;
+        $this->periodAcademicYearId = $period->academic_year_id ?? '';
+        $this->periodName = $period->name;
         $this->periodType = $period->type;
         $this->periodSequence = $period->sequence;
         $this->periodStartDate = $period->start_date->format('Y-m-d');
@@ -300,7 +628,8 @@ class SchoolSettingsDashboard extends Component
     public function saveAcademicPeriod()
     {
         $this->validate([
-            'periodTitle' => 'required|string|max:255',
+            'periodAcademicYearId' => 'required|exists:academic_years,id',
+            'periodName' => 'required|string|max:255',
             'periodType' => 'required|in:semester,term,quarter,trimester,session',
             'periodSequence' => 'required|integer|min:1|max:10',
             'periodStartDate' => 'required|date',
@@ -309,7 +638,9 @@ class SchoolSettingsDashboard extends Component
         ]);
 
         $data = [
-            'title' => $this->periodTitle,
+            'school_id' => $this->school->id,
+            'academic_year_id' => $this->periodAcademicYearId,
+            'name' => $this->periodName,
             'type' => $this->periodType,
             'sequence' => $this->periodSequence,
             'start_date' => $this->periodStartDate,
@@ -331,6 +662,7 @@ class SchoolSettingsDashboard extends Component
         }
 
         $this->loadAcademicPeriods();
+        $this->loadAcademicYears();
         $this->loadStats();
         $this->showPeriodModal = false;
         $this->resetPeriodForm();
@@ -381,8 +713,9 @@ class SchoolSettingsDashboard extends Component
 
     private function resetPeriodForm()
     {
-        $this->periodTitle = '';
-        $this->periodType = 'semester';
+        $this->periodAcademicYearId = '';
+        $this->periodName = '';
+        $this->periodType = 'term';
         $this->periodSequence = 1;
         $this->periodStartDate = '';
         $this->periodEndDate = '';

@@ -15,6 +15,7 @@ use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GroupBookSubscriptionController;
+use App\Http\Controllers\ImportTemplateController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonNoteController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignInController;
@@ -42,13 +44,11 @@ use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
 use App\Livewire\Learning\BookQuizInterface;
-use App\Livewire\Students\Courses;
 use App\Livewire\Teachers\EssayGrader;
 use App\Models\Assessment;
 use App\Models\Student;
 use App\Services\SchoolContextService;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SchoolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -344,7 +344,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
 
     // School Settings
-    Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
+    Route::get('/school-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('school-settings.index');
     Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)
         ->name('school-settings.fee-structure.setup');
 });
@@ -496,6 +496,14 @@ Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])
     return back()->with('success', 'Current term has been updated successfully.');
 })->name('academic.term.switch');
 
+
+Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchoolDashboard::class)
+    ->name('school.comprehensive-view')
+    ->middleware(['auth', 'verified']);
+
+Route::get('school/import-formats', [ImportTemplateController::class, 'viewFormats'])
+    ->name('school.import-formats')
+    ->middleware(['auth', 'verified']);
 
 // Include additional route files
 

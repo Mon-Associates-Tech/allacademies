@@ -46,46 +46,83 @@
     </div>
 
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <!-- Header -->
-        <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-            <div class="px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-6">
-                    <div class="flex items-center space-x-4">
-                        @if(isset($schoolLogo) && $schoolLogo)
-                            <img src="{{ $schoolLogo }}" alt="{{ $school->name }}" class="h-10 w-10 rounded-lg object-cover">
-                        @else
-                            <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                <span class="text-white font-bold text-sm">{{ $schoolInitials }}</span>
+        <!-- Quick Setup Cards -->
+        <section class="px-6">
+            @if($school)
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Configuration</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Academic Periods -->
+                        <a href="{{ route('academic-settings') }}"
+                           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-transparent hover:border-indigo-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
                             </div>
-                        @endif
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $school->name }}</h1>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">School Administration Dashboard</p>
-                        </div>
-                    </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Academic Periods</h3>
+                            <p class="text-sm text-gray-600">Manage terms, semesters, and academic calendar</p>
+                        </a>
 
-                    <div class="flex items-center space-x-4">
-                        <!-- Dark mode toggle -->
-                        <button wire:click="toggleDarkMode"
-                                class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            <svg x-show="!darkMode" class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                            </svg>
-                            <svg x-show="darkMode" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
-                            </svg>
+                        <!-- Fee Structure -->
+                        <a href="{{ route('school-settings.fee-structure.setup') }}"
+                           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-transparent hover:border-green-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Fee Structure</h3>
+                            <p class="text-sm text-gray-600">Configure fees for academic levels and terms</p>
+                        </a>
+
+                        <!-- Academic Groups & Levels -->
+                        <a href="{{ route('academic-settings') }}"
+                           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-transparent hover:border-purple-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Academic Structure</h3>
+                            <p class="text-sm text-gray-600">Manage academic groups, levels, and subjects</p>
+                        </a>
+
+                        <!-- General Settings -->
+                        <button type="button" wire:click="showCreateModal"
+                                class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-transparent hover:border-orange-500 text-left">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                                    </svg>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Custom Settings</h3>
+                            <p class="text-sm text-gray-600">Add and manage custom school settings</p>
                         </button>
-
-                        <!-- Notifications indicator -->
-                        <div class="relative">
-                            <div class="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                                <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            @endif
+        </section>
 
         <!-- Stats Overview -->
         <div class="px-4 sm:px-6 lg:px-8 py-8">
@@ -180,6 +217,18 @@
                             class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                         System Settings
                     </button>
+
+                    <button wire:click="setActiveTab('account-information')"
+                            :class="activeTab === 'account-information' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Account Information
+                    </button>
+
+                    <button wire:click="setActiveTab('fee-structure')"
+                            :class="activeTab === 'fee-structure' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Fee Structure
+                    </button>
                 </nav>
             </div>
 
@@ -188,9 +237,12 @@
             @include('livewire.school.partials.basic-info-tab')
             @include('livewire.school.partials.academic-periods-tab')
             @include('livewire.school.partials.system-settings-tab')
+            @include('livewire.school.partials.fee-structure-tab')
+            @include('livewire.school.partials.account-information-tab')
         </div>
 
         <!-- Academic Period Modal -->
         @include('livewire.school.partials.period-modal')
+        @include('livewire.school.partials.academic-year-modal')
     </div>
 </section>

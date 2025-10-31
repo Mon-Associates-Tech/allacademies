@@ -37,7 +37,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
                                     <div>
-                                        <p class="font-medium text-gray-900 dark:text-white">{{ $period['title'] }}</p>
+                                        <p class="font-medium text-gray-900 dark:text-white">{{ $period['name'] }}</p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">{{ $period['academic_year'] }}</p>
                                     </div>
                                     @if($period['is_current'])
