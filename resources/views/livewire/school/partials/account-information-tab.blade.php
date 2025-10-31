@@ -1,3 +1,4 @@
+<div x-show="activeTab === 'account-information'" class="max-w-4xl animate-fade-in">
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
@@ -302,4 +303,5 @@
             </form>
         </div>
     </div>
+</div>
 </div>

@@ -313,7 +313,7 @@ class SchoolSettingsDashboard extends Component
 
                 $updateData = [
                     'business_name' => $this->accountName ?: $this->school->name,
-                    'bank_code' => $this->accountBankCode,
+                    // 'bank_code' => $this->accountBankCode,
                     'account_number' => $this->accountNumber,
                 ];
 
@@ -352,7 +352,7 @@ class SchoolSettingsDashboard extends Component
                         'subaccount_code' => $response['data']['subaccount_code'],
                         'business_name' => $this->accountName ?: $this->school->name,
                         'settlement_bank' => $this->accountBank,
-                        'bank_code' => $this->accountBankCode,
+                        // 'bank_code' => $this->accountBankCode,
                         'account_number' => $this->accountNumber,
                         'percentage_charge' => $response['data']['percentage_charge'] ?? 0,
                         'description' => $response['data']['description'] ?? null,

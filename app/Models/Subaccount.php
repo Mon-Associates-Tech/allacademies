@@ -18,7 +18,6 @@ class Subaccount extends Model
         'percentage_charge',
         'description',
         'paystack_response',
-        'bank_code'
     ];
 
     protected $casts = [
