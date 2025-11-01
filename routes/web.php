@@ -341,7 +341,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Academic Settings
-    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
+//    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
 
     // School Settings
     Route::get('/school-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('school-settings.index');
@@ -503,6 +503,10 @@ Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchool
 
 Route::get('school/import-formats', [ImportTemplateController::class, 'viewFormats'])
     ->name('school.import-formats')
+    ->middleware(['auth', 'verified']);
+
+Route::get('school/download-template/{type}', [ImportTemplateController::class, 'download'])
+    ->name('school.download-template')
     ->middleware(['auth', 'verified']);
 
 // Include additional route files

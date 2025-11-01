@@ -7,6 +7,7 @@ use App\Models\School;
 use App\Models\SchoolSetting;
 use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
+use App\Services\ImportExportService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -149,6 +150,34 @@ class SchoolSettingsDashboard extends Component
     public $accountName = '';
     public $accountType = 'bank'; // bank, mobile_money
     public $isPrimaryAccount = false;
+
+    // Import functionality
+    public $showImportModal = false;
+    public $showTemplateModal = false;
+    public $importType = 'students';
+    public $importFile;
+    public $defaultPassword = 'Welcome@2024';
+
+// Import options
+    public $createMissingLevels = true;
+    public $createMissingGroups = true;
+    public $sendWelcomeEmail = false;
+
+// Supported import types
+    public $importTypes = [
+        'students' => 'Students',
+        'teachers' => 'Teachers',
+        'librarians' => 'Librarians',
+        'administrators' => 'Administrators',
+        'parents' => 'Parents',
+    ];
+
+    protected ImportExportService $importService;
+
+    public function boot(ImportExportService $importService)
+    {
+        $this->importService = $importService;
+    }
 
     public function mount()
     {
@@ -708,5 +737,72 @@ class SchoolSettingsDashboard extends Component
             return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
         }
         return strtoupper(substr($this->school->name, 0, 2));
+    }
+
+    public function openImportModal()
+    {
+        $this->showImportModal = true;
+        $this->importFile = null;
+    }
+
+    public function closeImportModal()
+    {
+        $this->showImportModal = false;
+        $this->importFile = null;
+    }
+
+    public function openTemplateModal()
+    {
+        $this->showTemplateModal = true;
+    }
+
+    public function closeTemplateModal()
+    {
+        $this->showTemplateModal = false;
+    }
+
+    public function downloadTemplate($type)
+    {
+        return redirect()->route('school.download-template', ['type' => $type]);
+    }
+
+    public function performImport()
+    {
+        $this->validate([
+            'importFile' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+            'importType' => 'required|in:students,teachers,librarians,administrators,parents',
+            'defaultPassword' => 'required|string|min:6'
+        ]);
+
+        try {
+            // Prepare import options
+            $options = [
+                'default_school_id' => $this->school->id,
+                'default_password' => $this->defaultPassword,
+                'create_missing_levels' => $this->createMissingLevels,
+                'create_missing_groups' => $this->createMissingGroups,
+                'send_welcome_email' => $this->sendWelcomeEmail,
+            ];
+
+            // Perform import using existing service
+            $result = $this->importService->performImport(
+                $this->importFile,
+                $this->importType,
+                $options
+            );
+
+            if ($result['success']) {
+                $stats = $result['stats'];
+                session()->flash('success', "Import completed! Imported: {$stats['imported']}, Skipped: {$stats['skipped']}, Errors: {$stats['errors']}");
+
+                $this->closeImportModal();
+                $this->loadStats();
+            } else {
+                session()->flash('error', 'Import failed: ' . $result['message']);
+            }
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 }
