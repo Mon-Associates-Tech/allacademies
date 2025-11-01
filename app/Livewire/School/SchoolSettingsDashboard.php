@@ -19,7 +19,7 @@ class SchoolSettingsDashboard extends Component
 {
     use WithFileUploads;
 
-    public School $school;
+    public ?School $school;
     public $activeTab = 'overview';
     public $darkMode = false;
 
