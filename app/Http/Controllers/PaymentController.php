@@ -246,8 +246,6 @@ class PaymentController extends Controller
 
 
 
-// ... existing code ...
-
     /**
      * Initialize book subscription payment with split payment to author
      */

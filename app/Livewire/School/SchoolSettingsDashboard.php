@@ -201,8 +201,12 @@ class SchoolSettingsDashboard extends Component
 
         if (!$this->school) {
             session()->flash('error', 'Please select a school to manage its settings.');
-            return;
+            return redirect(route('dashboard'));
         }
+
+        // Restore active tab from session or default to 'overview'
+        $this->activeTab = session('school_settings_active_tab', 'overview');
+
 
         $this->loadSchoolData();
         $this->loadAcademicYears();
@@ -346,7 +350,7 @@ class SchoolSettingsDashboard extends Component
             'accountName' => 'nullable|string|max:255',
         ]);
 
-       // try {
+        try {
             // Get bank name from code
             $this->accountBank = $this->getBankNameFromCode($this->accountBankCode);
 
@@ -358,7 +362,7 @@ class SchoolSettingsDashboard extends Component
 
                 $updateData = [
                     'business_name' => $this->accountName ?: $this->school->name,
-                    // 'bank_code' => $this->accountBankCode,
+                     'bank_code' => $this->accountBankCode,
                     'account_number' => $this->accountNumber,
                 ];
 
@@ -397,7 +401,7 @@ class SchoolSettingsDashboard extends Component
                         'subaccount_code' => $response['data']['subaccount_code'],
                         'business_name' => $this->accountName ?: $this->school->name,
                         'settlement_bank' => $this->accountBank,
-                        // 'bank_code' => $this->accountBankCode,
+                         'bank_code' => $this->accountBankCode,
                         'account_number' => $this->accountNumber,
                         'percentage_charge' => $response['data']['percentage_charge'] ?? 0,
                         'description' => $response['data']['description'] ?? null,
@@ -413,10 +417,10 @@ class SchoolSettingsDashboard extends Component
             $this->showAccountModal = false;
             $this->resetAccountForm();
             $this->loadAccountInformation();
-        //} catch (\Exception $e) {
-         //   $errorMessage = 'Failed to save account: ' . $e->getMessage();
-        //    session()->flash('error', $errorMessage);
-       // }
+        } catch (\Exception $e) {
+            $errorMessage = 'Failed to save account: ' . $e->getMessage();
+            session()->flash('error', $errorMessage);
+        }
     }
 
     public function deleteAccount(): void
@@ -461,6 +465,8 @@ class SchoolSettingsDashboard extends Component
     public function setActiveTab($tab)
     {
         $this->activeTab = $tab;
+        // Save the active tab to session
+        session(['school_settings_active_tab' => $tab]);
     }
 
     public function updateSchoolBasicInfo()

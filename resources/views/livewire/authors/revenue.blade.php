@@ -30,7 +30,7 @@
                         <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-emerald-100 text-sm font-medium">Your Net Revenue (98%)</p>
+                                    <p class="text-emerald-100 text-sm font-medium">Your Net Revenue (90%)</p>
                                     <p class="text-2xl font-bold text-white">
                                         GHS {{ number_format($revenueData['total_net_revenue'], 2) }}</p>
                                     <p class="text-xs text-emerald-100 mt-1">Gross:
@@ -49,7 +49,7 @@
                         <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-emerald-100 text-sm font-medium">Platform Fee (2%)</p>
+                                    <p class="text-emerald-100 text-sm font-medium">Platform Fee (10%)</p>
                                     <p class="text-2xl font-bold text-white">
                                         GHS {{ number_format($revenueData['total_platform_fees'], 2) }}</p>
                                     <p class="text-xs text-emerald-100 mt-1">{{ $revenueData['total_payments'] }}
@@ -158,7 +158,7 @@
             </span>
                 @endif
             </div>
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Net Revenue (98%)</h3>
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Net Revenue (90%)</h3>
             <p class="text-2xl font-bold text-gray-900 dark:text-white">
                 GHS {{ number_format($revenueData['total_net_revenue'], 2) }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Gross:

@@ -62,8 +62,8 @@ class PaymentAccountManager extends Component
             $contactPhone = $this->getContactPhone();
 
             // Determine percentage charge based on model type
-            // Authors get 98% (platform keeps 2%), Schools get 100%
-            $percentageCharge = $this->modelType === 'author' ? 2 : 0;
+            // Authors get 90% (the platform keeps 10%), Schools get 100%
+            $percentageCharge = $this->modelType === 'author' ? 10 : 0;
 
             if ($this->editingAccountId) {
                 // Update existing subaccount

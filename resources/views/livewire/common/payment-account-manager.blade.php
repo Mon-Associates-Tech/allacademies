@@ -202,11 +202,11 @@
                         <!-- Bank Selection -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Select Bank <span class="text-red-500">*</span>
+                                Select Bank or Mobile Money Wallet <span class="text-red-500">*</span>
                             </label>
                             <select wire:model.defer="accountBankCode" required
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">-- Select Bank --</option>
+                                <option value="">-- Select Bank Or Mobile Money Wallet --</option>
                                 @foreach($this->banks as $code => $name)
                                     <option value="{{ $code }}">{{ $name }}</option>
                                 @endforeach
@@ -219,7 +219,7 @@
                         <!-- Account Number -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Account Number <span class="text-red-500">*</span>
+                                Account Number or Phone Number <span class="text-red-500">*</span>
                             </label>
                             <input type="text" wire:model.defer="accountNumber" required
                                    placeholder="Enter your account number"

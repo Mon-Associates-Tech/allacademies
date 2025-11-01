@@ -992,6 +992,9 @@
                 class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification Settings</h3>
                 <p class="text-gray-600 dark:text-gray-400">Notification preferences will be implemented here.</p>
+
+                <livewire:common.mock-data-banner variant="warning" />
+
             </div>
         @endif
 
@@ -1019,7 +1022,7 @@
                             Payment Account
                         </h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Set up your bank account to receive
-                            payments from book sales (98% of revenue)</p>
+                            payments from book sales (90% of revenue)</p>
                     </div>
 
                     <div class="p-6">
@@ -1041,8 +1044,8 @@
                                 Information</h3>
                             <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
                                 <ul class="list-disc list-inside space-y-1">
-                                    <li><strong>You receive 98%</strong> of all book subscription payments</li>
-                                    <li>Platform fee of 2% helps us maintain and improve the platform</li>
+                                    <li><strong>You receive 90%</strong> of all book subscription payments</li>
+                                    <li>Platform fee of 10% helps us maintain and improve the platform</li>
                                     <li>Payments are automatically split and sent to your account</li>
                                     <li>Track detailed earnings in the <a href="{{ route('author.revenue.index') }}"
                                                                           class="underline font-medium">Revenue tab</a>
@@ -1078,7 +1081,7 @@
                             </p>
                             <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                 <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Your share (98%)
+                                    Your share (90%)
                                 </p>
                             </div>
                         </div>
@@ -1127,7 +1130,7 @@
                             <p class="text-xs text-gray-500 mt-1">Average per book sale</p>
                             <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                 <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    After 2% platform fee
+                                    After 10% platform fee
                                 </p>
                             </div>
                         </div>
@@ -1162,7 +1165,7 @@
                             </a>
                         </div>
                     </div>
-                @else
+                @elseif(!$author->subaccount)
                     <!-- No Revenue Stats - Show Setup Prompt -->
                     <div
                         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
