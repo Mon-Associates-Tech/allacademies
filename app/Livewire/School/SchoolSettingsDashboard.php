@@ -181,10 +181,26 @@ class SchoolSettingsDashboard extends Component
 
     public function mount()
     {
-        $this->school = Auth::user()->school;
+        $user = Auth::user();
+
+        // For owners/super admins, get school from context, otherwise get from user's school
+        if ($user->isOwner() || $user->isSuperAdmin()) {
+            // Check for selected school context
+            $schoolId = session('current_school_id');
+
+            if ($schoolId) {
+                $this->school = School::find($schoolId);
+            } else {
+                // No school selected - they need to select one
+                $this->school = null;
+            }
+        } else {
+            // Regular users get their assigned school
+            $this->school = $user->school;
+        }
 
         if (!$this->school) {
-            session()->flash('error', 'No school associated with your account.');
+            session()->flash('error', 'Please select a school to manage its settings.');
             return;
         }
 
@@ -198,7 +214,6 @@ class SchoolSettingsDashboard extends Component
         // Check for saved theme preference
         $this->darkMode = session('dark_mode', false);
     }
-
     public function loadSchoolData()
     {
         $this->schoolName = $this->school->name;
