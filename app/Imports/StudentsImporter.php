@@ -30,8 +30,14 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
 
     public function __construct($defaultSchoolId = null, $defaultPassword = 'password123')
     {
-        $this->defaultSchoolId = $defaultSchoolId;
-        $this->defaultPassword = $defaultPassword;
+        if (is_array($defaultSchoolId)) {
+            $options = $defaultSchoolId;
+            $this->defaultSchoolId = $options['default_school_id'] ?? null;
+            $this->defaultPassword = $options['default_password'] ?? 'password123';
+        } else {
+            $this->defaultSchoolId = $defaultSchoolId;
+            $this->defaultPassword = $defaultPassword;
+        }
     }
 
     /**
@@ -39,7 +45,9 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
      */
     public function collection(Collection $collection): void
     {
+        logInfo('data: '. json_encode($collection));
         foreach ($collection as $row) {
+
             try {
                 $this->processStudentRow($row->toArray());
                 $this->importedCount++;
@@ -56,6 +64,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
 
     protected function processStudentRow(array $row): void
     {
+
         // Clean and validate data
         $studentData = $this->cleanRowData($row);
 
@@ -191,20 +200,122 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         );
     }
 
+
     protected function handleAdditionalRelationships(Student $student, array $studentData): void
     {
-        // Add any additional relationship handling here
-        // For example, assigning to specific teachers, subjects, etc.
+        // 1. Auto-assign all subjects from the academic level to the student
+        if ($student->academicLevel) {
+            $this->assignLevelSubjectsToStudent($student);
+        }
+
+        // 2. Track academic progression/history
+        if ($student->academic_level_id || $student->academic_group_id) {
+            $this->createAcademicProgression($student, $studentData);
+        }
+
+        // 3. Assign to academic level's teachers (if you want automatic teacher-student relationships)
+        // $this->assignLevelTeachersToStudent($student);
+    }
+
+    /**
+     * Assign all subjects from the student's academic level
+     */
+    protected function assignLevelSubjectsToStudent(Student $student): void
+    {
+        $subjects = $student->academicLevel->academicSubjects;
+
+        if ($subjects->isEmpty()) {
+            return;
+        }
+
+        // Attach subjects with pivot data
+        $subjectData = [];
+        foreach ($subjects as $subject) {
+            $subjectData[$subject->id] = [
+                'is_active' => true,
+                'assigned_by' => auth()->id() ?? null,
+                'assigned_at' => now(),
+                'notes' => 'Auto-assigned from academic level during import'
+            ];
+        }
+
+        // Sync subjects (won't duplicate if already exists)
+        $student->academicSubjects()->syncWithoutDetaching($subjectData);
+
+        \Log::info("Assigned {$subjects->count()} subjects to student {$student->student_id}");
+    }
+
+    /**
+     * Create academic progression record
+     */
+    protected function createAcademicProgression(Student $student, array $studentData): void
+    {
+        try {
+            $student->academicProgression()->create([
+                'academic_level_id' => $student->academic_level_id,
+                'academic_group_id' => $student->academic_group_id,
+                'start_date' => $studentData['admission_date'] ?? now(),
+                'end_date' => null, // Will be set when they graduate or move levels
+                'status' => 'current',
+                'remarks' => 'Initial assignment during import'
+            ]);
+
+            \Log::info("Created academic progression for student {$student->student_id}");
+        } catch (\Exception $e) {
+            \Log::warning("Could not create academic progression: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Optional: Assign teachers from the academic level/group to the student
+     */
+    protected function assignLevelTeachersToStudent(Student $student): void
+    {
+        if (!$student->academicLevel) {
+            return;
+        }
+
+        // Get teachers from the academic level
+        $teachers = $student->academicLevel->teachers;
+
+        if ($teachers->isEmpty()) {
+            return;
+        }
+
+        // Attach teachers with pivot data
+        $teacherData = [];
+        foreach ($teachers as $teacher) {
+            $teacherData[$teacher->id] = [
+                'is_primary' => false, // You can set logic for primary teacher
+                'notes' => 'Auto-assigned during import'
+            ];
+        }
+
+        // Only assign the first teacher as primary
+        if ($teachers->isNotEmpty()) {
+            $teacherData[$teachers->first()->id]['is_primary'] = true;
+        }
+
+        $student->teachers()->syncWithoutDetaching($teacherData);
+
+        \Log::info("Assigned {$teachers->count()} teachers to student {$student->student_id}");
     }
 
     public function rules(): array
     {
         return [
             '*.email' => 'required|email',
-            '*.name' => 'required|string|min:2',
+            '*.first_name' => 'required|string|min:2',
+            '*.last_name' => 'required|string|min:2',
             '*.academic_level_id' => 'nullable|exists:academic_levels,id',
             '*.academic_group_id' => 'nullable|exists:academic_groups,id',
         ];
+    }
+
+    public function prepareForValidation($data, $index)
+    {
+     //   \Log::info("Row {$index} before validation:", $data);
+        return $data;
     }
 
     public function customValidationMessages(): array
@@ -212,7 +323,8 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         return [
             '*.email.required' => 'Email is required for each student',
             '*.email.email' => 'Email must be a valid email address',
-            '*.name.required' => 'Name is required for each student',
+            '*.first_name.required' => 'First Name is required for each student',
+            '*.last_name.required' => 'Last Name is required for each student',
             '*.academic_level_id.exists' => 'The specified academic level does not exist',
             '*.academic_group_id.exists' => 'The specified academic group does not exist',
         ];
