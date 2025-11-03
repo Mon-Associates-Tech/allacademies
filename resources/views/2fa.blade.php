@@ -121,6 +121,10 @@
         // Auto-focus the code input
         document.getElementById('code').focus();
 
+        const button = document.getElementById('verifyButton');
+        const buttonText = document.getElementById('buttonText');
+        const spinner = document.getElementById('loadingSpinner');
+
         // Timer countdown for code expiration (15 minutes)
         let timeLeft = 15 * 60; // 15 minutes in seconds
         const countdownElement = document.getElementById('countdown');
@@ -153,9 +157,6 @@
 
         // Form submission handling
         document.getElementById('twoFactorForm').addEventListener('submit', function() {
-            const button = document.getElementById('verifyButton');
-            const buttonText = document.getElementById('buttonText');
-            const spinner = document.getElementById('loadingSpinner');
 
             button.disabled = true;
             buttonText.textContent = 'Verifying...';
@@ -237,6 +238,8 @@
                 // Small delay to allow user to see the complete code
                 setTimeout(() => {
                     document.getElementById('twoFactorForm').submit();
+                    button.disabled = true;
+                    buttonText.textContent = 'Wait! Verifying OTP ...'
                 }, 500);
             }
         });
