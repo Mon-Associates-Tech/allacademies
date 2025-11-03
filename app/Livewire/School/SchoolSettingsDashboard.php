@@ -234,7 +234,7 @@ class SchoolSettingsDashboard extends Component
         $this->schoolDescription = $this->school->description;
         $this->studentCapacity = $this->school->student_capacity;
         $this->timezone = $this->school->timezone ?? 'UTC';
-        $this->currency = $this->school->currency ?? 'USD';
+        $this->currency = $this->school->currency ?? 'GHS';
     }
 
     public function loadAcademicYears()
@@ -789,11 +789,12 @@ class SchoolSettingsDashboard extends Component
 
     public function performImport()
     {
-        $this->validate([
-            'importFile' => 'required|file|mimes:csv,xlsx,xls|max:10240',
-            'importType' => 'required|in:students,teachers,librarians,administrators,parents',
-            'defaultPassword' => 'required|string|min:6'
-        ]);
+
+     //   $this->validate([
+      //      'importFile' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+     //       'importType' => 'required|in:students,teachers,librarians,administrators,parents',
+      //      'defaultPassword' => 'required|string|min:6'
+      //  ]);
 
         try {
             // Prepare import options
@@ -805,13 +806,13 @@ class SchoolSettingsDashboard extends Component
                 'send_welcome_email' => $this->sendWelcomeEmail,
             ];
 
+
             // Perform import using existing service
             $result = $this->importService->performImport(
                 $this->importFile,
                 $this->importType,
                 $options
             );
-
             if ($result['success']) {
                 $stats = $result['stats'];
                 session()->flash('success', "Import completed! Imported: {$stats['imported']}, Skipped: {$stats['skipped']}, Errors: {$stats['errors']}");
@@ -820,10 +821,12 @@ class SchoolSettingsDashboard extends Component
                 $this->loadStats();
             } else {
                 session()->flash('error', 'Import failed: ' . $result['message']);
+                logError('error '. json_encode($result));
             }
 
         } catch (\Exception $e) {
             session()->flash('error', 'Import failed: ' . $e->getMessage());
+            logError('error: '. $e->getMessage());
         }
     }
 }
