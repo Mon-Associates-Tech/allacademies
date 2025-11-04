@@ -315,9 +315,9 @@
                             x-model="modalData.role"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="subscriber">Subscriber</option>
-                        {{--                        <option value="student">Student</option>--}}
-                        {{--                        <option value="teacher">Teacher</option>--}}
-                        {{--                        <option value="librarian">Librarian</option>--}}
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="librarian">Librarian</option>
                         <option value="author">Author</option>
                         <option value="parent">Parent</option>
                         <option value="moderator">Moderator</option>
