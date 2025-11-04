@@ -9,6 +9,7 @@ use App\Livewire\Librarians\BookReturns;
 use App\Livewire\Librarians\OverdueBooks;
 use App\Livewire\Librarians\BookInventory;
 use App\Livewire\Librarians\StudentLibraryProfiles;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:librarian'])->prefix('librarian')->name('librarian.')->group(function () {
     Route::get('dashboard', LibraryDashboard::class)->name('dashboard');

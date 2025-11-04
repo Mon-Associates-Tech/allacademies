@@ -18,6 +18,7 @@ use Livewire\WithFileUploads;
 use Log;
 use setasign\Fpdi\Fpdi;
 use ValueError;
+use App\Enums\UserRole;
 
 class BookForm extends Component
 {
@@ -250,17 +251,17 @@ class BookForm extends Component
         $user = auth()->user();
 
         // Admin and owner can edit any book
-        if (in_array($user->role, ['admin', 'owner'])) {
+        if (in_array($user->role, [UserRole::ADMIN, UserRole::OWNER])) {
             return;
         }
 
         // Authors can only edit their own books
-        if ($user->role === 'author' && $this->book->author->user_id === $user->id) {
+        if ($user->role === UserRole::AUTHOR && $this->book->author->user_id === $user->id) {
             return;
         }
 
         // Teachers can edit books if they have permission (you might want to add a specific permission check)
-        if ($user->role === 'teacher') {
+        if ($user->role === UserRole::TEACHER) {
             // Add your teacher permission logic here
             // For now, allowing all teachers to edit books
             return;
@@ -310,7 +311,7 @@ class BookForm extends Component
         $this->existingSamplePdfFile = null;
     }
 
-    public function getPublishingStatusOptionsProperty()
+    public function getPublishingStatusOptionsProperty(): array
     {
         return PublishingStatus::getOptions();
     }
@@ -318,7 +319,7 @@ class BookForm extends Component
 
     // Get publishing status options for the view
 
-    public function getCurrentPublishingStatusProperty()
+    public function getCurrentPublishingStatusProperty(): PublishingStatus
     {
         try {
             return PublishingStatus::from($this->status);
@@ -329,12 +330,12 @@ class BookForm extends Component
 
     // Get current publishing status enum
 
-    public function getPageTitleProperty()
+    public function getPageTitleProperty(): string
     {
         return $this->mode === 'edit' ? 'Edit Book' : 'Create New Book';
     }
 
-    public function getSubmitButtonTextProperty()
+    public function getSubmitButtonTextProperty(): string
     {
         return $this->mode === 'edit' ? 'Update Book' : 'Create Book';
     }
@@ -386,6 +387,9 @@ class BookForm extends Component
         $this->resetValidation(['newCategoryName', 'newCategoryDescription']);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function createNewAuthor(): void
     {
         $this->validate([
@@ -618,9 +622,9 @@ class BookForm extends Component
             $user = auth()->user();
 
             return match ($user->role) {
-                'admin', 'owner' => redirect()->route('admin.book-management'),
-                'author' => redirect()->route('author.books.index'),
-                'teacher' => redirect()->route('books.index'),
+              UserRole::ADMIN, UserRole::OWNER  => redirect()->route('admin.book-management'),
+                UserRole::AUTHOR => redirect()->route('author.books.index'),
+                UserRole::TEACHER => redirect()->route('books.index'),
                 default => redirect()->back(),
             };
 
@@ -793,7 +797,7 @@ class BookForm extends Component
         return $mediaData;
     }
 
-    private function handleSamplePdfFile($book): void
+    private function handleSamplePdfFile(Book $book): void
     {
         $samplePath = $book->getAttributes()['sample_url'] ?? null;
 
@@ -981,34 +985,28 @@ class BookForm extends Component
         ]);
     }
 
-    public function removeExistingSingleAudioFile()
+    public function removeExistingSingleAudioFile(): void
     {
         $this->removeSingleAudioFile = true;
         $this->existingSingleAudio = null;
     }
 
-    public function removeExistingSingleVideoFile()
+    public function removeExistingSingleVideoFile(): void
     {
         $this->removeSingleVideoFile = true;
         $this->existingSingleVideo = null;
     }
 
-    public function removeChapterAudioFile($chapterIndex)
+    public function removeChapterAudioFile(int $chapterIndex): void
     {
         $this->removeChapterAudioFiles[$chapterIndex] = true;
         unset($this->existingChapterAudios[$chapterIndex]);
     }
 
-    public function removeChapterVideoFile($chapterIndex)
+    public function removeChapterVideoFile(int $chapterIndex): void
     {
         $this->removeChapterVideoFiles[$chapterIndex] = true;
         unset($this->existingChapterVideos[$chapterIndex]);
-    }
-
-    public function redirectIntended($default = '/', $navigate = false)
-    {
-
-        return redirect()->intended($default)->with('success', 'Book updated successfully.');
     }
 
     public function render()

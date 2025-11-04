@@ -247,32 +247,156 @@ class PaymentController extends Controller
 
 
     /**
-     * Book subscription payment
+     * Initialize book subscription payment with split payment to author
      */
     public function initializeBook($subscriptionId)
     {
-        $subscription = BookSubscription::findOrFail($subscriptionId);
+        $subscription = BookSubscription::with(['book.author.subaccount'])->findOrFail($subscriptionId);
+        $book = $subscription->book;
 
-        $data = [
+        // Check if book is free
+        if ($book->is_free) {
+            return redirect()->route('books.show', $book)
+                ->with('info', 'This book is free. No payment required.');
+        }
+
+        // Check if author has a subaccount for paid books
+        $author = $book->author;
+        $authorSubaccount = $author->subaccount;
+
+        $paymentData = [
             'email' => auth()->user()->email,
             'amount' => (int) $subscription->annual_fee * 100, // convert to kobo
             'metadata' => [
                 'subscription_id' => $subscription->id,
                 'type' => 'book',
                 'book_id' => $subscription->book_id,
+                'book_title' => $book->title,
+                'author_id' => $author->id,
+                'author_name' => $author->name,
                 'name' => auth()->user()->name,
                 'phone' => auth()->user()->phone ?? '0000000000',
             ],
             'callback_url' => route('payment.book.callback'),
         ];
 
-        $response = $this->paystack->initializeTransaction($data);
+        // Add subaccount for revenue split if author has one configured
+        if ($authorSubaccount && $authorSubaccount->subaccount_code) {
+            $paymentData['subaccount'] = $authorSubaccount->subaccount_code;
+
+            // Add bearer information for transaction charges
+            // 'account' means subaccount bears the charge
+            // 'subaccount' means the main account bears the charge
+            $paymentData['bearer'] = 'account';
+
+            // Add metadata about revenue split
+            $paymentData['metadata']['revenue_split'] = [
+                'platform_percentage' => $authorSubaccount->percentage_charge,
+                'author_percentage' => 100 - $authorSubaccount->percentage_charge,
+                'subaccount_code' => $authorSubaccount->subaccount_code,
+            ];
+        } else {
+            // Log warning if author doesn't have subaccount for paid book
+            \Log::warning('Author does not have subaccount configured for paid book', [
+                'author_id' => $author->id,
+                'book_id' => $book->id,
+                'subscription_id' => $subscription->id,
+            ]);
+
+            // You can either:
+            // 1. Proceed without split (all money goes to platform)
+            // 2. Require author to set up subaccount first
+            // For now, we'll proceed without split but notify
+            $paymentData['metadata']['note'] = 'Author subaccount not configured. Payment will go to platform.';
+        }
+
+        $response = $this->paystack->initializeTransaction($paymentData);
 
         return redirect($response['data']['authorization_url']);
     }
 
+    /**
+     * Handle book payment callback with revenue split tracking
+     */
+    public function bookCallback(Request $request)
+    {
+        $reference = $request->query('reference');
+        $response = $this->paystack->verifyTransaction($reference);
 
+        if ($response['status'] && $response['data']['status'] === 'success') {
+            $paymentDetails = $response['data'];
+            $subscriptionId = $paymentDetails['metadata']['subscription_id'];
 
+            // Find the BookSubscription
+            $subscription = BookSubscription::with(['book.author'])->findOrFail($subscriptionId);
+            $book = $subscription->book;
+            $author = $book->author;
+
+            DB::transaction(function () use ($subscription, $paymentDetails, $author) {
+                // 1. Update book subscription
+                $subscription->update([
+                    'status' => 'paid',
+                    'payment_completed_at' => now(),
+                    'end_date' => now()->addYear(),
+                ]);
+
+                // 2. Calculate revenue split
+                $totalAmount = $subscription->annual_fee;
+                $platformCharge = $author->subaccount ? $author->subaccount->percentage_charge : 0;
+                $platformAmount = ($totalAmount * $platformCharge) / 100;
+                $authorAmount = $totalAmount - $platformAmount;
+
+                // 3. Record payment with split information
+                Payment::create([
+                    'reference' => $paymentDetails['reference'],
+                    'amount' => $totalAmount,
+                    'currency' => $paymentDetails['currency'] ?? 'GHS',
+                    'status' => 'succeeded',
+                    'subscription_id' => null,
+                    'book_subscription_id' => $subscription->id,
+                    'gateway_reference' => $paymentDetails['id'] ?? null,
+                    'notes' => json_encode([
+                        'revenue_split' => [
+                            'total_amount' => $totalAmount,
+                            'platform_amount' => $platformAmount,
+                            'platform_percentage' => $platformCharge,
+                            'author_amount' => $authorAmount,
+                            'author_percentage' => 100 - $platformCharge,
+                            'author_id' => $author->id,
+                            'author_name' => $author->name,
+                            'subaccount_code' => $author->subaccount?->subaccount_code ?? null,
+                        ],
+                        'book_info' => [
+                            'book_id' => $subscription->book_id,
+                            'book_title' => $subscription->book->title,
+                        ],
+                    ]),
+                ]);
+
+                // 4. Log revenue split for analytics
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($subscription)
+                    ->withProperties([
+                        'action' => 'book_payment_completed',
+                        'total_amount' => $totalAmount,
+                        'platform_amount' => $platformAmount,
+                        'author_amount' => $authorAmount,
+                        'author_id' => $author->id,
+                        'book_id' => $subscription->book_id,
+                    ])
+                    ->log('Book subscription payment completed with revenue split');
+            });
+
+            return redirect()
+                ->to("/books/{$subscription->book_id}")
+                ->with('success', 'Book subscription paid successfully! You can now access the book.');
+        }
+
+        return redirect()
+            ->to("/books/{$subscription->book_id}")
+            ->with('error', 'Book subscription payment failed or was cancelled.');
+    }
 
     public function callback(Request $request)
     {
@@ -313,50 +437,6 @@ class PaymentController extends Controller
             ->with('error', 'Payment failed or was cancelled.');
     }
 
-
-    public function bookCallback(Request $request)
-    {
-        $reference = $request->query('reference');
-        $response = $this->paystack->verifyTransaction($reference);
-
-        if ($response['status'] && $response['data']['status'] === 'success') {
-            $paymentDetails = $response['data'];
-            $subscriptionId = $paymentDetails['metadata']['subscription_id'];
-
-            // Find the BookSubscription
-            $subscription = BookSubscription::findOrFail($subscriptionId);
-
-            DB::transaction(function () use ($subscription, $paymentDetails) {
-                // 1. Update book subscription
-                $subscription->update([
-                    'status' => 'paid',
-                    'payment_completed_at' => now(),
-                    'end_date' => now()->addYear(),
-                ]);
-
-                // 2. Record payment
-                Payment::create([
-                    'reference'            => $paymentDetails['reference'],
-                    'amount'               => $subscription->annual_fee,
-                    'currency'             => $paymentDetails['currency'] ?? 'GHS',
-                    'status'               => 'succeeded',
-                    'subscription_id'      => null, // because this is not a regular subscription
-                    'book_subscription_id' => $subscription->id,
-
-                ]);
-            });
-
-            return redirect()
-                ->to("/books/{$subscription->book_id}")
-                ->with('success', 'Book subscription paid successfully! Ref: ' . $subscription->reference);
-        }
-
-        return redirect()
-            ->to("/books/{$subscription->book_id}")
-            ->with('error', 'Book subscription payment failed or was cancelled.');
-    }
-
-
     //Sub Account
     public function initializeSubAccount(Request $request)
     {
@@ -380,23 +460,42 @@ class PaymentController extends Controller
     {
         $subscription = UserTokenSubscription::findOrFail($subscriptionId);
 
-        // Check if it's a free package
+        // Check if it's a free package - this should NOT reach here for free packages
         if ($subscription->package->isFree()) {
-            // Activate immediately for free packages
-            $subscription->update([
-                'status' => 'active',
-                'purchased_at' => now(),
+            \Log::warning('Free package reached payment initialization', [
+                'subscription_id' => $subscription->id,
+                'user_id' => auth()->id()
             ]);
 
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('success', 'Free token package activated successfully!');
+                ->with('error', 'Free trials do not require payment. Please contact support if you see this message.');
         }
+
+        // Check if reference already exists in a completed payment
+        $existingPayment = Payment::where('reference', $subscription->reference)
+            ->where('status', 'succeeded')
+            ->first();
+
+        if ($existingPayment) {
+            \Log::warning('Duplicate payment attempt', [
+                'subscription_id' => $subscription->id,
+                'reference' => $subscription->reference,
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('error', 'This subscription has already been paid for.');
+        }
+
+        // Generate a fresh unique reference for Paystack
+        $paystackReference = 'TOKEN-' . $subscription->id . '-' . time() . '-' . strtoupper(Str::random(6));
 
         $data = [
             'email' => auth()->user()->email,
             'amount' => (int) ($subscription->package->price * 100), // convert to kobo
-            'reference' => $subscription->reference,
+            'reference' => $paystackReference, // Use fresh reference
             'metadata' => [
                 'subscription_id' => $subscription->id,
                 'type' => 'token_subscription',
@@ -407,11 +506,25 @@ class PaymentController extends Controller
             'callback_url' => route('payment.token.callback'),
         ];
 
-        $response = $this->paystack->initializeTransaction($data);
+        try {
+            $response = $this->paystack->initializeTransaction($data);
 
-        return redirect($response['data']['authorization_url']);
+            // Store the Paystack reference for verification later
+            $subscription->update(['reference' => $paystackReference]);
+
+            return redirect($response['data']['authorization_url']);
+        } catch (\Exception $e) {
+            \Log::error('Paystack initialization failed', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('error', 'Failed to initialize payment. Please try again or contact support.');
+        }
     }
-
     public function tokenCallback(Request $request)
     {
         $reference = $request->query('reference');

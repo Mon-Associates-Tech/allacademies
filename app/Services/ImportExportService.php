@@ -15,7 +15,10 @@ class ImportExportService
 {
     protected $availableImporters = [
         'students' => StudentsImporter::class,
-        // Add more importers as they are created
+        'teachers' => TeachersImporter::class,
+        'librarians' => LibrariansImporter::class,
+        'administrators' => AdministratorsImporter::class,
+        'parents' => ParentsImporter::class,
     ];
 
     protected $availableExporters = [
@@ -146,6 +149,9 @@ class ImportExportService
         $columns = [
             'students' => ['name', 'email'],
             'teachers' => ['name', 'email'],
+            'librarians' => ['name', 'email'],
+            'administrators' => ['name', 'email'],
+            'parents' => ['name', 'email'],
             'books' => ['title', 'author'],
             'academic_subjects' => ['name'],
             'academic_levels' => ['name'],
@@ -164,22 +170,19 @@ class ImportExportService
                     'first_name' => 'John',
                     'last_name' => 'Doe',
                     'email' => 'john.doe@example.com',
-                    'academic_level' => 'Grade 10',
-                    'academic_group' => 'Science Group',
-                    'school' => 'Main Campus',
-                    'student_group' => 'Class A',
-                    'student_id' => 'STU001'
-                ],
-                [
-                    'name' => 'Jane Smith',
-                    'first_name' => 'Jane',
-                    'last_name' => 'Smith',
-                    'email' => 'jane.smith@example.com',
-                    'academic_level' => 'Grade 11',
-                    'academic_group' => 'Arts Group',
-                    'school' => 'Main Campus',
-                    'student_group' => 'Class B',
-                    'student_id' => 'STU002'
+                    'phone' => '+233201234567',
+                    'date_of_birth' => '2010-05-15',
+                    'gender' => 'Male',
+                    'academic_group_id' => '1',
+                    'academic_level_id' => '1',
+                    'student_id' => 'STD2024001',
+                    'admission_date' => '2024-01-15',
+                    'blood_group' => 'O+',
+                    'address' => '123 Main Street, Accra',
+                    'parent_name' => 'Jane Doe',
+                    'parent_phone' => '+233207654321',
+                    'parent_email' => 'jane.doe@example.com',
+                    'emergency_contact' => '+233501234567'
                 ]
             ],
             'teachers' => [
@@ -188,9 +191,61 @@ class ImportExportService
                     'first_name' => 'Alice',
                     'last_name' => 'Johnson',
                     'email' => 'alice.johnson@school.edu',
-                    'department' => 'Mathematics',
-                    'school' => 'Main Campus',
-                    'employee_id' => 'TCH001'
+                    'phone' => '+233301234567',
+                    'date_of_birth' => '1985-03-20',
+                    'gender' => 'Female',
+                    'qualification' => 'Masters in Mathematics',
+                    'specialization' => 'Mathematics',
+                    'employee_id' => 'TCH2024001',
+                    'hire_date' => '2024-01-01',
+                    'address' => '456 Teacher Lane, Accra',
+                    'emergency_contact' => '+233507654321',
+                ]
+            ],
+            'librarians' => [
+                [
+                    'name' => 'Robert Johnson',
+                    'first_name' => 'Robert',
+                    'last_name' => 'Johnson',
+                    'email' => 'robert.johnson@school.edu',
+                    'phone' => '+233401234567',
+                    'date_of_birth' => '1990-07-10',
+                    'gender' => 'Male',
+                    'qualification' => 'Bachelors in Library Science',
+                    'employee_id' => 'LIB2024001',
+                    'hire_date' => '2024-01-01',
+                    'address' => '789 Library Road, Accra',
+                    'emergency_contact' => '+233607654321'
+                ]
+            ],
+            'administrators' => [
+                [
+                    'name' => 'Mary Williams',
+                    'first_name' => 'Mary',
+                    'last_name' => 'Williams',
+                    'email' => 'mary.williams@school.edu',
+                    'phone' => '+233501234567',
+                    'date_of_birth' => '1980-11-25',
+                    'gender' => 'Female',
+                    'position' => 'Principal',
+                    'department' => 'Administration',
+                    'employee_id' => 'ADM2024001',
+                    'hire_date' => '2024-01-01',
+                    'address' => '321 Admin Street, Accra',
+                    'emergency_contact' => '+233707654321'
+                ]
+            ],
+            'parents' => [
+                [
+                    'name' => 'David Brown',
+                    'first_name' => 'David',
+                    'last_name' => 'Brown',
+                    'email' => 'david.brown@example.com',
+                    'phone' => '+233601234567',
+                    'address' => '654 Parent Avenue, Accra',
+                    'relationship' => 'Father',
+                    'occupation' => 'Engineer',
+                    'student_id' => 'STD2024001', // Link to student
                 ]
             ],
             'books' => [

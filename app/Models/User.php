@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
@@ -179,6 +180,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Only check email verification if not forcing creation
         if (!$force && !$this->hasVerifiedEmail()) {
+            return;
+        }
+
+        // Check if user has ever had a trial subscription
+        if ($this->hasEverHadTrial()) {
             return;
         }
 
@@ -517,6 +523,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user has ever had a trial subscription
+     */
+    public function hasEverHadTrial(): bool
+    {
+        return $this->tokenSubscriptions()
+            ->where('action_type', 'trial')
+            ->exists();
+    }
+
+    /**
      * Get all token purchases for this user (including top-ups)
      */
     public function tokenPurchases()
@@ -549,10 +565,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
-        // Non-subscribers have unlimited access - use enum comparison
-        if ($this->role !== UserRole::SUBSCRIBER) {
-            return true;
-        }
 
         $subscription = $this->activeTokenSubscription;
 
@@ -562,7 +574,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Check if expired
         if ($subscription->isExpired()) {
-            $subscription->deactivate('expired');
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
             return false;
         }
 
@@ -632,6 +644,14 @@ class User extends Authenticatable implements MustVerifyEmail
             UserRole::AUTHOR,
             UserRole::LIBRARIAN,
         ]);
+    }
+
+    /**
+     * Get the user's subaccount (for direct user payments)
+     */
+    public function subaccount(): MorphOne
+    {
+        return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 
 }

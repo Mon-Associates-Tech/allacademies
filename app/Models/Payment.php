@@ -22,6 +22,8 @@ class Payment extends Model
         'status',
         'subscription_id',
         'book_subscription_id',
+        'token_subscription_id',
+        'notes',
     ];
 
     /**
@@ -29,6 +31,8 @@ class Payment extends Model
      */
     protected $casts = [
         'status' => PaymentStatus::class,
+        'amount' => 'decimal:2',
+        'notes' => 'array',
     ];
 
     public function subscription()
@@ -44,5 +48,40 @@ class Payment extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get revenue split information
+     */
+    public function getRevenueSplitAttribute(): ?array
+    {
+        if (is_array($this->notes) && isset($this->notes['revenue_split'])) {
+            return $this->notes['revenue_split'];
+        }
+        return null;
+    }
+
+    /**
+     * Check if this payment has revenue split
+     */
+    public function hasRevenueSplit(): bool
+    {
+        return $this->revenue_split !== null;
+    }
+
+    /**
+     * Get platform amount from split
+     */
+    public function getPlatformAmountAttribute(): float
+    {
+        return $this->revenue_split['platform_amount'] ?? 0;
+    }
+
+    /**
+     * Get author amount from split
+     */
+    public function getAuthorAmountAttribute(): float
+    {
+        return $this->revenue_split['author_amount'] ?? 0;
     }
 }

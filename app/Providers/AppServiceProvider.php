@@ -112,6 +112,7 @@ class AppServiceProvider extends ServiceProvider
             'open_ai_token_package' => \App\Models\Chat\OpenAiTokenPackage::class,
             'user_book' => UserBook::class,
             'user_book_share' => \App\Models\UserBookShare::class,
+            'academic_year' => \App\Models\AcademicYear::class,
 
         ]);
     }

@@ -131,5 +131,40 @@ class UserBook extends Model
     {
         return $this->shares()->count();
     }
+
+    /**
+     * Check if a user has access to this book
+     */
+    public function userHasAccess(User $user): bool
+    {
+        // Owner always has access
+        if ($this->user_id === $user->id) {
+            return true;
+        }
+
+        // Check active shares
+        return UserBookShare::where('user_book_id', $this->id)
+            ->active()
+            ->forUser($user)
+            ->exists();
+    }
+
+    /**
+     * Get all users who have access to this book
+     */
+    public function getUsersWithAccess()
+    {
+        $shares = $this->shares()->active()->get();
+        $users = collect([$this->user]); // Include owner
+
+        foreach ($shares as $share) {
+            $affected = $share->getAffectedUsers();
+            if ($affected) {
+                $users = $users->merge($affected);
+            }
+        }
+
+        return $users->unique('id');
+    }
 }
 

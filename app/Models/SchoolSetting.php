@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 class SchoolSetting extends Model
@@ -11,6 +12,7 @@ class SchoolSetting extends Model
     use HasFactory;
 
     protected $fillable = [
+        'school_id',
         'key',
         'type',
         'value',
@@ -27,6 +29,10 @@ class SchoolSetting extends Model
         'required' => 'boolean'
     ];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
     public function getValueAttribute($value)
     {
         return match ($this->type) {
@@ -75,5 +81,49 @@ class SchoolSetting extends Model
             ->map(function ($group) {
                 return $group->keyBy('key');
             });
+    }
+
+    public static function getForSchool($schoolId, $key, $default = null)
+    {
+        $setting = static::where('school_id', $schoolId)
+            ->where('key', $key)
+            ->first();
+
+        return $setting ? $setting->value : $default;
+    }
+
+    public static function setForSchool($schoolId, $key, $value)
+    {
+        $setting = static::where('school_id', $schoolId)
+            ->where('key', $key)
+            ->first();
+
+        if ($setting) {
+            $setting->update(['value' => $value]);
+        }
+
+        return $setting;
+    }
+
+    public static function getGroupedForSchool($schoolId)
+    {
+        return static::where('school_id', $schoolId)
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('group')
+            ->map(function ($group) {
+                return $group->keyBy('key');
+            });
+    }
+
+    // Scopes
+    public function scopeForSchool($query, $schoolId)
+    {
+        return $query->where('school_id', $schoolId);
+    }
+
+    public function scopeByGroup($query, $group)
+    {
+        return $query->where('group', $group);
     }
 }

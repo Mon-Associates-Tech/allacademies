@@ -164,8 +164,9 @@ class SchoolController extends Controller
         $schoolId = Auth::user()->school_id;
 
         // Fetch groups and levels that belong to the logged-in admin’s school
-        $academicGroups = AcademicGroup::where('school_id', $schoolId)->get();
+//        $academicGroups = AcademicGroup::where('school_id', $schoolId)->get();
         $academicLevels = AcademicLevel::where('school_id', $schoolId)->get();
+        $academicGroups = auth()->user()->school?->academicGroups()->get();
 
 
         // school_academic_group
@@ -224,7 +225,7 @@ CREATE TABLE `school_fees` (
   `authorization_url` VARCHAR(500) NULL,
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
+
   CONSTRAINT `fk_school_fees_school_id` FOREIGN KEY (`school_id`) REFERENCES `schools`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

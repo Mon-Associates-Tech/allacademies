@@ -14,6 +14,17 @@ class PaystackService
     {
     }
 
+    public function createSubAccount(array $data): array
+    {
+        $this->initialize();
+
+        $response = $this->client->post('/subaccount', [
+            'json' => $data
+        ]);
+
+        return json_decode($response->getBody(), true);
+    }
+
     protected function initialize()
     {
         if ($this->initialized) {
@@ -70,17 +81,19 @@ class PaystackService
         return $isSpecialUser;
     }
 
-    // 🔹 Create Subaccount
-    public function createSubAccount(array $data): array
+    // 🔹 Update Subaccount
+
+    public function updateSubAccount(string $subaccountCode, array $data): array
     {
-        $this->initialize(); 
-        
-        $response = $this->client->post('/subaccount', [
+        $this->initialize();
+
+        $response = $this->client->put("/subaccount/{$subaccountCode}", [
             'json' => $data
         ]);
 
         return json_decode($response->getBody(), true);
     }
+
 
     // 🔹 Initialize Transaction
     public function initializeTransaction(array $data): array

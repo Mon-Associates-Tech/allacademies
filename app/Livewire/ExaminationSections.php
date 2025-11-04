@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -9,18 +11,18 @@ class ExaminationSections extends Component
 {
 
     use withFileUploads;
-    public $topics;
+    public array $topics;
 
-    public $sections;
+    public array $sections;
 
-    public $subtopics;
+    public array $subtopics;
 
-    public $instructions;
-    public $metafields = [];
+    public array $instructions;
+    public array $metafields = [];
 
     public array $selectedOptions = [];
 
-    public function plus()
+    public function plus():void
     {
         $this->sections[] = [
             'name' => '',
@@ -33,7 +35,7 @@ class ExaminationSections extends Component
         ];
     }
 
-    public function minus()
+    public function minus():void
     {
         array_pop($this->sections);
     }
@@ -42,9 +44,9 @@ class ExaminationSections extends Component
     {
         $this->topics = $topics;
 
-        $this->sections = old('sections') ?? [
+        $this->sections = old('sections',  [
             ['name' => '', 'type' => '', 'count' => '', 'topics' => [], 'instructions' => '', 'subtopics' => [], 'metafields' => []],
-        ];
+        ]);
     }
 
     public function render()
@@ -52,17 +54,17 @@ class ExaminationSections extends Component
         return view('livewire.examination-sections');
     }
 
-    public function countQuestions($topic, $type)
+    public function countQuestions(AcademicTopic $topic, mixed $type):int
     {
         return $topic[$type . '_count'] ?? 0;
     }
 
-    public function countSubQuestions($subtopic, $type)
+    public function countSubQuestions(AcademicSubtopic $subtopic, mixed $type):int
     {
         return $subtopic[$type . '_count'] ?? 0;
     }
 
-    public function addMetafield()
+    public function addMetafield(): array
     {
         $this->metafields[] = [
             'option' => null,
@@ -72,9 +74,8 @@ class ExaminationSections extends Component
         ];
     }
 
-    public function __construct($id = null)
+    public function __construct(int $id = null)
     {
-//        parent::__construct($id);
         $this->metafields[] = [
             'option' => null,
             'pages_count' => 1,
@@ -82,17 +83,5 @@ class ExaminationSections extends Component
             'file' => null,
         ];
     }
-
-//    public function save()
-//    {
-//        foreach ($this->sections as $i => &$section) {
-//            if (isset($section['document']) && $section['document'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
-//                $section['document'] = $section['document']->store('documents', 'public');
-//            }
-//        }
-//
-//        // Pass the processed data to controller or save to DB
-//    }
-
 
 }

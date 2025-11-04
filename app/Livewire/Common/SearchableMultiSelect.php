@@ -119,6 +119,7 @@ class SearchableMultiSelect extends Component
             } else {
                 $this->selected[] = $value;
             }
+            $this->search = '';
         } else {
             $this->selected = [$value];
             $this->dropdownOpen = false;

@@ -93,7 +93,7 @@ class AcademicChat extends Component
         $this->response_length = 1000;
     }
 
-    public function checkTokenAvailability()
+    public function checkTokenAvailability(): void
     {
         $user = auth()->user();
 
@@ -124,12 +124,12 @@ class AcademicChat extends Component
         if ($subscription->isExpired()) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'expired';
-            $subscription->deactivate('expired');
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
             return;
         }
 
         // Check if user has at least minimum tokens (e.g., 100 tokens for a basic chat)
-        if (!$user->hasOpenAiTokens(100)) {
+        if (!$user->hasOpenAiTokens(200)) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'insufficient';
             return;

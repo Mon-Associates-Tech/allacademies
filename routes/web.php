@@ -15,6 +15,7 @@ use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GroupBookSubscriptionController;
+use App\Http\Controllers\ImportTemplateController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonNoteController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignInController;
@@ -42,7 +44,6 @@ use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
 use App\Livewire\Learning\BookQuizInterface;
-use App\Livewire\Students\Courses;
 use App\Livewire\Teachers\EssayGrader;
 use App\Models\Assessment;
 use App\Models\Student;
@@ -340,10 +341,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Academic Settings
-    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
+//    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
 
     // School Settings
-    Route::get('/school-settings', \App\Livewire\SchoolSettings\Index::class)->name('school-settings.index');
+    Route::get('/school-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('school-settings.index');
+    Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)
+        ->name('school-settings.fee-structure.setup');
 });
 
 // Admin Routes
@@ -427,43 +430,6 @@ Route::get('/feepayment/callback/{student}', [PaymentController::class, 'payment
 Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
 
 
-
-
-
-Route::get('mailtest', function () {
-    try {
-        $testEmail = auth()->check() ? auth()->user()->email : 'test@example.com';
-
-        Mail::raw('This is a test email from ' . config('app.name'), function ($message) use ($testEmail) {
-            $message->to($testEmail)
-                ->subject('Test Email - ' . now()->format('Y-m-d H:i:s'));
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Test email sent successfully to ' . $testEmail,
-            'mail_driver' => config('mail.default'),
-            'from_address' => config('mail.from.address'),
-            'timestamp' => now()->toDateTimeString()
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'mail_driver' => config('mail.default'),
-            'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode for trace'
-        ], 500);
-    }
-});
-
-
-
-
-
-
-
-
 Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])
     ->name('subscriptions.toggle-test-mode')
     ->middleware('auth');
@@ -500,9 +466,11 @@ Route::middleware(['auth'])->group(function () {
     })->name('user-books.show');
     Route::get('/user-books/{userBook}/edit', \App\Livewire\UserBooks\UserBookForm::class)->name('user-books.edit');
 
+    Route::get('/{userBook}/manage-shares', \App\Livewire\UserBooks\ManageShares::class)
+        ->name('user-books.manage-shares');
 });
 
-use App\Http\Controllers\SchoolController;
+
 
 Route::prefix('schools')->group(function () {
     Route::get('/create', [SchoolController::class, 'create'])->name('schools.create');
@@ -510,9 +478,6 @@ Route::prefix('schools')->group(function () {
     Route::post('/{school}/collect-fees', [SchoolController::class, 'collectFees'])->name('schools.collectFees');
 });
 Route::get('/payment/callback/school-fees', [SchoolController::class, 'schoolFeesCallback'])->name('schoolfees.callback');
-
-
-
 
 
 // School fees setup routes (inside SchoolController)
@@ -532,6 +497,17 @@ Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])
 })->name('academic.term.switch');
 
 
+Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchoolDashboard::class)
+    ->name('school.comprehensive-view')
+    ->middleware(['auth', 'verified']);
+
+Route::get('school/import-formats', [ImportTemplateController::class, 'viewFormats'])
+    ->name('school.import-formats')
+    ->middleware(['auth', 'verified']);
+
+Route::get('school/download-template/{type}', [ImportTemplateController::class, 'download'])
+    ->name('school.download-template')
+    ->middleware(['auth', 'verified']);
 
 // Include additional route files
 
@@ -543,7 +519,7 @@ include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'academic.php';
 
-// 
+//
 include_once 'subscriber.php';
 
 
