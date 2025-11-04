@@ -538,16 +538,34 @@ class Book extends Model
             ->get();
     }
 
-    public function getTableOfContentsAttribute()
-    {
-        // First try to get from relationship
-        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-            return $this->tableOfContents->content;
-        }
+    // public function getTableOfContentsAttribute()
+    // {
+    //     // First try to get from relationship
+    //     if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+    //         return $this->tableOfContents->content;
+    //     }
 
-        // If no relation exists, generate default
-        return $this->generateDefaultTableOfContents();
+    //     // If no relation exists, generate default
+    //     return $this->generateDefaultTableOfContents();
+    // }
+
+
+    public function getTableOfContentsAttribute($value)
+{
+    // Use DB value if it exists
+    if (!empty($value)) {
+        return is_string($value) ? json_decode($value, true) : $value;
     }
+
+    // Then fallback to relationship
+    if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+        return $this->tableOfContents->content;
+    }
+
+    // Otherwise, generate a default
+    return $this->generateDefaultTableOfContents();
+}
+
 
     public function getFormattedTableOfContentsAttribute(): array
     {

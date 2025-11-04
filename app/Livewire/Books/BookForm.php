@@ -709,9 +709,10 @@ class BookForm extends Component
         ]);
 
         $book->categories()->attach($this->bookCategoryIds);
-        if ($pdfPath) {
-           ConvertBookToAudioJob::dispatch($book);
-         }
+
+       if ($this->hasAudio && $pdfPath) {
+          ConvertBookToAudioJob::dispatch($book);
+      }
 
         $this->handleSamplePdfFile($book);
 
@@ -973,9 +974,9 @@ class BookForm extends Component
 
         $this->book->categories()->sync($this->bookCategoryIds);
 
-        if ($this->pdfFile) {
-           //ConvertBookToAudioJob::dispatch($this->book);
-       }
+       if ($this->hasAudio && $pdfPath) {
+          ConvertBookToAudioJob::dispatch($this->book);
+      }
 
         $this->book->media()->update([
             'single_audio' => $mediaData['single_audio'],

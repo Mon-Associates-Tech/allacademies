@@ -49,11 +49,10 @@ class ConvertBookToAudioJob implements ShouldQueue
                 return;
             }
 
-            // Extract pages
+            // 🧠 Parse PDF
             $parser = new Parser();
             $pdf = $parser->parseFile($pdfPath);
             $pages = $pdf->getPages();
-
             if (empty($pages)) {
                 Log::error("❌ No pages found in PDF for book ID {$book->id}");
                 return;
@@ -61,35 +60,59 @@ class ConvertBookToAudioJob implements ShouldQueue
 
             Log::info("📄 Total pages: " . count($pages));
 
+            // 🧭 Normalize the table_of_contents
+            $toc = $this->normalizeToc($book->table_of_contents);
+            if (empty($toc)) {
+                Log::error("❌ No valid chapters found in TOC for book ID {$book->id}");
+                return;
+            }
+
+            Log::info("🧭 Normalized TOC: " . json_encode($toc));
+            Log::info("🧭 Found " . count($toc) . " chapters in TOC.");
+
             $apiKey = config('services.openai.key');
+
+            // ✅ Create proper folder structure
+            $baseFolder = "audio-books/{$book->id}";
+            $chaptersFolder = "{$baseFolder}/chapters";
+            Storage::disk('public')->makeDirectory($chaptersFolder);
+
             $chapterAudios = [];
-            $pageBatchSize = 10;
-            $volume = 1;
 
-            $pageGroups = array_chunk($pages, $pageBatchSize);
+            // 🔁 Process each chapter
+            foreach ($toc as $chapter) {
+                $chapterNum = $chapter['chapter'];
+                $pageStart = $chapter['page_start'];
+                $pageEnd = $chapter['page_end'];
 
-            foreach ($pageGroups as $pageSet) {
-                // Concatenate text for this 10-page batch
+                Log::info("🎙 Processing Chapter {$chapterNum}: pages {$pageStart}–{$pageEnd}");
+
+                // Extract text for this chapter
                 $text = '';
-                foreach ($pageSet as $page) {
-                    $text .= $page->getText() . "\n";
+                for ($i = $pageStart - 1; $i < $pageEnd && isset($pages[$i]); $i++) {
+                    $text .= $pages[$i]->getText() . "\n";
                 }
 
+                // Clean the text
                 $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
                 $text = preg_replace('/[^\P{C}\n]+/u', '', $text);
                 $text = preg_replace('/\s+/', ' ', $text);
                 $text = trim($text);
 
-                if (empty($text)) continue;
+                if (empty($text)) {
+                    Log::warning("⚠️ No text extracted for Chapter {$chapterNum}");
+                    continue;
+                }
 
-                // Split into smaller chunks to avoid TTS token limits (~800 chars)
+                // Split into chunks (800 characters each)
                 $chunks = str_split($text, 800);
-                $volumeAudioPaths = [];
+                $chunkPaths = [];
 
                 foreach ($chunks as $chunkIndex => $chunk) {
-                    if (empty(trim($chunk))) continue;
+                    $chunk = trim($chunk);
+                    if (empty($chunk)) continue;
 
-                    Log::info("🔊 Converting Volume {$volume}, Chunk " . ($chunkIndex + 1) . "/" . count($chunks));
+                    Log::info("🔊 Chapter {$chapterNum}, Chunk " . ($chunkIndex + 1) . "/" . count($chunks));
 
                     $payload = [
                         'model' => 'gpt-4o-mini-tts',
@@ -102,68 +125,120 @@ class ConvertBookToAudioJob implements ShouldQueue
                         $response = Http::withHeaders([
                             'Authorization' => "Bearer {$apiKey}",
                             'Content-Type' => 'application/json',
-                        ])->timeout(300)->post('https://api.openai.com/v1/audio/speech', $payload);
+                        ])->timeout(300)
+                            ->post('https://api.openai.com/v1/audio/speech', $payload);
 
                         if ($response->failed()) {
-                            Log::error("❌ Failed chunk {$chunkIndex} in Volume {$volume}: " . $response->body());
+                            Log::error("❌ Failed chunk {$chunkIndex} in Chapter {$chapterNum}: " . $response->body());
                             continue;
                         }
 
-                        $chunkPath = "book-audio/temp_chunk_{$book->id}_vol{$volume}_{$chunkIndex}.mp3";
-                        Storage::disk('public')->put($chunkPath, $response->body());
-                        $volumeAudioPaths[] = Storage::disk('public')->path($chunkPath);
+                        $tempChunkPath = "{$chaptersFolder}/temp_chunk_ch{$chapterNum}_{$chunkIndex}.mp3";
+                        Storage::disk('public')->put($tempChunkPath, $response->body());
+                        $chunkPaths[] = Storage::disk('public')->path($tempChunkPath);
 
-                        usleep(300000); // slight delay
+                        // Small rate limit pause
+                        usleep(300000);
                     } catch (\Throwable $ex) {
-                        Log::error("⚠️ Exception in chunk {$chunkIndex}: " . $ex->getMessage());
+                        Log::error("⚠️ Exception in chunk {$chunkIndex} of Chapter {$chapterNum}: " . $ex->getMessage());
                         continue;
                     }
                 }
 
-                // Merge chunks for this 10-page volume
-                if (!empty($volumeAudioPaths)) {
-                    $finalVolumePath = "book-audio/book-{$book->id}_vol{$volume}.mp3";
-                    $merged = fopen(Storage::disk('public')->path($finalVolumePath), 'wb');
-                    foreach ($volumeAudioPaths as $path) {
+                // Merge chunks into one file per chapter
+                if (!empty($chunkPaths)) {
+                    $chapterPath = "{$chaptersFolder}/chapter{$chapterNum}.mp3";
+                    $chapterFullPath = Storage::disk('public')->path($chapterPath);
+
+                    $merged = fopen($chapterFullPath, 'wb');
+                    foreach ($chunkPaths as $path) {
                         fwrite($merged, file_get_contents($path));
                         @unlink($path);
                     }
                     fclose($merged);
 
-                    $chapterAudios[] = $finalVolumePath;
+                    $chapterAudios[] = $chapterPath;
+                    Log::info("✅ Created audio for Chapter {$chapterNum}");
                 }
-
-                $volume++;
             }
 
             if (empty($chapterAudios)) {
-                Log::error("❌ No audio volumes generated for book ID {$book->id}");
+                Log::error("❌ No chapter audios generated for book ID {$book->id}");
                 return;
             }
 
-            // Merge all volumes into **one final audio file**
-            $finalSingleAudio = "book-audio/book-{$book->id}_audio.mp3";
+            // ✅ Merge all chapters into a single audio file inside the same book folder
+            $finalSingleAudio = "{$baseFolder}/book_audio.mp3";
             $finalSinglePath = Storage::disk('public')->path($finalSingleAudio);
 
             $mergedSingle = fopen($finalSinglePath, 'wb');
-            foreach ($chapterAudios as $volPath) {
-                fwrite($mergedSingle, file_get_contents(Storage::disk('public')->path($volPath)));
-                @unlink(Storage::disk('public')->path($volPath)); // clean up temp volume
+            foreach ($chapterAudios as $chPath) {
+                $fullPath = Storage::disk('public')->path($chPath);
+                if (file_exists($fullPath)) {
+                    fwrite($mergedSingle, file_get_contents($fullPath));
+                }
             }
             fclose($mergedSingle);
 
+            // ✅ Update database
             $book->update(['has_audio' => true]);
             $book->media()->updateOrCreate(
                 ['book_id' => $book->id],
                 [
-                    'chapter_audios' => $chapterAudios,    // keep all volume paths
-                    'single_audio' => $finalSingleAudio,   // final merged audio
+                    'chapter_audios' => $chapterAudios,
+                    'single_audio' => $finalSingleAudio,
                 ]
             );
 
-            Log::info("✅ Completed audio conversion for book ID {$book->id} with " . count($chapterAudios) . " volumes");
+            Log::info("✅ Completed audio conversion for book ID {$book->id} with " . count($chapterAudios) . " chapters");
+
         } catch (\Throwable $e) {
             Log::error("❌ Fatal error in ConvertBookToAudioJob (book ID {$this->bookId}): {$e->getMessage()}");
+            Log::error($e->getTraceAsString());
         }
+    }
+
+    /**
+     * 🧭 Normalize table_of_contents from JSON string to array of chapters.
+     */
+    private function normalizeToc($toc): array
+    {
+        if (empty($toc)) {
+            return [];
+        }
+
+        // Decode JSON if it's a string
+        if (is_string($toc)) {
+            $decoded = json_decode($toc, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $toc = $decoded;
+            } else {
+                Log::error("❌ Failed to decode table_of_contents JSON: " . json_last_error_msg());
+                return [];
+            }
+        }
+
+        if (!is_array($toc)) {
+            return [];
+        }
+
+        // Filter and normalize each chapter
+        return collect($toc)
+            ->filter(function ($ch) {
+                return is_array($ch)
+                    && isset($ch['chapter'], $ch['page_start'], $ch['page_end'])
+                    && (int) $ch['chapter'] > 0;
+            })
+            ->map(function ($ch) {
+                return [
+                    'chapter' => (int) $ch['chapter'],
+                    'title' => $ch['title'] ?? "Chapter {$ch['chapter']}",
+                    'page_start' => (int) $ch['page_start'],
+                    'page_end' => (int) $ch['page_end'],
+                ];
+            })
+            ->sortBy('chapter')
+            ->values()
+            ->toArray();
     }
 }

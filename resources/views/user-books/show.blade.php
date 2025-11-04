@@ -638,7 +638,7 @@
 
                                                   {{-- Debug: see what chapter_audios contains --}}
 
-{{-- @if($userBook->single_audio)
+@if($userBook->single_audio)
     <div class="mb-6">
         <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
         <audio controls class="w-full">
@@ -646,7 +646,8 @@
             Your browser does not support the audio element.
         </audio>
     </div>
-@endif --}}
+@endif
+
 {{-- Chapter Audios (multi-volume) --}}
 @if($userBook->chapter_audios && count($userBook->chapter_audios) > 0)
     <div>
