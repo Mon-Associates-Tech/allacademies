@@ -165,7 +165,7 @@ class BookController extends Controller
             return response()->json(['error' => 'Already subscribed to this book'], 400);
         }
 
-        // Free book - direct subscription
+        // Free book - direct subscription 
         if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
             $subscription = BookSubscription::create([
                 'user_id' => $user->id,

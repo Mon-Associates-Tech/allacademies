@@ -585,10 +585,16 @@ class Book extends Model
         return $this->media?->getSingleVideoAttribute();
     }
 
+    // public function getChapterAudiosAttribute(): array
+    // {
+    //     return $this->media?->getChapterAudiosAttribute() ?? [];
+    // }
+
     public function getChapterAudiosAttribute(): array
-    {
-        return $this->media?->getChapterAudiosAttribute() ?? [];
-    }
+{
+    $media = $this->media()->first(); // Always fetch the media row
+    return $media?->chapter_audios ?? [];
+}
 
     public function getChapterVideosAttribute(): array
     {
