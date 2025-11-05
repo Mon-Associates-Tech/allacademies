@@ -40,16 +40,26 @@ class BookMedia extends Model
             : null; // asset('/media/video/the_ultimate_gift.mp4');
     }
 
-    public function getChapterAudiosAttribute(): array
-    {
-        $files = $this->attributes['chapter_audios'] ?? [];
-        if(is_array($files)){
-            return array_map(function($file) {
-                return asset('storage/' . $file);
-            }, $files);
-        }
-      return [];
+    // public function getChapterAudiosAttribute(): array
+    // {
+    //     $files = $this->attributes['chapter_audios'] ?? [];
+    //     if(is_array($files)){
+    //         return array_map(function($file) {
+    //             return asset('storage/' . $file);
+    //         }, $files);
+    //     }
+    //   return [];
+    // }
+
+public function getChapterAudiosAttribute(): array
+{
+    $files = $this->attributes['chapter_audios'] ?? [];
+    if (!is_array($files)) {
+        return [];
     }
+
+    return array_map(fn($file) => asset('storage/' . $file), $files);
+}
 
     public function getChapterVideosAttribute(): array
     {

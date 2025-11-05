@@ -168,6 +168,10 @@ class SchoolController extends Controller
         $academicLevels = AcademicLevel::where('school_id', $schoolId)->get();
         $academicGroups = auth()->user()->school?->academicGroups()->get();
 
+
+        // school_academic_group
+        // school_academic_level
+
         // Academic periods (terms) are global — no school_id column
         $academicTerms = AcademicPeriod::orderBy('start_date', 'asc')->get();
 
@@ -242,6 +246,15 @@ CREATE TABLE `subaccounts` (
   CONSTRAINT `subaccounts_school_id_foreign` FOREIGN KEY (`school_id`)
     REFERENCES `schools`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+*/
+
+
+/*
+
+
+
 
 
 */

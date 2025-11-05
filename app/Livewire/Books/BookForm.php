@@ -7,6 +7,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\User;
+use App\Jobs\ConvertBookToAudioJob;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -100,6 +101,8 @@ class BookForm extends Component
         'update-bookCategoryIds' => 'updateBookCategoryIds',
     ];
 
+
+
     protected $rules = [
         'title' => 'required|min:3|max:255',
         'authorId' => 'required|exists:authors,id',
@@ -137,7 +140,7 @@ class BookForm extends Component
         'singleAudio' => 'nullable|file|mimes:mp3,wav,ogg|max:51200', // 50MB max
         'singleVideo' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:524288',
         'chapterAudios.*' => 'nullable|file|mimes:mp3,wav,ogg|max:51200',
-        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:102400',
+        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:102400', 
 
     ];
 
@@ -664,6 +667,7 @@ class BookForm extends Component
     private function createBook(): void
     {
         // Handle cover image
+        // dd($this->tableOfContents);
         $coverPath = null;
         if ($this->coverImage) {
             $fileName = $this->generateFileName(null, 'cover.' . $this->coverImage->extension());
@@ -705,6 +709,11 @@ class BookForm extends Component
         ]);
 
         $book->categories()->attach($this->bookCategoryIds);
+
+       if ($this->hasAudio && $pdfPath) {
+          ConvertBookToAudioJob::dispatch($book);
+      }
+
         $this->handleSamplePdfFile($book);
 
         if ($book->has_audio || $book->has_video) {
@@ -965,6 +974,10 @@ class BookForm extends Component
 
         $this->book->categories()->sync($this->bookCategoryIds);
 
+       if ($this->hasAudio && $pdfPath) {
+          ConvertBookToAudioJob::dispatch($this->book);
+      }
+
         $this->book->media()->update([
             'single_audio' => $mediaData['single_audio'],
             'single_video' => $mediaData['single_video'],
@@ -1002,3 +1015,16 @@ class BookForm extends Component
         return view('livewire.books.book-form');
     }
 }
+
+
+
+// [{"chapter":1,"title":"Introduction","description":"","page_start":"1","page_end":"6","sections":[]},{"chapter":2,"title":"Chapter 2","description":"","page_start":"7","page_end":"12","sections":[]}]
+
+/**
+ * 
+ * 
+
+
+
+ */
+
