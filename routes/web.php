@@ -425,7 +425,7 @@ Route::get('/feepayment/{student}', [PaymentController::class, 'showPaymentForm'
 Route::post('/feepayment', [PaymentController::class, 'processPayment'])->name('feepayment.process');
 Route::get('/feepayment/callback', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
 Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
-Route::get('/feepayment/callback/{student}', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
+Route::get('/feepayment/callback/{student}', [PaymentController::class, 'paymentCallback'])->name('feepayment.student.callback');
 
 Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
 
