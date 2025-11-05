@@ -67,8 +67,8 @@ class ConvertBookToAudioJob implements ShouldQueue
                 return;
             }
 
-            Log::info("🧭 Normalized TOC: " . json_encode($toc));
-            Log::info("🧭 Found " . count($toc) . " chapters in TOC.");
+            Log::info("Normalized TOC: " . json_encode($toc));
+            Log::info("Found " . count($toc) . " chapters in TOC.");
 
             $apiKey = config('services.openai.key');
 
