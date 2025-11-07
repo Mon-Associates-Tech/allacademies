@@ -310,4 +310,30 @@ class BookController extends Controller
 
         return response()->json(['books' => $featuredBooks]);
     }
+
+    /**
+     * Public book view for unauthenticated users (shared links)
+     */
+    public function publicShow(Book $book)
+    {
+        // Only show published books
+        if ($book->status !== PublishingStatus::PUBLISHED->value) {
+            abort(404);
+        }
+
+        $book->load([
+            'author',
+            'bookCategory',
+            'categories',
+        ]);
+
+        // Get a few approved reviews without user data for privacy
+        $recentReviews = $book->reviews()
+            ->approved()
+            ->latest()
+            ->limit(3)
+            ->get();
+
+        return view('books.public-show', compact('book', 'recentReviews'));
+    }
 }

@@ -509,6 +509,8 @@ Route::get('school/download-template/{type}', [ImportTemplateController::class, 
     ->name('school.download-template')
     ->middleware(['auth', 'verified']);
 
+Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('books.public');
+
 // Include additional route files
 
 include_once 'student.php';

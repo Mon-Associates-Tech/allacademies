@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use Log;
 use setasign\Fpdi\Fpdi;
 use Storage;
@@ -122,6 +123,16 @@ class Book extends Model
         return asset('sample.pdf');
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($book) {
+            if (empty($book->slug)) {
+                $book->slug = Str::slug($book->title);
+            }
+        });
+    }
 
     public function getSampleUrlAttribute(): string
     {
