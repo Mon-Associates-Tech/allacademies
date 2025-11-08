@@ -22,6 +22,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('tokens:check-expired')->daily();
         $schedule->command('books:process-audio-conversion')->everyFiveMinutes();
 
+        $schedule->command('queue:work --stop-when-empty --max-time=240')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+
     }
 
     /**
