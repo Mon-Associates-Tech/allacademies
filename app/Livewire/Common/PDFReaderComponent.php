@@ -3,6 +3,7 @@
 namespace App\Livewire\Common;
 
 use App\Enums\SubscriptionStatus;
+use App\Enums\UserRole;
 use App\Models\Book;
 use App\Models\BookReadingProgress;
 use App\Models\BookSubscription;
@@ -59,23 +60,15 @@ class PDFReaderComponent extends Component
     #[On('openPDFReader')]
     public function openReader(int $bookId, array $options = []): void
     {
-        \Log::info('openPDFReader event received', ['bookId' => $bookId, 'options' => $options]);
 
         $this->reset(['errorMessage', 'isLoading']);
         $this->bookId = $bookId;
         $this->isLoading = true;
 
         try {
-            \Log::info('About to load book', ['bookId' => $this->bookId]);
             $this->loadBook();
-            \Log::info('Book loaded successfully', [
-                'hasAccess' => $this->hasAccess,
-                'accessType' => $this->accessType,
-                'book_title' => $this->book->title ?? 'No title'
-            ]);
 
             if ($this->hasAccess) {
-                \Log::info('User has access, loading progress...');
                 $this->loadUserProgress();
 
                 // Apply options
@@ -83,7 +76,6 @@ class PDFReaderComponent extends Component
                     $this->currentPage = max(1, (int) $options['startPage']);
                 }
 
-                \Log::info('Setting isVisible to true and dispatching initializePDFReader');
                 $this->isVisible = true;
                 $this->logBookAccess();
 
@@ -102,15 +94,10 @@ class PDFReaderComponent extends Component
                     ]
                 ];
 
-                \Log::info('Dispatching initializePDFReader with data', $dispatchData);
                 $this->dispatch('initializePDFReader', $dispatchData);
-                \Log::info('initializePDFReader dispatched successfully');
 
             } else {
-                \Log::warning('User does not have access to book', [
-                    'errorMessage' => $this->errorMessage,
-                    'bookId' => $this->bookId
-                ]);
+
                 $this->dispatch('show-error', [
                     'message' => $this->errorMessage ?? 'You do not have access to this book.'
                 ]);
@@ -126,7 +113,6 @@ class PDFReaderComponent extends Component
             ]);
         } finally {
             $this->isLoading = false;
-            \Log::info('openReader method completed', ['isVisible' => $this->isVisible]);
         }
     }
 
@@ -242,12 +228,6 @@ class PDFReaderComponent extends Component
     {
         try {
             $this->book = Book::with(['author.user'])->findOrFail($this->bookId);
-            \Log::info('Book loaded', [
-                'book_id' => $this->book->id,
-                'title' => $this->book->title,
-                'content_url' => $this->book->content_url,
-                'is_free' => $this->book->is_free ?? 'not set'
-            ]);
             $this->checkAccess();
         } catch (\Exception $e) {
             \Log::error('Failed to load book', [
@@ -266,7 +246,7 @@ class PDFReaderComponent extends Component
         $student = $user->student ?? $user;
 
         // Check if book is free
-        if ($this->book->is_free || Auth::user()->role  === 'owner' || Auth::user()->role  === 'admin') {
+        if ($this->book->is_free || Auth::user()->role  === UserRole::OWNER || Auth::user()->role  === UserRole::ADMIN) {
             $this->hasAccess = true;
             $this->accessType = 'free';
             return;
@@ -439,12 +419,6 @@ class PDFReaderComponent extends Component
 
     public function render(): View|Application|Factory|\Illuminate\View\View
     {
-        \Log::info('Rendering PDFReaderComponent', [
-            'isVisible' => $this->isVisible,
-            'hasAccess' => $this->hasAccess,
-            'bookId' => $this->bookId
-        ]);
-
         return view('livewire.common.PDFReaderModal', [
             'progressPercentage' => $this->getProgressPercentage(),
             'canGoNext' => $this->getCanGoNext(),

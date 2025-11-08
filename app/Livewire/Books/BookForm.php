@@ -140,7 +140,7 @@ class BookForm extends Component
         'singleAudio' => 'nullable|file|mimes:mp3,wav,ogg|max:51200', // 50MB max
         'singleVideo' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:524288',
         'chapterAudios.*' => 'nullable|file|mimes:mp3,wav,ogg|max:51200',
-        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:102400', 
+        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:102400',
 
     ];
 
@@ -298,9 +298,9 @@ class BookForm extends Component
         $user = auth()->user();
 
         return match ($user->role) {
-            'admin', 'owner' => redirect()->route('admin.book-management'),
-            'author' => redirect()->route('author.books.index'),
-            'teacher' => redirect()->route('books.index'),
+            UserRole::ADMIN, UserRole::OWNER => redirect()->route('admin.book-management'),
+            UserRole::AUTHOR => redirect()->route('author.books.index'),
+            UserRole::TEACHER => redirect()->route('books.index'),
             default => redirect()->back(),
         };
     }
@@ -1021,8 +1021,8 @@ class BookForm extends Component
 // [{"chapter":1,"title":"Introduction","description":"","page_start":"1","page_end":"6","sections":[]},{"chapter":2,"title":"Chapter 2","description":"","page_start":"7","page_end":"12","sections":[]}]
 
 /**
- * 
- * 
+ *
+ *
 
 
 
