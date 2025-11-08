@@ -54,6 +54,9 @@ class Book extends Model
         'chapter_videos',
         'audio_conversion_pending',
         'audio_conversion_initiated_by',
+        'audio_conversion_progress',
+        'audio_conversion_attempts',
+        'audio_conversion_last_attempt',
 
     ];
     protected $casts = [
@@ -68,7 +71,10 @@ class Book extends Model
         'has_video' => 'boolean',
         'chapter_audios' => 'array',
         'chapter_videos' => 'array',
-        'audio_conversion_pending' => 'boolean'
+        'audio_conversion_pending' => 'boolean',
+        'audio_conversion_progress' => 'array',
+        'audio_conversion_attempts' => 'integer',
+        'audio_conversion_last_attempt' => 'datetime',
     ];
 
     public function author(): BelongsTo
