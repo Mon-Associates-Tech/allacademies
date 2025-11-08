@@ -52,6 +52,9 @@ class Book extends Model
         'single_video',
         'chapter_audios',
         'chapter_videos',
+        'audio_conversion_pending',
+        'audio_conversion_initiated_by',
+
     ];
     protected $casts = [
         'has_hardcopy' => 'boolean',
@@ -65,6 +68,7 @@ class Book extends Model
         'has_video' => 'boolean',
         'chapter_audios' => 'array',
         'chapter_videos' => 'array',
+        'audio_conversion_pending' => 'boolean'
     ];
 
     public function author(): BelongsTo

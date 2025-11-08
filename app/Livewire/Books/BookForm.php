@@ -706,12 +706,15 @@ class BookForm extends Component
             'status' => $this->status,
             'has_audio' => $mediaData['has_audio'],
             'has_video' => $mediaData['has_video'],
+            'audio_conversion_pending' => $this->hasAudio && $pdfPath ? true : false,
+            'audio_conversion_initiated_by' => $this->hasAudio && $pdfPath ? auth()->id() : null,
+
         ]);
 
         $book->categories()->attach($this->bookCategoryIds);
 
        if ($this->hasAudio && $pdfPath) {
-          ConvertBookToAudioJob::dispatch($book);
+         // ConvertBookToAudioJob::dispatch($book);
       }
 
         $this->handleSamplePdfFile($book);
@@ -949,6 +952,10 @@ class BookForm extends Component
 
         $mediaData = $this->handleMediaFiles();
 
+        $shouldConvertAudio = $this->hasAudio && $pdfPath &&
+            (!$this->book->has_audio || $this->pdfFile);
+
+
         // Update book
         $this->book->update([
             'title' => $this->title,
@@ -968,6 +975,8 @@ class BookForm extends Component
             'status' => $this->status,
             'has_audio' => $mediaData['has_audio'],
             'has_video' => $mediaData['has_video'],
+            'audio_conversion_pending' => $shouldConvertAudio,
+            'audio_conversion_initiated_by' => $shouldConvertAudio ? auth()->id() : $this->book->audio_conversion_initiated_by,
         ]);
 
         $this->handleSamplePdfFile($this->book);

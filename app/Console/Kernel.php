@@ -20,6 +20,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('sessions:cleanup --timeout=30')->everyFiveMinutes();
         $schedule->command('messages:send-scheduled')->everyMinute();
         $schedule->command('tokens:check-expired')->daily();
+        $schedule->command('books:process-audio-conversion')->everyFiveMinutes();
+
     }
 
     /**
