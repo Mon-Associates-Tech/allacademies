@@ -44,7 +44,13 @@
                         <div>
                             <p class="text-green-100 text-sm font-medium uppercase">Amount Paid</p>
                             <p class="text-3xl font-bold mt-2">₵{{ number_format($totalPaid, 2) }}</p>
-                            <p class="text-green-100 text-xs mt-1">{{ number_format(($totalPaid/$termTotalAmount)*100, 1) }}% Complete</p>
+                            <p class="text-green-100 text-xs mt-1">
+                                @if($termTotalAmount > 0)
+                                    {{ number_format(($totalPaid/$termTotalAmount)*100, 1) }}%
+                                @else
+                                    0%
+                                @endif
+                            </p>
                         </div>
                         <div class="bg-white/20 rounded-full p-3">
                             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
@@ -92,24 +98,47 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
+            <!-- Progress Bar with Payment Button -->
             @if($termTotalAmount > 0)
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Payment Progress</h3>
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {{ number_format(($totalPaid/$termTotalAmount)*100, 1) }}%
-                    </span>
+                            {{ number_format(($totalPaid/$termTotalAmount)*100, 1) }}%
+                        </span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
                         <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-500"
                              style="width: {{ min(($totalPaid/$termTotalAmount)*100, 100) }}%">
                         </div>
                     </div>
-                    <div class="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        <span>₵0</span>
-                        <span>₵{{ number_format($termTotalAmount, 2) }}</span>
+                    <div class="flex justify-between items-center mt-3">
+                        <div class="flex justify-between w-full text-xs text-gray-500 dark:text-gray-400">
+                            <span>₵0</span>
+                            <span>₵{{ number_format($termTotalAmount, 2) }}</span>
+                        </div>
                     </div>
+                    @if($remainingAmount > 0)
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <a href="{{ route('students.fees.payment') }}"
+                               class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-violet-600 to-violet-700 border border-transparent rounded-lg font-semibold text-sm text-white uppercase tracking-wider hover:from-violet-700 hover:to-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg hover:shadow-xl">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                                Make Payment - ₵{{ number_format($remainingAmount, 2) }} Remaining
+                            </a>
+                        </div>
+                    @else
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-green-700 dark:text-green-300 font-semibold">Payment Complete! Thank you.</span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endif
 
@@ -187,6 +216,16 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No payment history found</p>
+                                    @if($remainingAmount > 0)
+                                        <a href="{{ route('students.fees.payment') }}"
+                                           class="mt-4 inline-flex items-center px-4 py-2 bg-violet-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-violet-700 focus:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                            </svg>
+                                            Make Your First Payment
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse

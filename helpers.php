@@ -322,4 +322,40 @@ if (!function_exists('getTimeRemaining')) {
             return redirect()->route('impersonate', $userId);
         }
     }
+
+     function getSchoolId(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+        // For owners/super admins, check session for selected school
+        if ($user->canAccessCrossSchool()) {
+            $sessionSchoolId = session('current_school_id');
+
+            // If they've explicitly selected a school, use it
+            if ($sessionSchoolId) {
+                return $sessionSchoolId;
+            }
+
+            // Check app binding
+            if (app()->bound('current_school_id')) {
+                return app('current_school_id');
+            }
+
+            // Check if current_school is bound
+            if (app()->bound('current_school')) {
+                $school = app('current_school');
+                return $school ? $school->id : null;
+            }
+
+            // No school selected - return null
+            return null;
+        }
+
+        // For regular users, use their school_id
+        return $user->school_id;
+    }
 }

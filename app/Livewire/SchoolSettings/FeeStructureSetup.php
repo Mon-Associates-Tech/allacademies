@@ -33,6 +33,8 @@ class FeeStructureSetup extends Component
     public $editingFeeId = null;
     public $viewingFee = null;
 
+    protected $listeners = ['academicYearCreated' => 'refreshAcademicYears'];
+
     protected $rules = [
         'academic_year_id' => 'required|exists:academic_years,id',
         'academic_group_id' => 'required|exists:academic_groups,id',
@@ -63,20 +65,39 @@ class FeeStructureSetup extends Component
 
     public function loadAcademicYears()
     {
-        $this->academicYears = AcademicYear::where('school_id', Auth::user()->school_id)
+        $schoolId = $this->getSchoolId();
+
+        if (!$schoolId) {
+            $this->academicYears = collect();
+            return;
+        }
+
+        $this->academicYears = AcademicYear::where('school_id', $schoolId)
             ->orderBy('start_date', 'desc')
             ->get();
     }
 
     public function loadAcademicGroups()
     {
-        $school = Auth::user()->school;
+        $schoolId = $this->getSchoolId();
+
+        if (!$schoolId) {
+            $this->academicGroups = collect();
+            return;
+        }
+
+        $school = \App\Models\School::find($schoolId);
 
         if ($school) {
             $this->academicGroups = $school->academicGroups()
                 ->orderBy('name')
                 ->get();
         }
+    }
+
+    public function refreshAcademicYears()
+    {
+        $this->loadAcademicYears();
     }
 
     public function updatedAcademicYearId($value)
@@ -87,8 +108,15 @@ class FeeStructureSetup extends Component
 
     public function loadAcademicPeriods()
     {
+        $schoolId = $this->getSchoolId();
+
+        if (!$schoolId) {
+            $this->academicPeriods = [];
+            return;
+        }
+
         if ($this->academic_year_id) {
-            $this->academicPeriods = AcademicPeriod::where('school_id', Auth::user()->school_id)
+            $this->academicPeriods = AcademicPeriod::where('school_id', $schoolId)
                 ->where('academic_year_id', $this->academic_year_id)
                 ->whereIn('status', ['active', 'upcoming'])
                 ->orderBy('sequence')
@@ -118,6 +146,8 @@ class FeeStructureSetup extends Component
     public function showCreateForm()
     {
         $this->resetForm();
+        $this->loadAcademicYears(); // Refresh academic years when opening the form
+        $this->loadAcademicGroups(); // Also refresh groups
         $this->showFormModal = true;
         $this->formMode = 'create';
     }
@@ -148,12 +178,16 @@ class FeeStructureSetup extends Component
 
     public function view($id)
     {
-        $this->viewingFee = AcademicFeeStructure::with([
-            'academicGroup',
-            'academicLevel',
-            'currentTerm',
-            'currentTerm.academicYear'
-        ])->findOrFail($id);
+        $schoolId = $this->getSchoolId();
+
+        $this->viewingFee = AcademicFeeStructure::where('school_id', $schoolId)
+            ->with([
+                'academicGroup',
+                'academicLevel',
+                'currentTerm',
+                'currentTerm.academicYear'
+            ])
+            ->findOrFail($id);
     }
 
     public function closeViewModal()
@@ -163,7 +197,11 @@ class FeeStructureSetup extends Component
 
     public function edit($id)
     {
-        $fee = AcademicFeeStructure::with('currentTerm')->findOrFail($id);
+        $schoolId = $this->getSchoolId();
+
+        $fee = AcademicFeeStructure::where('school_id', $schoolId)
+            ->with('currentTerm')
+            ->findOrFail($id);
 
         $this->editingFeeId = $fee->id;
         $this->academic_year_id = $fee->currentTerm->academic_year_id ?? '';
@@ -185,10 +223,19 @@ class FeeStructureSetup extends Component
     {
         $this->validate();
 
+        $schoolId = $this->getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'No school context found. Please select a school.');
+            return;
+        }
+
         try {
             if ($this->formMode === 'edit' && $this->editingFeeId) {
                 // Update existing fee structure
-                $fee = AcademicFeeStructure::findOrFail($this->editingFeeId);
+                $fee = AcademicFeeStructure::where('school_id', $schoolId)
+                    ->findOrFail($this->editingFeeId);
+
                 $fee->update([
                     'academic_group_id' => $this->academic_group_id,
                     'academic_level_id' => $this->academic_level_id,
@@ -202,7 +249,7 @@ class FeeStructureSetup extends Component
             } else {
                 // Create new fee structure
                 AcademicFeeStructure::create([
-                    'school_id' => Auth::user()->school_id,
+                    'school_id' => $schoolId,
                     'academic_group_id' => $this->academic_group_id,
                     'academic_level_id' => $this->academic_level_id,
                     'current_term_id' => $this->current_term_id,
@@ -224,7 +271,11 @@ class FeeStructureSetup extends Component
     public function delete($id)
     {
         try {
-            $fee = AcademicFeeStructure::findOrFail($id);
+            $schoolId = $this->getSchoolId();
+
+            $fee = AcademicFeeStructure::where('school_id', $schoolId)
+                ->findOrFail($id);
+
             $fee->delete();
 
             session()->flash('success', 'Fee structure deleted successfully!');
@@ -236,13 +287,58 @@ class FeeStructureSetup extends Component
 
     public function render()
     {
-        $feeStructures = AcademicFeeStructure::where('school_id', Auth::user()->school_id)
-            ->with(['academicGroup', 'academicLevel', 'currentTerm.academicYear'])
-            ->latest()
-            ->paginate(10);
+        $schoolId = $this->getSchoolId();
+
+        $feeStructures = collect();
+
+        if ($schoolId) {
+            $feeStructures = AcademicFeeStructure::where('school_id', $schoolId)
+                ->with(['academicGroup', 'academicLevel', 'currentTerm.academicYear'])
+                ->latest()
+                ->paginate(10);
+        }
 
         return view('livewire.school-settings.fee-structure-setup', [
             'feeStructures' => $feeStructures
         ]);
+    }
+
+    /**
+     * Get school ID from context (works for owners, admins, and regular users)
+     */
+    protected function getSchoolId(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+        // For owners/super admins, check session for selected school
+        if ($user->canAccessCrossSchool()) {
+            $sessionSchoolId = session('current_school_id');
+
+            // If they've explicitly selected a school, use it
+            if ($sessionSchoolId) {
+                return $sessionSchoolId;
+            }
+
+            // Check app binding
+            if (app()->bound('current_school_id')) {
+                return app('current_school_id');
+            }
+
+            // Check if current_school is bound
+            if (app()->bound('current_school')) {
+                $school = app('current_school');
+                return $school ? $school->id : null;
+            }
+
+            // No school selected - return null
+            return null;
+        }
+
+        // For regular users, use their school_id
+        return $user->school_id;
     }
 }

@@ -129,7 +129,7 @@
         <!-- Payments -->
         <li class="mb-0.5 last:mb-0" title="Payments">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('students.fees*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('students.fees.index')}}">
+               href="{{route('students.payments.index')}}">
                 <div class="flex items-center">
                     <svg
                         class="shrink-0 fill-current {{ Route::is('students.fees*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"

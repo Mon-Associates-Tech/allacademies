@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademicFeeStructure;
 use App\Models\AcademicPeriod;
+use App\Models\School;
 use App\Models\SchoolFee;
 use App\Models\Student;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class StudentFeeController extends Controller
 {
@@ -25,65 +27,89 @@ class StudentFeeController extends Controller
      */
     public function index()
     {
-        $student = Auth::user()->student;
+        try {
+            $user = Auth::user();
+            $schoolId = getSchoolId(); // Get school_id from User
 
-        if (!$student) {
-            $student = Student::where('user_id', Auth::id())->first();
+            if (!$schoolId) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'School context not found. Please contact your administrator.');
+            }
+
+            // Get student by user_id ONLY (student.school_id might be null)
+            $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
+
+            if (!$student) {
+                Log::warning('Student accessing payments without student profile', [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'user_school_id' => $schoolId
+                ]);
+
+                return redirect()->route('dashboard')
+                    ->with('error', 'Student profile not found. Please contact your administrator.');
+            }
+
+            // Use User's school_id for all queries (not student's school_id)
+            $currentTerm = AcademicPeriod::where('school_id', $schoolId)
+                ->where('is_current', 1)
+                ->orWhere('status', 'active')
+                ->first();
+
+            // Get fee structure using User's school_id
+            $feeStructure = AcademicFeeStructure::where('school_id', $schoolId)
+                ->where('academic_group_id', $student->academic_group_id)
+                ->where('academic_level_id', $student->academic_level_id)
+                ->where('current_term_id', $currentTerm->id ?? null)
+                ->first();
+
+            // Calculate payment stats
+            $totalPaid = SchoolFee::where('student_id', $student->id)
+                ->where('term_id', $currentTerm->id ?? null)
+                ->where('status', 'succeeded')
+                ->sum('amount');
+
+            $termTotalAmount = $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0;
+            $remainingAmount = max($termTotalAmount - $totalPaid, 0);
+
+            // Get all payment history
+            $paymentHistory = SchoolFee::where('student_id', $student->id)
+                ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            // Get pending payments
+            $pendingPayments = SchoolFee::where('student_id', $student->id)
+                ->where('status', 'pending')
+                ->count();
+
+            // Get payment stats by term
+            $termPayments = SchoolFee::where('student_id', $student->id)
+                ->select('term_id', DB::raw('SUM(amount) as total_paid'), DB::raw('COUNT(*) as payment_count'))
+                ->groupBy('term_id')
+                ->with('academicPeriod')
+                ->get();
+
+            return view('students.fees.index', compact(
+                'student',
+                'feeStructure',
+                'totalPaid',
+                'termTotalAmount',
+                'remainingAmount',
+                'paymentHistory',
+                'currentTerm',
+                'pendingPayments',
+                'termPayments'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Error in StudentFeeController@index', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return redirect()->route('dashboard')
+                ->with('error', 'An error occurred. Please try again.');
         }
-
-        if(!$student){
-            return redirect()->route('dashboard')->with('error', 'Student profile not found.');
-
-        }
-
-        // Get current term
-        $currentTerm = AcademicPeriod::where('is_current', 1)->first();
-
-        // Get fee structure
-        $feeStructure = AcademicFeeStructure::where('school_id', $student->school_id)
-            ->where('academic_group_id', $student->academic_group_id)
-            ->where('academic_level_id', $student->academic_level_id)
-            ->where('current_term_id', $currentTerm->id ?? null)
-            ->first();
-
-        // Calculate payment stats
-        $totalPaid = SchoolFee::where('student_id', $student->id)
-            ->where('term_id', $currentTerm->id ?? null)
-            ->where('status', 'succeeded')
-            ->sum('amount');
-
-        $termTotalAmount = $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0;
-        $remainingAmount = max($termTotalAmount - $totalPaid, 0);
-
-        // Get all payment history
-        $paymentHistory = SchoolFee::where('student_id', $student->id)
-            ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        // Get pending payments
-        $pendingPayments = SchoolFee::where('student_id', $student->id)
-            ->where('status', 'pending')
-            ->count();
-
-        // Get payment stats by term
-        $termPayments = SchoolFee::where('student_id', $student->id)
-            ->select('term_id', DB::raw('SUM(amount) as total_paid'), DB::raw('COUNT(*) as payment_count'))
-            ->groupBy('term_id')
-            ->with('academicPeriod')
-            ->get();
-
-        return view('students.fees.index', compact(
-            'student',
-            'feeStructure',
-            'totalPaid',
-            'termTotalAmount',
-            'remainingAmount',
-            'paymentHistory',
-            'currentTerm',
-            'pendingPayments',
-            'termPayments'
-        ));
     }
 
     /**
@@ -91,15 +117,31 @@ class StudentFeeController extends Controller
      */
     public function payment()
     {
-        $student = Auth::user()->student;
+        $user = Auth::user();
+        $schoolId = getSchoolId(); // Get school_id from User
 
-        if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Student profile not found.');
+        if (!$schoolId) {
+            return redirect()->route('dashboard')
+                ->with('error', 'School context not found. Please contact your administrator.');
         }
 
-        $currentTerm = AcademicPeriod::where('is_current', 1)->first();
+        // Get student by user_id ONLY (student.school_id might be null)
+        $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
 
-        $feeStructure = AcademicFeeStructure::where('school_id', $student->school_id)
+        if (!$student) {
+            Log::warning('Student accessing payments without student profile', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'user_school_id' => $schoolId
+            ]);
+
+            return redirect()->route('dashboard')
+                ->with('error', 'Student profile not found. Please contact your administrator.');
+        }
+
+        $currentTerm = AcademicPeriod::where('status', 'active')->first();
+
+        $feeStructure = AcademicFeeStructure::where('school_id', $schoolId)
             ->where('academic_group_id', $student->academic_group_id)
             ->where('academic_level_id', $student->academic_level_id)
             ->where('current_term_id', $currentTerm->id ?? null)
@@ -132,16 +174,34 @@ class StudentFeeController extends Controller
             'amount' => 'required|numeric|min:1',
         ]);
 
-        $student = Auth::user()->student;
-        $school = $student->school;
-        $currentTerm = AcademicPeriod::where('is_current', 1)->first();
+        $user = Auth::user();
+        $schoolId = getSchoolId(); // Get school_id from User
 
-        if (!$school) {
-            return back()->withErrors(['error' => 'School information not found.']);
+        if (!$schoolId) {
+            return redirect()->route('dashboard')
+                ->with('error', 'School context not found. Please contact your administrator.');
         }
 
+        // Get student by user_id ONLY (student.school_id might be null)
+        $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
+
+        if (!$student) {
+            Log::warning('Student accessing payments without student profile', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'user_school_id' => $schoolId
+            ]);
+
+            return redirect()->route('dashboard')
+                ->with('error', 'Student profile not found. Please contact your administrator.');
+        }
+
+
+        $currentTerm = AcademicPeriod::where('status', 'active')->first();
+
+
         // Get subaccount
-        $subaccount = \App\Models\Subaccount::where('school_id', $school->id)->first();
+        $subaccount = \App\Models\Subaccount::where('school_id', $schoolId)->first();
 
         $paymentData = [
             'email' => Auth::user()->email,
@@ -151,7 +211,7 @@ class StudentFeeController extends Controller
             'metadata' => [
                 'student_id' => $student->id,
                 'term_id' => $currentTerm->id ?? null,
-                'school_id' => $school->id,
+                'school_id' => $schoolId,
             ],
         ];
 
@@ -167,14 +227,16 @@ class StudentFeeController extends Controller
 
         $reference = $response['data']['reference'];
 
-        $feeStructure = AcademicFeeStructure::where('school_id', $school->id)
+        $feeStructure = AcademicFeeStructure::where('school_id', $schoolId)
             ->where('academic_group_id', $student->academic_group_id)
             ->where('academic_level_id', $student->academic_level_id)
             ->where('current_term_id', $currentTerm->id ?? null)
             ->first();
 
+        $school = School::findOrFail($schoolId);
+
         SchoolFee::create([
-            'school_id' => $school->id,
+            'school_id' => $schoolId,
             'student_id' => $student->id,
             'payer_id' => Auth::id(),
             'payer_type' => get_class(Auth::user()),

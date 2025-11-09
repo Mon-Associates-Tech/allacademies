@@ -31,12 +31,12 @@
                             <!-- Role Badge -->
                             <div class="mt-1">
                                 <span class="inline-flex items-center rounded-md px-3 py-1 text-sm font-medium capitalize
-                                    {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : '' }}
-                                    {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-700' : '' }}
-                                    {{ $user->role === 'student' ? 'bg-green-100 text-green-700' : '' }}
-                                    {{ $user->role === 'librarian' ? 'bg-purple-100 text-purple-700' : '' }}
-                                    {{ !in_array($user->role, ['admin', 'teacher', 'student', 'librarian']) ? 'bg-gray-100 text-gray-700' : '' }}">
-                                    {{ $user->role ?? 'User' }}
+                                    {{ $user->role->value === 'admin' ? 'bg-red-100 text-red-700' : '' }}
+                                    {{ $user->role->value === 'teacher' ? 'bg-blue-100 text-blue-700' : '' }}
+                                    {{ $user->role->value === 'student' ? 'bg-green-100 text-green-700' : '' }}
+                                    {{ $user->role->value === 'librarian' ? 'bg-purple-100 text-purple-700' : '' }}
+                                    {{ !in_array($user->role->value, ['admin', 'teacher', 'student', 'librarian']) ? 'bg-gray-100 text-gray-700' : '' }}">
+                                    {{ $user->role->value ?? 'User' }}
                                 </span>
                             </div>
                         </div>
@@ -175,7 +175,7 @@
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Role</dt>
-                            <dd class="mt-1 text-sm text-gray-900 capitalize">{{ $user->role ?? 'User' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 capitalize">{{ $user->role->value ?? 'User' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Email Verification</dt>
