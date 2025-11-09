@@ -3,8 +3,10 @@
 use App\Http\Controllers\ExaminationController;
 use App\Models\AcademicSubtopic;
 use App\Models\Examination;
+use App\Models\User;
 use App\Support\Examiner;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Exception\CommonMarkException;
 use League\CommonMark\Output\RenderedContentInterface;
@@ -294,6 +296,30 @@ if (!function_exists('getTimeRemaining')) {
         {
             $emails = config('access.owner.special_access_emails', '');
             return array_map('trim', explode(',', $emails));
+        }
+    }
+
+    if(!function_exists('impersonateUser')){
+         function impersonateUser($userId)
+        {
+            $user = User::findOrFail($userId);
+
+            // Check if current user can impersonate
+            if (!Auth::user()->canImpersonate()) {
+                session()->flash('error', 'You do not have permission to impersonate users.');
+                return;
+            }
+
+            // Check if target user can be impersonated
+            if (!$user->canBeImpersonated()) {
+                session()->flash('error', 'This user cannot be impersonated.');
+                return;
+            }
+
+            // Store the current user ID and redirect URL before impersonation
+            session()->put('impersonate_redirect_to', route('dashboard'));
+
+            return redirect()->route('impersonate', $userId);
         }
     }
 }

@@ -34,7 +34,7 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-                        {{ ucfirst($user->role ?? 'Student') }}
+                        {{ ucfirst($user->role->value ?? 'Student') }}
                     </span>
                 </div>
 
@@ -76,7 +76,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Subscription</p>
-                    <p class="text-lg font-semibold text-gray-900">Basic Plan</p>
+                    <p class="text-lg font-semibold text-gray-900">{{$user->activeTokenSubscription->package->name ?? 'Basic'}}</p>
                 </div>
             </div>
         </div>
@@ -91,8 +91,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Days Active</p>
-                    <p class="text-lg font-semibold text-gray-900">{{ $user->created_at->diffInDays(now()) }}</p>
-                </div>
+                    <p class="text-lg font-semibold text-gray-900">{{ floor($user->created_at->diffInDays(now())) }} days</p></div>
             </div>
         </div>
 
@@ -144,13 +143,13 @@
                             <dt class="text-sm font-medium text-gray-500">Account Type</dt>
                             <dd class="mt-1">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    {{ ucfirst($user->role ?? 'Student') }}
+                                    {{ ucfirst($user->role->value ?? 'Student') }}
                                 </span>
                             </dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Subscription Plan</dt>
-                            <dd class="mt-1 text-base text-gray-900">Basic</dd>
+                            <dd class="mt-1 text-base text-gray-900">{{$user->activeTokenSubscription->package->name ?? 'Basic'}}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Email Status</dt>

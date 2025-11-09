@@ -219,6 +219,19 @@
                                             View Details
                                         </x-dropdown.item>
 
+                                            @if($user->canBeImpersonated())
+                                                <x-dropdown.item
+                                                    :href="route('impersonate', $user->id)">
+                                                    <x-slot:icon>
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                                        </svg>
+                                                    </x-slot:icon>
+                                                    <span class="hidden sm:inline">Impersonate</span>
+                                            </x-dropdown.item>
+                                            @endif
+
                                         <x-dropdown.item click="$dispatch('open-delete-modal', {{ $user->id }})">
                                             <x-slot name="icon">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
