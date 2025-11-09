@@ -306,7 +306,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('onboarding/school-setup', \App\Livewire\SchoolOnboarding::class)->name('onboarding.school-setup');
 
     // Educational Chat Routes
-    Route::prefix('academic-chats')->name('academic-chat.')->group(function () {
+    Route::prefix('academic-chats')->middleware(['assignment.session'])->name('academic-chat.')->group(function () {
         Route::get('/', [AcademicChatController::class, 'index'])->name('index');
         Route::post('/chat', [AcademicChatController::class, 'chat'])->name('chat');
         Route::get('/subjects', [AcademicChatController::class, 'subjects'])->name('subjects');

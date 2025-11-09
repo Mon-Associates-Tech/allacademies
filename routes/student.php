@@ -43,6 +43,7 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('settings', Books::class)->name('settings');
     Route::get('help', Books::class)->name('help');
 //Route::get('notifications', Notifications::class)->name('notifications.index');
+
     Route::get('assignments/{assignment}/take', AssignmentTakingComponent::class)
         ->name('assignment.take')
         ->middleware(['auth', 'role:student']);

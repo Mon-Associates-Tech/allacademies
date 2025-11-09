@@ -77,5 +77,6 @@ class Kernel extends HttpKernel
         'school.context' => \App\Http\Middleware\SchoolContextMiddleware::class,
         'chat.rate.limit' => \App\Http\Middleware\AcademicChatRateLimit::class,
         'school.scope' => \App\Http\Middleware\AutomaticSchoolScoping::class,
+        'assignment.session' => \App\Http\Middleware\AssignmentSessionMiddleware::class,
     ];
 }

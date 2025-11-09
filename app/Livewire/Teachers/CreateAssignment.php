@@ -56,6 +56,11 @@ class CreateAssignment extends Component
     public $teacher;
     public $showQuestionSelection = false;
 
+    public $restrict_navigation = false;
+    public $max_tab_switches = 3;
+    public $auto_submit_on_violation = true;
+
+
     protected $rules = [
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
@@ -67,6 +72,9 @@ class CreateAssignment extends Component
         'is_randomized' => 'boolean',
         'instructions' => 'nullable|string',
         'total_marks' => 'required|integer|min:1',
+        'restrict_navigation' => 'boolean',
+        'max_tab_switches' => 'nullable|integer|min:1|max:10',
+        'auto_submit_on_violation' => 'boolean',
     ];
 
     protected $messages = [
@@ -227,6 +235,10 @@ class CreateAssignment extends Component
                 'instructions' => $this->instructions,
                 'total_marks' => $this->total_marks,
                 'questions' => $questionsConfig,
+                'restrict_navigation' => $this->restrict_navigation,
+                'max_tab_switches' => $this->restrict_navigation ? $this->max_tab_switches : null,
+                'auto_submit_on_violation' => $this->restrict_navigation ? $this->auto_submit_on_violation : null,
+
             ]);
 
             // Assign to academic groups

@@ -38,6 +38,12 @@ class AssignmentTakingComponent extends Component
     public $showReview = false;
     public $darkMode = false;
 
+    public $tabSwitchCount = 0;
+    public $maxTabSwitches = null;
+    public $showViolationWarning = false;
+    public $violationMessage = '';
+    public $restrictNavigation = false;
+
     // Services
     protected RandomQuestionSelectionService $questionService;
 
@@ -83,6 +89,10 @@ class AssignmentTakingComponent extends Component
             return redirect()->route('students.assignments');
         }
 
+        $this->restrictNavigation = $this->assignment->restrict_navigation ?? false;
+        $this->maxTabSwitches = $this->assignment->max_tab_switches;
+
+
         // Check if student is eligible
         if (!$this->canStartAssignment()) {
             session()->flash('error', 'You are not eligible to take this assignment.');
@@ -107,6 +117,63 @@ class AssignmentTakingComponent extends Component
             $this->resumeAssignment($existingSubmission);
         } else {
             $this->startAssessment();
+        }
+    }
+
+    public function recordTabSwitch()
+    {
+        if (!$this->restrictNavigation || !$this->assignmentSubmission) {
+            return;
+        }
+
+        $this->tabSwitchCount++;
+
+        // Log the violation
+        $violations = $this->assignmentSubmission->violation_logs ?? [];
+        $violations[] = [
+            'type' => 'tab_switch',
+            'timestamp' => now()->toISOString(),
+            'count' => $this->tabSwitchCount,
+        ];
+
+        $this->assignmentSubmission->update([
+            'tab_switch_count' => $this->tabSwitchCount,
+            'violation_logs' => $violations,
+        ]);
+
+        // Check if exceeded limit
+        if ($this->maxTabSwitches && $this->tabSwitchCount >= $this->maxTabSwitches) {
+            $this->handleViolation();
+        } else {
+            $remaining = $this->maxTabSwitches ? ($this->maxTabSwitches - $this->tabSwitchCount) : 'unlimited';
+            $this->showViolationWarning = true;
+            $this->violationMessage = "Warning: You switched tabs/windows. Remaining switches: {$remaining}";
+
+            $this->dispatch('show-violation-warning', message: $this->violationMessage);
+        }
+    }
+
+    private function handleViolation()
+    {
+        if ($this->assignment->auto_submit_on_violation) {
+            // Auto-submit and mark as violated
+            $this->assignmentSubmission->update([
+                'cancelled_due_to_violation' => true,
+                'status' => 'cancelled',
+                'submitted_at' => now(),
+            ]);
+
+            $this->isSubmitted = true;
+            $this->isTimerActive = false;
+            $this->step = 'violation';
+
+            Log::warning('Assignment cancelled due to violation', [
+                'submission_id' => $this->assignmentSubmission->id,
+                'student_id' => $this->assignmentSubmission->student_id,
+                'tab_switches' => $this->tabSwitchCount,
+            ]);
+
+            session()->flash('error', 'Your assignment has been automatically cancelled due to excessive tab switching.');
         }
     }
 

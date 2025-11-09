@@ -31,7 +31,10 @@ class Assignment extends Model
         'status', // 'draft', 'published', 'completed'
         'instructions',
         'total_marks',
-        'questions'
+        'questions',
+        'restrict_navigation',
+        'max_tab_switches',
+        'auto_submit_on_violation',
     ];
 
     protected $casts = [
@@ -39,6 +42,8 @@ class Assignment extends Model
         'ends_at' => 'datetime',
         'is_randomized' => 'boolean',
         'questions' => 'array',
+        'restrict_navigation' => 'boolean',
+        'auto_submit_on_violation' => 'boolean',
     ];
 
     public function structure(){
