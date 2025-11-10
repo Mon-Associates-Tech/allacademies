@@ -264,9 +264,11 @@ class PaymentController extends Controller
         $author = $book->author;
         $authorSubaccount = $author->subaccount;
 
+        $amount = $subscription->anunual_fee > 0 ? $subscription->annual_fee : $book->annual_subscription_fee;
+
         $paymentData = [
             'email' => auth()->user()->email,
-            'amount' => (int) $subscription->annual_fee * 100, // convert to kobo
+            'amount' => (int) $amount * 100, // convert to kobo
             'metadata' => [
                 'subscription_id' => $subscription->id,
                 'type' => 'book',
