@@ -511,6 +511,23 @@ Route::get('school/download-template/{type}', [ImportTemplateController::class, 
 
 Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('books.public');
 
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('payments', App\Http\Controllers\Admin\SchoolPaymentController::class);
+    Route::get('payments/export', [App\Http\Controllers\Admin\SchoolPaymentController::class, 'export'])->name('payments.export');
+
+    Route::resource('school-payment-structures', App\Http\Controllers\Admin\SchoolPaymentStructureController::class);
+
+});
+
+// Public payment routes (for parents/others)
+Route::prefix('pay')->name('payments.public.')->group(function () {
+    Route::get('/', [App\Http\Controllers\PublicPaymentController::class, 'showLookupForm'])->name('lookup');
+    Route::post('/lookup', [App\Http\Controllers\PublicPaymentController::class, 'lookupStudent'])->name('lookup.post');
+    Route::post('/initialize', [App\Http\Controllers\PublicPaymentController::class, 'initializePayment'])->name('initialize');
+    Route::get('/callback', [App\Http\Controllers\PublicPaymentController::class, 'paymentCallback'])->name('callback');
+    Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
+});
+
 // Include additional route files
 
 include_once 'student.php';

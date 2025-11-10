@@ -2,12 +2,31 @@
 
 namespace App\Traits;
 
+use App\Models\School;
 use App\Scopes\SchoolScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 trait BelongsToSchoolEnhanced
 {
+
+    public function getUserSchoolId(){
+        if($this->attributes['school_id']){
+            return $this->attributes['school_id'];
+        }
+        elseif ($this->user->school_id){
+            return $this->user->school_id;
+        }
+        else {
+            return getSchoolId();
+        }
+
+    }
+
+    public function getSchoolForUser(){
+        return School::find($this->getUserSchoolId())->first();
+    }
+
     public static function bootBelongsToSchoolEnhanced(): void
     {
         // Check if this model should be school-scoped
