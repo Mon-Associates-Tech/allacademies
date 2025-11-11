@@ -121,6 +121,91 @@
                             @enderror
                         </div>
 
+                        <!-- Gender field (Optional) -->
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">Gender <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                <select
+                                    id="gender"
+                                    name="gender"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                >
+                                    <option value="">Select gender</option>
+                                    <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                                    <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                                    <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
+                                    <option value="prefer_not_to_say" {{ old('gender') == 'prefer_not_to_say' ? 'selected' : '' }}>Prefer not to say</option>
+                                </select>
+                            </div>
+                            @error('gender')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Phone number field with country code (Optional) -->
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <div class="flex gap-2">
+                                <!-- Country Code Dropdown -->
+                                <div class="relative w-32">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                        </svg>
+                                    </div>
+                                    <select
+                                        id="country_code"
+                                        name="country_code"
+                                        class="block w-full pl-10 pr-2 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                                    >
+                                        <option value="">Code</option>
+                                        <option value="+1" {{ old('country_code') == '+1' ? 'selected' : '' }}>+1</option>
+                                        <option value="+44" {{ old('country_code') == '+44' ? 'selected' : '' }}>+44</option>
+                                        <option value="+91" {{ old('country_code') == '+91' ? 'selected' : '' }}>+91</option>
+                                        <option value="+234" {{ old('country_code') == '+234' ? 'selected' : '' }}>+234</option>
+                                        <option value="+254" {{ old('country_code') == '+254' ? 'selected' : '' }}>+254</option>
+                                        <option value="+27" {{ old('country_code') == '+27' ? 'selected' : '' }}>+27</option>
+                                        <option value="+233" {{ old('country_code') == '+233' ? 'selected' : '' }}>+233</option>
+                                        <option value="+256" {{ old('country_code') == '+256' ? 'selected' : '' }}>+256</option>
+                                        <option value="+255" {{ old('country_code') == '+255' ? 'selected' : '' }}>+255</option>
+                                        <option value="+20" {{ old('country_code') == '+20' ? 'selected' : '' }}>+20</option>
+                                        <option value="+212" {{ old('country_code') == '+212' ? 'selected' : '' }}>+212</option>
+                                        <option value="+86" {{ old('country_code') == '+86' ? 'selected' : '' }}>+86</option>
+                                        <option value="+81" {{ old('country_code') == '+81' ? 'selected' : '' }}>+81</option>
+                                        <option value="+49" {{ old('country_code') == '+49' ? 'selected' : '' }}>+49</option>
+                                        <option value="+33" {{ old('country_code') == '+33' ? 'selected' : '' }}>+33</option>
+                                        <option value="+39" {{ old('country_code') == '+39' ? 'selected' : '' }}>+39</option>
+                                        <option value="+34" {{ old('country_code') == '+34' ? 'selected' : '' }}>+34</option>
+                                        <option value="+7" {{ old('country_code') == '+7' ? 'selected' : '' }}>+7</option>
+                                        <option value="+61" {{ old('country_code') == '+61' ? 'selected' : '' }}>+61</option>
+                                        <option value="+55" {{ old('country_code') == '+55' ? 'selected' : '' }}>+55</option>
+                                    </select>
+                                </div>
+                                <!-- Phone Number Input -->
+                                <div class="flex-1 relative">
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        class="block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        placeholder="Enter phone number"
+                                        value="{{ old('phone') }}"
+                                    >
+                                </div>
+                            </div>
+                            @error('country_code')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            @error('phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Password field -->
                         <div>
                             <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>

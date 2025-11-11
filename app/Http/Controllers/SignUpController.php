@@ -46,6 +46,9 @@ class SignUpController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => bcrypt($validated['password']),
+                'gender' => $validated['gender'] ?? null,
+                'country_code' => $validated['country_code'] ?? null,
+                'phone' => $validated['phone'] ?? null,
                 'role' => $userRoleEnum,
                 'role_id' => $role?->id,
             ]);
@@ -83,7 +86,7 @@ class SignUpController extends Controller
         $successMessage = "Registration successful as {$roleMessage}! Please check your email to verify your account before signing in.";
 
         // ✅ Check if the "Onboard a new school" checkbox was selected
-       
+
 
         // Default redirect to verification notice
         return redirect()->route('verification.notice')
