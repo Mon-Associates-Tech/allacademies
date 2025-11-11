@@ -21,7 +21,7 @@ class SignUpRequest extends FormRequest
             'author' => ['sometimes'],
             'gender' => ['nullable', 'string', 'in:male,female,other,prefer_not_to_say'],
             'country_code' => ['nullable', 'string', 'max:10'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20', 'min:7'],
             'terms' => ['required', 'accepted'],
             'newschool' => ['nullable', 'boolean'],
         ];

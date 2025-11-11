@@ -31,6 +31,7 @@
         "dompurify": "^3.2.6",
         "flatpickr": "^4.6.13",
         "gsap": "^3.12.5",
+        "intl-tel-input": "^25.12.5",
         "pdfjs-dist": "^5.3.31",
         "video.js": "^8.6.1",
         "videojs-contrib-quality-levels": "^4.0.0",

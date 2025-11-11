@@ -319,3 +319,41 @@ html:not(.dark) .sidebar-expanded #sidebar .dark\:block {
     background-color: rgba(75, 85, 99, 0.8);
 }
 
+
+
+/* Custom styles for intl-tel-input */
+.iti {
+    width: 100%;
+}
+
+.iti__flag-container {
+    padding-left: 12px;
+}
+
+.iti__selected-flag {
+    padding: 0 0 0 12px;
+    border-top-left-radius: 0.75rem;
+    border-bottom-left-radius: 0.75rem;
+}
+
+.iti__country-list {
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    margin-top: 4px;
+}
+
+.iti__country-list .iti__country {
+    padding: 8px 12px;
+}
+
+.iti__country-list .iti__country:hover {
+    background-color: rgb(239 246 255);
+}
+
+.iti__country-list .iti__country.iti__highlight {
+    background-color: rgb(219 234 254);
+}
+
+#phone {
+    padding-left: 52px;
+}
