@@ -76,7 +76,7 @@
         <livewire:subscription-features-banner placement="dashboard" />
     </div>
 
-    @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
+    @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber', 'teacher']) && Route::is('dashboard'))
         <section>
             @if ($academicSubjects->count() || request()->hasAny(['search', 'academic_group', 'academic_level']))
                 <section class="mt-10 w-full mx-auto">
