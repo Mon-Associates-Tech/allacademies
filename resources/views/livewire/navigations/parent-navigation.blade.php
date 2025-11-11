@@ -71,6 +71,22 @@
             </a>
         </li>
 
+        <!-- Payments -->
+        <li class="mb-0.5 last:mb-0" title="Payments">
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('students.fees*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('students.payments.index')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('students.fees*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        width="16" height="16" viewBox="0 0 24 24">
+                        <path
+                            d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                    </svg>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Payments</span>
+                </div>
+            </a>
+        </li>
+
         <!-- Notifications -->
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('parent.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
