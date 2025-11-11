@@ -3,6 +3,7 @@
 use App\Http\Controllers\ExaminationController;
 use App\Models\AcademicSubtopic;
 use App\Models\Examination;
+use App\Models\Student;
 use App\Models\User;
 use App\Support\Examiner;
 use Carbon\Carbon;
@@ -357,5 +358,68 @@ if (!function_exists('getTimeRemaining')) {
 
         // For regular users, use their school_id
         return $user->school_id;
+    }
+
+    /**
+     * Get a student based on provided parameters
+     *
+     * @param int|null $user_id The user ID to search by
+     * @param int|null $student_id The student's database ID to search by
+     * @param int|null $school_id The school ID to filter by
+     * @param bool $withoutScopes Whether to bypass global scopes
+     * @return \App\Models\Student|null
+     */
+    function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = false)
+    {
+        // Start with the base query
+        $query = $withoutScopes
+            ? \App\Models\Student::withoutGlobalScopes()
+            : \App\Models\Student::query();
+
+        // If specific student_id provided, search by that first (highest priority)
+        if ($student_id !== null) {
+            $query->where('id', $student_id);
+
+            // Optionally filter by school_id if provided
+            if ($school_id !== null) {
+                $query->where('school_id', $school_id);
+            }
+
+            return $query->first();
+        }
+
+        // If user_id provided, search by user_id
+        if ($user_id !== null) {
+            $query->where('user_id', $user_id);
+
+            // Optionally filter by school_id if provided
+            if ($school_id !== null) {
+                $query->where('school_id', $school_id);
+            }
+
+            return $query->first();
+        }
+
+        // If school_id only provided, get first student from that school
+        if ($school_id !== null) {
+            return $query->where('school_id', $school_id)->first();
+        }
+
+        // Fallback: Get authenticated user's student
+        if (Auth::check()) {
+            $student = Auth::user()->student;
+
+            // If student not found via relationship, try direct query
+            if (!$student) {
+                $student = \App\Models\Student::withoutGlobalScopes()
+                    ->where('user_id', Auth::id())
+                    ->first();
+            }
+
+            return $student;
+        }
+
+        // No parameters and no authenticated user
+        return null;
     }
 }
