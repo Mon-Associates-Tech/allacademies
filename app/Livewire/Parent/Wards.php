@@ -53,8 +53,16 @@ class Wards extends AppComponent
     #[Computed]
     public function wards()
     {
-        $students = StudentParent::where('user_id', Auth::id())
-            ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
+        $students = StudentParent::withoutGlobalScopes()
+            ->where('user_id', Auth::id())
+            ->with([
+                'students' => function($query) {
+                    $query->withoutGlobalScopes();
+                },
+                'students.user',
+                'students.academicLevel.academicGroup',
+                'students.studentGroup'
+            ])
             ->get()
             ->flatMap(function($parent) {
                 return $parent->students;
@@ -64,15 +72,14 @@ class Wards extends AppComponent
         if ($this->searchTerm) {
             $students = $students->filter(function($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
-                       stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
-                       stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
-        });
+                    stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
+                    stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
+            });
+        }
+
+        return $students->sortBy($this->sortBy === 'name' ? 'user.name' : $this->sortBy,
+            SORT_REGULAR, $this->sortDirection === 'desc');
     }
-
-    return $students->sortBy($this->sortBy === 'name' ? 'user.name' : $this->sortBy,
-                        SORT_REGULAR, $this->sortDirection === 'desc');
-}
-
     #[Computed]
     public function selectedWard()
     {

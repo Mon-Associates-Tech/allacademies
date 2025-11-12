@@ -16,10 +16,12 @@ class Dashboard extends AppComponent
     public $searchTerm = '';
     public $sortBy = 'name';
     public $sortDirection = 'asc';
+    public $without_scope = true;
 
-    public function mount()
+    public function mount($without_scope = false)
     {
         $wards = $this->wards;
+        $this->without_scope = $without_scope;
         if ($wards->isNotEmpty()) {
             $this->selectedWardId = $wards->first()->id;
         }
@@ -33,8 +35,16 @@ class Dashboard extends AppComponent
     #[Computed]
     public function wards()
     {
-        $students = StudentParent::withoutGlobalScopes()->where('user_id', Auth::id())
-            ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
+        $students = StudentParent::withoutGlobalScopes()
+            ->where('user_id', Auth::id())
+            ->with([
+                'students' => function($query) {
+                    $query->withoutGlobalScopes();
+                },
+                'students.user',
+                'students.academicLevel.academicGroup',
+                'students.studentGroup'
+            ])
             ->get()
             ->flatMap(function($parent) {
                 return $parent->students;
@@ -53,13 +63,17 @@ class Dashboard extends AppComponent
             SORT_REGULAR, $this->sortDirection === 'desc');
     }
 
-
     #[Computed]
     public function selectedWard()
     {
         if (!$this->selectedWardId) return null;
 
-        return Student::with([
+        $student = Student::query();
+        if($this->without_scope){
+            $student = $student->withoutGlobalScopes();
+        }
+
+        return $student->with([
             'academicLevel.academicGroup',
             'academicGroup',
             'studentGroup',
@@ -69,7 +83,6 @@ class Dashboard extends AppComponent
             }
         ])->find($this->selectedWardId);
     }
-
     #[Computed]
     public function recentAssessments()
     {
