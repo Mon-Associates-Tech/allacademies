@@ -38,6 +38,13 @@ class Kernel extends ConsoleKernel
         // Cleanup expired recordings daily
         $schedule->job(new \App\Jobs\CleanupExpiredRecordingsJob())
             ->daily();
+
+        $schedule->command('books:process-audio-conversion')->everyFiveMinutes();
+
+        $schedule->command('queue:work --stop-when-empty --max-time=240')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+
     }
 
     /**

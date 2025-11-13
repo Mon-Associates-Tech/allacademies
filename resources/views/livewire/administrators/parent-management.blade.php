@@ -195,19 +195,11 @@
                             <div
                                 class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow duration-200 border border-gray-200 dark:border-gray-600">
                                 <div class="flex items-start justify-between mb-3">
-                                    <div class="flex items-center">
-                                        <div
-                                            class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                            {{ substr($parent->user->name, 0, 2) }}
-                                        </div>
-                                        <div class="ml-3">
-                                            <h4 class="font-medium text-gray-900 dark:text-white text-sm">{{ $parent->user->name }}</h4>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst($parent->relationship ?? 'Parent') }}</p>
-                                        </div>
-                                    </div>
+                                    <x-avatar class="w-12 h-12" :name="$parent->user?->name" :avatar="$parent->user?->avatar" />
+
                                     <span
-                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $parent->user->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                                        {{ $parent->user->is_active ? 'Active' : 'Inactive' }}
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $parent->user?->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                        {{ $parent->user?->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </div>
 
@@ -218,15 +210,15 @@
                                                 d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                                             <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                                         </svg>
-                                        {{ $parent->user->email }}
+                                        {{ $parent->user?->email }}
                                     </div>
-                                    @if($parent->user->phone)
+                                    @if($parent->user?->phone)
                                         <div class="flex items-center text-xs text-gray-600 dark:text-gray-400">
                                             <svg class="w-3 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                 <path
                                                     d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
                                             </svg>
-                                            {{ $parent->user->phone }}
+                                            {{ $parent->user?->phone }}
                                         </div>
                                     @endif
                                     <div class="flex items-center text-xs text-gray-600 dark:text-gray-400">
@@ -281,10 +273,6 @@
                                         </svg>
                                     @endif
                                 </div>
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Contact
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
@@ -342,9 +330,9 @@
                                     <div class="flex items-center">
                                         <!-- Avatar with online status -->
                                         <div class="relative">
-                                            <x-avatar :name="$parent->user->name"
+                                            <x-avatar :name="$parent->user?->name"
                                                       class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full"/>
-                                            @if($parent->user->is_online)
+                                            @if($parent->user?->is_online)
                                                 <div
                                                     class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                                             @endif
@@ -352,8 +340,36 @@
 
                                         <div class="ml-4">
                                             <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {{ $parent->user->name }}
+                                                {{ $parent->user?->name }}
                                             </div>
+
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor"
+                                                     viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                                </svg>
+                                                <span class="text-xs">
+                                                    {{ $parent->user?->email }}
+                                                </span>
+                                            </div>
+
+                                            @if($parent->user?->phone)
+                                                <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                    <div class="flex items-center">
+                                                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor"
+                                                             viewBox="0 0 20 20">
+                                                            <path
+                                                                d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                                                        </svg>
+                                                        <span class="text-xs">
+                                                            {{ $parent->user?->phone }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endif
+
                                             <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                     <path
@@ -366,40 +382,14 @@
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">
-                                        <div class="flex items-center">
-                                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor"
-                                                 viewBox="0 0 20 20">
-                                                <path
-                                                    d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                                            </svg>
-                                            {{ $parent->user->email }}
-                                        </div>
-                                    </div>
-                                    @if($parent->user->phone)
-                                        <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            <div class="flex items-center">
-                                                <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor"
-                                                     viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
-                                                </svg>
-                                                {{ $parent->user->phone }}
-                                            </div>
-                                        </div>
-                                    @endif
-                                </td>
-
-                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         @if($parent->students->count() > 0)
                                             <div class="flex -space-x-2 mr-3">
                                                 @foreach($parent->students->take(3) as $student)
                                                     <div
                                                         class="w-6 h-6 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white shadow-sm"
-                                                        title="{{ $student->user->name }}">
-                                                        {{ substr($student->user->name, 0, 1) }}
+                                                        title="{{ $student->user?->name }}">
+                                                        {{ substr($student->user?->name, 0, 1) }}
                                                     </div>
                                                 @endforeach
                                                 @if($parent->students->count() > 3)
@@ -428,7 +418,7 @@
 
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        @if($parent->user->is_active)
+                                        @if($parent->user?->is_active)
                                             <div class="flex items-center">
                                                 <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
                                                 <span
@@ -447,9 +437,9 @@
                                         @endif
                                     </div>
 
-                                    @if($parent->user->last_seen_at)
+                                    @if($parent->user?->last_seen_at)
                                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            Last seen {{ $parent->user->last_seen_at->diffForHumans() }}
+                                            Last seen {{ $parent->user?->last_seen_at->diffForHumans() }}
                                         </div>
                                     @endif
                                 </td>
@@ -527,7 +517,7 @@
                                                  x-transition:leave-end="transform opacity-0 scale-95"
                                                  class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
                                                 <div class="py-1">
-                                                    @if($parent->user->is_active)
+                                                    @if($parent->user?->is_active)
                                                         <button wire:click="toggleParentStatus({{ $parent->id }})"
                                                                 class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                             <svg class="w-4 h-4 mr-3 text-orange-500" fill="none"
@@ -552,7 +542,7 @@
                                                     @endif
 
                                                     <button
-                                                        onclick="navigator.clipboard.writeText('{{ $parent->user->email }}')"
+                                                        onclick="navigator.clipboard.writeText('{{ $parent->user?->email }}')"
                                                         class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                         <svg class="w-4 h-4 mr-3 text-blue-500" fill="none"
                                                              stroke="currentColor" viewBox="0 0 24 24">
@@ -590,7 +580,7 @@
 
             <!-- Pagination -->
             <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                {{ $parents->links() }}
+                {{-- {{ $parents->links() }} --}}
             </div>
         @else
             <!-- Empty State -->

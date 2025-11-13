@@ -205,8 +205,8 @@
                                             <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Payment Status</p>
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                    {{ $subscription->payment->status === 'succeeded' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }}">
-                                                    {{ ucfirst($subscription->payment->status) }}
+                                                    {{ $subscription->payment->status->value === 'succeeded' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }}">
+                                                    {{ ucfirst($subscription->payment->status->value) }}
                                                 </span>
                                             </div>
                                             <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
+        'country_code', 'gender',
     ];
 
     protected $hidden = [
@@ -643,6 +645,14 @@ class User extends Authenticatable implements MustVerifyEmail
             UserRole::AUTHOR,
             UserRole::LIBRARIAN,
         ]);
+    }
+
+    /**
+     * Get the user's subaccount (for direct user payments)
+     */
+    public function subaccount(): MorphOne
+    {
+        return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 
 }

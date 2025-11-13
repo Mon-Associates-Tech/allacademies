@@ -59,6 +59,12 @@ class Student extends Model
             ->dontSubmitEmptyLogs();
     }
 
+
+    public function schoolFees()
+   {
+    return $this->hasMany(\App\Models\SchoolFee::class, 'student_id');
+   }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -133,6 +139,9 @@ class Student extends Model
     {
         return $this->belongsTo(AcademicGroup::class);
     }
+
+
+
 
     public function academicSubjects(): BelongsToMany
     {
@@ -444,5 +453,41 @@ public function currentAcademicLevel(): BelongsTo
 
     public function idCards(){
         return $this->hasMany(StudentIdCard::class);
+    }
+
+    /**
+     * Get all accessible book subscriptions (including parent subscriptions)
+     */
+    public function accessibleBookSubscriptions()
+    {
+        return BookSubscription::where('user_id', $this->user_id)
+            ->orWhere(function($query) {
+                // Get subscriptions made by parents for this student
+                $query->whereIn('subscribed_by', function($subQuery) {
+                    $subQuery->select('user_id')
+                        ->from('parent_student')
+                        ->where('student_id', $this->id);
+                })->where('user_id', $this->user_id);
+            });
+    }
+
+    /**
+     * Check if student can access a specific book (via own or parent subscription)
+     */
+    public function canAccessBook($bookId): bool
+    {
+        return BookSubscription::where('book_id', $bookId)
+            ->where(function($query) {
+                $query->where('user_id', $this->user_id)
+                    ->orWhere(function($q) {
+                        $q->whereIn('subscribed_by', function($subQuery) {
+                            $subQuery->select('user_id')
+                                ->from('parent_student')
+                                ->where('student_id', $this->id);
+                        })->where('user_id', $this->user_id);
+                    });
+            })
+            ->where('status', 'active')
+            ->exists();
     }
 }

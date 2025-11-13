@@ -35,10 +35,11 @@ class ExaminationHeading extends Component
     public function mount($metadata)
     {
         $this->metadata = $metadata;
-        $this->template = old('heading.template', 'twig');
+        $this->template = old('heading.template',  'twig');
         $this->title = old('heading.title', '');
         $this->duration = old('heading.duration', '');
-        $this->instructions = old('heading.instructions', '');
+
+
 
         $this->compile();
     }
@@ -46,7 +47,7 @@ class ExaminationHeading extends Component
     private function compile()
     {
         if ('twig' === $this->template) {
-          $this->down =   TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
+            $this->down =   TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
         }
 
         if ('pug' === $this->template) {

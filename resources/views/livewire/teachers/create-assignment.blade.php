@@ -154,6 +154,50 @@
                         </div>
                     </div>
 
+                    <!-- Exam Security & Restrictions -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Exam Security & Restrictions</h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox"
+                                       wire:model="restrict_navigation"
+                                       id="restrict_navigation"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <label for="restrict_navigation" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                    Restrict navigation (prevent students from leaving the assignment page)
+                                </label>
+                            </div>
+
+                            @if($restrict_navigation)
+                                <div class="ml-6 space-y-4 border-l-2 border-blue-300 pl-4">
+                                    <div>
+                                        <label for="max_tab_switches" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Maximum Tab Switches Allowed
+                                        </label>
+                                        <input type="number"
+                                               wire:model="max_tab_switches"
+                                               id="max_tab_switches"
+                                               min="0"
+                                               max="10"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                        <p class="mt-1 text-xs text-gray-500">Set to 0 for unlimited. Recommended: 2-3 switches.</p>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                        <input type="checkbox"
+                                               wire:model="auto_submit_on_violation"
+                                               id="auto_submit_on_violation"
+                                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                        <label for="auto_submit_on_violation" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                            Automatically cancel assignment when limit is exceeded
+                                        </label>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     <!-- Randomization Toggle -->
                     <div class="mt-6">
                         <label class="flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-all duration-200">

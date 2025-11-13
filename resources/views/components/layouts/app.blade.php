@@ -60,8 +60,6 @@
                     <div class="max-w-5xl px-4 lg:px-8 py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
                 @endif
 
-
-
                 <!-- Alerts -->
                 <div class="max-w-5xl ml-auto px-4 sm:px-6 lg:px-8 print:hidden">
                     <x-alert.success></x-alert.success>

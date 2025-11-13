@@ -627,7 +627,7 @@ class StudentManagement extends Component
 
     public function render()
     {
-        $students = Student::whereHas('user', function ($query) {
+        $students = Student::withoutGlobalScopes()->whereHas('user', function ($query) {
             $query->where('name', 'like', '%' . $this->searchTerm . '%')
                 ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
         })

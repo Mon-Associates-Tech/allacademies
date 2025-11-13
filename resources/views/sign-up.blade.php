@@ -1,5 +1,4 @@
 <x-app>
-
     <section class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
         <!-- Animated background elements -->
         <div class="absolute inset-0">
@@ -9,8 +8,8 @@
         </div>
 
         <div class="lg:grid lg:min-h-screen lg:grid-cols-12 relative z-10">
-            <!-- Image section -->
-            <aside class="relative block h-32 lg:order-last lg:col-span-5 lg:h-full xl:col-span-6">
+            <!-- Image section - Fixed on large screens -->
+            <aside class="relative block h-32 lg:order-last lg:col-span-5 lg:h-screen lg:sticky lg:top-0 xl:col-span-6">
                 <div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-green-600/20 backdrop-blur-sm"></div>
                 <img
                     alt="Students studying together"
@@ -51,9 +50,9 @@
                 </div>
             </aside>
 
-            <!-- Form section -->
-            <main class="flex items-center justify-center px-8 py-12 lg:col-span-7 lg:px-16 xl:col-span-6">
-                <div class="w-full max-w-md">
+            <!-- Form section - Scrollable -->
+            <main class="flex items-center justify-center px-8 py-12 lg:col-span-7 lg:px-16 xl:col-span-6 lg:overflow-y-auto lg:h-screen lg:py-16">
+                <div class="w-full max-w-md my-auto">
                     <!-- Logo and branding -->
                     <div class="mb-8">
                         <div class="flex items-center gap-3 mb-6">
@@ -121,6 +120,59 @@
                             @enderror
                         </div>
 
+                        <!-- Gender field (Optional) -->
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">Gender <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                <select
+                                    id="gender"
+                                    name="gender"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                >
+                                    <option value="">Select gender</option>
+                                    <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                                    <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                                    <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
+                                    <option value="prefer_not_to_say" {{ old('gender') == 'prefer_not_to_say' ? 'selected' : '' }}>Prefer not to say</option>
+                                </select>
+                            </div>
+                            @error('gender')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Phone number field with country code (Optional) -->
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Phone Number <span class="text-gray-400 text-xs">(optional)</span>
+                            </label>
+                            <div class="relative">
+                                <!-- Hidden input for country code -->
+                                <input type="hidden" id="country_code" name="country_code" value="{{ old('country_code') }}">
+
+                                <!-- Phone input (intl-tel-input will enhance this) -->
+                                <input
+                                    id="phone"
+                                    name="phone"
+                                    type="tel"
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    placeholder="Enter phone number"
+                                    value="{{ old('phone') }}"
+                                >
+                            </div>
+                            @error('country_code')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            @error('phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Password field -->
                         <div>
                             <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
@@ -179,7 +231,22 @@
                             <div class="ml-3 text-sm">
                                 <label for="author" class="text-gray-700">
                                 Sign me up as an author</label>
+                                </div>
+                        </div>
+
+                         <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input
+                                    id="newschool"
+                                    name="newschool"
+                                    type="checkbox"
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                >
                             </div>
+                             <div class="ml-3 text-sm">
+                                <label for="newschool" class="text-gray-700">
+                                    Onboard a new school</label>
+                                 </div>
                         </div>
 
                         <!-- Terms agreement -->

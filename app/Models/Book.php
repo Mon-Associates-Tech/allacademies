@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use Log;
 use setasign\Fpdi\Fpdi;
 use Storage;
@@ -51,6 +52,12 @@ class Book extends Model
         'single_video',
         'chapter_audios',
         'chapter_videos',
+        'audio_conversion_pending',
+        'audio_conversion_initiated_by',
+        'audio_conversion_progress',
+        'audio_conversion_attempts',
+        'audio_conversion_last_attempt',
+
     ];
     protected $casts = [
         'has_hardcopy' => 'boolean',
@@ -64,6 +71,10 @@ class Book extends Model
         'has_video' => 'boolean',
         'chapter_audios' => 'array',
         'chapter_videos' => 'array',
+        'audio_conversion_pending' => 'boolean',
+        'audio_conversion_progress' => 'array',
+        'audio_conversion_attempts' => 'integer',
+        'audio_conversion_last_attempt' => 'datetime',
     ];
 
     public function author(): BelongsTo
@@ -122,6 +133,16 @@ class Book extends Model
         return asset('sample.pdf');
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($book) {
+            if (empty($book->slug)) {
+                $book->slug = Str::slug($book->title);
+            }
+        });
+    }
 
     public function getSampleUrlAttribute(): string
     {
@@ -538,16 +559,34 @@ class Book extends Model
             ->get();
     }
 
-    public function getTableOfContentsAttribute()
-    {
-        // First try to get from relationship
-        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-            return $this->tableOfContents->content;
-        }
+    // public function getTableOfContentsAttribute()
+    // {
+    //     // First try to get from relationship
+    //     if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+    //         return $this->tableOfContents->content;
+    //     }
 
-        // If no relation exists, generate default
-        return $this->generateDefaultTableOfContents();
+    //     // If no relation exists, generate default
+    //     return $this->generateDefaultTableOfContents();
+    // }
+
+
+    public function getTableOfContentsAttribute($value)
+{
+    // Use DB value if it exists
+    if (!empty($value)) {
+        return is_string($value) ? json_decode($value, true) : $value;
     }
+
+    // Then fallback to relationship
+    if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+        return $this->tableOfContents->content;
+    }
+
+    // Otherwise, generate a default
+    return $this->generateDefaultTableOfContents();
+}
+
 
     public function getFormattedTableOfContentsAttribute(): array
     {
@@ -585,10 +624,16 @@ class Book extends Model
         return $this->media?->getSingleVideoAttribute();
     }
 
+    // public function getChapterAudiosAttribute(): array
+    // {
+    //     return $this->media?->getChapterAudiosAttribute() ?? [];
+    // }
+
     public function getChapterAudiosAttribute(): array
-    {
-        return $this->media?->getChapterAudiosAttribute() ?? [];
-    }
+{
+    $media = $this->media()->first(); // Always fetch the media row
+    return $media?->chapter_audios ?? [];
+}
 
     public function getChapterVideosAttribute(): array
     {

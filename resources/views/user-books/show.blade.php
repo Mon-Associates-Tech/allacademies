@@ -634,32 +634,75 @@
                                                     </div>
 
                                                     <!-- Audio Player -->
-                                                    @if($userBook->single_audio)
-                                                        <div class="mb-6">
-                                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
-                                                            <audio controls class="w-full">
-                                                                <source src="{{ $userBook->single_audio }}" type="audio/mpeg">
-                                                                Your browser does not support the audio element.
-                                                            </audio>
-                                                        </div>
-                                                    @endif
+                                                  {{-- Full Book Audio (if available) --}}
 
-                                                    @if($userBook->chapter_audios && count($userBook->chapter_audios) > 0)
-                                                        <div>
-                                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chapter Audios</h4>
-                                                            <div class="space-y-3">
-                                                                @foreach($userBook->chapter_audios as $index => $audioUrl)
-                                                                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                                        <span class="text-gray-700 dark:text-gray-300">Chapter {{ $index + 1 }}</span>
-                                                                        <audio controls class="w-64">
-                                                                            <source src="{{ $audioUrl }}" type="audio/mpeg">
-                                                                            Your browser does not support the audio element.
-                                                                        </audio>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        </div>
-                                                    @endif
+                                                  {{-- Debug: see what chapter_audios contains --}}
+
+@if($userBook->single_audio)
+    <div class="mb-6">
+        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
+        <audio controls class="w-full">
+            <source src="{{ $userBook->single_audio }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+@endif
+
+{{-- Chapter Audios (multi-volume) --}}
+@if($userBook->chapter_audios && count($userBook->chapter_audios) > 0)
+    <div>
+        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chapter Audios</h4>
+        <div class="space-y-3">
+            @foreach($userBook->chapter_audios as $index => $audioUrl)
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span class="text-gray-700 dark:text-gray-300">Volume {{ $index + 1 }}</span>
+                    <audio controls class="w-64">
+                        <source src="{{ $audioUrl }}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
+                                                    <!-- Audio Player -->
+{{-- @if($userBook->single_audio)
+    <div class="mb-6">
+        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
+        <audio controls class="w-full">
+            <source src="{{ Storage::url($userBook->single_audio) }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+@endif
+
+@if(!empty($userBook->chapter_audios))
+    @php
+        $chapterAudios = is_array($userBook->chapter_audios)
+            ? $userBook->chapter_audios
+            : json_decode($userBook->chapter_audios, true);
+    @endphp
+
+    @if(!empty($chapterAudios))
+        <div>
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chapter Audios</h4>
+            <div class="space-y-3">
+                @foreach($chapterAudios as $index => $audioUrl)
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <span class="text-gray-700 dark:text-gray-300">Chapter {{ $index + 1 }}</span>
+                        <audio controls class="w-64">
+                            <source src="{{ asset('storage/' . ltrim($audioUrl, '/')) }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+@endif --}}
+
+
                                                 </div>
                                             @endif
 

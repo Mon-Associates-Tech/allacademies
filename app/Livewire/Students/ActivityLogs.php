@@ -137,9 +137,10 @@ class ActivityLogs extends Component
 
     public function getActivityLogsProperty()
     {
-        $student = Auth::user()->student;
-        if (!$student) return Activity::query()->where('id', 0)->paginate($this->perPage);
-
+        $student = getStudent(auth()->id(), withoutScopes: true);
+        if (!$student) {
+            return Activity::query()->where('id', 0)->paginate($this->perPage);
+        }
         $query = Activity::query()
             ->where(function($q) use ($student) {
                 $q->where('subject_type', get_class($student))

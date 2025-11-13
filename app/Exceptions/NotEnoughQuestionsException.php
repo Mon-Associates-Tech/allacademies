@@ -6,8 +6,10 @@ use Exception;
 
 class NotEnoughQuestionsException extends Exception
 {
-    public function __construct()
+    public string $msg = 'Not enough questions';
+    public function __construct(?string $message)
     {
-        parent::__construct('Not Enough Questions');
+        $this->msg = $message;
+        parent::__construct($this->msg);
     }
 }

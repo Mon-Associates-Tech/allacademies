@@ -273,7 +273,6 @@
                                         <span class="text-sm font-medium">Notes</span>
                                     </button>
                                 </div>
-
                                 <!-- Share Button -->
                                 <div class="relative" x-data="{ open: false }">
                                     <button @click="open = !open"
@@ -293,7 +292,7 @@
                                          x-transition:leave-start="opacity-100 transform scale-100"
                                          x-transition:leave-end="opacity-0 transform scale-95"
                                          class="absolute right-0 w-56 mt-2 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700">
-                                        <button @click="copyLink(); open = false"
+                                        <button @click="navigator.clipboard.writeText('{{ route('books.public', ['book' => $book]) }}'); open = false; alert('Link copied!')"
                                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
                                             <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
                                                  viewBox="0 0 24 24">
@@ -302,7 +301,7 @@
                                             </svg>
                                             Copy Link
                                         </button>
-                                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($book->title) }}&url={{ urlencode(request()->url()) }}"
+                                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($book->title) }}&url={{ urlencode(route('books.public', $book)) }}"
                                            target="_blank"
                                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                                             <div class="flex items-center">
@@ -313,7 +312,7 @@
                                                 Share on Twitter
                                             </div>
                                         </a>
-                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}"
+                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('books.public', $book)) }}"
                                            target="_blank"
                                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                                             <div class="flex items-center">
@@ -326,7 +325,6 @@
                                         </a>
                                     </div>
                                 </div>
-
                                 <!-- Add to Reading List -->
                                 <button
                                     class="flex hidden items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
@@ -774,13 +772,14 @@
         </div>
 
         <!-- Related Books Section -->
-        <div class="max-w-7xl hidden mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             @if($book->getAuthorBooks()->count())
-                @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author_name])
+                @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
             @endif
             @if($book->getSimilarBooks()->count())
                 @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])
             @endif
+
 
 
             <div class="grid  grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">

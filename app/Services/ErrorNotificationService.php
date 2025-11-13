@@ -19,7 +19,7 @@ class ErrorNotificationService
      */
     public function __construct()
     {
-        $this->recipients = config('error_notification.recipients', []);
+        $this->recipients = config('error_handling.recipients', []);
     }
 
     /**

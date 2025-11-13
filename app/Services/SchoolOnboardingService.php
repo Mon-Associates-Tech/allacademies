@@ -18,7 +18,8 @@ class SchoolOnboardingService
             // Create school
             $school = School::create([
                 ...$data,
-                'status' => 'inactive'
+                // 'status' => 'inactive'
+                'status' => 'active'
             ]);
 
             // Assign user to school and make them admin

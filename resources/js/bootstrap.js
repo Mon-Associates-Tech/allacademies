@@ -31,6 +31,7 @@ import 'videojs-http-source-selector';
 import './modal'
 import './upload_progress'
 import DOMPurify from 'dompurify';
+import './phone-input';
 window.DOMPurify = DOMPurify;
 
 

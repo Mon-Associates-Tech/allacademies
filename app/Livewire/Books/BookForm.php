@@ -7,6 +7,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\User;
+use App\Jobs\ConvertBookToAudioJob;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -99,6 +100,8 @@ class BookForm extends Component
         'update-authorId' => 'updateAuthorId',
         'update-bookCategoryIds' => 'updateBookCategoryIds',
     ];
+
+
 
     protected $rules = [
         'title' => 'required|min:3|max:255',
@@ -295,9 +298,9 @@ class BookForm extends Component
         $user = auth()->user();
 
         return match ($user->role) {
-            'admin', 'owner' => redirect()->route('admin.book-management'),
-            'author' => redirect()->route('author.books.index'),
-            'teacher' => redirect()->route('books.index'),
+            UserRole::ADMIN, UserRole::OWNER => redirect()->route('admin.book-management'),
+            UserRole::AUTHOR => redirect()->route('author.books.index'),
+            UserRole::TEACHER => redirect()->route('books.index'),
             default => redirect()->back(),
         };
     }
@@ -664,6 +667,7 @@ class BookForm extends Component
     private function createBook(): void
     {
         // Handle cover image
+        // dd($this->tableOfContents);
         $coverPath = null;
         if ($this->coverImage) {
             $fileName = $this->generateFileName(null, 'cover.' . $this->coverImage->extension());
@@ -702,9 +706,17 @@ class BookForm extends Component
             'status' => $this->status,
             'has_audio' => $mediaData['has_audio'],
             'has_video' => $mediaData['has_video'],
+            'audio_conversion_pending' => $this->hasAudio && $pdfPath ? true : false,
+            'audio_conversion_initiated_by' => $this->hasAudio && $pdfPath ? auth()->id() : null,
+
         ]);
 
         $book->categories()->attach($this->bookCategoryIds);
+
+       if ($this->hasAudio && $pdfPath) {
+         // ConvertBookToAudioJob::dispatch($book);
+      }
+
         $this->handleSamplePdfFile($book);
 
         if ($book->has_audio || $book->has_video) {
@@ -940,6 +952,10 @@ class BookForm extends Component
 
         $mediaData = $this->handleMediaFiles();
 
+        $shouldConvertAudio = $this->hasAudio && $pdfPath &&
+            (!$this->book->has_audio || $this->pdfFile);
+
+
         // Update book
         $this->book->update([
             'title' => $this->title,
@@ -959,11 +975,17 @@ class BookForm extends Component
             'status' => $this->status,
             'has_audio' => $mediaData['has_audio'],
             'has_video' => $mediaData['has_video'],
+            'audio_conversion_pending' => $shouldConvertAudio,
+            'audio_conversion_initiated_by' => $shouldConvertAudio ? auth()->id() : $this->book->audio_conversion_initiated_by,
         ]);
 
         $this->handleSamplePdfFile($this->book);
 
         $this->book->categories()->sync($this->bookCategoryIds);
+
+       if ($this->hasAudio && $pdfPath) {
+          ConvertBookToAudioJob::dispatch($this->book);
+      }
 
         $this->book->media()->update([
             'single_audio' => $mediaData['single_audio'],
@@ -1002,3 +1024,16 @@ class BookForm extends Component
         return view('livewire.books.book-form');
     }
 }
+
+
+
+// [{"chapter":1,"title":"Introduction","description":"","page_start":"1","page_end":"6","sections":[]},{"chapter":2,"title":"Chapter 2","description":"","page_start":"7","page_end":"12","sections":[]}]
+
+/**
+ *
+ *
+
+
+
+ */
+

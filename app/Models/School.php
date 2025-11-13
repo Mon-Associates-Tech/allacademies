@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
 
 class School extends Model
@@ -55,6 +56,30 @@ class School extends Model
 
     // Relationships
 
+
+    /**
+     * Get the school's subaccount (polymorphic)
+     */
+    public function subaccount(): MorphOne
+    {
+        return $this->morphOne(Subaccount::class, 'subaccountable');
+    }
+
+    public function settings(): HasMany
+    {
+        return $this->hasMany(SchoolSetting::class);
+    }
+
+    public function getSetting($key, $default = null)
+    {
+        return SchoolSetting::getForSchool($this->id, $key, $default);
+    }
+
+    public function setSetting($key, $value)
+    {
+        return SchoolSetting::setForSchool($this->id, $key, $value);
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -101,7 +126,7 @@ class School extends Model
     public function getActiveAcademicLevels(): BelongsToMany
     {
         return $this->academicLevels()->wherePivot('is_active', true)
-            ->orderBy('school_academic_level.sort_order');
+            ->orderBy('academic_level.sort_order');
     }
 
     // Scopes
@@ -109,7 +134,7 @@ class School extends Model
     public function academicLevels(): BelongsToMany
     {
         return $this->belongsToMany(AcademicLevel::class, 'school_academic_level')
-            ->withPivot('is_active', 'sort_order', 'custom_settings', 'school_academic_group_id')
+            ->withPivot('is_active', 'sort_order', 'custom_settings', 'academic_group_id')
             ->withTimestamps();
     }
 

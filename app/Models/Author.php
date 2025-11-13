@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Author extends Model
 {
@@ -86,5 +87,13 @@ class Author extends Model
         $booksWithRatings = $books->where('average_rating', '>', 0)->count();
 
         return $booksWithRatings > 0 ? round($totalRating / $booksWithRatings, 1) : 0;
+    }
+
+    /**
+     * Get the author's subaccount for payments
+     */
+    public function subaccount(): MorphOne
+    {
+        return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 }

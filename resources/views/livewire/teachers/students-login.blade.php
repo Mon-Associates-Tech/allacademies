@@ -14,4 +14,4 @@
     <div class="mt-4">
         {{ $activities->links() }}
     </div>
-</div><?php
+</div>

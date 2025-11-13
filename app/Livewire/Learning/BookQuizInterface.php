@@ -866,6 +866,7 @@ class BookQuizInterface extends Component
             $userAnswer = $answers[$index] ?? null;
             $isCorrect = false;
             $feedback = '';
+            $pointsEarned = 0;
 
             // Safely get question type with fallback
             $questionType = $question['type'] ?? $question['question_type'] ?? 'unknown';
@@ -877,22 +878,44 @@ class BookQuizInterface extends Component
                     $correctAnswer = $question['correct_answer'] ?? '';
                     $isCorrect = strtolower((string)$userAnswer) === strtolower((string)$correctAnswer);
                     $feedback = $question['explanation'] ?? '';
+                    $pointsEarned = $isCorrect ? ($question['points'] ?? 1) : 0;
                     break;
 
                 case 'essay':
+                case 'essay_question':
+                    // FIX: Properly grade essay questions
                     $gradingResult = $this->gradeEssayQuestion($question, $userAnswer, $quizSession);
-                    $isCorrect = ($gradingResult['score'] ?? 0) >= 70;
-                    $feedback = $gradingResult['feedback'] ?? '';
+
+                    // Use the score from grading (0-100) to determine correctness
+                    $score = $gradingResult['score'] ?? 0;
+
+                    // Consider passing if score is 60% or higher
+                    $isCorrect = $score >= 60;
+
+                    // Calculate points proportionally
+                    $maxPoints = $question['points'] ?? 1;
+                    $pointsEarned = ($score / 100) * $maxPoints;
+
+                    $feedback = $gradingResult['feedback'] ?? 'Your essay has been reviewed.';
+
+                    Log::info('Essay question graded', [
+                        'question_index' => $index,
+                        'score' => $score,
+                        'points_earned' => $pointsEarned,
+                        'max_points' => $maxPoints,
+                        'is_correct' => $isCorrect
+                    ]);
                     break;
 
                 default:
                     // Handle unknown question types
                     $isCorrect = false;
                     $feedback = 'Unable to grade this question type.';
+                    $pointsEarned = 0;
                     break;
             }
 
-            if ($isCorrect) {
+            if ($isCorrect && $questionType !== 'essay' && $questionType !== 'essay_question') {
                 $correctAnswers++;
             }
 
@@ -902,31 +925,37 @@ class BookQuizInterface extends Component
                 'user_answer' => $userAnswer,
                 'correct_answer' => $question['correct_answer'] ?? 'N/A',
                 'is_correct' => $isCorrect,
-                'points_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
+                'points_earned' => round($pointsEarned, 2),
                 'points_possible' => $question['points'] ?? 1,
                 'feedback' => $feedback,
-                'question_type' => $questionType
+                'question_type' => $questionType,
+                'essay_score' => $questionType === 'essay' || $questionType === 'essay_question' ? ($score ?? 0) : null
             ];
         }
 
-        $percentage = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
+        // Calculate total points
+        $totalPointsEarned = array_sum(array_column($questionDetails, 'points_earned'));
+        $totalPointsPossible = array_sum(array_column($questionDetails, 'points_possible'));
+
+        $percentage = $totalPointsPossible > 0 ? ($totalPointsEarned / $totalPointsPossible) * 100 : 0;
 
         return [
             'total_questions' => $totalQuestions,
             'correct_answers' => $correctAnswers,
             'percentage' => round($percentage, 2),
             'question_details' => $questionDetails,
-            'points_earned' => array_sum(array_column($questionDetails, 'points_earned')),
-            'points_possible' => array_sum(array_column($questionDetails, 'points_possible'))
+            'points_earned' => round($totalPointsEarned, 2),
+            'points_possible' => $totalPointsPossible
         ];
     }
-
     protected function gradeEssayQuestion(array $question, ?string $answer, QuizSession $quizSession): array
     {
-        if (empty($answer)) {
+        if (empty($answer) || strlen(trim($answer)) < 10) {
             return [
                 'score' => 0,
-                'feedback' => 'No answer provided.'
+                'feedback' => empty($answer)
+                    ? 'No answer provided.'
+                    : 'Your answer is too short. Please provide a more detailed response (minimum 10 characters).'
             ];
         }
 
@@ -980,16 +1009,25 @@ class BookQuizInterface extends Component
         $result = $this->chatService->chat($chatParameters);
 
         if ($result['success']) {
-            return $this->parseEssayGradingResult($result['content']);
+            $parsedResult = $this->parseEssayGradingResult($result['content']);
+
+            // FIX: Log the grading result for debugging
+            Log::info('Essay grading AI result', [
+                'raw_content' => substr($result['content'], 0, 500),
+                'parsed_score' => $parsedResult['score'],
+                'parsed_feedback' => substr($parsedResult['feedback'], 0, 200)
+            ]);
+
+            return $parsedResult;
         }
 
-        // Fallback grading with similarity matching if AI fails
+        // FIX: Improved fallback grading with similarity matching
         $expectedAnswer = $question['correct_answer'] ?? '';
         $similarityScore = $this->calculateTextSimilarity($answer, $expectedAnswer);
 
         return [
             'score' => $similarityScore,
-            'feedback' => 'Your answer shows ' . ($similarityScore >= 70 ? 'good' : ($similarityScore >= 40 ? 'moderate' : 'limited')) . ' similarity to the expected answer.'
+            'feedback' => 'Your answer shows ' . ($similarityScore >= 70 ? 'good' : ($similarityScore >= 40 ? 'moderate' : 'limited')) . ' similarity to the expected answer. Score: ' . $similarityScore . '%'
         ];
     }
 

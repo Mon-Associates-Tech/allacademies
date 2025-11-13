@@ -671,13 +671,17 @@ class BookBasedLearningService
                 // Check if questions are at root level (array of questions)
                 if (isset($parsed[0]) && is_array($parsed[0]) && isset($parsed[0]['question'])) {
                     Log::info('Found questions at root level', ['count' => count($parsed)]);
+
+                    // FIX: Normalize question structure
+                    $normalizedQuestions = $this->normalizeQuestions($parsed);
+
                     return [
                         'quiz_session' => [
                             'book_title' => $context['book_title'] ?? 'Quiz',
                             'author' => $context['author'] ?? 'Unknown',
                             'context' => 'Generated quiz'
                         ],
-                        'questions' => $parsed,
+                        'questions' => $normalizedQuestions,
                         'adaptive_features' => [
                             'difficulty_adjusted' => $context['adaptive_difficulty'],
                             'focus_areas_addressed' => $context['focus_areas'] ?? [],
@@ -693,13 +697,17 @@ class BookBasedLearningService
                 // Check if questions are nested
                 if (isset($parsed['questions']) && is_array($parsed['questions'])) {
                     Log::info('Found nested questions', ['count' => count($parsed['questions'])]);
+
+                    // FIX: Normalize question structure
+                    $normalizedQuestions = $this->normalizeQuestions($parsed['questions']);
+
                     return [
                         'quiz_session' => $parsed['quiz_session'] ?? [
                                 'book_title' => $context['book_title'] ?? 'Quiz',
                                 'author' => $context['author'] ?? 'Unknown',
                                 'context' => 'Generated quiz'
                             ],
-                        'questions' => $parsed['questions'],
+                        'questions' => $normalizedQuestions,
                         'adaptive_features' => [
                             'difficulty_adjusted' => $context['adaptive_difficulty'],
                             'focus_areas_addressed' => $context['focus_areas'] ?? [],
@@ -726,6 +734,107 @@ class BookBasedLearningService
         }
 
         return $this->parseQuizManually($content, $context);
+    }
+
+
+    /**
+     * Normalize questions to ensure proper structure for all question types
+     */
+    protected function normalizeQuestions(array $questions): array
+    {
+        $normalized = [];
+
+        foreach ($questions as $question) {
+            if (!is_array($question)) {
+                continue;
+            }
+
+            // Determine question type
+            $type = $question['type'] ?? 'multiple_choice';
+
+            // Base structure
+            $normalizedQuestion = [
+                'question' => $question['question'] ?? '',
+                'type' => $type,
+                'difficulty' => $question['difficulty'] ?? 'medium',
+                'points' => $question['points'] ?? 1,
+                'explanation' => $question['explanation'] ?? '',
+                'learning_objective' => $question['learning_objective'] ?? ''
+            ];
+
+            // Handle type-specific fields
+            switch ($type) {
+                case 'multiple_choice':
+                    // Ensure options array exists
+                    $normalizedQuestion['options'] = $question['options'] ?? [];
+
+                    // If options is empty, try to extract from question text
+                    if (empty($normalizedQuestion['options']) && isset($question['question'])) {
+                        $normalizedQuestion['options'] = $this->extractOptionsFromText($question['question']);
+                    }
+
+                    // Ensure correct_answer exists
+                    $normalizedQuestion['correct_answer'] = $question['correct_answer'] ?? ($normalizedQuestion['options'][0] ?? '');
+                    break;
+
+                case 'true_false':
+                    // For true/false, ensure options are set
+                    $normalizedQuestion['options'] = ['True', 'False'];
+
+                    // Normalize correct answer
+                    $correctAnswer = $question['correct_answer'] ?? 'True';
+                    if (is_bool($correctAnswer)) {
+                        $correctAnswer = $correctAnswer ? 'True' : 'False';
+                    }
+                    $normalizedQuestion['correct_answer'] = ucfirst(strtolower($correctAnswer));
+                    break;
+
+                case 'essay':
+                case 'essay_question':
+                    // Essay questions should NOT have options
+                    $normalizedQuestion['type'] = 'essay';
+
+                    // Correct answer is the expected/model answer
+                    $normalizedQuestion['correct_answer'] = $question['correct_answer'] ?? $question['answer'] ?? '';
+
+                    // Remove options if they exist
+                    unset($normalizedQuestion['options']);
+                    break;
+
+                default:
+                    // For unknown types, include options if they exist
+                    if (isset($question['options'])) {
+                        $normalizedQuestion['options'] = $question['options'];
+                    }
+                    $normalizedQuestion['correct_answer'] = $question['correct_answer'] ?? '';
+                    break;
+            }
+
+            $normalized[] = $normalizedQuestion;
+        }
+
+        Log::info('Normalized questions', [
+            'original_count' => count($questions),
+            'normalized_count' => count($normalized),
+            'types' => array_count_values(array_column($normalized, 'type'))
+        ]);
+
+        return $normalized;
+    }
+
+    /**
+     * Try to extract options from question text if they're embedded
+     */
+    protected function extractOptionsFromText(string $text): array
+    {
+        $options = [];
+
+        // Pattern for options like "A) Option text" or "a. Option text"
+        if (preg_match_all('/[A-D][\.\)]\s*(.+?)(?=[A-D][\.\)]|$)/si', $text, $matches)) {
+            $options = array_map('trim', $matches[1]);
+        }
+
+        return $options;
     }
 
     /**

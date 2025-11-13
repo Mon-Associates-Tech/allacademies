@@ -81,7 +81,7 @@
             </a>
         </li>
         <!-- User Impersonation -->
-        <li class="mb-0.5 last:mb-0 " title="User Impersonation">
+        <li class="mb-0.5 last:mb-0 hidden" title="User Impersonation">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.users.impersonate') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('admin.users.impersonate')}}">
                 <div class="flex items-center">
@@ -366,7 +366,7 @@
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0" title="Media Management">
+        <li class="mb-0.5 last:mb-0 hidden" title="Media Management">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('media*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('media.index')}}">
                 <div class="flex items-center">

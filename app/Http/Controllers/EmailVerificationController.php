@@ -26,37 +26,55 @@ class EmailVerificationController extends Controller
 
     public function verify(Request $request, $id, $hash)
     {
-        // Find the user by ID
-        $user = User::findOrFail($id);
 
-        // Verify the hash matches
+        $user = User::findOrFail($id);
+        $redirectFlag = $request->session()->pull('redirect_after_verification');
+        //  if ($redirectFlag === 'onboarding') {
+        //     return redirect('/onboarding/school-setup')
+        //         ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
+        // }
+
         if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
             abort(403, 'Invalid verification link.');
         }
 
-        // Check if the URL has expired (optional - Laravel's signed URLs handle this)
         if ($request->hasValidSignature() === false) {
             abort(403, 'Verification link has expired.');
         }
 
-        // Check if already verified
         if ($user->hasVerifiedEmail()) {
+             if ($redirectFlag === 'onboarding') {
+                return redirect('/onboarding/school-setup')
+                    ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
+            }
             return redirect()->route('sign-in')->with('info', 'Your email is already verified. Please sign in.');
         }
 
-        // Mark email as verified
         if ($user->markEmailAsVerified()) {
+            if ($redirectFlag === 'onboarding') {
+                return redirect('/onboarding/school-setup')
+                    ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
+            }
             event(new \Illuminate\Auth\Events\Verified($user));
         }
 
-        // Clear the verification email from session if it exists
-        $request->session()->forget('verification_email');
-        $user->ownedTeams()->create([
-            'name' => $user->name . '\'s Team' ,
-        ]);
-        // Redirect to sign-in with success message
+        // ✅ Create a team if needed
+        if (!$user->ownedTeams()->exists()) {
+            $user->ownedTeams()->create(['name' => "{$user->name}'s Team"]);
+        }
+
+        // ✅ Check session flag for post-verification redirect
+
+
+
+        // Default redirect to sign-in
+         if ($redirectFlag === 'onboarding') {
+                return redirect('/onboarding/school-setup')
+                    ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
+        }
         return redirect()->route('sign-in')->with('success', 'Your email has been verified successfully! You can now sign in.');
     }
+
 
     public function send(Request $request)
     {

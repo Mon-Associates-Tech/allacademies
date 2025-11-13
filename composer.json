@@ -26,10 +26,12 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^3.6",
         "maatwebsite/excel": "^3.1",
+        "openai-php/laravel": "^0.17.1",
         "phpoffice/phpword": "^1.3",
         "prism-php/prism": "^0.87.0",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-activitylog": "^4.10",
         "stevebauman/location": "^7.5",
         "symfony/console": "^7.2.0",
@@ -86,7 +88,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": false
         }
     },
     "minimum-stability": "dev",
