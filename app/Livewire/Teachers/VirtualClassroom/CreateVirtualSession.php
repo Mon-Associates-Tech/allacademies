@@ -168,7 +168,7 @@ class CreateVirtualSession extends Component
 
     public function createSession()
     {
-        $this->validate();
+//        $this->validate();
 
         DB::beginTransaction();
 
@@ -192,6 +192,7 @@ class CreateVirtualSession extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
+            logError('failed to create session: ' . $e->getMessage());
             $this->dispatch('error', 'Failed to create session: ' . $e->getMessage());
         }
     }

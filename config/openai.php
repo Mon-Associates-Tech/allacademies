@@ -18,6 +18,13 @@ return [
         'max_tokens' => env('OPENAI_MAX_TOKENS', 2000),
     ],
 
+    'models' => [
+        'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-4'),
+        'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-4-turbo'),
+        'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
+
+    ],
+
     'chat' => [
         'max_conversation_history' => env('CHAT_MAX_HISTORY', 20),
         'session_timeout' => env('CHAT_SESSION_TIMEOUT', 3600), // 1 hour
