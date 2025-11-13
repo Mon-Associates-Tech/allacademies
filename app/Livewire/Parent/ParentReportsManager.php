@@ -7,9 +7,13 @@ use App\Models\Student;
 use App\Models\StudentParent;
 use App\Models\Assessment;
 use App\Models\AcademicSubject;
+use App\Models\Attendance\AttendanceRecord;
+use App\Models\AssignmentSubmission;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
+use Carbon\Carbon;
 
 class ParentReportsManager extends AppComponent
 {
@@ -21,9 +25,7 @@ class ParentReportsManager extends AppComponent
     public $selectedSubjectId = null;
     public $generatedReport = null;
     public $showReportPreview = false;
-    public $sortBy = 'date';
-    public $sortDirection = 'desc';
-    public $searchTerm = '';
+    public $activeTab = 'generate'; // 'generate' or 'history'
 
     public function mount()
     {
@@ -37,24 +39,13 @@ class ParentReportsManager extends AppComponent
     {
         $this->selectedWardId = $wardId;
         $this->resetReport();
+        $this->resetPage();
     }
 
-    public function selectReportType($type)
+    public function changeTab($tab)
     {
-        $this->selectedReportType = $type;
-        $this->resetReport();
-    }
-
-    public function selectPeriod($period)
-    {
-        $this->selectedPeriod = $period;
-        $this->resetReport();
-    }
-
-    public function selectSubject($subjectId)
-    {
-        $this->selectedSubjectId = $subjectId;
-        $this->resetReport();
+        $this->activeTab = $tab;
+        $this->resetPage();
     }
 
     public function generateReport()
@@ -64,6 +55,10 @@ class ParentReportsManager extends AppComponent
         try {
             $this->generatedReport = $this->buildReport();
             $this->showReportPreview = true;
+
+            // Save report to history (you can create a reports table for this)
+            // $this->saveReportToHistory($this->generatedReport);
+
             session()->flash('success', 'Report generated successfully!');
         } catch (\Exception $e) {
             session()->flash('error', 'Error generating report: ' . $e->getMessage());
@@ -74,7 +69,6 @@ class ParentReportsManager extends AppComponent
 
     public function downloadReport($format = 'pdf')
     {
-        // Implementation for downloading report
         $this->dispatch('download-report', [
             'format' => $format,
             'data' => $this->generatedReport
@@ -105,8 +99,8 @@ class ParentReportsManager extends AppComponent
                 return $this->buildAttendanceReport();
             case 'progress':
                 return $this->buildProgressReport();
-            case 'subject_analysis':
-                return $this->buildSubjectAnalysisReport();
+            case 'comprehensive':
+                return $this->buildComprehensiveReport();
             default:
                 throw new \Exception('Invalid report type');
         }
@@ -114,210 +108,238 @@ class ParentReportsManager extends AppComponent
 
     private function buildPerformanceReport()
     {
-        $assessments = Assessment::where('student_id', $this->selectedWardId)
-            ->with(['academicSubject', 'assessmentType'])
+        $dateRange = $this->getDateRange();
+
+        $submissions = AssignmentSubmission::where('student_id', $this->selectedWardId)
+            ->with(['assignment.academicSubject'])
             ->when($this->selectedSubjectId, function($query) {
-                $query->where('academic_subject_id', $this->selectedSubjectId);
+                $query->whereHas('assignment', function($q) {
+                    $q->where('academic_subject_id', $this->selectedSubjectId);
+                });
+            })
+            ->when($dateRange, function($query) use ($dateRange) {
+                $query->whereBetween('submitted_at', $dateRange);
             })
             ->get();
 
-        $subjectPerformance = $assessments->groupBy('academic_subject_id')->map(function($subjectAssessments) {
-            $subject = $subjectAssessments->first()->academicSubject;
+        $subjectPerformance = $submissions->groupBy(function($submission) {
+            return $submission->assignment->academic_subject_id;
+        })->map(function($subjectSubmissions) {
+            $subject = $subjectSubmissions->first()->assignment->academicSubject;
+            $graded = $subjectSubmissions->filter(fn($s) => $s->status === 'graded' && $s->total_marks > 0);
+
             return [
                 'subject' => $subject,
-                'assessments_count' => $subjectAssessments->count(),
-                'average_score' => $subjectAssessments->avg('score'),
-                'highest_score' => $subjectAssessments->max('score'),
-                'lowest_score' => $subjectAssessments->min('score'),
-                'passed_count' => $subjectAssessments->where('passed', true)->count(),
-                'latest_assessment' => $subjectAssessments->sortByDesc('created_at')->first()
+                'count' => $subjectSubmissions->count(),
+                'average' => $graded->isEmpty() ? 0 : $graded->avg(fn($s) => ($s->score / $s->total_marks) * 100),
+                'passed' => $graded->filter(fn($s) => ($s->score / $s->total_marks) * 100 >= 50)->count(),
+                'failed' => $graded->filter(fn($s) => ($s->score / $s->total_marks) * 100 < 50)->count(),
+                'highest' => $graded->isEmpty() ? 0 : $graded->max(fn($s) => ($s->score / $s->total_marks) * 100),
+                'lowest' => $graded->isEmpty() ? 0 : $graded->min(fn($s) => ($s->score / $s->total_marks) * 100),
             ];
         });
 
+        $gradedSubmissions = $submissions->filter(fn($s) => $s->status === 'graded' && $s->total_marks > 0);
+        $averageScore = $gradedSubmissions->isEmpty() ? 0 : $gradedSubmissions->avg(fn($s) => ($s->score / $s->total_marks) * 100);
+
         return [
-            'type' => 'performance',
+            'report_type' => 'performance',
             'ward' => $this->selectedWard,
-            'period' => $this->selectedPeriod,
-            'generated_at' => now(),
-            'overall_stats' => [
-                'total_assessments' => $assessments->count(),
-                'average_score' => $assessments->avg('score') ?? 0,
-                'passed_assessments' => $assessments->where('passed', true)->count(),
-                'failed_assessments' => $assessments->where('passed', false)->count(),
-                'subjects_count' => $assessments->pluck('academic_subject_id')->unique()->count()
+            'date_range' => [
+                'start' => $dateRange ? $dateRange[0] : Carbon::now()->subYear(),
+                'end' => $dateRange ? $dateRange[1] : Carbon::now(),
             ],
-            'subject_performance' => $subjectPerformance,
-            'recent_assessments' => $assessments->sortByDesc('created_at')->take(10)
+            'subject' => $this->selectedSubjectId ? AcademicSubject::find($this->selectedSubjectId) : null,
+            'generated_at' => now(),
+            'summary' => [
+                'total_assignments' => $submissions->count(),
+                'average_score' => $averageScore,
+                'passed_count' => $gradedSubmissions->filter(fn($s) => ($s->score / $s->total_marks) * 100 >= 50)->count(),
+                'pass_rate' => $gradedSubmissions->isEmpty() ? 0 : ($gradedSubmissions->filter(fn($s) => ($s->score / $s->total_marks) * 100 >= 50)->count() / $gradedSubmissions->count()) * 100,
+            ],
+            'subject_breakdown' => $subjectPerformance,
+            'assessments' => $submissions->sortByDesc('submitted_at')->take(20),
         ];
     }
 
     private function buildAttendanceReport()
     {
-        // Mock attendance data - replace with actual attendance model
+        $dateRange = $this->getDateRange();
+
+        $attendanceRecords = AttendanceRecord::where('attendance_records.student_id', $this->selectedWardId)
+            ->join('attendances', 'attendance_records.attendance_id', '=', 'attendances.id')
+            ->when($dateRange, function($query) use ($dateRange) {
+                $query->whereBetween('attendances.date', $dateRange);
+            })
+            ->select('attendance_records.*', 'attendances.date', 'attendances.session')
+            ->orderBy('attendances.date', 'desc')
+            ->get();
+
+        $totalDays = $attendanceRecords->count();
+        $presentDays = $attendanceRecords->where('status', 'present')->count();
+        $absentDays = $attendanceRecords->where('status', 'absent')->count();
+        $lateDays = $attendanceRecords->where('status', 'late')->count();
+        $attendanceRate = $totalDays > 0 ? ($presentDays / $totalDays) * 100 : 0;
+
+        // Monthly breakdown
+        $monthlyBreakdown = $attendanceRecords->groupBy(function($record) {
+            return Carbon::parse($record->date)->format('Y-m');
+        })->map(function($records, $month) {
+            return [
+                'month' => Carbon::createFromFormat('Y-m', $month)->format('F Y'),
+                'total' => $records->count(),
+                'present' => $records->where('status', 'present')->count(),
+                'absent' => $records->where('status', 'absent')->count(),
+                'late' => $records->where('status', 'late')->count(),
+                'rate' => $records->count() > 0 ? ($records->where('status', 'present')->count() / $records->count()) * 100 : 0,
+            ];
+        });
+
         return [
-            'type' => 'attendance',
+            'report_type' => 'attendance',
             'ward' => $this->selectedWard,
-            'period' => $this->selectedPeriod,
-            'generated_at' => now(),
-            'attendance_stats' => [
-                'total_days' => 100,
-                'present_days' => 95,
-                'absent_days' => 5,
-                'attendance_rate' => 95.0
+            'date_range' => [
+                'start' => $dateRange ? $dateRange[0] : Carbon::now()->subYear(),
+                'end' => $dateRange ? $dateRange[1] : Carbon::now(),
             ],
-            'monthly_breakdown' => [
-                'January' => ['present' => 20, 'absent' => 1],
-                'February' => ['present' => 18, 'absent' => 2],
-                'March' => ['present' => 22, 'absent' => 0],
-                // Add more months as needed
-            ]
+            'generated_at' => now(),
+            'summary' => [
+                'total_days' => $totalDays,
+                'present_days' => $presentDays,
+                'absent_days' => $absentDays,
+                'late_days' => $lateDays,
+                'attendance_rate' => $attendanceRate,
+            ],
+            'monthly_breakdown' => $monthlyBreakdown,
+            'recent_records' => $attendanceRecords->take(30),
         ];
     }
 
     private function buildProgressReport()
     {
-        $assessments = Assessment::where('student_id', $this->selectedWardId)
-            ->with('academicSubject')
-            ->orderBy('created_at')
+        $dateRange = $this->getDateRange();
+
+        $submissions = AssignmentSubmission::where('student_id', $this->selectedWardId)
+            ->with(['assignment.academicSubject'])
+            ->when($dateRange, function($query) use ($dateRange) {
+                $query->whereBetween('submitted_at', $dateRange);
+            })
+            ->orderBy('submitted_at')
             ->get();
 
-        $progressData = [];
-        foreach ($assessments->groupBy('academic_subject_id') as $subjectId => $subjectAssessments) {
-            $subject = $subjectAssessments->first()->academicSubject;
-            $progressData[] = [
+        $progressData = $submissions->groupBy(function($submission) {
+            return $submission->assignment->academic_subject_id;
+        })->map(function($subjectSubmissions) {
+            $subject = $subjectSubmissions->first()->assignment->academicSubject;
+            $progressPoints = $subjectSubmissions->map(function($submission) {
+                return [
+                    'date' => $submission->submitted_at->format('Y-m-d'),
+                    'score' => $submission->total_marks > 0 ? ($submission->score / $submission->total_marks) * 100 : 0,
+                    'title' => $submission->assignment->title,
+                ];
+            });
+
+            $scores = $progressPoints->pluck('score');
+            $trend = $this->calculateTrend($scores);
+
+            return [
                 'subject' => $subject,
-                'progress_points' => $subjectAssessments->map(function($assessment) {
-                    return [
-                        'date' => $assessment->created_at->format('Y-m-d'),
-                        'score' => $assessment->score,
-                        'passed' => $assessment->passed
-                    ];
-                })->values()
+                'progress_points' => $progressPoints,
+                'trend' => $trend,
+                'improvement' => $scores->count() > 1 ? ($scores->last() - $scores->first()) : 0,
             ];
-        }
+        });
 
         return [
-            'type' => 'progress',
+            'report_type' => 'progress',
             'ward' => $this->selectedWard,
-            'period' => $this->selectedPeriod,
+            'date_range' => [
+                'start' => $dateRange ? $dateRange[0] : Carbon::now()->subYear(),
+                'end' => $dateRange ? $dateRange[1] : Carbon::now(),
+            ],
             'generated_at' => now(),
             'progress_data' => $progressData,
-            'improvement_areas' => $this->identifyImprovementAreas($assessments)
         ];
     }
 
-    private function buildSubjectAnalysisReport()
+    private function buildComprehensiveReport()
     {
-        if (!$this->selectedSubjectId) {
-            throw new \Exception('Subject must be selected for subject analysis report');
-        }
-
-        $assessments = Assessment::where('student_id', $this->selectedWardId)
-            ->where('academic_subject_id', $this->selectedSubjectId)
-            ->with(['academicSubject', 'assessmentType'])
-            ->get();
-
         return [
-            'type' => 'subject_analysis',
+            'report_type' => 'comprehensive',
             'ward' => $this->selectedWard,
-            'subject' => AcademicSubject::find($this->selectedSubjectId),
-            'period' => $this->selectedPeriod,
+            'date_range' => [
+                'start' => $dateRange = $this->getDateRange() ? $this->getDateRange()[0] : Carbon::now()->subYear(),
+                'end' => $dateRange = $this->getDateRange() ? $this->getDateRange()[1] : Carbon::now(),
+            ],
             'generated_at' => now(),
-            'detailed_analysis' => [
-                'total_assessments' => $assessments->count(),
-                'average_score' => $assessments->avg('score') ?? 0,
-                'score_distribution' => $this->calculateScoreDistribution($assessments),
-                'difficulty_analysis' => $this->analyzeDifficulty($assessments),
-                'time_series' => $assessments->sortBy('created_at')->map(function($assessment) {
-                    return [
-                        'date' => $assessment->created_at->format('Y-m-d'),
-                        'score' => $assessment->score,
-                        'type' => $assessment->assessmentType->name ?? 'Unknown'
-                    ];
-                })
-            ]
+            'performance' => $this->buildPerformanceReport(),
+            'attendance' => $this->buildAttendanceReport(),
+            'progress' => $this->buildProgressReport(),
         ];
     }
 
-    private function identifyImprovementAreas($assessments)
+    private function getDateRange()
     {
-        $subjectAverages = $assessments->groupBy('academic_subject_id')
-            ->map(function($subjectAssessments) {
-                return [
-                    'subject' => $subjectAssessments->first()->academicSubject,
-                    'average' => $subjectAssessments->avg('score')
-                ];
-            })
-            ->sortBy('average')
-            ->take(3);
-
-        return $subjectAverages->values();
-    }
-
-    private function calculateScoreDistribution($assessments)
-    {
-        $distribution = [
-            'A (90-100)' => 0,
-            'B (80-89)' => 0,
-            'C (70-79)' => 0,
-            'D (60-69)' => 0,
-            'F (0-59)' => 0
-        ];
-
-        foreach ($assessments as $assessment) {
-            $score = $assessment->score;
-            if ($score >= 90) $distribution['A (90-100)']++;
-            elseif ($score >= 80) $distribution['B (80-89)']++;
-            elseif ($score >= 70) $distribution['C (70-79)']++;
-            elseif ($score >= 60) $distribution['D (60-69)']++;
-            else $distribution['F (0-59)']++;
+        switch ($this->selectedPeriod) {
+            case 'current_term':
+                return [Carbon::now()->startOfMonth(), Carbon::now()];
+            case 'last_term':
+                return [Carbon::now()->subMonths(3)->startOfMonth(), Carbon::now()->subMonths(3)->endOfMonth()];
+            case 'current_year':
+                return [Carbon::now()->startOfYear(), Carbon::now()];
+            case 'last_year':
+                return [Carbon::now()->subYear()->startOfYear(), Carbon::now()->subYear()->endOfYear()];
+            case 'all_time':
+                return null;
+            default:
+                return [Carbon::now()->startOfMonth(), Carbon::now()];
         }
-
-        return $distribution;
     }
 
-    private function analyzeDifficulty($assessments)
+    private function calculateTrend($scores)
     {
-        $averageScore = $assessments->avg('score');
+        if ($scores->count() < 2) return 'stable';
 
-        if ($averageScore >= 80) return 'Easy';
-        if ($averageScore >= 60) return 'Moderate';
-        return 'Difficult';
+        $recent = $scores->slice(-3)->avg();
+        $earlier = $scores->slice(0, 3)->avg();
+
+        if ($recent > $earlier + 5) return 'improving';
+        if ($recent < $earlier - 5) return 'declining';
+        return 'stable';
     }
 
     #[Computed]
     public function wards()
     {
-        $students = StudentParent::where('user_id', Auth::id())
-            ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
+        $students = StudentParent::withoutGlobalScopes()
+            ->where('user_id', Auth::id())
+            ->with([
+                'students' => function($query) {
+                    $query->withoutGlobalScopes();
+                },
+                'students.user',
+                'students.academicLevel.academicGroup',
+                'students.studentGroup'
+            ])
             ->get()
             ->flatMap(function($parent) {
                 return $parent->students;
             })
-            ->unique('id'); // Remove duplicates
+            ->unique('id');
 
-        if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
-                return stripos($student->user->name, $this->searchTerm) !== false ||
-                    stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
-                    stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
-            });
-        }
-
-        return $students->sortBy($this->sortBy === 'name' ? 'user.name' : $this->sortBy,
-            SORT_REGULAR, $this->sortDirection === 'desc');
+        return $students->sortBy('user.name');
     }
-
 
     #[Computed]
     public function selectedWard()
     {
         if (!$this->selectedWardId) return null;
 
-        return Student::with([
-            'user',
-            'academicLevel.academicGroup'
-        ])->find($this->selectedWardId);
+        return Student::withoutGlobalScopes()
+            ->with([
+                'user',
+                'academicLevel.academicGroup'
+            ])->find($this->selectedWardId);
     }
 
     #[Computed]
@@ -325,7 +347,7 @@ class ParentReportsManager extends AppComponent
     {
         if (!$this->selectedWard) return collect();
 
-        return AcademicSubject::whereHas('assessments', function($query) {
+        return AcademicSubject::whereHas('assignments.submissions', function($query) {
             $query->where('student_id', $this->selectedWardId);
         })->get();
     }
@@ -337,7 +359,7 @@ class ParentReportsManager extends AppComponent
             'performance' => 'Performance Report',
             'attendance' => 'Attendance Report',
             'progress' => 'Progress Report',
-            'subject_analysis' => 'Subject Analysis'
+            'comprehensive' => 'Comprehensive Report'
         ];
     }
 
@@ -351,6 +373,13 @@ class ParentReportsManager extends AppComponent
             'last_year' => 'Last Academic Year',
             'all_time' => 'All Time'
         ];
+    }
+
+    #[Computed]
+    public function reportHistory()
+    {
+        // In production, fetch from a reports table
+        return collect();
     }
 
     public function render()

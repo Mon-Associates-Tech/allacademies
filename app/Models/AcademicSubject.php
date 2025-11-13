@@ -164,4 +164,9 @@ class AcademicSubject extends Model
         ]);
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
 }

@@ -128,8 +128,16 @@ class ParentLibraryManager extends AppComponent
     {
         if (!$this->selectedWardId) return collect();
 
-        // Get books that the ward has access to through subscriptions
-        $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
+        $student = Student::findOrFail($this->selectedWardId);
+
+        // Get books that the ward has access to through subscriptions (including parent subscriptions)
+        $subscribedBookIds = BookSubscription::where(function($query) use ($student) {
+            $query->where('user_id', $student->user->id)
+                ->orWhere(function($q) use ($student) {
+                    $q->where('subscribed_by', auth()->user()->id)
+                        ->where('user_id', $student->user->id);
+                });
+        })
             ->where('status', 'active')
             ->pluck('book_id');
 
@@ -139,10 +147,10 @@ class ParentLibraryManager extends AppComponent
         if ($this->searchTerm) {
             $query->where(function($q) {
                 $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                  ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                  ->orWhereHas('author', function($author) {
-                      $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
-                  });
+                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
+                    ->orWhereHas('author', function($author) {
+                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+                    });
             });
         }
 
@@ -151,7 +159,7 @@ class ParentLibraryManager extends AppComponent
         }
 
         if ($this->readingFilter !== 'all') {
-            // Filter based on reading history - mock implementation
+            // Filter based on reading history - implement as needed
         }
 
         $query->orderBy($this->sortBy, $this->sortDirection);

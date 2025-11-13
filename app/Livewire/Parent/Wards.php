@@ -53,21 +53,20 @@ class Wards extends AppComponent
     #[Computed]
     public function wards()
     {
-        $students = StudentParent::withoutGlobalScopes()
+        // Get the parent record first
+        $parent = StudentParent::withoutGlobalScopes()
             ->where('user_id', Auth::id())
-            ->with([
-                'students' => function($query) {
-                    $query->withoutGlobalScopes();
-                },
-                'students.user',
-                'students.academicLevel.academicGroup',
-                'students.studentGroup'
-            ])
-            ->get()
-            ->flatMap(function($parent) {
-                return $parent->students;
-            })
-            ->unique('id'); // Remove duplicates
+            ->first();
+
+        if (!$parent) {
+            return collect();
+        }
+
+        // Get students through the pivot table
+        $students = $parent->students()
+            ->withoutGlobalScopes()
+            ->with(['user', 'academicLevel.academicGroup', 'studentGroup'])
+            ->get();
 
         if ($this->searchTerm) {
             $students = $students->filter(function($student) {
@@ -80,21 +79,24 @@ class Wards extends AppComponent
         return $students->sortBy($this->sortBy === 'name' ? 'user.name' : $this->sortBy,
             SORT_REGULAR, $this->sortDirection === 'desc');
     }
+
     #[Computed]
     public function selectedWard()
     {
         if (!$this->selectedWardId) return null;
 
-        return Student::with([
-            'user',
-            'academicLevel.academicGroup',
-            'academicGroup',
-            'studentGroup',
-            'assessments' => function($query) {
-                $query->latest()->limit(10);
-            }
-        ])->find($this->selectedWardId);
+        return Student::withoutGlobalScopes()
+            ->with([
+                'user',
+                'academicLevel.academicGroup',
+                'academicGroup',
+                'studentGroup',
+                'assessments' => function($query) {
+                    $query->latest()->limit(10);
+                }
+            ])->find($this->selectedWardId);
     }
+    #[Computed]
 
     #[Computed]
     public function wardPerformanceData()
