@@ -264,11 +264,11 @@
 
         <!-- Profile -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.account.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.account*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('teachers.account')}}">
                 <div class="flex items-center">
                     <svg
-                        class="shrink-0 fill-current {{ Route::is('teachers.account.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        class="shrink-0 fill-current {{ Route::is('teachers.account*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                         width="16" height="16" viewBox="0 0 24 24">
                         <path
                             d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>

@@ -73,3 +73,5 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('/report-cards/{reportCard}/print', [StudentManagementController::class, 'printReportCard'])->name('print-report-card');
     Route::post('/import', [StudentManagementController::class, 'import'])->name('import');
 });
+
+Route::get('students/{user}/profile', \App\Livewire\Students\PublicProfile::class)->name('students.profile.public');
