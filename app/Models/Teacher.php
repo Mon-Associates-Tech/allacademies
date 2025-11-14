@@ -22,7 +22,7 @@ class Teacher extends Model
     protected $fillable = [
         'school_id', 'user_id', 'employee_id', 'department',
         'hire_date', 'termination_date', 'salary',
-        'employment_type', 'status', 'qualifications'
+        'employment_type', 'status', 'qualifications', 'specialization'
     ];
 
     protected $casts = [
