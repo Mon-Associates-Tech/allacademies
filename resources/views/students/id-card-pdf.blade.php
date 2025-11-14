@@ -59,9 +59,13 @@
     </style>
 </head>
 <body>
+
+@php
+    $school = $student->school ?? $student->user->school;
+@endphp
 <!-- Include letterhead -->
-@include('components.letterheads.' . ($student->school->letterhead_template ?? 'classic'), [
-    'school' => $student->school,
+@include('components.letterheads.' . ($school->letterhead_template ?? 'classic'), [
+    'school' => $school,
     'title' => 'Student Identification Card'
 ])
 
@@ -70,7 +74,7 @@
     <div class="id-card">
         <div class="id-header">
             <h2 style="font-size: 18px; margin: 0;">STUDENT ID CARD</h2>
-            <p style="font-size: 11px; margin-top: 5px;">{{ $student->school->name }}</p>
+            <p style="font-size: 11px; margin-top: 5px;">{{ $school->name }}</p>
         </div>
 
         <div class="id-body">
@@ -136,8 +140,8 @@
         </div>
 
         <div class="id-footer">
-            <p><strong>Emergency Contact:</strong> {{ $student->school->phone }}</p>
-            <p style="margin-top: 3px;">This card is property of {{ $student->school->name }}</p>
+            <p><strong>Emergency Contact:</strong> {{ $school->phone }}</p>
+            <p style="margin-top: 3px;">This card is property of {{ $school->name }}</p>
         </div>
     </div>
 

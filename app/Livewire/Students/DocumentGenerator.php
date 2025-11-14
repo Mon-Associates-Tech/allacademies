@@ -73,7 +73,7 @@ class DocumentGenerator extends Component
         ]);
 
         // Load academic years
-        $this->academicYears = AcademicYear::where('school_id', $this->student->school_id)
+        $this->academicYears = AcademicYear::where('school_id', getSchoolId())
             ->orderBy('start_date', 'desc')
             ->get();
 
@@ -252,7 +252,7 @@ class DocumentGenerator extends Component
                 'academic_year_id' => $this->selectedAcademicYearId,
                 'term' => $this->selectedTerm,
             ], [
-                'school_id' => $this->student->school_id,
+                'school_id' => getSchoolId(),
                 'generated_at' => now(),
             ]);
 
@@ -282,6 +282,7 @@ class DocumentGenerator extends Component
         }
     }
 
+
     public function downloadReportCard($reportCardId = null)
     {
         if ($reportCardId) {
@@ -304,7 +305,6 @@ class DocumentGenerator extends Component
             echo $pdf->output();
         }, "report-card-{$this->student->user->name}-{$reportCard->term}.pdf");
     }
-
     public function generateIdCard()
     {
         try {
@@ -364,7 +364,6 @@ class DocumentGenerator extends Component
             echo $pdf->output();
         }, "id-card-{$this->student->user->name}.pdf");
     }
-
     public function generateLibraryCard()
     {
         try {
@@ -419,7 +418,7 @@ class DocumentGenerator extends Component
 
         $libraryCard->load('student.user', 'student.academicLevel', 'student.school');
 
-        $pdf = PDF::loadView('students.library-card-pdf', [
+        $pdf = PDF::loadView('students.library-card', [
             'student' => $libraryCard->student,
             'libraryCard' => $libraryCard
         ]);
@@ -433,7 +432,7 @@ class DocumentGenerator extends Component
     {
         $data = $this->getAttendanceReportData();
 
-        $pdf = PDF::loadView('students.attendance-report-pdf', [
+        $pdf = PDF::loadView('students.attendance-report', [
             'student' => $this->student,
             'data' => $data,
             'academicYear' => AcademicYear::find($this->selectedAcademicYearId)
