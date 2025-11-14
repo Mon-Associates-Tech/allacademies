@@ -22,6 +22,7 @@ class School extends Model
         'phone',
         'website',
         'logo',
+        'letterhead_template',
 
         // Location
         'address',

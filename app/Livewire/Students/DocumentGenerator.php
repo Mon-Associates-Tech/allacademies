@@ -458,6 +458,8 @@ class DocumentGenerator extends Component
     {
         return [
             'student' => $this->student,
+            'school' => $this->student->school,
+            'letterhead_template' => $this->student->school->letterhead_template ?? 'classic',
             'academic_year' => AcademicYear::find($this->selectedAcademicYearId),
             'term' => $this->selectedTerm,
             'grades' => $this->grades,
@@ -469,6 +471,8 @@ class DocumentGenerator extends Component
     {
         return [
             'student' => $this->student,
+            'school' => $this->student->school,
+            'letterhead_template' => $this->student->school->letterhead_template ?? 'classic',
             'card_number' => $this->generateCardNumber('ID'),
             'issue_date' => now(),
             'expiry_date' => now()->addMonths($this->cardExpiryMonths),
@@ -479,6 +483,8 @@ class DocumentGenerator extends Component
     {
         return [
             'student' => $this->student,
+            'school' => $this->student->school,
+            'letterhead_template' => $this->student->school->letterhead_template ?? 'classic',
             'card_number' => $this->generateCardNumber('LIB'),
             'card_type' => $this->libraryCardType,
             'issued_date' => now(),
@@ -489,6 +495,8 @@ class DocumentGenerator extends Component
     private function getAttendanceReportData()
     {
         return [
+            'school' => $this->student->school,
+            'letterhead_template' => $this->student->school->letterhead_template ?? 'classic',
             'summary' => $this->attendanceSummary,
             'records' => $this->student->attendanceRecords()
                 ->with(['attendance.academicLevel', 'attendance.academicSubject'])

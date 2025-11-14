@@ -22,6 +22,7 @@ use App\Livewire\Common\Messages\MessageShow;
 use App\Livewire\School\SchoolDetails;
 use App\Livewire\Changelogs\ChangelogList;
 use App\Livewire\Changelogs\CreateChangelog;
+use App\Livewire\SchoolSettings\LetterheadSettings;
 use Illuminate\Support\Facades\Route;
 
 
@@ -88,5 +89,8 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
 
     Route::get('students/{student}/documents', \App\Livewire\Students\DocumentGenerator::class)
         ->name('students.documents');
+
+    Route::get('/school-settings/letterhead', LetterheadSettings::class)
+        ->name('school-settings.letterhead');
 
 });
