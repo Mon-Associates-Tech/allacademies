@@ -12,6 +12,7 @@ use App\Livewire\Teachers\Messages\ComposeMessage;
 use App\Livewire\Teachers\Messages\MessageIndex;
 use App\Livewire\Teachers\Messages\MessageShow;
 use App\Livewire\Teachers\Messages\SendMessageToStudents;
+use App\Livewire\Teachers\PublicProfile;
 use App\Livewire\Teachers\Schedules;
 use App\Livewire\Teachers\StudentDetails;
 use App\Livewire\Teachers\StudentPerformances;
@@ -83,3 +84,6 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
     });
 
 });
+
+Route::get('teachers/{user}/profile', PublicProfile::class)->name('teachers.profile.public');
+

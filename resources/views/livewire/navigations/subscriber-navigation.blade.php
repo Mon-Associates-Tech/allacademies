@@ -101,7 +101,7 @@
                         <path d="M17 3l1.5 3L22 8l-3.5 2L17 13l-1.5-3L12 8l3.5-2L17 3z"/>
                     </svg>
 
-                    <span class="text-sm ml-4 sidebar-text duration-200">Self Assessment Assistant</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Assessment Assistant</span>
                 </div>
             </a>
         </li>

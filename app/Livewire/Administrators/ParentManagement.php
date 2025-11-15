@@ -55,7 +55,7 @@ class ParentManagement extends AppComponent ///
 
     public function mount()
     {
-        $this->authorize('own');
+       // $this->authorize('own');
     }
 
     public function updatingSearch()
@@ -360,7 +360,7 @@ class ParentManagement extends AppComponent ///
     {
         //dd(StudentParent::with(['user', 'students'])->get());
         return StudentParent::withoutGlobalScopes()->with(['user', 'students'])->get();
-        
+
             // ->whereHas('user', function (Builder $query) {
             //     if ($this->search) {
             //         $query->where(function ($q) {

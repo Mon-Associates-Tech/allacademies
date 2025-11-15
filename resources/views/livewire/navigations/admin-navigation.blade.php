@@ -31,6 +31,7 @@
             </a>
         </li>
 
+        @if(auth()->user()->role === \App\Enums\UserRole::OWNER)
         <li class="mb-0.5 last:mb-0" title="School Switcher">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.school-switcher') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{ route('admin.school-switcher') }}">
@@ -48,6 +49,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
 
         <li class="mb-0.5 last:mb-0" title="Academic Management">
@@ -164,7 +166,7 @@
                 </div>
             </a>
         </li>
-
+        @if(auth()->user()->role === \App\Enums\UserRole::OWNER)
         <!-- Author Management -->
         <li class="mb-0.5 last:mb-0 " title="Author Management">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.author-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -180,6 +182,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <!-- Parent Management -->
         <li class="mb-0.5 last:mb-0" title="Parent Management">
@@ -198,6 +201,7 @@
         </li>
 
         <!-- Book Management -->
+        @if(auth()->user()->role === \App\Enums\UserRole::OWNER)
         <li class="mb-0.5 last:mb-0 " title="Book Management">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.book-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('admin.book-management')}}">
@@ -212,8 +216,10 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <!-- Book Approvals -->
+        @if(auth()->user()->role === \App\Enums\UserRole::OWNER)
         <li class="mb-0.5 last:mb-0 " title="Book Approvals">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.book-approvals') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('admin.book-approvals')}}">
@@ -229,6 +235,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <!-- Subject Management -->
         <li class="mb-0.5 last:mb-0 " title="Subject Management">
@@ -321,6 +328,7 @@
         </li>
 
         {{-- Moderator Activities --}}
+        @if(auth()->user()->role === \App\Enums\UserRole::OWNER)
         <li class="mb-0.5 last:mb-0" title="Moderator Activities">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('admin.academic-activities*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('admin.academic-activities')}}">
@@ -335,6 +343,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <li class="mb-0.5 last:mb-0" title="School Settings">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('school-settings.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"

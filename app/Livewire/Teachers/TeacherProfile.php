@@ -20,6 +20,7 @@ class TeacherProfile extends Component
     public $phone;
     public $bio;
     public $avatar;
+    public $cover_image;
 
     // Password form properties
     public $current_password;
@@ -44,6 +45,7 @@ class TeacherProfile extends Component
         'phone' => ['nullable', 'string', 'max:20'],
         'bio' => ['nullable', 'string', 'max:1000'],
         'avatar' => ['nullable', 'image', 'max:2048'], // 2MB max
+        'cover_image' => ['nullable', 'image', 'max:5120'], // 5MB max
     ];
 
     protected $passwordRules = [
@@ -105,6 +107,18 @@ class TeacherProfile extends Component
                 $user->avatar = $avatarPath;
             }
 
+            // Handle cover image upload
+            if ($this->cover_image) {
+                // Delete old cover image if exists
+                if ($user->cover_image) {
+                    Storage::disk('public')->delete($user->cover_image);
+                }
+
+                // Store new cover image
+                $coverPath = $this->cover_image->store('covers', 'public');
+                $user->cover_image = $coverPath;
+            }
+
             // Update user data
             $user->name = $validatedData['name'];
             $user->email = $validatedData['email'];
@@ -112,8 +126,9 @@ class TeacherProfile extends Component
             $user->bio = $validatedData['bio'];
             $user->save();
 
-            // Reset avatar input
+            // Reset file inputs
             $this->avatar = null;
+            $this->cover_image = null;
 
             session()->flash('message', 'Profile updated successfully!');
 
@@ -132,6 +147,19 @@ class TeacherProfile extends Component
                 'type' => 'error'
             ]);
         }
+    }
+
+    public function removeCoverImage()
+    {
+        $user = Auth::user();
+
+        if ($user->cover_image && Storage::disk('public')->exists($user->cover_image)) {
+            Storage::disk('public')->delete($user->cover_image);
+        }
+
+        $user->update(['cover_image' => null]);
+
+        session()->flash('message', 'Cover image removed successfully!');
     }
 
     public function updatePassword()

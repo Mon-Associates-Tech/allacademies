@@ -64,7 +64,7 @@ class Dashboard extends Component
         $this->recentAssignments = $this->teacher->assignments()
             ->with(['academicSubject', 'students', 'academicLevels'])
             ->orderBy('created_at', 'desc')
-            ->take(10)
+            ->take(5)
             ->get()
             ->toArray();
 

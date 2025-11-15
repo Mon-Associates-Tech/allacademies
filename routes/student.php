@@ -80,3 +80,5 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
         Route::get('/recordings', ViewSessionRecordings::class)->name('recordings');
     });
 });
+
+Route::get('students/{user}/profile', \App\Livewire\Students\PublicProfile::class)->name('students.profile.public');

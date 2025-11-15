@@ -113,6 +113,8 @@ class AppServiceProvider extends ServiceProvider
             'user_book' => UserBook::class,
             'user_book_share' => \App\Models\UserBookShare::class,
             'academic_year' => \App\Models\AcademicYear::class,
+            'studentIdCard' => \App\Models\StudentIdCard::class,
+            'report_card' => \App\Models\ReportCard::class,
 
         ]);
     }

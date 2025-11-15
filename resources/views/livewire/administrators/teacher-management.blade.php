@@ -1,7 +1,6 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
-        <!-- Replace the Create/Edit Form section with this -->
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Teacher Management</h1>
@@ -43,288 +42,108 @@
             </div>
         @endif
 
-        <x-modal-component name="teacher-form"  :title="$isEditing ? 'Edit Teacher' : 'Create New Teacher'" size="2xl" :closable="true">
-            <form id="teacher-form" wire:submit.prevent="{{ $isEditing ? 'update' : 'create' }}" class="">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Personal Information -->
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
-
-                            <div class="space-y-4">
-                                <!-- Email (First to check existing user) -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Email Address <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        wire:model.blur="email"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        placeholder="Enter email address"
-                                    >
-                                    @if($userExists)
-                                        <p class="text-blue-600 text-sm mt-1 flex items-center">
-                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                            </svg>
-                                            User exists. Will assign teacher role to existing user.
-                                        </p>
-                                    @endif
-                                    @error('email')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Name -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Full Name <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        wire:model="name"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        placeholder="Enter teacher's full name"
-                                    >
-                                    @error('name')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Password -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Password
-                                        @if(!$userExists && !$isEditing)
-                                            <span class="text-red-500">*</span>
-                                        @endif
-                                        @if($userExists || $isEditing)
-                                            <span class="text-gray-500 text-xs">(leave blank to keep current)</span>
-                                        @endif
-                                    </label>
-                                    <input
-                                        type="password"
-                                        wire:model="password"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        placeholder="{{ $userExists || $isEditing ? 'Enter new password (optional)' : 'Enter password' }}"
-                                    >
-                                    @error('password')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Specialization -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Specialization
-                                    </label>
-                                    <input
-                                        type="text"
-                                        wire:model="specialization"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        placeholder="e.g., Mathematics, Science, etc."
-                                    >
-                                    @error('specialization')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Biography -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Biography
-                                    </label>
-                                    <textarea
-                                        wire:model="biography"
-                                        rows="3"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        placeholder="Brief biography about the teacher..."
-                                    ></textarea>
-                                    @error('biography')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Academic Information -->
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Academic Assignment</h3>
-
-                            <div class="space-y-4">
-                                <!-- Academic Group -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Academic Group <span class="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        wire:model.live="academicGroupId"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                    >
-                                        <option value="">Select Academic Group</option>
-                                        @foreach($academicGroups as $group)
-                                            <option value="{{ $group->id }}">{{ $group->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('academicGroupId')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Academic Level -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Academic Level <span class="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        wire:model.live="academicLevelId"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        {{ empty($academicLevels) ? 'disabled' : '' }}
-                                    >
-                                        <option value="">{{ empty($academicLevels) ? 'Select Academic Group First' : 'Select Academic Level' }}</option>
-                                        @foreach($academicLevels as $level)
-                                            <option value="{{ $level->id }}">{{ $level->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('academicLevelId')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Subjects -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Teaching Subjects
-                                    </label>
-                                    <div class="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
-                                        @if(empty($availableSubjects))
-                                            <p class="text-gray-500 text-sm">Select Academic Level to view subjects</p>
-                                        @else
-                                            @foreach($availableSubjects as $subject)
-                                                <label class="flex items-center space-x-2 mb-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        wire:model="selectedSubjects"
-                                                        value="{{ $subject->id }}"
-                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
-                                                    >
-                                                    <span class="text-sm text-gray-700">{{ $subject->name }}</span>
-                                                </label>
-                                            @endforeach
-                                        @endif
-                                    </div>
-                                    @error('selectedSubjects')
-                                    <p class="text-red-500 text-sm mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Info Box -->
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <div class="flex items-start">
-                                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <div>
-                                            <h4 class="text-sm font-medium text-blue-900">Auto-Assignment Information</h4>
-                                            <p class="text-sm text-blue-700 mt-1">
-                                                All students currently enrolled in the selected academic level will be automatically assigned to this teacher.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-            <x-slot:footer>
-                <div class="flex place-content-end items-end">
-                    <div class="flex space-x-3">
-                        @if($isEditing)
-                            <button
-                                type="button"
-                                wire:click="cancelEdit"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                                Cancel
-                            </button>
-                        @endif
-
-                        <x-button.primary
-                            form="teacher-form"
-                            type="submit"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                        >
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            {{ $isEditing ? 'Update Teacher' : 'Create Teacher' }}
-                        </x-button.primary>
-                    </div>
-                </div>
-            </x-slot:footer>
-
-        </x-modal-component>
-
         <!-- Teachers List -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <!-- Filters Section -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters
+                        @if($activeFiltersCount > 0)
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ $activeFiltersCount }} active
+                            </span>
+                        @endif
+                    </h3>
+                    @if($activeFiltersCount > 0)
+                        <button wire:click="clearFilters"
+                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Clear All
+                        </button>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Academic Group Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Academic Group
+                        </label>
+                        <select wire:model.live="filterAcademicGroup"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Groups</option>
+                            @foreach($filterAcademicGroups as $group)
+                                <option value="{{ $group->id }}">{{ $group->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Academic Level Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Academic Level
+                        </label>
+                        <select wire:model.live="filterAcademicLevel"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Levels</option>
+                            @foreach($filterAcademicLevels as $level)
+                                <option value="{{ $level->id }}">{{ $level->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Subject Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Subject
+                        </label>
+                        <select wire:model.live="filterSubject"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Subjects</option>
+                            @foreach($filterSubjects as $subject)
+                                <option value="{{ $subject->id }}">
+                                    {{ $subject->name }}
+                                    @if($subject->academicLevel)
+                                        ({{ $subject->academicLevel->name }})
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Specialization Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Specialization
+                        </label>
+                        <select wire:model.live="filterSpecialization"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Specializations</option>
+                            @foreach($filterSpecializations as $specialization)
+                                <option value="{{ $specialization }}">{{ $specialization }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 class="text-xl font-semibold text-gray-900">Teachers</h2>
-                        <p class="mt-1 text-sm text-gray-600">Manage all teachers and their assignments</p>
+                        <p class="mt-1 text-sm text-gray-600">Total: {{ $teachers->total() }} teachers</p>
                     </div>
                     <div class="mt-4 sm:mt-0 sm:ml-4">
                         <div class="relative">
                             <input
                                 type="text"
-                                wire:model.live="searchTerm"
+                                wire:model.live.debounce.300ms="searchTerm"
                                 class="w-full sm:w-64 px-4 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Search teachers..."
                             >
@@ -450,6 +269,274 @@
             @endif
         </div>
     </div>
+    <x-modal-component name="teacher-form"  :title="$isEditing ? 'Edit Teacher' : 'Create New Teacher'" size="2xl" :closable="true">
+        <form id="teacher-form" wire:submit.prevent="{{ $isEditing ? 'update' : 'create' }}" class="">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Personal Information -->
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+
+                        <div class="space-y-4">
+                            <!-- Email (First to check existing user) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    wire:model.blur="email"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    placeholder="Enter email address"
+                                >
+                                @if($userExists)
+                                    <p class="text-blue-600 text-sm mt-1 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                        </svg>
+                                        User exists. Will assign teacher role to existing user.
+                                    </p>
+                                @endif
+                                @error('email')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Name -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Full Name <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    wire:model="name"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    placeholder="Enter teacher's full name"
+                                >
+                                @error('name')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Password -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Password
+                                    @if(!$userExists && !$isEditing)
+                                        <span class="text-red-500">*</span>
+                                    @endif
+                                    @if($userExists || $isEditing)
+                                        <span class="text-gray-500 text-xs">(leave blank to keep current)</span>
+                                    @endif
+                                </label>
+                                <input
+                                    type="password"
+                                    wire:model="password"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    placeholder="{{ $userExists || $isEditing ? 'Enter new password (optional)' : 'Enter password' }}"
+                                >
+                                @error('password')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Specialization -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Specialization
+                                </label>
+                                <input
+                                    type="text"
+                                    wire:model="specialization"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    placeholder="e.g., Mathematics, Science, etc."
+                                >
+                                @error('specialization')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Biography -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Biography
+                                </label>
+                                <textarea
+                                    wire:model="biography"
+                                    rows="3"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    placeholder="Brief biography about the teacher..."
+                                ></textarea>
+                                @error('biography')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Information -->
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Academic Assignment</h3>
+
+                        <div class="space-y-4">
+                            <!-- Academic Group -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Academic Group <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    wire:model.live="academicGroupId"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                >
+                                    <option value="">Select Academic Group</option>
+                                    @foreach($academicGroups as $group)
+                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('academicGroupId')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Academic Level -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Academic Level <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    wire:model.live="academicLevelId"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    {{ empty($academicLevels) ? 'disabled' : '' }}
+                                >
+                                    <option value="">{{ empty($academicLevels) ? 'Select Academic Group First' : 'Select Academic Level' }}</option>
+                                    @foreach($academicLevels as $level)
+                                        <option value="{{ $level->id }}">{{ $level->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('academicLevelId')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Subjects -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Teaching Subjects
+                                </label>
+                                <div class="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
+                                    @if(empty($availableSubjects))
+                                        <p class="text-gray-500 text-sm">Select Academic Level to view subjects</p>
+                                    @else
+                                        @foreach($availableSubjects as $subject)
+                                            <label class="flex items-center space-x-2 mb-2">
+                                                <input
+                                                    type="checkbox"
+                                                    wire:model="selectedSubjects"
+                                                    value="{{ $subject->id }}"
+                                                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                                >
+                                                <span class="text-sm text-gray-700">{{ $subject->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    @endif
+                                </div>
+                                @error('selectedSubjects')
+                                <p class="text-red-500 text-sm mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+
+                            <!-- Info Box -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-blue-900">Auto-Assignment Information</h4>
+                                        <p class="text-sm text-blue-700 mt-1">
+                                            All students currently enrolled in the selected academic level will be automatically assigned to this teacher.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <x-slot:footer>
+            <div class="flex place-content-end items-end">
+                <div class="flex space-x-3">
+                    @if($isEditing)
+                        <button
+                            type="button"
+                            wire:click="cancelEdit"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Cancel
+                        </button>
+                    @endif
+
+                    <x-button.primary
+                        form="teacher-form"
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ $isEditing ? 'Update Teacher' : 'Create Teacher' }}
+                    </x-button.primary>
+                </div>
+            </div>
+        </x-slot:footer>
+
+    </x-modal-component>
 
     <!-- Delete Confirmation Modal -->
     @if($showDeleteModal)

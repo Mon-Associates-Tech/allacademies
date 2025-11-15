@@ -10,6 +10,7 @@ use App\Models\AcademicYear;
 use App\Services\ImportExportService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Validate;
@@ -469,6 +470,13 @@ class SchoolSettingsDashboard extends Component
         session(['school_settings_active_tab' => $tab]);
     }
 
+    #[On('tabChanged')]
+    public function handleTabChange($tab)
+    {
+        $this->activeTab = $tab;
+        session(['school_settings_active_tab' => $tab]);
+    }
+
     public function updateSchoolBasicInfo()
     {
         $this->validate([
@@ -745,9 +753,21 @@ class SchoolSettingsDashboard extends Component
 
     public function render()
     {
+
+        $tabs = [
+            ['key' => 'overview', 'label' => 'Overview'],
+            ['key' => 'basic-info', 'label' => 'Basic Information'],
+            ['key' => 'academic-periods', 'label' => 'Academic Periods'],
+            ['key' => 'system-settings', 'label' => 'System Settings'],
+            ['key' => 'account-information', 'label' => 'Account Information'],
+            ['key' => 'fee-structure', 'label' => 'Fee Structure'],
+            ['key' => 'letterheads', 'label' => 'Letterheads'],
+        ];
+
         return view('livewire.school.school-settings-dashboard', [
             'schoolInitials' => $this->getSchoolInitials(),
             'schoolLogo' => $this->school->logo ? Storage::url($this->school->logo) : null,
+            'tabs' => $tabs,
         ]);
     }
 

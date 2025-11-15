@@ -264,40 +264,10 @@
 
             <!-- Navigation Tabs -->
             <div class="mb-8">
-                <nav class="flex space-x-8 border-b border-gray-200 dark:border-gray-700">
-                    <button wire:click="setActiveTab('overview')"
-                            :class="activeTab === 'overview' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                        Overview
-                    </button>
-                    <button wire:click="setActiveTab('basic-info')"
-                            :class="activeTab === 'basic-info' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                        Basic Information
-                    </button>
-                    <button wire:click="setActiveTab('academic-periods')"
-                            :class="activeTab === 'academic-periods' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                        Academic Periods
-                    </button>
-                    <button wire:click="setActiveTab('system-settings')"
-                            :class="activeTab === 'system-settings' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                        System Settings
-                    </button>
-
-                    <button wire:click="setActiveTab('account-information')"
-                            :class="activeTab === 'account-information' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                        Account Information
-                    </button>
-
-                    <button wire:click="setActiveTab('fee-structure')"
-                            :class="activeTab === 'fee-structure' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                        Fee Structure
-                    </button>
-                </nav>
+                <livewire:scrollable-tabs
+                    :tabs="$tabs"
+                    :activeTab="$activeTab"
+                />
             </div>
 
             <!-- Tab Content -->
@@ -306,12 +276,9 @@
             @include('livewire.school.partials.academic-periods-tab')
             @include('livewire.school.partials.system-settings-tab')
             @include('livewire.school.partials.fee-structure-tab')
+            <livewire:school-settings.letterhead-settings />
             @include('livewire.school.partials.account-information-tab')
         </div>
-
-        <!-- Academic Period Modal -->
-        @include('livewire.school.partials.period-modal')
-        @include('livewire.school.partials.academic-year-modal')
 
         <!-- Academic Period Modal -->
         @include('livewire.school.partials.period-modal')

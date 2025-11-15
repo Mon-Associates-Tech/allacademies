@@ -31,71 +31,172 @@
             @endif
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-200">
+                <!-- Filters Section -->
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            Filters
+                            @if($activeFiltersCount > 0)
+                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200">
+                                    {{ $activeFiltersCount }} active
+                                </span>
+                            @endif
+                        </h3>
+                        @if($activeFiltersCount > 0)
+                            <button wire:click="clearFilters"
+                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                Clear All
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Academic Group Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Academic Group
+                            </label>
+                            <select wire:model.live="filterAcademicGroup"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Groups</option>
+                                @foreach($filterAcademicGroups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Academic Level Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Academic Level
+                            </label>
+                            <select wire:model.live="filterAcademicLevel"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Levels</option>
+                                @foreach($filterAcademicLevels as $level)
+                                    <option value="{{ $level->id }}">{{ $level->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Student Group Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Student Group
+                            </label>
+                            <select wire:model.live="filterStudentGroup"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Student Groups</option>
+                                @foreach($filterStudentGroups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Teacher Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Teacher
+                            </label>
+                            <select wire:model.live="filterTeacher"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Teachers</option>
+                                @foreach($filterTeachers as $teacher)
+                                    <option value="{{ $teacher->id }}">{{ $teacher->user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Subject Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Subject
+                            </label>
+                            <select wire:model.live="filterSubject"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Subjects</option>
+                                @foreach($filterSubjects as $subject)
+                                    <option value="{{ $subject->id }}">
+                                        {{ $subject->name }}
+                                        @if($subject->academicLevel)
+                                            ({{ $subject->academicLevel->name }})
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- List Header -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-200">
-                    <!-- List Header -->
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <!-- Left Section -->
-                            <div class="flex items-center">
-                                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Students</h2>
-                                <span
-                                    class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200">
-                    {{ $students->total() }}
-                </span>
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <!-- Left Section -->
+                        <div class="flex items-center">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Students</h2>
+                            <span
+                                class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200">
+                {{ $students->total() }}
+            </span>
+                        </div>
+
+                        <!-- Right Section -->
+                        <div class="flex items-center gap-4">
+                            <!-- View Mode Toggle -->
+                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                                <button wire:click="$set('viewMode', 'card')"
+                                        class="px-3 py-1.5 rounded-md text-sm font-medium {{ $viewMode === 'card'
+                            ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white' }}">
+                                    <div class="flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                                        </svg>
+                                        <span class="hidden sm:inline">Cards</span>
+                                    </div>
+                                </button>
+                                <button wire:click="$set('viewMode', 'list')"
+                                        class="px-3 py-1.5 rounded-md text-sm font-medium {{ $viewMode === 'list'
+                            ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white' }}">
+                                    <div class="flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                        </svg>
+                                        <span class="hidden sm:inline">List</span>
+                                    </div>
+                                </button>
                             </div>
 
-                            <!-- Right Section -->
-                            <div class="flex items-center gap-4">
-                                <!-- View Mode Toggle -->
-                                <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                                    <button wire:click="$set('viewMode', 'card')"
-                                            class="px-3 py-1.5 rounded-md text-sm font-medium {{ $viewMode === 'card'
-                                ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-white shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white' }}">
-                                        <div class="flex items-center space-x-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                                            </svg>
-                                            <span class="hidden sm:inline">Cards</span>
-                                        </div>
-                                    </button>
-                                    <button wire:click="$set('viewMode', 'list')"
-                                            class="px-3 py-1.5 rounded-md text-sm font-medium {{ $viewMode === 'list'
-                                ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-white shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white' }}">
-                                        <div class="flex items-center space-x-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                            </svg>
-                                            <span class="hidden sm:inline">List</span>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                <!-- Search Bar -->
-                                <div class="relative">
-                                    <input type="text"
-                                           wire:model.debounce.300ms="searchTerm"
-                                           placeholder="Search students..."
-                                           class="w-full sm:w-64 px-4 py-2 pl-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
-                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                        </svg>
-                                    </div>
+                            <!-- Search Bar -->
+                            <div class="relative">
+                                <input type="text"
+                                       wire:model.live.debounce.300ms="searchTerm"
+                                       placeholder="Search students..."
+                                       class="w-full sm:w-64 px-4 py-2 pl-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Content Area -->
-                    <div class="p-6">
-                        @if($students->count() > 0)
+                <!-- Content Area -->
+                <div class="p-6">
+                    @if($students->count() > 0)
                             @if($viewMode === 'card')
                                 <!-- Card View -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -353,9 +454,9 @@
                                                     </div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div class="flex justify-end space-x-2">
+                                                    <div class="flex justify-endg space-x-2">
                                                         <a href="{{ route('students.show', $student) }}"
-                                                           class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-gray-50 dark:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                                           class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-gray-50 dark:bg-gray-700 group-hover:opacity-100 transition-all duration-200"
                                                            title="View Details">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
