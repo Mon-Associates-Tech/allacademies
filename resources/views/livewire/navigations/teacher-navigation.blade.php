@@ -229,7 +229,7 @@
 
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.classroom.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('teachers.classroom')}}">
+               href="{{route('teachers.classroom.index')}}">
                 <div class="flex items-center">
                     <svg
                         class="shrink-0 fill-current {{ Route::is('teacher.classroom.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"

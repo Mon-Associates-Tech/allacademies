@@ -24,9 +24,14 @@ class ConvertBookToAudioJob implements ShouldQueue
     public int $timeout = 0;
     public int $tries = 10; // Allow up to 10 attempts
     public int $maxExceptions = 3; // Max consecutive failures before giving up
+    public string $tts_model = '';
 
-    public function __construct(Book $book)
+    public function __construct(Book $book, string $tts_model = null)
     {
+        $this->tts_model = $tts_model;
+        if (!$tts_model){
+            $this->tts_model  = config('openai.models.tts_model');
+        }
         $this->bookId = $book->id;
     }
 
@@ -185,7 +190,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                     }
 
                     $payload = [
-                        'model' => 'gpt-4o-mini-tts',
+                        'model' => $this->tts_model,
                         'voice' => 'alloy',
                         'input' => $chunk,
                         'format' => 'mp3',

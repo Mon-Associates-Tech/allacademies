@@ -11,6 +11,7 @@
         "ext-libxml": "*",
         "ext-zip": "*",
         "barryvdh/laravel-dompdf": "^3.1",
+        "bigbluebutton/bigbluebutton-api-php": "^2.3",
         "brick/money": "^0.7.0",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",

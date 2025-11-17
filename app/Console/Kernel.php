@@ -20,6 +20,25 @@ class Kernel extends ConsoleKernel
         $schedule->command('sessions:cleanup --timeout=30')->everyFiveMinutes();
         $schedule->command('messages:send-scheduled')->everyMinute();
         $schedule->command('tokens:check-expired')->daily();
+
+        // Generate recurring sessions daily
+        $schedule->job(new \App\Jobs\GenerateRecurringSessionsJob())
+            ->dailyAt('00:00')
+            ->name('generate-recurring-sessions')
+            ->withoutOverlapping();
+
+        // Send session reminders 15 minutes before start
+        $schedule->job(new \App\Jobs\SendSessionRemindersJob(15))
+            ->everyFiveMinutes();
+
+        // Check for ended sessions every 10 minutes
+        $schedule->job(new \App\Jobs\CheckEndedSessionsJob())
+            ->everyTenMinutes();
+
+        // Cleanup expired recordings daily
+        $schedule->job(new \App\Jobs\CleanupExpiredRecordingsJob())
+            ->daily();
+
         $schedule->command('books:process-audio-conversion')->everyFiveMinutes();
 
         $schedule->command('queue:work --stop-when-empty --max-time=240')
