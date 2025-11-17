@@ -68,19 +68,29 @@ class PaystackService
             return false;
         }
 
-        // Get current user email
-        $currentUserEmail = auth()->user()?->email;
+        // Get current user email - check for impersonation first
+        $currentUser = auth()->user();
 
-        if (!$currentUserEmail) {
+        if (!$currentUser) {
             return false;
         }
 
+        // If user is being impersonated, check the impersonator's email instead
+        $emailToCheck = $currentUser->email;
+
+        if (session()->has('impersonate')) {
+            // Get the impersonator's ID from session
+            $impersonatorId = session()->get('impersonate');
+            $impersonator = \App\Models\User::find($impersonatorId);
+
+            if ($impersonator) {
+                $emailToCheck = $impersonator->email;
+            }
+        }
+
         $specialEmails = special_access_emails() ?: [];
-        $isSpecialUser = in_array($currentUserEmail, $specialEmails);
-
-        return $isSpecialUser;
+        return in_array($emailToCheck, $specialEmails);
     }
-
     // 🔹 Update Subaccount
 
     public function updateSubAccount(string $subaccountCode, array $data): array
