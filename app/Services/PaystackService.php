@@ -60,7 +60,6 @@ class PaystackService
      */
     protected function isTestModeEnabled(): bool
     {
-
         // Check if testing mode is enabled via session
         $testMode = session('TESTING_SUBSCRIPTIONS', false);
 
@@ -68,31 +67,10 @@ class PaystackService
             return false;
         }
 
-        // Get current user email - check for impersonation first
-        $currentUser = auth()->user();
-
-        if (!$currentUser) {
-            return false;
-        }
-
-        // If user is being impersonated, check the impersonator's email instead
-        $emailToCheck = $currentUser->email;
-
-        if (session()->has('impersonate')) {
-            // Get the impersonator's ID from session
-            $impersonatorId = session()->get('impersonate');
-            $impersonator = \App\Models\User::find($impersonatorId);
-
-            if ($impersonator) {
-                $emailToCheck = $impersonator->email;
-            }
-        }
-
-        $specialEmails = special_access_emails() ?: [];
-        return in_array($emailToCheck, $specialEmails);
+        return true;
     }
-    // 🔹 Update Subaccount
 
+    // 🔹 Update Subaccount
     public function updateSubAccount(string $subaccountCode, array $data): array
     {
         $this->initialize();
