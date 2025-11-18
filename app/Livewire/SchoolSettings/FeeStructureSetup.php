@@ -3,13 +3,15 @@
 namespace App\Livewire\SchoolSettings;
 
 use App\Models\AcademicFeeStructure;
-use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
+use App\Models\School;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Log;
 
 class FeeStructureSetup extends Component
 {
@@ -77,6 +79,45 @@ class FeeStructureSetup extends Component
             ->get();
     }
 
+    /**
+     * Get school ID from context (works for owners, admins, and regular users)
+     */
+    protected function getSchoolId(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+        // For owners/super admins, check session for selected school
+        if ($user->canAccessCrossSchool()) {
+            $sessionSchoolId = session('current_school_id');
+
+            // If they've explicitly selected a school, use it
+            if ($sessionSchoolId) {
+                return $sessionSchoolId;
+            }
+
+            // Check app binding
+            if (app()->bound('current_school_id')) {
+                return app('current_school_id');
+            }
+
+            // Check if current_school is bound
+            if (app()->bound('current_school')) {
+                $school = app('current_school');
+                return $school ? $school->id : null;
+            }
+
+            // No school selected - return null
+            return null;
+        }
+
+        // For regular users, use their school_id
+        return $user->school_id;
+    }
+
     public function loadAcademicGroups()
     {
         $schoolId = $this->getSchoolId();
@@ -86,7 +127,7 @@ class FeeStructureSetup extends Component
             return;
         }
 
-        $school = \App\Models\School::find($schoolId);
+        $school = School::find($schoolId);
 
         if ($school) {
             $this->academicGroups = $school->academicGroups()
@@ -170,16 +211,9 @@ class FeeStructureSetup extends Component
         $this->resetErrorBag();
     }
 
-    public function closeModal()
-    {
-        $this->showFormModal = false;
-        $this->resetForm();
-    }
-
     public function view($id)
     {
         $schoolId = $this->getSchoolId();
-
         $this->viewingFee = AcademicFeeStructure::where('school_id', $schoolId)
             ->with([
                 'academicGroup',
@@ -188,7 +222,32 @@ class FeeStructureSetup extends Component
                 'currentTerm.academicYear'
             ])
             ->findOrFail($id);
+
+        // Properly serialize the data for JavaScript
+        $viewingFeeData = [
+            'id' => $this->viewingFee->id,
+            'amount' => $this->viewingFee->amount,
+            'formatted_amount' => $this->viewingFee->formatted_amount,
+            'due_date' => $this->viewingFee->due_date,
+            'formatted_due_date' => $this->viewingFee->formatted_due_date,
+            'payment_method' => $this->viewingFee->payment_method,
+            'academicGroup' => [
+                'name' => $this->viewingFee->academicGroup->name
+            ],
+            'academicLevel' => [
+                'name' => $this->viewingFee->academicLevel->name
+            ],
+            'currentTerm' => [
+                'display_name' => $this->viewingFee->currentTerm->getDisplayName(),
+                'academicYear' => $this->viewingFee->currentTerm->academicYear ? [
+                    'getDisplayName' => $this->viewingFee->currentTerm->academicYear->getDisplayName()
+                ] : null
+            ]
+        ];
+
+        $this->js("window.Modal.open('fee-structure-details', {viewingFee: " . json_encode($viewingFeeData) . "})");
     }
+
 
     public function closeViewModal()
     {
@@ -262,10 +321,16 @@ class FeeStructureSetup extends Component
             }
 
             $this->closeModal();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             session()->flash('error', 'Failed to save fee structure. Please try again.');
-            \Log::error('Fee structure save error: ' . $e->getMessage());
+            Log::error('Fee structure save error: ' . $e->getMessage());
         }
+    }
+
+    public function closeModal()
+    {
+        $this->showFormModal = false;
+        $this->resetForm();
     }
 
     public function delete($id)
@@ -279,9 +344,9 @@ class FeeStructureSetup extends Component
             $fee->delete();
 
             session()->flash('success', 'Fee structure deleted successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             session()->flash('error', 'Failed to delete fee structure. Please try again.');
-            \Log::error('Fee structure deletion error: ' . $e->getMessage());
+            Log::error('Fee structure deletion error: ' . $e->getMessage());
         }
     }
 
@@ -301,44 +366,5 @@ class FeeStructureSetup extends Component
         return view('livewire.school-settings.fee-structure-setup', [
             'feeStructures' => $feeStructures
         ]);
-    }
-
-    /**
-     * Get school ID from context (works for owners, admins, and regular users)
-     */
-    protected function getSchoolId(): ?int
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return null;
-        }
-
-        // For owners/super admins, check session for selected school
-        if ($user->canAccessCrossSchool()) {
-            $sessionSchoolId = session('current_school_id');
-
-            // If they've explicitly selected a school, use it
-            if ($sessionSchoolId) {
-                return $sessionSchoolId;
-            }
-
-            // Check app binding
-            if (app()->bound('current_school_id')) {
-                return app('current_school_id');
-            }
-
-            // Check if current_school is bound
-            if (app()->bound('current_school')) {
-                $school = app('current_school');
-                return $school ? $school->id : null;
-            }
-
-            // No school selected - return null
-            return null;
-        }
-
-        // For regular users, use their school_id
-        return $user->school_id;
     }
 }

@@ -294,6 +294,7 @@ class SchoolPayment extends Model
             'annual' => 'Annual',
             'monthly' => 'Monthly',
             'one_time' => 'One Time',
+            'other' => 'Other'
         ];
     }
 

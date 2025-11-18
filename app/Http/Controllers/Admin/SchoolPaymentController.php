@@ -28,6 +28,11 @@ class SchoolPaymentController extends Controller
 
         // Build query with filters
         $query = SchoolPayment::with([
+            'student' => function ($query) use ($schoolId) {
+                // Explicitly filter by school_id to work with global scope
+                $query->withoutGlobalScope(\App\Scopes\SchoolScope::class)
+                    ->where('school_id', $schoolId);
+            },
             'student.user',
             'academicGroup',
             'academicLevel',
@@ -177,7 +182,14 @@ class SchoolPaymentController extends Controller
      */
     public function show(SchoolPayment $payment)
     {
+        $schoolId = getSchoolId();
+
         $payment->load([
+            'student' => function ($query) use ($schoolId) {
+                // Explicitly filter by school_id to work with global scope
+                $query->withoutGlobalScope(\App\Scopes\SchoolScope::class);
+                  //  ->where('school_id', $schoolId);
+            },
             'student.user',
             'student.academicGroup',
             'student.academicLevel',

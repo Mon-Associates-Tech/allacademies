@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityTrailController;
+use App\Http\Controllers\Admin\SchoolPaymentController;
 use App\Http\Controllers\BookController;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
@@ -93,4 +94,8 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/school-settings/letterhead', LetterheadSettings::class)
         ->name('school-settings.letterhead');
 
+    // School Payments/Transactions
+    Route::get('/transactions', [SchoolPaymentController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{payment}', [SchoolPaymentController::class, 'show'])->name('transactions.show');
+    Route::post('/transactions/export', [SchoolPaymentController::class, 'export'])->name('transactions.export');
 });
