@@ -6,6 +6,8 @@ use App\Models\Book;
 use App\Models\User;
 use App\Notifications\BookAudioConversionCompleted;
 use App\Notifications\BookAudioConversionFailed;
+use App\Services\PdfContentExtractionService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Smalot\PdfParser\Parser;
+use Throwable;
 
 class ConvertBookToAudioJob implements ShouldQueue
 {
@@ -24,21 +26,26 @@ class ConvertBookToAudioJob implements ShouldQueue
     public int $timeout = 0;
     public int $tries = 10; // Allow up to 10 attempts
     public int $maxExceptions = 3; // Max consecutive failures before giving up
-    public string $tts_model = '';
+    public ?string $tts_model = '';
+
+    protected PdfContentExtractionService $pdfExtractor;
+
 
     public function __construct(Book $book, string $tts_model = null)
     {
         $this->tts_model = $tts_model;
-        if (!$tts_model){
-            $this->tts_model  = config('openai.models.tts_model');
+        if (!$tts_model) {
+            $this->tts_model = config('openai.models.tts_model');
         }
         $this->bookId = $book->id;
     }
 
-    public function handle(): void
+    public function handle(PdfContentExtractionService $pdfExtractor): void
     {
         ini_set('max_execution_time', 0);
         set_time_limit(0);
+
+        $this->pdfExtractor = $pdfExtractor;
 
         $book = Book::find($this->bookId);
         if (!$book) {
@@ -54,19 +61,17 @@ class ConvertBookToAudioJob implements ShouldQueue
 
         try {
             $this->processConversion($book);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error("❌ Fatal error in ConvertBookToAudioJob (book ID {$this->bookId}): {$e->getMessage()}");
             Log::error($e->getTraceAsString());
 
-            // Don't fail completely - keep pending for retry
             $book->update(['audio_conversion_pending' => true]);
 
-            // Only notify failure after multiple attempts
             if ($book->audio_conversion_attempts >= 3) {
                 $this->notifyFailure($book, $e->getMessage());
             }
 
-            throw $e; // Re-throw for queue retry mechanism
+            throw $e;
         }
     }
 
@@ -94,18 +99,15 @@ class ConvertBookToAudioJob implements ShouldQueue
             return;
         }
 
-        // Parse PDF (cached if already done)
-        $parser = new Parser();
-        $pdf = $parser->parseFile($pdfPath);
-        $pages = $pdf->getPages();
-
-        if (empty($pages)) {
-            Log::error("❌ No pages found in PDF for book ID {$book->id}");
-            $this->notifyFailure($book, 'No pages found in PDF');
+        // Get page count using the extraction service
+        try {
+            $pageCount = $this->pdfExtractor->getPageCount($pdfPath);
+            Log::info("📄 Total pages: {$pageCount}");
+        } catch (Exception $e) {
+            Log::error("❌ Failed to get page count: {$e->getMessage()}");
+            $this->notifyFailure($book, 'Failed to parse PDF');
             return;
         }
-
-        Log::info("📄 Total pages: " . count($pages));
 
         // Normalize TOC
         $toc = $this->normalizeToc($book->table_of_contents);
@@ -124,7 +126,7 @@ class ConvertBookToAudioJob implements ShouldQueue
 
         $chapterAudios = [];
 
-        // Process each chapter (skip already completed ones)
+        // Process each chapter
         foreach ($toc as $chapter) {
             $chapterNum = $chapter['chapter'];
 
@@ -132,7 +134,6 @@ class ConvertBookToAudioJob implements ShouldQueue
             if (in_array($chapterNum, $progress['completed_chapters'])) {
                 Log::info("⏭️ Skipping already completed Chapter {$chapterNum}");
 
-                // Add existing chapter file to array
                 $chapterPath = "{$chaptersFolder}/chapter{$chapterNum}.mp3";
                 if (Storage::disk('public')->exists($chapterPath)) {
                     $chapterAudios[] = $chapterPath;
@@ -150,17 +151,8 @@ class ConvertBookToAudioJob implements ShouldQueue
             Log::info("🎙 Processing Chapter {$chapterNum}: pages {$pageStart}–{$pageEnd}");
 
             try {
-                // Extract text
-                $text = '';
-                for ($i = $pageStart - 1; $i < $pageEnd && isset($pages[$i]); $i++) {
-                    $text .= $pages[$i]->getText() . "\n";
-                }
-
-                // Clean text
-                $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
-                $text = preg_replace('/[^\P{C}\n]+/u', '', $text);
-                $text = preg_replace('/\s+/', ' ', $text);
-                $text = trim($text);
+                // Extract text using the service
+                $text = $this->pdfExtractor->extractPageRange($pdfPath, $pageStart, $pageEnd);
 
                 if (empty($text)) {
                     Log::warning("⚠️ No text extracted for Chapter {$chapterNum}");
@@ -169,14 +161,11 @@ class ConvertBookToAudioJob implements ShouldQueue
                     continue;
                 }
 
-                // Split into chunks
-                $chunks = str_split($text, 800);
+                // Split into chunks using the service
+                $chunks = $this->pdfExtractor->splitIntoChunks($text, 800, ['preserve_sentences' => true]);
                 $chunkPaths = [];
 
                 foreach ($chunks as $chunkIndex => $chunk) {
-                    $chunk = trim($chunk);
-                    if (empty($chunk)) continue;
-
                     Log::info("🔊 Chapter {$chapterNum}, Chunk " . ($chunkIndex + 1) . "/" . count($chunks));
 
                     // Check if chunk file already exists
@@ -223,7 +212,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                     foreach ($chunkPaths as $path) {
                         if (file_exists($path)) {
                             fwrite($merged, file_get_contents($path));
-                            @unlink($path); // Clean up temp chunks
+                            @unlink($path);
                         }
                     }
                     fclose($merged);
@@ -238,12 +227,10 @@ class ConvertBookToAudioJob implements ShouldQueue
                     Log::info("✅ Created audio for Chapter {$chapterNum}");
                 }
 
-            } catch (\Throwable $ex) {
+            } catch (Throwable $ex) {
                 Log::error("⚠️ Exception processing Chapter {$chapterNum}: " . $ex->getMessage());
                 $progress['failed_chapters'][] = $chapterNum;
                 $book->update(['audio_conversion_progress' => $progress]);
-
-                // Don't fail the entire job, continue with next chapter
                 continue;
             }
         }
@@ -271,7 +258,7 @@ class ConvertBookToAudioJob implements ShouldQueue
         $book->update([
             'has_audio' => true,
             'audio_conversion_pending' => false,
-            'audio_conversion_progress' => null, // Clear progress
+            'audio_conversion_progress' => null,
         ]);
 
         $book->media()->updateOrCreate(
@@ -284,6 +271,25 @@ class ConvertBookToAudioJob implements ShouldQueue
 
         Log::info("✅ Completed audio conversion for book ID {$book->id} with " . count($chapterAudios) . " chapters");
         $this->notifySuccess($book, count($chapterAudios));
+    }
+
+    private function notifyFailure(Book $book, string $errorMessage): void
+    {
+        try {
+            $user = User::find($book->audio_conversion_initiated_by);
+
+            if ($user) {
+                $user->notify(new BookAudioConversionFailed($book, $errorMessage));
+                Log::info("📧 Failure notification sent to user {$user->id} for book {$book->id}");
+            }
+
+            if ($book->author && $book->author->user_id !== $book->audio_conversion_initiated_by) {
+                $book->author->user->notify(new BookAudioConversionFailed($book, $errorMessage));
+                Log::info("📧 Failure notification sent to author for book {$book->id}");
+            }
+        } catch (Throwable $e) {
+            Log::error("Failed to send failure notification: " . $e->getMessage());
+        }
     }
 
     private function normalizeToc($toc): array
@@ -310,14 +316,14 @@ class ConvertBookToAudioJob implements ShouldQueue
             ->filter(function ($ch) {
                 return is_array($ch)
                     && isset($ch['chapter'], $ch['page_start'], $ch['page_end'])
-                    && (int) $ch['chapter'] > 0;
+                    && (int)$ch['chapter'] > 0;
             })
             ->map(function ($ch) {
                 return [
-                    'chapter' => (int) $ch['chapter'],
+                    'chapter' => (int)$ch['chapter'],
                     'title' => $ch['title'] ?? "Chapter {$ch['chapter']}",
-                    'page_start' => (int) $ch['page_start'],
-                    'page_end' => (int) $ch['page_end'],
+                    'page_start' => (int)$ch['page_start'],
+                    'page_end' => (int)$ch['page_end'],
                 ];
             })
             ->sortBy('chapter')
@@ -339,27 +345,8 @@ class ConvertBookToAudioJob implements ShouldQueue
                 $book->author->user->notify(new BookAudioConversionCompleted($book, $chaptersCount));
                 Log::info("📧 Notification sent to author for book {$book->id}");
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error("Failed to send success notification: " . $e->getMessage());
-        }
-    }
-
-    private function notifyFailure(Book $book, string $errorMessage): void
-    {
-        try {
-            $user = User::find($book->audio_conversion_initiated_by);
-
-            if ($user) {
-                $user->notify(new BookAudioConversionFailed($book, $errorMessage));
-                Log::info("📧 Failure notification sent to user {$user->id} for book {$book->id}");
-            }
-
-            if ($book->author && $book->author->user_id !== $book->audio_conversion_initiated_by) {
-                $book->author->user->notify(new BookAudioConversionFailed($book, $errorMessage));
-                Log::info("📧 Failure notification sent to author for book {$book->id}");
-            }
-        } catch (\Throwable $e) {
-            Log::error("Failed to send failure notification: " . $e->getMessage());
         }
     }
 }

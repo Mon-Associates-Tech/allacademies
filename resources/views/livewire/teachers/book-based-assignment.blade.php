@@ -1,4 +1,3 @@
-{{-- resources/views/livewire/teachers/book-based-assignment.blade.php --}}
 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">Create Book-Based Assignment</h1>
@@ -141,11 +140,11 @@
                                                     <div class="flex text-sm text-gray-600">
                                                         <label class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
                                                             <span>Upload a file</span>
-                                                            <input type="file" class="sr-only" wire:model="uploadedFile">
+                                                            <input type="file" class="sr-only" wire:model="uploadedFile" accept=".pdf,.doc,.docx,.txt">
                                                         </label>
                                                         <p class="pl-1">or drag and drop</p>
                                                     </div>
-                                                    <p class="text-xs text-gray-500">PDF, DOC, TXT up to 10MB</p>
+                                                    <p class="text-xs text-gray-500">PDF, DOC, DOCX, TXT up to 10MB</p>
                                                 </div>
                                             </div>
                                             @error('uploadedFile') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -159,10 +158,13 @@
                                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                                                         </svg>
                                                     </div>
-                                                    <div class="ml-3">
-                                                        <h3 class="text-sm font-medium text-blue-800">File uploaded</h3>
+                                                    <div class="ml-3 flex-1">
+                                                        <h3 class="text-sm font-medium text-blue-800">File uploaded successfully</h3>
                                                         <div class="mt-2 text-sm text-blue-700">
                                                             <p>{{ $fileName }}</p>
+                                                            @if($fileContent)
+                                                                <p class="text-xs mt-1">Content extracted ({{ strlen($fileContent) }} characters)</p>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -205,6 +207,16 @@
                                         <option value="medium">Medium</option>
                                         <option value="hard">Hard</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Marks *</label>
+                                    <input type="number" min="1"
+                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           wire:model="totalMarks"
+                                           placeholder="e.g., 100">
+                                    @error('totalMarks') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    <p class="mt-1 text-xs text-gray-500">Total marks for the assignment</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Focus Topics (Optional)</label>

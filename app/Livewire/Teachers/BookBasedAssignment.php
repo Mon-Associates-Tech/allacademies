@@ -8,6 +8,7 @@ use App\Models\AcademicSubject;
 use App\Services\AssignmentNotificationService;
 use App\Services\BookBasedLearningService;
 use App\Services\AcademicChatService;
+use App\Services\PdfContentExtractionService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -23,6 +24,7 @@ class BookBasedAssignment extends Component
     public $pageEnd = '';
     public $questionType = 'mixed';
     public $questionCount = 10;
+    public $totalMarks = 10;
     public $difficulty = 'medium';
     public $focusTopics = '';
     public $includeQuotes = false;
@@ -34,7 +36,7 @@ class BookBasedAssignment extends Component
     public $startDate;
     public $endDate;
     public $isRandomized = true;
-    public $selectedSubjectId = ''; // New property for subject selection
+    public $selectedSubjectId = '';
 
     // Target groups
     public $selectedStudentGroups = [];
@@ -44,7 +46,7 @@ class BookBasedAssignment extends Component
 
     // Component state
     public $availableBooks = [];
-    public $availableSubjects = []; // New property for subjects
+    public $availableSubjects = [];
     public $bookChapters = [];
     public $selectedBook = null;
     public $studentGroups = [];
@@ -59,11 +61,12 @@ class BookBasedAssignment extends Component
 
     protected $rules = [
         'title' => 'required|string|max:255',
-        'selectedSubjectId' => 'required|exists:academic_subjects,id', // Subject is now required
+        'selectedSubjectId' => 'required|exists:academic_subjects,id',
         'description' => 'nullable|string',
         'selectedBookId' => 'required_without:uploadedFile',
         'questionType' => 'required|in:multiple_choice,true_false,essay,mixed',
         'questionCount' => 'required|integer|min:1|max:50',
+        'totalMarks' => 'required|integer|min:1',
         'difficulty' => 'required|in:easy,medium,hard',
         'durationInMinutes' => 'required|integer|min:1',
         'startDate' => 'required|date',
@@ -72,19 +75,24 @@ class BookBasedAssignment extends Component
 
     protected BookBasedLearningService $bookLearningService;
     protected AcademicChatService $chatService;
+    protected PdfContentExtractionService $pdfExtractor;
+
 
     public function boot(
         BookBasedLearningService $bookLearningService,
-        AcademicChatService $chatService
+        AcademicChatService $chatService,
+        PdfContentExtractionService $pdfExtractor
     ) {
         $this->bookLearningService = $bookLearningService;
         $this->chatService = $chatService;
+        $this->pdfExtractor = $pdfExtractor;
     }
+
 
     public function mount()
     {
         $this->loadAvailableBooks();
-        $this->loadAvailableSubjects(); // Load subjects
+        $this->loadAvailableSubjects();
         $this->loadTargetGroups();
         $this->startDate = now()->format('Y-m-d H:i');
         $this->endDate = now()->addWeek()->format('Y-m-d H:i');
@@ -166,12 +174,36 @@ class BookBasedAssignment extends Component
         $this->validateOnly('uploadedFile');
 
         if ($this->uploadedFile) {
-            // Extract content from uploaded file
-            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
-            $this->fileName = $this->uploadedFile->getClientOriginalName();
+            try {
+                $extension = strtolower($this->uploadedFile->getClientOriginalExtension());
+
+                // Support multiple file types
+                if (!in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
+                    $this->addError('uploadedFile', 'Unsupported file type. Please upload PDF, DOC, DOCX, or TXT files.');
+                    return;
+                }
+
+                // Extract content from uploaded file using the PDF extraction service
+                $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                    'preserve_layout' => false,
+                    'method' => 'auto'
+                ]);
+                $this->fileName = $this->uploadedFile->getClientOriginalName();
+
+                if (empty($this->fileContent)) {
+                    $this->addError('uploadedFile', 'Failed to extract content from the uploaded file.');
+                }
+            } catch (\Exception $e) {
+                \Log::error('File content extraction failed', [
+                    'user_id' => Auth::id(),
+                    'file_name' => $this->uploadedFile->getClientOriginalName(),
+                    'error' => $e->getMessage()
+                ]);
+
+                $this->addError('uploadedFile', 'Unable to extract content from this file. Please ensure it is a valid document file.');
+            }
         }
     }
-
     public function generateQuestions()
     {
         $this->validate([
@@ -190,6 +222,21 @@ class BookBasedAssignment extends Component
         $this->isGenerating = true;
 
         try {
+            $content = '';
+
+            // Extract content based on source
+            if ($this->selectedBookId) {
+                $content = $this->extractBookContent();
+            } else {
+                $content = $this->fileContent;
+            }
+
+            if (empty($content)) {
+                $this->addError('generation', 'Failed to extract content. Please try again.');
+                $this->isGenerating = false;
+                return;
+            }
+
             $parameters = [
                 'book_id' => $this->selectedBookId,
                 'chapter_id' => $this->selectedChapterId ?: null,
@@ -200,8 +247,9 @@ class BookBasedAssignment extends Component
                 'difficulty' => $this->difficulty,
                 'focus_topics' => $this->parseFocusTopics(),
                 'include_quotes' => $this->includeQuotes,
-                'file_content' => $this->fileContent,
-                'file_name' => $this->fileName,
+                'content' => $content,
+                'file_content' => $this->fileContent ?: null,
+                'file_name' => $this->fileName ?: null,
                 'request_type' => 'assignment_generation',
             ];
 
@@ -242,7 +290,6 @@ class BookBasedAssignment extends Component
             $this->isGenerating = false;
         }
     }
-
     protected function parseFocusTopics(): array
     {
         if (empty($this->focusTopics)) {
@@ -266,7 +313,6 @@ class BookBasedAssignment extends Component
         try {
             DB::beginTransaction();
 
-
             $assignment = new Assignment();
             $assignment->teacher_id = $teacher->id;
             $assignment->academic_subject_id = $this->selectedSubjectId;
@@ -278,7 +324,7 @@ class BookBasedAssignment extends Component
             $assignment->ends_at = $this->endDate;
             $assignment->is_randomized = $this->isRandomized;
             $assignment->status = 'published';
-            $assignment->total_marks = $this->questionCount;
+            $assignment->total_marks = $this->totalMarks;
             $assignment->questions = $this->formatQuestionsForAssignment();
             $assignment->save();
 
@@ -321,6 +367,7 @@ class BookBasedAssignment extends Component
             $this->addError('creation', 'Failed to create assignment. Please try again.');
         }
     }
+
     protected function formatQuestionsForAssignment(): array
     {
         $questionsConfig = [];
@@ -344,6 +391,7 @@ class BookBasedAssignment extends Component
 
         return $questionsConfig;
     }
+
     /**
      * Normalize question format to match system expectations
      */
@@ -433,6 +481,70 @@ class BookBasedAssignment extends Component
             default => 'multiple_choice_question'
         };
     }
+
+    /**
+     * Extract content from the selected book
+     *
+     * @return string Extracted content
+     */
+    protected function extractBookContent(): string
+    {
+        if (!$this->selectedBook) {
+            return '';
+        }
+
+        try {
+            $relativePdfPath = $this->selectedBook->getAttributes()['content_url'] ?? null;
+            if (!$relativePdfPath) {
+                throw new \RuntimeException("Book PDF path not found");
+            }
+
+            $pdfPath = Storage::disk('public')->path($relativePdfPath);
+            if (!file_exists($pdfPath)) {
+                throw new \RuntimeException("Book PDF file not found");
+            }
+
+            // Extract content based on specified range
+            if ($this->pageStart && $this->pageEnd) {
+                // Extract specific page range
+                return $this->pdfExtractor->extractPageRange(
+                    $pdfPath,
+                    (int) $this->pageStart,
+                    (int) $this->pageEnd,
+                    ['preserve_layout' => false]
+                );
+            } elseif ($this->selectedChapterId) {
+                // Extract specific chapter
+                $chapter = collect($this->selectedBook->formatted_table_of_contents)
+                    ->firstWhere('chapter_number', $this->selectedChapterId);
+
+                if ($chapter) {
+                    return $this->pdfExtractor->extractPageRange(
+                        $pdfPath,
+                        $chapter['page_start'] ?? 1,
+                        $chapter['page_end'] ?? $this->pdfExtractor->getPageCount($pdfPath),
+                        ['preserve_layout' => false]
+                    );
+                }
+            }
+
+            // Extract entire book content
+            return $this->pdfExtractor->extractText($pdfPath, [
+                'preserve_layout' => false,
+                'method' => 'auto'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Book content extraction failed', [
+                'user_id' => Auth::id(),
+                'book_id' => $this->selectedBookId,
+                'error' => $e->getMessage()
+            ]);
+
+            throw $e;
+        }
+    }
+
 
     public function render()
     {

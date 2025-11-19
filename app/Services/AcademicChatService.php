@@ -415,7 +415,7 @@ class AcademicChatService
     /**
      * Extract text content from an uploaded file
      */
-    public function extractFileContent(UploadedFile $file): string
+    public function extractFileContentDeprecated(UploadedFile $file): string
     {
         $mimeType = $file->getMimeType();
         $originalName = $file->getClientOriginalName();
@@ -485,44 +485,101 @@ class AcademicChatService
     }
 
     /**
+     * Extract content from various file types
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    public function extractFileContent(UploadedFile $file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        return match($extension) {
+            'pdf' => $this->extractPdfContent($file),
+            'txt' => file_get_contents($file->getRealPath()),
+            'doc', 'docx' => $this->extractDocxContent($file),
+            default => "Unsupported file type: {$extension}\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n"
+        };
+    }
+
+    /**
      * Extract content from PDF files
      */
     protected function extractPdfContent(UploadedFile $file): string
     {
-        // Check if pdftotext is available
-        if (function_exists('exec') && $this->isCommandAvailable('pdftotext')) {
-            $tmpFile = $file->getRealPath();
-            $outputFile = tempnam(sys_get_temp_dir(), 'pdf_output');
+        try {
+            $pdfExtractor = app(PdfContentExtractionService::class);
+            return $pdfExtractor->extractFromUploadedFile($file, [
+                'preserve_layout' => true,
+                'method' => 'auto'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("PDF extraction failed: {$e->getMessage()}");
 
-            // Use pdftotext command line tool
-            $command = "pdftotext -layout " . escapeshellarg($tmpFile) . " " . escapeshellarg($outputFile);
-            exec($command, $output, $returnCode);
+            return "PDF file content extraction failed.\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n" .
+                "Error: " . $e->getMessage();
+        }
+    }
 
-            if ($returnCode === 0 && file_exists($outputFile)) {
-                $content = file_get_contents($outputFile);
-                unlink($outputFile);
-                return trim($content);
-            }
-
-            // Fallback if pdftotext fails
-            unlink($outputFile);
+    protected function isCommandAvailable(string $command): bool
+    {
+        if (!function_exists('exec')) {
+            return false;
         }
 
-        // If pdftotext is not available or fails, try to use the simple approach
-        return "PDF file content extraction requires pdftotext to be installed on the server.\n" .
-            "File name: " . $file->getClientOriginalName() . "\n" .
-            "File size: " . $file->getSize() . " bytes\n";
+        $output = [];
+        $returnCode = 0;
+        @exec("which {$command} 2>&1", $output, $returnCode);
+
+        return $returnCode === 0;
     }
 
     /**
-     * Check if a command is available on the system
+     * Extract content from DOCX files
+     *
+     * @param UploadedFile $file
+     * @return string
      */
-    protected function isCommandAvailable(string $command): bool
+    protected function extractDocxContent(UploadedFile $file): string
     {
-        $returnCode = null;
-        $output = [];
-        exec("which $command", $output, $returnCode);
-        return $returnCode === 0;
+        try {
+            if (!class_exists(\PhpOffice\PhpWord\IOFactory::class)) {
+                throw new \RuntimeException('PhpWord library not available');
+            }
+
+            $tmpPath = $file->getRealPath();
+            $phpWord = \PhpOffice\PhpWord\IOFactory::load($tmpPath);
+            $text = '';
+
+            foreach ($phpWord->getSections() as $section) {
+                foreach ($section->getElements() as $element) {
+                    if (method_exists($element, 'getText')) {
+                        $text .= $element->getText() . "\n";
+                    } elseif (method_exists($element, 'getElements')) {
+                        foreach ($element->getElements() as $childElement) {
+                            if (method_exists($childElement, 'getText')) {
+                                $text .= $childElement->getText() . "\n";
+                            }
+                        }
+                    }
+                }
+            }
+
+            return trim($text);
+        } catch (\Exception $e) {
+            Log::error('DOCX processing failed', [
+                'error' => $e->getMessage(),
+                'file' => $file->getClientOriginalName()
+            ]);
+
+            return "Error processing document: " . $e->getMessage() . "\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
+        }
     }
 
     /**
