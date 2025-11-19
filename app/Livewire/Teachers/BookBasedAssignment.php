@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
+use Smalot\PdfParser\Exception\MissingCatalogException;
 
 class BookBasedAssignment extends Component
 {
@@ -100,12 +101,22 @@ class BookBasedAssignment extends Component
 
     protected function loadAvailableBooks()
     {
+        $user = Auth::user();
+
+        // Get books from user's subscriptions
         $this->availableBooks = Book::published()
             ->with(['author', 'bookCategory'])
+            ->whereHas('subscriptions', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->where('status', 'paid');
+                  //  ->where(function ($q) {
+                   //     $q->whereNull('expires_at')
+                    //        ->orWhere('expires_at', '>', now());
+                   // });
+            })
             ->orderBy('title')
             ->get();
     }
-
     protected function loadAvailableSubjects()
     {
         // Load subjects the teacher is assigned to or all subjects
@@ -404,6 +415,7 @@ class BookBasedAssignment extends Component
             'points' => $question['points'] ?? 1,
             'explanation' => $question['explanation'] ?? null,
             'learning_objective' => $question['learning_objective'] ?? null,
+            'type' => $this->mapQuestionType($type), // Add type to normalized data
         ];
 
         // Handle multiple choice questions - convert 0-indexed to A-E
@@ -466,18 +478,22 @@ class BookBasedAssignment extends Component
             $normalized['answer'] = $normalized['correct_answer'];
         }
         // Handle essay questions
-        else {
+        elseif ($type === 'essay' || $type === 'essay_question') {
             $normalized['sample_answer'] = $question['sample_answer'] ?? null;
             $normalized['rubric'] = $question['rubric'] ?? null;
+            $normalized['max_words'] = $question['max_words'] ?? null;
+            $normalized['min_words'] = $question['min_words'] ?? null;
         }
 
         return $normalized;
     }
+
     protected function mapQuestionType($type): string
     {
         return match($type) {
-            'true_false' => 'true_or_false_question',
-            'essay' => 'essay_question',
+            'true_false', 'true_or_false_question' => 'true_or_false_question',
+            'essay', 'essay_question' => 'essay_question',
+            'multiple_choice', 'multiple_choice_question' => 'multiple_choice_question',
             default => 'multiple_choice_question'
         };
     }
@@ -486,6 +502,7 @@ class BookBasedAssignment extends Component
      * Extract content from the selected book
      *
      * @return string Extracted content
+     * @throws MissingCatalogException
      */
     protected function extractBookContent(): string
     {
