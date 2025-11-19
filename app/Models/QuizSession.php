@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuizSession extends Model
 {
@@ -12,6 +13,7 @@ class QuizSession extends Model
     protected $fillable = [
         'user_id',
         'book_id',
+        'subject_id',
         'chapter_id',
         'page_start',
         'page_end',
@@ -40,17 +42,25 @@ class QuizSession extends Model
     /**
      * Get the user that owns the quiz session
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
-     * Get the book associated with the quiz session
+     * Get the book associated with the quiz session (optional)
      */
-    public function book()
+    public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    /**
+     * Get the subject associated with the quiz session
+     */
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubject::class, 'subject_id');
     }
 
     /**
@@ -67,5 +77,21 @@ class QuizSession extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    /**
+     * Check if quiz is based on a book
+     */
+    public function isBookBased(): bool
+    {
+        return $this->book_id !== null;
+    }
+
+    /**
+     * Check if quiz is based on uploaded content
+     */
+    public function isContentBased(): bool
+    {
+        return $this->book_id === null;
     }
 }
