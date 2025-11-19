@@ -1,5 +1,4 @@
 <x-app>
-
     <!-- Navigation -->
     <div class="bg-white dark:bg-gray-900 transition-colors  duration-300">
         <!-- Navigation -->
@@ -241,7 +240,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span class="text-xs font-medium">Trusted by 50,000+ Students Worldwide</span>
+                                <span class="text-xs font-medium">Trusted by Thousands of Students Worldwide</span>
                             </div>
 
                             <h1 class="text-4xl font-extrabold pt-2 tracking-tight text-white sm:text-5xl md:text-6xl">
@@ -295,7 +294,7 @@
                                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face"
                                          alt="User">
                                 </div>
-                                <span class="text-white text-sm ml-2">Join 50,000+ learners</span>
+                                <span class="text-white text-sm ml-2">Join thousands of learners</span>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <div class="flex space-x-1">
@@ -1157,15 +1156,15 @@
                                 <!-- Simple Description -->
                                 <div class="max-w-3xl mx-auto mb-10">
                                     <p class="text-xl lg:text-2xl mb-6 text-gray-600 dark:text-gray-300 leading-relaxed">
-                                        Join <span class="font-bold text-blue-600 dark:text-blue-400">50,000+</span>
-                                        educators and learners who are already experiencing the power of our
+                                        Join <span class="font-bold text-blue-600 dark:text-blue-400">thousands</span>
+                                        of educators and learners who are already experiencing the power of our
                                         comprehensive platform.
                                     </p>
 
                                     <!-- Clean Stats Row -->
                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                                         <div class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">15,000+
+                                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">Thousands
                                             </div>
                                             <div class="text-sm text-gray-600 dark:text-gray-400">Resources Available
                                             </div>
@@ -1677,7 +1676,7 @@
                 </div>
                 <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
                     Trusted by <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">50,000+ Learners</span>
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">1000+ Learners</span>
                 </h2>
                 <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
                     Don't just take our word for it. See what our community of learners, educators, and
