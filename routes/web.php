@@ -22,6 +22,7 @@ use App\Http\Controllers\LessonNoteController;
 use App\Http\Controllers\LibrarianController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\NotesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
@@ -474,6 +475,12 @@ Route::prefix('general/pay')->name('payments.public.')->group(function () {
     Route::post('/initialize', [App\Http\Controllers\PublicPaymentController::class, 'initializePayment'])->name('initialize');
     Route::get('/callback', [App\Http\Controllers\PublicPaymentController::class, 'paymentCallback'])->name('callback');
     Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('notes', NotesController::class);
+    Route::post('/notes/{note}/share', [NotesController::class, 'share'])->name('notes.share');
+    Route::delete('/notes/{note}/unshare/{user}', [NotesController::class, 'unshare'])->name('notes.unshare');
 });
 
 // Include additional route files

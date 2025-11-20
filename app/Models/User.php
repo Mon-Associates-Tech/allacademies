@@ -75,7 +75,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         static::created(static function ($user) {
             $user->handleRoleChange();
-             $user->createFreeTrialSubscription();
+            $user->createFreeTrialSubscription();
         });
 
         static::updated(static function ($user) {
@@ -218,17 +218,28 @@ class User extends Authenticatable implements MustVerifyEmail
             'action_type' => 'trial',
         ]);
     }
+
+    /**
+     * Check if user has ever had a trial subscription
+     */
+    public function hasEverHadTrial(): bool
+    {
+        return $this->tokenSubscriptions()
+            ->where('action_type', 'trial')
+            ->exists();
+    }
+
     public function tokenSubscriptions(): HasMany
     {
         return $this->hasMany(UserTokenSubscription::class);
     }
 
+    // Multi-tenant role checking
+
     public function subscriptions(): User|HasMany
     {
         return $this->hasMany(Subscription::class, 'subscriber_id');
     }
-
-    // Multi-tenant role checking
 
     public function borrowedBooks(): HasMany
     {
@@ -240,12 +251,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(BookSubscription::class);
     }
 
+    // Impersonation methods
+
     public function worksheets(): HasMany
     {
         return $this->hasMany(Worksheet::class);
     }
-
-    // Impersonation methods
 
     public function student(): HasOne
     {
@@ -274,14 +285,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return redirect()->route('impersonate', $userId);
     }
 
+    // Get user's primary role in current school context
+
     public function canImpersonate(): bool
     {
         return $this->isSuperAdmin() ||
             $this->role === UserRole::OWNER ||
             $this->role === UserRole::ADMIN;
     }
-
-    // Get user's primary role in current school context
 
     public function isSuperAdmin(): User|bool
     {
@@ -524,16 +535,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user has ever had a trial subscription
-     */
-    public function hasEverHadTrial(): bool
-    {
-        return $this->tokenSubscriptions()
-            ->where('action_type', 'trial')
-            ->exists();
-    }
-
-    /**
      * Get all token purchases for this user (including top-ups)
      */
     public function tokenPurchases()
@@ -655,4 +656,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
+
+    public function sharedNotes()
+    {
+        return $this->belongsToMany(Note::class, 'note_shares', 'shared_with_user_id', 'note_id')
+            ->withPivot('can_edit')
+            ->withTimestamps();
+    }
 }

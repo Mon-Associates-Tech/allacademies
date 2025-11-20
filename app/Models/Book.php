@@ -77,6 +77,17 @@ class Book extends Model
         'audio_conversion_last_attempt' => 'datetime',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($book) {
+            if (empty($book->slug)) {
+                $book->slug = Str::slug($book->title);
+            }
+        });
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
@@ -131,17 +142,6 @@ class Book extends Model
             return asset('storage/' . $this->attributes['content_url']);
         }
         return asset('sample.pdf');
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saving(function ($book) {
-            if (empty($book->slug)) {
-                $book->slug = Str::slug($book->title);
-            }
-        });
     }
 
     public function getSampleUrlAttribute(): string
@@ -572,20 +572,20 @@ class Book extends Model
 
 
     public function getTableOfContentsAttribute($value)
-{
-    // Use DB value if it exists
-    if (!empty($value)) {
-        return is_string($value) ? json_decode($value, true) : $value;
-    }
+    {
+        // Use DB value if it exists
+        if (!empty($value)) {
+            return is_string($value) ? json_decode($value, true) : $value;
+        }
 
-    // Then fallback to relationship
-    if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-        return $this->tableOfContents->content;
-    }
+        // Then fallback to relationship
+        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
+            return $this->tableOfContents->content;
+        }
 
-    // Otherwise, generate a default
-    return $this->generateDefaultTableOfContents();
-}
+        // Otherwise, generate a default
+        return $this->generateDefaultTableOfContents();
+    }
 
 
     public function getFormattedTableOfContentsAttribute(): array
@@ -630,10 +630,15 @@ class Book extends Model
     // }
 
     public function getChapterAudiosAttribute(): array
-{
-    $media = $this->media()->first(); // Always fetch the media row
-    return $media?->chapter_audios ?? [];
-}
+    {
+        $media = $this->media()->first(); // Always fetch the media row
+        return $media?->chapter_audios ?? [];
+    }
+
+    public function media(): HasOne|Book
+    {
+        return $this->hasOne(BookMedia::class);
+    }
 
     public function getChapterVideosAttribute(): array
     {
@@ -645,11 +650,6 @@ class Book extends Model
         return $this->hasOne(BookTableOfContent::class);
     }
 
-    public function media(): HasOne|Book
-    {
-        return $this->hasOne(BookMedia::class);
-    }
-
     public function quizSessions()
     {
         return $this->hasMany(QuizSession::class);
@@ -658,5 +658,10 @@ class Book extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'book_subscription_id');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
     }
 }
