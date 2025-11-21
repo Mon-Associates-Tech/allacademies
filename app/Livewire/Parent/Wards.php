@@ -96,7 +96,6 @@ class Wards extends AppComponent
                 }
             ])->find($this->selectedWardId);
     }
-    #[Computed]
 
     #[Computed]
     public function wardPerformanceData()
