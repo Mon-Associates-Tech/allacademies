@@ -10,6 +10,7 @@ use App\Services\BookBasedLearningService;
 use App\Services\AcademicChatService;
 use App\Services\PdfContentExtractionService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
