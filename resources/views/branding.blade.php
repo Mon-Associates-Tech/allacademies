@@ -126,7 +126,7 @@
                                 Sign In
                                 <span aria-hidden="true" class="ml-2">&rarr;</span>
                             </a>
-                            <x-link.primary variant="primary" type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
+                            <x-link.primary variant="primary" type="button" class="ml-4 hidden" to="{{ route('payments.public.lookup') }}">
                                 <span>Make Payment</span>
                             </x-link.primary>
                         </div>
