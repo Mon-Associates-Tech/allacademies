@@ -49,7 +49,7 @@
 
                     <!-- Desktop Navigation -->
                     <nav class="hidden lg:flex items-center space-x-8">
-                        <a href="#home"
+{{--                        <a href="#home"
                            class="font-semibold transition-colors duration-300 relative group flex items-center"
                            :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
                             <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -61,7 +61,7 @@
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                                 :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
-                        </a>
+                        </a>--}}
                         <a href="#features"
                            class="font-semibold transition-colors duration-300 relative group flex items-center"
                            :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
@@ -177,9 +177,9 @@
                             <div class="mt-6 flow-root">
                                 <div class="-my-6 divide-y divide-gray-500/10 dark:divide-gray-400/10">
                                     <div class="space-y-2 py-6">
-                                        <a href="#home"
-                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                           x-on:click="open = false">Home</a>
+{{--                                        <a href="#home"--}}
+{{--                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"--}}
+{{--                                           x-on:click="open = false">Home</a>--}}
                                         <a href="#features"
                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                            x-on:click="open = false">Features</a>
