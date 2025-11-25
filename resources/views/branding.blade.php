@@ -126,6 +126,9 @@
                                 Sign In
                                 <span aria-hidden="true" class="ml-2">&rarr;</span>
                             </a>
+                            <x-link.primary variant="primary" type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
+                                <span>Make Payment</span>
+                            </x-link.primary>
                         </div>
 
                         <!-- Mobile menu button -->
@@ -190,10 +193,14 @@
                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                            x-on:click="open = false">FAQ</a>
                                     </div>
-                                    <div class="py-6">
+                                    <div class="py-6 space-y-3">
                                         <a href="{{ route('sign-in') }}"
                                            class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
                                             Sign In
+                                        </a>
+                                        <a href="{{ route('payments.public.lookup') }}"
+                                           class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
+                                            Make Payment
                                         </a>
                                     </div>
                                 </div>
@@ -1815,7 +1822,6 @@
 
     <!-- Footer -->
     <x-layouts.footer/>
-    </div>
 
     <!-- Custom Styles and Animations -->
     <style>

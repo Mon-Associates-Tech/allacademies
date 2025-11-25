@@ -202,6 +202,10 @@
                             </svg>
                             Success Stories
                         </a></li>
+
+                    <li><x-link.primary type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
+                            <span>Make Payment</span>
+                        </x-link.primary></li>
                 </ul>
             </div>
 
