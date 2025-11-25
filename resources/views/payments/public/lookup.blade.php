@@ -1,12 +1,6 @@
-<x-layouts.guest>
+<x-layouts.guest page-name="Pay School Fees">
     <!DOCTYPE html>
     <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Pay School Fees - {{ config('app.name') }}</title>
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
     <body class="antialiased bg-gray-50 dark:bg-gray-900">
     <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
