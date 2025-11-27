@@ -6,6 +6,7 @@ use App\Models\AcademicFeeStructure;
 use App\Models\AcademicPeriod;
 use App\Models\School;
 use App\Models\SchoolFee;
+use App\Models\SchoolPayment;
 use App\Models\Student;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
@@ -29,14 +30,13 @@ class StudentFeeController extends Controller
     {
         try {
             $user = Auth::user();
-            $schoolId = getSchoolId(); // Get school_id from User
+            $schoolId = getSchoolId();
 
             if (!$schoolId) {
                 return redirect()->route('dashboard')
                     ->with('error', 'School context not found. Please contact your administrator.');
             }
 
-            // Get student by user_id ONLY (student.school_id might be null)
             $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
 
             if (!$student) {
@@ -50,40 +50,69 @@ class StudentFeeController extends Controller
                     ->with('error', 'Student profile not found. Please contact your administrator.');
             }
 
-            // Use User's school_id for all queries (not student's school_id)
             $currentTerm = AcademicPeriod::where('school_id', $schoolId)
                 ->where('is_current', 1)
                 ->orWhere('status', 'active')
                 ->first();
 
-            // Get fee structure using User's school_id
             $feeStructure = AcademicFeeStructure::where('school_id', $schoolId)
                 ->where('academic_group_id', $student->academic_group_id)
                 ->where('academic_level_id', $student->academic_level_id)
                 ->where('current_term_id', $currentTerm->id ?? null)
                 ->first();
 
-            // Calculate payment stats
-            $totalPaid = SchoolFee::where('student_id', $student->id)
+            // Calculate payment stats from SchoolFee
+            $totalPaidFromFees = SchoolFee::where('student_id', $student->id)
                 ->where('term_id', $currentTerm->id ?? null)
                 ->where('status', 'succeeded')
                 ->sum('amount');
 
+            // Also include payments from SchoolPayment (public payment portal)
+            $totalPaidFromPayments = SchoolPayment::where('student_id', $student->id)
+                ->where('academic_period_id', $currentTerm->id ?? null)
+                ->where('status', 'succeeded')
+                ->sum('amount');
+
+            $totalPaid = $totalPaidFromFees + $totalPaidFromPayments;
+
             $termTotalAmount = $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0;
             $remainingAmount = max($termTotalAmount - $totalPaid, 0);
 
-            // Get all payment history
-            $paymentHistory = SchoolFee::where('student_id', $student->id)
+            // Get payment history from SchoolFee
+            $feePayments = SchoolFee::where('student_id', $student->id)
                 ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+                ->get();
 
-            // Get pending payments
+            // Get payment history from SchoolPayment
+            $schoolPayments = SchoolPayment::where('student_id', $student->id)
+                ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel'])
+                ->get();
+
+            // Combine and sort by created_at
+            $paymentHistory = $feePayments->concat($schoolPayments)
+                ->sortByDesc('created_at')
+                ->values();
+
+            // Paginate manually if needed (or use a union query)
+            $page = request()->get('page', 1);
+            $perPage = 10;
+            $paymentHistory = new \Illuminate\Pagination\LengthAwarePaginator(
+                $paymentHistory->forPage($page, $perPage),
+                $paymentHistory->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url()]
+            );
+
+            // Get pending payments from both tables
             $pendingPayments = SchoolFee::where('student_id', $student->id)
-                ->where('status', 'pending')
-                ->count();
+                    ->where('status', 'pending')
+                    ->count()
+                + SchoolPayment::where('student_id', $student->id)
+                    ->where('status', 'pending')
+                    ->count();
 
-            // Get payment stats by term
+            // ... existing code for termPayments ...
             $termPayments = SchoolFee::where('student_id', $student->id)
                 ->select('term_id', DB::raw('SUM(amount) as total_paid'), DB::raw('COUNT(*) as payment_count'))
                 ->groupBy('term_id')
