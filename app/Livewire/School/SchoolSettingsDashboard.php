@@ -3,6 +3,8 @@
 namespace App\Livewire\School;
 
 use App\Constants\GhanaBanks;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
 use App\Models\School;
 use App\Models\SchoolSetting;
 use App\Models\AcademicPeriod;
@@ -164,6 +166,14 @@ class SchoolSettingsDashboard extends Component
     public $createMissingGroups = true;
     public $sendWelcomeEmail = false;
 
+    // Academic Structure Management
+    public $showGroupLevelModal = false;
+    public $allAcademicGroups = [];
+    public $selectedGroups = [];
+    public $selectedLevels = [];
+    public $activeStructure = [];
+
+
 // Supported import types
     public $importTypes = [
         'students' => 'Students',
@@ -211,6 +221,7 @@ class SchoolSettingsDashboard extends Component
 
         $this->loadSchoolData();
         $this->loadAcademicYears();
+        $this->loadAcademicStructure();
         $this->loadAcademicPeriods();
         $this->loadSettings();
         $this->loadStats();
@@ -526,6 +537,76 @@ class SchoolSettingsDashboard extends Component
         $this->showAcademicYearModal = true;
     }
 
+    public function createAcademicGroupsAndLevels()
+    {
+        $this->allAcademicGroups = AcademicGroup::with(['academicLevels' => function ($query) {
+            $query->orderBy('name');
+        }])->orderBy('name')->get();
+
+        // Load current associations
+        $this->selectedGroups = $this->school->academicGroups()
+            ->wherePivot('is_active', true)
+            ->pluck('academic_groups.id')
+            ->map(fn($id) => (string)$id)
+            ->toArray();
+
+        $this->selectedLevels = $this->school->academicLevels()
+            ->wherePivot('is_active', true)
+            ->pluck('academic_levels.id')
+            ->map(fn($id) => (string)$id)
+            ->toArray();
+
+        $this->showGroupLevelModal = true;
+    }
+
+    public function saveAcademicGroupsAndLevels()
+    {
+        try {
+            // Prepare sync data with is_active = true
+            $groupSyncData = collect($this->selectedGroups)
+                ->mapWithKeys(fn($id) => [$id => ['is_active' => true]])
+                ->toArray();
+
+            $levelSyncData = collect($this->selectedLevels)
+                ->mapWithKeys(fn($id) => [$id => ['is_active' => true]])
+                ->toArray();
+
+            $this->school->academicGroups()->sync($groupSyncData);
+            $this->school->academicLevels()->sync($levelSyncData);
+
+            session()->flash('success', 'Academic structure updated successfully!');
+            $this->showGroupLevelModal = false;
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to update academic structure: ' . $e->getMessage());
+        }
+    }
+
+    public function updatedSelectedGroups()
+    {
+        // When a group is deselected, remove its corresponding levels
+        foreach ($this->allAcademicGroups as $group) {
+            if (!in_array((string)$group->id, $this->selectedGroups)) {
+                $levelIds = $group->academicLevels->pluck('id')->map(fn($id) => (string)$id)->toArray();
+                $this->selectedLevels = array_values(array_diff($this->selectedLevels, $levelIds));
+            }
+        }
+    }
+    public function toggleGroupSelection($groupId)
+    {
+        $groupId = (string)$groupId;
+
+        // If group is deselected, deselect all its levels
+        if (!in_array($groupId, $this->selectedGroups)) {
+            $group = AcademicGroup::with('academicLevels')->find($groupId);
+            if ($group) {
+                $levelIds = $group->academicLevels->pluck('id')->map(fn($id) => (string)$id)->toArray();
+                $this->selectedLevels = array_values(array_diff($this->selectedLevels, $levelIds));
+            }
+        }
+    }
+
+
     public function editAcademicYear($yearId)
     {
         $year = AcademicYear::where('school_id', $this->school->id)
@@ -751,6 +832,37 @@ class SchoolSettingsDashboard extends Component
         $this->editingPeriod = null;
     }
 
+    public function loadAcademicStructure()
+    {
+        // Get all active levels for this school first
+        $activeLevelIds = $this->school->academicLevels()
+            ->wherePivot('is_active', true)
+            ->pluck('academic_levels.id');
+
+        // Fetch full level objects grouped by their parent group ID
+        $levelsByGroup = AcademicLevel::whereIn('id', $activeLevelIds)
+            ->orderBy('name')
+            ->get()
+            ->groupBy('academic_group_id');
+
+        // Map active groups to their levels
+        $this->activeStructure = $this->school->academicGroups()
+            ->wherePivot('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($group) use ($levelsByGroup) {
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'levels' => $levelsByGroup->has($group->id)
+                        ? $levelsByGroup->get($group->id)->map(fn($l) => ['id' => $l->id, 'name' => $l->name])->toArray()
+                        : []
+                ];
+            })
+            ->toArray();
+    }
+
+
     public function render()
     {
 
@@ -758,9 +870,9 @@ class SchoolSettingsDashboard extends Component
             ['key' => 'overview', 'label' => 'Overview'],
             ['key' => 'basic-info', 'label' => 'Basic Information'],
             ['key' => 'academic-periods', 'label' => 'Academic Periods'],
-            ['key' => 'system-settings', 'label' => 'System Settings'],
+//            ['key' => 'system-settings', 'label' => 'System Settings'],
             ['key' => 'account-information', 'label' => 'Account Information'],
-            ['key' => 'fee-structure', 'label' => 'Fee Structure'],
+            ['key' => 'fee-structure', 'label' => 'Fees & Payments'],
             ['key' => 'letterheads', 'label' => 'Letterheads'],
         ];
 

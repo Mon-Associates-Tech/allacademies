@@ -3,6 +3,10 @@
     notificationMessage: '',
     activeTab: @entangle('activeTab'),
     showPeriodModal: @entangle('showPeriodModal'),
+    showPeriodModal: @entangle('showPeriodModal'),
+    showGroupLevelModal: @entangle('showGroupLevelModal'),
+    showAcademicYearModal: @entangle('showAcademicYearModal'),
+
     editingPeriod: @entangle('editingPeriod'),
     periods: @js($periods),
     stats: @js($stats),
@@ -274,7 +278,7 @@
             @include('livewire.school.partials.overview-tab')
             @include('livewire.school.partials.basic-info-tab')
             @include('livewire.school.partials.academic-periods-tab')
-            @include('livewire.school.partials.system-settings-tab')
+{{--            @include('livewire.school.partials.system-settings-tab')--}}
             @include('livewire.school.partials.fee-structure-tab')
             <livewire:school-settings.letterhead-settings />
             @include('livewire.school.partials.account-information-tab')
@@ -282,7 +286,7 @@
 
         <!-- Academic Period Modal -->
         @include('livewire.school.partials.period-modal')
-        @include('livewire.school.partials.academic-year-modal')
+{{--        @include('livewire.school.partials.academic-year-modal')--}}
 
         <!-- Import Modal -  -->
         @if($showImportModal)
@@ -441,6 +445,148 @@
                                     View detailed import format documentation
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($showGroupLevelModal)
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50" wire:click="$set('showGroupLevelModal', false)"></div>
+            <div class="fixed inset-0 z-50 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl" wire:click.stop>
+                        <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
+                                        Manage Academic Structure
+                                    </h3>
+                                    <div class="mt-2 max-h-[60vh] overflow-y-auto pr-2">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                            Select the academic groups and levels active for this school.
+                                        </p>
+
+                                        <div class="space-y-4">
+                                            @foreach($allAcademicGroups as $group)
+                                                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                                    <div class="flex items-center">
+                                                        <input type="checkbox"
+                                                               value="{{ $group->id }}"
+                                                               wire:model.live="selectedGroups"
+                                                               id="group_{{ $group->id }}"
+                                                               class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
+                                                        <label for="group_{{ $group->id }}" class="ml-3 block text-base font-medium text-gray-900 dark:text-white cursor-pointer">
+                                                            {{ $group->name }}
+                                                        </label>
+                                                    </div>
+
+                                                    @if(in_array((string)$group->id, $selectedGroups))
+                                                        <div class="mt-3 ml-8 pl-4 border-l-2 border-indigo-100 dark:border-gray-600 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in-down">
+                                                            @foreach($group->academicLevels as $level)
+                                                                <div class="flex items-center">
+                                                                    <input type="checkbox"
+                                                                           value="{{ $level->id }}"
+                                                                           wire:model="selectedLevels"
+                                                                           id="level_{{ $level->id }}"
+                                                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
+                                                                    <label for="level_{{ $level->id }}" class="ml-2 block text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
+                                                                        {{ $level->name }}
+                                                                    </label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="button" wire:click="saveAcademicGroupsAndLevels" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto">
+                                Save Changes
+                            </button>
+                            <button type="button" wire:click="$set('showGroupLevelModal', false)" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($showAcademicYearModal)
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50" wire:click="$set('showAcademicYearModal', false)"></div>
+            <div class="fixed inset-0 z-50 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg" wire:click.stop>
+                        <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
+                                        {{ $editingYearId ? 'Edit Academic Year' : 'Create Academic Year' }}
+                                    </h3>
+
+                                    <form wire:submit.prevent="saveAcademicYear">
+                                        <div class="space-y-4">
+                                            <!-- Name -->
+                                            <div>
+                                                <label for="yearName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name *</label>
+                                                <input type="text" wire:model="yearName" id="yearName"
+                                                       placeholder="e.g. 2024/2025"
+                                                       class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                @error('yearName') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                            </div>
+
+                                            <!-- Dates Row -->
+                                            <div class="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-2">
+                                                <div>
+                                                    <label for="yearStartDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date *</label>
+                                                    <input type="date" wire:model="yearStartDate" id="yearStartDate"
+                                                           class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                    @error('yearStartDate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                                </div>
+                                                <div>
+                                                    <label for="yearEndDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date *</label>
+                                                    <input type="date" wire:model="yearEndDate" id="yearEndDate"
+                                                           class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                    @error('yearEndDate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                                </div>
+                                            </div>
+
+                                            <!-- Status -->
+                                            <div>
+                                                <label for="yearStatus" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status *</label>
+                                                <select wire:model="yearStatus" id="yearStatus"
+                                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                    <option value="upcoming">Upcoming</option>
+                                                    <option value="active">Active</option>
+                                                    <option value="completed">Completed</option>
+                                                </select>
+                                                @error('yearStatus') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                            </div>
+
+                                            <!-- Description -->
+                                            <div>
+                                                <label for="yearDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                                                <textarea wire:model="yearDescription" id="yearDescription" rows="3"
+                                                          class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                                                @error('yearDescription') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="button" wire:click="saveAcademicYear" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto">
+                                {{ $editingYearId ? 'Update Year' : 'Create Year' }}
+                            </button>
+                            <button type="button" wire:click="$set('showAcademicYearModal', false)" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

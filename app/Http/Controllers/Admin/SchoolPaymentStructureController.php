@@ -79,7 +79,7 @@ class SchoolPaymentStructureController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'academic_period_id' => 'nullable|exists:academic_periods,id',
@@ -93,11 +93,79 @@ class SchoolPaymentStructureController extends Controller
             'allow_partial_payment' => 'boolean',
             'minimum_partial_amount' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
-        ]);
+        ];
+
+        // Add validation for new entities if provided
+        if ($request->has('new_year_start_date')) {
+            $rules['new_year_start_date'] = 'required|date';
+            $rules['new_year_end_date'] = 'required|date|after:new_year_start_date';
+        }
+
+        if ($request->has('new_period_start_date')) {
+            $rules['new_period_name'] = 'required|string|max:255';
+            $rules['new_period_type'] = 'required|string';
+            $rules['new_period_sequence'] = 'required|integer|min:1';
+            $rules['new_period_start_date'] = 'required|date';
+            $rules['new_period_end_date'] = 'required|date|after:new_period_start_date';
+        }
+
+        $validated = $request->validate($rules);
 
         $validated['school_id'] = getSchoolId();
         $validated['created_by'] = auth()->id();
         $validated['currency'] = 'GHS';
+
+        // Create new Academic Year if needed
+        if (!$request->filled('academic_year_id') && $request->has('new_year_start_date')) {
+            $year = new AcademicYear([
+                'school_id' => $validated['school_id'],
+                'start_date' => $request->new_year_start_date,
+                'end_date' => $request->new_year_end_date,
+                'status' => 'active',
+                'is_current' => true,
+            ]);
+            $year->name = $year->generateName();
+            $year->save();
+
+            $validated['academic_year_id'] = $year->id;
+        }
+
+        // Create new Academic Period if needed
+        if (!$request->filled('academic_period_id') && $request->has('new_period_start_date')) {
+            $period = new AcademicPeriod([
+                'school_id' => $validated['school_id'],
+                'academic_year_id' => $validated['academic_year_id'] ?? null, // Link to the year we just created or selected
+                'name' => $request->new_period_name,
+                'type' => $request->new_period_type,
+                'sequence' => $request->new_period_sequence,
+                'start_date' => $request->new_period_start_date,
+                'end_date' => $request->new_period_end_date,
+                'status' => 'active',
+                'is_current' => true,
+            ]);
+
+            // Generate academic year string if linked to a year
+            if ($period->academic_year_id) {
+                $year = AcademicYear::find($period->academic_year_id);
+                if ($year) {
+                    $period->academic_year = $year->getDisplayName();
+                }
+            }
+
+            $period->save();
+            $validated['academic_period_id'] = $period->id;
+        }
+
+        // Clean up temporary fields from validated data before creating payment structure
+        $fieldsToRemove = [
+            'new_year_start_date', 'new_year_end_date',
+            'new_period_name', 'new_period_type', 'new_period_sequence',
+            'new_period_start_date', 'new_period_end_date'
+        ];
+
+        foreach ($fieldsToRemove as $field) {
+            unset($validated[$field]);
+        }
 
         SchoolPaymentStructure::create($validated);
 

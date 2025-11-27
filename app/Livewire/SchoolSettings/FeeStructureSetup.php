@@ -2,10 +2,12 @@
 
 namespace App\Livewire\SchoolSettings;
 
-use App\Models\AcademicFeeStructure;
+use App\Models\AcademicFeeStructure; // Keeping for backward compatibility if needed, but primary is SchoolPaymentStructure
+use App\Models\SchoolPaymentStructure;
 use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
+use App\Models\AcademicGroup;
 use App\Models\School;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -17,18 +19,37 @@ class FeeStructureSetup extends Component
 {
     use WithPagination;
 
+    // Form Fields
+    public $name;
     public $academic_year_id = '';
     public $academic_group_id = '';
     public $academic_level_id = '';
-    public $current_term_id = '';
+    public $academic_period_id = ''; // Replaces current_term_id
+    public $payment_type = '';
     public $amount = '';
     public $due_date = '';
-    public $payment_method = 'Momo';
+    public $payment_period = '';
+    public $is_mandatory = true;
+    public $allow_partial_payment = false;
+    public $minimum_partial_amount = '';
+    public $description = '';
 
+    // On-the-fly creation fields
+    public $new_year_start_date;
+    public $new_year_end_date;
+    public $new_period_name;
+    public $new_period_type = 'term';
+    public $new_period_sequence = 1;
+    public $new_period_start_date;
+    public $new_period_end_date;
+
+    // Collections
     public $academicYears = [];
     public $academicGroups = [];
     public $academicLevels = [];
     public $academicPeriods = [];
+    public $paymentTypes = [];
+    public $paymentPeriods = [];
 
     public $showFormModal = false;
     public $formMode = 'create';
@@ -37,32 +58,46 @@ class FeeStructureSetup extends Component
 
     protected $listeners = ['academicYearCreated' => 'refreshAcademicYears'];
 
-    protected $rules = [
-        'academic_year_id' => 'required|exists:academic_years,id',
-        'academic_group_id' => 'required|exists:academic_groups,id',
-        'academic_level_id' => 'required|exists:academic_levels,id',
-        'current_term_id' => 'required|exists:academic_periods,id',
-        'amount' => 'required|numeric|min:0',
-        'due_date' => 'required|date',
-        'payment_method' => 'nullable|string|max:50',
-    ];
+    protected function rules()
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
+            'academic_period_id' => 'nullable|exists:academic_periods,id',
+            'academic_group_id' => 'nullable|exists:academic_groups,id',
+            'academic_level_id' => 'nullable|exists:academic_levels,id',
+            'payment_type' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+            'due_date' => 'nullable|date',
+            'payment_period' => 'nullable|string',
+            'is_mandatory' => 'boolean',
+            'allow_partial_payment' => 'boolean',
+            'minimum_partial_amount' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string',
+        ];
 
-    protected $messages = [
-        'academic_year_id.required' => 'Please select an academic year',
-        'academic_group_id.required' => 'Please select an academic group',
-        'academic_level_id.required' => 'Please select an academic level',
-        'current_term_id.required' => 'Please select a term',
-        'amount.required' => 'Amount is required',
-        'amount.numeric' => 'Amount must be a valid number',
-        'amount.min' => 'Amount must be greater than or equal to 0',
-        'due_date.required' => 'Due date is required',
-        'due_date.date' => 'Due date must be a valid date',
-    ];
+        if (!$this->academic_year_id && $this->new_year_start_date) {
+            $rules['new_year_start_date'] = 'required|date';
+            $rules['new_year_end_date'] = 'required|date|after:new_year_start_date';
+        }
+
+        if (!$this->academic_period_id && $this->new_period_start_date) {
+            $rules['new_period_name'] = 'required|string|max:255';
+            $rules['new_period_type'] = 'required|string';
+            $rules['new_period_sequence'] = 'required|integer|min:1';
+            $rules['new_period_start_date'] = 'required|date';
+            $rules['new_period_end_date'] = 'required|date|after:new_period_start_date';
+        }
+
+        return $rules;
+    }
 
     public function mount()
     {
         $this->loadAcademicYears();
         $this->loadAcademicGroups();
+        $this->paymentTypes = SchoolPaymentStructure::paymentTypes();
+        $this->paymentPeriods = SchoolPaymentStructure::paymentPeriods();
     }
 
     public function loadAcademicYears()
@@ -79,9 +114,6 @@ class FeeStructureSetup extends Component
             ->get();
     }
 
-    /**
-     * Get school ID from context (works for owners, admins, and regular users)
-     */
     protected function getSchoolId(): ?int
     {
         $user = Auth::user();
@@ -90,31 +122,17 @@ class FeeStructureSetup extends Component
             return null;
         }
 
-        // For owners/super admins, check session for selected school
         if ($user->canAccessCrossSchool()) {
             $sessionSchoolId = session('current_school_id');
-
-            // If they've explicitly selected a school, use it
-            if ($sessionSchoolId) {
-                return $sessionSchoolId;
-            }
-
-            // Check app binding
-            if (app()->bound('current_school_id')) {
-                return app('current_school_id');
-            }
-
-            // Check if current_school is bound
+            if ($sessionSchoolId) return $sessionSchoolId;
+            if (app()->bound('current_school_id')) return app('current_school_id');
             if (app()->bound('current_school')) {
                 $school = app('current_school');
                 return $school ? $school->id : null;
             }
-
-            // No school selected - return null
             return null;
         }
 
-        // For regular users, use their school_id
         return $user->school_id;
     }
 
@@ -143,7 +161,7 @@ class FeeStructureSetup extends Component
 
     public function updatedAcademicYearId($value)
     {
-        $this->current_term_id = '';
+        $this->academic_period_id = '';
         $this->loadAcademicPeriods();
     }
 
@@ -159,7 +177,6 @@ class FeeStructureSetup extends Component
         if ($this->academic_year_id) {
             $this->academicPeriods = AcademicPeriod::where('school_id', $schoolId)
                 ->where('academic_year_id', $this->academic_year_id)
-                ->whereIn('status', ['active', 'upcoming'])
                 ->orderBy('sequence')
                 ->get();
         } else {
@@ -187,8 +204,8 @@ class FeeStructureSetup extends Component
     public function showCreateForm()
     {
         $this->resetForm();
-        $this->loadAcademicYears(); // Refresh academic years when opening the form
-        $this->loadAcademicGroups(); // Also refresh groups
+        $this->loadAcademicYears();
+        $this->loadAcademicGroups();
         $this->showFormModal = true;
         $this->formMode = 'create';
     }
@@ -196,16 +213,25 @@ class FeeStructureSetup extends Component
     public function resetForm()
     {
         $this->reset([
+            'name',
             'academic_year_id',
             'academic_group_id',
             'academic_level_id',
-            'current_term_id',
+            'academic_period_id',
+            'payment_type',
             'amount',
             'due_date',
-            'payment_method',
-            'editingFeeId'
+            'payment_period',
+            'is_mandatory',
+            'allow_partial_payment',
+            'minimum_partial_amount',
+            'description',
+            'editingFeeId',
+            'new_year_start_date', 'new_year_end_date',
+            'new_period_name', 'new_period_type', 'new_period_sequence', 'new_period_start_date', 'new_period_end_date'
         ]);
-        $this->payment_method = 'Momo';
+        $this->is_mandatory = true;
+        $this->allow_partial_payment = false;
         $this->academicLevels = [];
         $this->academicPeriods = [];
         $this->resetErrorBag();
@@ -214,38 +240,17 @@ class FeeStructureSetup extends Component
     public function view($id)
     {
         $schoolId = $this->getSchoolId();
-        $this->viewingFee = AcademicFeeStructure::where('school_id', $schoolId)
+        $this->viewingFee = SchoolPaymentStructure::where('school_id', $schoolId)
             ->with([
                 'academicGroup',
                 'academicLevel',
-                'currentTerm',
-                'currentTerm.academicYear'
+                'academicPeriod',
+                'academicYear'
             ])
             ->findOrFail($id);
 
-        // Properly serialize the data for JavaScript
-        $viewingFeeData = [
-            'id' => $this->viewingFee->id,
-            'amount' => $this->viewingFee->amount,
-            'formatted_amount' => $this->viewingFee->formatted_amount,
-            'due_date' => $this->viewingFee->due_date,
-            'formatted_due_date' => $this->viewingFee->formatted_due_date,
-            'payment_method' => $this->viewingFee->payment_method,
-            'academicGroup' => [
-                'name' => $this->viewingFee->academicGroup->name
-            ],
-            'academicLevel' => [
-                'name' => $this->viewingFee->academicLevel->name
-            ],
-            'currentTerm' => [
-                'display_name' => $this->viewingFee->currentTerm->getDisplayName(),
-                'academicYear' => $this->viewingFee->currentTerm->academicYear ? [
-                    'getDisplayName' => $this->viewingFee->currentTerm->academicYear->getDisplayName()
-                ] : null
-            ]
-        ];
-
-        $this->js("window.Modal.open('fee-structure-details', {viewingFee: " . json_encode($viewingFeeData) . "})");
+        // Only serialize what is needed for view if using x-data, but since we use blade conditional, direct object is fine
+        $this->js("window.Modal.open('fee-structure-details')");
     }
 
 
@@ -258,18 +263,23 @@ class FeeStructureSetup extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        $fee = AcademicFeeStructure::where('school_id', $schoolId)
-            ->with('currentTerm')
+        $fee = SchoolPaymentStructure::where('school_id', $schoolId)
             ->findOrFail($id);
 
         $this->editingFeeId = $fee->id;
-        $this->academic_year_id = $fee->currentTerm->academic_year_id ?? '';
+        $this->name = $fee->name;
+        $this->academic_year_id = $fee->academic_year_id;
         $this->academic_group_id = $fee->academic_group_id;
         $this->academic_level_id = $fee->academic_level_id;
-        $this->current_term_id = $fee->current_term_id;
+        $this->academic_period_id = $fee->academic_period_id;
+        $this->payment_type = $fee->payment_type;
         $this->amount = $fee->amount;
-        $this->due_date = $fee->due_date;
-        $this->payment_method = $fee->payment_method;
+        $this->due_date = $fee->due_date?->format('Y-m-d');
+        $this->payment_period = $fee->payment_period;
+        $this->is_mandatory = $fee->is_mandatory;
+        $this->allow_partial_payment = $fee->allow_partial_payment;
+        $this->minimum_partial_amount = $fee->minimum_partial_amount;
+        $this->description = $fee->description;
 
         $this->loadAcademicPeriods();
         $this->loadAcademicLevels();
@@ -290,40 +300,73 @@ class FeeStructureSetup extends Component
         }
 
         try {
-            if ($this->formMode === 'edit' && $this->editingFeeId) {
-                // Update existing fee structure
-                $fee = AcademicFeeStructure::where('school_id', $schoolId)
-                    ->findOrFail($this->editingFeeId);
-
-                $fee->update([
-                    'academic_group_id' => $this->academic_group_id,
-                    'academic_level_id' => $this->academic_level_id,
-                    'current_term_id' => $this->current_term_id,
-                    'amount' => $this->amount,
-                    'due_date' => $this->due_date,
-                    'payment_method' => $this->payment_method,
-                ]);
-
-                session()->flash('success', 'Fee structure updated successfully!');
-            } else {
-                // Create new fee structure
-                AcademicFeeStructure::create([
+            // Handle on-the-fly creations
+            if (!$this->academic_year_id && $this->new_year_start_date) {
+                $year = new AcademicYear([
                     'school_id' => $schoolId,
-                    'academic_group_id' => $this->academic_group_id,
-                    'academic_level_id' => $this->academic_level_id,
-                    'current_term_id' => $this->current_term_id,
-                    'amount' => $this->amount,
-                    'due_date' => $this->due_date,
-                    'payment_method' => $this->payment_method,
+                    'start_date' => $this->new_year_start_date,
+                    'end_date' => $this->new_year_end_date,
+                    'status' => 'active',
+                    'is_current' => true,
                 ]);
+                $year->name = $year->generateName();
+                $year->save();
+                $this->academic_year_id = $year->id;
+            }
 
-                session()->flash('success', 'Fee structure created successfully!');
+            if (!$this->academic_period_id && $this->new_period_start_date) {
+                $period = new AcademicPeriod([
+                    'school_id' => $schoolId,
+                    'academic_year_id' => $this->academic_year_id ?: null,
+                    'name' => $this->new_period_name,
+                    'type' => $this->new_period_type,
+                    'sequence' => $this->new_period_sequence,
+                    'start_date' => $this->new_period_start_date,
+                    'end_date' => $this->new_period_end_date,
+                    'status' => 'active',
+                    'is_current' => true,
+                ]);
+                if ($period->academic_year_id) {
+                    $year = AcademicYear::find($period->academic_year_id);
+                    if ($year) $period->academic_year = $year->getDisplayName();
+                }
+                $period->save();
+                $this->academic_period_id = $period->id;
+            }
+
+            $data = [
+                'school_id' => $schoolId,
+                'name' => $this->name,
+                'academic_year_id' => $this->academic_year_id ?: null,
+                'academic_period_id' => $this->academic_period_id ?: null,
+                'academic_group_id' => $this->academic_group_id ?: null,
+                'academic_level_id' => $this->academic_level_id ?: null,
+                'payment_type' => $this->payment_type,
+                'amount' => $this->amount,
+                'due_date' => $this->due_date ?: null,
+                'payment_period' => $this->payment_period ?: null,
+                'is_mandatory' => $this->is_mandatory,
+                'allow_partial_payment' => $this->allow_partial_payment,
+                'minimum_partial_amount' => $this->minimum_partial_amount ?: null,
+                'description' => $this->description,
+                'currency' => 'GHS',
+            ];
+
+            if ($this->formMode === 'edit' && $this->editingFeeId) {
+                $fee = SchoolPaymentStructure::where('school_id', $schoolId)->findOrFail($this->editingFeeId);
+                $data['updated_by'] = Auth::id();
+                $fee->update($data);
+                session()->flash('success', 'Payment structure updated successfully!');
+            } else {
+                $data['created_by'] = Auth::id();
+                SchoolPaymentStructure::create($data);
+                session()->flash('success', 'Payment structure created successfully!');
             }
 
             $this->closeModal();
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to save fee structure. Please try again.');
-            Log::error('Fee structure save error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to save payment structure: ' . $e->getMessage());
+            Log::error('Payment structure save error: ' . $e->getMessage());
         }
     }
 
@@ -337,34 +380,39 @@ class FeeStructureSetup extends Component
     {
         try {
             $schoolId = $this->getSchoolId();
-
-            $fee = AcademicFeeStructure::where('school_id', $schoolId)
-                ->findOrFail($id);
-
+            $fee = SchoolPaymentStructure::where('school_id', $schoolId)->findOrFail($id);
             $fee->delete();
-
-            session()->flash('success', 'Fee structure deleted successfully!');
+            session()->flash('success', 'Payment structure deleted successfully!');
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to delete fee structure. Please try again.');
-            Log::error('Fee structure deletion error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete payment structure. Please try again.');
         }
     }
 
     public function render()
     {
         $schoolId = $this->getSchoolId();
-
-        $feeStructures = collect();
+        $schoolFees = collect();
+        $otherFees = collect();
 
         if ($schoolId) {
-            $feeStructures = AcademicFeeStructure::where('school_id', $schoolId)
-                ->with(['academicGroup', 'academicLevel', 'currentTerm.academicYear'])
+            $allFees = SchoolPaymentStructure::where('school_id', $schoolId)
+                ->with(['academicGroup', 'academicLevel', 'academicPeriod', 'academicYear'])
                 ->latest()
-                ->paginate(10);
+                ->get();
+
+            // Categorize fees: Tuition and Registration as School Fees, others as Other Fees
+            $schoolFees = $allFees->filter(function ($fee) {
+                return in_array($fee->payment_type, ['tuition', 'admission', 'registration']);
+            });
+
+            $otherFees = $allFees->reject(function ($fee) {
+                return in_array($fee->payment_type, ['tuition', 'admission', 'registration']);
+            });
         }
 
         return view('livewire.school-settings.fee-structure-setup', [
-            'feeStructures' => $feeStructures
+            'schoolFees' => $schoolFees,
+            'otherFees' => $otherFees
         ]);
     }
 }

@@ -1,16 +1,4 @@
 <x-layouts.app>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Create Fee Structure') }}
-            </h2>
-            <a href="{{ route('admin.school-payment-structures.index') }}"
-               class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                ← Back to Fee Structures
-            </a>
-        </div>
-    </x-slot>
-
     <div class="py-6">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
@@ -133,16 +121,32 @@
                                 <label for="academic_year_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Academic Year
                                 </label>
-                                <select name="academic_year_id"
-                                        id="academic_year_id"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
-                                    <option value="">All Years</option>
-                                    @foreach($academic_years as $year)
-                                        <option value="{{ $year->id }}" {{ old('academic_year_id') == $year->id ? 'selected' : '' }}>
-                                            {{ $year->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @if($academic_years->isNotEmpty())
+                                    <select name="academic_year_id"
+                                            id="academic_year_id"
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
+                                        <option value="">All Years</option>
+                                        @foreach($academic_years as $year)
+                                            <option value="{{ $year->id }}" {{ old('academic_year_id') == $year->id ? 'selected' : '' }}>
+                                                {{ $year->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                                        <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">No academic years found. Create one:</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">Start Date</label>
+                                                <input type="date" name="new_year_start_date" required class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">End Date</label>
+                                                <input type="date" name="new_year_end_date" required class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Academic Period -->
@@ -150,22 +154,48 @@
                                 <label for="academic_period_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Academic Period
                                 </label>
-                                <select name="academic_period_id"
-                                        id="academic_period_id"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
-                                    <option value="">All Periods</option>
-                                    @foreach($academic_periods as $period)
-                                        <option value="{{ $period->id }}" {{ old('academic_period_id') == $period->id ? 'selected' : '' }}>
-                                            {{ $period->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @if($academic_periods->isNotEmpty())
+                                    <select name="academic_period_id"
+                                            id="academic_period_id"
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
+                                        <option value="">All Periods</option>
+                                        @foreach($academic_periods as $period)
+                                            <option value="{{ $period->id }}" {{ old('academic_period_id') == $period->id ? 'selected' : '' }}>
+                                                {{ $period->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 space-y-2">
+                                        <p class="text-xs font-medium text-gray-600 dark:text-gray-400">No periods found. Create one:</p>
+                                        <input type="text" name="new_period_name" required placeholder="Name (e.g. Term 1)" class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <select name="new_period_type" required class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                                <option value="term">Term</option>
+                                                <option value="semester">Semester</option>
+                                                <option value="quarter">Quarter</option>
+                                            </select>
+                                            <input type="number" name="new_period_sequence" required value="1" placeholder="Seq" class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">Start</label>
+                                                <input type="date" name="new_period_start_date" required class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">End</label>
+                                                <input type="date" name="new_period_end_date" required class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-violet-500 focus:border-violet-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
+
 
                             <!-- Academic Group -->
                             <div>
                                 <label for="academic_group_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Academic Group
+                               Academic Group
                                 </label>
                                 <select name="academic_group_id"
                                         id="academic_group_id"
