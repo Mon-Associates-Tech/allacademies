@@ -483,6 +483,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/notes/{note}/unshare/{user}', [NotesController::class, 'unshare'])->name('notes.unshare');
 });
 
+Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
+
 // Include additional route files
 
 include_once 'student.php';

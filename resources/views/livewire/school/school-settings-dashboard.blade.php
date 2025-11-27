@@ -281,6 +281,7 @@
 {{--            @include('livewire.school.partials.system-settings-tab')--}}
             @include('livewire.school.partials.fee-structure-tab')
             <livewire:school-settings.letterhead-settings />
+            @include('livewire.school.partials.financial-aid-tab')
             @include('livewire.school.partials.account-information-tab')
         </div>
 

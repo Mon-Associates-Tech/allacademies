@@ -54,7 +54,7 @@
             <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"></x-app.header>
 
             <!-- Main content -->
-            <main class="mt-0 p-0">
+            <main class="mt-0 p-0  animate-fade-in">
                 <!-- Breadcrumb -->
                 @if($breadcrumb)
                     <div class="max-w-5xl px-4 lg:px-8 py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>

@@ -874,6 +874,7 @@ class SchoolSettingsDashboard extends Component
             ['key' => 'account-information', 'label' => 'Account Information'],
             ['key' => 'fee-structure', 'label' => 'Fees & Payments'],
             ['key' => 'letterheads', 'label' => 'Letterheads'],
+            ['key' => 'financialaids', 'label' => 'Financial Aids'],
         ];
 
         return view('livewire.school.school-settings-dashboard', [

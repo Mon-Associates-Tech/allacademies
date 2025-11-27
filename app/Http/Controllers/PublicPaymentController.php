@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademicFeeStructure;
 use App\Models\AcademicPeriod;
+use App\Models\FinancialAid;
 use App\Models\School;
 use App\Models\SchoolFee;
 use App\Models\SchoolPayment;
@@ -190,16 +191,17 @@ class PublicPaymentController extends Controller
      */
     protected function resolvePaymentCode(string $code)
     {
-        // Business logic to find students based on a code
-        // This could be looking up a StudentGroup, or a specific event code
+        // Lookup Financial Aid by the code provided
+        $financialAid = FinancialAid::with(['beneficiaries.user', 'beneficiaries.school', 'beneficiaries.academicGroup', 'beneficiaries.academicLevel'])
+            ->where('code', $code)
+            ->where('status', 'active')
+            ->first();
 
-        // Example implementation: Check if it matches a StudentGroup code/name
-        // Assuming StudentGroup has a code or name column we can search
+        if ($financialAid) {
+            return $financialAid->beneficiaries;
+        }
 
         // $group = \App\Models\StudentGroup::where('code', $code)->first();
-        // if ($group) {
-        //     return $group->students()->with(['user', 'school', 'academicGroup', 'academicLevel'])->get();
-        // }
 
         return collect();
     }
