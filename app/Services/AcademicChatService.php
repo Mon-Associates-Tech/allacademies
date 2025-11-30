@@ -104,7 +104,7 @@ class AcademicChatService
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
-                Log::info('OpenAI API attempt', ['attempt' => $attempt, 'max_retries' => $maxRetries]);
+               // Log::info('OpenAI API attempt', ['attempt' => $attempt, 'max_retries' => $maxRetries]);
 
                 $response = Http::withToken($this->apiKey)
                     ->timeout($timeout)
@@ -112,21 +112,9 @@ class AcademicChatService
                     ->retry(2, 1000) // Retry 2 times with 1 second delay for connection issues
                     ->post($this->endpoint, $requestData);
 
-                Log::info('OpenAI Response Received', [
-                    'status' => $response->status(),
-                    'successful' => $response->successful(),
-                    'attempt' => $attempt,
-                ]);
-
                 if ($response->successful()) {
                     $responseData = $response->json();
                     $usage = $responseData['usage'] ?? null;
-
-                    Log::info('OpenAI Response Success', [
-                        'has_usage' => $usage !== null,
-                        'data' => $responseData,
-                        'model_used' => $responseData['model'] ?? 'unknown',
-                    ]);
 
                     // Log token usage and deduct from user's subscription
                     if ($user && $usage) {

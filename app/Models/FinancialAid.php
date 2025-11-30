@@ -20,6 +20,7 @@ class FinancialAid extends Model
         'code',
         'description',
         'amount',
+        'amount_raised',
         'school_payment_structure_id',
         'status'
     ];
@@ -50,5 +51,33 @@ class FinancialAid extends Model
     public function isTuition(): bool
     {
         return $this->schoolPaymentStructure && $this->schoolPaymentStructure->payment_type === 'tuition';
+    }
+
+    public function school(){
+        return $this->belongsTo(School::class);
+    }
+
+
+    public function schoolFees()
+    {
+        return $this->hasMany(SchoolFee::class);
+    }
+
+    public function schoolPayments()
+    {
+        return $this->hasMany(SchoolPayment::class);
+    }
+
+    // Helper to calculate left amount
+    public function getAmountLeftAttribute()
+    {
+        return max(0, $this->amount - $this->amount_raised);
+    }
+
+    // Helper to calculate progress
+    public function getProgressPercentageAttribute()
+    {
+        if ($this->amount <= 0) return 0;
+        return min(100, round(($this->amount_raised / $this->amount) * 100));
     }
 }

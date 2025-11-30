@@ -17,6 +17,15 @@
                  x-data="{
                     mode: 'individual',
                     inputs: [''],
+                        paymentCode: '',
+                        init() {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const code = urlParams.get('payment_code');
+                            if (code) {
+                                this.mode = 'code';
+                                this.paymentCode = code;
+                            }
+                        },
                     addInput() {
                         this.inputs.push('');
                     },
@@ -111,6 +120,7 @@
                             <div class="mt-1">
                                 <input id="payment_code"
                                        name="payment_code"
+                                       x-model="paymentCode"
                                        type="text"
                                        placeholder="Enter the code provided to you"
                                        class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:text-white sm:text-sm">

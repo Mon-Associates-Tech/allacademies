@@ -170,10 +170,6 @@ class QuestionGenerator
                         'available' => $fetchedCount,
                         'table' => $table
                     ]);
-
-                    throw new NotEnoughQuestionsException(
-                        "Not enough questions in subtopic '{$subtopicModel->name}'. Requested: {$count}, Available: {$fetchedCount}"
-                    );
                 }
 
                 $sectionQuestions = array_merge($sectionQuestions, $questions);

@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PublicPaymentController extends Controller
 {
@@ -31,62 +32,7 @@ class PublicPaymentController extends Controller
     }
 
     /**
-     * Lookup student by ID or email and show payment form
-     */
-    public function lookupStudentDep(Request $request)
-    {
-        // Validate that at least one field is provided
-        $request->validate([
-            'student_id' => 'nullable|string|required_without:email',
-            'email' => 'nullable|email|required_without:student_id',
-        ], [
-            'student_id.required_without' => 'Please provide either a student ID or email address.',
-            'email.required_without' => 'Please provide either a student ID or email address.',
-        ]);
-
-        // Build query based on what was provided
-        $query = Student::with([
-            'user',
-            'school',
-            'academicGroup',
-            'academicLevel'
-        ]);
-
-        // Search by student_id or email
-        if ($request->filled('student_id') && $request->filled('email')) {
-            // Both provided - search for student matching both
-            $query->where('student_id', $request->student_id)
-                ->whereHas('user', function ($q) use ($request) {
-                    $q->where('email', $request->email);
-                });
-        } elseif ($request->filled('student_id')) {
-            // Only student_id provided
-            $query->where('student_id', $request->student_id);
-        } else {
-            // Only email provided
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('email', $request->email);
-            });
-        }
-
-        $student = $query->first();
-
-        if (!$student) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'lookup' => 'Student not found. Please check the information and try again.'
-                ]);
-        }
-
-        // Get available payment types and amounts
-        $paymentOptions = $this->getPaymentOptionsForStudent($student);
-
-        return view('payments.public.form', compact('student', 'paymentOptions'));
-    }
-
-    /**
-     * Lookup student by ID or email and show payment form
+     * Lookup student by ID or email, or Financial Aid Code for bulk payment
      */
     public function lookupStudent(Request $request)
     {
@@ -99,18 +45,51 @@ class PublicPaymentController extends Controller
 
         $students = collect();
         $notFound = [];
+        $financialAidId = null;
+        $isBulkMode = false;
+        $financialAid = null;
+        $beneficiaryCount = 0;
+        $beneficiaries = collect();
 
         // Scenario 1: Lookup by Payment/Group Code
         if ($request->filled('payment_code')) {
             $code = $request->input('payment_code');
-            $studentsFromCode = $this->resolvePaymentCode($code);
 
-            if ($studentsFromCode->isEmpty()) {
-                return back()
-                    ->withInput()
-                    ->withErrors(['lookup' => 'Invalid payment code or no students associated with this code.']);
+            // 1a. Try to find Financial Aid Code (Bulk Mode)
+            $financialAid = FinancialAid::where('code', $code)
+                ->where('status', 'active')
+                ->with('school') // Load school for view header
+                ->first();
+
+            if ($financialAid) {
+                $financialAidId = $financialAid->id;
+                $isBulkMode = true;
+                // Count beneficiaries
+                $beneficiaryCount = $financialAid->beneficiaries()->count();
+
+                if ($beneficiaryCount === 0) {
+                    return back()
+                        ->withInput()
+                        ->withErrors(['lookup' => 'This Financial Aid program has no beneficiaries listed yet.']);
+                }
+
+                // Load beneficiaries list for display (Optimized selection)
+                $beneficiaries = $financialAid->beneficiaries()
+                    ->with('user:id,name,avatar')
+                    ->select('students.id', 'students.user_id', 'students.student_id')
+                    ->get();
+
+            } else {
+                // 1b. Fallback: standard student lookup by group code (legacy behavior)
+                $studentsFromCode = $this->resolvePaymentCode($code);
+
+                if ($studentsFromCode->isEmpty()) {
+                    return back()
+                        ->withInput()
+                        ->withErrors(['lookup' => 'Invalid payment code or no students associated with this code.']);
+                }
+                $students = $studentsFromCode;
             }
-            $students = $studentsFromCode;
         }
         // Scenario 2: Lookup by Identifiers (IDs or Emails)
         elseif ($request->filled('identifiers')) {
@@ -127,18 +106,15 @@ class PublicPaymentController extends Controller
             foreach ($identifiers as $identifier) {
                 $identifier = trim($identifier);
 
-                // Use withoutGlobalScopes() to bypass school-based filtering for public lookups
-                // Search by student_id first
+                // Use withoutGlobalScopes to find across schools
                 $student = Student::withoutGlobalScopes()
                     ->with(['user', 'school', 'academicGroup', 'academicLevel'])
                     ->where('student_id', $identifier)
                     ->first();
 
-                // If not found by student_id, search by email through User model
+                // Try email if ID fails
                 if (!$student) {
-                    // Find user by email first, then get their student record
                     $user = \App\Models\User::where('email', $identifier)->first();
-
                     if ($user) {
                         $student = Student::withoutGlobalScopes()
                             ->with(['user', 'school', 'academicGroup', 'academicLevel'])
@@ -148,7 +124,6 @@ class PublicPaymentController extends Controller
                 }
 
                 if ($student) {
-                    // Prevent duplicates
                     if (!$students->contains('id', $student->id)) {
                         $students->push($student);
                     }
@@ -173,34 +148,322 @@ class PublicPaymentController extends Controller
         }
 
         // Prepare data for the view
-        $studentsData = $students->map(function ($student) {
+        // If Bulk Mode, we pass an empty collection for studentsData to avoid individual list generation
+        $studentsData = $isBulkMode ? collect() : $students->map(function ($student) {
             return [
                 'student' => $student,
                 'options' => $this->getPaymentOptionsForStudent($student)
             ];
         });
 
+        // Determine context student for headers if not bulk
+        $contextStudent = $students->first();
+
         return view('payments.public.form', [
             'studentsData' => $studentsData,
-            'student' => $students->first(),
-            'paymentOptions' => $this->getPaymentOptionsForStudent($students->first())
+            'student' => $contextStudent, // Nullable in bulk mode
+            'paymentOptions' => $contextStudent ? $this->getPaymentOptionsForStudent($contextStudent) : [],
+            'financial_aid_id' => $financialAidId,
+            'isBulkMode' => $isBulkMode,
+            'financialAid' => $financialAid,
+            'beneficiaryCount' => $beneficiaryCount,
+            'beneficiaries' => $beneficiaries
         ]);
     }
+
     /**
-     * Resolve students from a payment code
+     * Initialize payment transaction
+     */
+    public function initializePayment(Request $request)
+    {
+        $validated = $request->validate([
+            // Standard payments validation (required unless bulk)
+            'payments' => 'required_without:bulk_amount|array',
+            'payments.*.student_id' => 'required_without:bulk_amount|exists:students,id',
+            'payments.*.payment_type' => 'required_without:bulk_amount|string',
+            'payments.*.amount' => 'required_without:bulk_amount|numeric|min:1',
+
+            // Bulk payment validation (required if bulk)
+            'bulk_amount' => 'required_without:payments|numeric|min:1',
+            'financial_aid_id' => 'nullable|exists:financial_aids,id',
+
+            // Payer details
+            'payer_type' => 'required|in:parent,student,other',
+            'payer_name' => 'nullable|string|max:255',
+            'payer_email' => 'required|email',
+            'payer_phone' => 'nullable|string|max:20',
+        ]);
+
+        // Logic check: if bulk_amount is present, financial_aid_id must be present
+        if ($request->filled('bulk_amount') && !$request->filled('financial_aid_id')) {
+            return back()->withErrors(['error' => 'Financial Aid context missing for bulk payment.']);
+        }
+
+        $totalAmount = 0;
+        $paymentRecords = [];
+        $batchReference = 'BATCH-' . now()->format('YmdHis') . '-' . strtoupper(\Str::random(6));
+        $financialAidId = $request->input('financial_aid_id');
+
+        DB::beginTransaction();
+        try {
+            // --- PATH A: Bulk Distribution Mode ---
+            if ($request->filled('bulk_amount')) {
+                $amount = $request->input('bulk_amount');
+                $totalAmount = $amount;
+
+                $financialAid = FinancialAid::with('school')->find($financialAidId);
+
+                // Optimised fetch: Get beneficiary IDs directly to avoid hydrating thousands of models
+                $beneficiaries = DB::table('financial_aid_student')
+                    ->join('students', 'financial_aid_student.student_id', '=', 'students.id')
+                    ->where('financial_aid_student.financial_aid_id', $financialAidId)
+                    ->whereNull('students.deleted_at')
+                    ->select(
+                        'students.id',
+                        'students.school_id',
+                        'students.user_id'
+                    )
+                    ->get();
+
+                $count = $beneficiaries->count();
+                if ($count === 0) {
+                    throw new \Exception("No beneficiaries found to distribute funds to.");
+                }
+
+                // Calculate split (floor to 2 decimals)
+                $amountPerStudent = floor(($amount / $count) * 100) / 100;
+
+                if ($amountPerStudent < 0.01) {
+                    throw new \Exception("Amount per student is too small to process.");
+                }
+
+                // Common insert data
+                $now = now();
+                $payerId = auth()->id();
+                $payerType = $validated['payer_type'];
+                $payerName = $validated['payer_name'] ?? 'Guest';
+                $payerEmail = $validated['payer_email'];
+
+                // Get current term context for the school
+                $currentTermId = AcademicPeriod::where('school_id', $financialAid->school_id)
+                    ->where(function($q) {
+                        $q->where('is_current', 1)->orWhere('status', 'active');
+                    })
+                    ->value('id');
+
+                $feesToInsert = [];
+
+                foreach ($beneficiaries as $student) {
+                    $feesToInsert[] = [
+                        'school_id' => $student->school_id,
+                        'student_id' => $student->id,
+                        'financial_aid_id' => $financialAidId,
+                        'payer_id' => $payerId,
+                        'payer_type' => $payerType,
+                        'school_name' => $financialAid->school->name ?? '',
+                        'amount' => $amountPerStudent,
+                        'term_total_amount' => $amountPerStudent, // Placeholder
+                        'term_id' => $currentTermId,
+                        'currency' => 'GHS',
+                        'status' => 'pending',
+                        'reference' => $batchReference, // Shared reference
+                        'authorization_url' => null,
+                        'paystack_response' => json_encode([
+                            'batch_reference' => $batchReference,
+                            'payer_name' => $payerName,
+                            'payer_email' => $payerEmail,
+                            'distribution' => 'bulk_equal_share',
+                            'financial_aid_code' => $financialAid->code
+                        ]),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+
+                // Insert in chunks
+                foreach (array_chunk($feesToInsert, 500) as $chunk) {
+                    SchoolFee::insert($chunk);
+                }
+
+            }
+            // --- PATH B: Individual Student Mode ---
+            else {
+                foreach ($validated['payments'] as $item) {
+                    $student = Student::withoutGlobalScopes()
+                        ->with(['school', 'user'])
+                        ->find($item['student_id']);
+
+                    if (!$student) continue;
+
+                    $amount = $item['amount'];
+                    $paymentType = $item['payment_type'];
+
+                    // Current Term context
+                    $currentTerm = AcademicPeriod::where('school_id', $student->getUserSchoolId())
+                        ->where(function($q) {
+                            $q->where('is_current', 1)->orWhere('status', 'active');
+                        })
+                        ->first();
+
+                    if ($paymentType === 'tuition') {
+                        // Create SchoolFee
+                        $feeStructure = AcademicFeeStructure::where('school_id', $student->getUserSchoolId())
+                            ->where('academic_group_id', $student->academic_group_id)
+                            ->where('academic_level_id', $student->academic_level_id)
+                            ->first();
+
+                        $payment = SchoolFee::create([
+                            'school_id' => $student->getUserSchoolId(),
+                            'student_id' => $student->id,
+                            'financial_aid_id' => $financialAidId,
+                            'payer_id' => auth()->id(),
+                            'payer_type' => $validated['payer_type'],
+                            'school_name' => $student->school->name ?? '',
+                            'amount' => $amount,
+                            'term_total_amount' => $feeStructure->term_total_amount ?? $feeStructure->amount ?? $amount,
+                            'term_id' => $currentTerm->id ?? null,
+                            'currency' => 'GHS',
+                            'status' => 'pending',
+                            'reference' => 'FEE-' . now()->format('YmdHis') . '-' . strtoupper(\Str::random(6)),
+                            'paystack_response' => json_encode([
+                                'batch_reference' => $batchReference,
+                                'payer_name' => $validated['payer_name'] ?? 'Guest',
+                                'payer_email' => $validated['payer_email'],
+                                'student_name' => $student->user->name ?? '',
+                                'financial_aid_id' => $financialAidId,
+                            ]),
+                        ]);
+
+                        $paymentRecords[] = ['model' => $payment, 'type' => 'fee'];
+
+                    } else {
+                        // Create SchoolPayment (Other types)
+                        $payment = SchoolPayment::create([
+                            'school_id' => $student->getUserSchoolId(),
+                            'student_id' => $student->id,
+                            'financial_aid_id' => $financialAidId,
+                            'academic_group_id' => $student->academic_group_id,
+                            'academic_level_id' => $student->academic_level_id,
+                            'academic_period_id' => $currentTerm->id ?? null,
+                            'payment_type' => $paymentType,
+                            'amount' => $amount,
+                            'fixed_amount' => $amount,
+                            'currency' => 'GHS',
+                            'payer_type' => $validated['payer_type'],
+                            'payer_id' => auth()->id(),
+                            'payer_name' => $validated['payer_name'] ?? (auth()->check() ? auth()->user()->name : 'Guest'),
+                            'payer_email' => $validated['payer_email'],
+                            'payer_phone' => $validated['payer_phone'] ?? null,
+                            'status' => 'pending',
+                            'gateway' => 'paystack',
+                            'metadata' => [
+                                'batch_reference' => $batchReference,
+                                'student_name' => $student->user->name ?? '',
+                                'financial_aid_id' => $financialAidId,
+                            ]
+                        ]);
+
+                        $paymentRecords[] = ['model' => $payment, 'type' => 'payment'];
+                    }
+
+                    $totalAmount += $amount;
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Payment Initialization Error', ['error' => $e->getMessage()]);
+            return back()->withErrors(['payment' => 'Failed to initialize payment records. ' . $e->getMessage()]);
+        }
+
+        // --- Initialize Paystack ---
+        $callbackUrl = route('payments.public.callback');
+
+        $metadata = [
+            'batch_reference' => $batchReference,
+            'payer_type' => $validated['payer_type'],
+            'financial_aid_id' => $financialAidId,
+            'is_bulk' => $request->filled('bulk_amount'),
+        ];
+
+        $paymentData = [
+            'email' => $validated['payer_email'],
+            'amount' => $totalAmount * 100, // Convert to pesewas
+            'currency' => 'GHS',
+            'reference' => $batchReference,
+            'callback_url' => $callbackUrl,
+            'metadata' => $metadata,
+        ];
+
+        // Handle Subaccount (Try finding specific school context)
+        $schoolForSubaccount = null;
+        if ($financialAidId && $financialAid = FinancialAid::with('school.subaccount')->find($financialAidId)) {
+            $schoolForSubaccount = $financialAid->school;
+        } elseif (isset($paymentRecords[0])) {
+            $schoolForSubaccount = $paymentRecords[0]['model']->school ?? null;
+        }
+
+        if ($schoolForSubaccount && $schoolForSubaccount->subaccount && $schoolForSubaccount->subaccount->subaccount_code) {
+            $paymentData['subaccount'] = $schoolForSubaccount->subaccount->subaccount_code;
+            $paymentData['bearer'] = 'account';
+        }
+
+        try {
+            $response = $this->paystack->initializeTransaction($paymentData);
+
+            if (empty($response['status']) || !$response['status']) {
+                return back()->withErrors(['payment' => 'Unable to initialize payment gateway.']);
+            }
+
+            $authUrl = $response['data']['authorization_url'];
+            $gatewayRef = $response['data']['reference'];
+
+            // --- Update Local Records with Gateway Info ---
+            if ($request->filled('bulk_amount')) {
+                // Bulk Update using the shared reference
+                SchoolFee::where('reference', $batchReference)
+                    ->update([
+                        'authorization_url' => $authUrl,
+                        // Append gateway reference to JSON field
+                        'paystack_response' => DB::raw("JSON_SET(paystack_response, '$.gateway_reference', '{$gatewayRef}')")
+                    ]);
+            } else {
+                // Individual Update
+                foreach ($paymentRecords as $record) {
+                    $record['model']->update([
+                        'authorization_url' => $authUrl,
+                        // Only SchoolPayment usually has separate transaction_id column in this schema
+                        'transaction_id' => $record['type'] === 'payment' ? $gatewayRef : null,
+                    ]);
+
+                    if ($record['type'] === 'fee') {
+                        $record['model']->update([
+                            'paystack_response' => json_encode(array_merge(
+                                json_decode($record['model']->paystack_response, true) ?? [],
+                                ['gateway_reference' => $gatewayRef]
+                            ))
+                        ]);
+                    }
+                }
+            }
+
+            return redirect($authUrl);
+
+        } catch (\Exception $e) {
+            Log::error('Paystack Init Failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['payment' => 'Gateway initialization failed.']);
+        }
+    }
+
+    /**
+     * Resolve students from a payment code (Legacy/Standard groups)
      */
     protected function resolvePaymentCode(string $code)
     {
-        // Lookup Financial Aid by the code provided
-        $financialAid = FinancialAid::with(['beneficiaries.user', 'beneficiaries.school', 'beneficiaries.academicGroup', 'beneficiaries.academicLevel'])
-            ->where('code', $code)
-            ->where('status', 'active')
-            ->first();
+        // Note: Financial Aid resolution is now handled directly in lookupStudent
 
-        if ($financialAid) {
-            return $financialAid->beneficiaries;
-        }
-
+        // Placeholder for other StudentGroup logic
         // $group = \App\Models\StudentGroup::where('code', $code)->first();
 
         return collect();
@@ -224,7 +487,7 @@ class PublicPaymentController extends Controller
                 'name' => 'Tuition Fee',
                 'amount' => $tuitionAmount,
                 'allow_custom' => true,
-                'is_default' => true, // Mark tuition as default
+                'is_default' => true,
             ],
             'library' => [
                 'name' => 'Library Fee',
@@ -271,328 +534,6 @@ class PublicPaymentController extends Controller
         ];
 
         return $paymentOptions;
-    }
-
-    /**
-     * Initialize payment
-     */
-    public function initializePaymentDep(Request $request)
-    {
-        $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'payment_type' => 'required|string',
-            'amount' => 'required|numeric|min:1',
-            'fixed_amount' => 'nullable|numeric',
-            'payer_type' => 'required|in:parent,student,other',
-            'payer_name' => 'required_if:payer_type,other|string|max:255',
-            'payer_email' => 'required|email',
-            'payer_phone' => 'nullable|string|max:20',
-        ]);
-
-        $student = Student::with('school')->findOrFail($validated['student_id']);
-
-        // Create payment record
-        $payment = SchoolPayment::create([
-            'school_id' => $student->school_id,
-            'student_id' => $student->id,
-            'academic_group_id' => $student->academic_group_id,
-            'academic_level_id' => $student->academic_level_id,
-            'payment_type' => $validated['payment_type'],
-            'amount' => $validated['amount'],
-            'fixed_amount' => $validated['fixed_amount'] ?? $validated['amount'],
-            'currency' => 'GHS',
-            'payer_type' => $validated['payer_type'],
-            'payer_id' => auth()->id(),
-            'payer_name' => $validated['payer_name'] ?? (auth()->check() ? auth()->user()->name : null),
-            'payer_email' => $validated['payer_email'],
-            'payer_phone' => $validated['payer_phone'] ?? null,
-            'status' => 'pending',
-            'gateway' => 'paystack',
-        ]);
-
-        // Initialize Paystack transaction
-        $callbackUrl = route('payments.public.callback');
-
-        $paymentData = [
-            'email' => $validated['payer_email'],
-            'amount' => $validated['amount'] * 100, // Convert to pesewas
-            'currency' => 'GHS',
-            'reference' => $payment->reference,
-            'callback_url' => $callbackUrl,
-            'metadata' => [
-                'payment_id' => $payment->id,
-                'student_id' => $student->student_id,
-                'student_name' => $student->user->name,
-                'payment_type' => $validated['payment_type'],
-            ],
-        ];
-
-        // Add subaccount if school has one
-        $subaccount = $student->school->subaccount;
-        if ($subaccount && $subaccount->subaccount_code) {
-            $paymentData['subaccount'] = $subaccount->subaccount_code;
-            $paymentData['bearer'] = 'account';
-        }
-
-        try {
-            $response = $this->paystack->initializeTransaction($paymentData);
-
-            if (empty($response['status']) || !$response['status']) {
-                return back()->withErrors(['payment' => 'Unable to initialize payment. Please try again.']);
-            }
-
-            // Update payment with authorization URL
-            $payment->update([
-                'authorization_url' => $response['data']['authorization_url'],
-                'transaction_id' => $response['data']['reference'],
-            ]);
-
-            return redirect($response['data']['authorization_url']);
-        } catch (\Exception $e) {
-            \Log::error('Payment initialization failed', [
-                'error' => $e->getMessage(),
-                'payment_id' => $payment->id,
-            ]);
-
-            return back()->withErrors(['payment' => 'Unable to initialize payment. Please try again or contact support.']);
-        }
-    }
-
-    /**
-     * Handle payment callback
-     */
-    public function paymentCallbackDep(Request $request)
-    {
-        $reference = $request->query('reference');
-
-        if (!$reference) {
-            return redirect()->route('payments.public.lookup')
-                ->withErrors(['payment' => 'Missing payment reference.']);
-        }
-
-        try {
-            $response = $this->paystack->verifyTransaction($reference);
-
-            if (empty($response['status']) || !$response['status']) {
-                return redirect()->route('payments.public.lookup')
-                    ->withErrors(['payment' => 'Payment verification failed.']);
-            }
-
-            $data = $response['data'] ?? [];
-
-            // Try to get payment_id from metadata or find by reference
-            $paymentId = $data['metadata']['payment_id'] ?? null;
-
-            if (!$paymentId) {
-                // Fallback: try to find payment by reference
-                $payment = SchoolPayment::where('reference', $reference)->first();
-
-                if (!$payment) {
-                    return redirect()->route('payments.public.lookup')
-                        ->withErrors(['payment' => 'Invalid payment reference.']);
-                }
-            } else {
-                $payment = SchoolPayment::findOrFail($paymentId);
-            }
-
-            // Update payment status
-            DB::transaction(function () use ($payment, $response) {
-                $payment->markAsSucceeded([
-                    'gateway_response' => $response,
-                    'transaction_id' => $response['data']['id'] ?? null,
-                ]);
-            });
-
-            return redirect()->route('payments.public.success', $payment)
-                ->with('success', 'Payment successful!');
-        } catch (\Exception $e) {
-            \Log::error('Payment callback failed', [
-                'error' => $e->getMessage(),
-                'reference' => $reference,
-            ]);
-
-            return redirect()->route('payments.public.lookup')
-                ->withErrors(['payment' => 'An error occurred processing your payment. Please contact support with reference: ' . $reference]);
-        }
-    }
-
-    /**
-     * Show payment success page
-     */
-    public function success(SchoolPayment $payment)
-    {
-        $payment->load('student.user', 'student.school');
-
-        return view('payments.public.success', compact('payment'));
-    }
-
-    /**
-     * Initialize payment for multiple students
-     */
-    public function initializePayment(Request $request)
-    {
-        $validated = $request->validate([
-            'payments' => 'required|array|min:1',
-            'payments.*.student_id' => 'required|exists:students,id',
-            'payments.*.payment_type' => 'required|string',
-            'payments.*.amount' => 'required|numeric|min:1',
-
-            'payer_type' => 'required|in:parent,student,other',
-            'payer_name' => 'nullable|string|max:255',
-            'payer_email' => 'required|email',
-            'payer_phone' => 'nullable|string|max:20',
-        ]);
-
-        $totalAmount = 0;
-        $paymentRecords = [];
-        $batchReference = 'BATCH-' . now()->format('YmdHis') . '-' . strtoupper(\Str::random(6));
-
-        DB::beginTransaction();
-        try {
-            foreach ($validated['payments'] as $item) {
-                $student = Student::withoutGlobalScopes()
-                    ->with(['school', 'user'])
-                    ->find($item['student_id']);
-                $amount = $item['amount'];
-                $paymentType = $item['payment_type'];
-
-                // Determine if this is a tuition payment (SchoolFee) or other payment (SchoolPayment)
-                if ($paymentType === 'tuition') {
-                    // Get current term for this student's school
-                    $currentTerm = AcademicPeriod::where('school_id', $student->getUserSchoolId())
-                        ->where(function($q) {
-                            $q->where('is_current', 1)->orWhere('status', 'active');
-                        })
-                        ->first();
-
-                    // Get fee structure for term total
-                    $feeStructure = AcademicFeeStructure::where('school_id', $student->getUserSchoolId())
-                        ->where('academic_group_id', $student->academic_group_id)
-                        ->where('academic_level_id', $student->academic_level_id)
-                        ->first();
-
-                    $school = School::find($student->getUserSchoolId());
-
-                    // Create SchoolFee record for tuition
-                    $payment = SchoolFee::create([
-                        'school_id' => $student->getUserSchoolId(),
-                        'student_id' => $student->id,
-                        'payer_id' => auth()->id(),
-                        'payer_type' => $validated['payer_type'],
-                        'school_name' => $school->name ?? '',
-                        'amount' => $amount,
-                        'term_total_amount' => $feeStructure->term_total_amount ?? $feeStructure->amount ?? $amount,
-                        'term_id' => $currentTerm->id ?? null,
-                        'currency' => 'GHS',
-                        'status' => 'pending',
-                        'reference' => 'FEE-' . now()->format('YmdHis') . '-' . strtoupper(\Str::random(6)),
-                        'paystack_response' => json_encode([
-                            'batch_reference' => $batchReference,
-                            'payer_name' => $validated['payer_name'] ?? 'Guest',
-                            'payer_email' => $validated['payer_email'],
-                            'payer_phone' => $validated['payer_phone'] ?? null,
-                            'student_name' => $student->user->name ?? '',
-                        ]),
-                    ]);
-                } else {
-                    // Get current term for this student's school
-                    $currentTerm = AcademicPeriod::where('school_id', $student->getUserSchoolId())
-                        ->where(function($q) {
-                            $q->where('is_current', 1)->orWhere('status', 'active');
-                        })
-                        ->first();
-
-                    // Create SchoolPayment record for other payment types
-                    $payment = SchoolPayment::create([
-                        'school_id' => $student->getUserSchoolId(),
-                        'student_id' => $student->id,
-                        'academic_group_id' => $student->academic_group_id,
-                        'academic_level_id' => $student->academic_level_id,
-                        'academic_period_id' => $currentTerm->id ?? null,
-                        'payment_type' => $paymentType,
-                        'amount' => $amount,
-                        'fixed_amount' => $amount,
-                        'currency' => 'GHS',
-                        'payer_type' => $validated['payer_type'],
-                        'payer_id' => auth()->id(),
-                        'payer_name' => $validated['payer_name'] ?? (auth()->check() ? auth()->user()->name : 'Guest'),
-                        'payer_email' => $validated['payer_email'],
-                        'payer_phone' => $validated['payer_phone'] ?? null,
-                        'status' => 'pending',
-                        'gateway' => 'paystack',
-                        'metadata' => [
-                            'batch_reference' => $batchReference,
-                            'student_name' => $student->user->name ?? '',
-                        ]
-                    ]);
-                }
-
-                // Store payment info for callback processing
-                $paymentRecords[] = [
-                    'model' => $payment,
-                    'type' => $paymentType === 'tuition' ? 'fee' : 'payment',
-                ];
-                $totalAmount += $amount;
-            }
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Batch payment creation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return back()->withErrors(['payment' => 'Failed to create payment records. Please try again.']);
-        }
-
-        // Initialize ONE Paystack transaction for the total amount
-        $callbackUrl = route('payments.public.callback');
-
-        $firstStudent = Student::withoutGlobalScopes()->with('school')->find($validated['payments'][0]['student_id']);
-
-        $paymentData = [
-            'email' => $validated['payer_email'],
-            'amount' => $totalAmount * 100, // Convert to pesewas
-            'currency' => 'GHS',
-            'reference' => $batchReference,
-            'callback_url' => $callbackUrl,
-            'metadata' => [
-                'batch_reference' => $batchReference,
-                'payer_type' => $validated['payer_type'],
-                'payment_count' => count($paymentRecords),
-            ],
-        ];
-
-        // Subaccount handling
-        $subaccount = $firstStudent->school->subaccount ?? null;
-        if ($subaccount && $subaccount->subaccount_code) {
-            $paymentData['subaccount'] = $subaccount->subaccount_code;
-            $paymentData['bearer'] = 'account';
-        }
-
-        try {
-            $response = $this->paystack->initializeTransaction($paymentData);
-
-            if (empty($response['status']) || !$response['status']) {
-                return back()->withErrors(['payment' => 'Unable to initialize payment gateway.']);
-            }
-
-            // Update all records with the gateway reference/url
-            foreach ($paymentRecords as $record) {
-                if ($record['type'] === 'fee') {
-                    $record['model']->update([
-                        'authorization_url' => $response['data']['authorization_url'],
-                    ]);
-                } else {
-                    $record['model']->update([
-                        'authorization_url' => $response['data']['authorization_url'],
-                        'transaction_id' => $batchReference,
-                    ]);
-                }
-            }
-
-            return redirect($response['data']['authorization_url']);
-
-        } catch (\Exception $e) {
-            \Log::error('Paystack init failed', ['error' => $e->getMessage()]);
-            return back()->withErrors(['payment' => 'Gateway initialization failed.']);
-        }
     }
 
     /**
@@ -650,6 +591,14 @@ class PublicPaymentController extends Controller
                                 ['gateway_response' => $response]
                             )),
                         ]);
+
+                        // Update Financial Aid amount_raised if applicable
+                        if ($fee->financial_aid_id) {
+                            $aid = FinancialAid::find($fee->financial_aid_id);
+                            if ($aid) {
+                                $aid->increment('amount_raised', $fee->amount);
+                            }
+                        }
                     }
                 }
             });
@@ -663,10 +612,19 @@ class PublicPaymentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Callback error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Callback error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return redirect()->route('payments.public.lookup')
                 ->withErrors(['payment' => 'Error processing payment verification.']);
         }
     }
 
+    /**
+     * Show payment success page
+     */
+    public function success(SchoolPayment $payment)
+    {
+        $payment->load('student.user', 'student.school');
+
+        return view('payments.public.success', compact('payment'));
+    }
 }

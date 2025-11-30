@@ -16,6 +16,7 @@ class SchoolPayment extends Model
     protected $fillable = [
         'school_id',
         'student_id',
+        'financial_aid_id',
         'academic_group_id',
         'academic_level_id',
         'academic_year_id',
@@ -305,5 +306,10 @@ class SchoolPayment extends Model
             'student' => 'Student',
             'other' => 'Other',
         ];
+    }
+
+    public function financialAid()
+    {
+        return $this->belongsTo(FinancialAid::class);
     }
 }

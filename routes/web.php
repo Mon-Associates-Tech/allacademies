@@ -485,6 +485,8 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
 
+Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
+
 // Include additional route files
 
 include_once 'student.php';

@@ -10,6 +10,7 @@ class SchoolFee extends Model
     protected $fillable = [
         'school_id',
         'student_id',
+        'financial_aid_id',
         'payer_id',
         'payer_type',
         'school_name',
@@ -75,5 +76,9 @@ class SchoolFee extends Model
         return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
     }
 
+    public function financialAid()
+    {
+        return $this->belongsTo(FinancialAid::class);
+    }
 
 }
