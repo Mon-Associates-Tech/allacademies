@@ -32,31 +32,34 @@
             </div>
         @endif
 
-        <form method="POST" enctype="multipart/form-data"
-              action="{{ route('examinations.generate-preview', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}">
-            @csrf
-            <input type="hidden" name="team_id" value="{{ auth()->user()->current_team_id }}">
-            <input type="hidden" name="creator_id" value="{{ auth()->id() }}">
+        <section class="bg-white max-w-3xl pb-4 rounded-xl">
+            <form method="POST" enctype="multipart/form-data"
+                  action="{{ route('examinations.generate-preview', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}">
+                @csrf
+                <input type="hidden" name="team_id" value="{{ auth()->user()->current_team_id }}">
+                <input type="hidden" name="creator_id" value="{{ auth()->id() }}">
 
-            <div class="grid place-items-center">
-                <div class="w-full max-w-3xl">
-                    @livewire('examination-heading', ['metadata' => $metadata])
+                <div class="grid place-items-center">
+                    <div class="w-full max-w-3xl">
+                        @livewire('examination-heading', ['metadata' => $metadata])
+                    </div>
                 </div>
-            </div>
 
-            <div class="grid place-items-center mx-auto">
-                <div class="w-full max-w-3xl">
-                    @livewire('examination-sections', ['topics' => $topics])
+                <div class="grid place-items-center mx-auto">
+                    <div class="w-full max-w-3xl">
+                        @livewire('examination-sections', ['topics' => $topics])
+                    </div>
                 </div>
-            </div>
 
-            <div class="grid sm:grid-cols-6 gap-4 place-items-center">
-                <input name="metadata" value="{{base64_encode(json_encode($metadata, JSON_THROW_ON_ERROR))}}"
-                       type="hidden" hidden/>
-                <div class="sm:col-span-5 text-start ms-auto">
-                    <x-button.primary type="submit" class="text-right">Preview Examination</x-button.primary>
+                <div class="grid sm:grid-cols-6 gap-4 place-items-end">
+                    <input name="metadata" value="{{base64_encode(json_encode($metadata, JSON_THROW_ON_ERROR))}}"
+                           type="hidden" hidden/>
+                    <div class="sm:col-span-6 text-start ms-auto px-4">
+                        <x-button.primary type="submit" class="text-right">Preview Examination</x-button.primary>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </section>
+
     </div>
 </x-layouts.app>

@@ -24,7 +24,7 @@
 
 <div class="mt-6 w-full max-w-full">
     <div class="flex items-center mb-6">
-        <div class="flex-1">
+        <div class="flex-1 px-6">
             <h3 class="text-lg font-semibold text-gray-900">Examination Sections</h3>
             <p class="text-sm text-gray-600 mt-1">Configure your examination sections and select questions</p>
         </div>
@@ -32,9 +32,9 @@
 
     @foreach ($sections as $sectionIndex => $section)
         <div
-            class="mb-8 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+            class="mb-8 bg-white border border-t-0 border-gray-200 rounded-b-md hover:shadow-sm transition-shadow duration-200">
             <!-- Section Header -->
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200 rounded-t-xl">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200 rounded-t-0">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <div class="flex-shrink-0">
@@ -286,11 +286,13 @@
         </div>
     @endforeach
 
+
     <!-- Add/Remove Section Controls -->
-    <div class="flex items-center justify-center py-8">
+    <div class="flex items-center justify-center py-4">
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-1 inline-flex">
             <button wire:click="minus()"
                     type="button"
+                    :disabled="{{count($sections) <= 1}}"
                     title="Remove Section"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-transparent rounded-l-md hover:bg-gray-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                 {{ count($sections) <= 1 ? 'disabled' : '' }}>
@@ -313,4 +315,5 @@
             </button>
         </div>
     </div>
+
 </div>

@@ -64,7 +64,7 @@ class ExaminationSections extends Component
         return $subtopic[$type . '_count'] ?? 0;
     }
 
-    public function addMetafield(): array
+    public function addMetafield()
     {
         $this->metafields[] = [
             'option' => null,
@@ -72,6 +72,12 @@ class ExaminationSections extends Component
             'spaces_count' => 1,
             'file' => null,
         ];
+    }
+
+    public function removeSection($index): void
+    {
+        unset($this->sections[$index]);
+        $this->sections = array_values($this->sections);
     }
 
     public function __construct(int $id = null)

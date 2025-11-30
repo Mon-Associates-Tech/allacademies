@@ -1,7 +1,7 @@
 <section>
     <div class="space-y-6">
         <!-- Header Section -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div class="bg-white border border-gray-200 rounded-t-xl shadow-sm">
             <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-xl">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
