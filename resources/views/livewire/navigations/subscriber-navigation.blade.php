@@ -89,7 +89,7 @@
         </li>
 
         <!-- Academic Chat -->
-        <li class="mb-0.5 last:mb-0" title="Self Assessment Assistant">
+        <li class="mb-0.5 last:mb-0" title="Research Assistant">
             <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('academic-chat.index')}}">
                 <div class="flex items-center">
@@ -101,7 +101,7 @@
                         <path d="M17 3l1.5 3L22 8l-3.5 2L17 13l-1.5-3L12 8l3.5-2L17 3z"/>
                     </svg>
 
-                    <span class="text-sm ml-4 sidebar-text duration-200">Assessment Assistant</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Research Assistant</span>
                 </div>
             </a>
         </li>
