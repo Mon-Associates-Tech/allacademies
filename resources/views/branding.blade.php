@@ -1747,7 +1747,7 @@
                                 </div>
                                 <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
                                     Make a Real<span
-                                        class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600">Difference</span>
+                                        class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600"> Difference</span>
                                 </h2>
                                 <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
                                     Give a child a chance to learn. Your contribution can cover the fees they cannot.
