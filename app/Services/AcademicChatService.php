@@ -6,9 +6,12 @@ use App\Events\TokenUsageUpdated;
 use App\Models\Chat\OpenAiTokenUsageLog;
 use DOMDocument;
 use Exception;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpWord\IOFactory;
+use RuntimeException;
 use ZipArchive;
 
 class AcademicChatService
@@ -17,12 +20,55 @@ class AcademicChatService
     protected string $endpoint = 'https://api.openai.com/v1/chat/completions';
     protected string $model = '';
 
-    public function __construct($model = null)
+    protected ChatGPTService $chatGPTService;
+    protected ModelSelectionService $modelSelectionService;
+
+    public function __construct(ChatGPTService $chatGPTService, ModelSelectionService $modelSelectionService)
     {
-        $this->apiKey = config('openai.openai.api_key');
-        $this->model = $model ?? config('openai.openai.default_model');
+        $this->chatGPTService = $chatGPTService;
+        $this->modelSelectionService = $modelSelectionService;
     }
 
+    public function processRequest($parameters, $conversationHistory)
+    {
+        // First, determine if this request requires image generation
+        $modelType = $this->detectModelType($parameters, $conversationHistory);
+
+        if ($modelType === 'image') {
+            return $this->handleImageGeneration($parameters);
+        } else {
+            return $this->handleTextGeneration($parameters, $conversationHistory);
+        }
+    }
+
+    protected function detectModelType($parameters, $conversationHistory)
+    {
+        $detectionPrompt = [
+            [
+                'role' => 'system',
+                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests. Examples: "Draw a diagram"="image", "Explain photosynthesis"="text", "Create a chart"="image", "What is mathematics"="text"'
+            ],
+            [
+                'role' => 'user',
+                'content' => "User request: " . ($parameters['message'] ?? '') .
+                    "\n\nContext: " . json_encode(array_slice($conversationHistory, -3))
+            ]
+        ];
+
+        try {
+            $response = $this->chatGPTService->chat($detectionPrompt, 'gpt-4.1-nano');
+
+            // Extract text from various response formats
+            $responseText = $this->extractTextFromResponse($response);
+            $result = trim(strtolower($responseText));
+
+            \Log::info('Model detection result', ['raw_response' => $response, 'parsed_result' => $result]);
+            return $result === 'image' ? 'image' : 'text';
+        } catch (Exception $e) {
+            \Log::error('Model detection failed', ['error' => $e->getMessage()]);
+            return 'text'; // Default to text
+        }
+    }
 
     /**
      * Generate educational chat response with context parameters
@@ -104,7 +150,7 @@ class AcademicChatService
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
-               // Log::info('OpenAI API attempt', ['attempt' => $attempt, 'max_retries' => $maxRetries]);
+                // Log::info('OpenAI API attempt', ['attempt' => $attempt, 'max_retries' => $maxRetries]);
 
                 $response = Http::withToken($this->apiKey)
                     ->timeout($timeout)
@@ -154,7 +200,7 @@ class AcademicChatService
                     'error' => "API Error: " . $response->body()
                 ];
 
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            } catch (ConnectionException $e) {
                 // Handle connection/timeout errors specifically
                 Log::error('OpenAI Connection Error', [
                     'error' => $e->getMessage(),
@@ -347,6 +393,145 @@ class AcademicChatService
         event(new TokenUsageUpdated($user->id));
     }
 
+    private function extractTextFromResponse($response)
+    {
+        if (is_string($response)) {
+            return $response;
+        }
+
+        if (is_array($response)) {
+            // Handle Responses API format
+            if (isset($response[0]['content'][0]['text'])) {
+                return $response[0]['content'][0]['text'];
+            }
+
+            // Handle chat completions format
+            if (isset($response['choices'][0]['message']['content'])) {
+                return $response['choices'][0]['message']['content'];
+            }
+
+            // Handle other possible formats
+            if (isset($response['content'])) {
+                return is_array($response['content']) ?
+                    ($response['content'][0]['text'] ?? json_encode($response['content'])) :
+                    $response['content'];
+            }
+        }
+
+        return (string)$response;
+    }
+
+    protected function handleImageGeneration($parameters)
+    {
+        // Extract image generation details from parameters
+        $prompt = $this->prepareImagePrompt($parameters);
+
+        try {
+            // Get the appropriate image model for the current user
+            $user = auth()->user();
+            $model = $this->modelSelectionService->getImageModelForUser($user);
+
+            $images = $this->chatGPTService->generateImage($prompt, config('openai.models.premium_image_model'));
+
+            $responseContent = "Here is the generated image based on your request:\n\n";
+            foreach ($images as $image) {
+                $responseContent .= "![Generated Image]({$image['url']})\n\n";
+            }
+
+            return [
+                'success' => true,
+                'content' => $responseContent,
+                'model_used' => $model,
+                'images' => $images
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    protected function prepareImagePrompt($parameters)
+    {
+        // Create a detailed prompt for image generation
+        $description = $parameters['message'] ?? 'Generate an educational image';
+
+        $details = [];
+        if (!empty($parameters['subject'])) {
+            $details[] = "Subject: " . $parameters['subject'];
+        }
+
+        if (!empty($parameters['topics'])) {
+            $details[] = "Topics: " . (is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
+        }
+
+        if (!empty($parameters['academic_level'])) {
+            $details[] = "Academic level: " . $parameters['academic_level'];
+        }
+
+        $prompt = $description;
+        if (!empty($details)) {
+            $prompt .= ". " . implode('. ', $details);
+        }
+
+        // Add style guidance for educational content
+        $prompt .= ". Educational, clear, professional style, suitable for academic purposes";
+
+        return $prompt;
+    }
+
+    protected function handleTextGeneration($parameters, $conversationHistory)
+    {
+        // Prepare the prompt for text generation
+        $prompt = $this->prepareTextPrompt($parameters);
+
+        // Add to conversation history
+        $messages = array_merge($conversationHistory, [['role' => 'user', 'content' => $prompt]]);
+
+        try {
+            // Get the appropriate model for the current user
+            $user = auth()->user();
+            $model = $this->modelSelectionService->getTextModelForUser($user);
+
+            $content = $this->chatGPTService->chat($messages, $model);
+
+            return [
+                'success' => true,
+                'content' => $content,
+                'model_used' => $model
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    protected function prepareTextPrompt($parameters)
+    {
+        $prompt = "User request: " . ($parameters['message'] ?? '');
+
+        // Add context from parameters
+        $context = [];
+        foreach ($parameters as $key => $value) {
+            if ($key !== 'message' && !empty($value)) {
+                if (is_array($value)) {
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . implode(', ', $value);
+                } else {
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . $value;
+                }
+            }
+        }
+
+        if (!empty($context)) {
+            $prompt .= "\n\nContext:\n" . implode("\n", $context);
+        }
+
+        return $prompt;
+    }
+
     /**
      * Validate educational parameters
      */
@@ -377,7 +562,7 @@ class AcademicChatService
         }
 
         // Creativity level validation
-        if ((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level'])) || $parameters['creativity_level'] < 1 )) {
+        if ((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level'])) || $parameters['creativity_level'] < 1)) {
             $errors[] = 'Creativity level must be greater than 1';
         }
 
@@ -473,26 +658,6 @@ class AcademicChatService
     }
 
     /**
-     * Extract content from various file types
-     *
-     * @param UploadedFile $file
-     * @return string
-     */
-    public function extractFileContent(UploadedFile $file): string
-    {
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        return match($extension) {
-            'pdf' => $this->extractPdfContent($file),
-            'txt' => file_get_contents($file->getRealPath()),
-            'doc', 'docx' => $this->extractDocxContent($file),
-            default => "Unsupported file type: {$extension}\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n"
-        };
-    }
-
-    /**
      * Extract content from PDF files
      */
     protected function extractPdfContent(UploadedFile $file): string
@@ -503,70 +668,13 @@ class AcademicChatService
                 'preserve_layout' => true,
                 'method' => 'auto'
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("PDF extraction failed: {$e->getMessage()}");
 
             return "PDF file content extraction failed.\n" .
                 "File name: " . $file->getClientOriginalName() . "\n" .
                 "File size: " . $file->getSize() . " bytes\n" .
                 "Error: " . $e->getMessage();
-        }
-    }
-
-    protected function isCommandAvailable(string $command): bool
-    {
-        if (!function_exists('exec')) {
-            return false;
-        }
-
-        $output = [];
-        $returnCode = 0;
-        @exec("which {$command} 2>&1", $output, $returnCode);
-
-        return $returnCode === 0;
-    }
-
-    /**
-     * Extract content from DOCX files
-     *
-     * @param UploadedFile $file
-     * @return string
-     */
-    protected function extractDocxContent(UploadedFile $file): string
-    {
-        try {
-            if (!class_exists(\PhpOffice\PhpWord\IOFactory::class)) {
-                throw new \RuntimeException('PhpWord library not available');
-            }
-
-            $tmpPath = $file->getRealPath();
-            $phpWord = \PhpOffice\PhpWord\IOFactory::load($tmpPath);
-            $text = '';
-
-            foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    } elseif (method_exists($element, 'getElements')) {
-                        foreach ($element->getElements() as $childElement) {
-                            if (method_exists($childElement, 'getText')) {
-                                $text .= $childElement->getText() . "\n";
-                            }
-                        }
-                    }
-                }
-            }
-
-            return trim($text);
-        } catch (\Exception $e) {
-            Log::error('DOCX processing failed', [
-                'error' => $e->getMessage(),
-                'file' => $file->getClientOriginalName()
-            ]);
-
-            return "Error processing document: " . $e->getMessage() . "\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n";
         }
     }
 
@@ -656,6 +764,83 @@ class AcademicChatService
         }
 
         return "Unsupported Excel document format.\n";
+    }
+
+    /**
+     * Extract content from various file types
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    public function extractFileContent(UploadedFile $file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        return match ($extension) {
+            'pdf' => $this->extractPdfContent($file),
+            'txt' => file_get_contents($file->getRealPath()),
+            'doc', 'docx' => $this->extractDocxContent($file),
+            default => "Unsupported file type: {$extension}\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n"
+        };
+    }
+
+    /**
+     * Extract content from DOCX files
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    protected function extractDocxContent(UploadedFile $file): string
+    {
+        try {
+            if (!class_exists(IOFactory::class)) {
+                throw new RuntimeException('PhpWord library not available');
+            }
+
+            $tmpPath = $file->getRealPath();
+            $phpWord = IOFactory::load($tmpPath);
+            $text = '';
+
+            foreach ($phpWord->getSections() as $section) {
+                foreach ($section->getElements() as $element) {
+                    if (method_exists($element, 'getText')) {
+                        $text .= $element->getText() . "\n";
+                    } elseif (method_exists($element, 'getElements')) {
+                        foreach ($element->getElements() as $childElement) {
+                            if (method_exists($childElement, 'getText')) {
+                                $text .= $childElement->getText() . "\n";
+                            }
+                        }
+                    }
+                }
+            }
+
+            return trim($text);
+        } catch (Exception $e) {
+            Log::error('DOCX processing failed', [
+                'error' => $e->getMessage(),
+                'file' => $file->getClientOriginalName()
+            ]);
+
+            return "Error processing document: " . $e->getMessage() . "\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
+        }
+    }
+
+    protected function isCommandAvailable(string $command): bool
+    {
+        if (!function_exists('exec')) {
+            return false;
+        }
+
+        $output = [];
+        $returnCode = 0;
+        @exec("which {$command} 2>&1", $output, $returnCode);
+
+        return $returnCode === 0;
     }
 
 }

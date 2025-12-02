@@ -206,14 +206,15 @@ class AcademicChat extends Component
             'conversation_title' => $this->generateConversationTitle(),
             'content' => $this->message,
             'role' => 'user',
-            'parameters' => $parameters
+            'parameters' => json_encode($parameters)
         ]);
 
         // Get conversation history for context
         $conversationHistory = $this->getConversationHistory();
 
-        // Send to AI service
-        $response = $this->chatService->chat($parameters, $conversationHistory);
+        // Send to AI service with automatic model detection
+        $response = $this->chatService->processRequest($parameters, $conversationHistory);
+
 
         if ($response['success']) {
             // Add AI response to chat
@@ -221,7 +222,8 @@ class AcademicChat extends Component
                 'role' => 'assistant',
                 'content' => $response['content'],
                 'timestamp' => now()->toISOString(),
-                'usage' => $response['usage'] ?? null
+                'usage' => $response['usage'] ?? null,
+                'model_used' => $response['model_used'] ?? null
             ];
             $this->messages[] = $aiMessage;
 
@@ -232,9 +234,13 @@ class AcademicChat extends Component
                 'conversation_title' => $this->generateConversationTitle(),
                 'content' => $response['content'],
                 'role' => 'assistant',
-                'parameters' => $parameters,
-                'usage' => $response['usage'] ?? null
+                'parameters' => json_encode($parameters),
+                'usage' => $response['usage'] ?? null,
+                'model_used' => $response['model_used'] ?? null,
             ]);
+            if (isset($response['images'])) {
+                // Handle image data storage if needed
+            }
         } else {
             $this->errors[] = $response['error'];
         }
