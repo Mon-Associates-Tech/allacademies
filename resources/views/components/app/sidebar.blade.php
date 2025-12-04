@@ -11,8 +11,8 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] overflow-y-scroll hide-scrollbar lg:overflow-y-auto no-scrollbar w-64 lg:w-20 lg:sidebar-expanded:!w-64 2xl:w-64! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
-        :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-64'"
+        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] overflow-y-scroll hide-scrollbar lg:overflow-y-auto no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-52'"
         @click.outside="$store.sidebar.open =  false"
         style=""
         @keydown.escape.window="$store.sidebar.open = false"
@@ -30,8 +30,13 @@
             </button>
         </div>
         <div class="lg:pt-6">
-            <x-avatar :name="auth()->user()->name" avatar="{{ auth()->user()->avatar }}"
-                      class="w-12 h-12 rounded-full mx-auto mb-2"></x-avatar>
+            <div :class="$store.sidebar.open ? 'w-12 h-12' : 'w-8 h-8'" class="mx-auto mb-2">
+                <x-avatar
+                    :name="auth()->user()->name"
+                    avatar="{{ auth()->user()->avatar }}"
+                    class="rounded-full w-full h-full"
+                ></x-avatar>
+            </div>
             <div x-show="$store.sidebar.expanded" class="sidebar-text">
                 <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>
                 <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">{{ auth()->user()->email }}</h2>
@@ -92,7 +97,7 @@
             <div class="border-b rounded-lg border-gray-200 border-2 mt-6"></div>
         </div>
 
-        <div class="space-y-8 p-4">
+        <div class="space-y-8 p-2">
             @php
                 use App\Enums\UserRole;
 

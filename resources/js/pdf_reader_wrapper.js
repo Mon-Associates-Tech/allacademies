@@ -133,5 +133,4 @@ export class PDFReaderWrapper {
     }
 }
 
-// Make it available globally for debugging/external access
 window.PDFReaderWrapper = PDFReaderWrapper;

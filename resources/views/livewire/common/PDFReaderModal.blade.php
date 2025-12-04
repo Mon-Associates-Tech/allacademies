@@ -6,7 +6,7 @@
              @keydown.escape="handleEscape()"
              @fullscreenchange="handleFullscreenChange()">
 
-            <div class="w-full h-full max-w-7xl mx-auto p-4t flex flex-col"
+            <div class="w-full h-full max-w-full mx-auto p-4t flex flex-col"
                  :class="{ 'max-w-none p-0': isFullscreen }">
 
                 <!-- Reader Header -->
@@ -158,8 +158,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <!-- PDF.js reader will be injected here -->
                 </div>
 
                 <!-- Mobile Controls -->
