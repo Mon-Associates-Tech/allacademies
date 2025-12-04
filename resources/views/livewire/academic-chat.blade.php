@@ -604,6 +604,17 @@
                     prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline">
                                                 <x-form.markdown-with-math
                                                     :content="$message['content']"></x-form.markdown-with-math>
+                                                @if(isset($message['images']) && !empty($message['images']))
+                                                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        @foreach($message['images'] as $image)
+                                                            <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                                                <img src="{{ $image['url'] }}"
+                                                                     alt="Generated image"
+                                                                     class="w-full h-auto object-contain">
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center {{ $message['role'] === 'user' ? 'justify-end' : '' }}">

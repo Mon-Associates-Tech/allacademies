@@ -223,6 +223,7 @@ class AcademicChat extends Component
                 'content' => $response['content'],
                 'timestamp' => now()->toISOString(),
                 'usage' => $response['usage'] ?? null,
+                'images' => $response['images'] ?? null,
                 'model_used' => $response['model_used'] ?? null
             ];
             $this->messages[] = $aiMessage;
@@ -237,6 +238,7 @@ class AcademicChat extends Component
                 'parameters' => json_encode($parameters),
                 'usage' => $response['usage'] ?? null,
                 'model_used' => $response['model_used'] ?? null,
+                'images' => isset($response['images']) ? json_encode($response['images']) : null, // Add this line
             ]);
             if (isset($response['images'])) {
                 // Handle image data storage if needed
@@ -314,10 +316,11 @@ class AcademicChat extends Component
             $this->messages = $dbMessages->map(function ($msg) {
                 return [
                     'role' => $msg->role,
-                    'content' => $msg->content,
+                    'content' => $msg->role === 'user' ? $msg->content : json_decode($msg->content)[0]->content[0]->text,
                     'timestamp' => $msg->created_at->toISOString(),
-                    'usage' => $msg->usage
-                ];
+                    'usage' => $msg->usage,
+                  'images' => $msg->images ? json_decode($msg->images, true) : null // Add this line
+            ];
             })->toArray();
         } else {
             $this->messages = [];

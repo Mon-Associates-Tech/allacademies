@@ -421,36 +421,47 @@ class AcademicChatService
         return (string)$response;
     }
 
-    protected function handleImageGeneration($parameters)
-    {
-        // Extract image generation details from parameters
-        $prompt = $this->prepareImagePrompt($parameters);
+protected function handleImageGeneration($parameters)
+{
+    // Extract image generation details from parameters
+    $prompt = $this->prepareImagePrompt($parameters);
 
-        try {
-            // Get the appropriate image model for the current user
-            $user = auth()->user();
-            $model = $this->modelSelectionService->getImageModelForUser($user);
+    try {
+        // Get the appropriate image model for the current user
+        $user = auth()->user();
+        $model = $this->modelSelectionService->getImageModelForUser($user);
 
-            $images = $this->chatGPTService->generateImage($prompt, config('openai.models.premium_image_model'));
+        $images = $this->chatGPTService->generateImage($prompt, $model);
+        dd($images);
+        $this->logTokenUsage($user, $images[0]['usage'], 'image', $model);
 
-            $responseContent = "Here is the generated image based on your request:\n\n";
-            foreach ($images as $image) {
-                $responseContent .= "![Generated Image]({$image['url']})\n\n";
-            }
 
-            return [
-                'success' => true,
-                'content' => $responseContent,
-                'model_used' => $model,
-                'images' => $images
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
+        // Create markdown content with images
+        $responseContent = "Here is the generated image based on your request:\n\n";
+
+        // Also prepare images for direct access
+        $imageData = [];
+        foreach ($images as $image) {
+            $responseContent .= "![Generated Image]({$image['url']})\n\n";
+            $imageData[] = [
+                'url' => $image['url'],
+                'revised_prompt' => $image['revised_prompt'] ?? null
             ];
         }
+
+        return [
+            'success' => true,
+            'content' => $responseContent,
+            'model_used' => $model,
+            'images' => $imageData
+        ];
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'error' => $e->getMessage()
+        ];
     }
+}
 
     protected function prepareImagePrompt($parameters)
     {

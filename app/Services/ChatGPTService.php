@@ -35,6 +35,7 @@ class ChatGPTService
 
     public function generateImage($prompt, $model = 'dall-e-3', $n = 1, $size = '1024x1024')
     {
+
         $response = Http::withToken($this->apiKey)
             ->post($this->imageEndpoint, [
                 'model' => $model,
@@ -42,10 +43,11 @@ class ChatGPTService
                 'n' => $n,
                 'size' => $size,
             ]);
-
+        logInfo("Let generate some image". $response);
         if ($response->successful()) {
             return $response->json()['data'];
         }
+        logInfo("Let generate some image". $response->json());
 
         throw new \Exception("OpenAI API Error: " . $response->body());
     }
@@ -53,7 +55,7 @@ class ChatGPTService
     /**
      * Format messages array into a single prompt string for responses API
      */
-    private function formatMessagesForResponses($messages)
+    private function formatMessagesForResponses($messages): string
     {
         $prompt = '';
 
