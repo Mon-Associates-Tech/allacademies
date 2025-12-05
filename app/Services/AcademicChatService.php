@@ -27,6 +27,7 @@ class AcademicChatService
     {
         $this->chatGPTService = $chatGPTService;
         $this->modelSelectionService = $modelSelectionService;
+        $this->apiKey = config('openai.openai.api_key');
     }
 
     public function processRequest($parameters, $conversationHistory)
@@ -73,7 +74,6 @@ class AcademicChatService
     /**
      * Generate educational chat response with context parameters
      */
-
     public function chat(array $parameters, array $messages = []): array
     {
 
