@@ -66,7 +66,7 @@ class AcademicChat extends Component
     public $availableTopics = [];
     public $errors = [];
     public $conversationId = null;
-    public $conversationHistory = []; // This needs to be a simple array, not associative
+    public $conversationHistory = [];
     public $showHistory = false;
 
     protected $chatService;
@@ -233,7 +233,7 @@ class AcademicChat extends Component
                 'user_id' => Auth::id(),
                 'conversation_id' => $this->conversationId,
                 'conversation_title' => $this->generateConversationTitle(),
-                'content' => $response['content'],
+                'content' => json_encode($response['content']),
                 'role' => 'assistant',
                 'parameters' => json_encode($parameters),
                 'usage' => $response['usage'] ?? null,
@@ -316,7 +316,7 @@ class AcademicChat extends Component
             $this->messages = $dbMessages->map(function ($msg) {
                 return [
                     'role' => $msg->role,
-                    'content' => $msg->role === 'user' ? $msg->content : json_decode($msg->content)[0]->content[0]->text,
+                    'content' => $msg->role === 'user' ? $msg->content : trim(json_decode($msg->content)[0]->content[0]->text),
                     'timestamp' => $msg->created_at->toISOString(),
                     'usage' => $msg->usage,
                   'images' => $msg->images ? json_decode($msg->images, true) : null // Add this line
