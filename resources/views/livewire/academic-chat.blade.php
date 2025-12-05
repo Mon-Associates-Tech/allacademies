@@ -603,7 +603,7 @@
                     prose-li:text-gray-900 dark:prose-li:text-gray-100
                     prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline">
                                                 <x-form.markdown-with-math
-                                                    :content="trim($message['content'])"></x-form.markdown-with-math>
+                                                    :content="is_string($message['content'])? trim($message['content']) : $message['content']"></x-form.markdown-with-math>
                                                 @if(isset($message['images']) && !empty($message['images']))
                                                     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         @foreach($message['images'] as $image)
