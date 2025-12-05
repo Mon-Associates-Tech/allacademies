@@ -609,7 +609,7 @@
                                                 @endif
                                                     @if(is_array($message['content']))
                                                         <x-form.markdown-with-math
-                                                            :content="json_decode($message['content'])">
+                                                            :content="json_encode($message['content'])">
                                                         </x-form.markdown-with-math>
                                                     @endif
 
