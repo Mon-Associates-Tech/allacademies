@@ -2,14 +2,14 @@
 
 namespace App\Livewire;
 
-use App\Enums\UserRole;
 use App\Models\AcademicChatMessage;
 use App\Services\AcademicChatService;
 use App\Support\TokenSubscriptionStatus;
-use Livewire\Component;
-use Livewire\Attributes\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Rule;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class AcademicChat extends Component
@@ -52,8 +52,8 @@ class AcademicChat extends Component
     #[Rule('nullable|integer|min:100|max:2000')]
     public $response_length = 1000;
 
-    #[Rule('nullable|file|max:10240')] // 10MB limit
-    public $uploadedFile = null;
+    #[Rule('nullable|file|max:10240')]
+    public $uploadedFile;
 
     public $fileContent = '';
     public $fileName = '';
@@ -62,29 +62,47 @@ class AcademicChat extends Component
     public $messages = [];
     public $isLoading = false;
     public $showParameters = false;
+    public $showHistory = false;
     public $availableSubjects = [];
     public $availableTopics = [];
     public $errors = [];
-    public $conversationId = null;
+    public $conversationId;
+    public $conversationTitle;
     public $conversationHistory = [];
-    public $showHistory = false;
-
+    public $canSendMessage = true;
+    public $tokenWarningMessage;
     protected $chatService;
 
-    public $canSendMessage = true;
-    public $tokenWarningMessage = null;
+    #[Rule('nullable|string|uuid')]
+    public $urlConversationId;
 
-    public function boot(AcademicChatService $chatService)
+    public function boot(AcademicChatService $chatService): void
     {
         $this->chatService = $chatService;
     }
 
-    public function mount()
+    public function mount(?string $conversationId = null): void
     {
         $this->checkTokenAvailability();
         $this->availableSubjects = $this->chatService->getAvailableSubjects();
+
+        // Check URL query parameter first
+        $urlConversationId = request()->query('conversationId');
+
+        if ($urlConversationId) {
+            $this->conversationId = $urlConversationId;
+            $this->urlConversationId = $urlConversationId;
+            $this->loadChatHistory();
+            $this->loadConversationTitle();
+        } elseif ($conversationId) {
+            // Fallback for route parameter
+            $this->conversationId = $conversationId;
+            $this->urlConversationId = $conversationId;
+            $this->loadChatHistory();
+            $this->loadConversationTitle();
+        }
+
         $this->loadConversationHistory();
-        $this->loadChatHistory();
 
         // Set default values
         $this->difficulty = 'medium';
@@ -93,19 +111,24 @@ class AcademicChat extends Component
         $this->response_length = 1000;
     }
 
+    protected function loadConversationTitle(): void
+    {
+        if (!$this->conversationId) {
+            $this->conversationTitle = null;
+            return;
+        }
+
+        $firstMessage = AcademicChatMessage::where('user_id', Auth::id())
+            ->where('conversation_id', $this->conversationId)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        $this->conversationTitle = $firstMessage?->conversation_title ?? 'Untitled Conversation';
+    }
     public function checkTokenAvailability(): void
     {
         $user = auth()->user();
 
-        // Non-subscribers have unlimited access - use enum comparison
-        // Commenting this out as per your code, but keeping the proper comparison for reference
-        // if ($user->role !== UserRole::SUBSCRIBER) {
-        //     $this->canSendMessage = true;
-        //     $this->tokenWarningMessage = null;
-        //     return;
-        // }
-
-        // For all users, check their token subscription
         $subscription = $user->activeTokenSubscription;
 
         if (!$subscription) {
@@ -114,7 +137,6 @@ class AcademicChat extends Component
             return;
         }
 
-        // Use enum comparison for status
         if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'depleted';
@@ -128,7 +150,6 @@ class AcademicChat extends Component
             return;
         }
 
-        // Check if user has at least minimum tokens (e.g., 100 tokens for a basic chat)
         if (!$user->hasOpenAiTokens(200)) {
             $this->canSendMessage = false;
             $this->tokenWarningMessage = 'insufficient';
@@ -139,11 +160,154 @@ class AcademicChat extends Component
         $this->tokenWarningMessage = null;
     }
 
+    protected function loadConversationHistory(): void
+    {
+        $conversations = AcademicChatMessage::where('user_id', Auth::id())
+            ->whereNotNull('conversation_id')
+            ->selectRaw('conversation_id, conversation_title, MAX(created_at) as created_at')
+            ->groupBy('conversation_id', 'conversation_title')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        $this->conversationHistory = $conversations->map(function ($conversation) {
+            return [
+                'id' => $conversation->conversation_id,
+                'title' => $conversation->conversation_title ?? 'Untitled Conversation',
+                'created_at' => $conversation->created_at
+            ];
+        })->toArray();
+    }
+    protected function loadChatHistory(): void
+    {
+        if (!$this->conversationId) {
+            $this->messages = [];
+            return;
+        }
+
+        // Clear messages first
+        $this->messages = [];
+
+        // Fresh query from database
+        $dbMessages = AcademicChatMessage::where('user_id', Auth::id())
+            ->where('conversation_id', $this->conversationId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($dbMessages->isEmpty()) {
+            return;
+        }
+
+        // Build messages array
+        $messages = [];
+        foreach ($dbMessages as $msg) {
+            $content = $msg->content;
+
+            if ($msg->role === 'assistant') {
+                $content = $this->normalizeStoredAssistantContent($msg->content);
+            }
+
+            $messages[] = [
+                'role' => $msg->role,
+                'content' => $content,
+                'timestamp' => $msg->created_at->toISOString(),
+                'usage' => $msg->usage,
+                'images' => $msg->images ?? null,
+                'model_used' => $msg->model_used ?? null
+            ];
+        }
+
+        // Assign all at once
+        $this->messages = $messages;
+    }
+    protected function getConversationHistory(): array
+    {
+        $history = [];
+
+        foreach ($this->messages as $msg) {
+            $history[] = [
+                'role' => $msg['role'],
+                'content' => is_string($msg['content']) ? $msg['content'] : (string)$msg['content']
+            ];
+        }
+
+        return array_slice($history, -10);
+    }
+
+    #[Computed]
+    public function messageInputDisabled(): bool
+    {
+        return !$this->isMessageInputEnabled();
+    }
+
+    #[Computed]
+    public function currentTokenWarning(): ?string
+    {
+        return $this->getTokenWarningMessage();
+    }
+
+    public function isMessageInputEnabled(): bool
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false;
+        }
+
+        $subscription = $user->activeTokenSubscription;
+
+        if (!$subscription) {
+            return false;
+        }
+
+        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
+            return false;
+        }
+
+        if ($subscription->isExpired()) {
+            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
+            return false;
+        }
+
+        if (!$user->hasOpenAiTokens(200)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function getTokenWarningMessage(): ?string
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return 'no_subscription';
+        }
+
+        $subscription = $user->activeTokenSubscription;
+
+        if (!$subscription) {
+            return 'no_subscription';
+        }
+
+        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
+            return 'depleted';
+        }
+
+        if ($subscription->isExpired()) {
+            return 'expired';
+        }
+
+        if (!$user->hasOpenAiTokens(200)) {
+            return 'insufficient';
+        }
+
+        return null;
+    }
+
     public function sendMessage(): void
     {
-        $this->checkTokenAvailability();
-
-        if (!$this->canSendMessage) {
+        if (!$this->isMessageInputEnabled()) {
             $this->dispatch('tokenCheckFailed');
             return;
         }
@@ -157,12 +321,11 @@ class AcademicChat extends Component
         $this->isLoading = true;
         $this->errors = [];
 
-        // Generate conversation ID if this is a new conversation
         if (!$this->conversationId) {
-            $this->conversationId = (string) Str::uuid();
+            $this->conversationId = (string)Str::uuid();
+            $this->urlConversationId = $this->conversationId;
         }
 
-        // Prepare parameters
         $parameters = $this->getParameters();
         $parameters['message'] = $this->message;
 
@@ -170,7 +333,6 @@ class AcademicChat extends Component
             $parameters['file_content'] = $this->fileContent;
         }
 
-        // Validate parameters
         $validationErrors = $this->chatService->validateParameters($parameters);
         if (!empty($validationErrors)) {
             $this->errors = $validationErrors;
@@ -178,20 +340,17 @@ class AcademicChat extends Component
             return;
         }
 
-        // Process uploaded file if present
         if ($this->uploadedFile) {
             $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
             $this->fileName = $this->uploadedFile->getClientOriginalName();
-            $this->uploadedFile = null; // Reset file input
+            $this->uploadedFile = null;
         }
 
-        // Add user message to chat and database
         $userMessageContent = $this->message;
         if (!empty($this->fileContent)) {
             $userMessageContent .= "\n\nFile: " . $this->fileName . "\nFile Content:\n" . $this->fileContent;
         }
 
-        // Add user message to chat and database
         $userMessage = [
             'role' => 'user',
             'content' => $userMessageContent,
@@ -199,231 +358,86 @@ class AcademicChat extends Component
         ];
         $this->messages[] = $userMessage;
 
-        // Save user message to database
+        $title = $this->generateConversationTitle();
+        $this->conversationTitle = $title;
+
         AcademicChatMessage::create([
             'user_id' => Auth::id(),
             'conversation_id' => $this->conversationId,
-            'conversation_title' => $this->generateConversationTitle(),
+            'conversation_title' => $title,
             'content' => $this->message,
             'role' => 'user',
-            'parameters' => json_encode($parameters)
+            'parameters' => $parameters
         ]);
 
-        // Get conversation history for context
         $conversationHistory = $this->getConversationHistory();
-
-        // Send to AI service with automatic model detection
         $response = $this->chatService->processRequest($parameters, $conversationHistory);
 
-
         if ($response['success']) {
-            // Add AI response to chat
             $aiMessage = [
                 'role' => 'assistant',
                 'content' => $response['content'],
                 'timestamp' => now()->toISOString(),
                 'usage' => $response['usage'] ?? null,
                 'images' => $response['images'] ?? null,
-                'model_used' => $response['model_used'] ?? null
+                'model_used' => $response['model_used'] ?? null,
             ];
             $this->messages[] = $aiMessage;
 
-            // Save AI response to database
             AcademicChatMessage::create([
                 'user_id' => Auth::id(),
                 'conversation_id' => $this->conversationId,
-                'conversation_title' => $this->generateConversationTitle(),
-                'content' => json_encode($response['content']),
+                'conversation_title' => $title,
+                'content' => $response['content'],
                 'role' => 'assistant',
-                'parameters' => json_encode($parameters),
+                'parameters' => $parameters,
                 'usage' => $response['usage'] ?? null,
                 'model_used' => $response['model_used'] ?? null,
-                'images' => isset($response['images']) ? json_encode($response['images']) : null, // Add this line
+                'images' => $response['images'] ?? null,
             ]);
-            if (isset($response['images'])) {
-                // Handle image data storage if needed
-            }
         } else {
-            $this->errors[] = $response['error'];
+            $this->errors[] = $response['error'] ?? 'Unknown error occurred';
         }
 
-        // Clear message and reset loading
         $this->message = '';
         $this->fileContent = '';
         $this->fileName = '';
         $this->isLoading = false;
 
-        // Refresh conversation history
         $this->loadConversationHistory();
     }
 
-    public function updatedUploadedFile()
+    protected function normalizeStoredAssistantContent(?string $content): string
     {
-        $this->validateOnly('uploadedFile');
-
-        if ($this->uploadedFile) {
-            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
-            $this->fileName = $this->uploadedFile->getClientOriginalName();
-        }
-    }
-
-    public function clearChat()
-    {
-        $this->messages = [];
-        $this->conversationId = null;
-    }
-
-    public function loadConversation($conversationId)
-    {
-        $this->conversationId = $conversationId;
-        $this->loadChatHistory();
-    }
-
-    public function deleteConversation($conversationId)
-    {
-        AcademicChatMessage::where('user_id', Auth::id())
-            ->where('conversation_id', $conversationId)
-            ->delete();
-
-        if ($this->conversationId === $conversationId) {
-            $this->messages = [];
-            $this->conversationId = null;
+        if (empty($content)) {
+            return '';
         }
 
-        $this->loadConversationHistory();
-    }
+        $decoded = json_decode($content, true);
 
-    public function newConversation()
-    {
-        $this->messages = [];
-        $this->conversationId = null;
-    }
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $segments = [];
 
-    public function toggleHistory()
-    {
-        $this->showHistory = !$this->showHistory;
-    }
+            if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
+                foreach ($decoded[0]['content'] as $segment) {
+                    if (is_string($segment)) {
+                        $segments[] = $segment;
+                        continue;
+                    }
 
-    protected function loadChatHistory()
-    {
-        if ($this->conversationId) {
-            // Load chat history from database for specific conversation
-            $dbMessages = AcademicChatMessage::where('user_id', Auth::id())
-                ->where('conversation_id', $this->conversationId)
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            $this->messages = $dbMessages->map(function ($msg) {
-                return [
-                    'role' => $msg->role,
-                    'content' => $msg->role === 'user' ? $msg->content : trim(json_decode($msg->content)[0]->content[0]->text),
-                    'timestamp' => $msg->created_at->toISOString(),
-                    'usage' => $msg->usage,
-                  'images' => $msg->images ? json_decode($msg->images, true) : null // Add this line
-            ];
-            })->toArray();
-        } else {
-            $this->messages = [];
-        }
-    }
-
-    protected function loadConversationHistory()
-    {
-        // Load conversation history from database as a simple array
-        $conversations = AcademicChatMessage::select('conversation_id', 'conversation_title', 'created_at')
-            ->where('user_id', Auth::id())
-            ->whereNotNull('conversation_id')
-            ->groupBy('conversation_id', 'conversation_title', 'created_at')
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        // Convert to simple array format that Livewire supports
-        $this->conversationHistory = $conversations->map(function ($conversation) {
-            return [
-                'id' => $conversation->conversation_id,
-                'title' => $conversation->conversation_title ?? 'Untitled Conversation',
-                'created_at' => $conversation->created_at
-            ];
-        })->toArray();
-    }
-
-    protected function generateConversationTitle()
-    {
-        if (!empty($this->messages)) {
-            // Use the first user message as the title
-            $firstUserMessage = collect($this->messages)->firstWhere('role', 'user');
-            if ($firstUserMessage) {
-                return Str::limit($firstUserMessage['content'], 50);
+                    if (isset($segment['text']) && is_string($segment['text'])) {
+                        $segments[] = $segment['text'];
+                    }
+                }
             }
+
+            $fallback = trim(json_encode($decoded));
+            $joined = trim(implode("\n\n", array_filter($segments, static fn($segment) => trim($segment) !== '')));
+
+            return $joined !== '' ? $joined : $fallback;
         }
 
-        // Fallback title
-        return 'Academic Chat - ' . now()->format('M j, Y');
-    }
-
-    public function toggleParameters()
-    {
-        $this->showParameters = !$this->showParameters;
-    }
-
-    public function updatedSubject()
-    {
-        $this->availableTopics = $this->availableSubjects[$this->subject] ?? [];
-        $this->topics = [];
-        $this->subtopics = [];
-    }
-
-    public function addTopic($topic)
-    {
-        if (!in_array($topic, $this->topics)) {
-            $this->topics[] = $topic;
-        }
-    }
-
-    public function removeTopic($index)
-    {
-        unset($this->topics[$index]);
-        $this->topics = array_values($this->topics);
-    }
-
-    public function addSubtopic()
-    {
-        // This will be handled by Alpine.js in the frontend
-    }
-
-    public function removeSubtopic($index)
-    {
-        unset($this->subtopics[$index]);
-        $this->subtopics = array_values($this->subtopics);
-    }
-
-    public function addAccommodation($accommodation)
-    {
-        if (!in_array($accommodation, $this->accommodations)) {
-            $this->accommodations[] = $accommodation;
-        }
-    }
-
-    public function removeAccommodation($index)
-    {
-        unset($this->accommodations[$index]);
-        $this->accommodations = array_values($this->accommodations);
-    }
-
-    public function resetParameters()
-    {
-        $this->reset([
-            'age', 'academic_level', 'academic_group', 'subject',
-            'topics', 'subtopics', 'learning_style', 'difficulty',
-            'accommodations', 'response_format', 'creativity_level', 'response_length'
-        ]);
-
-        // Reset to defaults
-        $this->difficulty = 'medium';
-        $this->response_format = 'detailed';
-        $this->creativity_level = 1;
-        $this->response_length = 1000;
+        return $content;
     }
 
     protected function getParameters(): array
@@ -446,16 +460,149 @@ class AcademicChat extends Component
         });
     }
 
-    protected function getConversationHistory(): array
+    protected function generateConversationTitle(): string
     {
-        // Return last 10 messages for context (excluding current message)
-        $history = array_slice($this->messages, -10);
-        return array_map(function ($msg) {
-            return [
-                'role' => $msg['role'],
-                'content' => $msg['content']
-            ];
-        }, $history);
+        if (!empty($this->messages)) {
+            $firstUserMessage = collect($this->messages)->firstWhere('role', 'user');
+            if ($firstUserMessage) {
+                return Str::limit($firstUserMessage['content'], 50);
+            }
+        }
+
+        return 'Academic Chat - ' . now()->format('M j, Y');
+    }
+
+    public function updatedUploadedFile(): void
+    {
+        $this->validateOnly('uploadedFile');
+
+        if ($this->uploadedFile) {
+            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
+            $this->fileName = $this->uploadedFile->getClientOriginalName();
+        }
+    }
+
+    public function clearChat(): void
+    {
+        $this->messages = [];
+        $this->conversationId = null;
+        $this->urlConversationId = null;
+        $this->conversationTitle = null;
+        $this->redirect(route('academic-chat.index'));
+    }
+
+
+
+    public function loadConversation($conversationId): void
+    {
+        // Force complete state reset
+        $this->reset('messages', 'conversationId', 'conversationTitle');
+
+        // Now set the new conversation
+        $this->conversationId = $conversationId;
+        $this->urlConversationId = $conversationId;
+
+        // Load fresh data from database
+        $this->loadConversationTitle();
+        $this->loadChatHistory();
+
+        // Redirect to update URL with query parameter
+        $this->redirect(route('academic-chat.index', ['conversationId' => $conversationId]));
+    }
+
+    public function deleteConversation($conversationId): void
+    {
+        AcademicChatMessage::where('user_id', Auth::id())
+            ->where('conversation_id', $conversationId)
+            ->delete();
+
+        if ($this->conversationId === $conversationId) {
+            $this->messages = [];
+            $this->conversationId = null;
+            $this->urlConversationId = null;
+            $this->conversationTitle = null;
+        }
+
+        $this->loadConversationHistory();
+    }
+
+    public function newConversation(): void
+    {
+        $this->messages = [];
+        $this->conversationId = null;
+        $this->urlConversationId = null;
+        $this->conversationTitle = null;
+
+        // Redirect to clean URL
+        $this->redirect(route('academic-chat.index'));
+    }
+
+    public function toggleHistory(): void
+    {
+        $this->showHistory = !$this->showHistory;
+    }
+
+    public function toggleParameters(): void
+    {
+        $this->showParameters = !$this->showParameters;
+    }
+
+    public function updatedSubject(): void
+    {
+        $this->availableTopics = $this->availableSubjects[$this->subject] ?? [];
+        $this->topics = [];
+        $this->subtopics = [];
+    }
+
+    public function addTopic($topic): void
+    {
+        if (!in_array($topic, $this->topics, true)) {
+            $this->topics[] = $topic;
+        }
+    }
+
+    public function removeTopic($index): void
+    {
+        unset($this->topics[$index]);
+        $this->topics = array_values($this->topics);
+    }
+
+    public function addSubtopic(): void
+    {
+        // Handled by Alpine.js
+    }
+
+    public function removeSubtopic($index): void
+    {
+        unset($this->subtopics[$index]);
+        $this->subtopics = array_values($this->subtopics);
+    }
+
+    public function addAccommodation($accommodation): void
+    {
+        if (!in_array($accommodation, $this->accommodations, true)) {
+            $this->accommodations[] = $accommodation;
+        }
+    }
+
+    public function removeAccommodation($index): void
+    {
+        unset($this->accommodations[$index]);
+        $this->accommodations = array_values($this->accommodations);
+    }
+
+    public function resetParameters(): void
+    {
+        $this->reset([
+            'age', 'academic_level', 'academic_group', 'subject',
+            'topics', 'subtopics', 'learning_style', 'difficulty',
+            'accommodations', 'response_format', 'creativity_level', 'response_length'
+        ]);
+
+        $this->difficulty = 'medium';
+        $this->response_format = 'detailed';
+        $this->creativity_level = 1;
+        $this->response_length = 1000;
     }
 
     public function render()
