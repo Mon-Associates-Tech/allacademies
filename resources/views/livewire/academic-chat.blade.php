@@ -606,10 +606,14 @@
                                                     <x-form.markdown-with-math
                                                         :content="trim($message['content'])">
                                                     </x-form.markdown-with-math>
-                                                @endif
-                                                    @if(is_array($message['content']))
+
+                                                    @elseif(is_array($message['content']))
                                                         <x-form.markdown-with-math
-                                                            :content="json_encode($message['content'])">
+                                                            :content="$message['content'][0]['content'][0]['text']">
+                                                        </x-form.markdown-with-math>
+                                                    @else
+                                                        <x-form.markdown-with-math
+                                                            :content="$message['content']">
                                                         </x-form.markdown-with-math>
                                                     @endif
 
