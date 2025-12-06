@@ -34,17 +34,17 @@
     adjustMessageRows() {
         const textarea = $refs.messageInput;
         if (textarea) {
-            textarea.style.height = 'auto';
-            const newRows = Math.ceil(textarea.scrollHeight / 24);
-            this.messageRows = Math.max(3, Math.min(newRows, 8));
-            textarea.style.height = 'auto';
+           // textarea.style.height = 'auto';
+          //  const newRows = Math.ceil(textarea.scrollHeight / 24);
+          //  this.messageRows = Math.max(3, Math.min(newRows, 8));
+          //  textarea.style.height = 'auto';
         }
     }
 }"
      class="min-h-screen rounded-t-lg bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
 
     <!-- Header -->
-    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 rounded-t-lg">
+    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 rounded-t-lg">
         <div class="max-w-full px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3 flex-1 min-w-0">
@@ -214,8 +214,25 @@
 
                                 <!-- Message -->
                                 <div class="flex-1 {{ $message['role'] === 'user' ? 'text-right' : '' }}">
-                                    <div class="px-4 py-3 rounded-xl shadow-sm {{ $message['role'] === 'user' ? 'bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 text-gray-900 dark:text-gray-100' : 'bg-white dark:bg-gray-700/50 text-gray-900 dark:text-gray-100' }}">
-                                        <div class="prose prose-sm max-w-none text-left">
+                                    <div class="px-4 py-0.5 rounded-xl shadow-sm {{ $message['role'] === 'user' ? 'bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40' : 'bg-white dark:bg-gray-700/50' }}">
+                                        <div class="prose prose-sm max-w-none text-left dark:prose-invert
+            prose-headings:text-gray-900 dark:prose-headings:text-gray-100
+            prose-p:text-gray-900 dark:prose-p:text-gray-100
+            prose-strong:text-gray-900 dark:prose-strong:text-gray-100
+            prose-em:text-gray-800 dark:prose-em:text-gray-200
+            prose-code:text-gray-900 dark:prose-code:text-gray-100
+            prose-code:bg-gray-100 dark:prose-code:bg-gray-800
+            prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+            prose-pre:text-gray-100 dark:prose-pre:text-gray-100
+            prose-pre:bg-gray-800 dark:prose-pre:bg-gray-900
+            prose-pre:shadow-inner
+            prose-li:text-gray-900 dark:prose-li:text-gray-100
+            prose-ul:text-gray-900 dark:prose-ul:text-gray-100
+            prose-ol:text-gray-900 dark:prose-ol:text-gray-100
+            prose-a:text-blue-600 dark:prose-a:text-blue-400
+            prose-a:no-underline hover:prose-a:underline
+            prose-blockquote:text-gray-800 dark:prose-blockquote:text-gray-200
+            prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-600">
                                             @if(is_string($message['content']))
                                                 <x-form.markdown-with-math :content="trim($message['content'])"></x-form.markdown-with-math>
                                             @else
@@ -286,8 +303,8 @@
                             wire:loading.attr="disabled"
                             wire:target="sendMessage"
                             :disabled="!$wire.message.trim() || {{ $this->messageInputDisabled ? 'true' : 'false' }}"
-                            class="flex-shrink-0 h-12 px-4 sm:px-6 text-white rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold flex items-center justify-center">
-                        <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="flex-shrink-0 h-12 px-4 my-auto sm:px-6 text-white rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold flex items-center justify-center">
+                        <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                         </svg>
                         <svg wire:loading wire:target="sendMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
