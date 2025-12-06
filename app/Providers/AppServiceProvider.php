@@ -18,6 +18,7 @@ use App\Models\Examination;
 use App\Models\Forum\ForumCategory;
 use App\Models\Forum\ForumTopic;
 use App\Models\MultipleChoiceQuestion;
+use App\Models\Note;
 use App\Models\Payment;
 use App\Models\Role;
 use App\Models\Student;
@@ -115,6 +116,7 @@ class AppServiceProvider extends ServiceProvider
             'academic_year' => \App\Models\AcademicYear::class,
             'studentIdCard' => \App\Models\StudentIdCard::class,
             'report_card' => \App\Models\ReportCard::class,
+            'note' => Note::class,
 
         ]);
     }

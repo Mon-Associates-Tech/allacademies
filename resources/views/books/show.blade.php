@@ -828,27 +828,17 @@
         </x-modal-component>
         <!-- Preview Modal -->
 
-        <x-modal-component name="book-notes" size="2xl" title="My Notes - {{ $book->title }}">
+<x-modal-component name="book-notes" size="3xl" title="Book Notes">
+    @livewire('books.book-notes-manager', ['book' => $book])
 
-        <textarea
-            x-data="{ notes: localStorage.getItem('notes_{{ $book->id }}') || '' }"
-            x-model="notes"
-            x-init="$watch('notes', value => localStorage.setItem('notes_{{ $book->id }}', value))"
-            class="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white resize-none"
-            placeholder="Write your notes about this book here..."></textarea>
+    <x-slot name="actions">
+        <button @click="$dispatch('close-modal', {name: 'book-notes'})"
+                class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+            Close
+        </button>
+    </x-slot>
+</x-modal-component>
 
-
-            <x-slot name="actions">
-                <button @click="$dispatch('close-modal', {name: 'book-notes'})"
-                        class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                    Cancel
-                </button>
-                <button @click="$dispatch('close-modal', {name: 'book-notes'})"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Save Notes
-                </button>
-            </x-slot>
-        </x-modal-component>
         <!-- Mobile Sticky Action Bar -->
         <div
             class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-40">
