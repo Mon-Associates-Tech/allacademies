@@ -12,6 +12,7 @@
                     editorId: editorId,
                     wireName: wireName,
                     initialized: false,
+                    isInitializing: true,
 
                     initEditor() {
                         if (this.initialized || this.editor) return;
@@ -34,8 +35,10 @@
                                 height: height,
                                 menubar: false,
                                 plugins: 'lists link image code autoresize',
-                                toolbar: 'undo redo | bold italic strikethrough | h1 h2 h3 | bullist numlist | link image code',
+                                toolbar: 'undo redo | bold italic strikethrough | blocks | bullist numlist | link image code',
                                 toolbar_mode: 'sliding',
+                                block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3',
+                                forced_root_block: 'p',
                                 content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; } p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }',
                                 paste_as_text: false,
                                 promotion: false,
@@ -50,13 +53,20 @@
                                         if (this.markdown) {
                                             editor.setContent(this.markdown);
                                         }
+                                        // Mark initialization complete after a short delay
+                                        setTimeout(() => {
+                                            this.isInitializing = false;
+                                        }, 300);
                                         console.log('TinyMCE initialized successfully');
                                     });
 
                                     editor.on('input change blur', () => {
-                                        this.markdown = editor.getContent();
-                                        // Sync with Livewire
-                                        this.syncWithLivewire();
+                                        // Only sync if not initializing
+                                        if (!this.isInitializing) {
+                                            this.markdown = editor.getContent();
+                                            // Sync with Livewire
+                                            this.syncWithLivewire();
+                                        }
                                     });
                                 },
                                 init_instance_callback: (editor) => {
@@ -70,8 +80,8 @@
                     },
 
                     syncWithLivewire() {
-                        // Update Livewire property
-                        if (this.wireName && this.$wire) {
+                        // Update Livewire property only if not initializing
+                        if (this.wireName && this.$wire && !this.isInitializing) {
                             this.$wire.set(this.wireName, this.markdown);
                         }
                     },
