@@ -90,7 +90,7 @@
                         </div>
                     </div>
 
-                    <!-- Donate Action (Optional Placeholder) -->
+                    <!-- Donate Action -->
                     <div class="p-4 border-t border-gray-100 dark:border-gray-700">
                         <a href="{{ route('payments.public.lookup', ['payment_code' => $aid->code]) }}"
                            class="block w-full py-2 px-4 bg-violet-600 hover:bg-violet-700 text-white text-center rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg">
@@ -99,18 +99,50 @@
                     </div>
                 </div>
             @empty
-                <div class="col-span-full text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No active programs</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Check back later for new financial aid opportunities.</p>
+                <!-- Empty State with Call to Action -->
+                <div class="col-span-full">
+                    <div class="max-w-md mx-auto text-center">
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+                            <!-- Icon -->
+                            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-violet-100 dark:bg-violet-900/30 mb-4">
+                                <svg class="h-10 w-10 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+
+                            <!-- Heading -->
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                No Active Financial Aid Programs
+                            </h3>
+
+                            <!-- Description -->
+                            <p class="text-gray-600 dark:text-gray-400 mb-6">
+                                There are currently no active financial aid programs available. However, you can still make general payments for tuition, fees, and other school expenses.
+                            </p>
+
+                            <!-- CTA Button -->
+                            <a href="{{ route('payments.public.lookup') }}"
+                               class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Make a General Payment
+                            </a>
+
+                            <!-- Secondary Info -->
+                            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                                Check back soon for new financial aid opportunities
+                            </p>
+                        </div>
+                    </div>
                 </div>
             @endforelse
         </div>
 
-        <div class="mt-12">
-            {{ $aids->links() }}
-        </div>
+        @if($aids->hasPages())
+            <div class="mt-12">
+                {{ $aids->links() }}
+            </div>
+        @endif
     </div>
 </div>

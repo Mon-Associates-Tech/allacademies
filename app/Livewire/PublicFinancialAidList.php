@@ -39,8 +39,11 @@ class PublicFinancialAidList extends Component
             return $aid;
         });
 
+        $hasActivePrograms = $aids->isNotEmpty();
+
         return view('livewire.public-financial-aid-list', [
-            'aids' => $aids
+            'aids' => $aids,
+            'hasActivePrograms' => $hasActivePrograms
         ])->layout('components.layouts.guest', ['pageName' => 'Philanthropy & Aid']);
     }
 }
