@@ -123,10 +123,10 @@ class AcademicChatService
         $requestData = [
             'model' => $modelToUse,
             'messages' => $formattedMessages,
-            'temperature' => (float)$parameters['creativity_level'] ?? 1,
+            'temperature' => (float) $parameters['creativity_level'] ?: 1.0,
         ];
 
-        $tokenLimit = (int)$parameters['response_length'] ?? 1000;
+        $tokenLimit = (int) $parameters['response_length'] ?: 1000;
 
         $requestData['max_completion_tokens'] = $tokenLimit;
 
@@ -506,10 +506,12 @@ protected function handleImageGeneration($parameters)
             $model = $this->modelSelectionService->getTextModelForUser($user);
 
             $content = $this->chatGPTService->chat($messages, $model);
+            $normalizedContent = $this->normalizeTextResponse($content);
 
             return [
                 'success' => true,
-                'content' => $content,
+                'content' => $normalizedContent['text'],
+                'raw_content' => $normalizedContent['raw'],
                 'model_used' => $model
             ];
         } catch (Exception $e) {
@@ -518,6 +520,55 @@ protected function handleImageGeneration($parameters)
                 'error' => $e->getMessage()
             ];
         }
+    }
+
+    protected function normalizeTextResponse($content): array
+    {
+        $raw = $content;
+        $textSegments = [];
+
+        if (is_string($content)) {
+            $textSegments[] = $content;
+        } elseif (is_array($content)) {
+            foreach ($content as $item) {
+                if (is_string($item)) {
+                    $textSegments[] = $item;
+                    continue;
+                }
+
+                if (isset($item['content'])) {
+                    $segments = $item['content'];
+
+                    if (is_array($segments)) {
+                        foreach ($segments as $segment) {
+                            if (is_string($segment)) {
+                                $textSegments[] = $segment;
+                                continue;
+                            }
+
+                            if (isset($segment['text']) && is_string($segment['text'])) {
+                                $textSegments[] = $segment['text'];
+                            }
+                        }
+                    } elseif (is_string($segments)) {
+                        $textSegments[] = $segments;
+                    }
+                } elseif (isset($item['text']) && is_string($item['text'])) {
+                    $textSegments[] = $item['text'];
+                }
+            }
+        }
+
+        $text = trim(implode("\n\n", array_filter($textSegments, static fn ($segment) => trim($segment) !== '')));
+
+        if ($text === '' && is_array($content)) {
+            $text = trim(json_encode($content));
+        }
+
+        return [
+            'text' => $text,
+            'raw' => $raw,
+        ];
     }
 
     protected function prepareTextPrompt($parameters)
@@ -573,7 +624,7 @@ protected function handleImageGeneration($parameters)
         }
 
         // Creativity level validation
-        if ((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level'])) || $parameters['creativity_level'] < 1)) {
+        if (((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level']))) || $parameters['creativity_level'] < 1)) {
             $errors[] = 'Creativity level must be greater than 1';
         }
 
