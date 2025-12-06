@@ -1,5 +1,5 @@
 @props(['variant' => 'v1'])
-<div class="min-w-fit hide-scrollbar">
+<div class="min-w-fit thin-scrollbar">
     <!-- Sidebar backdrop (mobile only) -->
     <div
         class="fixed inset-0 bg-gray-900/30 z-40 lg:hidden lg:z-auto transition-opacity duration-200"
@@ -138,9 +138,9 @@
                 @endif
             @endauth
 
-            <ul>
+            <ul class="border-t-2 pt-4 border-gray-200 dark:border-gray-700 space-y-1">
                 <li class="mb-0.5 last:mb-0" title="Messenger Subscriptions">
-                    <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                    <a class="block px-2 py-2 rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                        href="{{route('token-subscriptions.index')}}">
                         <div class="flex items-center">
                             <svg
@@ -152,20 +152,20 @@
                                     d="M3 4h10v6H3V4zm0-1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3z"/>
                             </svg>
 
-                            <span class="text-sm ml-4 sidebar-text duration-200">Messenger Subscriptions</span>
+                            <span class="text-sm ml-3 sidebar-text duration-200">Messenger Subscriptions</span>
                         </div>
                     </a>
                 </li>
 
                 <li class="mb-0.5 last:mb-0" title="Shared Resources">
-                    <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('user-books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                    <a class="block px-2 py-2 rounded-lg transition {{ Route::is('user-books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                        href="{{route('user-books.index')}}">
                         <div class="flex items-center">
                             <svg class="shrink-0 fill-current {{ Route::is('user-books*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                 <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>
                             </svg>
 
-                            <span class="text-sm ml-4 sidebar-text duration-200">Shared Resources</span>
+                            <span class="text-sm ml-3 sidebar-text duration-200">Shared Resources</span>
                         </div>
                     </a>
                 </li>
