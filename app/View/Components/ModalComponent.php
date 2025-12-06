@@ -23,6 +23,7 @@ class ModalComponent extends Component
     public string $height;
     public bool  $fixedFooter;
     public array $modalData;
+    public string $zIndex;
 
     public function __construct(
         string $name = '',
@@ -37,8 +38,9 @@ class ModalComponent extends Component
         bool $fullheight = false,
         string $headerBackground = 'bg-white dark:bg-gray-800',
         string $height = '',
-         bool  $fixedFooter = false,
-         array $modalData = []
+        bool  $fixedFooter = false,
+        array $modalData = [],
+        string $zIndex = 'z-50'
     ) {
         $this->name = $name;
         $this->title = $title;
@@ -55,6 +57,7 @@ class ModalComponent extends Component
         $this->height = $height;
         $this->fixedFooter = $fixedFooter;
         $this->modalData = $modalData;
+        $this->zIndex = $zIndex;
     }
 
     private function getMaxWidth(string $size): string
@@ -63,7 +66,6 @@ class ModalComponent extends Component
             'xs' => 'max-w-xs',
             'sm' => 'max-w-sm',
             'md' => 'max-w-md',
-            'lg' => 'max-w-lg',
             'xl' => 'max-w-xl',
             '2xl' => 'max-w-2xl',
             '3xl' => 'max-w-3xl',

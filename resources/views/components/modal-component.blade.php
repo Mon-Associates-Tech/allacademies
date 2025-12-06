@@ -12,6 +12,7 @@
         height: @js($height),
         fixedFooter: @js($fixedFooter ?? true),
         modalData: {},
+        zIndex: @js($zIndex),
 
         // Methods
         open(data = {}) {
@@ -28,8 +29,13 @@
                 this.setMaxWidth(data.size);
             }
 
+            // Allow dynamic z-index override
+            if (data.zIndex) {
+                this.zIndex = data.zIndex;
+            }
+
             // Store all passed data except for reserved properties
-            const reservedProps = ['name', 'title', 'size'];
+            const reservedProps = ['name', 'title', 'size', 'zIndex'];
             this.modalData = Object.fromEntries(
                 Object.entries(data).filter(([key]) => !reservedProps.includes(key))
             );
@@ -116,7 +122,8 @@
     x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0"
     x-cloak
-    class="fixed inset-0 z-50 overflow-y-auto"
+    :class="zIndex"
+    class="fixed inset-0 overflow-y-auto"
     style="display: none;"
 >
     <!-- Backdrop -->

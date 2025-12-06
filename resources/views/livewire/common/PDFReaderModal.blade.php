@@ -1,6 +1,6 @@
 <div>
     @if($isVisible && $hasAccess)
-        <div class="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center"
+        <div class="fixed inset-0 z-40 bg-black bg-opacity-95 flex items-center justify-center"
              x-data="pdfReaderAlpine()"
              x-init="init()"
              @keydown.escape="handleEscape()"

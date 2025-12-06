@@ -262,9 +262,8 @@
 
                                     <!-- Notes Button -->
                                     <button
-                                        x-data="{}"
-                                        @click="$dispatch('open-modal', {name: 'book-notes'})"
-                                        class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: { name: 'book-notes', zIndex: 'z-[60]' } }))"
+                                        class="flex items-center justify-center px-3 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
                                         <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none"
                                              stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -828,7 +827,7 @@
         </x-modal-component>
         <!-- Preview Modal -->
 
-<x-modal-component name="book-notes" size="3xl" title="Book Notes">
+<x-modal-component name="book-notes" size="3xl" title="Book Notes" z-index="z-[60]">
     @livewire('books.book-notes-manager', ['book' => $book])
 
     <x-slot name="actions">
