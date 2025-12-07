@@ -223,107 +223,207 @@
                         <div class="">
                             <div class="bg-white dark:bg-gray-800 rounded-b-xl shadow-lg p-6">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {{-- Book Selection --}}
-                                    <div class="space-y-6">
-                                        <div>
-                                            <label
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Select Book
-                                            </label>
-                                            <select wire:model.live="selectedBookId"
-                                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                                <option value="">Choose a book...</option>
-                                                @foreach($availableBooks as $book)
-                                                    <option value="{{ $book->id }}">{{ $book->title }}
-                                                        by {{ $book->author_name }}</option>
-                                                @endforeach
-                                            </select>
+                                    <div class="mb-6">
+                                        <div class="border-b border-gray-200">
+                                            <nav class="-mb-px flex space-x-8">
+                                                <button type="button"
+                                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                               {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                        wire:click="$set('contentSourceTab', 'book')">
+                                                    Select Book
+                                                </button>
+                                                <button type="button"
+                                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                               {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                        wire:click="$set('contentSourceTab', 'upload')">
+                                                    Upload Content
+                                                </button>
+                                            </nav>
                                         </div>
 
-                                        @if($selectedBook)
-                                            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                <div class="flex items-start space-x-4">
-                                                    @if($selectedBook->cover_image)
-                                                        <img src="{{ $selectedBook->cover_image }}"
-                                                             alt="{{ $selectedBook->title }}"
-                                                             class="w-20 h-28 object-cover overflow-hidden rounded shadow-md">
-                                                    @else
-                                                        <div
-                                                            class="w-20 h-28 bg-gray-300 dark:bg-gray-600 rounded flex items-center justify-center">
-                                                            <svg class="h-8 w-8 text-gray-400" fill="none"
-                                                                 stroke="currentColor"
-                                                                 viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                      stroke-width="2"
-                                                                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                                            </svg>
+                                    <!-- Content Selection -->
+                                    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                                        <div class="px-4 py-5 sm:p-6">
+                                            @if($contentSourceTab === 'book')
+                                                <div class="space-y-4">
+                                                    <!-- Book Selection -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Select
+                                                            Book</label>
+                                                        <select
+                                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                            wire:model="selectedBookId">
+                                                            <option value="">Choose a book...</option>
+                                                            @foreach($availableBooks as $book)
+                                                                <option value="{{ $book->id }}">
+                                                                    {{ $book->title }} by {{ $book->author_name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @error('selectedBookId') <p
+                                                            class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                    </div>
+
+                                                    <!-- Subject Selection - REQUIRED -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject
+                                                            *</label>
+                                                        <select
+                                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                            wire:model="selectedSubjectId">
+                                                            <option value="">Choose a subject...</option>
+                                                            @foreach($availableSubjects as $subject)
+                                                                <option value="{{ $subject->id }}">
+                                                                    {{ $subject->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @error('selectedSubjectId') <p
+                                                            class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                        <p class="mt-1 text-xs text-gray-500">Select the subject this
+                                                            quiz is related to</p>
+                                                    </div>
+
+                                                    <!-- Book Details (if selected) -->
+                                                    @if($selectedBook)
+                                                        <div class="bg-gray-50 rounded-lg p-4">
+                                                            <h4 class="font-medium text-gray-900">{{ $selectedBook->title }}</h4>
+                                                            <div
+                                                                class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                                                                <div>
+                                                                    <p class="text-gray-500">Author</p>
+                                                                    <p class="font-medium">{{ $selectedBook->author_name }}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p class="text-gray-500">Genre</p>
+                                                                    <p class="font-medium">{{ $selectedBook->genre ?? 'N/A' }}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p class="text-gray-500">Pages</p>
+                                                                    <p class="font-medium">{{ $selectedBook->pages ?? 'N/A' }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Chapter Selection (if available) -->
+                                                        @if(!empty($bookChapters))
+                                                            <div>
+                                                                <label
+                                                                    class="block text-sm font-medium text-gray-700 mb-1">Chapter
+                                                                    (Optional)</label>
+                                                                <select
+                                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                    wire:model="selectedChapterId">
+                                                                    <option value="">All chapters</option>
+                                                                    @foreach($bookChapters as $chapter)
+                                                                        <option value="{{ $chapter->id }}">
+                                                                            Chapter {{ $chapter->chapter_number }}
+                                                                            : {{ $chapter->title }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        @endif
+
+                                                        <!-- Page Range (Optional) -->
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label
+                                                                    class="block text-sm font-medium text-gray-700 mb-1">Start
+                                                                    Page (Optional)</label>
+                                                                <input type="number" min="1"
+                                                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                       wire:model="pageStart" placeholder="e.g., 1">
+                                                            </div>
+                                                            <div>
+                                                                <label
+                                                                    class="block text-sm font-medium text-gray-700 mb-1">End
+                                                                    Page (Optional)</label>
+                                                                <input type="number" min="1"
+                                                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                       wire:model="pageEnd" placeholder="e.g., 50">
+                                                            </div>
                                                         </div>
                                                     @endif
+                                                </div>
+                                            @else
+                                                <div class="space-y-4">
+                                                    <!-- Subject Selection - REQUIRED -->
                                                     <div>
-                                                        <h3 class="font-bold text-gray-900 dark:text-white">{{ $selectedBook->title }}</h3>
-                                                        <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                            by {{ $selectedBook->author_name }}</p>
-                                                        @if($selectedBook->genre)
-                                                            <span
-                                                                class="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mt-1">
-                                                        {{ $selectedBook->genre }}
-                                                    </span>
-                                                        @endif
-                                                        <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">
-                                                            {{ Str::limit($selectedBook->description, 100) }}
-                                                        </p>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject
+                                                            *</label>
+                                                        <select
+                                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                            wire:model="selectedSubjectId">
+                                                            <option value="">Choose a subject...</option>
+                                                            @foreach($availableSubjects as $subject)
+                                                                <option value="{{ $subject->id }}">
+                                                                    {{ $subject->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @error('selectedSubjectId') <p
+                                                            class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                        <p class="mt-1 text-xs text-gray-500">Select the subject this
+                                                            quiz is related to</p>
                                                     </div>
 
-
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        @if(!$selectedBookId)
-                                            <div class="mt-4">
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Or Upload Your Own Content
-                                                </label>
-                                                <div class="flex items-center space-x-2">
-                                                    <input
-                                                        type="file"
-                                                        wire:model="uploadedFile"
-                                                        class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                        accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                                                    <button
-                                                        type="button"
-                                                        wire:click="$refresh"
-                                                        class="px-4 hidden py-3 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">
-                                                        Upload
-                                                    </button>
-                                                </div>
-                                                @if($fileName)
-                                                    <div
-                                                        class="mt-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                                        <div class="flex items-center justify-between">
-                                                            <div class="flex items-center">
-                                                                <svg
-                                                                    class="h-5 w-5 text-blue-500 dark:text-blue-400 mr-2"
-                                                                    fill="none" stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                          stroke-width="2"
-                                                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                </svg>
-                                                                <span
-                                                                    class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ $fileName }}</span>
+                                                    <!-- File Upload -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Upload
+                                                            Content File</label>
+                                                        <div
+                                                            class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                                            <div class="space-y-1 text-center">
+                                                                <div class="flex text-sm text-gray-600">
+                                                                    <label
+                                                                        class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                                                                        <span>Upload a file</span>
+                                                                        <input type="file" class="sr-only"
+                                                                               wire:model="uploadedFile"
+                                                                               accept=".pdf,.doc,.docx,.txt">
+                                                                    </label>
+                                                                    <p class="pl-1">or drag and drop</p>
+                                                                </div>
+                                                                <p class="text-xs text-gray-500">PDF, DOC, DOCX, TXT up
+                                                                    to 10MB</p>
                                                             </div>
-                                                            <span
-                                                                class="text-xs text-blue-600 dark:text-blue-400">Uploaded</span>
                                                         </div>
+                                                        @error('uploadedFile') <p
+                                                            class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                                     </div>
-                                                @endif
-                                                {{--    @error('uploadedFile')
-                                                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
-                                                    @enderror--}}
-                                            </div>
-                                        @endif
+
+                                                    <!-- File Info (if uploaded) -->
+                                                    @if($fileName)
+                                                        <div class="rounded-md bg-blue-50 p-4">
+                                                            <div class="flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <svg class="h-5 w-5 text-blue-400"
+                                                                         xmlns="http://www.w3.org/2000/svg"
+                                                                         viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path fill-rule="evenodd"
+                                                                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                                              clip-rule="evenodd"/>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="ml-3 flex-1">
+                                                                    <h3 class="text-sm font-medium text-blue-800">File
+                                                                        uploaded successfully</h3>
+                                                                    <div class="mt-2 text-sm text-blue-700">
+                                                                        <p>{{ $fileName }}</p>
+                                                                        @if($fileContent)
+                                                                            <p class="text-xs mt-1">Content extracted
+                                                                                ({{ strlen($fileContent) }}
+                                                                                characters)</p>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     {{-- Quiz Settings --}}
@@ -452,25 +552,25 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {{-- Generate Quiz Button --}}
-                                <div class="pt-6">
-                                    <button
-                                        wire:click="generateQuiz"
-                                        :disabled="$wire.isGenerating || !{{ $canGenerateQuiz ? 'true' : 'false' }}"
-                                        class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                        <div class="pt-6">
+                                            <button
+                                                wire:click="generateQuiz"
+                                                :disabled="$wire.isGenerating || !{{ $canGenerateQuiz ? 'true' : 'false' }}"
+                                                class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
     <span wire:loading.remove wire:target="generateQuiz">
         {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Tokens' }}
     </span>
-                                        <span wire:loading wire:target="generateQuiz">
+                                                <span wire:loading wire:target="generateQuiz">
         Generating Quiz...
     </span>
-                                    </button>
-                                    <p class="text-gray-500 dark:text-gray-500 text-sm mt-2 text-center">This may take
-                                        30-60
-                                        seconds</p>
+                                            </button>
+                                            <p class="text-gray-500 dark:text-gray-500 text-sm mt-2 text-center">This may take
+                                                30-60
+                                                seconds</p>
+                                        </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -994,8 +1094,6 @@
 
         @endif
 
-
-        {{-- Detailed Results Modal/Section --}}
         <x-modal-component
             name="detailed-results-modal"
             title="Detailed Quiz Results"
@@ -1464,7 +1562,6 @@
             @endif
         </div>
 
-
         {{-- Loading States --}}
         <div wire:loading.flex wire:target="generateQuiz"
              class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center">
@@ -1487,7 +1584,7 @@
         </div>
     </div>
 
-    {{-- Custom Styles --}}
+
     <style>
         .quiz-option:hover {
             transform: translateY(-2px);
@@ -1633,5 +1730,5 @@
             });
         });
     </script>
-
+    </div>
 </section>
