@@ -495,7 +495,7 @@ class BookBasedLearningService
             throw new Exception('Failed to generate adaptive quiz: ' . $result['error']);
         }
 
-        return $this->parseAdaptiveQuizResponse($result['content'], $context);
+        return $this->parseAdaptiveQuizResponse($result['content'][0]['text'], $context);
     }
 
     /**

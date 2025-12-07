@@ -17,7 +17,7 @@ use ZipArchive;
 class AcademicChatService
 {
     protected mixed $apiKey;
-    protected string $endpoint = 'https://api.openai.com/v1/chat/completions';
+    protected string $endpoint = 'https://api.openai.com/v1/responses';
     protected string $model = '';
 
     protected ChatGPTService $chatGPTService;
@@ -51,7 +51,7 @@ class AcademicChatService
             ],
             [
                 'role' => 'user',
-                'content' => "User request: " . ($parameters['message'] ?? '') .
+                'content' => "User request: " . ($parameters['input'] ?? '') .
                     "\n\nContext: " . json_encode(array_slice($conversationHistory, -3))
             ]
         ];
@@ -81,8 +81,8 @@ class AcademicChatService
 
         Log::info('Academic Chat Request Started', [
             'user_id' => $user?->id,
-            'has_message' => isset($parameters['message']),
-            'message_length' => isset($parameters['message']) ? strlen($parameters['message']) : 0,
+            'has_message' => isset($parameters['input']),
+            'message_length' => isset($parameters['input']) ? strlen($parameters['input']) : 0,
         ]);
 
         // Check if user has active subscription and sufficient tokens
@@ -113,22 +113,22 @@ class AcademicChatService
         }
 
         // Add current user message if provided in parameters
-        if (isset($parameters['message'])) {
+        if (isset($parameters['input'])) {
             $formattedMessages[] = [
                 'role' => 'user',
-                'content' => $parameters['message']
+                'content' => $parameters['input']
             ];
         }
 
         $requestData = [
             'model' => $modelToUse,
-            'messages' => $formattedMessages,
+            'input' => $formattedMessages,
             'temperature' => (float) $parameters['creativity_level'] ?: 1.0,
         ];
 
-        $tokenLimit = (int) $parameters['response_length'] ?: 1000;
+        $tokenLimit = (int) $parameters['response_length'] ?: 10000;
 
-        $requestData['max_completion_tokens'] = $tokenLimit;
+        $requestData['max_output_tokens'] = $tokenLimit;
 
 
         // Add additional OpenAI parameters if specified
@@ -169,7 +169,7 @@ class AcademicChatService
 
                     return [
                         'success' => true,
-                        'content' => $responseData['choices'][0]['message']['content'],
+                        'content' => $responseData['output'][0]['content'],
                         'usage' => $usage,
                         'model' => $responseData['model'] ?? $modelToUse
                     ];
@@ -381,7 +381,7 @@ class AcademicChatService
             'subscription_id' => $subscription->id,
             'model' => $model ?? $this->model,
             'prompt_tokens' => $usage['prompt_tokens'] ?? 0,
-            'completion_tokens' => $usage['max_completion_tokens'] ?? 0,
+            'completion_tokens' => $usage['max_output_tokens'] ?? 0,
             'total_tokens' => $totalTokens,
             'request_type' => $requestType,
         ]);
@@ -406,8 +406,8 @@ class AcademicChatService
             }
 
             // Handle chat completions format
-            if (isset($response['choices'][0]['message']['content'])) {
-                return $response['choices'][0]['message']['content'];
+            if (isset($response['output'][0]['content']['text'])) {
+                return $response['output'][0]['content']['text'];
             }
 
             // Handle other possible formats
@@ -466,7 +466,7 @@ protected function handleImageGeneration($parameters)
     protected function prepareImagePrompt($parameters)
     {
         // Create a detailed prompt for image generation
-        $description = $parameters['message'] ?? 'Generate an educational image';
+        $description = $parameters['input'] ?? 'Generate an educational image';
 
         $details = [];
         if (!empty($parameters['subject'])) {
@@ -573,12 +573,12 @@ protected function handleImageGeneration($parameters)
 
     protected function prepareTextPrompt($parameters)
     {
-        $prompt = "User request: " . ($parameters['message'] ?? '');
+        $prompt = "User request: " . ($parameters['input'] ?? '');
 
         // Add context from parameters
         $context = [];
         foreach ($parameters as $key => $value) {
-            if ($key !== 'message' && !empty($value)) {
+            if ($key !== 'input' && !empty($value)) {
                 if (is_array($value)) {
                     $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . implode(', ', $value);
                 } else {
@@ -602,7 +602,7 @@ protected function handleImageGeneration($parameters)
         $errors = [];
 
         // Required parameters
-        if (!isset($parameters['message']) || empty(trim($parameters['message']))) {
+        if (!isset($parameters['input']) || empty(trim($parameters['input']))) {
             $errors[] = 'Message is required';
         }
 

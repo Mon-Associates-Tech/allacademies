@@ -1122,7 +1122,7 @@ class BookQuizInterface extends Component
             'topics' => ['essay_grading', 'reading_comprehension'],
             'response_format' => 'json',
             'creativity_level' => 0.3,
-            'response_length' => 800
+//            'response_length' => 800
         ];
 
         $result = $this->chatService->chat($chatParameters);
