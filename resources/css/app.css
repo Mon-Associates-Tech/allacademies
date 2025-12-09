@@ -268,20 +268,20 @@
 
 /* Add to your CSS */
 body.sidebar-expanded #sidebar {
-    width: 15rem !important; /* 64px */
+    width: 16rem !important; /* 64px */
 }
 
 body:not(.sidebar-expanded) #sidebar {
-    width: 4rem !important; /* 20px */
+    width: 3.5rem !important; /* 20px */
 }
 
 @media (min-width: 1024px) { /* lg breakpoint */
     body.sidebar-expanded #sidebar {
-        width: 15rem !important;
+        width: 16rem !important;
     }
 
     body:not(.sidebar-expanded) #sidebar {
-        width: 3rem !important;
+        width: 3.5rem !important;
     }
 }
 
