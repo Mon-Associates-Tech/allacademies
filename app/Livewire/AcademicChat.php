@@ -327,7 +327,7 @@ class AcademicChat extends Component
         }
 
         $parameters = $this->getParameters();
-        $parameters['message'] = $this->message;
+        $parameters['input'] = $this->message;
 
         if (!empty($this->fileContent)) {
             $parameters['file_content'] = $this->fileContent;

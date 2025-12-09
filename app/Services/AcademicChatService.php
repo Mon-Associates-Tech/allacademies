@@ -76,13 +76,13 @@ class AcademicChatService
      */
     public function chat(array $parameters, array $messages = []): array
     {
-
         $user = auth()->user();
 
         Log::info('Academic Chat Request Started', [
             'user_id' => $user?->id,
-            'has_message' => isset($parameters['input']),
-            'message_length' => isset($parameters['input']) ? strlen($parameters['input']) : 0,
+            'has_input' => isset($parameters['input']),
+            'input_preview' => isset($parameters['input']) ? substr($parameters['input'], 0, 300) : 'none',
+            'request_type' => $parameters['request_type'] ?? 'general',
         ]);
 
         // Check if user has active subscription and sufficient tokens
@@ -98,87 +98,95 @@ class AcademicChatService
         // Get the appropriate model for this user
         $modelToUse = $user ? $user->getOpenAiModel() : $this->model;
 
-
-        // Build system message based on educational parameters
-        $systemMessage = $this->buildEducationalSystemMessage($parameters);
-
         // Prepare messages array
-        $formattedMessages = [
-            ['role' => 'system', 'content' => $systemMessage]
-        ];
+        $formattedMessages = [];
 
-        // Add conversation history if provided
-        if (!empty($messages)) {
-            $formattedMessages = array_merge($formattedMessages, $messages);
-        }
+        // For quiz generation, DON'T use buildEducationalSystemMessage
+        // The prompt already contains all necessary instructions
+        if (isset($parameters['request_type']) && $parameters['request_type'] === 'quiz_generation') {
+            // Use ONLY the provided prompt - don't add educational context
+            if (isset($parameters['input'])) {
+                $formattedMessages[] = [
+                    'role' => 'user',
+                    'content' => $parameters['input']
+                ];
+            }
+        } else {
+            // For regular chat, use educational system message
+            $systemMessage = $this->buildEducationalSystemMessage($parameters);
+            $formattedMessages[] = ['role' => 'system', 'content' => $systemMessage];
 
-        // Add current user message if provided in parameters
-        if (isset($parameters['input'])) {
-            $formattedMessages[] = [
-                'role' => 'user',
-                'content' => $parameters['input']
-            ];
+            // Add conversation history if provided
+            if (!empty($messages)) {
+                $formattedMessages = array_merge($formattedMessages, $messages);
+            }
+
+            // Add current user message if provided in parameters
+            if (isset($parameters['input'])) {
+                $formattedMessages[] = [
+                    'role' => 'user',
+                    'content' => $parameters['input']
+                ];
+            }
         }
 
         $requestData = [
             'model' => $modelToUse,
             'input' => $formattedMessages,
-            'temperature' => (float) $parameters['creativity_level'] ?: 1.0,
+            'temperature' => (float) ($parameters['creativity_level'] ?? 1.0),
         ];
 
-        $tokenLimit = (int) $parameters['response_length'] ?: 10000;
-
+        $tokenLimit = (int) ($parameters['response_length'] ?? 10000);
         $requestData['max_output_tokens'] = $tokenLimit;
 
-
-        // Add additional OpenAI parameters if specified
         if (isset($parameters['top_p'])) {
             $requestData['top_p'] = $parameters['top_p'];
         }
 
-        Log::info('Sending request to OpenAI', [
-            'model' => $modelToUse,
-            'message_count' => count($formattedMessages),
-            'has_temperature' => isset($requestData['temperature']),
-            'token_limit' => $tokenLimit,
-        ]);
-
-        // Get timeout from config or use 90 seconds as default (increased from 30)
+        // Rest of the method stays the same...
         $timeout = config('openai.openai.timeout', 90);
         $maxRetries = 3;
-        $retryDelay = 2; // seconds
+        $retryDelay = 2;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
-                // Log::info('OpenAI API attempt', ['attempt' => $attempt, 'max_retries' => $maxRetries]);
-
                 $response = Http::withToken($this->apiKey)
                     ->timeout($timeout)
-                    ->connectTimeout(10) // Add connection timeout
-                    ->retry(2, 1000) // Retry 2 times with 1 second delay for connection issues
+                    ->connectTimeout(10)
+                    ->retry(2, 1000)
                     ->post($this->endpoint, $requestData);
 
                 if ($response->successful()) {
                     $responseData = $response->json();
+
+                    Log::info('OpenAI Response received', [
+                        'has_output' => isset($responseData['output']),
+                        'has_usage' => isset($responseData['usage']),
+                    ]);
+
                     $usage = $responseData['usage'] ?? null;
 
-                    // Log token usage and deduct from user's subscription
                     if ($user && $usage) {
-                        $this->logTokenUsage($user, $usage, $parameters['request_type'] ?? 'chat');
+                        $this->logTokenUsage($user, $usage, $parameters['request_type'] ?? 'chat', $modelToUse);
                     }
+
+                    $content = $this->extractContentFromResponsesAPI($responseData);
+
+                    Log::warning('OpenAI Response Content', [
+                       // 'content' => $content
+                    ]);
 
                     return [
                         'success' => true,
-                        'content' => $responseData['output'][0]['content'],
+                        'content' => $content,
                         'usage' => $usage,
                         'model' => $responseData['model'] ?? $modelToUse
                     ];
                 }
 
-                // Handle 429 (rate limit) and 503 (service unavailable) with retry
                 if (in_array($response->status(), [429, 503, 502])) {
                     if ($attempt < $maxRetries) {
-                        $waitTime = $retryDelay * $attempt; // Exponential backoff
+                        $waitTime = $retryDelay * $attempt;
                         Log::warning('OpenAI API rate limit or unavailable, retrying', [
                             'status' => $response->status(),
                             'attempt' => $attempt,
@@ -201,23 +209,20 @@ class AcademicChatService
                 ];
 
             } catch (ConnectionException $e) {
-                // Handle connection/timeout errors specifically
                 Log::error('OpenAI Connection Error', [
                     'error' => $e->getMessage(),
                     'attempt' => $attempt,
-                    'max_retries' => $maxRetries,
                 ]);
 
                 if ($attempt < $maxRetries) {
                     $waitTime = $retryDelay * $attempt;
-                    Log::info('Retrying after connection error', ['wait_time' => $waitTime]);
                     sleep($waitTime);
                     continue;
                 }
 
                 return [
                     'success' => false,
-                    'error' => 'Connection timeout. The AI service is taking longer than expected. Please try again with a shorter message or fewer conversation history.'
+                    'error' => 'Connection timeout. Please try again.'
                 ];
 
             } catch (Exception $e) {
@@ -239,13 +244,69 @@ class AcademicChatService
             }
         }
 
-        // If all retries failed
         return [
             'success' => false,
             'error' => 'Service temporarily unavailable after multiple attempts. Please try again later.'
         ];
     }
 
+    protected function extractContentFromResponsesAPI(array $responseData): string
+    {
+        if (!isset($responseData['output'])) {
+            Log::warning('No output field in response');
+            return '';
+        }
+
+        $output = $responseData['output'];
+
+        // Handle direct string output
+        if (is_string($output)) {
+            return $output;
+        }
+
+        // Handle array output - NEW APPROACH
+        if (is_array($output)) {
+            // PRIORITY 1: Look for content array in first output element
+            if (isset($output[0]['content'])) {
+                $fullText = '';
+
+                foreach ($output as $outputItem) {
+                    if (isset($outputItem['content']) && is_array($outputItem['content'])) {
+                        foreach ($outputItem['content'] as $contentPart) {
+                            // Extract text from various possible structures
+                            if (is_string($contentPart)) {
+                                $fullText .= $contentPart;
+                            } elseif (isset($contentPart['text'])) {
+                                $fullText .= $contentPart['text'];
+                            } elseif (isset($contentPart['type']) && $contentPart['type'] === 'output_text' && isset($contentPart['text'])) {
+                                $fullText .= $contentPart['text'];
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($fullText)) {
+                    return $fullText;
+                }
+            }
+
+            // PRIORITY 2: Array of strings
+            if (isset($output[0]) && is_string($output[0])) {
+                return implode('', $output);
+            }
+
+            // PRIORITY 3: Direct text field
+            if (isset($output[0]['text'])) {
+                return $output[0]['text'];
+            }
+        }
+
+        // Final fallback
+        Log::error('Could not extract content from response', [
+            'output_structure' => json_encode($output)
+        ]);
+        return $this->extractTextFromResponse($responseData);
+    }
     /**
      * Build educational system message based on parameters
      */

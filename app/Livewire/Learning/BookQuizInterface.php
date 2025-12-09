@@ -15,6 +15,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -77,7 +78,7 @@ class BookQuizInterface extends Component
         $this->pdfExtractor = $pdfExtractor;
     }
 
-    public function mount()
+    public function mount(): void
     {
         $this->checkTokenAvailability();
         $this->loadAvailableBooks();
@@ -92,7 +93,7 @@ class BookQuizInterface extends Component
         }
     }
 
-    public function checkTokenAvailability()
+    public function checkTokenAvailability(): void
     {
         $user = auth()->user();
 
@@ -130,7 +131,7 @@ class BookQuizInterface extends Component
         $this->tokenWarningMessage = null;
     }
 
-    protected function loadAvailableBooks()
+    protected function loadAvailableBooks(): void
     {
         $user = Auth::user();
 
@@ -184,7 +185,7 @@ class BookQuizInterface extends Component
         $this->availableSubjects = AcademicSubject::orderBy('name')->get();
     }
 
-    protected function loadPreviousQuizzes()
+    protected function loadPreviousQuizzes(): void
     {
         $this->previousQuizzes = QuizSession::where('user_id', Auth::id())
             ->with(['book.author', 'book.bookCategory', 'subject']) // Load subject relationship
@@ -194,7 +195,7 @@ class BookQuizInterface extends Component
             ->get();
     }
 
-    public function updatedSelectedBookId()
+    public function updatedSelectedBookId(): void
     {
         if ($this->selectedBookId) {
             $this->selectedBook = Book::with(['author', 'bookCategory', 'subject'])->find($this->selectedBookId);
@@ -211,7 +212,7 @@ class BookQuizInterface extends Component
         }
     }
 
-    protected function loadBookChapters()
+    protected function loadBookChapters(): void
     {
         if (!$this->selectedBook || !$this->selectedBook->table_of_contents) {
             $this->bookChapters = [];
@@ -229,13 +230,13 @@ class BookQuizInterface extends Component
             });
     }
 
-    protected function resetPageRange()
+    protected function resetPageRange(): void
     {
         $this->pageStart = '';
         $this->pageEnd = '';
     }
 
-    public function updatedUploadedFile()
+    public function updatedUploadedFile(): void
     {
         $this->validateOnly('uploadedFile');
 
@@ -243,37 +244,80 @@ class BookQuizInterface extends Component
             try {
                 $extension = strtolower($this->uploadedFile->getClientOriginalExtension());
 
+                Log::info('File upload initiated', [
+                    'user_id' => Auth::id(),
+                    'file_name' => $this->uploadedFile->getClientOriginalName(),
+                    'extension' => $extension,
+                    'size' => $this->uploadedFile->getSize(),
+                    'mime_type' => $this->uploadedFile->getMimeType()
+                ]);
+
                 // Support multiple file types
                 if (!in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
                     $this->addError('uploadedFile', 'Unsupported file type. Please upload PDF, DOC, DOCX, or TXT files.');
                     return;
                 }
 
+                // Check file size (max 10MB)
+                if ($this->uploadedFile->getSize() > 10 * 1024 * 1024) {
+                    $this->addError('uploadedFile', 'File is too large. Maximum file size is 10MB.');
+                    return;
+                }
+
+                // Check if file is empty
+                if ($this->uploadedFile->getSize() === 0) {
+                    $this->addError('uploadedFile', 'The uploaded file is empty.');
+                    return;
+                }
+
                 // Extract content from uploaded file using the PDF extraction service
-                $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
-                    'preserve_layout' => false,
-                    'method' => 'auto'
-                ]);
+                try {
+                    $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                        'preserve_layout' => false,
+                        'method' => 'auto'
+                    ]);
+                } catch (InvalidArgumentException $e) {
+                    // Unsupported file type
+                    $this->addError('uploadedFile', $e->getMessage());
+                    return;
+                } catch (RuntimeException $e) {
+                    // Extraction failed
+                    $this->addError('uploadedFile', 'Unable to extract content: ' . $e->getMessage());
+                    Log::error('Content extraction runtime error', [
+                        'user_id' => Auth::id(),
+                        'file_name' => $this->uploadedFile->getClientOriginalName(),
+                        'error' => $e->getMessage()
+                    ]);
+                    return;
+                }
+
                 $this->fileName = $this->uploadedFile->getClientOriginalName();
 
                 if (empty($this->fileContent)) {
-                    $this->addError('uploadedFile', 'Failed to extract content from the uploaded file.');
+                    $this->addError('uploadedFile', 'No content could be extracted from the uploaded file. The file may be empty or corrupted.');
+                    Log::warning('Empty content extracted', [
+                        'user_id' => Auth::id(),
+                        'file_name' => $this->fileName
+                    ]);
+                    return;
                 }
 
                 Log::info('File content extracted successfully', [
                     'user_id' => Auth::id(),
                     'file_name' => $this->fileName,
-                    'content_length' => strlen($this->fileContent)
+                    'content_length' => strlen($this->fileContent),
+                    'preview' => substr($this->fileContent, 0, 200)
                 ]);
 
             } catch (Exception $e) {
-                Log::error('File content extraction failed', [
+                Log::error('File content extraction failed - unexpected error', [
                     'user_id' => Auth::id(),
-                    'file_name' => $this->uploadedFile->getClientOriginalName(),
-                    'error' => $e->getMessage()
+                    'file_name' => $this->uploadedFile->getClientOriginalName() ?? 'unknown',
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
 
-                $this->addError('uploadedFile', 'Unable to extract content from this file. Please ensure it is a valid document file.');
+                $this->addError('uploadedFile', 'An unexpected error occurred while processing the file. Please try again or use a different file.');
             }
         }
     }
@@ -294,7 +338,7 @@ class BookQuizInterface extends Component
         $this->showDetailedResultsModal = false;
     }
 
-    public function continueQuiz($quizSessionId)
+    public function continueQuiz($quizSessionId): void
     {
         $quizSession = QuizSession::where('user_id', Auth::id())
             ->where('id', $quizSessionId)
@@ -307,7 +351,7 @@ class BookQuizInterface extends Component
         }
     }
 
-    public function viewResults($quizSessionId)
+    public function viewResults($quizSessionId): void
     {
         $quizSession = QuizSession::where('user_id', Auth::id())
             ->where('id', $quizSessionId)
@@ -512,13 +556,13 @@ class BookQuizInterface extends Component
         return $suggestions;
     }
 
-    public function backToHistory()
+    public function backToHistory(): void
     {
         $this->activeTab = 'history';
         $this->quizResults = null;
     }
 
-    public function generateQuiz()
+    public function generateQuiz(): void
     {
         $this->checkTokenAvailability();
 
@@ -563,11 +607,34 @@ class BookQuizInterface extends Component
         try {
             $content = '';
 
-            // Extract content based on source
-            if ($this->selectedBookId) {
-                $content = $this->extractBookContent();
+            // FIX: Only extract book content if a book is actually selected
+            if ($this->selectedBookId && $this->selectedBook) {
+                try {
+                    $content = $this->extractBookContent();
+                } catch (Exception $e) {
+                    Log::error('Book content extraction failed', [
+                        'user_id' => Auth::id(),
+                        'book_id' => $this->selectedBookId,
+                        'error' => $e->getMessage()
+                    ]);
+
+                    // If extraction fails but we have uploaded content, use it as fallback
+                    if (!empty($this->fileContent)) {
+                        Log::info('Using uploaded file as fallback after book extraction failure');
+                        $content = $this->fileContent;
+                    } else {
+                        throw $e;
+                    }
+                }
             } else {
+                // Use uploaded file content
                 $content = $this->fileContent;
+
+                Log::info('Using uploaded file content for quiz generation', [
+                    'user_id' => Auth::id(),
+                    'file_name' => $this->fileName,
+                    'content_length' => strlen($content)
+                ]);
             }
 
             if (empty($content)) {
@@ -576,9 +643,10 @@ class BookQuizInterface extends Component
                 return;
             }
 
+            // FIX: Only set book_id if a book is actually selected
             $parameters = [
-                'book_id' => $this->selectedBookId,
-                'subject_id' => $this->selectedSubjectId, // Always include subject_id
+                'book_id' => $this->selectedBookId ?: null, // NULL for uploaded files
+                'subject_id' => $this->selectedSubjectId,
                 'chapter_id' => $this->selectedChapterId ?: null,
                 'page_start' => $this->pageStart ?: null,
                 'page_end' => $this->pageEnd ?: null,
@@ -591,6 +659,7 @@ class BookQuizInterface extends Component
                 'file_content' => $this->fileContent ?: null,
                 'file_name' => $this->fileName ?: null,
                 'request_type' => 'quiz_generation',
+                'is_file_based' => empty($this->selectedBookId), // NEW: Flag for file-based quizzes
             ];
 
             // Only include book-related parameters if a book is selected
@@ -602,12 +671,32 @@ class BookQuizInterface extends Component
                     'themes' => $this->selectedBook->themes ?? [],
                     'difficulty_score' => $this->selectedBook->difficulty_score,
                 ]);
+            } else {
+                // For uploaded files, provide basic metadata
+                $parameters = array_merge($parameters, [
+                    'book_title' => $this->fileName ?: 'Uploaded Content',
+                    'author' => 'User Uploaded',
+                    'genre' => 'General',
+                    'themes' => [],
+                    'difficulty_score' => 5,
+                ]);
             }
+
+            // FIX: Pass NULL for book when using uploaded files
+            $bookForGeneration = $this->selectedBook ?: null;
+
+            Log::info('Generating quiz with parameters', [
+                'user_id' => Auth::id(),
+                'has_book' => !is_null($bookForGeneration),
+                'book_id' => $parameters['book_id'],
+                'is_file_based' => $parameters['is_file_based'],
+                'content_length' => strlen($content)
+            ]);
 
             // Generate adaptive quiz using the book learning service
             $quizData = $this->bookLearningService->generateAdaptiveQuiz(
                 Auth::user(),
-                $this->selectedBook,
+                $bookForGeneration, // Pass NULL when using uploaded files
                 $parameters
             );
 
@@ -648,7 +737,15 @@ class BookQuizInterface extends Component
                 // Create quiz session
                 $this->createQuizSession($quizData, $parameters);
                 $this->quizData = $quizData;
-                $this->dispatch('quiz-generated');
+                Log::debug('Quiz data set', [
+                    'has_quiz_data' => !empty($this->quizData),
+                    'question_count' => count($this->quizData['questions'] ?? []),
+                    'quiz_data_keys' => array_keys($this->quizData ?? [])
+                ]);
+                $this->dispatch('quiz-generated', [
+                    'questionCount' => count($quizData['questions'])
+                ]);
+                $this->dispatch('$refresh');
             } else {
                 $this->addError('generation', 'Failed to generate quiz questions. Please try again with different parameters.');
             }
@@ -668,7 +765,7 @@ class BookQuizInterface extends Component
         }
     }
 
-    public function getActualQuestionCount()
+    public function getActualQuestionCount(): int
     {
         if ($this->questionCount === 'custom') {
             // Validate custom value is within range
@@ -849,7 +946,7 @@ class BookQuizInterface extends Component
         return $context;
     }
 
-    public function submitQuizAnswers($answers, $timeTaken = null)
+    public function submitQuizAnswers($answers, $timeTaken = null): void
     {
         \Log::info('Quiz submission started', [
             'user_id' => Auth::id(),

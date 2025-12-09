@@ -7,9 +7,9 @@ use App\Models\QuizSession;
 use App\Models\ReadingAchievement;
 use App\Models\ReadingProgress;
 use App\Models\User;
-use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class BookBasedLearningService
 {
@@ -476,136 +476,154 @@ class BookBasedLearningService
     {
         $prompt = $this->buildAdaptiveQuizPrompt($book, $context, $user);
 
+        // FIX: More realistic token calculation
+        $questionCount = $context['question_count'] ?? 10;
+
+        // Token breakdown:
+        // - Each question with 4 options + explanation: ~200-250 tokens
+        // - Metadata/formatting: ~500 tokens
+        // - Safety buffer: 20%
+        $tokensPerQuestion = 5000;
+        $baseTokens = 500;
+        $requiredTokens = ($questionCount * $tokensPerQuestion) + $baseTokens;
+
+        // Add 20% safety buffer
+        $maxTokens = (int)($requiredTokens * 1.2);
+
+        // Ensure minimum and maximum bounds
+        $maxTokens = max(20000, min(160000, $maxTokens));
+
         $chatParameters = [
-            'message' => $prompt,
-            'age' => $user->age,
-            'academic_level' => $user->academic_level,
-            'subject' => 'language_arts',
-            'topics' => ['adaptive_learning', 'reading_comprehension'],
-            'learning_style' => $user->learning_style,
-            'response_format' => 'structured',
-            'difficulty' => $context['adaptive_difficulty'],
-            'creativity_level' => 1,
-            'response_length' => 2000
+            'input' => $prompt,
+            'request_type' => 'quiz_generation',
+            'creativity_level' => 0.7,
+            'response_length' => $maxTokens,
         ];
 
         $result = $this->chatService->chat($chatParameters);
 
         if (!$result['success']) {
-            throw new Exception('Failed to generate adaptive quiz: ' . $result['error']);
+            throw new RuntimeException('Failed to generate adaptive quiz: ' . ($result['error'] ?? 'Unknown error'));
         }
 
-        return $this->parseAdaptiveQuizResponse($result['content'][0]['text'], $context);
+        return $this->parseAdaptiveQuizResponse($result['content'], $context);
     }
+
 
     /**
      * Build enhanced adaptive quiz prompt with comprehensive context
      */
     protected function buildAdaptiveQuizPrompt(?Book $book, array $context, User $user): string
     {
+        $questionCount = $context['question_count'] ?? 10;
+
         $prompt = '';
         if (!empty($context['file_content'])) {
             $prompt = "Generate a quiz based on the following content:\n\n";
-            // Limit content to prevent token overflow
             $prompt .= substr($context['file_content'], 0, 3000) . "\n\n";
             $prompt .= "CONTENT DETAILS:\n";
-
             if (!empty($context['file_name'])) {
                 $prompt .= "- File Name: {$context['file_name']}\n";
             }
         } else if ($book !== null && isset($book->id)) {
-
             $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
-
             $prompt .= "BOOK DETAILS:\n";
             $prompt .= "- Title: {$book->title}\n";
-            $prompt .= "- Author: {$book->author}\n";
+            $prompt .= "- Author: {$book->author_name}\n";
             $prompt .= "- Genre: {$book->genre}\n";
             $prompt .= "- Difficulty Score: {$book->difficulty_score}/10\n";
-            $prompt .= "- Estimated Reading Time: {$book->estimated_reading_time} hours\n";
-            if (!empty($book->themes)) {
-                $prompt .= "- Themes: " . implode(', ', $book->themes) . "\n";
-            }
         }
 
         $prompt .= "\nUSER PROFILE:\n";
         $prompt .= "- Age: {$user->age}\n";
         $prompt .= "- Academic Level: {$user->academic_level}\n";
-        $prompt .= "- Learning Style: {$user->learning_style}\n";
-        $prompt .= "- Reading Level: " . $this->determineUserReadingLevel($user) . "/10\n";
-
-        $prompt .= "\nADAPTATION CONTEXT:\n";
-        $prompt .= "- Requested Difficulty: {$context['difficulty']}\n";
-        $prompt .= "- Adaptive Difficulty: {$context['adaptive_difficulty']}\n";
-
-        if (!empty($context['weak_concepts'])) {
-            $prompt .= "- Focus on weak areas: " . implode(', ', $context['weak_concepts']) . "\n";
-        }
-
-        if (!empty($context['focus_areas'])) {
-            $prompt .= "- Problem areas from previous quizzes:\n";
-            foreach ($context['focus_areas'] as $area) {
-                $prompt .= "  * {$area['title']} (avg score: {$area['average_score']}%)\n";
-            }
-        }
-
-        if (!empty($context['focus_topics'])) {
-            $prompt .= "- Focus Topics: " . implode(', ', $context['focus_topics']) . "\n";
-        }
-
-        $prompt .= "\nPERFORMANCE HISTORY:\n";
-        if (!empty($context['user_performance_history'])) {
-            $recentQuizzes = array_slice($context['user_performance_history'], -3);
-            foreach ($recentQuizzes as $quiz) {
-                $prompt .= "- {$quiz['date']}: {$quiz['score']}% ({$quiz['question_count']} questions)\n";
-            }
-        } else {
-            $prompt .= "- No previous performance data available\n";
-        }
 
         $prompt .= "\nQUIZ REQUIREMENTS:\n";
-        $prompt .= "- Generate EXACTLY {$context['question_count']} questions\n";
-        $prompt .= "- Question type: {$context['question_type']}\n";
-        $prompt .= "- Adapt question complexity based on user's weak areas\n";
-        $prompt .= "- Include scaffolding questions if user is struggling\n";
-        $prompt .= "- Provide detailed explanations for learning\n";
-        $prompt .= "- Randomize options so that the correct answer is not always the first option\n";
-        $prompt .= "- Do not make the correct answer too obvious\n";
+        // CRITICAL: Make this EXTREMELY clear
+        $prompt .= "⚠️ CRITICAL: You MUST generate EXACTLY {$questionCount} complete questions.\n";
+        $prompt .= "⚠️ CRITICAL: Each question MUST have ALL required fields.\n";
+        $prompt .= "⚠️ DO NOT stop generating until all {$questionCount} questions are complete.\n\n";
+
+        $prompt .= "- Total Questions Required: {$questionCount}\n";
+        $prompt .= "- Question Type: {$context['question_type']}\n";
+        $prompt .= "- Difficulty: {$context['difficulty']}\n";
 
         if ($context['include_quotes'] ?? false) {
-            $prompt .= "- Include relevant book quotes in questions where appropriate\n";
+            $prompt .= "- Include relevant quotes where appropriate\n";
         }
 
-        $prompt .= "\nCRITICAL - OUTPUT FORMAT:\n";
-        $prompt .= "You MUST respond with VALID JSON ONLY. No additional text before or after.\n";
-        $prompt .= "Return a JSON object with this EXACT structure:\n\n";
-        $prompt .= "```json\n";
+        // CRITICAL: Simplify the JSON structure requirement
+        $prompt .= "\n=== RESPONSE FORMAT (JSON ONLY) ===\n";
+        $prompt .= "Return ONLY valid JSON with this EXACT structure:\n\n";
         $prompt .= "{\n";
-        $prompt .= "  \"quiz_session\": {\n";
-        $prompt .= "    \"book_title\": \"Book Title\",\n";
-        $prompt .= "    \"author\": \"Author Name\",\n";
-        $prompt .= "    \"context\": \"Quiz context description\"\n";
+        $prompt .= '  "quiz_session": {' . "\n";
+        $prompt .= '    "book_title": "string",' . "\n";
+        $prompt .= '    "author": "string",' . "\n";
+        $prompt .= '    "context": "string"' . "\n";
         $prompt .= "  },\n";
-        $prompt .= "  \"questions\": [\n";
-        $prompt .= "    {\n";
-        $prompt .= "      \"question\": \"Full question text here?\",\n";
-        $prompt .= "      \"type\": \"multiple_choice\",\n";
-        $prompt .= "      \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n";
-        $prompt .= "      \"correct_answer\": \"Option B\",\n";
-        $prompt .= "      \"explanation\": \"Detailed explanation of why this is correct\",\n";
-        $prompt .= "      \"difficulty\": \"medium\",\n";
-        $prompt .= "      \"points\": 1,\n";
-        $prompt .= "      \"learning_objective\": \"What this question tests\"\n";
-        $prompt .= "    }\n";
+        $prompt .= '  "questions": [' . "\n";
+
+        // Show example for EACH question type
+        if ($context['question_type'] === 'multiple_choice' || $context['question_type'] === 'mixed') {
+            $prompt .= "    // Question 1 example:\n";
+            $prompt .= "    {\n";
+            $prompt .= '      "question": "What is the primary focus of the book?",' . "\n";
+            $prompt .= '      "type": "multiple_choice",' . "\n";
+            $prompt .= '      "options": ["Option A", "Option B", "Option C", "Option D"],' . "\n";
+            $prompt .= '      "correct_answer": "Option B",' . "\n";
+            $prompt .= '      "explanation": "Explanation here",' . "\n";
+            $prompt .= '      "difficulty": "medium",' . "\n";
+            $prompt .= '      "points": 1' . "\n";
+            $prompt .= "    },\n";
+        }
+
+        if ($context['question_type'] === 'true_false' || $context['question_type'] === 'mixed') {
+            $prompt .= "    // Question 2 example:\n";
+            $prompt .= "    {\n";
+            $prompt .= '      "question": "The author emphasizes public interaction?",' . "\n";
+            $prompt .= '      "type": "true_false",' . "\n";
+            $prompt .= '      "options": ["True", "False"],' . "\n";
+            $prompt .= '      "correct_answer": "True",' . "\n";
+            $prompt .= '      "explanation": "Explanation here",' . "\n";
+            $prompt .= '      "difficulty": "easy",' . "\n";
+            $prompt .= '      "points": 1' . "\n";
+            $prompt .= "    },\n";
+        }
+
+        // FIX: Add essay question example with proper structure
+        if ($context['question_type'] === 'essay' || $context['question_type'] === 'mixed') {
+            $prompt .= "    // Essay Question example:\n";
+            $prompt .= "    {\n";
+            $prompt .= '      "question": "Discuss the main themes presented in the book. How do they relate to modern society?",' . "\n";
+            $prompt .= '      "type": "essay",' . "\n";
+            $prompt .= '      "correct_answer": "The expected answer should discuss themes such as identity, social justice, and human connection. Students should provide specific examples from the text and relate them to contemporary issues.",' . "\n";
+            $prompt .= '      "explanation": "A strong essay answer will identify key themes, provide textual evidence, and make meaningful connections to current events or personal experiences.",' . "\n";
+            $prompt .= '      "difficulty": "hard",' . "\n";
+            $prompt .= '      "points": 3' . "\n";
+            $prompt .= "    },\n";
+        }
+
+        $prompt .= "    // ... continue for ALL {$questionCount} questions\n";
         $prompt .= "  ]\n";
-        $prompt .= "}\n";
-        $prompt .= "```\n\n";
-        $prompt .= "IMPORTANT: \n";
-        $prompt .= "- Generate {$context['question_count']} questions in the questions array\n";
-        $prompt .= "- For true_false questions, options should be [\"True\", \"False\"]\n";
-        $prompt .= "- For essay questions, omit the options field and correct_answer can be a detailed expected answer\n";
-        $prompt .= "- Ensure all JSON is properly formatted with correct commas and brackets\n";
-        $prompt .= "- Do NOT include any text outside the JSON structure\n";
+        $prompt .= "}\n\n";
+
+        $prompt .= "IMPORTANT GENERATION RULES:\n";
+        $prompt .= "1. Generate ALL {$questionCount} questions - do not stop early\n";
+        $prompt .= "2. Each question MUST be complete with all fields\n";
+        $prompt .= "3. Number your questions mentally (1 through {$questionCount})\n";
+        $prompt .= "4. For multiple_choice: provide exactly 4 options\n";
+        $prompt .= "5. For true_false: options are [\"True\", \"False\"]\n";
+        // FIX: Add clear instruction for essay questions
+        $prompt .= "6. For essay questions:\n";
+        $prompt .= "   - 'question' field contains the actual question prompt\n";
+        $prompt .= "   - 'correct_answer' field contains the expected/model answer\n";
+        $prompt .= "   - Do NOT include 'options' field\n";
+        $prompt .= "   - Set 'points' to 2-5 based on complexity\n";
+        $prompt .= "7. Do NOT include markdown (no ```json)\n";
+        $prompt .= "8. Do NOT include any text before or after the JSON\n";
+        $prompt .= "9. Start with { and end with }\n\n";
+
+        $prompt .= "BEGIN GENERATION NOW. Generate all {$questionCount} questions:\n";
 
         return $prompt;
     }
@@ -613,129 +631,128 @@ class BookBasedLearningService
     /**
      * Parse adaptive quiz response with enhanced error handling
      */
+
     protected function parseAdaptiveQuizResponse(string $content, array $context): array
     {
-        Log::info('Parsing quiz response', [
-            'content_length' => strlen($content),
-            'content_preview' => substr($content, 0, 200)
-        ]);
+        // Simply try to decode the entire content as JSON
+        $parsed = json_decode($content, true);
 
-        // Try to extract JSON from the response - look for both { and [ starts
-        $jsonStart = strpos($content, '{');
-        $arrayStart = strpos($content, '[');
-
-        // Determine which comes first
-        if ($jsonStart === false && $arrayStart === false) {
-            Log::error('No JSON found in response', ['content' => $content]);
-            return $this->parseQuizManually($content, $context);
+        // If successful and has the structure we need, return it
+        if (json_last_error() === JSON_ERROR_NONE && is_array($parsed)) {
+            return $this->validateAndReturnQuizStructure($parsed, $context);
         }
 
-        $start = $jsonStart;
-        if ($arrayStart !== false && ($jsonStart === false || $arrayStart < $jsonStart)) {
-            $start = $arrayStart;
-            $endChar = ']';
-            $startChar = '[';
-        } else {
-            $endChar = '}';
-            $startChar = '{';
-        }
+        // If direct decode fails, try to find and extract JSON
+        $jsonString = $this->extractJsonString($content);
 
-        // Find matching closing bracket/brace
-        $jsonEnd = $this->findMatchingBracket($content, $start, $startChar, $endChar);
-
-        if ($jsonEnd === false) {
-            Log::error('No matching closing bracket found');
-            return $this->parseQuizManually($content, $context);
-        }
-
-        $jsonString = substr($content, $start, $jsonEnd - $start + 1);
-
-        Log::info('Extracted JSON string', [
-            'json_length' => strlen($jsonString),
-            'json_preview' => substr($jsonString, 0, 500)
-        ]);
-
-        try {
+        if ($jsonString) {
             $parsed = json_decode($jsonString, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::error('JSON decode error', [
-                    'error' => json_last_error_msg(),
-                    'json' => substr($jsonString, 0, 1000)
-                ]);
-                return $this->parseQuizManually($content, $context);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($parsed)) {
+                return $this->validateAndReturnQuizStructure($parsed, $context);
             }
-
-            // Handle different response structures
-            if (is_array($parsed)) {
-                // Check if questions are at root level (array of questions)
-                if (isset($parsed[0]) && is_array($parsed[0]) && isset($parsed[0]['question'])) {
-                    Log::info('Found questions at root level', ['count' => count($parsed)]);
-
-                    // FIX: Normalize question structure
-                    $normalizedQuestions = $this->normalizeQuestions($parsed);
-
-                    return [
-                        'quiz_session' => [
-                            'book_title' => $context['book_title'] ?? 'Quiz',
-                            'author' => $context['author'] ?? 'Unknown',
-                            'context' => 'Generated quiz'
-                        ],
-                        'questions' => $normalizedQuestions,
-                        'adaptive_features' => [
-                            'difficulty_adjusted' => $context['adaptive_difficulty'],
-                            'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                            'scaffolding_included' => true
-                        ],
-                        'metadata' => [
-                            'generation_type' => 'adaptive',
-                            'user_level' => $context['user_level'] ?? 'intermediate'
-                        ]
-                    ];
-                }
-
-                // Check if questions are nested
-                if (isset($parsed['questions']) && is_array($parsed['questions'])) {
-                    Log::info('Found nested questions', ['count' => count($parsed['questions'])]);
-
-                    // FIX: Normalize question structure
-                    $normalizedQuestions = $this->normalizeQuestions($parsed['questions']);
-
-                    return [
-                        'quiz_session' => $parsed['quiz_session'] ?? [
-                                'book_title' => $context['book_title'] ?? 'Quiz',
-                                'author' => $context['author'] ?? 'Unknown',
-                                'context' => 'Generated quiz'
-                            ],
-                        'questions' => $normalizedQuestions,
-                        'adaptive_features' => [
-                            'difficulty_adjusted' => $context['adaptive_difficulty'],
-                            'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                            'scaffolding_included' => true
-                        ],
-                        'metadata' => [
-                            'generation_type' => 'adaptive',
-                            'user_level' => $context['user_level'] ?? 'intermediate'
-                        ]
-                    ];
-                }
-            }
-
-            Log::warning('Parsed JSON but no questions found', [
-                'parsed_keys' => array_keys($parsed),
-                'structure' => json_encode(array_keys($parsed))
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Failed to parse quiz JSON', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
         }
+
+        Log::error('Failed to parse quiz response', [
+            'json_error' => json_last_error_msg(),
+            'content_preview' => substr($content, 0, 500)
+        ]);
 
         return $this->parseQuizManually($content, $context);
     }
 
+    /**
+     * Validate and return quiz structure in the expected format
+     */
+    protected function validateAndReturnQuizStructure(array $parsed, array $context): array
+    {
+        // CASE 1: Already has the complete structure with quiz_session and questions
+        if (isset($parsed['quiz_session']) && isset($parsed['questions']) && is_array($parsed['questions'])) {
+            Log::info('Found complete quiz structure', [
+                'has_quiz_session' => true,
+                'question_count' => count($parsed['questions'])
+            ]);
+
+            return [
+                'quiz_session' => $parsed['quiz_session'],
+                'questions' => $this->normalizeQuestions($parsed['questions']),
+                'adaptive_features' => $parsed['adaptive_features'] ?? [
+                        'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
+                        'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                        'scaffolding_included' => true
+                    ],
+                'metadata' => $parsed['metadata'] ?? [
+                        'generation_type' => 'adaptive',
+                        'user_level' => $context['user_level'] ?? 'intermediate',
+                        'questions_generated' => count($parsed['questions']),
+                        'questions_requested' => $context['question_count'] ?? 10
+                    ]
+            ];
+        }
+
+        // CASE 2: Has nested questions array
+        if (isset($parsed['questions']) && is_array($parsed['questions'])) {
+            Log::info('Found nested questions array', [
+                'question_count' => count($parsed['questions'])
+            ]);
+
+            return [
+                'quiz_session' => [
+                    'book_title' => $context['book_title'] ?? 'Quiz',
+                    'author' => $context['author'] ?? 'Unknown',
+                    'context' => 'Generated quiz'
+                ],
+                'questions' => $this->normalizeQuestions($parsed['questions']),
+                'adaptive_features' => [
+                    'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
+                    'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                    'scaffolding_included' => true
+                ],
+                'metadata' => [
+                    'generation_type' => 'adaptive',
+                    'user_level' => $context['user_level'] ?? 'intermediate',
+                    'questions_generated' => count($parsed['questions']),
+                    'questions_requested' => $context['question_count'] ?? 10
+                ]
+            ];
+        }
+
+        // CASE 3: Questions at root level (array of questions)
+        if (isset($parsed[0]) && is_array($parsed[0]) && isset($parsed[0]['question'])) {
+            Log::info('Found questions at root level', [
+                'question_count' => count($parsed)
+            ]);
+
+            return [
+                'quiz_session' => [
+                    'book_title' => $context['book_title'] ?? 'Quiz',
+                    'author' => $context['author'] ?? 'Unknown',
+                    'context' => 'Generated quiz'
+                ],
+                'questions' => $this->normalizeQuestions($parsed),
+                'adaptive_features' => [
+                    'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
+                    'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                    'scaffolding_included' => true
+                ],
+                'metadata' => [
+                    'generation_type' => 'adaptive',
+                    'user_level' => $context['user_level'] ?? 'intermediate',
+                    'questions_generated' => count($parsed),
+                    'questions_requested' => $context['question_count'] ?? 10
+                ]
+            ];
+        }
+
+        Log::warning('Parsed JSON but structure not recognized', [
+            'keys' => array_keys($parsed),
+            'is_array' => is_array($parsed),
+            'count' => count($parsed)
+        ]);
+
+        // Fall back to manual parsing
+        return $this->parseQuizManually(json_encode($parsed), $context);
+    }
 
     /**
      * Normalize questions to ensure proper structure for all question types
@@ -794,11 +811,36 @@ class BookBasedLearningService
                     // Essay questions should NOT have options
                     $normalizedQuestion['type'] = 'essay';
 
+                    // FIX: Ensure question text is not empty
+                    if (empty($normalizedQuestion['question'])) {
+                        // Try to extract from other fields if question is missing
+                        $normalizedQuestion['question'] = $question['prompt']
+                            ?? $question['essay_prompt']
+                            ?? $question['text']
+                            ?? 'Please provide your answer to this question.';
+
+                        Log::warning('Essay question missing question text, using fallback', [
+                            'original_keys' => array_keys($question),
+                            'fallback_used' => $normalizedQuestion['question']
+                        ]);
+                    }
+
                     // Correct answer is the expected/model answer
                     $normalizedQuestion['correct_answer'] = $question['correct_answer'] ?? $question['answer'] ?? '';
 
+                    // Ensure essay questions have higher point values
+                    if ($normalizedQuestion['points'] < 2) {
+                        $normalizedQuestion['points'] = 3;
+                    }
+
                     // Remove options if they exist
                     unset($normalizedQuestion['options']);
+
+                    Log::debug('Normalized essay question', [
+                        'has_question' => !empty($normalizedQuestion['question']),
+                        'question_length' => strlen($normalizedQuestion['question']),
+                        'has_answer' => !empty($normalizedQuestion['correct_answer'])
+                    ]);
                     break;
 
                 default:
@@ -835,31 +877,6 @@ class BookBasedLearningService
         }
 
         return $options;
-    }
-
-    /**
-     * Find matching closing bracket for a given opening bracket
-     */
-    protected function findMatchingBracket(string $content, int $start, string $openChar, string $closeChar): int|false
-    {
-        $depth = 0;
-        $length = strlen($content);
-
-        for ($i = $start; $i < $length; $i++) {
-            $char = $content[$i];
-
-            if ($char === $openChar) {
-                $depth++;
-            } elseif ($char === $closeChar) {
-                $depth--;
-
-                if ($depth === 0) {
-                    return $i;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -927,6 +944,26 @@ class BookBasedLearningService
                 'parsing_method' => 'manual'
             ]
         ];
+    }
+
+    /**
+     * Extract JSON string from content using simple pattern matching
+     */
+    protected function extractJsonString(string $content): ?string
+    {
+        // Remove any markdown code blocks
+        $content = preg_replace('/```(?:json)?\s*/', '', $content);
+        $content = trim($content);
+
+        // Find first { and last }
+        $firstBrace = strpos($content, '{');
+        $lastBrace = strrpos($content, '}');
+
+        if ($firstBrace === false || $lastBrace === false || $lastBrace <= $firstBrace) {
+            return null;
+        }
+
+        return substr($content, $firstBrace, $lastBrace - $firstBrace + 1);
     }
 
     /**
@@ -1385,7 +1422,6 @@ class BookBasedLearningService
         return $suggestions;
     }
 
-
     /**
      * Generate quiz based on book context with graceful error handling
      */
@@ -1406,7 +1442,7 @@ class BookBasedLearningService
         if (isset($parameters['book_id'])) {
             if (!$book) {
                 // Try to load the book if not provided
-                $book = \App\Models\Book::with(['chapters', 'sections', 'author'])->find($parameters['book_id']);
+                $book = Book::with(['chapters', 'sections', 'author'])->find($parameters['book_id']);
             }
 
             if (!$book) {
@@ -1511,6 +1547,29 @@ class BookBasedLearningService
     }
 
     /**
+     * Build quiz prompt from uploaded file
+     */
+    protected function buildQuizPromptFromFile(array $parameters): string
+    {
+        $prompt = "Generate a {$parameters['difficulty']} difficulty quiz with {$parameters['question_count']} questions ";
+        $prompt .= "of type {$parameters['question_type']} based on the following content:\n\n";
+
+        if (!empty($parameters['file_name'])) {
+            $prompt .= "Source: {$parameters['file_name']}\n\n";
+        }
+
+        $prompt .= "Content:\n{$parameters['file_content']}\n\n";
+
+        if (!empty($parameters['focus_topics'])) {
+            $prompt .= "Focus on these topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+        }
+
+        $prompt .= "\nGenerate questions that test comprehension and understanding of the material.";
+
+        return $prompt;
+    }
+
+    /**
      * Build quiz prompt from book context
      */
     protected function buildQuizPromptFromBook(Book $book, array $parameters): string
@@ -1548,29 +1607,87 @@ class BookBasedLearningService
     }
 
     /**
-     * Build quiz prompt from uploaded file
+     * Try to repair truncated JSON by adding missing closing brackets
      */
-    protected function buildQuizPromptFromFile(array $parameters): string
+    protected function tryRepairTruncatedJson(string $content, int $start, string $startChar, string $endChar): string|false
     {
-        $prompt = "Generate a {$parameters['difficulty']} difficulty quiz with {$parameters['question_count']} questions ";
-        $prompt .= "of type {$parameters['question_type']} based on the following content:\n\n";
+        $depth = 0;
+        $length = strlen($content);
+        $inString = false;
+        $escapeNext = false;
 
-        if (!empty($parameters['file_name'])) {
-            $prompt .= "Source: {$parameters['file_name']}\n\n";
+        // Count the bracket depth
+        for ($i = $start; $i < $length; $i++) {
+            $char = $content[$i];
+
+            if ($escapeNext) {
+                $escapeNext = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $escapeNext = true;
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = !$inString;
+                continue;
+            }
+
+            if (!$inString) {
+                if ($char === $startChar) {
+                    $depth++;
+                } elseif ($char === $endChar) {
+                    $depth--;
+                }
+            }
         }
 
-        $prompt .= "Content:\n{$parameters['file_content']}\n\n";
+        // If we have unclosed brackets, try to close them
+        if ($depth > 0) {
+            Log::info('Attempting to repair JSON', ['unclosed_brackets' => $depth]);
 
-        if (!empty($parameters['focus_topics'])) {
-            $prompt .= "Focus on these topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+            // Remove any trailing incomplete JSON elements
+            $content = rtrim($content);
+
+            // Remove trailing commas
+            if (substr($content, -1) === ',') {
+                $content = substr($content, 0, -1);
+            }
+
+            // Add missing closing brackets
+            $closingBrackets = str_repeat($endChar, $depth);
+            return $content . $closingBrackets;
         }
 
-        $prompt .= "\nGenerate questions that test comprehension and understanding of the material.";
-
-        return $prompt;
+        return false;
     }
 
+    /**
+     * Find matching closing bracket for a given opening bracket
+     */
+    protected function findMatchingBracket(string $content, int $start, string $openChar, string $closeChar): int|false
+    {
+        $depth = 0;
+        $length = strlen($content);
 
+        for ($i = $start; $i < $length; $i++) {
+            $char = $content[$i];
+
+            if ($char === $openChar) {
+                $depth++;
+            } elseif ($char === $closeChar) {
+                $depth--;
+
+                if ($depth === 0) {
+                    return $i;
+                }
+            }
+        }
+
+        return false;
+    }
 
 
     /**

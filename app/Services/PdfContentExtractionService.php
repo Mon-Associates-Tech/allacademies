@@ -18,6 +18,7 @@ class PdfContentExtractionService
      * @param string $filePath Full path to the PDF file
      * @param array $options Extraction options
      * @return string Extracted text content
+     * @throws \Exception
      */
     public function extractText(string $filePath, array $options = []): string
     {
@@ -40,6 +41,7 @@ class PdfContentExtractionService
      * @param array $options Extraction options
      * @return string Extracted text content
      * @throws MissingCatalogException
+     * @throws \Exception
      */
     public function extractPageRange(string $filePath, int $pageStart, int $pageEnd, array $options = []): string
     {
@@ -72,6 +74,7 @@ class PdfContentExtractionService
      * @param array $options Extraction options
      * @return array Array of page numbers => text content
      * @throws MissingCatalogException
+     * @throws \Exception
      */
     public function extractPages(string $filePath, array $pageNumbers, array $options = []): array
     {
@@ -108,6 +111,7 @@ class PdfContentExtractionService
      * @param string $filePath Full path to the PDF file
      * @return int Total number of pages
      * @throws MissingCatalogException
+     * @throws \Exception
      */
     public function getPageCount(string $filePath): int
     {
@@ -229,29 +233,60 @@ class PdfContentExtractionService
      */
     protected function extractWithFallback(string $filePath, array $options = []): string
     {
+        $errors = [];
+
         // Try pdftotext first (usually faster and more accurate)
         if ($this->isPdfToTextAvailable()) {
             try {
-                return $this->extractUsingPdfToText($filePath, $options);
+                Log::info('Attempting PDF extraction with pdftotext', ['file' => $filePath]);
+                $content = $this->extractUsingPdfToText($filePath, $options);
+
+                if (!empty(trim($content))) {
+                    return $content;
+                }
+
+                Log::warning('pdftotext returned empty content', ['file' => $filePath]);
+                $errors[] = 'pdftotext: returned empty content';
             } catch (\Exception $e) {
-                Log::warning("pdftotext extraction failed, falling back to parser", [
+                Log::warning("pdftotext extraction failed", [
+                    'file' => $filePath,
                     'error' => $e->getMessage()
                 ]);
+                $errors[] = 'pdftotext: ' . $e->getMessage();
             }
+        } else {
+            Log::info('pdftotext not available, skipping to parser method');
+            $errors[] = 'pdftotext: command not available';
         }
 
         // Fallback to parser
         try {
-            return $this->extractUsingParser($filePath, $options);
+            Log::info('Attempting PDF extraction with Smalot parser', ['file' => $filePath]);
+            $content = $this->extractUsingParser($filePath, $options);
+
+            if (!empty(trim($content))) {
+                return $content;
+            }
+
+            Log::warning('Parser returned empty content', ['file' => $filePath]);
+            $errors[] = 'parser: returned empty content';
         } catch (\Exception $e) {
-            Log::error("PDF text extraction failed", [
+            Log::error("PDF parser extraction failed", [
                 'file' => $filePath,
                 'error' => $e->getMessage()
             ]);
-            return '';
+            $errors[] = 'parser: ' . $e->getMessage();
         }
-    }
 
+        // If both methods failed, throw exception with details
+        $errorMessage = "All PDF extraction methods failed:\n" . implode("\n", $errors);
+        Log::error('PDF text extraction completely failed', [
+            'file' => $filePath,
+            'errors' => $errors
+        ]);
+
+        throw new \RuntimeException($errorMessage);
+    }
     /**
      * Clean extracted text
      *
@@ -347,14 +382,70 @@ class PdfContentExtractionService
         $extension = strtolower($file->getClientOriginalExtension());
         $tmpPath = $file->getRealPath();
 
-        return match($extension) {
-            'pdf' => $this->extractText($tmpPath, $options),
-            'txt' => file_get_contents($tmpPath),
-            'doc', 'docx' => $this->extractFromDocx($tmpPath),
-            default => throw new \InvalidArgumentException("Unsupported file type: {$extension}")
-        };
-    }
+        // Log for debugging
+        Log::info('Extracting content from uploaded file', [
+            'extension' => $extension,
+            'file_name' => $file->getClientOriginalName(),
+            'file_size' => $file->getSize(),
+            'tmp_path' => $tmpPath,
+            'file_exists' => file_exists($tmpPath),
+            'mime_type' => $file->getMimeType()
+        ]);
 
+        // Validate file exists
+        if (!file_exists($tmpPath)) {
+            throw new \RuntimeException("Temporary file not found: {$tmpPath}");
+        }
+
+        // Validate file is readable
+        if (!is_readable($tmpPath)) {
+            throw new \RuntimeException("Temporary file is not readable: {$tmpPath}");
+        }
+
+        // Validate file size
+        if ($file->getSize() === 0) {
+            throw new \RuntimeException("Uploaded file is empty");
+        }
+
+        try {
+            $content = match($extension) {
+                'pdf' => $this->extractText($tmpPath, $options),
+                'txt' => file_get_contents($tmpPath),
+                'doc', 'docx' => $this->extractFromDocx($tmpPath),
+                default => throw new \InvalidArgumentException("Unsupported file type: {$extension}")
+            };
+
+            // Validate extracted content
+            if (empty(trim($content))) {
+                throw new \RuntimeException("No content could be extracted from the file. The file may be empty, corrupted, or password-protected.");
+            }
+
+            Log::info('Content extracted successfully', [
+                'file_name' => $file->getClientOriginalName(),
+                'content_length' => strlen($content),
+                'preview' => substr($content, 0, 200)
+            ]);
+
+            return $content;
+
+        } catch (\InvalidArgumentException $e) {
+            // Re-throw invalid argument exceptions
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('File content extraction failed', [
+                'file_name' => $file->getClientOriginalName(),
+                'extension' => $extension,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw new \RuntimeException(
+                "Failed to extract content from {$extension} file: " . $e->getMessage(),
+                0,
+                $e
+            );
+        }
+    }
     /**
      * Extract text from DOCX files
      *
