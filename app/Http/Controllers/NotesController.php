@@ -6,22 +6,160 @@ use App\Models\Note;
 use App\Models\Book;
 use App\Models\AcademicSubject;
 use App\Models\User;
+use App\Services\NoteShareService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotesController extends Controller
 {
-    public function index()
-    {
-        $notes = Note::where('user_id', Auth::id())
-            ->orWhereHas('shares', function ($query) {
-                $query->where('shared_with_user_id', Auth::id());
-            })
-            ->with(['book', 'academicSubject', 'user'])
-            ->latest()
-            ->paginate(10);
+    public function __construct(
+        protected NoteShareService $shareService
+    ) {}
 
-        return view('notes.index', compact('notes'));
+    public function index(Request $request)
+    {
+        $query = Note::query();
+
+        // Base query - user's own notes or shared notes
+        $query->where(function ($q) {
+            $q->where('user_id', Auth::id())
+                ->orWhereHas('shares', function ($shareQuery) {
+                    $shareQuery->where('shared_with_user_id', Auth::id());
+                });
+        });
+
+        // Filter by ownership type
+        if ($request->filled('ownership')) {
+            if ($request->ownership === 'my_notes') {
+                $query->where('user_id', Auth::id());
+            } elseif ($request->ownership === 'shared_with_me') {
+                $query->where('user_id', '!=', Auth::id())
+                    ->whereHas('shares', function ($q) {
+                        $q->where('shared_with_user_id', Auth::id());
+                    });
+            }
+        }
+
+        // Filter by book
+        if ($request->filled('book_id')) {
+            $query->where('book_id', $request->book_id);
+        }
+
+        // Filter by academic subject
+        if ($request->filled('subject_id')) {
+            $query->where('academic_subject_id', $request->subject_id);
+        }
+
+        // Filter by visibility
+        if ($request->filled('visibility')) {
+            if ($request->visibility === 'public') {
+                $query->where('is_public', true);
+            } elseif ($request->visibility === 'private') {
+                $query->where('is_public', false);
+            }
+        }
+
+        // Search by title or content
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                    ->orWhere('content', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        switch ($sortBy) {
+            case 'title':
+                $query->orderBy('title', $sortOrder);
+                break;
+            case 'updated_at':
+                $query->orderBy('updated_at', $sortOrder);
+                break;
+            default:
+                $query->orderBy('created_at', $sortOrder);
+        }
+
+        // Eager load relationships
+        $query->with(['book', 'academicSubject', 'user', 'shares']);
+
+        // Paginate with 12 items per page
+        $notes = $query->paginate(12)->appends($request->query());
+
+        // Get filter options
+        $books = Book::whereHas('notes', function ($q) {
+            $q->where('user_id', Auth::id())
+                ->orWhereHas('shares', function ($shareQuery) {
+                    $shareQuery->where('shared_with_user_id', Auth::id());
+                });
+        })->orderBy('title')->get();
+
+        $subjects = AcademicSubject::whereHas('notes', function ($q) {
+            $q->where('user_id', Auth::id())
+                ->orWhereHas('shares', function ($shareQuery) {
+                    $shareQuery->where('shared_with_user_id', Auth::id());
+                });
+        })->orderBy('name')->get();
+
+        // Get active filters for display
+        $activeFilters = $this->getActiveFilters($request);
+
+        return view('notes.index', compact('notes', 'books', 'subjects', 'activeFilters'));
+    }
+
+    private function getActiveFilters(Request $request): array
+    {
+        $filters = [];
+
+        if ($request->filled('search')) {
+            $filters['search'] = $request->search;
+        }
+
+        if ($request->filled('ownership')) {
+            $filters['ownership'] = $request->ownership === 'my_notes' ? 'My Notes' : 'Shared with Me';
+        }
+
+        if ($request->filled('book_id')) {
+            $book = Book::find($request->book_id);
+            if ($book) {
+                $filters['book'] = $book->title;
+            }
+        }
+
+        if ($request->filled('subject_id')) {
+            $subject = AcademicSubject::find($request->subject_id);
+            if ($subject) {
+                $filters['subject'] = $subject->name;
+            }
+        }
+
+        if ($request->filled('visibility')) {
+            $filters['visibility'] = ucfirst($request->visibility);
+        }
+
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $dateRange = '';
+            if ($request->filled('date_from')) {
+                $dateRange .= date('M d, Y', strtotime($request->date_from));
+            }
+            if ($request->filled('date_to')) {
+                $dateRange .= ' - ' . date('M d, Y', strtotime($request->date_to));
+            }
+            $filters['date_range'] = $dateRange;
+        }
+
+        return $filters;
     }
 
     public function create()
@@ -118,25 +256,36 @@ class NotesController extends Controller
         }
 
         $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide',
+            'recipient_ids' => 'required|array|min:1',
+            'recipient_ids.*' => 'required|integer',
             'can_edit' => 'boolean'
         ]);
 
-        $note->shares()->updateOrCreate(
-            ['shared_with_user_id' => $request->user_id],
-            ['can_edit' => $request->boolean('can_edit')]
+        $result = $this->shareService->shareNote(
+            $note,
+            $request->share_type,
+            $request->recipient_ids,
+            $request->boolean('can_edit')
         );
 
-        return back()->with('success', 'Note shared successfully.');
+        return back()->with('success', "Note shared with {$result['users_notified']} " .
+            \Str::plural('recipient', $result['users_notified']) . " successfully.");
     }
 
-    public function unshare(Note $note, User $user)
+    public function unshare(Note $note, Request $request)
     {
         if ($note->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $note->shares()->where('shared_with_user_id', $user->id)->delete();
-        return back()->with('success', 'Note unshared successfully.');
+        $request->validate([
+            'share_type' => 'required|string',
+            'identifier' => 'required',
+        ]);
+
+        $this->shareService->unshare($note, $request->share_type, $request->identifier);
+
+        return back()->with('success', 'Note access removed successfully.');
     }
 }

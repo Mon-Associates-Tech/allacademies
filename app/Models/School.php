@@ -175,21 +175,7 @@ class School extends Model
         return AcademicLevel::whereIn('academic_group_id', $groupIds)->get();
     }
 
-    // Helper methods
 
-    public function getStatsDeprecated(): array
-    {
-        return [
-            'total_students' => $this->students()->count(),
-            'active_students' => $this->students()->where('status', 'active')->count(),
-            'total_teachers' => $this->teachers()->count(),
-            'active_teachers' => $this->teachers()->where('status', 'active')->count(),
-            'total_librarians' => $this->librarians()->count(),
-            'total_parents' => $this->parents()->count(),
-            'academic_groups' => $this->academicGroups()->count(),
-            'academic_levels' => $this->academicLevels()->count(),
-        ];
-    }
 
     public function students(): HasMany
     {
@@ -303,7 +289,19 @@ class School extends Model
             ->exists();
     }
 
-    // Update the getStats method to include academic period info
+// Add this relationship to School model
+
+    public function studentGroups(): HasMany
+    {
+        return $this->hasMany(StudentGroup::class);
+    }
+
+    public function activeStudentGroups(): HasMany
+    {
+        return $this->hasMany(StudentGroup::class)->where('is_active', true);
+    }
+
+// Update getStats method to include student groups
     public function getStats(): array
     {
         $currentPeriod = $this->getCurrentPeriod();
@@ -317,11 +315,12 @@ class School extends Model
             'total_parents' => $this->parents()->count(),
             'academic_groups' => $this->academicGroups()->count(),
             'academic_levels' => $this->academicLevels()->count(),
+            'student_groups' => $this->studentGroups()->count(), // Add this
+            'active_student_groups' => $this->activeStudentGroups()->count(), // Add this
             'current_period' => $currentPeriod ? $currentPeriod->getDisplayName() : 'No active period',
             'current_period_progress' => $currentPeriod ? round($currentPeriod->getProgressPercentage(), 1) : 0,
             'total_academic_periods' => $this->academicPeriods()->count(),
             'active_periods' => $this->academicPeriods()->where('status', 'active')->count(),
         ];
     }
-
 }

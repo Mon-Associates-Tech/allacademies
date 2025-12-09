@@ -169,6 +169,19 @@
                         </div>
                     </a>
                 </li>
+
+                <li class="mb-0.5 last:mb-0" title="Notes">
+                    <a class="block px-2 py-2 rounded-lg transition {{ Route::is('notes*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                       href="{{route('notes.index')}}">
+                        <div class="flex items-center">
+                            <svg class="shrink-0 fill-current {{ Route::is('notes*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                            </svg>
+
+                            <span class="text-sm ml-3 sidebar-text duration-200">Notes</span>
+                        </div>
+                    </a>
+                </li>
             </ul>
         </div>
 

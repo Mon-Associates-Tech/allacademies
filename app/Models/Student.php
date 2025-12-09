@@ -72,7 +72,12 @@ class Student extends Model
 
     public function studentGroup(): BelongsTo
     {
-        return $this->belongsTo(StudentGroup::class, 'student_group_id');
+        return $this->belongsTo(StudentGroup::class);
+    }
+
+    public function scopeInStudentGroup(Builder $query, int $groupId): Builder
+    {
+        return $query->where('student_group_id', $groupId);
     }
 
     public function borrowedBooks()
