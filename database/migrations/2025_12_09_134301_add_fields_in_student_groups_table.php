@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('student_groups', static function (Blueprint $table) {
             // Add school_id as mandatory
-            $table->unsignedBigInteger('school_id')->after('id');
+            $table->unsignedBigInteger('school_id')->after('id')->nullable();
 
             // Add optional academic relationships
             $table->unsignedBigInteger('academic_group_id')->nullable()->after('school_id');
