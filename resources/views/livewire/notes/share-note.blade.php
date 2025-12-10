@@ -176,7 +176,7 @@
                 <span class="text-red-500">*</span>
             </label>
 
-            @livewire('common.searchable-multiselect', [
+            @livewire('common.searchable-multi-select', [
                 'items' => $this->recipients,
                 'selected' => $selectedRecipients,
                 'placeholder' => 'Search and select recipients...',
