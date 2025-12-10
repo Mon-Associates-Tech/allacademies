@@ -161,4 +161,10 @@ class Note extends Model
     {
         return $this->morphTo();
     }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(NoteAttachment::class);
+    }
+
 }

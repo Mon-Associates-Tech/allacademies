@@ -19,6 +19,7 @@ class NoteShareService
     public const SHARE_ACADEMIC_LEVEL = 'academic_level';
     public const SHARE_STUDENT_GROUP = 'student_group';
     public const SHARE_SCHOOL_WIDE = 'school_wide';
+    public const SHARE_EMAIL = 'email';
 
     /**
      * Share a note with recipients based on share type
@@ -26,6 +27,10 @@ class NoteShareService
      */
     public function shareNote(Note $note, string $shareType, array $recipientIds, bool $canEdit = false): array
     {
+        if ($shareType === self::SHARE_EMAIL) {
+            return $this->shareNoteByEmail($note, $recipientIds[0], $canEdit);
+        }
+
         $recipients = $this->resolveRecipients($shareType, $recipientIds, $note->user->school_id);
         $sharesCreated = 0;
         $usersNotified = [];
@@ -77,6 +82,88 @@ class NoteShareService
             'users_notified' => count($usersNotified),
             'recipients' => $recipients,
         ];
+    }
+
+    /**
+     * Share note with an email address (may or may not be in database)
+     */
+    private function shareNoteByEmail(Note $note, string $email, bool $canEdit = false): array
+    {
+        $user = User::where('email', $email)
+            ->where('school_id', $note->user->school_id)
+            ->first();
+
+        $sharesCreated = 0;
+        $usersNotified = 0;
+
+        DB::transaction(function () use ($note, $email, $user, $canEdit, &$sharesCreated) {
+            if ($user) {
+                // User exists - create regular share
+                $share = $this->createIndividualShare($note, $user, $canEdit);
+                if ($share->wasRecentlyCreated) {
+                    $sharesCreated++;
+                }
+            } else {
+                // Guest email - create guest share
+                $share = NoteShare::updateOrCreate(
+                    [
+                        'note_id' => $note->id,
+                        'guest_email' => $email,
+                        'share_type' => self::SHARE_EMAIL,
+                    ],
+                    [
+                        'can_edit' => $canEdit,
+                    ]
+                );
+
+                if ($share->wasRecentlyCreated) {
+                    $sharesCreated++;
+                }
+            }
+        });
+
+        // Send notification
+        if ($user) {
+            $this->sendNotifications($note, [$user], $canEdit);
+            $usersNotified = 1;
+        } else {
+            $this->sendGuestNotification($note, $email, $canEdit);
+            $usersNotified = 1;
+        }
+
+        return [
+            'shares_created' => $sharesCreated,
+            'users_notified' => $usersNotified,
+            'recipients' => $user ? collect([$user]) : collect([]),
+        ];
+    }
+
+    /**
+     * Send notification to guest email
+     */
+    private function sendGuestNotification(Note $note, string $email, bool $canEdit): void
+    {
+        try {
+            \Mail::to($email)->send(new \App\Mail\NoteSharedGuestMail($note, $email, $canEdit));
+
+            NoteShare::where('note_id', $note->id)
+                ->where('guest_email', $email)
+                ->update([
+                    'notification_sent' => true,
+                    'notified_at' => now(),
+                ]);
+
+            \Log::info('Guest notification sent', [
+                'note_id' => $note->id,
+                'guest_email' => $email,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to notify guest about note share', [
+                'note_id' => $note->id,
+                'guest_email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

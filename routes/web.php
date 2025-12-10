@@ -479,8 +479,14 @@ Route::prefix('general/pay')->name('payments.public.')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('notes', NotesController::class);
+    Route::get('/notes/{note}/download', [NotesController::class, 'download'])->name('notes.download');
     Route::post('/notes/{note}/share', [NotesController::class, 'share'])->name('notes.share');
     Route::delete('/notes/{note}/unshare/{user}', [NotesController::class, 'unshare'])->name('notes.unshare');
+    // Attachment routes
+    Route::get('/notes/{note}/attachments/{attachment}/download', [NotesController::class, 'downloadAttachment'])
+        ->name('notes.attachments.download');
+    Route::get('/notes/{note}/attachments/{attachment}/view', [NotesController::class, 'viewAttachment'])
+        ->name('notes.attachments.view');
 });
 
 Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');

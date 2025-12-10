@@ -1,12 +1,12 @@
 <x-layouts.app>
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto  lg:px-8">
         {{-- Header Section --}}
-        <div class="page-header-blue">
+        <div class="page-header-sky rounded-t-xl">
             <div class="px-4 py-6 sm:px-6 border-b border-gray-100 dark:border-gray-700">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     {{-- Title & Meta --}}
                     <div class="flex-1 min-w-0">
-                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3 break-words">
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-3 break-words">
                             {{ $note->title }}
                         </h1>
 
@@ -88,6 +88,73 @@
 
                     {{-- Action Buttons --}}
                     <div class="flex flex-wrap gap-2">
+                        {{-- Download Dropdown --}}
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open" @click.away="open = false"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Download
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
+                                <div class="py-1">
+                                    <a href="{{ route('notes.download', ['note' => $note, 'format' => 'pdf']) }}"
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">PDF Document</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Best for printing
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <a href="{{ route('notes.download', ['note' => $note, 'format' => 'docx']) }}"
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <svg class="w-5 h-5 mr-3 text-blue-500" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Word Document</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Editable format</div>
+                                        </div>
+                                    </a>
+
+                                    <a href="{{ route('notes.download', ['note' => $note, 'format' => 'txt']) }}"
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Plain Text</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Simple format</div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                         @if($note->canUserEdit(Auth::id()))
                             <a href="{{ route('notes.edit', $note) }}"
                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
@@ -130,29 +197,58 @@
             </div>
         </div>
 
-        {{-- Share Section - Only for note owner --}}
+        {{-- Attachments Section --}}
+        <div class="bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="px-6 py-6 sm:px-8">
+                @livewire('notes.note-attachment-manager', ['note' => $note])
+            </div>
+        </div>
+
         {{-- Share Section - Only for note owner --}}
         @if($note->user_id === Auth::id())
-            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-b-xl border border-t-0 border-gray-200 dark:border-gray-700 shadow-sm px-6 py-8 sm:px-8">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="flex-shrink-0">
-                        <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                            </svg>
+            <div x-data="{ shareOpen: true }"
+                 class="bg-gray-50 dark:bg-gray-800/50 rounded-b-xl border border-t-0 border-gray-200 dark:border-gray-700 shadow-sm">
+                {{-- Collapsible Header --}}
+                <button @click="shareOpen = !shareOpen" type="button"
+                        class="w-full px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0">
+                            <div
+                                class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Share with
+                                Others</h3>
+                            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">Collaborate by sharing
+                                this note</p>
                         </div>
                     </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Share with Others</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Collaborate by sharing this note with users, groups, or your entire school</p>
-                    </div>
+                    <svg x-show="!shareOpen" class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none"
+                         stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                    <svg x-show="shareOpen" class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none"
+                         stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                    </svg>
+                </button>
+
+                {{-- Collapsible Content --}}
+                <div x-show="shareOpen"
+                     x-collapse
+                     class="px-4 sm:px-6 pb-6 sm:pb-8">
+                    {{-- Livewire Share Component --}}
+                    @livewire('notes.share-note', ['note' => $note])
+
+                    {{-- Livewire Shared With List Component --}}
+                    @livewire('notes.shared-with-list', ['note' => $note])
                 </div>
-
-                {{-- Livewire Share Component --}}
-                @livewire('notes.share-note', ['note' => $note])
-
-                {{-- Livewire Shared With List Component --}}
-                @livewire('notes.shared-with-list', ['note' => $note])
             </div>
         @endif
     </div>

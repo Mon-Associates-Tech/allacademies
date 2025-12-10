@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Note;
 use App\Models\Book;
 use App\Models\AcademicSubject;
+use App\Models\NoteAttachment;
 use App\Models\User;
+use App\Services\NoteExportService;
 use App\Services\NoteShareService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +15,8 @@ use Illuminate\Support\Facades\Auth;
 class NotesController extends Controller
 {
     public function __construct(
-        protected NoteShareService $shareService
+        protected NoteShareService $shareService,
+        protected NoteExportService $exportService
     ) {}
 
     public function index(Request $request)
@@ -288,4 +291,86 @@ class NotesController extends Controller
 
         return back()->with('success', 'Note access removed successfully.');
     }
+
+    public function download(Note $note, Request $request)
+    {
+        // Check permissions
+        if (!$note->canUserView(Auth::id())) {
+            abort(403, 'You do not have permission to download this note.');
+        }
+
+        $format = $request->get('format', 'pdf');
+
+        // Validate format
+        if (!in_array($format, ['pdf', 'txt', 'docx'])) {
+            return back()->with('error', 'Invalid export format.');
+        }
+
+        try {
+            $result = $this->exportService->export($note, $format);
+
+            if (!$result['success']) {
+                return back()->with('error', $result['error']);
+            }
+
+            return response($result['content'])
+                ->header('Content-Type', $result['mime_type'])
+                ->header('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"');
+
+        } catch (\Exception $e) {
+            \Log::error('Note download failed', [
+                'note_id' => $note->id,
+                'format' => $format,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to download note. Please try again.');
+        }
+    }
+
+    public function downloadAttachment(Note $note, NoteAttachment $attachment)
+    {
+        // Check permissions
+        if (!$note->canUserView(Auth::id())) {
+            abort(403, 'You do not have permission to access this note.');
+        }
+
+        // Verify attachment belongs to note
+        if ($attachment->note_id !== $note->id) {
+            abort(404);
+        }
+
+        $filePath = storage_path('app/public/' . $attachment->path);
+
+        if (!file_exists($filePath)) {
+            return back()->with('error', 'File not found.');
+        }
+
+        return response()->download($filePath, $attachment->original_filename);
+    }
+
+    public function viewAttachment(Note $note, NoteAttachment $attachment)
+    {
+        // Check permissions
+        if (!$note->canUserView(Auth::id())) {
+            abort(403, 'You do not have permission to access this note.');
+        }
+
+        // Verify attachment belongs to note
+        if ($attachment->note_id !== $note->id) {
+            abort(404);
+        }
+
+        $filePath = storage_path('app/public/' . $attachment->path);
+
+        if (!file_exists($filePath)) {
+            return back()->with('error', 'File not found.');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => $attachment->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $attachment->original_filename . '"'
+        ]);
+    }
+
 }

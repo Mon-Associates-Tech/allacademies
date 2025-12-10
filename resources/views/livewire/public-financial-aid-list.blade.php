@@ -117,7 +117,7 @@
 
                             <!-- Description -->
                             <p class="text-gray-600 dark:text-gray-400 mb-6">
-                                There are currently no active financial aid programs available. However, you can still make general payments for tuition, fees, and other school expenses.
+                                No listing of needy students at the moment. However,  you can still pay now if you already have the ID of the child/student you want to pay for
                             </p>
 
                             <!-- CTA Button -->

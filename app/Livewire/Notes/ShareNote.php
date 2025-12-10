@@ -16,6 +16,7 @@ class ShareNote extends Component
     public Note $note;
     public string $shareType = 'individual';
     public array $selectedRecipients = [];
+    public string $emailInput = '';
     public bool $canEdit = false;
     public bool $notifyRecipients = true;
 
@@ -30,8 +31,9 @@ class ShareNote extends Component
     ];
 
     protected $rules = [
-        'shareType' => 'required|in:individual,academic_group,academic_level,student_group,school_wide',
-        'selectedRecipients' => 'required_unless:shareType,school_wide|array|min:1',
+        'shareType' => 'required|in:individual,academic_group,academic_level,student_group,school_wide,email',
+        'selectedRecipients' => 'required_unless:shareType,school_wide,email|array|min:1',
+        'emailInput' => 'required_if:shareType,email|email',
         'canEdit' => 'boolean',
         'notifyRecipients' => 'boolean',
     ];
@@ -39,6 +41,8 @@ class ShareNote extends Component
     protected $messages = [
         'selectedRecipients.required_unless' => 'Please select at least one recipient.',
         'selectedRecipients.min' => 'Please select at least one recipient.',
+        'emailInput.required_if' => 'Please enter an email address.',
+        'emailInput.email' => 'Please enter a valid email address.',
     ];
 
     public function mount(Note $note): void
@@ -135,12 +139,33 @@ class ShareNote extends Component
         };
     }
 
+
+    public function updatedEmailInput(): void
+    {
+        // Check if user exists in database
+        $this->validateOnly('emailInput');
+
+        if (!empty($this->emailInput) && filter_var($this->emailInput, FILTER_VALIDATE_EMAIL)) {
+            $user = User::where('email', $this->emailInput)
+                ->where('school_id', auth()->user()->school_id)
+                ->first();
+
+            if ($user) {
+                $this->dispatch('info', message: "This email belongs to {$user->name} in your school.");
+            }
+        }
+    }
+
     public function getRecipientCountProperty(): int
     {
         if ($this->shareType === 'school_wide') {
             return User::where('school_id', auth()->user()->school_id)
                 ->where('id', '!=', auth()->id())
                 ->count();
+        }
+
+        if ($this->shareType === 'email') {
+            return 1;
         }
 
         if (empty($this->selectedRecipients)) {
@@ -160,11 +185,13 @@ class ShareNote extends Component
     public function shareNote(): void
     {
         // For school-wide, we don't need recipients
-        if ($this->shareType !== 'school_wide') {
-            $this->validate();
-        } else {
+        if ($this->shareType === 'school_wide') {
             $this->validate(['shareType' => 'required', 'canEdit' => 'boolean']);
             $this->selectedRecipients = [auth()->user()->school_id];
+        } elseif ($this->shareType === 'email') {
+            $this->validate(['shareType' => 'required', 'emailInput' => 'required|email', 'canEdit' => 'boolean']);
+        } else {
+            $this->validate();
         }
 
         try {
@@ -173,7 +200,7 @@ class ShareNote extends Component
             $result = $shareService->shareNote(
                 $this->note,
                 $this->shareType,
-                $this->selectedRecipients,
+                $this->shareType === 'email' ? [$this->emailInput] : $this->selectedRecipients,
                 $this->canEdit
             );
 
@@ -183,7 +210,7 @@ class ShareNote extends Component
             ]);
 
             // Reset form
-            $this->reset(['selectedRecipients', 'canEdit']);
+            $this->reset(['selectedRecipients', 'emailInput', 'canEdit']);
 
             // Refresh the note to show updated shares
             $this->note->refresh();
@@ -197,12 +224,12 @@ class ShareNote extends Component
             \Log::error('Note sharing failed: ' . $e->getMessage(), [
                 'share_type' => $this->shareType,
                 'selected_recipients' => $this->selectedRecipients,
+                'email_input' => $this->emailInput,
                 'exception' => $e->getTraceAsString()
             ]);
             $this->dispatch('error', message: 'Failed to share note. Please try again.');
         }
     }
-
     public function removeShare(int $shareId, string $shareType, $identifier): void
     {
         try {

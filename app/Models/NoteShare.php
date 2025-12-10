@@ -14,6 +14,7 @@ class NoteShare extends Model
     protected $fillable = [
         'note_id',
         'shared_with_user_id',
+        'guest_email',
         'share_type',
         'shareable_type',
         'shareable_id',
@@ -46,5 +47,30 @@ class NoteShare extends Model
     public function shareable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+
+    /**
+     * Get the recipient email whether it's a user or guest
+     */
+    public function getRecipientEmail(): string
+    {
+        return $this->sharedWithUser?->email ?? $this->guest_email ?? '';
+    }
+
+    /**
+     * Get the recipient name whether it's a user or guest
+     */
+    public function getRecipientName(): string
+    {
+        return $this->sharedWithUser?->name ?? $this->guest_email ?? 'Guest';
+    }
+
+    /**
+     * Check if this share is for a guest (non-user)
+     */
+    public function isGuest(): bool
+    {
+        return !$this->shared_with_user_id && !empty($this->guest_email);
     }
 }

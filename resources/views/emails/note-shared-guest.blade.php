@@ -6,12 +6,12 @@
     :headerSubtitle="$sharer->name . ' shared a note'"
 >
     <x-emails.greeting>
-        Hello {{ $recipient->name }},
+        Hello,
     </x-emails.greeting>
 
     <x-emails.paragraph>
-        <strong>{{ $sharer->name }}</strong> has shared a note with you on {{ config('app.name') }}.
-        You now have {{ $canEdit ? 'edit' : 'view' }} access to this note.
+        <strong>{{ $sharer->name }}</strong> from {{ config('app.name') }} has shared a note with you.
+        You have {{ $canEdit ? 'edit' : 'view' }} access to this note.
     </x-emails.paragraph>
 
     <!-- Note Info Box -->
@@ -42,22 +42,19 @@
         📝 View Note Now
     </x-emails.button>
 
-    @if($canEdit)
-        <x-emails.info-box type="green">
-            <strong>💡 What you can do:</strong><br>
-            • Read and study the note content<br>
-            • Edit and improve the note<br>
-            • Add your own insights and observations<br>
-            • Collaborate with {{ $sharer->name }}
-        </x-emails.info-box>
-    @endif
+    <x-emails.info-box type="yellow">
+        <strong>📧 Note:</strong><br>
+        • This email was sent to: {{ $guestEmail }}<br>
+        • You may need to create an account to access this note<br>
+        • Your access will be ready once you sign up
+    </x-emails.info-box>
 
     <x-emails.paragraph>
-        Make the most of this shared knowledge!
+        Join {{ config('app.name') }} to collaborate and share knowledge!
     </x-emails.paragraph>
 
     <p style="color: #6b7280; font-size: 14px; font-style: italic; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-        Best regards,<br>
+        Happy learning!<br>
         <strong>The {{ config('app.name') }} Team</strong>
     </p>
 </x-emails.layouts.default>

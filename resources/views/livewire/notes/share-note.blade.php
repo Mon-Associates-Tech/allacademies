@@ -32,6 +32,27 @@
                 </div>
             </label>
 
+            {{-- Email Address Option - NEW --}}
+            <label class="relative flex items-start p-4 cursor-pointer rounded-lg border-2 transition-all duration-200
+        {{ $shareType === 'email' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600' }}">
+                <input type="radio"
+                       wire:model.live="shareType"
+                       value="email"
+                       class="sr-only">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-lg flex items-center justify-center
+                {{ $shareType === 'email' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-3 flex-1">
+                    <span class="block text-sm font-medium text-gray-900 dark:text-white">Email Address</span>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Share with any email</span>
+                </div>
+            </label>
+
             {{-- Academic Groups --}}
             <label class="relative flex items-start p-4 cursor-pointer rounded-lg border-2 transition-all duration-200
                 {{ $shareType === 'academic_group' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600' }}">
@@ -124,8 +145,31 @@
         @enderror
     </div>
 
+    @if($shareType === 'email')
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+            <label class="block text-sm font-medium text-gray-900 dark:text-white mb-3">
+                Email Address
+                <span class="text-red-500">*</span>
+            </label>
+
+            <input type="email"
+                   wire:model.live.debounce.500ms="emailInput"
+                   placeholder="Enter email address..."
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-300">
+
+            @error('emailInput')
+            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                If this email exists in your school, they'll receive the note. Otherwise, they'll get an invitation email.
+            </p>
+        </div>
+    @endif
+
+
     {{-- Recipients Selection (Hidden for school_wide) --}}
-    @if($shareType !== 'school_wide')
+    @if($shareType !== 'school_wide' && $shareType !== 'email')
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
             <label class="block text-sm font-medium text-gray-900 dark:text-white mb-3">
                 Select Recipients
