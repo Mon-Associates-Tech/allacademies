@@ -64,7 +64,7 @@
                                         // Only sync if not initializing
                                         if (!this.isInitializing) {
                                             this.markdown = editor.getContent();
-                                            // Sync with Livewire
+                                            // Sync with Livewire - using safer method
                                             this.syncWithLivewire();
                                         }
                                     });
@@ -81,13 +81,46 @@
 
                     syncWithLivewire() {
                         // Update Livewire property only if not initializing
-                        if (this.wireName && this.$wire && !this.isInitializing) {
-                            this.$wire.set(this.wireName, this.markdown);
+                        if (this.wireName && !this.isInitializing) {
+                            // Find the Livewire component
+                            const component = window.Livewire?.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id'));
+                            if (component) {
+                                component.set(this.wireName, this.markdown);
+                            } else {
+                                // Fallback: dispatch event for Livewire to catch
+                                this.$dispatch('markdown-updated', {
+                                    name: this.wireName,
+                                    value: this.markdown
+                                });
+                            }
                         }
                     },
 
                     updatePreview() {
                         this.previewHtml = this.markdown || '<p class="text-gray-400">No content to preview</p>';
+
+                        // Render math after preview updates
+                        this.$nextTick(() => {
+                            const previewEl = this.$el.querySelector('.markdown-preview');
+                            if (previewEl && typeof window.renderMathInElement !== 'undefined') {
+                                try {
+                                    window.renderMathInElement(previewEl, {
+                                        delimiters: [
+                                            {left: '$$', right: '$$', display: true},
+                                            {left: '$', right: '$', display: false},
+                                            {left: '\\[', right: '\\]', display: true},
+                                            {left: '\\(', right: '\\)', display: false}
+                                        ],
+                                        throwOnError: false,
+                                        errorColor: '#cc0000',
+                                        strict: false,
+                                        trust: true
+                                    });
+                                } catch(e) {
+                                    console.error('KaTeX preview rendering error:', e);
+                                }
+                            }
+                        });
                     }
                 }
             };
@@ -116,7 +149,6 @@
             }
         });
      "
-     wire:ignore
      :data-editor-id="editorId">
 
     @if($label)
@@ -162,7 +194,7 @@
         </div>
 
         <!-- Editor Area -->
-        <div x-show="!preview" class="bg-white dark:bg-gray-800">
+        <div x-show="!preview" class="bg-white dark:bg-gray-800" wire:ignore>
             <textarea
                 :id="editorId"
                 name="{{ $name }}"
@@ -173,9 +205,9 @@
         <!-- Preview Area -->
         <div
             x-show="preview"
-            x-html="previewHtml"
             class="markdown-preview bg-white dark:bg-gray-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
-            style="display: none; min-height: {{ $height }}px;">
+            style="display: none; min-height: {{ $height }}px;"
+            x-html="previewHtml">
         </div>
     </div>
 

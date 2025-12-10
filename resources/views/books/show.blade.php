@@ -773,7 +773,7 @@
         <!-- Related Books Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             @if($book->getAuthorBooks()->count())
-                @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author->user->name])
+                @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getAuthorBooks(3), 'currentBook' => $book, 'heading' => "Other Books by ". $book->author_name])
             @endif
             @if($book->getSimilarBooks()->count())
                 @include('livewire.books.partials.similar-books', ['similarBooks' => $book->getSimilarBooks(3), 'currentBook' => $book])

@@ -11,6 +11,26 @@
     };
 @endphp
 
+@once
+    @push('scripts')
+        <script>
+            // Define math rendering configuration globally
+            window.mathRenderConfig = {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false,
+                errorColor: '#cc0000',
+                strict: false,
+                trust: true
+            };
+        </script>
+    @endpush
+@endonce
+
 <div {{ $attributes->merge(['class' => "prose {$sizeClasses} max-w-none
     prose-headings:text-gray-900 dark:prose-headings:text-gray-100
     prose-p:text-gray-700 dark:prose-p:text-gray-300
@@ -31,21 +51,18 @@
     prose-td:border prose-td:p-3"]) }}"
 @if($mathSupport)
     x-data="{
-    init() {
-    this.\$nextTick(() => {
+    renderMath() {
     if (typeof window.renderMathInElement !== 'undefined') {
-    window.renderMathInElement(this.\$el, {
-    delimiters: [
-    {left: '\$\$', right: '\$\$', display: true},
-    {left: '\$', right: '\$', display: false}
-    ],
-    throwOnError: false
-    });
+    try {
+    window.renderMathInElement(this.$el, window.mathRenderConfig);
+    console.log('Math rendered successfully');
+    } catch(e) {
+    console.error('KaTeX error:', e);
     }
-    });
+    }
     }
     }"
-    x-init="init()"
+    x-init="$nextTick(() => setTimeout(() => renderMath(), 100))"
 @endif>
 {!! $content ?? $slot !!}
 </div>
