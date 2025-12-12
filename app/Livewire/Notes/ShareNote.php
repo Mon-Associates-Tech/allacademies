@@ -8,7 +8,7 @@ use App\Models\Note;
 use App\Models\StudentGroup;
 use App\Models\User;
 use App\Services\NoteShareService;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 
 class ShareNote extends Component
@@ -19,12 +19,6 @@ class ShareNote extends Component
     public string $emailInput = '';
     public bool $canEdit = false;
     public bool $notifyRecipients = true;
-
-    // Available options
-    public Collection $individuals;
-    public Collection $academicGroups;
-    public Collection $academicLevels;
-    public Collection $studentGroups;
 
     protected $listeners = [
         'selection-changed' => 'handleSelectionChanged',
@@ -48,7 +42,6 @@ class ShareNote extends Component
     public function mount(Note $note): void
     {
         $this->note = $note;
-        $this->loadRecipientOptions();
     }
 
     public function handleSelectionChanged($data): void
@@ -58,91 +51,120 @@ class ShareNote extends Component
         }
     }
 
-    public function loadRecipientOptions(): void
-    {
-        $schoolId = auth()->user()->school_id;
-
-        // Load individuals - all users in the same school
-        $this->individuals = User::where('school_id', $schoolId)
-            ->where('id', '!=', auth()->id())
-            ->orderBy('name')
-            ->get()
-            ->map(fn($user) => [
-                'id' => $user->id,
-                'name' => $user->name . ' (' . $user->email . ')',
-                'email' => $user->email,
-                'role' => $user->role,
-            ]);
-
-        // Load academic groups - only groups associated with this school
-        $this->academicGroups = AcademicGroup::forSchool($schoolId)
-            ->withCount(['students' => function($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
-            }])
-            ->orderBy('name')
-            ->get()
-            ->map(fn($group) => [
-                'id' => $group->id,
-                'name' => $group->name . ' (' . $group->students_count . ' students)',
-                'tag' => $group->tag ?? null,
-            ]);
-
-        // Load academic levels - only levels associated with this school
-        $this->academicLevels = AcademicLevel::forSchool($schoolId)
-            ->with('academicGroup')
-            ->withCount(['students' => function($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
-            }])
-            ->orderBy('name')
-            ->get()
-            ->map(fn($level) => [
-                'id' => $level->id,
-                'name' => $level->name . ' (' . $level->students_count . ' students)',
-                'label' => $level->label ?? null,
-                'group' => $level->academicGroup?->name ?? 'N/A',
-            ]);
-
-        // Load student groups - properly filtered by school with relationships
-        $this->studentGroups = StudentGroup::where('school_id', $schoolId)
-            ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
-            ->withCount('students')
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->map(fn($group) => [
-                'id' => $group->id,
-                'name' => $group->getDisplayName(),
-                'description' => $group->description ?? null,
-                'students_count' => $group->students_count,
-                'academic_group' => $group->academicGroup?->name,
-                'academic_level' => $group->academicLevel?->name,
-                'academic_subject' => $group->academicSubject?->name,
-                'teacher' => $group->teacher?->user->name,
-            ]);
-    }
-
     public function updatedShareType(): void
     {
-        // Reset selected recipients when share type changes
         $this->selectedRecipients = [];
     }
 
-    public function getRecipientsProperty(): array
+    // Lazy loading configuration
+    public function getModelClassProperty(): ?string
     {
         return match($this->shareType) {
-            'individual' => $this->individuals->toArray(),
-            'academic_group' => $this->academicGroups->toArray(),
-            'academic_level' => $this->academicLevels->toArray(),
-            'student_group' => $this->studentGroups->toArray(),
-            'school_wide' => [],
-            default => [],
+            'individual' => User::class,
+            'academic_group' => AcademicGroup::class,
+            'academic_level' => AcademicLevel::class,
+            'student_group' => StudentGroup::class,
+            default => null,
         };
     }
 
+    public function getSearchColumnsProperty(): array|string
+    {
+        return match($this->shareType) {
+            'individual' => ['name', 'email'],
+            'academic_group' => ['name', 'tag'],
+            'academic_level' => ['name', 'label'],
+            'student_group' => ['name', 'description'],
+            default => 'name',
+        };
+    }
+
+    public function getQueryMethodProperty(): string
+    {
+        return match($this->shareType) {
+            'individual' => 'queryIndividuals',
+            'academic_group' => 'queryAcademicGroups',
+            'academic_level' => 'queryAcademicLevels',
+            'student_group' => 'queryStudentGroups',
+            default => '',
+        };
+    }
+
+    public function getLabelFormatterProperty(): string
+    {
+        return match($this->shareType) {
+            'individual' => 'formatUserLabel',
+            'academic_group' => 'formatGroupLabel',
+            'academic_level' => 'formatLevelLabel',
+            'student_group' => 'formatStudentGroupLabel',
+            default => '',
+        };
+    }
+
+    // Query methods for each type
+    public function queryIndividuals(Builder $query): Builder
+    {
+        return $query->where('school_id', auth()->user()->school_id)
+            ->where('id', '!=', auth()->id())
+            ->where('is_active', true);
+    }
+
+    public function queryAcademicGroups(Builder $query): Builder
+    {
+        $schoolId = auth()->user()->school_id;
+
+        return $query->whereHas('school', fn($q) => $q->where('id', $schoolId))
+            ->orWhereHas('students', fn($q) => $q->where('school_id', $schoolId))
+            ->withCount(['students' => function($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            }]);
+    }
+
+    public function queryAcademicLevels(Builder $query): Builder
+    {
+        $schoolId = auth()->user()->school_id;
+
+        return $query->whereHas('academicGroup.school', fn($q) => $q->where('id', $schoolId))
+            ->orWhereHas('students', fn($q) => $q->where('school_id', $schoolId))
+            ->with('academicGroup')
+            ->withCount(['students' => function($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            }]);
+    }
+
+    public function queryStudentGroups(Builder $query): Builder
+    {
+        return $query->where('school_id', auth()->user()->school_id)
+            ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
+            ->withCount('students')
+            ->where('is_active', true);
+    }
+
+    // Label formatters for each type
+    public function formatUserLabel($item): string
+    {
+        return $item->name . ' (' . $item->email . ')';
+    }
+
+    public function formatGroupLabel($item): string
+    {
+        $count = $item->students_count ?? 0;
+        return $item->name . ' (' . $count . ' students)';
+    }
+
+    public function formatLevelLabel($item): string
+    {
+        $count = $item->students_count ?? 0;
+        return $item->name . ' (' . $count . ' students)';
+    }
+
+    public function formatStudentGroupLabel($item): string
+    {
+        return $item->getDisplayName();
+    }
 
     public function updatedEmailInput(): void
     {
-        // Check if user exists in database
         $this->validateOnly('emailInput');
 
         if (!empty($this->emailInput) && filter_var($this->emailInput, FILTER_VALIDATE_EMAIL)) {
@@ -184,7 +206,6 @@ class ShareNote extends Component
 
     public function shareNote(): void
     {
-        // For school-wide, we don't need recipients
         if ($this->shareType === 'school_wide') {
             $this->validate(['shareType' => 'required', 'canEdit' => 'boolean']);
             $this->selectedRecipients = [auth()->user()->school_id];
@@ -209,10 +230,7 @@ class ShareNote extends Component
                 'users_notified' => $result['users_notified'],
             ]);
 
-            // Reset form
             $this->reset(['selectedRecipients', 'emailInput', 'canEdit']);
-
-            // Refresh the note to show updated shares
             $this->note->refresh();
 
             $this->dispatch('success',
@@ -230,6 +248,7 @@ class ShareNote extends Component
             $this->dispatch('error', message: 'Failed to share note. Please try again.');
         }
     }
+
     public function removeShare(int $shareId, string $shareType, $identifier): void
     {
         try {
