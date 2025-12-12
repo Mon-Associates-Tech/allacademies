@@ -178,7 +178,7 @@
             @livewire('notes.share-note-recipients-select', [
                 'shareType' => $shareType,
                 'selected' => $selectedRecipients,
-                'schoolId' => auth()->user()->school_id,
+                'schoolId' => getSchoolId(),
                 'placeholder' => 'Search and select recipients...',
                 'name' => 'selectedRecipients',
             ], key('recipients-select-' . $shareType))
