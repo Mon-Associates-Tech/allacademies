@@ -8,7 +8,7 @@ use App\Models\Note;
 use App\Models\StudentGroup;
 use App\Models\User;
 use App\Services\NoteShareService;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class ShareNote extends Component
@@ -53,118 +53,13 @@ class ShareNote extends Component
 
     public function updatedShareType(): void
     {
+        // Reset selected recipients when share type changes
         $this->selectedRecipients = [];
-    }
-
-    // Lazy loading configuration
-    public function getModelClassProperty(): ?string
-    {
-        return match($this->shareType) {
-            'individual' => User::class,
-            'academic_group' => AcademicGroup::class,
-            'academic_level' => AcademicLevel::class,
-            'student_group' => StudentGroup::class,
-            default => null,
-        };
-    }
-
-    public function getSearchColumnsProperty(): array|string
-    {
-        return match($this->shareType) {
-            'individual' => ['name', 'email'],
-            'academic_group' => ['name', 'tag'],
-            'academic_level' => ['name', 'label'],
-            'student_group' => ['name', 'description'],
-            default => 'name',
-        };
-    }
-
-    public function getQueryMethodProperty(): string
-    {
-        return match($this->shareType) {
-            'individual' => 'queryIndividuals',
-            'academic_group' => 'queryAcademicGroups',
-            'academic_level' => 'queryAcademicLevels',
-            'student_group' => 'queryStudentGroups',
-            default => '',
-        };
-    }
-
-    public function getLabelFormatterProperty(): string
-    {
-        return match($this->shareType) {
-            'individual' => 'formatUserLabel',
-            'academic_group' => 'formatGroupLabel',
-            'academic_level' => 'formatLevelLabel',
-            'student_group' => 'formatStudentGroupLabel',
-            default => '',
-        };
-    }
-
-    // Query methods for each type
-    public function queryIndividuals(Builder $query): Builder
-    {
-        return $query->where('school_id', auth()->user()->school_id)
-            ->where('id', '!=', auth()->id())
-            ->where('is_active', true);
-    }
-
-    public function queryAcademicGroups(Builder $query): Builder
-    {
-        $schoolId = auth()->user()->school_id;
-
-        return $query->whereHas('school', fn($q) => $q->where('id', $schoolId))
-            ->orWhereHas('students', fn($q) => $q->where('school_id', $schoolId))
-            ->withCount(['students' => function($q) use ($schoolId) {
-                $q->where('school_id', $schoolId);
-            }]);
-    }
-
-    public function queryAcademicLevels(Builder $query): Builder
-    {
-        $schoolId = auth()->user()->school_id;
-
-        return $query->whereHas('academicGroup.school', fn($q) => $q->where('id', $schoolId))
-            ->orWhereHas('students', fn($q) => $q->where('school_id', $schoolId))
-            ->with('academicGroup')
-            ->withCount(['students' => function($q) use ($schoolId) {
-                $q->where('school_id', $schoolId);
-            }]);
-    }
-
-    public function queryStudentGroups(Builder $query): Builder
-    {
-        return $query->where('school_id', auth()->user()->school_id)
-            ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
-            ->withCount('students')
-            ->where('is_active', true);
-    }
-
-    // Label formatters for each type
-    public function formatUserLabel($item): string
-    {
-        return $item->name . ' (' . $item->email . ')';
-    }
-
-    public function formatGroupLabel($item): string
-    {
-        $count = $item->students_count ?? 0;
-        return $item->name . ' (' . $count . ' students)';
-    }
-
-    public function formatLevelLabel($item): string
-    {
-        $count = $item->students_count ?? 0;
-        return $item->name . ' (' . $count . ' students)';
-    }
-
-    public function formatStudentGroupLabel($item): string
-    {
-        return $item->getDisplayName();
     }
 
     public function updatedEmailInput(): void
     {
+        // Check if user exists in database
         $this->validateOnly('emailInput');
 
         if (!empty($this->emailInput) && filter_var($this->emailInput, FILTER_VALIDATE_EMAIL)) {
@@ -204,8 +99,43 @@ class ShareNote extends Component
         return $recipients->count();
     }
 
+    // Lazy loading configuration methods
+    public function getModelClassProperty(): ?string
+    {
+        return match($this->shareType) {
+            'individual' => User::class,
+            'academic_group' => AcademicGroup::class,
+            'academic_level' => AcademicLevel::class,
+            'student_group' => StudentGroup::class,
+            default => null,
+        };
+    }
+
+    public function getSearchColumnsProperty(): array
+    {
+        return match($this->shareType) {
+            'individual' => ['name', 'email'],
+            'academic_group' => ['name', 'tag'],
+            'academic_level' => ['name', 'label'],
+            'student_group' => ['name', 'description'],
+            default => ['name'],
+        };
+    }
+
+    public function getLabelFormatProperty(): string
+    {
+        return match($this->shareType) {
+            'individual' => 'name_email',
+            'academic_group' => 'name_count',
+            'academic_level' => 'name_count',
+            'student_group' => 'display_name',
+            default => 'name',
+        };
+    }
+
     public function shareNote(): void
     {
+        // For school-wide, we don't need recipients
         if ($this->shareType === 'school_wide') {
             $this->validate(['shareType' => 'required', 'canEdit' => 'boolean']);
             $this->selectedRecipients = [auth()->user()->school_id];
@@ -230,7 +160,10 @@ class ShareNote extends Component
                 'users_notified' => $result['users_notified'],
             ]);
 
+            // Reset form
             $this->reset(['selectedRecipients', 'emailInput', 'canEdit']);
+
+            // Refresh the note to show updated shares
             $this->note->refresh();
 
             $this->dispatch('success',

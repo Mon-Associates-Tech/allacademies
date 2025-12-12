@@ -168,7 +168,6 @@
     @endif
 
 
-    {{-- Recipients Selection (Hidden for school_wide) --}}
     @if($shareType !== 'school_wide' && $shareType !== 'email')
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
             <label class="block text-sm font-medium text-gray-900 dark:text-white mb-3">
@@ -176,21 +175,13 @@
                 <span class="text-red-500">*</span>
             </label>
 
-            @livewire('common.searchable-multi-select', [
+            @livewire('notes.share-note-recipients-select', [
+                'shareType' => $shareType,
                 'selected' => $selectedRecipients,
+                'schoolId' => auth()->user()->school_id,
                 'placeholder' => 'Search and select recipients...',
-                'emptyMessage' => 'No recipients found',
-                'multiple' => true,
                 'name' => 'selectedRecipients',
-                'valueKey' => 'id',
-                'labelKey' => 'name',
-                'lazyLoad' => false,
-                'modelClass' => $this->modelClass,
-                'searchColumn' => $this->searchColumns,
-                'chunkSize' => 50,
-                'customQuery' => $this->queryMethod,
-                'labelFormatter' => $this->labelFormatter,
-            ], key('recipients-' . $shareType))
+            ], key('recipients-select-' . $shareType))
 
             @error('selectedRecipients')
             <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -207,7 +198,25 @@
                 </div>
             @endif
         </div>
+    @else
+        {{-- Keep the existing school_wide warning message --}}
+        <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 p-6">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-amber-900 dark:text-amber-200">School-Wide Sharing</h4>
+                    <p class="mt-1 text-sm text-amber-800 dark:text-amber-300">
+                        This note will be shared with all <strong>{{ $this->recipientCount }}</strong> users in your school. Everyone will be notified.
+                    </p>
+                </div>
+            </div>
+        </div>
     @endif
+
 
     {{-- Permissions --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
