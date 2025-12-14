@@ -45,18 +45,19 @@ class DocumentGenerator extends Component
     protected $rules = [
         'selectedAcademicYearId' => 'required|exists:academic_years,id',
         'selectedTerm' => 'required|string',
-        'grades.*.assessments_score' => 'nullable|numeric|min:0|max:10',
-        'grades.*.quizzes_score' => 'nullable|numeric|min:0|max:30',
-        'grades.*.final_exam_score' => 'nullable|numeric|min:0|max:60',
+        // Weighting: Assignments 40%, Quizzes 10%, Final Exam 50%
+        'grades.*.assessments_score' => 'nullable|numeric|min:0|max:40',
+        'grades.*.quizzes_score' => 'nullable|numeric|min:0|max:10',
+        'grades.*.final_exam_score' => 'nullable|numeric|min:0|max:50',
         'grades.*.remarks' => 'nullable|string|max:255',
     ];
 
     protected $messages = [
         'selectedAcademicYearId.required' => 'Please select an academic year.',
         'selectedTerm.required' => 'Please select a term.',
-        'grades.*.assessments_score.max' => 'Assessments score cannot exceed 10.',
-        'grades.*.quizzes_score.max' => 'Quizzes score cannot exceed 30.',
-        'grades.*.final_exam_score.max' => 'Final exam score cannot exceed 60.',
+        'grades.*.assessments_score.max' => 'Assignments score cannot exceed 40.',
+        'grades.*.quizzes_score.max' => 'Quizzes score cannot exceed 10.',
+        'grades.*.final_exam_score.max' => 'Final exam score cannot exceed 50.',
     ];
 
     public function mount(Student $student)
@@ -149,13 +150,21 @@ class DocumentGenerator extends Component
                 ? $existingReportCard->grades()->where('subject_id', $subject->id)->first()
                 : null;
 
+            // Auto-compute assignments (assessments) score from submissions (40% max)
+            $computedAssignmentsScore = $this->computeAssignmentsScoreForSubject($subject->id);
+
+            $assessments = $existingGrade->assessments_score ?? $computedAssignmentsScore;
+            $quizzes = $existingGrade->quizzes_score ?? 0;
+            $finalExam = $existingGrade->final_exam_score ?? 0;
+            $total = ($assessments ?: 0) + ($quizzes ?: 0) + ($finalExam ?: 0);
+
             $this->grades[$subject->id] = [
                 'subject_name' => $subject->name,
-                'assessments_score' => $existingGrade->assessments_score ?? '',
-                'quizzes_score' => $existingGrade->quizzes_score ?? '',
-                'final_exam_score' => $existingGrade->final_exam_score ?? '',
-                'total_score' => $existingGrade->total_score ?? 0,
-                'grade_label' => $existingGrade->grade_label ?? '',
+                'assessments_score' => $assessments,
+                'quizzes_score' => $quizzes,
+                'final_exam_score' => $finalExam,
+                'total_score' => $existingGrade->total_score ?? $total,
+                'grade_label' => $existingGrade->grade_label ?? $this->calculateGradeLabel($total),
                 'remarks' => $existingGrade->remarks ?? '',
             ];
         }
@@ -188,6 +197,53 @@ class DocumentGenerator extends Component
         if ($score >= 50) return 'C';
         if ($score >= 40) return 'D';
         return 'F';
+    }
+
+    /**
+     * Compute the student's Assignments aggregate for a subject within the selected academic year.
+     * Result is scaled to the assignment weight (40 points max).
+     */
+    private function computeAssignmentsScoreForSubject($subjectId): float
+    {
+        if (!$this->selectedAcademicYearId) {
+            return 0.0;
+        }
+
+        $academicYear = AcademicYear::find($this->selectedAcademicYearId);
+        if (!$academicYear) {
+            return 0.0;
+        }
+
+        // Sum scores from graded submissions for this subject within the academic year window
+        $submissions = $this->student->assignmentSubmissions()
+            ->where('status', 'graded')
+            ->whereHas('assignment', function ($q) use ($subjectId) {
+                $q->where('academic_subject_id', $subjectId);
+            })
+            ->whereBetween('submitted_at', [
+                $academicYear->start_date,
+                $academicYear->end_date,
+            ])
+            ->with('assignment:id,academic_subject_id')
+            ->get();
+
+        $totalObtained = (float) $submissions->sum(function ($s) {
+            return (float) ($s->score ?? 0);
+        });
+        $totalPossible = (float) $submissions->sum(function ($s) {
+            return (float) ($s->total_marks ?? 0);
+        });
+
+        if ($totalPossible <= 0) {
+            return 0.0;
+        }
+
+        $percentage = ($totalObtained / $totalPossible) * 100.0; // 0-100
+        // Scale to 40 points (assignments weight)
+        $scaled = ($percentage / 100.0) * 40.0;
+
+        // Round to 1 decimal place for neatness
+        return round($scaled, 1);
     }
 
     private function calculateAttendanceSummary()
@@ -246,6 +302,19 @@ class DocumentGenerator extends Component
         $this->validate();
 
         try {
+            // Resolve a teacher to attribute grades to (required by DB schema)
+            $teacherId = $this->student->primary_teacher?->id;
+            if (!$teacherId) {
+                // Fallback: any assigned teacher
+                $fallbackTeacher = $this->student->teachers()->first();
+                $teacherId = $fallbackTeacher?->id;
+            }
+
+            if (!$teacherId) {
+                session()->flash('error', 'Failed to generate report card: No teacher assigned to this student. Please assign a class/primary teacher first.');
+                return null;
+            }
+
             // Create or update report card
             $reportCard = ReportCard::updateOrCreate([
                 'student_id' => $this->student->id,
@@ -256,19 +325,25 @@ class DocumentGenerator extends Component
                 'generated_at' => now(),
             ]);
 
-            // Save grades
+            // Save grades (ensure teacher_id is set to avoid DB errors)
             foreach ($this->grades as $subjectId => $gradeData) {
-                ReportCardGrade::updateOrCreate([
+                $grade = ReportCardGrade::firstOrNew([
                     'report_card_id' => $reportCard->id,
                     'subject_id' => $subjectId,
-                ], [
-                    'assessments_score' => $gradeData['assessments_score'] ?: 0,
-                    'quizzes_score' => $gradeData['quizzes_score'] ?: 0,
-                    'final_exam_score' => $gradeData['final_exam_score'] ?: 0,
-                    'total_score' => $gradeData['total_score'],
-                    'grade_label' => $gradeData['grade_label'],
-                    'remarks' => $gradeData['remarks'],
                 ]);
+
+                if (empty($grade->teacher_id)) {
+                    $grade->teacher_id = $teacherId;
+                }
+
+                $grade->assessments_score = $gradeData['assessments_score'] ?: 0;
+                $grade->quizzes_score = $gradeData['quizzes_score'] ?: 0;
+                $grade->final_exam_score = $gradeData['final_exam_score'] ?: 0;
+                $grade->total_score = $gradeData['total_score'];
+                $grade->grade_label = $gradeData['grade_label'];
+                $grade->remarks = $gradeData['remarks'];
+
+                $grade->save();
             }
 
             $this->loadExistingData();
@@ -296,9 +371,15 @@ class DocumentGenerator extends Component
 
         $reportCard->load(['student.user', 'student.academicLevel', 'student.primaryTeacher.user', 'student.studentGroup', 'grades.subject', 'academicYear', 'school']);
 
+        // Prefer the report card's school, but fallback to the student's school for older records
+        $school = $reportCard->school ?: $reportCard->student->school;
+
         $pdf = PDF::loadView('students.report-card-pdf', [
             'reportCard' => $reportCard,
-            'attendanceSummary' => $this->attendanceSummary
+            'attendanceSummary' => $this->attendanceSummary,
+            'school' => $school,
+            // Provide a defensive fallback for subjects in case an older report card lacks persisted grades
+            'gradesArray' => $this->grades,
         ]);
 
         return response()->streamDownload(function() use ($pdf) {

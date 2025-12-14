@@ -4,56 +4,53 @@ namespace App\Traits;
 
 use App\Models\School;
 use App\Scopes\SchoolScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 trait BelongsToSchoolEnhanced
 {
-
-    public function getUserSchoolId(){
-        if($this->attributes['school_id']){
+    public function getUserSchoolId(): ?int
+    {
+        if (!empty($this->attributes['school_id'])) {
             return $this->attributes['school_id'];
         }
-        elseif ($this->user->school_id){
+
+        if (isset($this->user) && $this->user->school_id) {
             return $this->user->school_id;
         }
-        else {
-            return getSchoolId();
-        }
 
+        return getSchoolId();
     }
 
-    public function getSchoolForUser(){
-        return School::find($this->getUserSchoolId())->first();
+    public function getSchoolForUser(): ?School
+    {
+        $schoolId = $this->getUserSchoolId();
+        return $schoolId ? School::find($schoolId) : null;
     }
 
     public static function bootBelongsToSchoolEnhanced(): void
     {
-        // Check if this model should be school-scoped
+        // Apply global school scope if needed
         if (static::shouldApplySchoolScope()) {
             static::addGlobalScope(new SchoolScope);
         }
 
-        // Auto-assign school_id when creating (only for school-restricted models)
+        // Auto-assign school_id when creating
         static::creating(function ($model) {
-            // Skip auto-assignment if model shouldn't be school-restricted
             if (!$model->shouldAutoAssignSchool()) {
                 return;
             }
 
-            // Check if school_id column exists on this model's table
+            // Check if school_id column exists
             static $columnExists = null;
-            $table = $model->getTable();
-
             if ($columnExists === null) {
-                $columnExists = Schema::hasColumn($table, 'school_id');
+                $columnExists = Schema::hasColumn($model->getTable(), 'school_id');
             }
 
-            // Only proceed if school_id column exists and is empty
+            // Only auto-assign if column exists and is empty
             if ($columnExists && empty($model->school_id)) {
-                // Try to get school_id from authenticated user
-                $schoolId = self::getSchoolIdFromContext();
-
+                $schoolId = static::getSchoolIdFromContext();
                 if ($schoolId) {
                     $model->school_id = $schoolId;
                 }
@@ -69,44 +66,50 @@ trait BelongsToSchoolEnhanced
         // Models that should NEVER be school-scoped
         $globalModels = [
             \App\Models\School::class,
-            \App\Models\User::class, // Users are never scoped - they provide context
+            \App\Models\User::class, // Users provide context, not scoped by it
         ];
 
         if (in_array(static::class, $globalModels)) {
             return false;
         }
 
-        // Don't apply school scope if model doesn't have school_id column
+        // Don't apply if model doesn't have school_id column
         if (!Schema::hasColumn((new static)->getTable(), 'school_id')) {
             return false;
         }
 
-        // Check if model explicitly disables school scoping
+        // Check if model explicitly disables scoping via property
         if (property_exists(static::class, 'schoolRestricted') && !static::$schoolRestricted) {
             return false;
+        }
+
+        // Special handling for Author model
+        if (static::class === \App\Models\Author::class) {
+            return false; // Authors are global
         }
 
         // Check authenticated user context
         $user = auth()->user();
 
         if (!$user) {
-            return true; // Default to scoped if no user context
+            // No user = default to scoped (safe)
+            return true;
         }
 
-        // Roles that can access across all schools (never scoped)
-        $crossSchoolRoles = ['superadmin', 'owner'];
-
-        if ($user->hasAnyRole($crossSchoolRoles)) {
-            // But still apply scoping unless they're in "all schools" view
-            return app()->has('current_school_id') && app('current_school_id') !== null;
+        // Cross-school roles: only scope if they've selected a specific school
+        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+            // If current_school_id is bound and NOT null, apply scope
+            if (app()->bound('current_school_id')) {
+                $schoolId = app('current_school_id');
+                // null = "all schools" mode = no scope
+                // integer = specific school = apply scope
+                return $schoolId !== null;
+            }
+            // Not bound = default to "all schools" for owners
+            return false;
         }
 
-        // Special handling for Author model - not school-bound by design
-        if (static::class === \App\Models\Author::class) {
-            return false; // Authors are global
-        }
-
-        // Default: apply school scope for all other cases
+        // Default: apply school scope for regular users
         return true;
     }
 
@@ -115,7 +118,7 @@ trait BelongsToSchoolEnhanced
      */
     protected function shouldAutoAssignSchool(): bool
     {
-        // Models that should never auto-assign school
+        // Models that should never auto-assign
         $excludedModels = [
             \App\Models\School::class,
             \App\Models\User::class,
@@ -126,92 +129,145 @@ trait BelongsToSchoolEnhanced
             return false;
         }
 
-        // Check if model has a property to disable auto-assignment
+        // Check for explicit opt-out property
         if (property_exists($this, 'autoAssignSchool') && !$this->autoAssignSchool) {
             return false;
         }
 
-        // Check user context
         $user = auth()->user();
 
         if (!$user) {
-            return false; // Can't assign without user context
+            return false; // Can't auto-assign without user
         }
 
-        // Don't auto-assign for non-school roles
+        // Non-school roles don't auto-assign
         $nonSchoolRoles = ['subscriber'];
         if ($user->hasAnyRole($nonSchoolRoles)) {
             return false;
         }
 
-        // Default: auto-assign school for school-bound models
         return true;
     }
 
-    protected static function getSchoolIdFromContext()
+    /**
+     * Get school ID from current context
+     */
+    protected static function getSchoolIdFromContext(): ?int
     {
         try {
-            // First, check if we have it from middleware
+            // Priority 1: Middleware-set context
             if (app()->bound('current_school_id')) {
-                return app('current_school_id');
+                $schoolId = app('current_school_id');
+                // null = "all schools" (valid for owners)
+                // Return as-is (could be null or int)
+                return $schoolId;
             }
 
-            // Check if we're in a web request with authenticated user
+            // Priority 2: Authenticated user context
             if (app()->bound('auth') && app('auth')->hasResolvedGuards()) {
                 $user = Auth::user();
 
                 if ($user) {
-                    // Cross-school roles don't auto-assign school
-                    $crossSchoolRoles = ['superadmin', 'owner'];
-                    if ($user->hasAnyRole($crossSchoolRoles)) {
-                        // Check if there's a current school context for these users
+                    // Cross-school roles
+                    if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+                        // Check for current_school binding
                         if (app()->bound('current_school')) {
                             return app('current_school')->id;
                         }
+                        // No context = null (don't auto-assign for owners)
                         return null;
                     }
 
-                    // Non-school roles don't have school context
-                    $nonSchoolRoles = ['subscriber'];
-                    if ($user->hasAnyRole($nonSchoolRoles)) {
+                    // Non-school roles
+                    if ($user->hasAnyRole(['subscriber'])) {
                         return null;
                     }
 
-                    // Regular school users use their school_id
+                    // Regular school-bound users
                     return $user->school_id;
                 }
             }
 
-            // Fallback to current_school if available
+            // Priority 3: Fallback to current_school
             if (app()->bound('current_school')) {
                 return app('current_school')->id;
             }
         } catch (\Exception $e) {
-            // If anything fails, return null to avoid breaking the application
+            \Log::warning('Failed to get school context', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
 
         return null;
     }
 
-    public function scopeForSchool($query, $schoolId)
+    // ==================== QUERY SCOPES ====================
+
+    /**
+     * Scope to a specific school (bypasses global scope)
+     */
+    public function scopeForSchool(Builder $query, int $schoolId): Builder
     {
-        return $query->where('school_id', $schoolId);
+        return $query->withoutGlobalScope(SchoolScope::class)
+            ->where('school_id', $schoolId);
     }
 
-    public function scopeWithoutSchoolScope($query)
+    /**
+     * Remove school scope (for internal queries)
+     */
+    public function scopeWithoutSchoolScope(Builder $query): Builder
     {
         return $query->withoutGlobalScope(SchoolScope::class);
     }
 
-    public function scopeCrossSchool($query)
+    /**
+     * Query all schools (requires permission)
+     */
+    public function scopeCrossSchool(Builder $query): Builder
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->hasAnyRole(['superadmin', 'owner']))) {
+        if (!$user || !$user->hasAnyRole(['superadmin', 'owner'])) {
             abort(403, 'Unauthorized to access cross-school data');
         }
 
         return $query->withoutGlobalScope(SchoolScope::class);
+    }
+
+    /**
+     * Explicit "all schools" scope with permission check
+     */
+    public function scopeAllSchools(Builder $query): Builder
+    {
+        if (!auth()->check()) {
+            abort(403, 'Authentication required');
+        }
+
+        $user = auth()->user();
+        if (!($user->isSuperAdmin() || $user->hasRole('owner'))) {
+            abort(403, 'Unauthorized to access all schools');
+        }
+
+        return $query->withoutGlobalScope(SchoolScope::class);
+    }
+
+    /**
+     * Scope to current school context (mostly redundant now)
+     * Kept for backwards compatibility
+     */
+    public function scopeForCurrentSchool(Builder $query): Builder
+    {
+        // Global scope handles this automatically
+        // But we keep it for explicit calls
+        return $query;
+    }
+
+    // ==================== RELATIONSHIP ====================
+
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 }

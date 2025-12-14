@@ -16,8 +16,8 @@ class Teacher extends Model
 {
     use HasFactory;
     use HasStudents;
-//    use BelongsToSchoolEnhanced;
-    use ShouldScopeSchool;
+    use BelongsToSchoolEnhanced;
+//    use ShouldScopeSchool;
 
     protected $fillable = [
         'school_id', 'user_id', 'employee_id', 'department',

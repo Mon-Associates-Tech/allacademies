@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 
 class LibrarianManagement extends Component
 {
@@ -29,16 +28,20 @@ class LibrarianManagement extends Component
     public $qualifications;
     public $specializations;
     public $isActive = true;
+
+    // Search and filters
     public $searchTerm = '';
+    public $statusFilter = 'all';
+    public $departmentFilter = '';
+    public $positionFilter = '';
+
+    // UI state
     public $isEditing = false;
     public $editingLibrarianId;
     public $showDeleteModal = false;
     public $deletingLibrarianId;
     public $sortField = 'name';
     public $sortDirection = 'asc';
-    public $statusFilter = 'all';
-    public $departmentFilter = '';
-    public $positionFilter = '';
     public $showBulkActions = false;
     public $selectedLibrarians = [];
     public $selectAll = false;
@@ -91,19 +94,48 @@ class LibrarianManagement extends Component
         'hireDate.before_or_equal' => 'Hire date cannot be in the future.',
     ];
 
-    public function openFormModal(): void
+    // Filter update methods
+    public function updatedSearchTerm()
     {
-//        $this->openModal('form-modal', [
-//            'title' => 'Create Newd Librarian',
-//            'size' => 'xl'
-//        ]);
+        $this->resetPage();
+    }
+
+    public function updatedStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDepartmentFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPositionFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->searchTerm = '';
+        $this->statusFilter = 'all';
+        $this->departmentFilter = '';
+        $this->positionFilter = '';
+        $this->resetPage();
     }
 
     public function create()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school before creating a librarian.');
+            return;
+        }
+
         $this->validate();
 
-        DB::transaction(function () {
+        DB::transaction(function () use ($schoolId) {
             // Create user
             $user = User::create([
                 'name' => $this->name,
@@ -111,7 +143,7 @@ class LibrarianManagement extends Component
                 'password' => Hash::make($this->password),
                 'role' => 'librarian',
                 'is_active' => $this->isActive,
-                'email_verified_at' => now(), // Auto-verify librarian accounts
+                'email_verified_at' => now(),
             ]);
 
             // Assign librarian role
@@ -120,9 +152,10 @@ class LibrarianManagement extends Component
                 $user->roles()->attach($librarianRole);
             }
 
-            // Create librarian record
+            // Create librarian record with school_id
             Librarian::create([
                 'user_id' => $user->id,
+                'school_id' => $schoolId,
                 'position' => $this->position,
                 'department' => $this->department,
                 'phone' => $this->phone,
@@ -140,12 +173,6 @@ class LibrarianManagement extends Component
         $this->dispatch('librarian-created');
         $this->closeModal();
     }
-
-//    public function openModal()
-//    {
-//        $this->showFormModal = true;
-//        $this->resetForm();
-//    }
 
     public function closeModal()
     {
@@ -180,10 +207,17 @@ class LibrarianManagement extends Component
 
     public function update()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school before updating a librarian.');
+            return;
+        }
+
         $librarian = Librarian::with('user')->findOrFail($this->editingLibrarianId);
         $this->validate();
 
-        DB::transaction(function () use ($librarian) {
+        DB::transaction(function () use ($librarian, $schoolId) {
             // Update user
             $userData = [
                 'name' => $this->name,
@@ -199,6 +233,7 @@ class LibrarianManagement extends Component
 
             // Update librarian
             $librarian->update([
+                'school_id' => $schoolId,
                 'position' => $this->position,
                 'department' => $this->department,
                 'phone' => $this->phone,
@@ -294,13 +329,6 @@ class LibrarianManagement extends Component
         session()->flash('message', 'Selected librarians deactivated successfully!');
     }
 
-    public function exportLibrarians()
-    {
-        // This would typically export to CSV/Excel
-        // For now, we'll just show a success message
-        session()->flash('message', 'Export functionality would be implemented here.');
-    }
-
     public function updatedSelectAll($value)
     {
         if ($value) {
@@ -308,16 +336,6 @@ class LibrarianManagement extends Component
         } else {
             $this->selectedLibrarians = [];
         }
-    }
-
-    public function resetFilters()
-    {
-        $this->searchTerm = '';
-        $this->statusFilter = 'all';
-        $this->departmentFilter = '';
-        $this->positionFilter = '';
-        $this->sortField = 'name';
-        $this->sortDirection = 'asc';
     }
 
     public function resetForm()
@@ -343,28 +361,36 @@ class LibrarianManagement extends Component
 
     private function getLibrarians()
     {
-        return Librarian::query()
-            ->whereHas('user', function($query) {
-                if ($this->searchTerm) {
-                    $query->where('name', 'like', '%'.$this->searchTerm.'%')
-                        ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
-                }
-                if ($this->statusFilter === 'active') {
-                    $query->where('is_active', true);
-                } elseif ($this->statusFilter === 'inactive') {
-                    $query->where('is_active', false);
-                }
-            })
+        $schoolId = getSchoolId();
+
+        $query = Librarian::query();
+
+        // Apply school context with explicit table name
+        if ($schoolId) {
+            $query->where('librarians.school_id', $schoolId);
+        }
+
+        return $query->whereHas('user', function($q) {
+            if ($this->searchTerm) {
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
+            }
+            if ($this->statusFilter === 'active') {
+                $q->where('is_active', true);
+            } elseif ($this->statusFilter === 'inactive') {
+                $q->where('is_active', false);
+            }
+        })
             ->when($this->searchTerm, function($query) {
-                $query->orWhere('position', 'like', '%'.$this->searchTerm.'%')
-                    ->orWhere('department', 'like', '%'.$this->searchTerm.'%');
-//                    ->orWhere('employee_id', 'like', '%'.$this->searchTerm.'%');
+                $query->orWhere('librarians.position', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('librarians.department', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('librarians.employee_id', 'like', '%'.$this->searchTerm.'%');
             })
             ->when($this->departmentFilter, function($query) {
-                $query->where('department', $this->departmentFilter);
+                $query->where('librarians.department', $this->departmentFilter);
             })
             ->when($this->positionFilter, function($query) {
-                $query->where('position', $this->positionFilter);
+                $query->where('librarians.position', $this->positionFilter);
             })
             ->with(['user', 'bookApprovals'])
             ->when($this->sortField === 'name', function($query) {
@@ -378,38 +404,62 @@ class LibrarianManagement extends Component
                     ->select('librarians.*');
             })
             ->when(in_array($this->sortField, ['position', 'department', 'hire_date']), function($query) {
-                $query->orderBy($this->sortField, $this->sortDirection);
+                $query->orderBy('librarians.' . $this->sortField, $this->sortDirection);
             });
     }
-
     public function render()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school to manage librarians.');
+        }
+
         $librarians = $this->getLibrarians()->paginate(10);
 
-        $departments = Librarian::whereNotNull('department')
-            ->distinct()
-            ->pluck('department')
-            ->filter()
-            ->sort();
+        // Get filter options scoped to current school
+        $departments = $schoolId
+            ? Librarian::where('school_id', $schoolId)
+                ->whereNotNull('department')
+                ->distinct()
+                ->pluck('department')
+                ->filter()
+                ->sort()
+            : collect();
 
-        $positions = Librarian::whereNotNull('position')
-            ->distinct()
-            ->pluck('position')
-            ->filter()
-            ->sort();
+        $positions = $schoolId
+            ? Librarian::where('school_id', $schoolId)
+                ->whereNotNull('position')
+                ->distinct()
+                ->pluck('position')
+                ->filter()
+                ->sort()
+            : collect();
 
+        // Stats scoped to current school
         $stats = [
-            'total' => Librarian::count(),
-            'active' => Librarian::whereHas('user', fn($q) => $q->where('is_active', true))->count(),
-            'inactive' => Librarian::whereHas('user', fn($q) => $q->where('is_active', false))->count(),
-            'this_month' => Librarian::whereMonth('created_at', now()->month)->count(),
+            'total' => $schoolId ? Librarian::where('school_id', $schoolId)->count() : 0,
+            'active' => $schoolId ? Librarian::where('school_id', $schoolId)
+                ->whereHas('user', fn($q) => $q->where('is_active', true))->count() : 0,
+            'inactive' => $schoolId ? Librarian::where('school_id', $schoolId)
+                ->whereHas('user', fn($q) => $q->where('is_active', false))->count() : 0,
+            'this_month' => $schoolId ? Librarian::where('school_id', $schoolId)
+                ->whereMonth('created_at', now()->month)->count() : 0,
         ];
+
+        // Count active filters
+        $activeFiltersCount = collect([
+            $this->statusFilter !== 'all' ? $this->statusFilter : null,
+            $this->departmentFilter,
+            $this->positionFilter
+        ])->filter()->count();
 
         return view('livewire.administrators.librarian-management', [
             'librarians' => $librarians,
             'departments' => $departments,
             'positions' => $positions,
             'stats' => $stats,
+            'activeFiltersCount' => $activeFiltersCount,
         ]);
     }
 }

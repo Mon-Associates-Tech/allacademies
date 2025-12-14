@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Administrators;
 
+use App\Models\School;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Teacher;
@@ -80,7 +81,16 @@ class TeacherManagement extends Component
 
     public function mount()
     {
-        $this->academicGroups = AcademicGroup::orderBy('name')->get();
+        $schoolId = getSchoolId();
+
+        if ($schoolId) {
+            // Get academic groups that this school has adopted
+            $this->academicGroups = AcademicGroup::forSchool($schoolId)
+                ->orderBy('name')
+                ->get();
+        } else {
+            $this->academicGroups = collect();
+        }
     }
 
     // Filter methods
@@ -95,22 +105,22 @@ class TeacherManagement extends Component
         $this->resetPage();
     }
 
-    public function updatedFilterAcademicLevel()
+    public function updatedFilterAcademicLevel(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterSubject()
+    public function updatedFilterSubject(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterSpecialization()
+    public function updatedFilterSpecialization(): void
     {
         $this->resetPage();
     }
 
-    public function clearFilters()
+    public function clearFilters(): void
     {
         $this->filterAcademicGroup = '';
         $this->filterAcademicLevel = '';
@@ -120,13 +130,13 @@ class TeacherManagement extends Component
         $this->resetPage();
     }
 
-    // Existing methods remain unchanged
-    public function updatedEmail()
+
+    public function updatedEmail(): void
     {
         $this->checkExistingUser();
     }
 
-    public function updatedAcademicGroupId()
+    public function updatedAcademicGroupId(): void
     {
         $this->academicLevelId = null;
         $this->selectedSubjects = [];
@@ -134,7 +144,7 @@ class TeacherManagement extends Component
         $this->loadAcademicLevels();
     }
 
-    public function updatedAcademicLevelId()
+    public function updatedAcademicLevelId(): void
     {
         $this->selectedSubjects = [];
         $this->loadAvailableSubjects();
@@ -165,18 +175,24 @@ class TeacherManagement extends Component
         }
     }
 
-    public function loadAcademicLevels()
+    public function loadAcademicLevels(): void
     {
-        if ($this->academicGroupId) {
-            $this->academicLevels = AcademicLevel::where('academic_group_id', $this->academicGroupId)
-                ->orderBy('name')
-                ->get();
+        $schoolId = getSchoolId();
+
+        if ($this->academicGroupId && $schoolId) {
+            // Get academic levels for this group that the school has adopted
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+
+            $this->academicLevels = $availableLevels->where('academic_group_id', $this->academicGroupId)
+                ->sortBy('name')
+                ->values();
         } else {
             $this->academicLevels = [];
         }
     }
 
-    public function loadAvailableSubjects()
+    public function loadAvailableSubjects(): void
     {
         if ($this->academicLevelId) {
             $this->availableSubjects = AcademicSubject::where('academic_level_id', $this->academicLevelId)
@@ -188,6 +204,13 @@ class TeacherManagement extends Component
     }
     public function create()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school before creating a teacher.');
+            return;
+        }
+
         // Dynamic validation rules
         $rules = $this->rules;
 
@@ -201,7 +224,7 @@ class TeacherManagement extends Component
         $this->validate($rules);
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($schoolId) {
                 // Step 1: Create or get user
                 if ($this->userExists && $this->existingUser) {
                     $user = $this->existingUser;
@@ -226,9 +249,10 @@ class TeacherManagement extends Component
                     $user->roles()->attach($teacherRole);
                 }
 
-                // Step 3: Create teacher record
+                // Step 3: Create teacher record with school_id
                 $teacher = Teacher::create([
                     'user_id' => $user->id,
+                    'school_id' => $schoolId,
                     'specialization' => $this->specialization,
                 ]);
 
@@ -260,8 +284,8 @@ class TeacherManagement extends Component
                     $teacher->subjects()->attach($subjectData);
                 }
 
-                // Step 7: Auto-assign all students at the same level
-                $this->autoAssignStudents($teacher);
+                // Step 7: Auto-assign all students at the same level (school-scoped)
+                $this->autoAssignStudents($teacher, $schoolId);
             });
 
             $this->resetForm();
@@ -272,15 +296,24 @@ class TeacherManagement extends Component
 
         $this->js('window.Modal.close("teacher-form")');
     }
-
-    private function autoAssignStudents($teacher)
+    private function autoAssignStudents($teacher, $schoolId = null): void
     {
         if (!$this->academicLevelId) {
             return;
         }
 
-        // Get all students at the same academic level
-        $students = Student::where('academic_level_id', $this->academicLevelId)->get();
+        if (!$schoolId) {
+            $schoolId = getSchoolId();
+        }
+
+        if (!$schoolId) {
+            return;
+        }
+
+        // Get all students at the same academic level AND same school
+        $students = Student::where('academic_level_id', $this->academicLevelId)
+            ->where('school_id', $schoolId)
+            ->get();
 
         if ($students->isNotEmpty()) {
             $studentData = [];
@@ -295,7 +328,7 @@ class TeacherManagement extends Component
         }
     }
 
-    public function edit($teacherId)
+    public function edit($teacherId): void
     {
         $this->isEditing = true;
         $this->editingTeacherId = $teacherId;
@@ -335,6 +368,13 @@ class TeacherManagement extends Component
 
     public function update()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school before updating a teacher.');
+            return;
+        }
+
         $teacher = Teacher::with('user')->findOrFail($this->editingTeacherId);
 
         $rules = $this->rules;
@@ -344,7 +384,7 @@ class TeacherManagement extends Component
         $this->validate($rules);
 
         try {
-            DB::transaction(function () use ($teacher) {
+            DB::transaction(function () use ($teacher, $schoolId) {
                 // Update user
                 $userData = [
                     'name' => $this->name,
@@ -360,6 +400,7 @@ class TeacherManagement extends Component
                 // Update teacher
                 $teacher->update([
                     'specialization' => $this->specialization,
+                    'school_id' => $schoolId, // Ensure school_id is set
                 ]);
 
                 // Update academic group association
@@ -393,9 +434,9 @@ class TeacherManagement extends Component
                     $teacher->subjects()->attach($subjectData);
                 }
 
-                // Re-assign students based on new level
+                // Re-assign students based on new level (school-scoped)
                 $teacher->assignedStudents()->detach();
-                $this->autoAssignStudents($teacher);
+                $this->autoAssignStudents($teacher, $schoolId);
             });
 
             $this->resetForm();
@@ -406,14 +447,13 @@ class TeacherManagement extends Component
 
         $this->js('window.Modal.close("teacher-form")');
     }
-
-    public function confirmDelete($teacherId)
+    public function confirmDelete($teacherId): void
     {
         $this->teacherToDelete = Teacher::with('user')->findOrFail($teacherId);
         $this->showDeleteModal = true;
     }
 
-    public function delete()
+    public function delete(): void
     {
         try {
             DB::transaction(function () {
@@ -441,13 +481,13 @@ class TeacherManagement extends Component
         }
     }
 
-    public function cancelEdit()
+    public function cancelEdit(): void
     {
         $this->resetForm();
         $this->js('window.Modal.close("teacher-form")');
     }
 
-    public function resetForm()
+    public function resetForm(): void
     {
         $this->reset([
             'name', 'email', 'password', 'specialization', 'biography',
@@ -460,8 +500,19 @@ class TeacherManagement extends Component
 
     public function render()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school to manage teachers.');
+        }
+
         // Build query with filters
         $query = Teacher::with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents']);
+
+        // Apply school context
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
+        }
 
         // Search filter
         if ($this->searchTerm) {
@@ -499,18 +550,51 @@ class TeacherManagement extends Component
 
         $teachers = $query->latest()->paginate(10);
 
-        // Get filter options
-        $filterAcademicGroups = AcademicGroup::orderBy('name')->get();
-        $filterAcademicLevels = $this->filterAcademicGroup
-            ? AcademicLevel::where('academic_group_id', $this->filterAcademicGroup)->orderBy('name')->get()
-            : AcademicLevel::orderBy('name')->get();
-        $filterSubjects = AcademicSubject::with('academicLevel')->orderBy('name')->get();
-        $filterSpecializations = Teacher::whereNotNull('specialization')
-            ->distinct()
-            ->pluck('specialization')
-            ->filter()
-            ->sort()
-            ->values();
+        // Get filter options - SCOPED TO CURRENT SCHOOL
+        // Academic groups that the school has adopted
+        $filterAcademicGroups = $schoolId
+            ? AcademicGroup::forSchool($schoolId)->orderBy('name')->get()
+            : collect();
+
+        // Academic levels - get from school's adopted groups
+        if ($this->filterAcademicGroup && $schoolId) {
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+            $filterAcademicLevels = $availableLevels->where('academic_group_id', $this->filterAcademicGroup)
+                ->sortBy('name')
+                ->values();
+        } elseif ($schoolId) {
+            $school = School::find($schoolId);
+            $filterAcademicLevels = $school->getAvailableAcademicLevels()
+                ->sortBy('name')
+                ->values();
+        } else {
+            $filterAcademicLevels = collect();
+        }
+
+        // Subjects - from school's adopted academic levels
+        if ($schoolId) {
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+            $levelIds = $availableLevels->pluck('id');
+            $filterSubjects = AcademicSubject::with('academicLevel')
+                ->whereIn('academic_level_id', $levelIds)
+                ->orderBy('name')
+                ->get();
+        } else {
+            $filterSubjects = collect();
+        }
+
+        // Specializations - from teachers in current school
+        $filterSpecializations = $schoolId
+            ? Teacher::where('school_id', $schoolId)
+                ->whereNotNull('specialization')
+                ->distinct()
+                ->pluck('specialization')
+                ->filter()
+                ->sort()
+                ->values()
+            : collect();
 
         // Count active filters
         $activeFiltersCount = collect([
