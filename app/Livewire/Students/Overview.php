@@ -12,6 +12,7 @@ use Livewire\Component;
 class Overview extends Component
 {
     public $student;
+    public string $range = '30d';
 
     // Assignment Stats
     public $totalAssignments = 0;
@@ -41,6 +42,18 @@ class Overview extends Component
     public $performanceChartData = [];
     public $subjectChartData = [];
 
+    // Chart props for Livewire components
+    public array $barLabels = [];
+    public array $barDatasets = [];
+    public array $barOptions = [];
+    public array $pieLabels = [];
+    public array $pieValues = [];
+    public array $pieOptions = [];
+    public float $gaugeValue = 0.0;
+    public int $gaugeMin = 0;
+    public int $gaugeMax = 100;
+    public array $gaugeThresholds = [];
+
     public function mount()
     {
         $user = Auth::user();
@@ -53,12 +66,25 @@ class Overview extends Component
         }
 
         if ($this->student) {
-            $this->loadAssignmentStats();
-            $this->loadSelfAssessmentStats();
-            $this->loadPerformanceData();
-            $this->loadRecentData();
-            $this->loadSubjectPerformance();
+            $this->loadAll();
         }
+    }
+
+    public function updatedRange(): void
+    {
+        if ($this->student) {
+            $this->loadAll();
+        }
+    }
+
+    protected function loadAll(): void
+    {
+        $this->loadAssignmentStats();
+        $this->loadSelfAssessmentStats();
+        $this->loadPerformanceData();
+        $this->loadRecentData();
+        $this->loadSubjectPerformance();
+        $this->prepareCharts();
     }
 
     protected function loadAssignmentStats()
@@ -218,9 +244,12 @@ class Overview extends Component
     {
         $student = $this->student;
 
-        // Get assignment submissions for the last 30 days
+        // Get assignment submissions within selected range
+        $start = $this->rangeStart();
         $submissions = AssignmentSubmission::where('student_id', $student->id)
-            ->where('submitted_at', '>=', now()->subDays(30))
+            ->when($start, function ($q) use ($start) {
+                $q->where('submitted_at', '>=', $start);
+            })
             ->whereIn('status', ['graded', 'completed'])
             ->orderBy('submitted_at')
             ->get();
@@ -305,9 +334,13 @@ class Overview extends Component
     {
         $student = $this->student;
 
-        // Get submissions grouped by subject
+        // Get submissions grouped by subject (filtered by selected range)
+        $start = $this->rangeStart();
         $submissions = AssignmentSubmission::where('student_id', $student->id)
             ->whereIn('status', ['graded', 'completed'])
+            ->when($start, function ($q) use ($start) {
+                $q->where('submitted_at', '>=', $start);
+            })
             ->with('assignment.academicSubject')
             ->get();
 
@@ -355,6 +388,88 @@ class Overview extends Component
                 ];
             })
             ->toArray();
+    }
+
+    protected function prepareCharts(): void
+    {
+        // Bar chart: performance by subject
+        $this->barLabels = collect($this->subjectChartData)->pluck('subject')->toArray();
+        $barData = collect($this->subjectChartData)->pluck('score')->toArray();
+        $this->barDatasets = [
+            [
+                'label' => 'Avg Score %',
+                'data' => $barData,
+                'backgroundColor' => '#3b82f6',
+            ]
+        ];
+        $this->barOptions = [
+            'plugins' => [ 'legend' => [ 'display' => true, 'position' => 'bottom' ] ],
+            'scales' => [
+                'y' => [ 'beginAtZero' => true, 'max' => 100 ]
+            ]
+        ];
+
+        // Pie chart: status distribution within selected range
+        [$completed, $ongoing, $overdue] = $this->statusCountsInRange();
+        $this->pieLabels = ['Completed', 'Ongoing', 'Overdue'];
+        $this->pieValues = [ $completed, $ongoing, $overdue ];
+        $this->pieOptions = [ 'plugins' => [ 'legend' => [ 'position' => 'right' ] ] ];
+
+        // Gauge: completion rate within selected range
+        $den = max(1, $completed + $ongoing + $overdue);
+        $rate = ($completed / $den) * 100.0;
+        $this->gaugeValue = round($rate, 1);
+        $this->gaugeMin = 0;
+        $this->gaugeMax = 100;
+        $this->gaugeThresholds = [
+            ['max' => 50, 'color' => '#ef4444', 'label' => 'Low'],
+            ['max' => 80, 'color' => '#f59e0b', 'label' => 'Medium'],
+            ['max' => 100, 'color' => '#10b981', 'label' => 'High'],
+        ];
+    }
+
+    protected function statusCountsInRange(): array
+    {
+        $student = $this->student;
+        $start = $this->rangeStart();
+
+        $completed = AssignmentSubmission::where('student_id', $student->id)
+            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->when($start, function ($q) use ($start) { $q->where('submitted_at', '>=', $start); })
+            ->count();
+
+        $ongoing = AssignmentSubmission::where('student_id', $student->id)
+            ->where('status', 'in_progress')
+            ->when($start, function ($q) use ($start) { $q->where('updated_at', '>=', $start); })
+            ->count();
+
+        // Overdue: assignments with due date past now, started before now, in the window, not completed
+        $available = $this->getAvailableAssignments();
+        $subs = AssignmentSubmission::where('student_id', $student->id)->get();
+        $overdue = $available->filter(function ($assignment) use ($subs, $start) {
+            $submission = $subs->where('assignment_id', $assignment->id)->first();
+            $inWindow = $start ? ($assignment->ends_at >= $start) : true;
+            return $inWindow && $assignment->ends_at < now() && (!$submission || !in_array($submission->status, ['completed','submitted','graded']));
+        })->count();
+
+        return [$completed, $ongoing, $overdue];
+    }
+
+    protected function rangeStart(): ?\Carbon\Carbon
+    {
+        switch ($this->range) {
+            case '7d':
+                return now()->subDays(7);
+            case '30d':
+                return now()->subDays(30);
+            case '90d':
+                return now()->subDays(90);
+            case 'term':
+                // Fallback: treat current term ~90 days if no explicit term store
+                return now()->subDays(90);
+            default:
+                return now()->subDays(30);
+        }
     }
 
     public function render()
