@@ -33,10 +33,10 @@ class EventServiceProvider extends ServiceProvider
             UpdateSubscription::class,
         ],
         Login::class => [
-            StoreUserLoginHistory::class,
+         //   StoreUserLoginHistory::class,
         ],
         Logout::class => [
-            StoreUserLogoutHistory::class,
+         //   StoreUserLogoutHistory::class,
         ],
         Verified::class => [
             CreateTrialSubscriptionOnVerification::class,
@@ -51,11 +51,11 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         Event::listen(Login::class, static function (Login $event) {
-           // app(UserLoginService::class)->handleLogin($event->user);
+            app(UserLoginService::class)->handleLogin($event->user);
         });
 
         Event::listen(Logout::class, static function (Logout $event) {
-           // app(UserLoginService::class)->handleLogout($event->user, 'manual');
+            app(UserLoginService::class)->handleLogout($event->user, 'manual');
         });
     }
 

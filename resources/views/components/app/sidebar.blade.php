@@ -1,4 +1,4 @@
-@props(['variant' => 'v1'])
+@props(['variant' => 'v1', 'hasSchoolSwitcher' => false])
 <div class="min-w-fit thin-scrollbar">
     <!-- Sidebar backdrop (mobile only) -->
     <div
@@ -11,7 +11,7 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $hasSchoolSwitcher ? 'h-[calc(100dvh-2.5rem)]' : 'h-[100dvh]' }} no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
         :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-52'"
         @click.outside="$store.sidebar.open =  false"
         style=""
@@ -200,7 +200,7 @@
         </div>
 
 
-        <div class="py-1 hidden lg:inline-flex justify-end border-t border-gray-200 dark:border-gray-700 shrink-0">
+        <div class="hidden lg:flex py-1 justify-end border-t border-gray-200 dark:border-gray-700 shrink-0">
             <div class="w-12 pl-4 pr-3 py-2">
                 <button
                     class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"

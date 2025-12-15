@@ -3,6 +3,17 @@
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex-1 max-w-md">
             <form method="GET" action="{{ route('users.index') }}">
+                <!-- Preserve all current filters -->
+                @foreach(request()->except(['search', 'page']) as $key => $value)
+                    @if(is_array($value))
+                        @foreach($value as $item)
+                            <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+
                 <div class="relative">
                     <input type="text"
                            name="search"
@@ -36,6 +47,12 @@
                 </a>
             </div>
 
+            <!-- Online status toggle -->
+            <a href="{{ route('users.index', array_merge(request()->all(), ['online' => !request('online')])) }}"
+               class="px-3 hidden py-2 text-sm font-medium rounded-md {{ request('online') ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                {{ request('online') ? 'Show All' : 'Online Only' }}
+            </a>
+
             <!-- Role filter dropdown -->
             <select name="role"
                     onchange="window.location.href = '{{ route('users.index') }}?role=' + this.value"
@@ -52,11 +69,16 @@
                 <option value="parent" {{ request('role') === 'parent' ? 'selected' : '' }}>Parent</option>
             </select>
 
-            <!-- Online status toggle -->
-            <a href="{{ route('users.index', array_merge(request()->all(), ['online' => !request('online')])) }}"
-               class="px-3 py-2 text-sm font-medium rounded-md {{ request('online') ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
-                {{ request('online') ? 'Show All' : 'Online Only' }}
-            </a>
+
+
+            <!-- Advanced Filters Component -->
+            <div class="relative">
+                <x-UserFilterPanel
+                    :academicGroups="$academicGroups"
+                    :academicLevels="$academicLevels"
+                    :subjects="$subjects"
+                />
+            </div>
 
             <!-- Add New User Button -->
             <x-button.primary variant="primary" size="sm" type="button"
@@ -67,9 +89,60 @@
                 </svg>
                 Add User
             </x-button.primary>
-
         </div>
     </div>
+
+    <!-- Active Advanced Filters Display (Optional - shows what filters are active) -->
+    @if(request()->hasAny(['gender', 'academic_group', 'academic_level', 'subject', 'status']))
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+
+            @if(request('gender'))
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-200 rounded-full">
+                    Gender: {{ ucfirst(request('gender')) }}
+                    <a href="{{ route('users.index', array_diff_key(request()->all(), ['gender' => ''])) }}" class="hover:text-pink-900 dark:hover:text-pink-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                </span>
+            @endif
+
+            @if(request('academic_group'))
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 rounded-full">
+                    Group: {{ $academicGroups->find(request('academic_group'))->name ?? 'N/A' }}
+                    <a href="{{ route('users.index', array_diff_key(request()->all(), ['academic_group' => ''])) }}" class="hover:text-indigo-900 dark:hover:text-indigo-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                </span>
+            @endif
+
+            @if(request('academic_level'))
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-full">
+                    Level: {{ $academicLevels->find(request('academic_level'))->name ?? 'N/A' }}
+                    <a href="{{ route('users.index', array_diff_key(request()->all(), ['academic_level' => ''])) }}" class="hover:text-blue-900 dark:hover:text-blue-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                </span>
+            @endif
+
+            @if(request('subject'))
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 rounded-full">
+                    Subject: {{ $subjects->find(request('subject'))->name ?? 'N/A' }}
+                    <a href="{{ route('users.index', array_diff_key(request()->all(), ['subject' => ''])) }}" class="hover:text-purple-900 dark:hover:text-purple-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                </span>
+            @endif
+
+            @if(request('status'))
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full">
+                    Status: {{ ucfirst(request('status')) }}
+                    <a href="{{ route('users.index', array_diff_key(request()->all(), ['status' => ''])) }}" class="hover:text-gray-900 dark:hover:text-gray-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                </span>
+            @endif
+        </div>
+    @endif
 
     @if ($users->count())
         <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 dark:ring-gray-700/50 rounded-lg overflow-hidden">

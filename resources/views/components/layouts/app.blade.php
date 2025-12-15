@@ -10,6 +10,11 @@
 ]
 )
 
+@php
+    // Determine if school switcher should be shown
+    $hasSchoolSwitcher = auth()->check() && auth()->user()->canAccessCrossSchool();
+@endphp
+
     <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" :class="{ 'dark': $store.darkMode.on }">
 <head>
@@ -33,6 +38,12 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* Ensure only one scrollbar */
+        html, body {
+            overflow: hidden;
+            height: 100%;
+        }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar
@@ -45,7 +56,7 @@
 >
 <!-- Global Page Loader -->
 <div
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-opacity duration-500 ease-in-out"
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-[#dcdcdc] dark:bg-gray-900 transition-opacity duration-500 ease-in-out"
     x-show="!pageLoaded"
     x-transition:leave="opacity-0"
     aria-hidden="true">
@@ -58,23 +69,24 @@
 
 <x-alert.impersonation-banner></x-alert.impersonation-banner>
 @if(auth()->check() && auth()->user()->canAccessCrossSchool())
-        <livewire:administrators.school-switcher />
+    <livewire:administrators.school-switcher />
 @endif
+
 <!-- Page wrapper -->
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-full overflow-hidden">
 
     <!-- Sidebar -->
     <aside class="print:hidden">
-        <x-app.sidebar :variant="$attributes['sidebarVariant']"></x-app.sidebar>
+        <x-app.sidebar :variant="$attributes['sidebarVariant']" :hasSchoolSwitcher="$hasSchoolSwitcher"></x-app.sidebar>
     </aside>
 
-    <!-- Content area -->
-    <div class="relative flex flex-col thin-scrollbar flex-1 overflow-y-auto overflow-x-hidden" x-ref="contentarea">
+    <!-- Content area - THIS IS THE ONLY SCROLLABLE CONTAINER -->
+    <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden thin-scrollbar" x-ref="contentarea">
         <!-- Header -->
         <x-app.header class="print:hidden" :variant="$attributes['headerVariant']"></x-app.header>
 
         <!-- Main content -->
-        <main class="mt-0 p-0  animate-fade-in">
+        <main class="flex-1 animate-fade-in">
             <!-- Breadcrumb -->
             @if($breadcrumb)
                 <div class="max-w-5xl px-4 lg:px-8 py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
@@ -88,7 +100,7 @@
 
             <!-- Page header -->
             @if($showTitleArea)
-                <div class="max-w-7xl mr-auto  sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
+                <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
                     <div
                         class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
                         <div
@@ -99,16 +111,13 @@
                 </div>
             @endif
 
-            <!-- Page content -->
-            <div
-                class="transition-all duration-300 bg-inherit mb-12 w-full overflow-y-visible thin-scrollbar overflow-x-hidden">
-                <div
-                    x-data="{}"
-                    class="w-full overflow-y-visible thin-scrollbar sm:px-4 lg:px-4 "
-                >
+            <!-- Page content - NO OVERFLOW HERE -->
+            <div class="pb-12 mb-8 w-full">
+                <div class="w-full sm:px-4 lg:px-4">
                     {{ $slot }}
                 </div>
             </div>
+
             <livewire:common.flash-message-handler></livewire:common.flash-message-handler>
 
         </main>

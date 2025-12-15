@@ -16,7 +16,7 @@ class ShareNoteRecipientsSelect extends Component
     public string $shareType = 'individual';
     public string $placeholder = 'Search and select recipients...';
     public string $name = 'selectedRecipients';
-    public int $schoolId;
+    public ?int $schoolId = null;
 
     public bool $dropdownOpen = false;
 
@@ -27,7 +27,7 @@ class ShareNoteRecipientsSelect extends Component
     public function mount(
         string $shareType,
         array $selected = [],
-        int $schoolId,
+        ?int $schoolId = null,
         string $placeholder = 'Search and select recipients...',
         string $name = 'selectedRecipients'
     ): void
@@ -40,7 +40,7 @@ class ShareNoteRecipientsSelect extends Component
     }
 
     #[Computed]
-    public function filteredItems()
+    public function filteredItems(): array
     {
         // Don't load anything if dropdown is closed and no search
         if (!$this->dropdownOpen && empty($this->search)) {
@@ -74,9 +74,14 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadIndividuals(): array
     {
-        $query = User::where('school_id', $this->schoolId)
+        $query = User::query()
             ->where('id', '!=', auth()->id())
             ->where('is_active', true);
+
+        // Only filter by school if provided; for individual searches schoolId is optional
+        if (!empty($this->schoolId)) {
+            $query->where('school_id', $this->schoolId);
+        }
 
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -108,6 +113,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadAcademicGroups(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         $query = AcademicGroup::forSchool($this->schoolId);
 
         if (!empty($this->search)) {
@@ -132,6 +141,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadSelectedAcademicGroups(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         return AcademicGroup::whereIn('id', $this->selected)
             ->withCount(['students' => function($q) {
                 $q->where('school_id', $this->schoolId);
@@ -146,6 +159,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadAcademicLevels(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         $query = AcademicLevel::forSchool($this->schoolId)
             ->with('academicGroup');
 
@@ -171,6 +188,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadSelectedAcademicLevels(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         return AcademicLevel::whereIn('id', $this->selected)
             ->withCount(['students' => function($q) {
                 $q->where('school_id', $this->schoolId);
@@ -185,6 +206,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadStudentGroups(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         $query = StudentGroup::where('school_id', $this->schoolId)
             ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
             ->active();
@@ -209,6 +234,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadSelectedStudentGroups(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         return StudentGroup::whereIn('id', $this->selected)
             ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
             ->get()

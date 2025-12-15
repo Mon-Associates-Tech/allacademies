@@ -17,18 +17,19 @@ class UserLoginLog extends Component
     {
         $activities = LoginActivity::with('user')
             ->when($this->searchTerm, function($query) {
-                $query->whereHas('user', function($q) {
-                    $q->where('name', 'like', '%' . $this->searchTerm . '%');
-                })->orWhere('action', 'like', '%' . $this->searchTerm . '%');
+                $query->where(function($q) {
+                    $q->whereHas('user', function($userQuery) {
+                        $userQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+                    })
+                        ->orWhere('device_type', 'like', '%' . $this->searchTerm . '%')
+                        ->orWhere('platform', 'like', '%' . $this->searchTerm . '%')
+                        ->orWhere('browser', 'like', '%' . $this->searchTerm . '%')
+                        ->orWhere('ip_address', 'like', '%' . $this->searchTerm . '%')
+                        ->orWhere('country', 'like', '%' . $this->searchTerm . '%')
+                        ->orWhere('action', 'like', '%' . $this->searchTerm . '%');
+                });
             })
-            ->when($this->searchTerm, function($query) {
-                $query->where('device_type', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('platform', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('browser', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('ip_address', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('country', 'like', '%' . $this->searchTerm . '%');
-            })
-            ->latest()
+            ->latest('login_at')
             ->paginate(15);
 
         return view('livewire.administrators.user-logins', [
