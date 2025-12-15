@@ -57,12 +57,10 @@ class Overview extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->student = $user->student;
+        $this->student = getStudent();
 
         if (!$this->student) {
-            $this->student = \App\Models\Student::withoutGlobalScopes()
-                ->where('user_id', $user->id)
-                ->first();
+            $this->student = \App\Models\Student::where('user_id', $user->id)->first();
         }
 
         if ($this->student) {
@@ -89,7 +87,7 @@ class Overview extends Component
 
     protected function loadAssignmentStats()
     {
-        $student = $this->student;
+        $student =  getStudent();
 
         // Get all assignments available to student
         $availableAssignments = $this->getAvailableAssignments();
@@ -281,7 +279,7 @@ class Overview extends Component
 
         // Recent assignments (completed)
         $this->recentAssignments = AssignmentSubmission::where('student_id', $student->id)
-            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->whereIn('status', ['completed', 'submitted', 'graded', 'not_started', 'in_progress'])
             ->with(['assignment.academicSubject', 'assignment.teacher.user'])
             ->orderBy('submitted_at', 'desc')
             ->limit(5)
@@ -314,7 +312,7 @@ class Overview extends Component
 
                 return $assignment->ends_at >= now() &&
                     $assignment->ends_at <= now()->addDays(7) &&
-                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded', 'not_started', 'in_progress']));
             })
             ->sortBy('ends_at')
             ->take(5)
@@ -330,14 +328,14 @@ class Overview extends Component
             ->values();
     }
 
-    protected function loadSubjectPerformance()
+    protected function loadSubjectPerformance(): void
     {
         $student = $this->student;
 
         // Get submissions grouped by subject (filtered by selected range)
         $start = $this->rangeStart();
         $submissions = AssignmentSubmission::where('student_id', $student->id)
-            ->whereIn('status', ['graded', 'completed'])
+            ->whereIn('status', ['graded', 'completed', 'in_progress', 'not_started', 'submitted'])
             ->when($start, function ($q) use ($start) {
                 $q->where('submitted_at', '>=', $start);
             })
@@ -457,19 +455,13 @@ class Overview extends Component
 
     protected function rangeStart(): ?\Carbon\Carbon
     {
-        switch ($this->range) {
-            case '7d':
-                return now()->subDays(7);
-            case '30d':
-                return now()->subDays(30);
-            case '90d':
-                return now()->subDays(90);
-            case 'term':
-                // Fallback: treat current term ~90 days if no explicit term store
-                return now()->subDays(90);
-            default:
-                return now()->subDays(30);
-        }
+        return match ($this->range) {
+            '7d' => now()->subDays(7),
+            '30d' => now()->subDays(30),
+            '90d' => now()->subDays(90),
+            'term' => now()->subDays(90),
+            default => now()->subDays(30),
+        };
     }
 
     public function render()

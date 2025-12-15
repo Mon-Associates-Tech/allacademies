@@ -369,7 +369,7 @@ if (!function_exists('getTimeRemaining')) {
      * @param bool $withoutScopes Whether to bypass global scopes
      * @return \App\Models\Student|null
      */
-    function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = false)
+    function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = true): ?Student
     {
         // Start with the base query
         $query = $withoutScopes
