@@ -14,6 +14,9 @@ enum UserRole: string
     case AUTHOR = 'author';
     case PARENT = 'parent';
     case ACCOUNTANT = 'accountant';
+    case BENEFACTOR = 'benefactor';
+    case SPONSOR = 'sponsor';
+    case REVIEWER = 'reviewer';
 
     case SUPER_ADMIN = 'super_admin';
 
@@ -30,6 +33,9 @@ enum UserRole: string
             self::AUTHOR,
             self::PARENT,
             self::ACCOUNTANT,
+            self::BENEFACTOR,
+            self::SPONSOR,
+            self::REVIEWER,
         ];
     }
 }
