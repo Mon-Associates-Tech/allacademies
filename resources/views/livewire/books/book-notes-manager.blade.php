@@ -1,4 +1,7 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+    @if(auth()->check() && !$has_token_subscription ?? false)
+        <x-alert.token-subscription-banner />
+    @else
     <!-- Tabs -->
     <div class="px-6 pt-1">
         @php
@@ -370,4 +373,5 @@
             @endif
         </div>
     </div>
+    @endif
 </div>

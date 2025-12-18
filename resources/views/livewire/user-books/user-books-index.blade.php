@@ -11,9 +11,12 @@
                 </a>
             </div>
         </div>
-
+    @if(auth()->check() && !$has_token_subscription ?? false)
+        <x-alert.token-subscription-banner />
+    @else
         <div class="">
             <livewire:user-books.shared-books />
         </div>
+        @endif
     </div>
 </div>

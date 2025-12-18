@@ -1,4 +1,7 @@
 <x-layouts.app>
+        @if(auth()->check() && !$has_token_subscription ?? false)
+        <x-alert.token-subscription-banner />
+    @else
     <div class="max-w-5xl mx-auto  lg:px-8">
         {{-- Header Section --}}
         <div class="page-header-sky rounded-t-xl">
@@ -252,4 +255,5 @@
             </div>
         @endif
     </div>
+    @endif
 </x-layouts.app>

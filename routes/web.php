@@ -269,7 +269,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Book Routes
     Route::get('books', [BookController::class, 'index'])->name('books.index');
-    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
+    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show')->middleware('token.subscription');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
     Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
@@ -307,7 +307,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('onboarding/school-setup', \App\Livewire\SchoolOnboarding::class)->name('onboarding.school-setup');
 
     // Educational Chat Routes
-    Route::prefix('academic-chats')->middleware(['assignment.session'])->name('academic-chat.')->group(function () {
+    Route::prefix('academic-chats')->middleware(['assignment.session', 'token.subscription'])->name('academic-chat.')->group(function () {
         Route::get('/', [AcademicChatController::class, 'index'])->name('index');
         Route::post('/chat', [AcademicChatController::class, 'chat'])->name('chat');
         Route::get('/subjects', [AcademicChatController::class, 'subjects'])->name('subjects');
@@ -316,16 +316,16 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Chat Routes
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', 'verified', 'token.subscription'])->group(function () {
         Route::get('/chat', ChatInterface::class)->name('chat');
         Route::get('/chat/{group}', ChatInterface::class)->name('chat.group');
     });
 
     // Forum Routes
-    Route::get('/forums', ForumManagement::class)->name('forums');
+    Route::get('/forums', ForumManagement::class)->middleware('token.subscription')->name('forums');
 
     // Learning Routes
-    Route::get('/learning/quiz/{bookId?}', BookQuizInterface::class)->name('learning.quiz');
+    Route::get('/learning/quiz/{bookId?}', BookQuizInterface::class)->middleware('token.subscription')->name('learning.quiz');
 
 
     // Academic Settings
@@ -398,10 +398,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
     Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
 
-    Route::get('/user-books/create', fn() => view('user-books/create'))->name('user-books.create');
-    Route::get('/user-books/shared', fn() => view('user-books.shared'))->name('user-books.shared');
+    Route::get('/user-books/create', fn() => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
+    Route::get('/user-books/shared', fn() => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
 
-    Route::get('/user-books', \App\Livewire\UserBooks\UserBooksIndex::class)->name('user-books.index');
+    Route::get('/user-books', \App\Livewire\UserBooks\UserBooksIndex::class)->middleware('token.subscription')->name('user-books.index');
 
     Route::get('/user-books/{userBook}', function (App\Models\UserBook $userBook) {
         // Ensure user can access this book (either owns it or it's shared with them)
@@ -412,10 +412,10 @@ Route::middleware(['auth'])->group(function () {
 
         $userBook->load('user');
         return view('user-books.show', compact('userBook'));
-    })->name('user-books.show');
-    Route::get('/user-books/{userBook}/edit', \App\Livewire\UserBooks\UserBookForm::class)->name('user-books.edit');
+    })->middleware('token.subscription')->name('user-books.show');
+    Route::get('/user-books/{userBook}/edit', \App\Livewire\UserBooks\UserBookForm::class)->middleware('token.subscription')->name('user-books.edit');
 
-    Route::get('/{userBook}/manage-shares', \App\Livewire\UserBooks\ManageShares::class)
+    Route::get('/{userBook}/manage-shares', \App\Livewire\UserBooks\ManageShares::class)->middleware('token.subscription')
         ->name('user-books.manage-shares');
 });
 
@@ -477,7 +477,7 @@ Route::prefix('general/pay')->name('payments.public.')->group(function () {
     Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'token.subscription'])->group(function () {
     Route::resource('notes', NotesController::class);
     Route::get('/notes/{note}/download', [NotesController::class, 'download'])->name('notes.download');
     Route::post('/notes/{note}/share', [NotesController::class, 'share'])->name('notes.share');

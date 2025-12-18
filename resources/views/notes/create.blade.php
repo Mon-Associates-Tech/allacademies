@@ -1,4 +1,7 @@
 <x-layouts.app>
+        @if(auth()->check() && !$has_token_subscription ?? false)
+        <x-alert.token-subscription-banner />
+    @else
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Single Cohesive Container --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -200,4 +203,5 @@
             </form>
         </div>
     </div>
+    @endif
 </x-layouts.app>
