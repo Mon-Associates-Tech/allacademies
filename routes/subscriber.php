@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
         Route::get('/assessments', Assessments::class)->name('assessments');
         Route::get('/quizzes', Quizzes::class)->name('quizzes');
         Route::get('/progress', Progress::class)->name('progress');
-        Route::get('/forums', ForumManagement::class)->name('forums');
+        Route::get('/forums', ForumManagement::class)->name('forums')->middleware('token.subscription');
         Route::get('/groups', StudyGroups::class)->name('groups');
         Route::get('/premium', Premium::class)->name('premium');
         Route::get('/analytics', Analytics::class)->name('analytics');
