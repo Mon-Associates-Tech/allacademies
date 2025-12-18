@@ -100,10 +100,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-blue-800 dark:text-blue-200 mb-1">
-                                        🎁 Get Started with Free AI Tokens!
+                                        🎁 Get Started with  AI Messengers!
                                     </h3>
                                     <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                                        You don't have any active token subscription. Activate your free trial
+                                        You don't have any active messenger subscription. Activate a
                                         package to start generating quizzes with AI assistance!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -112,12 +112,12 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                         </svg>
-                                        Get Free Tokens
+                                        Get Messengers
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    if($tokenWarningMessage === 'depleted')
+                    @if($tokenWarningMessage === 'depleted')
                         <div
                             class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">
@@ -129,10 +129,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-red-800 dark:text-red-200 mb-1">
-                                        😔 Tokens Exhausted
+                                        😔 Messengers Exhausted
                                     </h3>
                                     <p class="text-sm text-red-700 dark:text-red-300 mb-3">
-                                        Your token balance is fully depleted. Top up now to continue generating quizzes
+                                        Your Messenger balance is fully depleted. Top up now to continue generating quizzes
                                         and resume your learning journey!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -141,7 +141,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Buy More Tokens
+                                        Buy More Messengers
                                     </a>
                                 </div>
                             </div>
@@ -161,7 +161,7 @@
                                         ⏰ Subscription Expired
                                     </h3>
                                     <p class="text-sm text-orange-700 dark:text-orange-300 mb-3">
-                                        Your token subscription has expired. Purchase a new package to continue
+                                        Your Messenger subscription has expired. Purchase a new package to continue
                                         generating quizzes with AI assistance.
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -187,10 +187,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">
-                                        ⚠️ Insufficient Tokens
+                                        ⚠️ Insufficient Messengers
                                     </h3>
                                     <p class="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                                        You don't have enough tokens to generate a quiz. Top up now to keep learning
+                                        You don't have enough messengers to generate a quiz. Top up now to keep learning
                                         without interruption!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -199,7 +199,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Top Up Tokens
+                                        Top Up Messengers
                                     </a>
                                 </div>
                             </div>
@@ -522,7 +522,7 @@
                                                 :disabled="$wire.isGenerating || !{{ $canGenerateQuiz ? 'true' : 'false' }}"
                                                 class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                                 <span wire:loading.remove wire:target="generateQuiz">
-                                                    {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Tokens' }}
+                                                    {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Messengers' }}
                                                 </span>
                                                 <span wire:loading wire:target="generateQuiz">
                                                     Generating Quiz...
