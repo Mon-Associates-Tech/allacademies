@@ -505,7 +505,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function unsuspend()
     {
         $this->update([
-            'status' => 'active', // or whatever your default active status is
+            'status' => 'active',
             'suspension_reason' => null,
             'suspended_at' => null,
             'suspended_by' => null,

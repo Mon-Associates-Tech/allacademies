@@ -90,7 +90,6 @@
             <!-- Token Warning Banner -->
             @if(!$canGenerateQuiz)
                 <div class="mb-6">
-                    @if($tokenWarningMessage === 'no_subscription')
                         <div
                             class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">
@@ -118,7 +117,7 @@
                                 </div>
                             </div>
                         </div>
-                    @elseif($tokenWarningMessage === 'depleted')
+                    if($tokenWarningMessage === 'depleted')
                         <div
                             class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">

@@ -110,11 +110,24 @@
         <div :class="sidebarHistoryOpen ? 'lg:w-80 w-80' : 'lg:w-0 w-0'"
              class="hidden lg:flex lg:flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 overflow-hidden transition-all duration-300 ease-in-out">
 
+             <div class="flex justify-between">
             <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                     Chat History
                 </h2>
             </div>
+            <div class="my-auto m-2">
+ <button @click="toggleHistorySidebar()"
+                            :class="sidebarHistoryOpen ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
+                            class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all shadow-sm border border-gray-200 dark:border-gray-600"
+                            title="Toggle history">
+                   <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+</svg>
+                    </button>
+            </div>
+             </div>
+
 
             <div class="flex-1 overflow-y-auto p-4 space-y-2 thin-scrollbar">
                 @forelse($conversationHistory as $conversation)
@@ -160,11 +173,11 @@
                         <div class="flex-1">
                             <p class="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
                                 @if($this->currentTokenWarning === 'no_subscription')
-                                    Activate your free token package to get started
+                                    Activate  messenger package to get started
                                 @elseif($this->currentTokenWarning === 'insufficient')
-                                    You have insufficient tokens. Top up to continue.
+                                    You have insufficient messengers. Top up to continue.
                                 @elseif($this->currentTokenWarning === 'depleted')
-                                    Your tokens are depleted. Purchase more to continue.
+                                    Your messengers are depleted. Purchase more to continue.
                                 @elseif($this->currentTokenWarning === 'expired')
                                     Your subscription has expired. Renew to continue.
                                 @endif
