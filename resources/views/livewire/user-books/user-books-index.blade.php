@@ -11,12 +11,12 @@
                 </a>
             </div>
         </div>
-    @if(auth()->check() && !$has_token_subscription ?? false)
-        <x-alert.token-subscription-banner />
-    @else
+   
+        <x-alert.token-subscription-banner variant="full-page" />
+    
         <div class="">
             <livewire:user-books.shared-books />
         </div>
-        @endif
+       
     </div>
 </div>
