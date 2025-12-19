@@ -1,13 +1,17 @@
 @props(['variant' => 'minimal'])
 
 @if(auth()->check() && !$has_token_subscription ?? false)
-    <div>
-        <!-- Overlay Background - fixed to cover content area only -->
-        <div class="fixed inset-0 bg-black/70 dark:bg-black/80 z-40 pointer-events-auto" style="left: calc(var(--sidebar-width, 0px));" role="presentation"></div>
+    <div class="absolute inset-0 z-40" 
+         x-data="{}" 
+         @mounted="document.body.style.overflow = 'hidden'"
+         @destroy="document.body.style.overflow = 'auto'"
+         x-show="true">
+        <!-- Overlay Background - absolute to cover slot area only -->
+        <div class="absolute inset-0 bg-black/70 dark:bg-black/80 z-40 pointer-events-auto" role="presentation"></div>
         
         @if($variant === 'full-page')
             <!-- Full Page Variant -->
-            <div class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-auto" style="left: calc(var(--sidebar-width, 0px));" role="alert">
+            <div class="absolute inset-0 flex items-center justify-center z-50 p-4 pointer-events-auto" role="alert">
                 <div class="max-w-md w-full bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-8">
                     <div class="flex justify-center mb-6">
                         <div class="flex-shrink-0">
@@ -32,7 +36,7 @@
             </div>
         @else
             <!-- Minimal Variant (Default) -->
-            <div class="fixed top-0 left-0 right-0 z-50 bg-amber-50 dark:bg-amber-950 border-b-4 border-amber-400 dark:border-amber-500 p-4 shadow-lg pointer-events-auto" role="alert">
+            <div class="fixed top-0 left-0 right-0 z-50 bg-amber-50  ml-auto dark:bg-amber-950 border-b-4 border-amber-400 dark:border-amber-500 p-4 shadow-lg pointer-events-auto" role="alert">
                 <div class="flex items-start max-w-7xl mx-auto">
                     <div class="flex-shrink-0">
                         <svg class="h-5 w-5 text-amber-400 dark:text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -61,15 +65,19 @@
     </div>
 
     <script>
-        // Prevent scroll on content area
+        // Prevent scroll on body and content area
+        document.body.style.overflow = 'hidden';
         const contentArea = document.querySelector('[x-ref="contentarea"]');
         if (contentArea) {
             contentArea.style.overflow = 'hidden';
-            
-            // Cleanup on component destroy
-            return () => {
-                contentArea.style.overflow = 'auto';
-            };
         }
+        
+        // Cleanup when component is removed
+        window.addEventListener('beforeunload', () => {
+            document.body.style.overflow = 'auto';
+            if (contentArea) {
+                contentArea.style.overflow = 'auto';
+            }
+        });
     </script>
 @endif
