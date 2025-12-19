@@ -183,7 +183,7 @@
                                 @endif
                             </p>
                         </div>
-                        <a href="{{ route('token-subscriptions.create') }}" class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 hover:underline whitespace-nowrap">Get Tokens →</a>
+                        <a href="{{ route('token-subscriptions.create') }}" class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 hover:underline whitespace-nowrap">Get Messengers →</a>
                     </div>
                 </div>
             @endif
