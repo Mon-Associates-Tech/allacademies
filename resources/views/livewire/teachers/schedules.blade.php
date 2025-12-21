@@ -14,15 +14,28 @@
                 <div class="flex space-x-2">
                     <button wire:click="setViewMode('calendar')"
                             class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ $this->viewMode === 'calendar' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
-                        <i class="fas fa-calendar mr-2"></i>Calendar
+                        <!-- fas fa-calendar -->
+                        <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+                        </svg>
+                        Calendar
                     </button>
                     <button wire:click="setViewMode('list')"
                             class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ $this->viewMode === 'list' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
-                        <i class="fas fa-list mr-2"></i>List
+                        <!-- fas fa-list -->
+                        <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                        </svg>
+                        List
                     </button>
                     <button wire:click="setViewMode('week')"
                             class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ $this->viewMode === 'week' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
-                        <i class="fas fa-calendar-week mr-2"></i>Week
+                        <!-- fas fa-calendar-week -->
+                        <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+                            <path d="M7 12h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z"/>
+                        </svg>
+                        Week
                     </button>
                 </div>
             </div>
@@ -40,7 +53,11 @@
 
                 <button wire:click="setFilterType('assignments')"
                         class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 {{ $filterType === 'assignments' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
-                    <i class="fas fa-tasks mr-1"></i>Assignments
+                    <!-- fas fa-tasks -->
+                    <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                    </svg>
+                    Assignments
                 </button>
             </div>
         </div>
@@ -56,7 +73,10 @@
         <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                    <i class="fas fa-file-alt text-blue-600 dark:text-blue-400 text-xl"></i>
+                    <!-- fas fa-file-alt -->
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                    </svg>
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Assessments This Week</p>
@@ -68,7 +88,10 @@
         <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-                    <i class="fas fa-tasks text-purple-600 dark:text-purple-400 text-xl"></i>
+                    <!-- fas fa-tasks -->
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                    </svg>
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Assignments This Week</p>
@@ -80,7 +103,11 @@
         <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
-                    <i class="fas fa-percentage text-green-600 dark:text-green-400 text-xl"></i>
+                    <!-- fas fa-percentage -->
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.25 19H5.75c-.97 0-1.75-.78-1.75-1.75V6.75c0-.97.78-1.75 1.75-1.75h12.5c.97 0 1.75.78 1.75 1.75v10.5c0 .97-.78 1.75-1.75 1.75zM5.75 7v10.25h12.5V7H5.75z"/>
+                        <path d="M12 9.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm0 5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                    </svg>
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Assessment Score</p>
@@ -92,7 +119,10 @@
         <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-                    <i class="fas fa-book text-orange-600 dark:text-orange-400 text-xl"></i>
+                    <!-- fas fa-book -->
+                    <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>
+                    </svg>
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Subjects Taught</p>
@@ -113,11 +143,17 @@
                     <div class="flex space-x-2">
                         <button wire:click="changeMonth('prev')"
                                 class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
-                            <i class="fas fa-chevron-left"></i>
+                            <!-- fas fa-chevron-left -->
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                            </svg>
                         </button>
                         <button wire:click="changeMonth('next')"
                                 class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200">
-                            <i class="fas fa-chevron-right"></i>
+                            <!-- fas fa-chevron-right -->
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -177,7 +213,10 @@
                 @if($this->activities->isEmpty())
                     <div class="text-center py-12">
                         <div class="w-24 h-24 mx-auto mb-4">
-                            <i class="fas fa-calendar-day text-gray-300 dark:text-gray-600 text-6xl"></i>
+                            <!-- fas fa-calendar-day -->
+                            <svg class="w-24 h-24 text-gray-300 dark:text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                            </svg>
                         </div>
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No activities found</h3>
                         <p class="text-gray-500 dark:text-gray-400">There are no activities for the selected date and filter.</p>
@@ -190,7 +229,17 @@
                                 <div class="flex items-start justify-between">
                                     <div class="flex items-start space-x-4">
                                         <div class="p-2 rounded-lg bg-{{ $activity['color'] }}-100 text-{{ $activity['color'] }}-600 dark:bg-{{ $activity['color'] }}-900/30 dark:text-{{ $activity['color'] }}-400">
-                                            <i class="{{ $activity['icon'] }} text-lg"></i>
+                                            @if($activity['icon'] === 'fas fa-tasks')
+                                                <!-- fas fa-tasks -->
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                                                </svg>
+                                            @else
+                                                <!-- Default icon -->
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                                </svg>
+                                            @endif
                                         </div>
                                         <div class="flex-1">
                                             <h3 class="font-semibold text-gray-900 dark:text-white">{{ $activity['title'] }}</h3>
@@ -287,11 +336,20 @@
                             <div class="flex items-center space-x-3">
                                 <div class="p-3 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                     @if($selectedActivity instanceof \App\Models\Assessment)
-                                        <i class="fas fa-clipboard-check text-xl"></i>
+                                        <!-- fas fa-clipboard-check -->
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                        </svg>
                                     @elseif($selectedActivity instanceof \App\Models\Assignment)
-                                        <i class="fas fa-tasks text-xl"></i>
+                                        <!-- fas fa-tasks -->
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                                        </svg>
                                     @else
-                                        <i class="fas fa-chalkboard-teacher text-xl"></i>
+                                        <!-- fas fa-chalkboard-teacher -->
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M21 11c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v4H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8zm-8 3h-2v2c0 .55-.45 1-1 1s-1-.45-1-1v-2H7c-.55 0-1-.45-1-1s.45-1 1-1h2V9c0-.55.45-1 1-1s1 .45 1 1v2h2c.55 0 1 .45 1 1s-.45 1-1 1z"/>
+                                        </svg>
                                     @endif
                                 </div>
                                 <div>
@@ -313,7 +371,10 @@
                             </div>
                             <button wire:click="closeActivityModal"
                                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                <i class="fas fa-times text-xl"></i>
+                                <!-- fas fa-times -->
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -397,4 +458,3 @@
         }
     </style>
 @endpush
-
