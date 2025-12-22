@@ -2,16 +2,16 @@
     <div x-data="schoolOnboardingForm()" x-init="init()"
          class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         {{-- Progress Bar --}}
-        <div class="bg-white shadow-sm border-b">
+        <div class="bg-white shadow-sm border-b dark:bg-gray-800 dark:border-gray-700">
             <div class="max-w-4xl mx-auto px-6 py-4">
                 <div class="flex items-center justify-between mb-2">
-                    <h1 class="text-lg font-semibold text-gray-900">School Registration</h1>
-                    <span class="text-sm text-gray-500">Step <span
+                    <h1 class="text-lg font-semibold text-gray-900 dark:text-white">School Registration</h1>
+                    <span class="text-sm text-gray-500 dark:text-gray-300">Step <span
                             x-text="currentStep"></span> of {{ $totalSteps }}</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
                     <div
-                        class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500 ease-out"
+                        class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500 ease-out dark:from-blue-600 dark:to-indigo-700"
                         :style="`width: ${(currentStep / {{ $totalSteps }}) * 100}%`"></div>
                 </div>
             </div>
@@ -19,7 +19,7 @@
 
 
         <div class="max-w-4xl mx-auto py-8">
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden dark:bg-gray-800 dark:shadow-gray-900/20">
 
                 <section>
                     <form enctype="multipart/form-data" id="schoolForm">
@@ -49,15 +49,15 @@
                                 <div class="space-y-6">
                                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         <div class="lg:col-span-2">
-                                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 School Name <span class="text-red-500">*</span>
                                             </label>
                                             <div class="relative">
                                                 <input type="text" id="name" wire:model.defer="name"
-                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('name') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('name') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="Enter your school name" x-ref="firstInput">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5" fill="none"
+                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5 dark:text-gray-300" fill="none"
                                                      viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           stroke-width="2"
@@ -81,15 +81,15 @@
                                         </div>
 
                                         <div>
-                                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 School Email <span class="text-red-500">*</span>
                                             </label>
                                             <div class="relative">
                                                 <input type="email" id="email" wire:model.defer="email"
-                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('email') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('email') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="school@example.com">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5" fill="none"
+                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5 dark:text-gray-300" fill="none"
                                                      viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           stroke-width="2"
@@ -110,16 +110,16 @@
                                         </div>
 
                                         <div>
-                                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 Phone Number
                                             </label>
                                             <div class="relative">
                                                 <input type="tel" id="phone" wire:model.defer="phone"
-                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('phone') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('phone') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="+233 XX XXX XXXX"
                                                        x-on:input="formatPhoneNumber($event)">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5" fill="none"
+                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5 dark:text-gray-300" fill="none"
                                                      viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           stroke-width="2"
@@ -140,14 +140,14 @@
                                         </div>
 
                                         <div>
-                                            <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="type" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 School Type <span class="text-red-500">*</span>
                                             </label>
                                             <select id="type" wire:model.defer="type"
-                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('type') border-red-500 ring-2 ring-red-200 @enderror">
-                                                <option value="">Select school type</option>
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('type') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror">
+                                                <option value="" class="dark:bg-gray-700 dark:text-white">Select school type</option>
                                                 @foreach($this->schoolTypes as $value => $label)
-                                                    <option value="{{ $value }}">{{ $label }}</option>
+                                                    <option value="{{ $value }}" class="dark:bg-gray-700 dark:text-white">{{ $label }}</option>
                                                 @endforeach
                                             </select>
                                             @error('type')
@@ -164,14 +164,14 @@
                                         </div>
 
                                         <div>
-                                            <label for="ownership" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="ownership" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 Ownership Type <span class="text-red-500">*</span>
                                             </label>
                                             <select id="ownership" wire:model.defer="ownership"
-                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('ownership') border-red-500 ring-2 ring-red-200 @enderror">
-                                                <option value="">Select ownership type</option>
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('ownership') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror">
+                                                <option value="" class="dark:bg-gray-700 dark:text-white">Select ownership type</option>
                                                 @foreach($this->ownershipTypes as $value => $label)
-                                                    <option value="{{ $value }}">{{ $label }}</option>
+                                                    <option value="{{ $value }}" class="dark:bg-gray-700 dark:text-white">{{ $label }}</option>
                                                 @endforeach
                                             </select>
                                             @error('ownership')
@@ -188,15 +188,15 @@
                                         </div>
 
                                         <div>
-                                            <label for="website" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="website" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 Website
                                             </label>
                                             <div class="relative">
                                                 <input type="url" id="website" wire:model.defer="website"
-                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('website') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('website') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="https://www.yourschool.edu.gh">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5" fill="none"
+                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5 dark:text-gray-300" fill="none"
                                                      viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           stroke-width="2"
@@ -218,15 +218,15 @@
 
                                         <div>
                                             <label for="established_date"
-                                                   class="block text-sm font-medium text-gray-700 mb-2">
+                                                   class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 Established Date
                                             </label>
                                             <div class="relative">
                                                 <input type="date" id="established_date"
                                                        wire:model.defer="established_date"
-                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('established_date') border-red-500 ring-2 ring-red-200 @enderror">
+                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('established_date') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5" fill="none"
+                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5 dark:text-gray-300" fill="none"
                                                      viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           stroke-width="2"
@@ -248,17 +248,17 @@
 
                                         <div>
                                             <label for="student_capacity"
-                                                   class="block text-sm font-medium text-gray-700 mb-2">
+                                                   class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 Student Capacity <span class="text-red-500">*</span>
                                             </label>
 
                                             <div class="relative">
                                                 <input type="number" id="student_capacity"
                                                        wire:model.defer="student_capacity" min="1"
-                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('student_capacity') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('student_capacity') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="e.g., 500">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5" fill="none"
+                                                     class="absolute left-3 top-3.5 text-gray-400 h-5 w-5 dark:text-gray-300" fill="none"
                                                      viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           stroke-width="2"
@@ -280,11 +280,11 @@
 
                                         <div class="lg:col-span-2">
                                             <label for="description"
-                                                   class="block text-sm font-medium text-gray-700 mb-2">
+                                                   class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 School Description
                                             </label>
                                             <textarea id="description" wire:model.defer="description" rows="4"
-                                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none @error('description') border-red-500 ring-2 ring-red-200 @enderror"
+                                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('description') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                       placeholder="Brief description of your school, its mission, and values..."></textarea>
                                             @error('description')
                                             <p class="mt-2 text-sm text-red-600 flex items-center">
@@ -301,20 +301,20 @@
 
                                         {{-- Logo Upload Section --}}
                                         <div class="lg:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                 School Logo
                                             </label>
                                             <div class="flex items-center space-x-6">
                                                 <div class="flex-shrink-0">
                                                     <div
-                                                        class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                                                        class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden dark:border-gray-600">
                                                         <template x-if="logoPreview">
                                                             <img :src="logoPreview"
                                                                  class="w-full h-full object-cover rounded-lg">
                                                         </template>
                                                         <template x-if="!logoPreview">
                                                             <svg xmlns="http://www.w3.org/2000/svg"
-                                                                 class="text-gray-400 text-xl h-6 w-6" fill="none"
+                                                                 class="text-gray-400 text-xl h-6 w-6 dark:text-gray-300" fill="none"
                                                                  viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                       stroke-width="2"
@@ -332,18 +332,18 @@
                                                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                                                x-on:change="handleFileUpload($event)">
                                                         <div
-                                                            class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors duration-200">
+                                                            class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors duration-200 dark:border-gray-600 dark:hover:border-blue-500">
 
                                                             <svg xmlns="http://www.w3.org/2000/svg"
-                                                                 class="text-gray-400 text-xl mb-2 h-6 w-6" fill="none"
+                                                                 class="text-gray-400 text-xl mb-2 h-6 w-6 dark:text-gray-300" fill="none"
                                                                  viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                       stroke-width="2"
                                                                       d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                                                             </svg>
-                                                            <p class="text-sm text-gray-600">Click to upload or drag and
+                                                            <p class="text-sm text-gray-600 dark:text-gray-300">Click to upload or drag and
                                                                 drop</p>
-                                                            <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to
+                                                            <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">PNG, JPG, GIF up to
                                                                 2MB
                                                             </p>
                                                         </div>
@@ -378,8 +378,8 @@
 
                                     {{-- Address Section --}}
                                     <div class="border-t pt-6">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="text-blue-600 mr-2 h-5 w-5"
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center dark:text-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="text-blue-600 mr-2 h-5 w-5 dark:text-blue-400"
                                                  fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -392,11 +392,11 @@
                                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div class="lg:col-span-2">
                                                 <label for="address"
-                                                       class="block text-sm font-medium text-gray-700 mb-2">
+                                                       class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                     Street Address <span class="text-red-500">*</span>
                                                 </label>
                                                 <textarea id="address" wire:model.defer="address" rows="3"
-                                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none @error('address') border-red-500 ring-2 ring-red-200 @enderror"
+                                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('address') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                           placeholder="Enter complete street address"></textarea>
                                                 @error('address')
                                                 <p class="mt-2 text-sm text-red-600 flex items-center">
@@ -413,11 +413,11 @@
                                             </div>
 
                                             <div>
-                                                <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <label for="city" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                     City <span class="text-red-500">*</span>
                                                 </label>
                                                 <input type="text" id="city" wire:model.defer="city"
-                                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('city') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('city') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="e.g., Accra">
                                                 @error('city')
                                                 <p class="mt-2 text-sm text-red-600 flex items-center">
@@ -434,14 +434,14 @@
                                             </div>
 
                                             <div>
-                                                <label for="state" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <label for="state" class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                     Region/State <span class="text-red-500">*</span>
                                                 </label>
                                                 <select id="state" wire:model.defer="state"
-                                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('state') border-red-500 ring-2 ring-red-200 @enderror">
-                                                    <option value="">Select region</option>
+                                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('state') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror">
+                                                    <option value="" class="dark:bg-gray-700 dark:text-white">Select region</option>
                                                     @foreach($this->ghanaRegions as $region)
-                                                        <option value="{{ $region }}">{{ $region }}</option>
+                                                        <option value="{{ $region }}" class="dark:bg-gray-700 dark:text-white">{{ $region }}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('state')
@@ -460,11 +460,11 @@
 
                                             <div>
                                                 <label for="country"
-                                                       class="block text-sm font-medium text-gray-700 mb-2">
+                                                       class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                     Country <span class="text-red-500">*</span>
                                                 </label>
                                                 <input type="text" id="country" wire:model.defer="country"
-                                                       class="w-full px-4 py-3border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 @error('country') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('country') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        readonly>
                                                 @error('country')
                                                 <p class="mt-2 text-sm text-red-600 flex items-center">
@@ -482,11 +482,11 @@
 
                                             <div>
                                                 <label for="postal_code"
-                                                       class="block text-sm font-medium text-gray-700 mb-2">
+                                                       class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                                                     Postal Code
                                                 </label>
                                                 <input type="text" id="postal_code" wire:model.defer="postal_code"
-                                                       class="w-full px-4 py-3 border border-gray-300rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('postal_code') border-red-500 ring-2 ring-red-200 @enderror"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('postal_code') border-red-500 ring-2 ring-red-200 dark:ring-red-900/50 @enderror"
                                                        placeholder="e.g., GA-123-4567">
                                                 @error('postal_code')
                                                 <p class="mt-2 text-sm text-red-600 flex items-center">
@@ -540,7 +540,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2lg:grid-cols-3 gap-4">
                                             @foreach($this->availableAcademicGroups as $group)
                                                 <label
-                                                    class="group relative flex items-center p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 cursor-pointer transition-all duration-200 hover:shadow-md">
+                                                    class="group relative flex items-center p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-300 cursor-pointer transition-all duration-200 hover:shadow-md">
                                                     <input type="checkbox" wire:model.live="selectedAcademicGroups"
                                                            value="{{ $group->id }}" class="sr-only">
                                                     <div class="flex items-center w-full">
@@ -580,7 +580,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             @foreach($this->availableAcademicLevels as $level)
                                                 <label
-                                                    class="group relative flex items-center p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-all duration-200 hover:shadow-md">
+                                                    class="group relative flex items-center p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-green-300 cursor-pointer transition-all duration-200 hover:shadow-md">
                                                     <input type="checkbox" wire:model.live="selectedAcademicLevels"
                                                            value="{{ $level->id }}" class="sr-only">
                                                     <div class="flex items-center w-full">
@@ -965,7 +965,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-6 p-4 bg-white rounded-lg shadow-sm" x-show="$wire.description">
+                                    <div class="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm" x-show="$wire.description">
                                     <span
                                         class="text-xs font-medium text-gray-500 uppercase tracking-wide">Description</span>
                                         <p class="mt-1 text-sm text-gray-700" x-text="$wire.description"></p>
@@ -973,7 +973,7 @@
 
                                     {{-- Academic Structure Summary --}}
                                     <div class="mt-6 space-y-4" x-show="$wire.selectedAcademicGroups.length > 0">
-                                        <div class="p-4 bg-white rounded-lg shadow-sm">
+                                        <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                                         <span
                                             class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">AcademicGroups++</span>
                                             <div class="flex flex-wrap gap-2">
@@ -1016,7 +1016,7 @@
                                     </div>
 
                                     {{-- Settings Summary --}}
-                                    <div class="mt-6 p-4 bg-white rounded-lg shadow-sm">
+                                    <div class="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                                     <span
                                         class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Settings</span>
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -1109,7 +1109,7 @@
                                         @if($createdSchool)
                                             {{-- Success Summary --}}
                                             <div
-                                                class="bg-white border border-gray-200 rounded-xl p-6 mb-8 text-left max-w-2xl mx-auto shadow-lg">
+                                                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-8 text-left max-w-2xl mx-auto shadow-lg">
                                                 <div class="flex items-center justify-center mb-6">
                                                     @if($createdSchool->logo_url)
                                                         <img src="{{ Storage::url($createdSchool->logo_url) }}"
@@ -1320,7 +1320,7 @@
                             <div>
                                 <template x-if="currentStep > 1">
                                     <button type="button" @click="previousStep()"
-                                            class="px-6 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200 flex items-center">
+                                            class="px-6 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200 flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-5 w-5" fill="none"
                                              viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1378,7 +1378,7 @@
 
             {{-- QuickTips Sidebar --}}
             <div x-show="currentStep === 1" x-transition
-                 class="mt-8 bg-white rounded-xl shadow-lg p-6border border-blue-200">
+                 class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-blue-200 dark:border-blue-800">
                 <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                     <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="text-yellow-600 h-5 w-5" fill="none"
