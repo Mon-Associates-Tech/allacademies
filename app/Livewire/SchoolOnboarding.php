@@ -75,9 +75,66 @@ class SchoolOnboarding extends Component
             //return redirect()->route('dashboard');
         }
 
-        // Set default academic year dates
-        $this->academic_year_start = now()->startOfYear()->format('Y-m-d');
-        $this->academic_year_end = now()->endOfYear()->format('Y-m-d');
+        // Load persisted data from session
+        $this->loadPersistedData();
+
+        // Set default academic year dates if not set
+        if (!$this->academic_year_start) {
+            $this->academic_year_start = now()->startOfYear()->format('Y-m-d');
+        }
+        if (!$this->academic_year_end) {
+            $this->academic_year_end = now()->endOfYear()->format('Y-m-d');
+        }
+    }
+
+    /**
+     * Load form data from session
+     */
+    private function loadPersistedData()
+    {
+        if (session()->has('school_onboarding_data')) {
+            $data = session()->get('school_onboarding_data');
+            foreach ($data as $key => $value) {
+                if (property_exists($this, $key)) {
+                    $this->$key = $value;
+                }
+            }
+        }
+    }
+
+    /**
+     * Save current form data to session
+     */
+    public function persistData()
+    {
+        $data = [
+            'currentStep' => $this->currentStep,
+            'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'website' => $this->website,
+            'type' => $this->type,
+            'ownership' => $this->ownership,
+            'address' => $this->address,
+            'city' => $this->city,
+            'state' => $this->state,
+            'country' => $this->country,
+            'postal_code' => $this->postal_code,
+            'description' => $this->description,
+            'established_date' => $this->established_date,
+            'student_capacity' => $this->student_capacity,
+            'timezone' => $this->timezone,
+            'currency' => $this->currency,
+            'academic_year_start' => $this->academic_year_start,
+            'academic_year_end' => $this->academic_year_end,
+            'selectedAcademicGroups' => $this->selectedAcademicGroups,
+            'selectedAcademicLevels' => $this->selectedAcademicLevels,
+            'settlement_bank' => $this->settlement_bank,
+            'bank_code' => $this->bank_code,
+            'account_number' => $this->account_number,
+        ];
+
+        session()->put('school_onboarding_data', $data);
     }
 
     public function updatedLogo()
@@ -92,6 +149,7 @@ class SchoolOnboarding extends Component
     public function nextStep(): void
     {
         $this->validateCurrentStep();
+        $this->persistData();
 
         if ($this->currentStep < $this->totalSteps) {
             $this->currentStep++;
@@ -131,6 +189,7 @@ class SchoolOnboarding extends Component
     {
         if ($this->currentStep > 1) {
             $this->currentStep--;
+            $this->persistData();
         }
     }
 
@@ -179,6 +238,10 @@ class SchoolOnboarding extends Component
             }
 
             $this->currentStep = 4;
+            $this->clearPersistedData();
+            
+            // Emit event for completion
+            $this->dispatch('schoolCreated', schoolId: $this->createdSchool->id);
         } catch (ValidationException $e) {
             $this->currentStep = 1;
             throw $e;
@@ -217,6 +280,14 @@ class SchoolOnboarding extends Component
 
 
     // Computed properties for form options
+
+    /**
+     * Clear persisted session data
+     */
+    public function clearPersistedData()
+    {
+        session()->forget('school_onboarding_data');
+    }
 
     public function completeOnboarding()
     {

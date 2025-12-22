@@ -18,7 +18,8 @@ class SchoolSwitcherPage extends Component
 
     public function mount()
     {
-        if (!auth()->user()->canAccessCrossSchool()) {
+        
+        if (!auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403);
         }
 
