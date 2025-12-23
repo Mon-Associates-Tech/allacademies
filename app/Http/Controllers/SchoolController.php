@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\School;
 use App\Models\Subaccount;
 use App\Services\PaystackService;
+use App\Services\SubaccountPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\SchoolFee;
 use App\Models\AcademicGroup;;
-
 use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
 use App\Models\AcademicFeeStructure;
@@ -50,39 +50,32 @@ class SchoolController extends Controller
         // Step 1: Create school record
         $school = School::create($request->only(['name', 'email', 'phone', 'address']));
 
-        // Step 2: Create subaccount on Paystack
-        $subaccountData = [
-            'business_name'        => $school->name,
-            'bank_code'      => $request->bank_code,   // from <select>
-            'account_number'       => $request->account_number,
-            'percentage_charge'    => 0, // system commission %
-            'description'          => "Subaccount for {$school->name}",
-            'primary_contact_name' => $school->name,
-            'primary_contact_email' => $school->email,
-            'primary_contact_phone' => $school->phone,
-        ];
+        // Step 2: Create subaccount using the service
+        try {
+            $subaccountService = app(SubaccountPaymentService::class);
 
-        $response = $this->paystack->createSubAccount($subaccountData);
+            $bankData = [
+                'business_name' => $school->name,
+                'bank_code' => $request->bank_code,
+                'account_number' => $request->account_number,
+                'settlement_bank' => $request->settlement_bank,
+                'description' => "Subaccount for {$school->name}",
+            ];
 
-        if (!isset($response['status']) || !$response['status']) {
-            return back()->with('error', $response['message'] ?? 'Failed to create subaccount.');
+            $contactData = [
+                'name' => $school->name,
+                'email' => $school->email,
+                'phone' => $school->phone,
+            ];
+
+            $subaccountService->createSubAccount($school, $bankData, $contactData, 0);
+
+            return redirect()
+                ->route('schools.create')
+                ->with('success', 'School and Subaccount created successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        // Step 3: Save subaccount to DB
-        $school->subaccount()->create([
-            'subaccount_code'   => $response['data']['subaccount_code'],
-            'business_name'     => $response['data']['business_name'],
-            'settlement_bank'   => $request->settlement_bank,
-            'bank_code'        =>  $request->bank_code,
-            'account_number'    => $response['data']['account_number'],
-            'percentage_charge' => $response['data']['percentage_charge'],
-            'description'       => $response['data']['description'] ?? null,
-            'paystack_response' => $response['data'], // full JSON response
-        ]);
-
-        return redirect()
-            ->route('schools.create')
-            ->with('success', 'School and Subaccount created successfully.');
     }
 
 
@@ -93,16 +86,24 @@ class SchoolController extends Controller
             return back()->with('error', 'This school has no subaccount.');
         }
 
+        $subaccountService = app(SubaccountPaymentService::class);
+
         $data = [
-            'email'            => $school->email,
-            'amount'           => 100000, // 1000 GHS in kobo
-            'subaccount'       => $school->subaccount->subaccount_code,
-            'metadata'         => [
+            'email'        => $school->email,
+            'amount'       => 100000, // 1000 GHS in kobo
+            'metadata'     => [
                 'school_id' => $school->id,
                 'school'    => $school->name,
             ],
-            'callback_url'     => route('schoolfees.callback'),
+            'callback_url' => route('schoolfees.callback'),
         ];
+
+        // Add subaccount information to payment data
+        $data = $subaccountService->preparePaymentDataWithSubaccount(
+            $data,
+            $school->subaccount,
+            'account'
+        );
 
         $response = $this->paystack->initializeTransaction($data);
 

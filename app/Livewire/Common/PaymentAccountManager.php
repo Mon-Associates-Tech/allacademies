@@ -3,7 +3,7 @@
 namespace App\Livewire\Common;
 
 use App\Constants\GhanaBanks;
-use App\Services\PaystackService;
+use App\Services\SubaccountPaymentService;
 use Livewire\Component;
 use Exception;
 
@@ -55,71 +55,47 @@ class PaymentAccountManager extends Component
             // Get bank name from code
             $this->accountBank = GhanaBanks::getNameFromCode($this->accountBankCode);
 
-            $paystack = app(PaystackService::class);
+            $subaccountService = app(SubaccountPaymentService::class);
 
             // Get email for contact - handle different model structures
             $contactEmail = $this->getContactEmail();
             $contactPhone = $this->getContactPhone();
 
             // Determine percentage charge based on model type
-            // Authors get 90% (the platform keeps 10%), Schools get 100%
+            // Authors get 10% (the platform keeps 10%), Schools get 0%
             $percentageCharge = $this->modelType === 'author' ? 10 : 0;
 
             if ($this->editingAccountId) {
                 // Update existing subaccount
                 $subaccount = $this->model->subaccount;
 
-                $updateData = [
-                    'business_name' => $this->accountName ?: $this->model->name,
-                    'account_number' => $this->accountNumber,
-                ];
-
-                $response = $paystack->updateSubAccount($subaccount->subaccount_code, $updateData);
-
-                if (isset($response['status']) && $response['status']) {
-                    $subaccount->update([
-                        'business_name' => $this->accountName ?: $this->model->name,
-                        'settlement_bank' => $this->accountBank,
-                        'bank_code' => $this->accountBankCode,
-                        'account_number' => $this->accountNumber,
-                        'paystack_response' => $response['data'] ?? null,
-                    ]);
-
-                    session()->flash('success', 'Account information updated successfully!');
-                } else {
-                    throw new Exception($response['message'] ?? 'Failed to update account');
-                }
-            } else {
-                // Create new subaccount
-                $subaccountData = [
+                $bankData = [
                     'business_name' => $this->accountName ?: $this->model->name,
                     'bank_code' => $this->accountBankCode,
                     'account_number' => $this->accountNumber,
-                    'percentage_charge' => $percentageCharge,
-                    'description' => "Payment account for {$this->model->name}",
-                    'primary_contact_name' => $this->model->name,
-                    'primary_contact_email' => $contactEmail,
-                    'primary_contact_phone' => $contactPhone,
+                    'settlement_bank' => $this->accountBank,
                 ];
 
-                $response = $paystack->createSubAccount($subaccountData);
+                $subaccountService->updateSubAccount($subaccount, $bankData);
+                session()->flash('success', 'Account information updated successfully!');
+            } else {
+                // Create new subaccount
+                $bankData = [
+                    'business_name' => $this->accountName ?: $this->model->name,
+                    'bank_code' => $this->accountBankCode,
+                    'account_number' => $this->accountNumber,
+                    'settlement_bank' => $this->accountBank,
+                    'description' => "Payment account for {$this->model->name}",
+                ];
 
-                if (isset($response['status']) && $response['status']) {
-                    $this->model->subaccount()->create([
-                        'subaccount_code' => $response['data']['subaccount_code'],
-                        'business_name' => $this->accountName ?: $this->model->name,
-                        'settlement_bank' => $this->accountBank,
-                        'bank_code' => $this->accountBankCode,
-                        'account_number' => $this->accountNumber,
-                        'percentage_charge' => $percentageCharge,
-                        'description' => $response['data']['description'] ?? null,
-                        'paystack_response' => $response['data'],
-                    ]);
+                $contactData = [
+                    'name' => $this->model->name,
+                    'email' => $contactEmail,
+                    'phone' => $contactPhone,
+                ];
 
-                    session()->flash('success', 'Account information added successfully!');
-                } else {
-                    throw new Exception($response['message'] ?? 'Failed to create account');
-                }
+                $subaccountService->createSubAccount($this->model, $bankData, $contactData, $percentageCharge);
+                session()->flash('success', 'Account information added successfully!');
             }
 
             $this->showAccountModal = false;

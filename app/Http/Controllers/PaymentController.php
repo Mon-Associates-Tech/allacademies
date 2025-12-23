@@ -12,6 +12,7 @@ use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
 use App\Models\AcademicFeeStructure;
 use App\Services\TokenSubscriptionService;
+use App\Services\SubaccountPaymentService;
 use App\Traits\HandlesPayments;
 use Brick\Money\Money;
 use Illuminate\Http\RedirectResponse;
@@ -284,19 +285,12 @@ class PaymentController extends Controller
 
         // Add subaccount for revenue split if author has one configured
         if ($authorSubaccount && $authorSubaccount->subaccount_code) {
-            $paymentData['subaccount'] = $authorSubaccount->subaccount_code;
-
-            // Add bearer information for transaction charges
-            // 'account' means subaccount bears the charge
-            // 'subaccount' means the main account bears the charge
-            $paymentData['bearer'] = 'account';
-
-            // Add metadata about revenue split
-            $paymentData['metadata']['revenue_split'] = [
-                'platform_percentage' => $authorSubaccount->percentage_charge,
-                'author_percentage' => 100 - $authorSubaccount->percentage_charge,
-                'subaccount_code' => $authorSubaccount->subaccount_code,
-            ];
+            $subaccountService = app(SubaccountPaymentService::class);
+            $paymentData = $subaccountService->preparePaymentDataWithSubaccount(
+                $paymentData,
+                $authorSubaccount,
+                'account'
+            );
         } else {
             // Log warning if author doesn't have subaccount for paid book
             \Log::warning('Author does not have subaccount configured for paid book', [
@@ -660,8 +654,15 @@ class PaymentController extends Controller
             'amount'       => $validated['amount'] * 100, // Paystack expects amount in pesewas
             'currency'     => 'GHS',
             'callback_url' => $callbackUrl,
-            'subaccount'   => $subaccount->subaccount_code,
         ];
+
+        // Prepare payment data with subaccount information
+        $subaccountService = app(SubaccountPaymentService::class);
+        $paymentData = $subaccountService->preparePaymentDataWithSubaccount(
+            $paymentData,
+            $subaccount,
+            'account'
+        );
 
         // 9️⃣ Initialize transaction via Paystack API
         $response = $paystack->initializeTransaction($paymentData);

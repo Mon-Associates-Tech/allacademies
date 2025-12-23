@@ -2,10 +2,11 @@
 
 namespace App\Livewire;
 
+use App\Constants\GhanaBanks;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Services\PaystackService;
 use App\Services\SchoolOnboardingService;
+use App\Services\SubaccountPaymentService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -71,8 +72,8 @@ class SchoolOnboarding extends Component
     {
         // Check if user already has a school
         $user = Auth::user();
-        if ($user->school_id) {
-            //return redirect()->route('dashboard');
+        if ($user->school_id && !$user->hasAnyRole(['owner'])) {
+            return redirect()->route('dashboard');
         }
 
         // Load persisted data from session
@@ -100,41 +101,6 @@ class SchoolOnboarding extends Component
                 }
             }
         }
-    }
-
-    /**
-     * Save current form data to session
-     */
-    public function persistData()
-    {
-        $data = [
-            'currentStep' => $this->currentStep,
-            'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'website' => $this->website,
-            'type' => $this->type,
-            'ownership' => $this->ownership,
-            'address' => $this->address,
-            'city' => $this->city,
-            'state' => $this->state,
-            'country' => $this->country,
-            'postal_code' => $this->postal_code,
-            'description' => $this->description,
-            'established_date' => $this->established_date,
-            'student_capacity' => $this->student_capacity,
-            'timezone' => $this->timezone,
-            'currency' => $this->currency,
-            'academic_year_start' => $this->academic_year_start,
-            'academic_year_end' => $this->academic_year_end,
-            'selectedAcademicGroups' => $this->selectedAcademicGroups,
-            'selectedAcademicLevels' => $this->selectedAcademicLevels,
-            'settlement_bank' => $this->settlement_bank,
-            'bank_code' => $this->bank_code,
-            'account_number' => $this->account_number,
-        ];
-
-        session()->put('school_onboarding_data', $data);
     }
 
     public function updatedLogo()
@@ -174,6 +140,16 @@ class SchoolOnboarding extends Component
         }
     }
 
+    /**
+     * Save current form data to session
+     */
+    public function persistData()
+    {
+        $data = ['currentStep' => $this->currentStep, 'name' => $this->name, 'email' => $this->email, 'phone' => $this->phone, 'website' => $this->website, 'type' => $this->type, 'ownership' => $this->ownership, 'address' => $this->address, 'city' => $this->city, 'state' => $this->state, 'country' => $this->country, 'postal_code' => $this->postal_code, 'description' => $this->description, 'established_date' => $this->established_date, 'student_capacity' => $this->student_capacity, 'timezone' => $this->timezone, 'currency' => $this->currency, 'academic_year_start' => $this->academic_year_start, 'academic_year_end' => $this->academic_year_end, 'selectedAcademicGroups' => $this->selectedAcademicGroups, 'selectedAcademicLevels' => $this->selectedAcademicLevels, 'settlement_bank' => $this->settlement_bank, 'bank_code' => $this->bank_code, 'account_number' => $this->account_number,];
+
+        session()->put('school_onboarding_data', $data);
+    }
+
     public function canProceedToNextStep(): bool
     {
         try {
@@ -200,7 +176,7 @@ class SchoolOnboarding extends Component
 
         try {
             if (!empty($this->bank_code)) {
-                $this->settlement_bank = $this->getBankNameFromCode($this->bank_code);
+                $this->settlement_bank = GhanaBanks::getNameFromCode($this->bank_code);
             }
 
             $this->validate();
@@ -209,7 +185,7 @@ class SchoolOnboarding extends Component
 
             if ($this->logo) {
                 $logoPath = $this->logo->store('schools/logos', 'public');
-                $schoolData['logo_url'] = $logoPath;
+                $schoolData['logo'] = $logoPath;
             }
 
             $onboardingService = app(SchoolOnboardingService::class);
@@ -220,17 +196,13 @@ class SchoolOnboarding extends Component
             $user->update(['role' => 'admin']);
 
             if (!empty($this->bank_code)) {
-                $subaccountData = ['business_name' => $school->name, 'bank_code' => $this->bank_code, 'account_number' => $this->account_number, 'percentage_charge' => 0, 'description' => "Subaccount for {$school->name}", 'primary_contact_name' => $school->name, 'primary_contact_email' => $school->email, 'primary_contact_phone' => $school->phone,];
+                $subaccountService = app(SubaccountPaymentService::class);
 
-                $paystack = app(PaystackService::class);
-                $response = $paystack->createSubAccount($subaccountData);
+                $bankData = ['business_name' => $school->name, 'bank_code' => $this->bank_code, 'account_number' => $this->account_number, 'settlement_bank' => $this->settlement_bank, 'description' => "Subaccount for {$school->name}",];
 
-                if (!isset($response['status']) || !$response['status']) {
-                    throw new Exception($response['message'] ?? 'Failed to create subaccount.');
-                }
+                $contactData = ['name' => $school->name, 'email' => $school->email, 'phone' => $school->phone,];
 
-                $school->subaccount()->create(['subaccount_code' => $response['data']['subaccount_code'], 'business_name' => $response['data']['business_name'], 'settlement_bank' => $this->settlement_bank, 'bank_code' => $this->bank_code, 'account_number' => $response['data']['account_number'], 'percentage_charge' => $response['data']['percentage_charge'], 'description' => $response['data']['description'] ?? null, 'paystack_response' => $response['data'],]);
-
+                $subaccountService->createSubAccount($school, $bankData, $contactData, 0);
                 session()->flash('success', 'School created successfully');
             } else {
                 // no bank code → skip Paystack
@@ -239,7 +211,7 @@ class SchoolOnboarding extends Component
 
             $this->currentStep = 4;
             $this->clearPersistedData();
-            
+
             // Emit event for completion
             $this->dispatch('schoolCreated', schoolId: $this->createdSchool->id);
         } catch (ValidationException $e) {
@@ -271,16 +243,6 @@ class SchoolOnboarding extends Component
         }
     }
 
-    private function getBankNameFromCode(string $code): string
-    {
-        $banks = ['030100' => 'Absa Bank Ghana Limited', '280100' => 'Access Bank (Ghana) Plc', '080100' => 'Agricultural Development Bank Plc', '300341' => 'Affinity Ghana Savings and Loans', 'ATL' => 'AirtelTigo Money', '070101' => 'ARB Apex Bank', '210100' => 'Bank of Africa Ghana Limited', '010100' => 'Bank of Ghana', '300335' => 'Best Point Savings and Loans', '140100' => 'CalBank PLC', '340100' => 'Consolidated Bank Ghana Limited', '130100' => 'Ecobank Ghana Plc', '200100' => 'FBNBank Ghana Limited', '240100' => 'Fidelity Bank Ghana Limited', '170100' => 'First Atlantic Bank Limited', '330100' => 'First National Bank Ghana Limited', '040100' => 'GCB BankLimited', '230100' => 'Guaranty Trust Bank (Ghana) Limited', 'MTN' => 'MTN Mobile Money', '050100' => 'National Investment Bank Limited', '360100' => 'OmniBSIC Bank Ghana Limited', '300457' => 'Paystack Limited', '180100' => 'Prudential Bank Limited', '110100' => 'Republic Bank (Ghana) PLC', '300361' => 'Services Integrity Savings and Loans', '090100' => 'Société Générale Ghana Plc', '190100' => 'Stanbic Bank Ghana Limited', '020100' => 'Standard Chartered Bank GhanaPlc', '060100' => 'United Bank for Africa Ghana Limited', '100100' => 'Universal Merchant Bank Ghana Limited', 'VOD' => 'Vodafone Cash', '120100' => 'Zenith Bank Ghana',];
-
-        return $banks[$code] ?? $code;
-    }
-
-
-    // Computed properties for form options
-
     /**
      * Clear persisted session data
      */
@@ -289,39 +251,42 @@ class SchoolOnboarding extends Component
         session()->forget('school_onboarding_data');
     }
 
+
+    // Computed properties for form options
+
     public function completeOnboarding()
     {
         try {
             $onboardingService = app(SchoolOnboardingService::class);
             $onboardingService->completeOnboarding($this->createdSchool, Auth::user());
 
-            return redirect()->route('dashboard')->with('success', 'Welcome to your school dashboard!');
+            return redirect()->route('school-settings.index')->with('success', 'Welcome to your school dashboard!');
         } catch (Exception $e) {
             session()->flash('error', 'Failed to complete onboarding: ' . $e->getMessage());
         }
     }
 
-    public function getSchoolTypesProperty()
+    public function getSchoolTypesProperty(): array
     {
         return ['primary' => 'Primary School', 'secondary' => 'Secondary School', 'tertiary' => 'Tertiary Institution', 'mixed' => 'Mixed (Primary & Secondary)'];
     }
 
-    public function getOwnershipTypesProperty()
+    public function getOwnershipTypesProperty(): array
     {
         return ['public' => 'Public School', 'private' => 'Private School', 'mission' => 'Mission School'];
     }
 
-    public function getGhanaRegionsProperty()
+    public function getGhanaRegionsProperty(): array
     {
         return ['Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Volta', 'Northern', 'Upper East', 'Upper West', 'Brong Ahafo'];
     }
 
-    public function getCurrenciesProperty()
+    public function getCurrenciesProperty(): array
     {
         return ['GHS' => 'Ghana Cedi (GHS)', 'USD' => 'US Dollar (USD)', 'EUR' => 'Euro (EUR)'];
     }
 
-    public function getTimezonesProperty()
+    public function getTimezonesProperty(): array
     {
         return ['Africa/Accra' => 'Africa/Accra (GMT)', 'UTC' => 'UTC'];
     }
@@ -343,5 +308,12 @@ class SchoolOnboarding extends Component
     public function render()
     {
         return view('livewire.school-onboarding');
+    }
+
+    private function getBankNameFromCode(string $code): string
+    {
+        $banks = ['030100' => 'Absa Bank Ghana Limited', '280100' => 'Access Bank (Ghana) Plc', '080100' => 'Agricultural Development Bank Plc', '300341' => 'Affinity Ghana Savings and Loans', 'ATL' => 'AirtelTigo Money', '070101' => 'ARB Apex Bank', '210100' => 'Bank of Africa Ghana Limited', '010100' => 'Bank of Ghana', '300335' => 'Best Point Savings and Loans', '140100' => 'CalBank PLC', '340100' => 'Consolidated Bank Ghana Limited', '130100' => 'Ecobank Ghana Plc', '200100' => 'FBNBank Ghana Limited', '240100' => 'Fidelity Bank Ghana Limited', '170100' => 'First Atlantic Bank Limited', '330100' => 'First National Bank Ghana Limited', '040100' => 'GCB BankLimited', '230100' => 'Guaranty Trust Bank (Ghana) Limited', 'MTN' => 'MTN Mobile Money', '050100' => 'National Investment Bank Limited', '360100' => 'OmniBSIC Bank Ghana Limited', '300457' => 'Paystack Limited', '180100' => 'Prudential Bank Limited', '110100' => 'Republic Bank (Ghana) PLC', '300361' => 'Services Integrity Savings and Loans', '090100' => 'Société Générale Ghana Plc', '190100' => 'Stanbic Bank Ghana Limited', '020100' => 'Standard Chartered Bank GhanaPlc', '060100' => 'United Bank for Africa Ghana Limited', '100100' => 'Universal Merchant Bank Ghana Limited', 'VOD' => 'Vodafone Cash', '120100' => 'Zenith Bank Ghana',];
+
+        return $banks[$code] ?? $code;
     }
 }
