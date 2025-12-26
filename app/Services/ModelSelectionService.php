@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class ModelSelectionService
 {
@@ -67,5 +68,40 @@ class ModelSelectionService
     public function getTextModelForUser(User $user): string
     {
         return $this->getModelForUser($user);
+    }
+
+    /**
+     * Detect if the request is for image or text using a small LLM call.
+     */
+    public function detectModelType(ChatGPTService $chatGPT, array $parameters, array $conversationHistory): string
+    {
+        $user = auth()->user();
+        $classificationModel = config('openai.openai.default_model', 'gpt-4.1-nano');
+
+        $prompt = [
+            [
+                'role' => 'system',
+                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests.'
+            ],
+            [
+                'role' => 'user',
+                'content' => "User request: " . ($parameters['input'] ?? '') .
+                    "\n\nContext: " . json_encode(array_slice($conversationHistory, -3))
+            ]
+        ];
+
+        try {
+            // We use the basic model for classification to save costs
+            $result = $chatGPT->chat($prompt, $classificationModel, []);
+
+            $type = trim(strtolower($result['content'] ?? 'text'));
+
+            Log::info('Model detection result', ['model' => $classificationModel, 'type' => $type]);
+
+            return $type === 'image' ? 'image' : 'text';
+        } catch (\Exception $e) {
+            Log::error('Model detection failed', ['error' => $e->getMessage()]);
+            return 'text';
+        }
     }
 }

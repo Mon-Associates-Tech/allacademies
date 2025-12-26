@@ -11,143 +11,128 @@ class ChatGPTService
     protected mixed $apiKey;
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
     protected string $imageEndpoint = 'https://api.openai.com/v1/images/generations';
+    protected TokenUsageService $tokenUsageService;
 
-    public function __construct()
+    public function __construct(TokenUsageService $tokenUsageService)
     {
-        $this->apiKey = config('services.openai.key');
+        $this->apiKey = config('services.openai.key') ?? config('openai.openai.api_key');
+        $this->tokenUsageService = $tokenUsageService;
     }
 
     /**
-     * @throws ConnectionException
+     * Unified Chat method that handles HTTP, extraction, and usage logging
      */
-    public function chat($messages, $model = 'gpt-4'): string
+    public function chat($messages, $model = 'gpt-4', array $options = []): array
     {
-        $requestData = [
+        $user = auth()->user();
+
+        $requestData = array_merge([
             'model' => $model,
             'input' => $messages,
-        ];
+        ], $options);
 
-        Log::info('ChatGPTService request', [
-            'model' => $model,
-            'message_count' => count($messages),
-            'first_message_preview' => isset($messages[0]['content']) ? substr($messages[0]['content'], 0, 150) : 'none'
-        ]);
+        try {
+            $response = Http::withToken($this->apiKey)
+                ->timeout(config('openai.openai.timeout', 90))
+                ->post($this->textEndpoint, $requestData);
 
-        $response = Http::withToken($this->apiKey)
-            ->post($this->textEndpoint, $requestData);
-
-        if ($response->successful()) {
-            $responseData = $response->json();
-
-            Log::info('ChatGPTService response', [
-                'has_output' => isset($responseData['output']),
-                'response_keys' => array_keys($responseData),
-            ]);
-
-            // Extract content from v1/responses format
-            $content = $this->extractContent($responseData);
-
-            if (empty($content)) {
-                Log::error('Empty content extracted from response', [
-                    'full_response' => json_encode($responseData)
-                ]);
-                throw new \RuntimeException("Empty response from OpenAI API");
+            if (!$response->successful()) {
+                throw new \RuntimeException("OpenAI API Error: " . $response->body());
             }
 
-            return $content;
-        }
+            $responseData = $response->json();
+            $usage = $responseData['usage'] ?? null;
 
-        throw new \RuntimeException("OpenAI API Error: " . $response->body());
+            // Handle usage logging
+            if ($user && $usage) {
+                $this->tokenUsageService->logUsage(
+                    $user,
+                    $usage,
+                    $options['request_type'] ?? 'chat',
+                    $model
+                );
+            }
+
+            return [
+                'success' => true,
+                'content' => $this->extractContent($responseData),
+                'usage' => $usage,
+                'model' => $responseData['model'] ?? $model
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('ChatGPTService Error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
     }
 
     /**
-     * Extract content from the response data
+     * Unified Image Generation method
      */
-    private function extractContent(array $responseData): string
+    public function generateImage($prompt, $model = 'dall-e-3', array $options = []): array
+    {
+        $user = auth()->user();
+
+        try {
+            $response = Http::withToken($this->apiKey)
+                ->post($this->imageEndpoint, array_merge([
+                    'model' => $model,
+                    'prompt' => $prompt,
+                    'n' => 1,
+                    'size' => '1024x1024',
+                ], $options));
+
+            if (!$response->successful()) {
+                throw new \RuntimeException("OpenAI API Error: " . $response->body());
+            }
+
+            $responseData = $response->json();
+            $images = $responseData['data'] ?? [];
+
+            // Log usage if present in the image response
+            if ($user && !empty($images[0]['usage'])) {
+                $this->tokenUsageService->logUsage($user, $images[0]['usage'], 'image', $model);
+            }
+
+            return [
+                'success' => true,
+                'images' => $images,
+                'model' => $model
+            ];
+        } catch (\Exception $e) {
+            Log::error('Image Generation Error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Centralized extraction logic
+     */
+    public function extractContent(array $responseData): string
     {
         if (!isset($responseData['output'])) {
-            return '';
+            return $responseData['choices'][0]['message']['content'] ?? '';
         }
 
         $output = $responseData['output'];
+        if (is_string($output)) return $output;
 
-        // Handle direct string
-        if (is_string($output)) {
-            return $output;
-        }
-
-        // Handle array
         if (is_array($output)) {
-            // Array of strings
-            if (isset($output[0]) && is_string($output[0])) {
-                return implode("\n", $output);
-            }
-
-            // Nested content structure with output_text type
-            if (isset($output[0]['content']) && is_array($output[0]['content'])) {
-                $content = $output[0]['content'];
-
-                if (is_string($content)) {
-                    return $content;
-                }
-
-                if (is_array($content)) {
-                    $parts = [];
-                    foreach ($content as $item) {
-                        if (is_string($item)) {
-                            $parts[] = $item;
-                        } elseif (isset($item['type']) && $item['type'] === 'output_text' && isset($item['text'])) {
-                            // Handle output_text type from v1/responses API
-                            $parts[] = $item['text'];
-                        } elseif (isset($item['text'])) {
-                            $parts[] = $item['text'];
+            if (isset($output[0]['content'])) {
+                $text = '';
+                foreach ($output as $item) {
+                    if (isset($item['content']) && is_array($item['content'])) {
+                        foreach ($item['content'] as $part) {
+                            $text .= is_array($part) ? ($part['text'] ?? '') : $part;
                         }
                     }
-                    return implode("\n", array_filter($parts));
                 }
+                return $text;
             }
-
-            // Direct text field
-            if (isset($output[0]['text'])) {
-                return $output[0]['text'];
-            }
+            if (isset($output[0]['text'])) return implode("\n", array_column($output, 'text'));
+            return implode("\n", array_filter($output, 'is_string'));
         }
 
         return '';
-    }
-    public function generateImage($prompt, $model = 'dall-e-3', $n = 1, $size = '1024x1024')
-    {
-
-        $response = Http::withToken($this->apiKey)
-            ->post($this->imageEndpoint, [
-                'model' => $model,
-                'prompt' => $prompt,
-                'n' => $n,
-                'size' => $size,
-            ]);
-        logInfo("Let generate some image". $response);
-        if ($response->successful()) {
-            return $response->json()['data'];
-        }
-        logInfo("Let generate some image". $response->json());
-
-        throw new \Exception("OpenAI API Error: " . $response->body());
-    }
-
-    /**
-     * Format messages array into a single prompt string for responses API
-     */
-    private function formatMessagesForResponses($messages): string
-    {
-        $prompt = '';
-
-        foreach ($messages as $message) {
-            $role = $message['role'] ?? 'user';
-            $content = $message['content'] ?? '';
-
-            $prompt .= ucfirst($role) . ': ' . $content . "\n\n";
-        }
-
-        return trim($prompt);
     }
 }
