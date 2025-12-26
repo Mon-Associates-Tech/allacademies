@@ -195,6 +195,25 @@
                             </div>
                         </a>
                     </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Calendar">
+                        <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                           class="block pl-3 rounded-lg transition {{ Route::is('calendar*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{route('calendar.index')}}">
+                            <div class="flex items-center">
+                                <svg
+                                    class="shrink-0 fill-current {{ Route::is('calendar*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path
+                                        d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v13z"/>
+                                    <path
+                                        d="M16 11H8v2h8v-2zm0 4H8v2h8v-2z"/>
+                                </svg>
+
+                                <span class="text-sm ml-2 sidebar-text duration-200">Calendar</span>
+                            </div>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

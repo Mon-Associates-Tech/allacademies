@@ -121,6 +121,18 @@
                                 }
                             }
                         });
+                    },
+
+                    // Update editor content from external source (e.g., Livewire)
+                    setContent(newContent) {
+                        this.markdown = newContent || '';
+                        if (this.editor && this.initialized) {
+                            this.isInitializing = true;
+                            this.editor.setContent(this.markdown);
+                            setTimeout(() => {
+                                this.isInitializing = false;
+                            }, 300);
+                        }
                     }
                 }
             };
@@ -146,6 +158,20 @@
         $watch('preview', (value) => {
             if (value) {
                 updatePreview();
+            }
+        });
+        // Watch for Livewire property changes using $wire.$watch
+        if (wireName && typeof $wire !== 'undefined') {
+            $wire.$watch(wireName, (newValue) => {
+                if (newValue !== markdown) {
+                    setContent(newValue);
+                }
+            });
+        }
+        // Also listen for custom event to update content
+        $el.addEventListener('update-editor-content', (e) => {
+            if (e.detail && e.detail.content !== undefined) {
+                setContent(e.detail.content);
             }
         });
      "

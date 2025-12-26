@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Contracts\CalendarEventable;
+use App\Traits\HasCalendarEvents;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Note extends Model
+class Note extends Model implements CalendarEventable
 {
-    use HasFactory;
+    use HasFactory, HasCalendarEvents;
 
     protected $fillable = [
         'title',
@@ -24,6 +26,67 @@ class Note extends Model
     protected $casts = [
         'is_public' => 'boolean'
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | CalendarEventable Implementation
+    |--------------------------------------------------------------------------
+    | These methods customize the calendar integration for Notes.
+    | The base functionality is provided by the HasCalendarEvents trait.
+    */
+
+    /**
+     * Get the title to display on the calendar.
+     */
+    public function getCalendarTitle(): string
+    {
+        return $this->title;
+    }
+
+    /**
+     * Get the description to display on the calendar.
+     */
+    public function getCalendarDescription(): ?string
+    {
+        return $this->content;
+    }
+
+    /**
+     * Get the default color for notes on the calendar.
+     */
+    public function getCalendarColor(): ?string
+    {
+        return '#3B82F6'; // Blue color for notes
+    }
+
+    /**
+     * Get the URL to view this note's details.
+     */
+    public function getCalendarEventUrl(): ?string
+    {
+        return route('notes.show', $this);
+    }
+
+    /**
+     * Get additional metadata for the calendar event.
+     */
+    public function getCalendarMetadata(): array
+    {
+        return [
+            'model_type' => static::class,
+            'model_id' => $this->id,
+            'event_type' => $this->getCalendarEventType(),
+            'is_public' => $this->is_public,
+            'book_id' => $this->book_id,
+            'academic_subject_id' => $this->academic_subject_id,
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     public function user(): BelongsTo
     {
@@ -166,5 +229,4 @@ class Note extends Model
     {
         return $this->hasMany(NoteAttachment::class);
     }
-
 }

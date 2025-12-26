@@ -11,6 +11,7 @@ use App\Http\Controllers\BookCategoryController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookProgressController;
 use App\Http\Controllers\BookSubscriptionController;
+use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
@@ -487,11 +488,21 @@ Route::middleware(['auth', 'token.subscription'])->group(function () {
         ->name('notes.attachments.download');
     Route::get('/notes/{note}/attachments/{attachment}/view', [NotesController::class, 'viewAttachment'])
         ->name('notes.attachments.view');
+
+    // Calendar Events Routes
+    Route::resource('calendar-events', \App\Http\Controllers\CalendarEventsController::class);
+    Route::post('/calendar-events/{event}/create-note', [CalendarEventsController::class, 'createNoteFromEvent'])
+        ->name('calendar-events.create-note');
 });
 
 Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
 
 Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
+
+// Calendar Route
+Route::get('/calendar', function () {
+    return view('calendar.index');
+})->name('calendar.index');
 
 // Include additional route files
 

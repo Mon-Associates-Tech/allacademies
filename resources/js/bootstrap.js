@@ -49,6 +49,7 @@ import '../css/videoplayer.css'
 
 
 import './ChartDataHelper';
+import './calendar';
 // Configure axios
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 

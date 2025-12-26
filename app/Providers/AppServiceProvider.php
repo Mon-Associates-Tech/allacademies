@@ -12,6 +12,7 @@ use App\Models\Attendance\AttendanceRecord;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
+use App\Models\CalendarEvent;
 use App\Models\ChatGroup;
 use App\Models\EssayQuestion;
 use App\Models\Examination;
@@ -117,6 +118,7 @@ class AppServiceProvider extends ServiceProvider
             'studentIdCard' => \App\Models\StudentIdCard::class,
             'report_card' => \App\Models\ReportCard::class,
             'note' => Note::class,
+            'calendar_event' => CalendarEvent::class,
 
         ]);
     }
