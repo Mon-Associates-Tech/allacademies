@@ -16,7 +16,8 @@ class AcademicPeriod extends Model
 
     protected $fillable = [
         'school_id',
-        'title',
+        'academic_year_id',
+        'name',
         'type',
         'sequence',
         'start_date',
@@ -31,6 +32,7 @@ class AcademicPeriod extends Model
         'registration_end',
         'exam_start',
         'exam_end',
+        'is_current',
     ];
 
     protected $casts = [
@@ -271,7 +273,8 @@ class AcademicPeriod extends Model
     {
         return [
             'school_id' => 'required|exists:schools,id',
-            'title' => 'nullable|string|max:255',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
+            'name' => 'nullable|string|max:255',
             'type' => 'required|in:semester,term,quarter,trimester,session',
             'sequence' => 'required|integer|min:1|max:10',
             'start_date' => 'required|date',
@@ -287,5 +290,10 @@ class AcademicPeriod extends Model
             'exam_start' => 'nullable|date|after_or_equal:start_date',
             'exam_end' => 'nullable|date|after_or_equal:exam_start|before_or_equal:end_date',
         ];
+    }
+
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
     }
 }

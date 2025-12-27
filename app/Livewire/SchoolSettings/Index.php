@@ -2,15 +2,19 @@
 
 namespace App\Livewire\SchoolSettings;
 
+use App\Models\School;
 use App\Models\SchoolSetting;
+use App\Services\SchoolContextService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class Index extends Component
 {
     use WithFileUploads;
 
+    public $currentSchool;
     public $settings = [];
     public $showSettingModal = false;
     public $showValueModal = false;
@@ -32,7 +36,7 @@ class Index extends Component
     public $currentSetting = null;
     public $value = '';
     public $fileValue = null;
-    public $currentOptions = []; // Add this for managing options in value modal
+    public $currentOptions = [];
 
     // Delete confirmation
     public $settingToDelete = null;
@@ -50,12 +54,31 @@ class Index extends Component
 
     public function mount()
     {
+        $this->loadCurrentSchool();
         $this->loadSettings();
+    }
+
+    public function loadCurrentSchool()
+    {
+        $user = Auth::user();
+
+        // Get current school from context or user's school
+        if ($user->canAccessCrossSchool() && session()->has('current_school_id')) {
+            $this->currentSchool = School::find(session('current_school_id'));
+        } else {
+            $this->currentSchool = $user->school;
+        }
+
+        if (!$this->currentSchool) {
+            session()->flash('error', 'No school context found. Please select a school.');
+        }
     }
 
     public function loadSettings()
     {
-        $this->settings = SchoolSetting::getGrouped();
+        if ($this->currentSchool) {
+            $this->settings = SchoolSetting::getGroupedForSchool($this->currentSchool->id);
+        }
     }
 
     public function showCreateModal()
@@ -67,7 +90,8 @@ class Index extends Component
     public function showEditModal($settingId)
     {
         try {
-            $setting = SchoolSetting::findOrFail($settingId);
+            $setting = SchoolSetting::where('school_id', $this->currentSchool->id)
+                ->findOrFail($settingId);
 
             $this->settingId = $setting->id;
             $this->key = $setting->key;
@@ -81,7 +105,7 @@ class Index extends Component
             $this->isEditing = true;
 
             $this->showSettingModal = true;
-            $this->currentSetting  = $setting;
+            $this->currentSetting = $setting;
         } catch (\Exception $e) {
             session()->flash('error', 'Setting not found.');
         }
@@ -90,7 +114,8 @@ class Index extends Component
     public function showValueEditModal($settingId): void
     {
         try {
-            $this->currentSetting = SchoolSetting::findOrFail($settingId);
+            $this->currentSetting = SchoolSetting::where('school_id', $this->currentSchool->id)
+                ->findOrFail($settingId);
             $this->value = $this->currentSetting->raw_value ?? '';
             $this->fileValue = null;
             $this->currentOptions = $this->currentSetting->options ?: [];
@@ -104,20 +129,26 @@ class Index extends Component
     {
         $this->validate();
 
-        // Additional validation for unique key
+        if (!$this->currentSchool) {
+            session()->flash('error', 'No school selected.');
+            return;
+        }
+
+        // Additional validation for unique key per school
         $keyRule = $this->isEditing
-            ? 'unique:school_settings,key,' . $this->settingId
-            : 'unique:school_settings,key';
+            ? 'unique:school_settings,key,' . $this->settingId . ',id,school_id,' . $this->currentSchool->id
+            : 'unique:school_settings,key,NULL,id,school_id,' . $this->currentSchool->id;
 
         $this->validate(['key' => $keyRule]);
 
         $data = [
+            'school_id' => $this->currentSchool->id,
             'key' => $this->key,
             'type' => $this->type,
             'label' => $this->label,
             'description' => $this->description,
             'group' => $this->group,
-            'options' => array_filter($this->options), // Filter out empty options
+            'options' => array_filter($this->options),
             'required' => $this->required,
             'sort_order' => $this->sortOrder,
         ];
@@ -139,25 +170,20 @@ class Index extends Component
         $setting = $this->currentSetting;
         $value = $this->value;
 
-        // Validate based on setting type
         $rules = $this->getValueValidationRules($setting);
         $this->validate($rules);
 
-        // Handle file uploads
         if ($this->fileValue) {
-            // Delete old file if exists
             if ($setting->raw_value && in_array($setting->type, ['image', 'pdf'])) {
                 Storage::delete($setting->raw_value);
             }
 
-            $path = $this->fileValue->store('settings', 'public');
+            $path = $this->fileValue->store('settings/' . $this->currentSchool->id, 'public');
             $value = $path;
         }
 
-        // Update data
         $updateData = ['value' => $value];
 
-        // If it's a select or radio type, also update the options
         if (in_array($setting->type, ['select', 'radio'])) {
             $updateData['options'] = array_filter($this->currentOptions);
         }
@@ -172,7 +198,8 @@ class Index extends Component
     public function confirmDelete($settingId)
     {
         try {
-            $this->settingToDelete = SchoolSetting::findOrFail($settingId);
+            $this->settingToDelete = SchoolSetting::where('school_id', $this->currentSchool->id)
+                ->findOrFail($settingId);
             $this->showDeleteModal = true;
         } catch (\Exception $e) {
             session()->flash('error', 'Setting not found.');
@@ -182,7 +209,6 @@ class Index extends Component
     public function deleteSetting()
     {
         if ($this->settingToDelete) {
-            // Delete associated file if exists
             if (in_array($this->settingToDelete->type, ['image', 'pdf']) && $this->settingToDelete->raw_value) {
                 Storage::delete($this->settingToDelete->raw_value);
             }
@@ -258,7 +284,6 @@ class Index extends Component
         return $rules;
     }
 
-    // Options management for setting creation/editing
     public function addOption()
     {
         $this->options[] = '';
@@ -270,7 +295,6 @@ class Index extends Component
         $this->options = array_values($this->options);
     }
 
-    // Options management for value editing modal
     public function addSettingOption()
     {
         $this->currentOptions[] = '';

@@ -18,6 +18,7 @@ use App\Models\Examination;
 use App\Models\Forum\ForumCategory;
 use App\Models\Forum\ForumTopic;
 use App\Models\MultipleChoiceQuestion;
+use App\Models\Note;
 use App\Models\Payment;
 use App\Models\Role;
 use App\Models\Student;
@@ -111,6 +112,11 @@ class AppServiceProvider extends ServiceProvider
             'attendance_record' => AttendanceRecord::class,
             'open_ai_token_package' => \App\Models\Chat\OpenAiTokenPackage::class,
             'user_book' => UserBook::class,
+            'user_book_share' => \App\Models\UserBookShare::class,
+            'academic_year' => \App\Models\AcademicYear::class,
+            'studentIdCard' => \App\Models\StudentIdCard::class,
+            'report_card' => \App\Models\ReportCard::class,
+            'note' => Note::class,
 
         ]);
     }

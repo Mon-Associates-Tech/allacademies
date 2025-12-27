@@ -26,7 +26,7 @@ class Students extends Component
 
     public function mount()
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
+        $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', Auth::id())->first();
     }
 
     public function getStudentsQuery()
@@ -169,9 +169,9 @@ class Students extends Component
         $this->resetPage();
     }
 
-    public function viewStudentDetails($studentId)
+    public function viewStudentDetails($studentId): \Illuminate\Http\RedirectResponse
     {
-        return redirect()->route('teachers.student.details', ['student' => $studentId]);
+        return redirect()->route('students.show', ['student' => $studentId]);
     }
 
     public function render()

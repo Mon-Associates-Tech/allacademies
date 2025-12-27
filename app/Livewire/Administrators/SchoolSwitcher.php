@@ -20,7 +20,7 @@ class SchoolSwitcher extends Component
     {
         // Check if user has permission to switch schools
         if (!$this->canSwitchSchools()) {
-            abort(403, 'Unauthorized to switch schools');
+           abort(403, 'Unauthorized to switch schools');
         }
 
         $this->loadSchools();

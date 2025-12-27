@@ -20,6 +20,7 @@ class TeacherManagement extends Component
 {
     use WithPagination;
 
+    // Form fields
     public $name;
     public $email;
     public $password;
@@ -28,7 +29,15 @@ class TeacherManagement extends Component
     public $academicGroupId;
     public $academicLevelId;
     public $selectedSubjects = [];
+
+    // Search and filters
     public $searchTerm = '';
+    public $filterAcademicGroup = '';
+    public $filterAcademicLevel = '';
+    public $filterSubject = '';
+    public $filterSpecialization = '';
+
+    // UI state
     public $isEditing = false;
     public $editingTeacherId;
     public $showTeacherModal = false;
@@ -74,11 +83,44 @@ class TeacherManagement extends Component
         $this->academicGroups = AcademicGroup::orderBy('name')->get();
     }
 
+    // Filter methods
     public function updatedSearchTerm()
     {
         $this->resetPage();
     }
 
+    public function updatedFilterAcademicGroup()
+    {
+        $this->filterAcademicLevel = ''; // Reset level when group changes
+        $this->resetPage();
+    }
+
+    public function updatedFilterAcademicLevel()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterSubject()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterSpecialization()
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->filterAcademicGroup = '';
+        $this->filterAcademicLevel = '';
+        $this->filterSubject = '';
+        $this->filterSpecialization = '';
+        $this->searchTerm = '';
+        $this->resetPage();
+    }
+
+    // Existing methods remain unchanged
     public function updatedEmail()
     {
         $this->checkExistingUser();
@@ -113,7 +155,6 @@ class TeacherManagement extends Component
             $this->userExists = true;
             $this->name = $user->name;
 
-            // Check if user already has teacher role
             $hasTeacherRole = $user->roles()->where('name', 'teacher')->exists();
             if ($hasTeacherRole) {
                 $this->addError('email', 'This user already has a teacher account.');
@@ -145,7 +186,6 @@ class TeacherManagement extends Component
             $this->availableSubjects = [];
         }
     }
-
     public function create()
     {
         // Dynamic validation rules
@@ -176,8 +216,7 @@ class TeacherManagement extends Component
                         'name' => $this->name,
                         'email' => $this->email,
                         'password' => Hash::make($this->password),
-                        'role' => UserRole::TEACHER->value, // Add the role field
-                        'email_verified_at' => now(),
+                        'role' => UserRole::TEACHER->value,
                     ]);
                 }
 
@@ -421,18 +460,73 @@ class TeacherManagement extends Component
 
     public function render()
     {
-        $teachers = Teacher::with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents'])
-            ->when($this->searchTerm, function ($query) {
-                $query->whereHas('user', function ($q) {
-                    $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                        ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
-                });
-            })
-            ->latest()
-            ->paginate(10);
+        // Build query with filters
+        $query = Teacher::with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents']);
+
+        // Search filter
+        if ($this->searchTerm) {
+            $query->whereHas('user', function ($q) {
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+            });
+        }
+
+        // Academic Group filter
+        if ($this->filterAcademicGroup) {
+            $query->whereHas('academicGroups', function ($q) {
+                $q->where('academic_groups.id', $this->filterAcademicGroup);
+            });
+        }
+
+        // Academic Level filter
+        if ($this->filterAcademicLevel) {
+            $query->whereHas('academicLevels', function ($q) {
+                $q->where('academic_levels.id', $this->filterAcademicLevel);
+            });
+        }
+
+        // Subject filter
+        if ($this->filterSubject) {
+            $query->whereHas('subjects', function ($q) {
+                $q->where('academic_subjects.id', $this->filterSubject);
+            });
+        }
+
+        // Specialization filter
+        if ($this->filterSpecialization) {
+            $query->where('specialization', 'like', '%' . $this->filterSpecialization . '%');
+        }
+
+        $teachers = $query->latest()->paginate(10);
+
+        // Get filter options
+        $filterAcademicGroups = AcademicGroup::orderBy('name')->get();
+        $filterAcademicLevels = $this->filterAcademicGroup
+            ? AcademicLevel::where('academic_group_id', $this->filterAcademicGroup)->orderBy('name')->get()
+            : AcademicLevel::orderBy('name')->get();
+        $filterSubjects = AcademicSubject::with('academicLevel')->orderBy('name')->get();
+        $filterSpecializations = Teacher::whereNotNull('specialization')
+            ->distinct()
+            ->pluck('specialization')
+            ->filter()
+            ->sort()
+            ->values();
+
+        // Count active filters
+        $activeFiltersCount = collect([
+            $this->filterAcademicGroup,
+            $this->filterAcademicLevel,
+            $this->filterSubject,
+            $this->filterSpecialization
+        ])->filter()->count();
 
         return view('livewire.administrators.teacher-management', [
             'teachers' => $teachers,
+            'filterAcademicGroups' => $filterAcademicGroups,
+            'filterAcademicLevels' => $filterAcademicLevels,
+            'filterSubjects' => $filterSubjects,
+            'filterSpecializations' => $filterSpecializations,
+            'activeFiltersCount' => $activeFiltersCount,
         ]);
     }
 }

@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Livewire\Books;
+
+use App\Models\Book;
+use App\Models\Note;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
+
+class BookNotesManager extends Component
+{
+    use WithPagination;
+
+    public Book $book;
+    public string $activeTab = 'book-notes';
+    public string $newNoteContent = '';
+    public ?int $editingNoteId = null;
+    public string $editingContent = '';
+    public string $searchTerm = '';
+    public array $expandedNotes = [];
+
+    protected $listeners = ['tabChanged' => 'handleTabChange'];
+
+    public function mount(Book $book): void
+    {
+        $this->book = $book;
+    }
+
+    public function updatedSearchTerm(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedActiveTab(): void
+    {
+        $this->resetPage();
+        $this->searchTerm = '';
+        $this->expandedNotes = [];
+    }
+
+    public function handleTabChange(string $tab): void
+    {
+        $this->activeTab = $tab;
+        $this->resetPage();
+        $this->searchTerm = '';
+        $this->expandedNotes = [];
+    }
+
+    public function toggleNote(int $noteId): void
+    {
+        if (in_array($noteId, $this->expandedNotes)) {
+            $this->expandedNotes = array_filter($this->expandedNotes, fn($id) => $id !== $noteId);
+        } else {
+            $this->expandedNotes[] = $noteId;
+        }
+    }
+
+    public function isNoteExpanded(int $noteId): bool
+    {
+        return in_array($noteId, $this->expandedNotes);
+    }
+
+    #[Computed]
+    public function bookNotes()
+    {
+        $query = Note::where('book_id', $this->book->id)
+            ->where('user_id', Auth::id())
+            ->orderBy('updated_at', 'desc');
+
+        if (!empty($this->searchTerm)) {
+            $query->where(function ($q) {
+                $q->where('content', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('title', 'like', '%' . $this->searchTerm . '%');
+            });
+        }
+
+        return $query->paginate(10, pageName: 'bookNotesPage');
+    }
+
+    #[Computed]
+    public function userNotes()
+    {
+        $query = Note::where('user_id', Auth::id())
+            ->with('book')
+            ->orderBy('updated_at', 'desc');
+
+        if (!empty($this->searchTerm)) {
+            $query->where(function ($q) {
+                $q->where('content', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('title', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhereHas('book', function ($bookQuery) {
+                        $bookQuery->where('title', 'like', '%' . $this->searchTerm . '%');
+                    });
+            });
+        }
+
+        return $query->paginate(10, pageName: 'userNotesPage');
+    }
+
+    public function saveNote(): void
+    {
+        $this->validate([
+            'newNoteContent' => 'required|string|max:10000'
+        ]);
+
+        Note::create([
+            'title' => substr(strip_tags($this->newNoteContent), 0, 50) . '...',
+            'content' => $this->newNoteContent,
+            'user_id' => Auth::id(),
+            'book_id' => $this->book->id,
+        ]);
+
+        $this->newNoteContent = '';
+        $this->dispatch('notify', ['message' => 'Note saved successfully!', 'type' => 'success']);
+
+        // Log activity
+        activity()
+            ->performedOn($this->book)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'created_note', 'book_id' => $this->book->id])
+            ->log('User created a note for book');
+    }
+
+    public function editNote(int $noteId): void
+    {
+        $note = Note::where('id', $noteId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $this->editingNoteId = $note->id;
+        $this->editingContent = $note->content;
+    }
+
+    public function updateNote(): void
+    {
+        $this->validate([
+            'editingContent' => 'required|string|max:10000'
+        ]);
+
+        $note = Note::where('id', $this->editingNoteId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $note->update([
+            'content' => $this->editingContent,
+            'title' => substr(strip_tags($this->editingContent), 0, 50) . '...',
+        ]);
+
+        $this->editingNoteId = null;
+        $this->editingContent = '';
+        $this->dispatch('notify', ['message' => 'Note updated successfully!', 'type' => 'success']);
+
+        // Log activity
+        activity()
+            ->performedOn($note)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'updated_note', 'note_id' => $note->id])
+            ->log('User updated a note');
+    }
+
+    public function deleteNote(int $noteId): void
+    {
+        $note = Note::where('id', $noteId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $note->delete();
+        $this->dispatch('notify', ['message' => 'Note deleted successfully!', 'type' => 'success']);
+
+        // Log activity
+        activity()
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'deleted_note', 'note_id' => $noteId])
+            ->log('User deleted a note');
+    }
+
+    public function cancelEdit(): void
+    {
+        $this->editingNoteId = null;
+        $this->editingContent = '';
+    }
+
+    public function render()
+    {
+        return view('livewire.books.book-notes-manager');
+    }
+}

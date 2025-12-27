@@ -9,6 +9,7 @@ use App\Livewire\Subscribers\Premium;
 use App\Livewire\Subscribers\Progress;
 use App\Livewire\Subscribers\Quizzes;
 use App\Livewire\Subscribers\StudyGroups;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
 
@@ -18,7 +19,7 @@ Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
         Route::get('/assessments', Assessments::class)->name('assessments');
         Route::get('/quizzes', Quizzes::class)->name('quizzes');
         Route::get('/progress', Progress::class)->name('progress');
-        Route::get('/forums', ForumManagement::class)->name('forums');
+        Route::get('/forums', ForumManagement::class)->name('forums')->middleware('token.subscription');
         Route::get('/groups', StudyGroups::class)->name('groups');
         Route::get('/premium', Premium::class)->name('premium');
         Route::get('/analytics', Analytics::class)->name('analytics');

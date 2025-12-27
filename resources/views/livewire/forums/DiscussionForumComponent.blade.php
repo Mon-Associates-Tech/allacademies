@@ -1,5 +1,8 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" x-data="{ showFilters: false, showAttachments: false }">
-    <!-- Header -->
+
+        <x-alert.token-subscription-banner variant="full-page" />
+
+<!-- Header -->
     <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 space-y-4 lg:space-y-0">
         <div class="flex items-center space-x-2">
             @if($currentView !== 'categories')
@@ -857,3 +860,4 @@
         });
     </script>
 @endpush
+

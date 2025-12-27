@@ -7,7 +7,7 @@
     <ul class="mt-3">
         <!-- Dashboard -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('dashboard')}}">
                 <div class="flex items-center">
                     <svg
@@ -20,8 +20,8 @@
             </a>
         </li>
         <!-- Academic Chat -->
-        <li class="mb-0.5 last:mb-0" title="Academic Assistant">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+        <li class="mb-0.5 last:mb-0" title="Research Assistant">
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('academic-chat.index')}}">
                 <div class="flex items-center">
                     <!-- Chat bubble with spark -->
@@ -31,13 +31,13 @@
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10"/>
                         <path d="M17 3l1.5 3L22 8l-3.5 2L17 13l-1.5-3L12 8l3.5-2L17 3z"/>
                     </svg>
-                    <span class="text-sm ml-4 sidebar-text duration-200">Academic Assistant</span>
+                    <span class="text-sm ml-4 sidebar-text duration-200">Research Assistant</span>
                 </div>
             </a>
         </li>
         <!-- My Books -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.books.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.books.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.books.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -53,7 +53,7 @@
 
         <!-- Book Management -->
         <li class="mb-0.5 last:mb-0 hidden">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.books.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.books.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.books.create')}}">
                 <div class="flex items-center">
                     <svg
@@ -68,7 +68,7 @@
 
         <!-- Subscriptions -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.subscribers.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -84,7 +84,7 @@
 
         <!-- Book Borrowings -->
         <li class="mb-0.5 last:mb-0 hidden">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.borrowings*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.borrowings*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.borrowings.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -98,8 +98,8 @@
         </li>
 
         <!-- Analytics & Reports -->
-        <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.analytics*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+        <li class="mb-0.5 last:mb-0 hidden">
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.analytics*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.analytics.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -114,7 +114,7 @@
 
         <!-- Revenue & Earnings -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.revenue*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.revenue*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.revenue.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -130,7 +130,7 @@
 
         <!-- Reviews & Feedback -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.reviews*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.reviews*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.reviews.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -146,7 +146,7 @@
 
         <!-- Book Categories -->
         <li class="mb-0.5 last:mb-0 hidden">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.categories*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.categories*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.categories.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -162,7 +162,7 @@
 
         <!-- Publishing Status -->
         <li class="mb-0.5 last:mb-0 hidden">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.publishing*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.publishing*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.publishing.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -177,7 +177,7 @@
 
         <!-- Promotions & Marketing -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.promotions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.promotions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.promotions.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -193,7 +193,7 @@
 
         <!-- Author Community -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.community*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.community*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.community.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -209,7 +209,7 @@
 
         <!-- Notifications -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.notifications.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -231,7 +231,7 @@
 
         <!-- Settings -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.settings*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.settings*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.settings.index')}}">
                 <div class="flex items-center">
                     <svg
@@ -247,7 +247,7 @@
 
         <!-- Profile -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.profile*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.profile*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.profile.show')}}">
                 <div class="flex items-center">
                     <svg
@@ -263,7 +263,7 @@
 
         <!-- Help & Support -->
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-4 pr-3 py-2 rounded-lg transition {{ Route::is('author.help*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+           <a class="block px-3 py-2 rounded-lg transition {{ Route::is('author.help*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('author.help.index')}}">
                 <div class="flex items-center">
                     <svg

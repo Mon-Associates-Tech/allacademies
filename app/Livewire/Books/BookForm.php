@@ -7,6 +7,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\User;
+use App\Jobs\ConvertBookToAudioJob;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,7 @@ use Livewire\WithFileUploads;
 use Log;
 use setasign\Fpdi\Fpdi;
 use ValueError;
+use App\Enums\UserRole;
 
 class BookForm extends Component
 {
@@ -98,6 +100,8 @@ class BookForm extends Component
         'update-authorId' => 'updateAuthorId',
         'update-bookCategoryIds' => 'updateBookCategoryIds',
     ];
+
+
 
     protected $rules = [
         'title' => 'required|min:3|max:255',
@@ -247,17 +251,17 @@ class BookForm extends Component
         $user = auth()->user();
 
         // Admin and owner can edit any book
-        if (in_array($user->role, ['admin', 'owner'])) {
+        if (in_array($user->role, [UserRole::ADMIN, UserRole::OWNER])) {
             return;
         }
 
         // Authors can only edit their own books
-        if ($user->role === 'author' && $this->book->author->user_id === $user->id) {
+        if ($user->role === UserRole::AUTHOR && $this->book->author->user_id === $user->id) {
             return;
         }
 
         // Teachers can edit books if they have permission (you might want to add a specific permission check)
-        if ($user->role === 'teacher') {
+        if ($user->role === UserRole::TEACHER) {
             // Add your teacher permission logic here
             // For now, allowing all teachers to edit books
             return;
@@ -294,9 +298,9 @@ class BookForm extends Component
         $user = auth()->user();
 
         return match ($user->role) {
-            'admin', 'owner' => redirect()->route('admin.book-management'),
-            'author' => redirect()->route('author.books.index'),
-            'teacher' => redirect()->route('books.index'),
+            UserRole::ADMIN, UserRole::OWNER => redirect()->route('admin.book-management'),
+            UserRole::AUTHOR => redirect()->route('author.books.index'),
+            UserRole::TEACHER => redirect()->route('books.index'),
             default => redirect()->back(),
         };
     }
@@ -307,7 +311,7 @@ class BookForm extends Component
         $this->existingSamplePdfFile = null;
     }
 
-    public function getPublishingStatusOptionsProperty()
+    public function getPublishingStatusOptionsProperty(): array
     {
         return PublishingStatus::getOptions();
     }
@@ -315,7 +319,7 @@ class BookForm extends Component
 
     // Get publishing status options for the view
 
-    public function getCurrentPublishingStatusProperty()
+    public function getCurrentPublishingStatusProperty(): PublishingStatus
     {
         try {
             return PublishingStatus::from($this->status);
@@ -326,12 +330,12 @@ class BookForm extends Component
 
     // Get current publishing status enum
 
-    public function getPageTitleProperty()
+    public function getPageTitleProperty(): string
     {
         return $this->mode === 'edit' ? 'Edit Book' : 'Create New Book';
     }
 
-    public function getSubmitButtonTextProperty()
+    public function getSubmitButtonTextProperty(): string
     {
         return $this->mode === 'edit' ? 'Update Book' : 'Create Book';
     }
@@ -383,6 +387,9 @@ class BookForm extends Component
         $this->resetValidation(['newCategoryName', 'newCategoryDescription']);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function createNewAuthor(): void
     {
         $this->validate([
@@ -615,9 +622,9 @@ class BookForm extends Component
             $user = auth()->user();
 
             return match ($user->role) {
-                'admin', 'owner' => redirect()->route('admin.book-management'),
-                'author' => redirect()->route('author.books.index'),
-                'teacher' => redirect()->route('books.index'),
+              UserRole::ADMIN, UserRole::OWNER  => redirect()->route('admin.book-management'),
+                UserRole::AUTHOR => redirect()->route('author.books.index'),
+                UserRole::TEACHER => redirect()->route('books.index'),
                 default => redirect()->back(),
             };
 
@@ -660,6 +667,7 @@ class BookForm extends Component
     private function createBook(): void
     {
         // Handle cover image
+        // dd($this->tableOfContents);
         $coverPath = null;
         if ($this->coverImage) {
             $fileName = $this->generateFileName(null, 'cover.' . $this->coverImage->extension());
@@ -698,9 +706,17 @@ class BookForm extends Component
             'status' => $this->status,
             'has_audio' => $mediaData['has_audio'],
             'has_video' => $mediaData['has_video'],
+            'audio_conversion_pending' => $this->hasAudio && $pdfPath ? true : false,
+            'audio_conversion_initiated_by' => $this->hasAudio && $pdfPath ? auth()->id() : null,
+
         ]);
 
         $book->categories()->attach($this->bookCategoryIds);
+
+       if ($this->hasAudio && $pdfPath) {
+         // ConvertBookToAudioJob::dispatch($book);
+      }
+
         $this->handleSamplePdfFile($book);
 
         if ($book->has_audio || $book->has_video) {
@@ -785,7 +801,7 @@ class BookForm extends Component
         return $mediaData;
     }
 
-    private function handleSamplePdfFile($book): void
+    private function handleSamplePdfFile(Book $book): void
     {
         $samplePath = $book->getAttributes()['sample_url'] ?? null;
 
@@ -936,6 +952,10 @@ class BookForm extends Component
 
         $mediaData = $this->handleMediaFiles();
 
+        $shouldConvertAudio = $this->hasAudio && $pdfPath &&
+            (!$this->book->has_audio || $this->pdfFile);
+
+
         // Update book
         $this->book->update([
             'title' => $this->title,
@@ -955,11 +975,17 @@ class BookForm extends Component
             'status' => $this->status,
             'has_audio' => $mediaData['has_audio'],
             'has_video' => $mediaData['has_video'],
+            'audio_conversion_pending' => $shouldConvertAudio,
+            'audio_conversion_initiated_by' => $shouldConvertAudio ? auth()->id() : $this->book->audio_conversion_initiated_by,
         ]);
 
         $this->handleSamplePdfFile($this->book);
 
         $this->book->categories()->sync($this->bookCategoryIds);
+
+       if ($this->hasAudio && $pdfPath) {
+          ConvertBookToAudioJob::dispatch($this->book);
+      }
 
         $this->book->media()->update([
             'single_audio' => $mediaData['single_audio'],
@@ -969,34 +995,28 @@ class BookForm extends Component
         ]);
     }
 
-    public function removeExistingSingleAudioFile()
+    public function removeExistingSingleAudioFile(): void
     {
         $this->removeSingleAudioFile = true;
         $this->existingSingleAudio = null;
     }
 
-    public function removeExistingSingleVideoFile()
+    public function removeExistingSingleVideoFile(): void
     {
         $this->removeSingleVideoFile = true;
         $this->existingSingleVideo = null;
     }
 
-    public function removeChapterAudioFile($chapterIndex)
+    public function removeChapterAudioFile(int $chapterIndex): void
     {
         $this->removeChapterAudioFiles[$chapterIndex] = true;
         unset($this->existingChapterAudios[$chapterIndex]);
     }
 
-    public function removeChapterVideoFile($chapterIndex)
+    public function removeChapterVideoFile(int $chapterIndex): void
     {
         $this->removeChapterVideoFiles[$chapterIndex] = true;
         unset($this->existingChapterVideos[$chapterIndex]);
-    }
-
-    public function redirectIntended($default = '/', $navigate = false)
-    {
-
-        return redirect()->intended($default)->with('success', 'Book updated successfully.');
     }
 
     public function render()
@@ -1004,3 +1024,16 @@ class BookForm extends Component
         return view('livewire.books.book-form');
     }
 }
+
+
+
+// [{"chapter":1,"title":"Introduction","description":"","page_start":"1","page_end":"6","sections":[]},{"chapter":2,"title":"Chapter 2","description":"","page_start":"7","page_end":"12","sections":[]}]
+
+/**
+ *
+ *
+
+
+
+ */
+

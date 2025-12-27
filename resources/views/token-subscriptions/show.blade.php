@@ -16,7 +16,7 @@
                     </div>
 
                     {{-- Quick Action Button --}}
-                    @if($subscription->status === 'pending')
+                    @if($subscription->status->value === 'pending')
                         <a href="{{ route('payment.token.initialize', $subscription->id) }}"
                            class="inline-flex items-center px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors shadow-lg">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,7 +24,7 @@
                             </svg>
                             Complete Payment
                         </a>
-                    @elseif($subscription->status === 'active' || $subscription->status === 'depleted')
+                    @elseif($subscription->status->value === 'active' || $subscription->status->value === 'depleted')
                         <a href="{{ route('token-subscriptions.create') }}"
                            class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
 
                     {{-- Status Banner Section --}}
-                    <div class="relative overflow-hidden {{ $subscription->status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : ($subscription->status === 'depleted' ? 'bg-gradient-to-r from-red-500 to-pink-600' : ($subscription->status === 'pending' ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gradient-to-r from-gray-500 to-gray-600')) }} p-8">
+                    <div class="relative overflow-hidden {{ $subscription->status->value === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : ($subscription->status === 'depleted' ? 'bg-gradient-to-r from-red-500 to-pink-600' : ($subscription->status === 'pending' ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gradient-to-r from-gray-500 to-gray-600')) }} p-8">
                         {{-- Background Pattern --}}
                         <div class="absolute inset-0 opacity-10">
                             <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
@@ -69,20 +69,20 @@
                                     </div>
                                     <h2 class="text-3xl font-bold text-white mb-1">{{ $subscription->package->name }}</h2>
                                     <p class="text-white/80">
-                                        @if($subscription->status === 'active')
+                                        @if($subscription->status->value === 'active')
                                             Active and ready to use
-                                        @elseif($subscription->status === 'depleted')
+                                        @elseif($subscription->status->value === 'depleted')
                                             All tokens have been used
-                                        @elseif($subscription->status === 'pending')
+                                        @elseif($subscription->status->value === 'pending')
                                             Awaiting payment confirmation
                                         @else
-                                            {{ ucfirst($subscription->status) }}
+                                            {{ ucfirst($subscription->status->value) }}
                                         @endif
                                     </p>
                                 </div>
 
                                 <span class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-                                    {{ ucfirst($subscription->status) }}
+                                    {{ ucfirst($subscription->status->value) }}
                                 </span>
                             </div>
 
@@ -127,7 +127,7 @@
                                 </div>
 
                                 {{-- Warning Messages --}}
-                                @if($subscription->status === 'active' && $subscription->isNearingDepletion())
+                                @if($subscription->status->value === 'active' && $subscription->isNearingDepletion())
                                     <div class="bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-4">
                                         <div class="flex items-start">
                                             <svg class="w-5 h-5 mr-3 flex-shrink-0 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -205,8 +205,8 @@
                                             <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Payment Status</p>
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                    {{ $subscription->payment->status === 'succeeded' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }}">
-                                                    {{ ucfirst($subscription->payment->status) }}
+                                                    {{ $subscription->payment->status->value === 'succeeded' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }}">
+                                                    {{ ucfirst($subscription->payment->status->value) }}
                                                 </span>
                                             </div>
                                             <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
@@ -297,7 +297,7 @@
                                 <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                                     <div class="space-y-3">
-                                        @if($subscription->status === 'active' || $subscription->status === 'depleted')
+                                        @if($subscription->status->value === 'active' || $subscription->status->value === 'depleted')
                                             <a href="{{ route('token-subscriptions.create') }}"
                                                class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all shadow-lg">
                                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,7 +307,7 @@
                                             </a>
                                         @endif
 
-                                        @if($subscription->status === 'pending')
+                                        @if($subscription->status->value === 'pending')
                                             <a href="{{ route('payment.token.initialize', $subscription->id) }}"
                                                class="w-full flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors shadow-lg">
                                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

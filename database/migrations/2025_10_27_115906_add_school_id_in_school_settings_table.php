@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('school_settings', function (Blueprint $table) {
+            $table->unsignedBigInteger('school_id')->nullable()->after('id');
+
+            $table->foreign('school_id')
+                ->references('id')
+                ->on('schools')
+                ->onDelete('cascade');
+
+            // Add a composite index for better performance
+            $table->index(['school_id', 'key']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('school_settings', function (Blueprint $table) {
+            $table->dropForeign(['school_id']);
+            $table->dropIndex(['school_id', 'key']);
+            $table->dropColumn('school_id');
+        });
+    }
+};

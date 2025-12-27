@@ -2,13 +2,19 @@
 
 namespace App\Livewire\Teachers;
 
+use App\Models\Assignment;
 use App\Models\Book;
 use App\Models\AcademicSubject;
+use App\Services\AssignmentNotificationService;
 use App\Services\BookBasedLearningService;
 use App\Services\AcademicChatService;
+use App\Services\PdfContentExtractionService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
+use Smalot\PdfParser\Exception\MissingCatalogException;
 
 class BookBasedAssignment extends Component
 {
@@ -20,6 +26,7 @@ class BookBasedAssignment extends Component
     public $pageEnd = '';
     public $questionType = 'mixed';
     public $questionCount = 10;
+    public $totalMarks = 10;
     public $difficulty = 'medium';
     public $focusTopics = '';
     public $includeQuotes = false;
@@ -31,7 +38,7 @@ class BookBasedAssignment extends Component
     public $startDate;
     public $endDate;
     public $isRandomized = true;
-    public $selectedSubjectId = ''; // New property for subject selection
+    public $selectedSubjectId = '';
 
     // Target groups
     public $selectedStudentGroups = [];
@@ -41,7 +48,7 @@ class BookBasedAssignment extends Component
 
     // Component state
     public $availableBooks = [];
-    public $availableSubjects = []; // New property for subjects
+    public $availableSubjects = [];
     public $bookChapters = [];
     public $selectedBook = null;
     public $studentGroups = [];
@@ -56,11 +63,12 @@ class BookBasedAssignment extends Component
 
     protected $rules = [
         'title' => 'required|string|max:255',
-        'selectedSubjectId' => 'required|exists:academic_subjects,id', // Subject is now required
+        'selectedSubjectId' => 'required|exists:academic_subjects,id',
         'description' => 'nullable|string',
         'selectedBookId' => 'required_without:uploadedFile',
         'questionType' => 'required|in:multiple_choice,true_false,essay,mixed',
         'questionCount' => 'required|integer|min:1|max:50',
+        'totalMarks' => 'required|integer|min:1',
         'difficulty' => 'required|in:easy,medium,hard',
         'durationInMinutes' => 'required|integer|min:1',
         'startDate' => 'required|date',
@@ -69,19 +77,24 @@ class BookBasedAssignment extends Component
 
     protected BookBasedLearningService $bookLearningService;
     protected AcademicChatService $chatService;
+    protected PdfContentExtractionService $pdfExtractor;
+
 
     public function boot(
         BookBasedLearningService $bookLearningService,
-        AcademicChatService $chatService
+        AcademicChatService $chatService,
+        PdfContentExtractionService $pdfExtractor
     ) {
         $this->bookLearningService = $bookLearningService;
         $this->chatService = $chatService;
+        $this->pdfExtractor = $pdfExtractor;
     }
+
 
     public function mount()
     {
         $this->loadAvailableBooks();
-        $this->loadAvailableSubjects(); // Load subjects
+        $this->loadAvailableSubjects();
         $this->loadTargetGroups();
         $this->startDate = now()->format('Y-m-d H:i');
         $this->endDate = now()->addWeek()->format('Y-m-d H:i');
@@ -89,12 +102,22 @@ class BookBasedAssignment extends Component
 
     protected function loadAvailableBooks()
     {
+        $user = Auth::user();
+
+        // Get books from user's subscriptions
         $this->availableBooks = Book::published()
             ->with(['author', 'bookCategory'])
+            ->whereHas('subscriptions', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->where('status', 'paid');
+                  //  ->where(function ($q) {
+                   //     $q->whereNull('expires_at')
+                    //        ->orWhere('expires_at', '>', now());
+                   // });
+            })
             ->orderBy('title')
             ->get();
     }
-
     protected function loadAvailableSubjects()
     {
         // Load subjects the teacher is assigned to or all subjects
@@ -163,12 +186,36 @@ class BookBasedAssignment extends Component
         $this->validateOnly('uploadedFile');
 
         if ($this->uploadedFile) {
-            // Extract content from uploaded file
-            $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
-            $this->fileName = $this->uploadedFile->getClientOriginalName();
+            try {
+                $extension = strtolower($this->uploadedFile->getClientOriginalExtension());
+
+                // Support multiple file types
+                if (!in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
+                    $this->addError('uploadedFile', 'Unsupported file type. Please upload PDF, DOC, DOCX, or TXT files.');
+                    return;
+                }
+
+                // Extract content from uploaded file using the PDF extraction service
+                $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                    'preserve_layout' => false,
+                    'method' => 'auto'
+                ]);
+                $this->fileName = $this->uploadedFile->getClientOriginalName();
+
+                if (empty($this->fileContent)) {
+                    $this->addError('uploadedFile', 'Failed to extract content from the uploaded file.');
+                }
+            } catch (\Exception $e) {
+                \Log::error('File content extraction failed', [
+                    'user_id' => Auth::id(),
+                    'file_name' => $this->uploadedFile->getClientOriginalName(),
+                    'error' => $e->getMessage()
+                ]);
+
+                $this->addError('uploadedFile', 'Unable to extract content from this file. Please ensure it is a valid document file.');
+            }
         }
     }
-
     public function generateQuestions()
     {
         $this->validate([
@@ -187,6 +234,21 @@ class BookBasedAssignment extends Component
         $this->isGenerating = true;
 
         try {
+            $content = '';
+
+            // Extract content based on source
+            if ($this->selectedBookId) {
+                $content = $this->extractBookContent();
+            } else {
+                $content = $this->fileContent;
+            }
+
+            if (empty($content)) {
+                $this->addError('generation', 'Failed to extract content. Please try again.');
+                $this->isGenerating = false;
+                return;
+            }
+
             $parameters = [
                 'book_id' => $this->selectedBookId,
                 'chapter_id' => $this->selectedChapterId ?: null,
@@ -197,8 +259,9 @@ class BookBasedAssignment extends Component
                 'difficulty' => $this->difficulty,
                 'focus_topics' => $this->parseFocusTopics(),
                 'include_quotes' => $this->includeQuotes,
-                'file_content' => $this->fileContent,
-                'file_name' => $this->fileName,
+                'content' => $content,
+                'file_content' => $this->fileContent ?: null,
+                'file_name' => $this->fileName ?: null,
                 'request_type' => 'assignment_generation',
             ];
 
@@ -239,7 +302,6 @@ class BookBasedAssignment extends Component
             $this->isGenerating = false;
         }
     }
-
     protected function parseFocusTopics(): array
     {
         if (empty($this->focusTopics)) {
@@ -261,10 +323,11 @@ class BookBasedAssignment extends Component
         }
 
         try {
-            // Create the assignment - following the existing structure
-            $assignment = new \App\Models\Assignment();
+            DB::beginTransaction();
+
+            $assignment = new Assignment();
             $assignment->teacher_id = $teacher->id;
-            $assignment->academic_subject_id = $this->selectedSubjectId; // Now properly set
+            $assignment->academic_subject_id = $this->selectedSubjectId;
             $assignment->title = $this->title;
             $assignment->description = $this->description;
             $assignment->type = 'quiz';
@@ -272,8 +335,8 @@ class BookBasedAssignment extends Component
             $assignment->starts_at = $this->startDate;
             $assignment->ends_at = $this->endDate;
             $assignment->is_randomized = $this->isRandomized;
-            $assignment->status = 'draft';
-            $assignment->total_marks = $this->questionCount;
+            $assignment->status = 'published';
+            $assignment->total_marks = $this->totalMarks;
             $assignment->questions = $this->formatQuestionsForAssignment();
             $assignment->save();
 
@@ -294,13 +357,23 @@ class BookBasedAssignment extends Component
                 $assignment->students()->attach($this->selectedStudents);
             }
 
+            DB::commit();
+
+            // Send notifications to students
+            app(AssignmentNotificationService::class)->sendAssignmentNotifications($assignment);
+
             $this->dispatch('assignment-created', ['id' => $assignment->id]);
-            session()->flash('success', 'Assignment created successfully!');
+            session()->flash('success', 'Assignment created successfully and notifications sent!');
+
+            return redirect()->route('teachers.assignments.index');
 
         } catch (\Exception $e) {
+            DB::rollBack();
+
             \Log::error('Assignment creation failed', [
                 'user_id' => Auth::id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             $this->addError('creation', 'Failed to create assignment. Please try again.');
@@ -315,25 +388,181 @@ class BookBasedAssignment extends Component
         $questionsByType = collect($this->generatedQuestions)->groupBy('type');
 
         foreach ($questionsByType as $type => $questions) {
+            // Convert questions to proper format
+            $formattedQuestions = $questions->map(function ($question) use ($type) {
+                return $this->normalizeQuestionFormat($question, $type);
+            })->toArray();
+
             $questionsConfig[] = [
                 'type' => $this->mapQuestionType($type),
-                'count' => count($questions),
+                'count' => count($formattedQuestions),
                 'difficulty' => $this->difficulty,
-                'questions' => $questions->toArray()
+                'questions' => $formattedQuestions
             ];
         }
 
         return $questionsConfig;
     }
+
+    /**
+     * Normalize question format to match system expectations
+     */
+    protected function normalizeQuestionFormat($question, $type): array
+    {
+        $normalized = [
+            'id' => $question['id'] ?? uniqid('book_'),
+            'question' => $question['question'] ?? '',
+            'difficulty' => $question['difficulty'] ?? $this->difficulty,
+            'points' => $question['points'] ?? 1,
+            'explanation' => $question['explanation'] ?? null,
+            'learning_objective' => $question['learning_objective'] ?? null,
+            'type' => $this->mapQuestionType($type), // Add type to normalized data
+        ];
+
+        // Handle multiple choice questions - convert 0-indexed to A-E
+        if ($type === 'multiple_choice') {
+            $options = $question['options'] ?? [];
+            $correctAnswerText = $question['correct_answer'] ?? null;
+
+            // Convert numeric indices to letter indices
+            $convertedOptions = [];
+            $letters = ['A', 'B', 'C', 'D', 'E'];
+            $correctAnswerLetter = null;
+
+            foreach ($options as $index => $optionText) {
+                // Determine the letter index
+                if (is_string($index) && in_array($index, $letters)) {
+                    $letterIndex = $index;
+                } else {
+                    $letterIndex = is_numeric($index) ? $letters[$index] : $letters[0];
+                }
+
+                $convertedOptions[$letterIndex] = $optionText;
+
+                // Find which letter corresponds to the correct answer text
+                if ($correctAnswerText && trim($optionText) === trim($correctAnswerText)) {
+                    $correctAnswerLetter = $letterIndex;
+                }
+            }
+
+            // If correct answer is already a letter, use it
+            if ($correctAnswerText && in_array(strtoupper($correctAnswerText), $letters)) {
+                $correctAnswerLetter = strtoupper($correctAnswerText);
+            }
+
+            // If we still don't have a correct answer letter, try to find it by matching text
+            if (!$correctAnswerLetter && $correctAnswerText) {
+                foreach ($convertedOptions as $letter => $optionText) {
+                    if (strcasecmp(trim($optionText), trim($correctAnswerText)) === 0) {
+                        $correctAnswerLetter = $letter;
+                        break;
+                    }
+                }
+            }
+
+            $normalized['options'] = $convertedOptions;
+            $normalized['correct_answer'] = $correctAnswerLetter;
+            $normalized['answer'] = $correctAnswerLetter; // Add both for compatibility
+
+            // Log warning if we couldn't find the correct answer
+            if (!$correctAnswerLetter) {
+                \Log::warning('Could not determine correct answer letter for question', [
+                    'question_id' => $normalized['id'],
+                    'correct_answer_text' => $correctAnswerText,
+                    'options' => $convertedOptions
+                ]);
+            }
+        }
+        // Handle true/false questions
+        elseif ($type === 'true_false') {
+            $normalized['correct_answer'] = $question['correct_answer'] ?? $question['answer'] ?? null;
+            $normalized['answer'] = $normalized['correct_answer'];
+        }
+        // Handle essay questions
+        elseif ($type === 'essay' || $type === 'essay_question') {
+            $normalized['sample_answer'] = $question['sample_answer'] ?? null;
+            $normalized['rubric'] = $question['rubric'] ?? null;
+            $normalized['max_words'] = $question['max_words'] ?? null;
+            $normalized['min_words'] = $question['min_words'] ?? null;
+        }
+
+        return $normalized;
+    }
+
     protected function mapQuestionType($type): string
     {
         return match($type) {
-            'multiple_choice' => 'multiple_choice_question',
-            'true_false' => 'true_or_false_question',
-            'essay' => 'essay_question',
+            'true_false', 'true_or_false_question' => 'true_or_false_question',
+            'essay', 'essay_question' => 'essay_question',
+            'multiple_choice', 'multiple_choice_question' => 'multiple_choice_question',
             default => 'multiple_choice_question'
         };
     }
+
+    /**
+     * Extract content from the selected book
+     *
+     * @return string Extracted content
+     * @throws MissingCatalogException
+     */
+    protected function extractBookContent(): string
+    {
+        if (!$this->selectedBook) {
+            return '';
+        }
+
+        try {
+            $relativePdfPath = $this->selectedBook->getAttributes()['content_url'] ?? null;
+            if (!$relativePdfPath) {
+                throw new \RuntimeException("Book PDF path not found");
+            }
+
+            $pdfPath = Storage::disk('public')->path($relativePdfPath);
+            if (!file_exists($pdfPath)) {
+                throw new \RuntimeException("Book PDF file not found");
+            }
+
+            // Extract content based on specified range
+            if ($this->pageStart && $this->pageEnd) {
+                // Extract specific page range
+                return $this->pdfExtractor->extractPageRange(
+                    $pdfPath,
+                    (int) $this->pageStart,
+                    (int) $this->pageEnd,
+                    ['preserve_layout' => false]
+                );
+            } elseif ($this->selectedChapterId) {
+                // Extract specific chapter
+                $chapter = collect($this->selectedBook->formatted_table_of_contents)
+                    ->firstWhere('chapter_number', $this->selectedChapterId);
+
+                if ($chapter) {
+                    return $this->pdfExtractor->extractPageRange(
+                        $pdfPath,
+                        $chapter['page_start'] ?? 1,
+                        $chapter['page_end'] ?? $this->pdfExtractor->getPageCount($pdfPath),
+                        ['preserve_layout' => false]
+                    );
+                }
+            }
+
+            // Extract entire book content
+            return $this->pdfExtractor->extractText($pdfPath, [
+                'preserve_layout' => false,
+                'method' => 'auto'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Book content extraction failed', [
+                'user_id' => Auth::id(),
+                'book_id' => $this->selectedBookId,
+                'error' => $e->getMessage()
+            ]);
+
+            throw $e;
+        }
+    }
+
 
     public function render()
     {

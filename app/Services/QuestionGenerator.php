@@ -22,154 +22,232 @@ use RuntimeException;
 
 class QuestionGenerator
 {
-    public static function generate(
+
+ public static function generate(
         array $heading,
         array $sections,
         array $metadata = []
     ): array
     {
-
         // Ensure file uploads are handled first
         $sections = static::preprocessSections($sections);
+
         $usedQuestions = [
             'multiple_choice_questions' => [],
             'true_or_false_questions' => [],
             'essay_questions' => []
         ];
 
-        collect($sections)->each(/**
-         * @throws NoTopicsException
-         * @throws NotEnoughQuestionsException
-         */ function ($section, $index) use (
-            &$sections,
-            &$usedQuestions
-        ) {
-            $table = $section['type'];
-            if (empty($section['topics']) || !is_array($section['topics'])) {
-                throw new NoTopicsException();
-            }
-            $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
-            $subtopics = $section['subtopics'] ?? [];
-            $sectionQuestions = [];
+        $processedSections = [];
 
-
-            // Process document if present (a file should already be stored as a path)
-            if (isset($section['document'])) {
-                $sections[$index] = (new QuestionGenerator())->processDocument($section, $sections[$index]);
-            }
-
-
-            if (!empty($subtopics) && !empty($subtopics['count'])) {
-                // Handle questions with subtopics
-                collect($subtopics)->each(/**
-                 * @throws NotEnoughQuestionsException
-                 */ function ($subtopic) use ($table, &$sectionQuestions, &$usedQuestions) {
-                    $count = (int)$subtopic['count'];
-
-                    $topic_id = AcademicSubtopic::find($subtopic['id'])->academic_topic_id;
-                    if ($topic_id == null) {
-                        return;
-                    }
-
-                    $questions = DB::table($table)
-                        ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
-                        ->where('academic_subtopics.academic_topic_id', $topic_id)
-                        ->where('academic_subtopics.id', $subtopic['id'])
-                        ->whereNotIn($table . '.id', $usedQuestions[$table])
-                        ->inRandomOrder()
-                        ->take($count)
-                        ->pluck('' . $table . '.id')
-                        ->all();
-
-                    if (count($questions) < $count) {
-                        throw new NotEnoughQuestionsException();
-                    }
-
-                    $sectionQuestions = array_merge($sectionQuestions, $questions);
-                });
-
-                // Calculate remaining questions needed
-                $subtopicQuestionCount = count($sectionQuestions);
-                $remainingQuestionsNeeded = $section['count'] - $subtopicQuestionCount;
-
-                // If we still need more questions, get them from topic level
-                if ($remainingQuestionsNeeded > 0) {
-                    $topicQuestions = DB::table($table)
-                        ->whereIn('academic_topic_id', $topicIds)
-                        ->whereNull('academic_subtopic_id')
-                        ->whereNotIn('id', $usedQuestions[$table])
-                        ->inRandomOrder()
-                        ->take($remainingQuestionsNeeded)
-                        ->pluck('' . $table . '.id')
-                        ->all();
-
-                    if (count($topicQuestions) < $remainingQuestionsNeeded) {
-                        throw new NotEnoughQuestionsException();
-                    }
-
-                    $sectionQuestions = array_merge($sectionQuestions, $topicQuestions);
-                }
-            } else {
-                // Handle questions without subtopics (topic-level questions only)
-                // This handles the case where subtopics array is empty []
-                $questions = DB::table($table)
-                    ->whereIn('academic_topic_id', $topicIds)
-                    ->whereNull('academic_subtopic_id')
-                    ->whereNotIn('id', $usedQuestions[$table])
-                    ->inRandomOrder()
-                    ->take($section['count'])
-                    ->pluck('' . $table . '.id')
-                    ->all();
-
-                if (count($questions) < $section['count']) {
-                    throw new NotEnoughQuestionsException();
-                }
-
-                $sectionQuestions = $questions;
-            }
-
-
-            $sectionQuestions = $questions;
-
-
-            // Add questions to the tracking array for duplicate prevention
-            $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
-
-            // Build section
-            $sections[] = [
-                'name' => $section['name'],
-                'type' => $table,
-                'questions' => $sectionQuestions,
-                'page' => $section['page'] ?? null,
-                'document' => $section['document'] ?? null,
-                'pdf_images' => $section['pdf_images'] ?? [],
-                'extension' => $section['extension'] ?? null,
-                'original_path' => $section['original_path'] ?? null,
-                'instructions' => $section['instructions'],
-            ];
-        });
-        $sections = array_slice($sections, 1);
-
-        if (($heading['instructions']['up'] !== null) && isset($heading['template']) && $heading['template'] === 'twig') {
-            $heading['up'] = TemplateRenderer::renderTwig($heading['instructions']['up'], $heading['duration'], $heading['title'], $metadata);
-        }
-
-        if ($heading['instructions']['down'] !== null) {
-            if (isset($heading['template']) && $heading['template'] === 'twig') {
-                $heading['down'] = TemplateRenderer::renderTwig($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
-            }
-            if (isset($heading['template']) && $heading['template'] === 'pug') {
-                $heading['down'] = TemplateRenderer::renderPug($heading['instructions']['down'], $heading['duration'], $heading['title'], $metadata);
+        foreach ($sections as $index => $section) {
+            try {
+                $processedSection = (new static())->processSection($section, $usedQuestions);
+                $processedSections[] = $processedSection;
+            } catch (NoTopicsException | NotEnoughQuestionsException $e) {
+                Log::warning('Section processing failed', [
+                    'section_index' => $index,
+                    'section_name' => $section['name'] ?? 'Unnamed',
+                    'error' => $e->getMessage()
+                ]);
+                throw $e;
             }
         }
+
+        $processedHeading = (new static())->processHeading($heading, $metadata);
 
         return [
             'title' => $heading['title'],
-            'heading' => $heading,
-            'sections' => $sections,
+            'heading' => $processedHeading,
+            'sections' => $processedSections,
         ];
-
     }
+
+    /**
+     * Process a single section - extracted from generate method
+     */
+    private function processSection(array $section, array &$usedQuestions): array
+    {
+        $table = $section['type'];
+
+        if (empty($section['topics']) || !is_array($section['topics'])) {
+            throw new NoTopicsException();
+        }
+
+        $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
+        $subtopics = $section['subtopics'] ?? [];
+
+        // Get questions for this section
+        $sectionQuestions = $this->selectQuestionsForSection(
+            $table,
+            $topicIds,
+            $subtopics,
+            (int)$section['count'],
+            $usedQuestions[$table]
+        );
+
+        // Add questions to the tracking array for duplicate prevention
+        $usedQuestions[$table] = array_merge($usedQuestions[$table], $sectionQuestions);
+
+        // Process document if present
+        $documentData = [];
+        if (isset($section['document'])) {
+            $documentData = $this->processDocument($section, []);
+        }
+
+        // Build section
+        return array_merge([
+            'name' => $section['name'],
+            'type' => $table,
+            'questions' => $sectionQuestions,
+            'page' => $section['page'] ?? null,
+            'instructions' => $section['instructions'],
+        ], $documentData);
+    }
+
+    /**
+     * Select questions for a section based on topics and subtopics
+     */
+    private function selectQuestionsForSection(
+        string $table,
+        array $topicIds,
+        array $subtopics,
+        int $requiredCount,
+        array $usedQuestions
+    ): array {
+        $sectionQuestions = [];
+        $subtopicQuestionCount = 0;
+
+        // First, handle subtopic-specific questions if subtopics are specified
+        if (!empty($subtopics)) {
+            // Group subtopics by their actual IDs to avoid duplicates
+            $uniqueSubtopics = [];
+            foreach ($subtopics as $subtopic) {
+                if (isset($subtopic['id']) && isset($subtopic['count'])) {
+                    $subtopicId = (int)$subtopic['id'];
+                    $count = (int)$subtopic['count'];
+
+                    // Only process if count is greater than 0
+                    if ($count > 0) {
+                        // If this subtopic ID already exists, take the maximum count
+                        if (isset($uniqueSubtopics[$subtopicId])) {
+                            $uniqueSubtopics[$subtopicId] = max($uniqueSubtopics[$subtopicId], $count);
+                        } else {
+                            $uniqueSubtopics[$subtopicId] = $count;
+                        }
+                    }
+                }
+            }
+
+            // Now process each unique subtopic
+            foreach ($uniqueSubtopics as $subtopicId => $count) {
+                $subtopicModel = AcademicSubtopic::find($subtopicId);
+
+                if (!$subtopicModel) {
+                    Log::warning('Subtopic not found', ['subtopic_id' => $subtopicId]);
+                    continue;
+                }
+
+                $topicId = $subtopicModel->academic_topic_id;
+
+                $questions = DB::table($table)
+                    ->where('academic_subtopic_id', $subtopicId)
+                    ->where('academic_topic_id', $topicId)
+                    ->whereNotIn('id', $usedQuestions)
+                    ->whereNotIn('id', $sectionQuestions)
+                    ->inRandomOrder()
+                    ->take($count)
+                    ->pluck('id')
+                    ->all();
+
+                $fetchedCount = count($questions);
+
+                if ($fetchedCount < $count) {
+                    Log::error('Not enough questions in subtopic', [
+                        'subtopic_id' => $subtopicId,
+                        'subtopic_name' => $subtopicModel->name,
+                        'requested' => $count,
+                        'available' => $fetchedCount,
+                        'table' => $table
+                    ]);
+                }
+
+                $sectionQuestions = array_merge($sectionQuestions, $questions);
+                $subtopicQuestionCount += $fetchedCount;
+            }
+        }
+
+        // Calculate remaining questions needed from topic level
+        $remainingQuestionsNeeded = $requiredCount - $subtopicQuestionCount;
+
+        if ($remainingQuestionsNeeded > 0) {
+            $topicQuestions = DB::table($table)
+                ->whereIn('academic_topic_id', $topicIds)
+                ->whereNull('academic_subtopic_id')
+                ->whereNotIn('id', $usedQuestions)
+                ->whereNotIn('id', $sectionQuestions)
+                ->inRandomOrder()
+                ->take($remainingQuestionsNeeded)
+                ->pluck('id')
+                ->all();
+
+            $fetchedCount = count($topicQuestions);
+
+            if ($fetchedCount < $remainingQuestionsNeeded) {
+                Log::error('Not enough questions at topic level', [
+                    'topic_ids' => $topicIds,
+                    'requested' => $remainingQuestionsNeeded,
+                    'available' => $fetchedCount,
+                    'table' => $table,
+                    'subtopic_questions_count' => $subtopicQuestionCount
+                ]);
+
+                throw new NotEnoughQuestionsException(
+                    "Not enough questions at topic level. Requested: {$remainingQuestionsNeeded}, Available: {$fetchedCount}"
+                );
+            }
+
+            $sectionQuestions = array_merge($sectionQuestions, $topicQuestions);
+        }
+
+        return array_unique($sectionQuestions);
+    }
+    /**
+     * Process heading template rendering - extracted from generate method
+     */
+    private function processHeading(array $heading, array $metadata): array
+    {
+        // Fix: Handle instructions safely whether it's a string or array
+        $instructionsUp = null;
+        $instructionsDown = null;
+
+        if (isset($heading['instructions'])) {
+            if (is_array($heading['instructions'])) {
+                $instructionsUp = $heading['instructions']['up'] ?? null;
+                $instructionsDown = $heading['instructions']['down'] ?? null;
+            } else {
+                // If instructions is a string, use it as both up and down
+                $instructionsUp = $heading['instructions'];
+                $instructionsDown = $heading['instructions'];
+            }
+        }
+
+        if ($instructionsUp !== null && isset($heading['template']) && $heading['template'] === 'twig') {
+            $heading['up'] = TemplateRenderer::renderTwig($instructionsUp, $heading['duration'], $heading['title'], $metadata);
+        }
+
+        if ($instructionsDown !== null) {
+            if (isset($heading['template']) && $heading['template'] === 'twig') {
+                $heading['down'] = TemplateRenderer::renderTwig($instructionsDown, $heading['duration'], $heading['title'], $metadata);
+            }
+            if (isset($heading['template']) && $heading['template'] === 'pug') {
+                $heading['down'] = TemplateRenderer::renderPug($instructionsDown, $heading['duration'], $heading['title'], $metadata);
+            }
+        }
+
+        return $heading;
+    }
+
 
     /**
      * Preprocess sections to handle file uploads before any serialization
@@ -193,7 +271,7 @@ class QuestionGenerator
             // First, ensure the directory exists
             $documentsPath = storage_path('app/public/documents');
             if (!file_exists($documentsPath) && !mkdir($documentsPath, 0755, true) && !is_dir($documentsPath)) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $documentsPath));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $documentsPath));
             }
 
             // Try the standard store method first
@@ -534,19 +612,19 @@ class QuestionGenerator
         try {
             switch (strtolower($questionType)) {
                 case 'essay':
-                    $questions = \App\Models\EssayQuestion::whereIn('id', $questionIds)
+                    $questions = EssayQuestion::whereIn('id', $questionIds)
                         ->with(['subtopic.academicTopic'])
                         ->get();
                     break;
 
                 case 'multiple_choice':
-                    $questions = \App\Models\MultipleChoiceQuestion::whereIn('id', $questionIds)
+                    $questions = MultipleChoiceQuestion::whereIn('id', $questionIds)
                         ->with(['subtopic.academicTopic'])
                         ->get();
                     break;
 
                 case 'true_or_false':
-                    $questions = \App\Models\TrueOrFalseQuestion::whereIn('id', $questionIds)
+                    $questions = TrueOrFalseQuestion::whereIn('id', $questionIds)
                         ->with(['subtopic.academicTopic'])
                         ->get();
                     break;

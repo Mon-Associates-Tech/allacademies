@@ -3,11 +3,6 @@
 use App\Livewire\Parent\Dashboard;
 use App\Livewire\Parent\Wards;
 use App\Livewire\Parent\ParentWardPerformance;
-use App\Livewire\Parent\Reports;
-use App\Livewire\Parent\TerminalReports;
-use App\Livewire\Parent\Notifications;
-use App\Livewire\Parent\Books;
-use App\Livewire\Parent\Library;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'parent'])->prefix('parent')->name('parent.')->group(function () {
@@ -59,6 +54,21 @@ Route::middleware(['auth', 'verified', 'parent'])->prefix('parent')->name('paren
 //    Route::get('messages', \App\Livewire\Parent\Messages::class)->name('messages');
 //    Route::get('profile', \App\Livewire\Parent\Profile::class)->name('profile');
 //    Route::get('settings', \App\Livewire\Parent\Settings::class)->name('settings');
+
+
+    // Fees & Payments
+    Route::prefix('fees')->name('fees.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Parent\ParentFeeController::class, 'index'])->name('index');
+        Route::get('/payment/{student?}', [\App\Http\Controllers\Parent\ParentFeeController::class, 'payment'])->name('payment');
+        Route::post('/initialize', [\App\Http\Controllers\Parent\ParentFeeController::class, 'initializePayment'])->name('initialize');
+        Route::get('/callback', [\App\Http\Controllers\Parent\ParentFeeController::class, 'callback'])->name('callback');
+        Route::get('/receipt/{payment}', [\App\Http\Controllers\Parent\ParentFeeController::class, 'receipt'])->name('receipt');
+//        Route::get('/transactions', [\App\Http\Controllers\Parent\ParentFeeController::class, 'transactions'])->name('transactions');
+    });
+
+    // Alias route for convenience
+    Route::get('payments', [\App\Http\Controllers\Parent\ParentFeeController::class, 'index'])->name('payments.index');
+    Route::get('transactions', [\App\Http\Controllers\Parent\ParentFeeController::class, 'transactions'])->name('payments.transactions');
 
 
 });

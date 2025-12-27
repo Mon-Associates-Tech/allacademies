@@ -6,8 +6,8 @@ use App\Traits\AcademicGroupLogs;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicSubject extends Model
 {
@@ -50,7 +50,9 @@ class AcademicSubject extends Model
     {
         return $this->hasMany(Quiz::class);
     }
-    public function subtopic(){
+
+    public function subtopic()
+    {
         return $this->hasManyThrough(AcademicSubtopic::class, AcademicTopic::class);
     }
 
@@ -119,7 +121,9 @@ class AcademicSubject extends Model
             ->withTimestamps()
             ->withPivot('is_primary', 'notes');
     }
-    public function questions(){
+
+    public function questions()
+    {
         return $this->hasMany(Question::class);
     }
 
@@ -133,25 +137,26 @@ class AcademicSubject extends Model
     public function studentsWithAccess()
     {
         // Get students who have access through academic level OR individual assignment
-        return Student::where(function($query) {
-            $query->whereHas('academicLevel', function($levelQuery) {
-                $levelQuery->whereHas('academicSubjects', function($subjectQuery) {
+        return Student::where(function ($query) {
+            $query->whereHas('academicLevel', function ($levelQuery) {
+                $levelQuery->whereHas('academicSubjects', function ($subjectQuery) {
                     $subjectQuery->where('academic_subjects.id', $this->id);
                 });
             })
-            ->orWhereHas('individualSubjects', function($individualQuery) {
-                $individualQuery->where('academic_subjects.id', $this->id)
-                    ->wherePivot('is_active', true);
-            });
+                ->orWhereHas('individualSubjects', function ($individualQuery) {
+                    $individualQuery->where('academic_subjects.id', $this->id)
+                        ->wherePivot('is_active', true);
+                });
         })
-        // Exclude students who have this subject individually marked as inactive
-        ->whereDoesntHave('individualSubjects', function($query) {
-            $query->where('academic_subjects.id', $this->id)
-                ->wherePivot('is_active', false);
-        });
+            // Exclude students who have this subject individually marked as inactive
+            ->whereDoesntHave('individualSubjects', function ($query) {
+                $query->where('academic_subjects.id', $this->id)
+                    ->wherePivot('is_active', false);
+            });
     }
 
-    public function assessments(){
+    public function assessments()
+    {
         return $this->hasMany(Assessment::class, 'subject_id');
     }
 
@@ -164,4 +169,13 @@ class AcademicSubject extends Model
         ]);
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
 }

@@ -16,12 +16,15 @@ class AcademicChatMessage extends Model
         'content',
         'role',
         'parameters',
-        'usage'
+        'usage',
+        'model_used',
+        'images',
     ];
 
     protected $casts = [
         'parameters' => 'array',
-        'usage' => 'array'
+        'usage' => 'array',
+        'images' => 'array',
     ];
 
     public function user()

@@ -16,8 +16,23 @@ use App\Livewire\Students\Messages\MessageShow;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
+use App\Livewire\Students\VirtualClassroom\MyVirtualSessions;
+use App\Livewire\Students\VirtualClassroom\ViewSessionRecordings;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->group(function () {
+
+
+    Route::prefix('fees')->name('fees.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('index');
+        Route::get('/payment', [\App\Http\Controllers\StudentFeeController::class, 'payment'])->name('payment');
+        Route::post('/initialize', [\App\Http\Controllers\StudentFeeController::class, 'initializePayment'])->name('initialize');
+        Route::get('/callback', [\App\Http\Controllers\StudentFeeController::class, 'callback'])->name('callback');
+        Route::get('/receipt/{payment}', [\App\Http\Controllers\StudentFeeController::class, 'receipt'])->name('receipt');
+    });
+
+    // Alias route for convenience
+    Route::get('payments', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('payments.index');
 
     Route::get('assessments', BookQuizInterface::class)->name('assessments');
     Route::get('performance', PerformanceOverview::class)->name('performance');
@@ -29,7 +44,6 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('books', [BookController::class, 'index'])->name('books');
     Route::get('books/{book}', BookDetails::class)->name('books.show');
     Route::get('lessons', Books::class)->name('lessons');
-//Route::get('self-assessments', Books::class)->name('self-assessment');
     Route::get('quizzes', Books::class)->name('quizzes');
     Route::get('library', Books::class)->name('library');
     Route::get('materials', Books::class)->name('materials');
@@ -41,31 +55,30 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('profile', Books::class)->name('profile');
     Route::get('settings', Books::class)->name('settings');
     Route::get('help', Books::class)->name('help');
-//Route::get('notifications', Notifications::class)->name('notifications.index');
+
     Route::get('assignments/{assignment}/take', AssignmentTakingComponent::class)
         ->name('assignment.take')
         ->middleware(['auth', 'role:student']);
 
-
-
-        Route::get('/students', [StudentManagementController::class, 'index'])->name('index');
-        Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
-        Route::post('/{student}/promote', [StudentManagementController::class, 'promote'])->name('promote');
-        Route::post('{student}/generate-report-card', [StudentManagementController::class, 'generateReportCard'])->name('generate-report-card');
-        Route::post('/{student}/generate-id-card', [StudentManagementController::class, 'generateIdCard'])->name('generate-id-card');
-        Route::get('/{student}/print-id-card', [StudentManagementController::class, 'printIdCard'])->name('print-id-card');
-        Route::get('/report-cards/{reportCard}/print', [StudentManagementController::class, 'printReportCard'])->name('print-report-card');
-        Route::post('/import', [StudentManagementController::class, 'import'])->name('import');
-//        Route::post('students/', [StudentManagementController::class, 'import'])->name('import');
-
+    // Messages
     Route::get('/messages/compose', ComposeMessage::class)->name('messages.compose');
     Route::get('/messages', MessageIndex::class)->name('messages.index');
     Route::get('/messages/{message}', MessageShow::class)->name('messages.show');
 
+
+    Route::get('/students', [StudentManagementController::class, 'index'])->name('index');
+    Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');
+    Route::post('/{student}/promote', [StudentManagementController::class, 'promote'])->name('promote');
+    Route::post('{student}/generate-report-card', [StudentManagementController::class, 'generateReportCard'])->name('generate-report-card');
+    Route::post('/{student}/generate-id-card', [StudentManagementController::class, 'generateIdCard'])->name('generate-id-card');
+    Route::get('/{student}/print-id-card', [StudentManagementController::class, 'printIdCard'])->name('print-id-card');
+    Route::get('/report-cards/{reportCard}/print', [StudentManagementController::class, 'printReportCard'])->name('print-report-card');
+    Route::post('/import', [StudentManagementController::class, 'import'])->name('import');
+
+    Route::prefix('classroom')->name('classroom.')->group(function () {
+        Route::get('/sessions', MyVirtualSessions::class)->name('sessions');
+        Route::get('/recordings', ViewSessionRecordings::class)->name('recordings');
+    });
 });
 
-// entities should be given our academic structure to correctly map the students, teachers, librarians, etc to their respective roles and permissions within the system.
-// For example, a student should be linked to their academic level, group, and school to ensure they have access to the appropriate resources and functionalities.
-// Similarly, teachers should be associated with the subjects they teach and the academic levels they are responsible for.
-// This structure helps maintain a clear hierarchy and ensures that users can only access information and perform actions relevant to their roles.
-// By implementing this structure, we can create a more organized and efficient system that caters to the specific needs of each user type.
+Route::get('students/{user}/profile', \App\Livewire\Students\PublicProfile::class)->name('students.profile.public');

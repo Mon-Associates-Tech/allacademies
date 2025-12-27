@@ -15,9 +15,9 @@ class OpenAiTokenUsageLog extends Model
         'user_id',
         'subscription_id',
         'model',
-        'prompt_tokens',
-        'completion_tokens',
-        'total_tokens',
+        'prompt_tokens', // tracks input_tokens
+        'completion_tokens', // tracks output_tokens
+        'total_tokens', // sum of input_tokens and output_tokens
         'request_type',
         'context',
     ];

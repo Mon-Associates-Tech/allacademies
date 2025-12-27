@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Services\AcademicChatService;
+use App\Services\ChatGPTService;
+use App\Services\ModelSelectionService;
+use App\Services\TokenUsageService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -14,7 +17,15 @@ class AcademicChatServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AcademicChatService::class, function ($app) {
-            return new AcademicChatService();
+            return new AcademicChatService(
+                $app->make(\App\Services\ChatGPTService::class),
+                $app->make(\App\Services\ModelSelectionService::class),
+                $app->make(TokenUsageService::class)
+            );
+        });
+
+        $this->app->singleton(ModelSelectionService::class, function ($app) {
+            return new ModelSelectionService();
         });
 
         // Merge configuration

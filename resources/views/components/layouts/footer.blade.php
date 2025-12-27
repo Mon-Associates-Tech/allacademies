@@ -102,7 +102,7 @@
                 <!-- Key Stats -->
                 <div class="grid grid-cols-3 gap-4 pt-6">
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-400">10K+</div>
+                        <div class="text-2xl font-bold text-yellow-400">5K+</div>
                         <div class="text-sm text-gray-400">Active Users</div>
                     </div>
                     <div class="text-center">
@@ -202,6 +202,10 @@
                             </svg>
                             Success Stories
                         </a></li>
+
+                    <li><x-link.primary type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
+                            <span>Make Payment</span>
+                        </x-link.primary></li>
                 </ul>
             </div>
 

@@ -21,7 +21,8 @@ class BookSubscription extends Model
         'status',
         'reference',
         'annual_fee',
-        'payment_completed_at'
+        'payment_completed_at',
+        'subscribed_by'
     ];
 
     protected $casts = [
@@ -71,5 +72,10 @@ class BookSubscription extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'book_subscription_id');
+    }
+
+    public function subscribedBy()
+    {
+        return $this->belongsTo(User::class, 'subscribed_by');
     }
 }

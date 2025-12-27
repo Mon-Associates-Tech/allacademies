@@ -29,7 +29,7 @@ class Handler extends ExceptionHandler
     public function report(Throwable $exception)
     {
         // Log memory usage for debugging
-        \Log::debug('Memory usage in Handler::report', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
+      //  \Log::debug('Memory usage in Handler::report', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
 
         // Prevent recursive notifications
         static $notificationSent = false;

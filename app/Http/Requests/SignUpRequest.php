@@ -19,6 +19,11 @@ class SignUpRequest extends FormRequest
             'password' => ['required', 'string', 'min:8'],
             'password_confirmation' => ['required', 'same:password'],
             'author' => ['sometimes'],
+            'gender' => ['nullable', 'string', 'in:male,female,other,prefer_not_to_say'],
+            'country_code' => ['nullable', 'string', 'max:10'],
+            'phone' => ['nullable', 'string', 'max:20', 'min:7'],
+            'terms' => ['required', 'accepted'],
+            'newschool' => ['nullable', 'boolean'],
         ];
     }
 }

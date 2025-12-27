@@ -2,214 +2,140 @@
 
 namespace App\Services;
 
-use App\Events\TokenUsageUpdated;
-use App\Models\Chat\OpenAiTokenUsageLog;
 use DOMDocument;
 use Exception;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpWord\IOFactory;
+use RuntimeException;
 use ZipArchive;
 
 class AcademicChatService
 {
     protected mixed $apiKey;
-    protected string $endpoint = 'https://api.openai.com/v1/chat/completions';
+    protected string $endpoint = 'https://api.openai.com/v1/responses';
     protected string $model = '';
 
-    public function __construct($model = null)
+    protected ChatGPTService $chatGPTService;
+    protected ModelSelectionService $modelSelectionService;
+
+    protected TokenUsageService $tokenUsageService;
+
+    public function __construct(
+        ChatGPTService        $chatGPTService,
+        ModelSelectionService $modelSelectionService,
+        TokenUsageService     $tokenUsageService
+    )
     {
+        $this->chatGPTService = $chatGPTService;
+        $this->modelSelectionService = $modelSelectionService;
+        $this->tokenUsageService = $tokenUsageService;
         $this->apiKey = config('openai.openai.api_key');
-        $this->model = $model ?? config('openai.openai.default_model');
     }
 
-
-    /**
-     * Generate educational chat response with context parameters
-     */
-
-    public function chat(array $parameters, array $messages = []): array
+    public function processRequest($parameters, $conversationHistory)
     {
-
         $user = auth()->user();
 
-        Log::info('Academic Chat Request Started', [
-            'user_id' => $user?->id,
-            'has_message' => isset($parameters['message']),
-            'message_length' => isset($parameters['message']) ? strlen($parameters['message']) : 0,
-        ]);
-
-        // Check if user has active subscription and sufficient tokens
         if ($user && !$user->hasOpenAiTokens()) {
-            Log::warning('Insufficient tokens', ['user_id' => $user->id]);
-
-            return [
-                'success' => false,
-                'error' => 'Insufficient tokens. Please purchase a token package to continue.'
-            ];
+            return ['success' => false, 'error' => 'Insufficient tokens.'];
         }
 
-        // Get the appropriate model for this user
-        $modelToUse = $user ? $user->getOpenAiModel() : $this->model;
+        // 1. Fast Regex Check for image intent to save classification tokens
+        $input = $parameters['input'] ?? '';
+        $modelType = 'text';
 
-
-        // Build system message based on educational parameters
-        $systemMessage = $this->buildEducationalSystemMessage($parameters);
-
-        // Prepare messages array
-        $formattedMessages = [
-            ['role' => 'system', 'content' => $systemMessage]
-        ];
-
-        // Add conversation history if provided
-        if (!empty($messages)) {
-            $formattedMessages = array_merge($formattedMessages, $messages);
+        if (preg_match('/(draw|generate|create|visualize|image|picture|diagram|chart|graph)/i', $input)) {
+            // 2. Delegate to ModelSelectionService for AI-based classification
+            $modelType = $this->modelSelectionService->detectModelType(
+                $this->chatGPTService,
+                $parameters,
+                $conversationHistory
+            );
         }
 
-        // Add current user message if provided in parameters
-        if (isset($parameters['message'])) {
-            $formattedMessages[] = [
-                'role' => 'user',
-                'content' => $parameters['message']
-            ];
+        if ($modelType === 'image') {
+            return $this->handleImageGeneration($parameters);
         }
 
-        $requestData = [
-            'model' => $modelToUse,
-            'messages' => $formattedMessages,
-            'temperature' => (float)$parameters['creativity_level'] ?? 1,
-        ];
+        return $this->handleTextGeneration($parameters, $conversationHistory);
+    }
 
-        $tokenLimit = (int)$parameters['response_length'] ?? 1000;
+    protected function handleImageGeneration($parameters)
+    {
+        $user = auth()->user();
+        $model = $this->modelSelectionService->getImageModelForUser($user);
+        $prompt = $this->prepareImagePrompt($parameters);
 
-        $requestData['max_completion_tokens'] = $tokenLimit;
+        $result = $this->chatGPTService->generateImage($prompt, $model);
 
+        if (!$result['success']) return $result;
 
-        // Add additional OpenAI parameters if specified
-        if (isset($parameters['top_p'])) {
-            $requestData['top_p'] = $parameters['top_p'];
+        $responseContent = "Here is the generated image:\n\n";
+        $imageData = [];
+        foreach ($result['images'] as $image) {
+            $responseContent .= "![Generated Image]({$image['url']})\n\n";
+            $imageData[] = ['url' => $image['url'], 'revised_prompt' => $image['revised_prompt'] ?? null];
         }
 
-        Log::info('Sending request to OpenAI', [
-            'model' => $modelToUse,
-            'message_count' => count($formattedMessages),
-            'has_temperature' => isset($requestData['temperature']),
-            'token_limit' => $tokenLimit,
-        ]);
-
-        // Get timeout from config or use 90 seconds as default (increased from 30)
-        $timeout = config('openai.openai.timeout', 90);
-        $maxRetries = 3;
-        $retryDelay = 2; // seconds
-
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            try {
-                Log::info('OpenAI API attempt', ['attempt' => $attempt, 'max_retries' => $maxRetries]);
-
-                $response = Http::withToken($this->apiKey)
-                    ->timeout($timeout)
-                    ->connectTimeout(10) // Add connection timeout
-                    ->retry(2, 1000) // Retry 2 times with 1 second delay for connection issues
-                    ->post($this->endpoint, $requestData);
-
-                Log::info('OpenAI Response Received', [
-                    'status' => $response->status(),
-                    'successful' => $response->successful(),
-                    'attempt' => $attempt,
-                ]);
-
-                if ($response->successful()) {
-                    $responseData = $response->json();
-                    $usage = $responseData['usage'] ?? null;
-
-                    Log::info('OpenAI Response Success', [
-                        'has_usage' => $usage !== null,
-                        'data' => $responseData,
-                        'model_used' => $responseData['model'] ?? 'unknown',
-                    ]);
-
-                    // Log token usage and deduct from user's subscription
-                    if ($user && $usage) {
-                        $this->logTokenUsage($user, $usage, $parameters['request_type'] ?? 'chat');
-                    }
-
-                    return [
-                        'success' => true,
-                        'content' => $responseData['choices'][0]['message']['content'],
-                        'usage' => $usage,
-                        'model' => $responseData['model'] ?? $modelToUse
-                    ];
-                }
-
-                // Handle 429 (rate limit) and 503 (service unavailable) with retry
-                if (in_array($response->status(), [429, 503, 502])) {
-                    if ($attempt < $maxRetries) {
-                        $waitTime = $retryDelay * $attempt; // Exponential backoff
-                        Log::warning('OpenAI API rate limit or unavailable, retrying', [
-                            'status' => $response->status(),
-                            'attempt' => $attempt,
-                            'wait_time' => $waitTime,
-                        ]);
-                        sleep($waitTime);
-                        continue;
-                    }
-                }
-
-                Log::error('OpenAI API Error', [
-                    'response' => $response->body(),
-                    'status' => $response->status(),
-                    'attempt' => $attempt,
-                ]);
-
-                return [
-                    'success' => false,
-                    'error' => "API Error: " . $response->body()
-                ];
-
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                // Handle connection/timeout errors specifically
-                Log::error('OpenAI Connection Error', [
-                    'error' => $e->getMessage(),
-                    'attempt' => $attempt,
-                    'max_retries' => $maxRetries,
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    $waitTime = $retryDelay * $attempt;
-                    Log::info('Retrying after connection error', ['wait_time' => $waitTime]);
-                    sleep($waitTime);
-                    continue;
-                }
-
-                return [
-                    'success' => false,
-                    'error' => 'Connection timeout. The AI service is taking longer than expected. Please try again with a shorter message or fewer conversation history.'
-                ];
-
-            } catch (Exception $e) {
-                Log::error('Educational Chat Service Error', [
-                    'error' => $e->getMessage(),
-                    'attempt' => $attempt,
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    $waitTime = $retryDelay * $attempt;
-                    sleep($waitTime);
-                    continue;
-                }
-
-                return [
-                    'success' => false,
-                    'error' => 'Service temporarily unavailable. Please try again.'
-                ];
-            }
-        }
-
-        // If all retries failed
         return [
-            'success' => false,
-            'error' => 'Service temporarily unavailable after multiple attempts. Please try again later.'
+            'success' => true,
+            'content' => $responseContent,
+            'model_used' => $model,
+            'images' => $imageData
         ];
+    }
+
+    protected function prepareImagePrompt($parameters)
+    {
+        // Create a detailed prompt for image generation
+        $description = $parameters['input'] ?? 'Generate an educational image';
+
+        $details = [];
+        if (!empty($parameters['subject'])) {
+            $details[] = "Subject: " . $parameters['subject'];
+        }
+
+        if (!empty($parameters['topics'])) {
+            $details[] = "Topics: " . (is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
+        }
+
+        if (!empty($parameters['academic_level'])) {
+            $details[] = "Academic level: " . $parameters['academic_level'];
+        }
+
+        $prompt = $description;
+        if (!empty($details)) {
+            $prompt .= ". " . implode('. ', $details);
+        }
+
+        // Add style guidance for educational content
+        $prompt .= ". Educational, clear, professional style, suitable for academic purposes";
+
+        return $prompt;
+    }
+
+    protected function handleTextGeneration($parameters, $conversationHistory)
+    {
+        $user = auth()->user();
+        $model = $this->modelSelectionService->getTextModelForUser($user);
+
+        // Build messages using existing educational prompt logic
+        $messages = [];
+        if (($parameters['request_type'] ?? '') !== 'quiz_generation') {
+            $messages[] = ['role' => 'system', 'content' => $this->buildEducationalSystemMessage($parameters)];
+        }
+
+        $messages = array_merge($messages, $conversationHistory);
+        $messages[] = ['role' => 'user', 'content' => $this->prepareTextPrompt($parameters)];
+
+        return $this->chatGPTService->chat($messages, $model, [
+            'temperature' => (float)($parameters['creativity_level'] ?? 1.0),
+            'max_output_tokens' => (int)($parameters['response_length'] ?? 10000),
+//            'request_type' => $parameters['request_type'] ?? 'chat'
+        ]);
     }
 
     /**
@@ -328,35 +254,300 @@ class AcademicChatService
         return $systemPrompt;
     }
 
+    protected function prepareTextPrompt($parameters)
+    {
+        $prompt = "User request: " . ($parameters['input'] ?? '');
+
+        // Add context from parameters
+        $context = [];
+        foreach ($parameters as $key => $value) {
+            if ($key !== 'input' && !empty($value)) {
+                if (is_array($value)) {
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . implode(', ', $value);
+                } else {
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . $value;
+                }
+            }
+        }
+
+        if (!empty($context)) {
+            $prompt .= "\n\nContext:\n" . implode("\n", $context);
+        }
+
+        return $prompt;
+    }
+
+    /**
+     * Generate educational chat response with context parameters
+     */
+    public function chat(array $parameters, array $messages = []): array
+    {
+        $user = auth()->user();
+
+        Log::info('Academic Chat Request Started', [
+            'user_id' => $user?->id,
+            'has_input' => isset($parameters['input']),
+            'input_preview' => isset($parameters['input']) ? substr($parameters['input'], 0, 300) : 'none',
+            'request_type' => $parameters['request_type'] ?? 'general',
+        ]);
+
+        // Check if user has active subscription and sufficient tokens
+        if ($user && !$user->hasOpenAiTokens()) {
+            Log::warning('Insufficient tokens', ['user_id' => $user->id]);
+
+            return [
+                'success' => false,
+                'error' => 'Insufficient tokens. Please purchase a token package to continue.'
+            ];
+        }
+
+        // Get the appropriate model for this user
+        $modelToUse = $user ? $user->getOpenAiModel() : $this->model;
+
+        // Prepare messages array
+        $formattedMessages = [];
+
+        // For quiz generation, DON'T use buildEducationalSystemMessage
+        // The prompt already contains all necessary instructions
+        if (isset($parameters['request_type']) && $parameters['request_type'] === 'quiz_generation') {
+            // Use ONLY the provided prompt - don't add educational context
+            if (isset($parameters['input'])) {
+                $formattedMessages[] = [
+                    'role' => 'user',
+                    'content' => $parameters['input']
+                ];
+            }
+        } else {
+            // For regular chat, use educational system message
+            $systemMessage = $this->buildEducationalSystemMessage($parameters);
+            $formattedMessages[] = ['role' => 'system', 'content' => $systemMessage];
+
+            // Add conversation history if provided
+            if (!empty($messages)) {
+                $formattedMessages = array_merge($formattedMessages, $messages);
+            }
+
+            // Add current user message if provided in parameters
+            if (isset($parameters['input'])) {
+                $formattedMessages[] = [
+                    'role' => 'user',
+                    'content' => $parameters['input']
+                ];
+            }
+        }
+
+        $requestData = [
+            'model' => $modelToUse,
+            'input' => $formattedMessages,
+            'temperature' => (float)($parameters['creativity_level'] ?? 1.0),
+        ];
+
+        $tokenLimit = (int)($parameters['response_length'] ?? 10000);
+        $requestData['max_output_tokens'] = $tokenLimit;
+
+        if (isset($parameters['top_p'])) {
+            $requestData['top_p'] = $parameters['top_p'];
+        }
+
+        // Rest of the method stays the same...
+        $timeout = config('openai.openai.timeout', 90);
+        $maxRetries = 3;
+        $retryDelay = 2;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $response = Http::withToken($this->apiKey)
+                    ->timeout($timeout)
+                    ->connectTimeout(10)
+                    ->retry(2, 1000)
+                    ->post($this->endpoint, $requestData);
+
+                if ($response->successful()) {
+                    $responseData = $response->json();
+
+                    Log::info('OpenAI Response received', [
+                        'has_output' => isset($responseData['output']),
+                        'has_usage' => isset($responseData['usage']),
+                    ]);
+
+                    $usage = $responseData['usage'] ?? null;
+
+                    if ($user && $usage) {
+                        $this->logTokenUsage($user, $usage, $parameters['request_type'] ?? 'chat', $modelToUse);
+                    }
+
+                    $content = $this->extractContentFromResponsesAPI($responseData);
+
+                    Log::warning('OpenAI Response Content', [
+                        // 'content' => $content
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'content' => $content,
+                        'usage' => $usage,
+                        'model' => $responseData['model'] ?? $modelToUse
+                    ];
+                }
+
+                if (in_array($response->status(), [429, 503, 502])) {
+                    if ($attempt < $maxRetries) {
+                        $waitTime = $retryDelay * $attempt;
+                        Log::warning('OpenAI API rate limit or unavailable, retrying', [
+                            'status' => $response->status(),
+                            'attempt' => $attempt,
+                            'wait_time' => $waitTime,
+                        ]);
+                        sleep($waitTime);
+                        continue;
+                    }
+                }
+
+                Log::error('OpenAI API Error', [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                    'attempt' => $attempt,
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => "API Error: " . $response->body()
+                ];
+
+            } catch (ConnectionException $e) {
+                Log::error('OpenAI Connection Error', [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt < $maxRetries) {
+                    $waitTime = $retryDelay * $attempt;
+                    sleep($waitTime);
+                    continue;
+                }
+
+                return [
+                    'success' => false,
+                    'error' => 'Connection timeout. Please try again.'
+                ];
+
+            } catch (Exception $e) {
+                Log::error('Educational Chat Service Error', [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt < $maxRetries) {
+                    $waitTime = $retryDelay * $attempt;
+                    sleep($waitTime);
+                    continue;
+                }
+
+                return [
+                    'success' => false,
+                    'error' => 'Service temporarily unavailable. Please try again.'
+                ];
+            }
+        }
+
+        return [
+            'success' => false,
+            'error' => 'Service temporarily unavailable after multiple attempts. Please try again later.'
+        ];
+    }
+
     /**
      * Log token usage and deduct from user's subscription
      */
     protected function logTokenUsage($user, array $usage, string $requestType = 'chat', string $model = null): void
     {
-        $subscription = $user->activeTokenSubscription;
+        $this->tokenUsageService->logUsage($user, $usage, $requestType, $model);
+    }
 
-        if (!$subscription) {
-            return;
+    protected function extractContentFromResponsesAPI(array $responseData): string
+    {
+        if (!isset($responseData['output'])) {
+            Log::warning('No output field in response');
+            return '';
         }
 
-        $totalTokens = $usage['total_tokens'] ?? 0;
+        $output = $responseData['output'];
 
-        // Create usage log
-        OpenAiTokenUsageLog::create([
-            'user_id' => $user->id,
-            'subscription_id' => $subscription->id,
-            'model' => $model ?? $this->model,
-            'prompt_tokens' => $usage['prompt_tokens'] ?? 0,
-            'completion_tokens' => $usage['max_completion_tokens'] ?? 0,
-            'total_tokens' => $totalTokens,
-            'request_type' => $requestType,
+        // Handle direct string output
+        if (is_string($output)) {
+            return $output;
+        }
+
+        // Handle array output - NEW APPROACH
+        if (is_array($output)) {
+            // PRIORITY 1: Look for content array in first output element
+            if (isset($output[0]['content'])) {
+                $fullText = '';
+
+                foreach ($output as $outputItem) {
+                    if (isset($outputItem['content']) && is_array($outputItem['content'])) {
+                        foreach ($outputItem['content'] as $contentPart) {
+                            // Extract text from various possible structures
+                            if (is_string($contentPart)) {
+                                $fullText .= $contentPart;
+                            } elseif (isset($contentPart['text'])) {
+                                $fullText .= $contentPart['text'];
+                            } elseif (isset($contentPart['type']) && $contentPart['type'] === 'output_text' && isset($contentPart['text'])) {
+                                $fullText .= $contentPart['text'];
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($fullText)) {
+                    return $fullText;
+                }
+            }
+
+            // PRIORITY 2: Array of strings
+            if (isset($output[0]) && is_string($output[0])) {
+                return implode('', $output);
+            }
+
+            // PRIORITY 3: Direct text field
+            if (isset($output[0]['text'])) {
+                return $output[0]['text'];
+            }
+        }
+
+        // Final fallback
+        Log::error('Could not extract content from response', [
+            'output_structure' => json_encode($output)
         ]);
+        return $this->extractTextFromResponse($responseData);
+    }
 
-        // Deduct tokens from subscription
-        $subscription->deductTokens($totalTokens);
+    private function extractTextFromResponse($response)
+    {
+        if (is_string($response)) {
+            return $response;
+        }
 
-        // Dispatch event for real-time updates
-        event(new TokenUsageUpdated($user->id));
+        if (is_array($response)) {
+            // Handle Responses API format
+            if (isset($response[0]['content'][0]['text'])) {
+                return $response[0]['content'][0]['text'];
+            }
+
+            // Handle chat completions format
+            if (isset($response['output'][0]['content']['text'])) {
+                return $response['output'][0]['content']['text'];
+            }
+
+            // Handle other possible formats
+            if (isset($response['content'])) {
+                return is_array($response['content']) ?
+                    ($response['content'][0]['text'] ?? json_encode($response['content'])) :
+                    $response['content'];
+            }
+        }
+
+        return (string)$response;
     }
 
     /**
@@ -367,7 +558,7 @@ class AcademicChatService
         $errors = [];
 
         // Required parameters
-        if (!isset($parameters['message']) || empty(trim($parameters['message']))) {
+        if (!isset($parameters['input']) || empty(trim($parameters['input']))) {
             $errors[] = 'Message is required';
         }
 
@@ -389,7 +580,7 @@ class AcademicChatService
         }
 
         // Creativity level validation
-        if ((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level'])) || $parameters['creativity_level'] < 1 )) {
+        if (((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level']))) || $parameters['creativity_level'] < 1)) {
             $errors[] = 'Creativity level must be greater than 1';
         }
 
@@ -415,7 +606,7 @@ class AcademicChatService
     /**
      * Extract text content from an uploaded file
      */
-    public function extractFileContent(UploadedFile $file): string
+    public function extractFileContentDeprecated(UploadedFile $file): string
     {
         $mimeType = $file->getMimeType();
         $originalName = $file->getClientOriginalName();
@@ -489,40 +680,20 @@ class AcademicChatService
      */
     protected function extractPdfContent(UploadedFile $file): string
     {
-        // Check if pdftotext is available
-        if (function_exists('exec') && $this->isCommandAvailable('pdftotext')) {
-            $tmpFile = $file->getRealPath();
-            $outputFile = tempnam(sys_get_temp_dir(), 'pdf_output');
+        try {
+            $pdfExtractor = app(PdfContentExtractionService::class);
+            return $pdfExtractor->extractFromUploadedFile($file, [
+                'preserve_layout' => true,
+                'method' => 'auto'
+            ]);
+        } catch (Exception $e) {
+            Log::error("PDF extraction failed: {$e->getMessage()}");
 
-            // Use pdftotext command line tool
-            $command = "pdftotext -layout " . escapeshellarg($tmpFile) . " " . escapeshellarg($outputFile);
-            exec($command, $output, $returnCode);
-
-            if ($returnCode === 0 && file_exists($outputFile)) {
-                $content = file_get_contents($outputFile);
-                unlink($outputFile);
-                return trim($content);
-            }
-
-            // Fallback if pdftotext fails
-            unlink($outputFile);
+            return "PDF file content extraction failed.\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n" .
+                "Error: " . $e->getMessage();
         }
-
-        // If pdftotext is not available or fails, try to use the simple approach
-        return "PDF file content extraction requires pdftotext to be installed on the server.\n" .
-            "File name: " . $file->getClientOriginalName() . "\n" .
-            "File size: " . $file->getSize() . " bytes\n";
-    }
-
-    /**
-     * Check if a command is available on the system
-     */
-    protected function isCommandAvailable(string $command): bool
-    {
-        $returnCode = null;
-        $output = [];
-        exec("which $command", $output, $returnCode);
-        return $returnCode === 0;
     }
 
     /**
@@ -611,6 +782,132 @@ class AcademicChatService
         }
 
         return "Unsupported Excel document format.\n";
+    }
+
+    /**
+     * Extract content from various file types
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    public function extractFileContent(UploadedFile $file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        return match ($extension) {
+            'pdf' => $this->extractPdfContent($file),
+            'txt' => file_get_contents($file->getRealPath()),
+            'doc', 'docx' => $this->extractDocxContent($file),
+            default => "Unsupported file type: {$extension}\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n"
+        };
+    }
+
+    /**
+     * Extract content from DOCX files
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    protected function extractDocxContent(UploadedFile $file): string
+    {
+        try {
+            if (!class_exists(IOFactory::class)) {
+                throw new RuntimeException('PhpWord library not available');
+            }
+
+            $tmpPath = $file->getRealPath();
+            $phpWord = IOFactory::load($tmpPath);
+            $text = '';
+
+            foreach ($phpWord->getSections() as $section) {
+                foreach ($section->getElements() as $element) {
+                    if (method_exists($element, 'getText')) {
+                        $text .= $element->getText() . "\n";
+                    } elseif (method_exists($element, 'getElements')) {
+                        foreach ($element->getElements() as $childElement) {
+                            if (method_exists($childElement, 'getText')) {
+                                $text .= $childElement->getText() . "\n";
+                            }
+                        }
+                    }
+                }
+            }
+
+            return trim($text);
+        } catch (Exception $e) {
+            Log::error('DOCX processing failed', [
+                'error' => $e->getMessage(),
+                'file' => $file->getClientOriginalName()
+            ]);
+
+            return "Error processing document: " . $e->getMessage() . "\n" .
+                "File name: " . $file->getClientOriginalName() . "\n" .
+                "File size: " . $file->getSize() . " bytes\n";
+        }
+    }
+
+    protected function normalizeTextResponse($content): array
+    {
+        $raw = $content;
+        $textSegments = [];
+
+        if (is_string($content)) {
+            $textSegments[] = $content;
+        } elseif (is_array($content)) {
+            foreach ($content as $item) {
+                if (is_string($item)) {
+                    $textSegments[] = $item;
+                    continue;
+                }
+
+                if (isset($item['content'])) {
+                    $segments = $item['content'];
+
+                    if (is_array($segments)) {
+                        foreach ($segments as $segment) {
+                            if (is_string($segment)) {
+                                $textSegments[] = $segment;
+                                continue;
+                            }
+
+                            if (isset($segment['text']) && is_string($segment['text'])) {
+                                $textSegments[] = $segment['text'];
+                            }
+                        }
+                    } elseif (is_string($segments)) {
+                        $textSegments[] = $segments;
+                    }
+                } elseif (isset($item['text']) && is_string($item['text'])) {
+                    $textSegments[] = $item['text'];
+                }
+            }
+        }
+
+        $text = trim(implode("\n\n", array_filter($textSegments, static fn($segment) => trim($segment) !== '')));
+
+        if ($text === '' && is_array($content)) {
+            $text = trim(json_encode($content));
+        }
+
+        return [
+            'text' => $text,
+            'raw' => $raw,
+        ];
+    }
+
+    protected function isCommandAvailable(string $command): bool
+    {
+        if (!function_exists('exec')) {
+            return false;
+        }
+
+        $output = [];
+        $returnCode = 0;
+        @exec("which {$command} 2>&1", $output, $returnCode);
+
+        return $returnCode === 0;
     }
 
 }

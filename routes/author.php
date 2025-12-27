@@ -10,27 +10,20 @@ use App\Livewire\Authors\Books;
 use App\Livewire\Authors\Community;
 use App\Livewire\Authors\Help;
 use App\Livewire\Authors\Notifications;
-use App\Livewire\Authors\Profile;
 use App\Livewire\Authors\Promotions;
 use App\Livewire\Authors\Publishing;
 use App\Livewire\Authors\Revenue;
 use App\Livewire\Authors\Reviews;
 use App\Livewire\Authors\Settings;
 use App\Livewire\Authors\Subscriptions;
-
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('author.')->group(function () {
 
-    // Dashboard
-//    Route::get('/dashboard', Dashboard::class)->name('dashboard');
-
     // Book Management
     Route::prefix('books')->name('books.')->group(function () {
         Route::get('/', Books::class)->name('index');
-//        Route::get('/create', BookCreate::class)->name('create');
-//        Route::get('/create', App\Livewire\Books\CreateBook::class)->name('create');
-//        Route::get('/{book}/edit', BookCreate::class)->name('edit');
+
         Route::get('/{book}', BookDetails::class)->name('show');
         Route::get('/create', [BookController::class, 'create'])->name('create');
         Route::get('/{book}/edit', [BookController::class, 'edit'])->name('edit');

@@ -3,8 +3,11 @@
 use App\Http\Controllers\ExaminationController;
 use App\Models\AcademicSubtopic;
 use App\Models\Examination;
+use App\Models\Student;
+use App\Models\User;
 use App\Support\Examiner;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Exception\CommonMarkException;
 use League\CommonMark\Output\RenderedContentInterface;
@@ -295,5 +298,128 @@ if (!function_exists('getTimeRemaining')) {
             $emails = config('access.owner.special_access_emails', '');
             return array_map('trim', explode(',', $emails));
         }
+    }
+
+    if(!function_exists('impersonateUser')){
+         function impersonateUser($userId)
+        {
+            $user = User::findOrFail($userId);
+
+            // Check if current user can impersonate
+            if (!Auth::user()->canImpersonate()) {
+                session()->flash('error', 'You do not have permission to impersonate users.');
+                return;
+            }
+
+            // Check if target user can be impersonated
+            if (!$user->canBeImpersonated()) {
+                session()->flash('error', 'This user cannot be impersonated.');
+                return;
+            }
+
+            // Store the current user ID and redirect URL before impersonation
+            session()->put('impersonate_redirect_to', route('dashboard'));
+
+            return redirect()->route('impersonate', $userId);
+        }
+    }
+
+     function getSchoolId(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+        // For owners/super admins, check session for selected school
+        if ($user->canAccessCrossSchool()) {
+            $sessionSchoolId = session('current_school_id');
+
+            // If they've explicitly selected a school, use it
+            if ($sessionSchoolId) {
+                return $sessionSchoolId;
+            }
+
+            // Check app binding
+            if (app()->bound('current_school_id')) {
+                return app('current_school_id');
+            }
+
+            // Check if current_school is bound
+            if (app()->bound('current_school')) {
+                $school = app('current_school');
+                return $school ? $school->id : null;
+            }
+
+            // No school selected - return null
+            return null;
+        }
+
+        // For regular users, use their school_id
+        return $user->school_id;
+    }
+
+    /**
+     * Get a student based on provided parameters
+     *
+     * @param int|null $user_id The user ID to search by
+     * @param int|null $student_id The student's database ID to search by
+     * @param int|null $school_id The school ID to filter by
+     * @param bool $withoutScopes Whether to bypass global scopes
+     * @return \App\Models\Student|null
+     */
+    function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = false)
+    {
+        // Start with the base query
+        $query = $withoutScopes
+            ? \App\Models\Student::withoutGlobalScopes()
+            : \App\Models\Student::query();
+
+        // If specific student_id provided, search by that first (highest priority)
+        if ($student_id !== null) {
+            $query->where('id', $student_id);
+
+            // Optionally filter by school_id if provided
+            if ($school_id !== null) {
+                $query->where('school_id', $school_id);
+            }
+
+            return $query->first();
+        }
+
+        // If user_id provided, search by user_id
+        if ($user_id !== null) {
+            $query->where('user_id', $user_id);
+
+            // Optionally filter by school_id if provided
+            if ($school_id !== null) {
+                $query->where('school_id', $school_id);
+            }
+
+            return $query->first();
+        }
+
+        // If school_id only provided, get first student from that school
+        if ($school_id !== null) {
+            return $query->where('school_id', $school_id)->first();
+        }
+
+        // Fallback: Get authenticated user's student
+        if (Auth::check()) {
+            $student = Auth::user()->student;
+
+            // If student not found via relationship, try direct query
+            if (!$student) {
+                $student = \App\Models\Student::withoutGlobalScopes()
+                    ->where('user_id', Auth::id())
+                    ->first();
+            }
+
+            return $student;
+        }
+
+        // No parameters and no authenticated user
+        return null;
     }
 }

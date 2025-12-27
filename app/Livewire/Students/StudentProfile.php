@@ -4,6 +4,8 @@ namespace App\Livewire\Students;
 
 use App\Models\Assessment;
 use App\Models\Activity;
+use App\Models\Student;
+use App\Models\AcademicFeeStructure;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -50,6 +52,7 @@ class StudentProfile extends Component
     public function mount()
     {
         $this->student = Auth::user()->student;
+        $this->student = Student::withoutGlobalScopes()->where("user_id", Auth::id())->first();
 
         if ($this->student) {
             $user = $this->student->user;
@@ -193,12 +196,72 @@ class StudentProfile extends Component
         $recentActivity = $this->getRecentActivity();
         $upcomingTasks = $this->getUpcomingTasks();
 
+        $feeDetails = null;
+        $totalPaid = 0;
+        $remainingAmount = 0;
+        $feeStatus = 'Pending';
+        $paymentMethod = 'Momo'; // default
+        $paymentHistory = collect();
+
+        if ($this->student) {
+            // Get current term
+            $currentTerm = \App\Models\AcademicPeriod::where('is_current', 1)->first();
+            $currentTermId = $currentTerm->id ?? null;
+
+            // Get the matching fee structure for this student
+            $feeDetails = \App\Models\AcademicFeeStructure::where('school_id', $this->student->school_id)
+                ->where('academic_group_id', $this->student->academic_group_id)
+                ->where('academic_level_id', $this->student->academic_level_id)
+                ->where('current_term_id', $currentTermId)
+                ->first();
+
+            $termTotalAmount = $feeDetails->term_total_amount ?? $feeDetails->amount ?? 0;
+            $paymentMethod = $feeDetails->payment_method ?? 'Momo';
+
+            // Sum total paid by this student for the current term
+            $totalPaid = \App\Models\SchoolFee::where('student_id', $this->student->id)
+                ->where('term_id', $currentTermId)
+                ->sum('amount');
+
+            // Compute remaining & status
+            $remainingAmount = max($termTotalAmount - $totalPaid, 0);
+
+            if ($totalPaid >= $termTotalAmount && $termTotalAmount > 0) {
+                $feeStatus = 'Completed';
+            } elseif ($totalPaid > 0 && $totalPaid < $termTotalAmount) {
+                $feeStatus = 'Part Payment';
+            } else {
+                $feeStatus = 'Pending';
+            }
+
+            // Attach computed fields for easy Blade access
+            if ($feeDetails) {
+                $feeDetails->total_paid = $totalPaid;
+                $feeDetails->remaining = $remainingAmount;
+                $feeDetails->status = $feeStatus;
+                $feeDetails->payment_method = $paymentMethod;
+            }
+
+            // ✅ Fetch payment history (all terms)
+            $paymentHistory = \App\Models\SchoolFee::where('student_id', $this->student->id)
+                ->with([
+                    'payer',
+                    'student.academicGroup',
+                    'student.academicLevel',
+                    'academicPeriod'
+                ])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
         return view('livewire.students.profile', [
             'student' => $this->student,
             'studentGroup' => $this->student?->studentGroup,
             'profileStats' => $profileStats,
             'recentActivity' => $recentActivity,
-            'upcomingTasks' => $upcomingTasks
+            'upcomingTasks' => $upcomingTasks,
+            'feeDetails' => $feeDetails,
+            'paymentHistory' => $paymentHistory,
         ]);
     }
 }

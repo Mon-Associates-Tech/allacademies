@@ -8,8 +8,8 @@ use Livewire\Component;
 
 class SharedBooks extends Component
 {
-    public $activeTab = 'pending'; // Define the property with default value
-
+    public $activeTab = 'my-books'; // Define the property with default value
+    public $sharedByMe;
     public function acceptShare(UserBookShare $share): void
     {
         if ($share->shared_to_user_id !== auth()->id()) {
@@ -52,10 +52,21 @@ class SharedBooks extends Component
             ->get();
 
 
+        // Get group-based shares
+        $groupShares = UserBookShare::with(['userBook', 'sharedBy', 'academicGroup', 'academicLevel', 'studentGroup'])
+            ->where('status', 'accepted')
+            ->where('share_type', '!=', 'individual')
+            ->forUser(auth()->user())
+            ->get();
+
         // Add a user's own uploaded books
         $myBooks = UserBook::where('user_id', auth()->id())->get();
+        $this->sharedByMe = UserBookShare::where('shared_by_user_id', auth()->id())
+            ->with(['userBook', 'sharedWith'])
+            ->get();
 
-
-        return view('livewire.user-books.shared-books', compact('pendingShares', 'acceptedShares', 'myBooks'));
+        return view('livewire.user-books.shared-books', compact(
+            'pendingShares', 'acceptedShares', 'myBooks', 'groupShares'
+        ));
     }
 }

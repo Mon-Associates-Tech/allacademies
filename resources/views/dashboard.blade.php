@@ -2,19 +2,26 @@
 
     @php
         $user = Auth::user();
-        $primaryRole = $user->role;
+        $primaryRole = $user->role->value;
         $isImpersonating = session()->has('impersonated_by');
     @endphp
 
 
     @if(config('app.debug'))
-        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+        <div class="container bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 mx-auto rounded mb-4">
             <strong>Debug:</strong>
             Primary Role: {{ $primaryRole }} |
             All Roles: {{ implode(', ', $user->getRoleNames()) }} |
             Is Impersonating: {{ $isImpersonating ? 'Yes' : 'No' }}
         </div>
     @endif
+
+    <div class="container mx-auto px-4 py-4">
+        @auth
+            <livewire:trial-expiration-banner/>
+        @endauth
+
+    </div>
 
     @if($primaryRole === 'student')
         @livewire('students.dashboard')
@@ -45,32 +52,39 @@
         </div>
     @endif
 
+    {{-- some useful components  --}}
     <div class="mb-4 hidden">
-        <livewire:chats.token-usage-monitor />
+        <livewire:chats.token-usage-monitor/>
     </div>
 
     <div class="w-64 hidden">
-        <livewire:chats.token-usage-horizontal />
+        <livewire:chats.token-usage-horizontal/>
     </div>
 
     {{-- Use Vertical Compact in sidebar --}}
     <div class="w-16 hidden">
-        <livewire:chats.token-usage-vertical />
+        <livewire:chats.token-usage-vertical/>
     </div>
 
     {{-- Use Circular in dashboard widget --}}
     <div class="w-full max-w-xs hidden">
-        <livewire:chats.token-usage-circular />
+        <livewire:chats.token-usage-circular/>
     </div>
 
-    @if( in_array(auth()->user()->role, ['admin', 'owner', 'moderator', 'subscriber']) && Route::is('dashboard'))
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 hidden lg:px-8 py-6">
+        <!-- Full version for prominent display -->
+        <livewire:subscription-features-banner placement="dashboard"/>
+    </div>
+
+    @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber', 'teacher']) && Route::is('dashboard'))
+
         <section>
             @if ($academicSubjects->count() || request()->hasAny(['search', 'academic_group', 'academic_level']))
                 <section class="mt-10 w-full mx-auto">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="font-semibold text-3xl text-gray-900">My Courses</h3>
-                            <div class="text-sm text-gray-500 mt-1">
+                            <h3 class="font-semibold text-3xl text-gray-900 dark:text-gray-100">My Courses</h3>
+                            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 {{ $academicSubjects->total() }} {{ Str::plural('course', $academicSubjects->total()) }}
                                 @if(request()->hasAny(['search', 'academic_group', 'academic_level']))
                                     found
@@ -82,10 +96,10 @@
 
                         <!-- View Toggle Controls -->
                         <div class="flex items-center space-x-4">
-                            <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                                 <button onclick="toggleView('grid')"
                                         id="grid-btn"
-                                        class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 bg-white text-gray-700 shadow-sm">
+                                        class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 shadow-sm">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
@@ -94,7 +108,7 @@
                                 </button>
                                 <button onclick="toggleView('list')"
                                         id="list-btn"
-                                        class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 text-gray-500 hover:text-gray-700">
+                                        class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"
                                               d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
@@ -107,19 +121,22 @@
                     </div>
 
                     <!-- Advanced Filters & Search -->
-                    <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
                         <div class="p-6">
                             <form method="GET" action="{{ route('dashboard') }}" class="space-y-4" id="filters-form">
                                 <!-- Search Row -->
                                 <div class="flex flex-col lg:flex-row gap-4">
                                     <div class="flex-1">
-                                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="search"
+                                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Search Courses
                                         </label>
                                         <div class="relative">
                                             <div
                                                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <svg class="h-5 w-5 text-gray-400" fill="currentColor"
+                                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                                     fill="currentColor"
                                                      viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
                                                           d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
@@ -131,19 +148,19 @@
                                                    name="search"
                                                    value="{{ $filters['search'] ?? '' }}"
                                                    placeholder="Search by subject name, code, level, or group..."
-                                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm">
+                                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm">
                                         </div>
                                     </div>
 
                                     <div class="lg:w-48">
                                         <label for="academic_group"
-                                               class="block text-sm font-medium text-gray-700 mb-2">
+                                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Academic Group
                                         </label>
                                         <select name="academic_group"
                                                 id="academic_group"
                                                 onchange="updateLevels()"
-                                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
+                                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
                                             <option value="">All Groups</option>
                                             @foreach($academicGroups as $group)
                                                 <option
@@ -156,12 +173,12 @@
 
                                     <div class="lg:w-48">
                                         <label for="academic_level"
-                                               class="block text-sm font-medium text-gray-700 mb-2">
+                                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Academic Level
                                         </label>
                                         <select name="academic_level"
                                                 id="academic_level"
-                                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
+                                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
                                             <option value="">All Levels</option>
                                             @foreach($academicLevels as $level)
                                                 <option value="{{ $level->id }}"
@@ -176,14 +193,14 @@
 
                                 <!-- Sorting and Action Row -->
                                 <div
-                                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
+                                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <div class="flex flex-col sm:flex-row gap-2">
                                         <div class="flex items-center gap-2">
                                             <label for="sort_by"
-                                                   class="text-sm font-medium text-gray-700 whitespace-nowrap">Sort
+                                                   class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Sort
                                                 by:</label>
                                             <select name="sort_by" id="sort_by"
-                                                    class="text-sm border border-gray-300 rounded px-2 py-1">
+                                                    class="text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1">
                                                 <option
                                                     value="name" {{ ($filters['sort_by'] ?? '') == 'name' ? 'selected' : '' }}>
                                                     Name
@@ -209,7 +226,7 @@
 
                                         <div class="flex items-center gap-2">
                                             <select name="sort_order" id="sort_order"
-                                                    class="text-sm border border-gray-300 rounded px-2 py-1">
+                                                    class="text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1">
                                                 <option
                                                     value="asc" {{ ($filters['sort_order'] ?? '') == 'asc' ? 'selected' : '' }}>
                                                     ↑ Ascending
@@ -237,7 +254,7 @@
 
                                         @if(request()->hasAny(['search', 'academic_group', 'academic_level']) || ($filters['sort_by'] ?? 'name') !== 'name' || ($filters['sort_order'] ?? 'asc') !== 'asc')
                                             <a href="{{ route('dashboard') }}"
-                                               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                                               class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
                                                           d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -251,52 +268,53 @@
 
                                 <!-- Active Filters Display -->
                                 @if(request()->hasAny(['search', 'academic_group', 'academic_level']))
-                                    <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
-                                        <span class="text-sm font-medium text-gray-700">Active filters:</span>
+                                    <div
+                                        class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active filters:</span>
 
                                         @if($filters['search'])
                                             <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                                                Search: "{{ $filters['search'] }}"
-                                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
-                                                   class="ml-1.5">
-                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                              clip-rule="evenodd"/>
-                                                    </svg>
-                                                </a>
-                                            </span>
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200">
+                                            Search: "{{ $filters['search'] }}"
+                                            <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
+                                               class="ml-1.5">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                          clip-rule="evenodd"/>
+                                                </svg>
+                                            </a>
+                                        </span>
                                         @endif
 
                                         @if($filters['academic_group'])
                                             <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                Group: {{ $academicGroups->find($filters['academic_group'])->name }}
-                                                <a href="{{ request()->fullUrlWithQuery(['academic_group' => null]) }}"
-                                                   class="ml-1.5">
-                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                              clip-rule="evenodd"/>
-                                                    </svg>
-                                                </a>
-                                            </span>
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                            Group: {{ $academicGroups->find($filters['academic_group'])->name }}
+                                            <a href="{{ request()->fullUrlWithQuery(['academic_group' => null]) }}"
+                                               class="ml-1.5">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                          clip-rule="evenodd"/>
+                                                </svg>
+                                            </a>
+                                        </span>
                                         @endif
 
                                         @if($filters['academic_level'])
                                             <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Level: {{ $academicLevels->find($filters['academic_level'])->name }}
-                                                <a href="{{ request()->fullUrlWithQuery(['academic_level' => null]) }}"
-                                                   class="ml-1.5">
-                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                              clip-rule="evenodd"/>
-                                                    </svg>
-                                                </a>
-                                            </span>
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                            Level: {{ $academicLevels->find($filters['academic_level'])->name }}
+                                            <a href="{{ request()->fullUrlWithQuery(['academic_level' => null]) }}"
+                                               class="ml-1.5">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                          clip-rule="evenodd"/>
+                                                </svg>
+                                            </a>
+                                        </span>
                                         @endif
                                     </div>
                                 @endif
@@ -309,36 +327,36 @@
                         <div id="grid-view" class="grid hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                             @foreach ($academicSubjects as $academicSubject)
                                 <div
-                                    class="bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-all duration-200 hover:shadow-lg group">
+                                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-200 hover:shadow-lg group">
                                     <!-- Course Header -->
                                     <div class="p-6">
                                         <div class="flex items-start justify-between mb-4">
                                             <div class="flex-1">
                                                 <!-- Subject hierarchy -->
-                                                <div class="text-sm text-gray-500 mb-2">
-                                        <span class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                            {{ $academicSubject->academicLevel->academicGroup->name }}
-                                        </span>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-xs">
+            {{ $academicSubject->academicLevel->academicGroup->name }}
+        </span>
                                                     <span class="mx-1">•</span>
-                                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                                            {{ $academicSubject->academicLevel->name }}
-                                        </span>
+                                                    <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-2 py-1 rounded text-xs">
+            {{ $academicSubject->academicLevel->name }}
+        </span>
                                                 </div>
 
                                                 <!-- Subject name -->
-                                                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
+                                                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors">
                                                     {{ $academicSubject->name }}
                                                 </h4>
 
                                                 @if($academicSubject->code)
-                                                    <p class="text-sm text-gray-500 mt-1">{{ $academicSubject->code }}</p>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $academicSubject->code }}</p>
                                                 @endif
                                             </div>
 
                                             <!-- Subject icon -->
                                             <div class="ml-3">
                                                 <div
-                                                    class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+                                                    class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-lg flex items-center justify-center">
                                                     <svg class="w-6 h-6 text-white" fill="currentColor"
                                                          viewBox="0 0 20 20">
                                                         <path
@@ -350,7 +368,7 @@
 
                                         <!-- Quick stats -->
                                         <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-                                            <div class="flex items-center text-gray-600">
+                                            <div class="flex items-center text-gray-600 dark:text-gray-400">
                                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
                                                           d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
@@ -360,7 +378,7 @@
                                                 Quizzes
                                             </div>
                                             @can('privileged', $currentTeam)
-                                                <div class="flex items-center text-gray-600">
+                                                <div class="flex items-center text-gray-600 dark:text-gray-400">
                                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd"
                                                               d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -375,7 +393,7 @@
                                         <!-- Action buttons -->
                                         <div class="flex flex-col space-y-2">
                                             <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                               class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                                               class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 text-white text-sm font-medium rounded-md transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
                                                           d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
@@ -386,7 +404,7 @@
 
                                             @can('privileged', $currentTeam)
                                                 <a href="{{ route('examinations.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                                   class="inline-flex items-center justify-center px-4 py-2 border border-primary-600 text-primary-600 hover:bg-primary-50 text-sm font-medium rounded-md transition-colors duration-200">
+                                                   class="inline-flex items-center justify-center px-4 py-2 border border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-sm font-medium rounded-md transition-colors duration-200">
                                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd"
                                                               d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -403,30 +421,30 @@
 
                         <!-- List View -->
                         <div id="list-view"
-                             class="hidden bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-8">
+                             class="hidden bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden mb-8">
                             <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-900">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Course Details
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Statistics
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                     </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     @foreach ($academicSubjects as $academicSubject)
-                                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center">
                                                     <div class="flex-shrink-0 h-10 w-10">
                                                         <div
-                                                            class="h-10 w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+                                                            class="h-10 w-10 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-lg flex items-center justify-center">
                                                             <svg class="w-5 h-5 text-white" fill="currentColor"
                                                                  viewBox="0 0 20 20">
                                                                 <path
@@ -435,30 +453,30 @@
                                                         </div>
                                                     </div>
                                                     <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-900">
+                                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                             {{ $academicSubject->name }}
                                                         </div>
-                                                        <div class="text-sm text-gray-500">
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                        {{ $academicSubject->academicLevel->academicGroup->name }}
-                                                    </span>
+                                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span
+                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                {{ $academicSubject->academicLevel->academicGroup->name }}
+                            </span>
                                                             <span class="mx-1">•</span>
                                                             <span
-                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        {{ $academicSubject->academicLevel->name }}
-                                                    </span>
+                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                {{ $academicSubject->academicLevel->name }}
+                            </span>
                                                             @if($academicSubject->code)
                                                                 <span class="mx-1">•</span>
                                                                 <span
-                                                                    class="text-gray-500">{{ $academicSubject->code }}</span>
+                                                                    class="text-gray-500 dark:text-gray-400">{{ $academicSubject->code }}</span>
                                                             @endif
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                                                     <div class="flex items-center">
                                                         <svg class="w-4 h-4 mr-1" fill="currentColor"
                                                              viewBox="0 0 20 20">
@@ -486,7 +504,7 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div class="flex items-center space-x-3">
                                                     <a href="{{ route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                                       class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200">
+                                                       class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-200">
                                                         <svg class="w-3 h-3 mr-1" fill="currentColor"
                                                              viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
@@ -497,7 +515,7 @@
                                                     </a>
                                                     @can('privileged', $currentTeam)
                                                         <a href="{{ route('examinations.index', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) }}"
-                                                           class="inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded-full text-primary-600 hover:bg-primary-50 transition-colors duration-200">
+                                                           class="inline-flex items-center px-3 py-1.5 border border-primary-600 dark:border-primary-500 text-xs font-medium rounded-full text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-200">
                                                             <svg class="w-3 h-3 mr-1" fill="currentColor"
                                                                  viewBox="0 0 20 20">
                                                                 <path fill-rule="evenodd"
@@ -515,7 +533,6 @@
                                 </table>
                             </div>
                         </div>
-
                         <!-- Enhanced Pagination -->
                         <div class="mt-6 flex items-center justify-between">
                             <div class="text-sm text-gray-500">

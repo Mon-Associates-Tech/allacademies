@@ -31,7 +31,10 @@ class Assignment extends Model
         'status', // 'draft', 'published', 'completed'
         'instructions',
         'total_marks',
-        'questions'
+        'questions',
+        'restrict_navigation',
+        'max_tab_switches',
+        'auto_submit_on_violation',
     ];
 
     protected $casts = [
@@ -39,6 +42,8 @@ class Assignment extends Model
         'ends_at' => 'datetime',
         'is_randomized' => 'boolean',
         'questions' => 'array',
+        'restrict_navigation' => 'boolean',
+        'auto_submit_on_violation' => 'boolean',
     ];
 
     public function structure(){
@@ -171,7 +176,7 @@ class Assignment extends Model
      * If is_randomized is false, returns fixed questions
      * If is_randomized is true, generates random questions from the pool
      */
-    public function generateQuestionsForStudent($studentId = null)
+    public function generateQuestionsForStudentDeprecated($studentId = null)
     {
         if (!$this->questions) {
             return collect();
@@ -289,7 +294,7 @@ class Assignment extends Model
         return $stats;
     }
 
-    private function buildQuestionQuery($type, $difficulty, $topicIds = [], $subtopicIds = [])
+    public function buildQuestionQuery($type, $difficulty, $topicIds = [], $subtopicIds = [])
     {
         $model = match($type) {
             'multiple_choice_question' => MultipleChoiceQuestion::class,
@@ -332,7 +337,7 @@ class Assignment extends Model
         return $query;
     }
 
-    private function getQuestionsByTypeAndIds($type, $ids)
+    public function getQuestionsByTypeAndIds($type, $ids)
     {
         $model = match($type) {
             'multiple_choice_question' => MultipleChoiceQuestion::class,
@@ -344,7 +349,7 @@ class Assignment extends Model
         return $model::whereIn('id', $ids)->get();
     }
 
-    private function getQuestionTypeName($question)
+    public function getQuestionTypeName($question)
     {
         return match(get_class($question)) {
             MultipleChoiceQuestion::class => 'multiple_choice_question',
@@ -368,5 +373,242 @@ class Assignment extends Model
 
     public function subject(){
         return $this->belongsTo(AcademicSubject::class, 'academic_subject_id');
+    }
+
+    /**
+     * Check if this assignment has embedded questions (book-based)
+     * or references to database questions (topic-based)
+     */
+    public function hasEmbeddedQuestions(): bool
+    {
+        if (!$this->questions || !is_array($this->questions)) {
+            return false;
+        }
+
+        foreach ($this->questions as $questionConfig) {
+            // If we find a 'questions' array with full question data, it's embedded
+            if (isset($questionConfig['questions']) && is_array($questionConfig['questions'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate questions for this assignment based on the configuration
+     * Handles both embedded questions and database-referenced questions
+     */
+    public function generateQuestionsForStudent($studentId = null)
+    {
+        if (!$this->questions) {
+            return collect();
+        }
+
+        // Check if this is a book-based assignment with embedded questions
+        if ($this->hasEmbeddedQuestions()) {
+            return $this->getEmbeddedQuestions();
+        }
+
+        // Otherwise, generate from database questions (existing logic)
+        $generatedQuestions = collect();
+
+        foreach ($this->questions as $questionConfig) {
+            $type = $questionConfig['type'];
+            $count = $questionConfig['count'] ?? 1;
+            $difficulty = $questionConfig['difficulty'] ?? 'all';
+            $topicIds = $questionConfig['topic_ids'] ?? [];
+            $subtopicIds = $questionConfig['subtopic_ids'] ?? [];
+            $specificIds = $questionConfig['specific_ids'] ?? [];
+
+            // If specific question IDs are provided and not randomized, use them
+            if (!empty($specificIds) && !$this->is_randomized) {
+                $questions = $this->getQuestionsByTypeAndIds($type, $specificIds);
+                $generatedQuestions = $generatedQuestions->merge($questions);
+                continue;
+            }
+
+            // Generate questions based on criteria
+            $query = $this->buildQuestionQuery($type, $difficulty, $topicIds, $subtopicIds);
+
+            if ($this->is_randomized) {
+                $availableQuestions = $query->get();
+                if ($availableQuestions->count() >= $count) {
+                    $selectedQuestions = $availableQuestions->random($count);
+                } else {
+                    $selectedQuestions = $availableQuestions;
+                }
+            } else {
+                $selectedQuestions = $query->take($count)->get();
+            }
+
+            $generatedQuestions = $generatedQuestions->merge($selectedQuestions);
+        }
+
+        return $generatedQuestions->map(function ($question) {
+            return [
+                'type' => $this->getQuestionTypeName($question),
+                'model' => $question,
+                'points' => $question->score ?? 1,
+                'difficulty_level' => $question->difficulty_level ?? 'medium'
+            ];
+        });
+    }
+
+    /**
+     * Get embedded questions from book-based assignments
+     */
+    public function getEmbeddedQuestions()
+    {
+        $allQuestions = collect();
+
+        foreach ($this->questions as $questionConfig) {
+            if (!isset($questionConfig['questions'])) {
+                continue;
+            }
+
+            $questions = $questionConfig['questions'];
+            $count = $questionConfig['count'] ?? count($questions);
+
+            // If randomized, shuffle and take count
+            if ($this->is_randomized && count($questions) > $count) {
+                shuffle($questions);
+                $questions = array_slice($questions, 0, $count);
+            }
+
+            // Format questions for consistency
+            foreach ($questions as $question) {
+                $normalized = [
+                    'id' => $question['id'] ?? uniqid('embedded_'),
+                    'type' => $this->normalizeQuestionType($questionConfig['type']),
+                    'question' => $question['question'] ?? '',
+                    'points' => $question['points'] ?? 1,
+                    'difficulty_level' => $question['difficulty'] ?? 'medium',
+                    'explanation' => $question['explanation'] ?? null,
+                    'learning_objective' => $question['learning_objective'] ?? null,
+                    'is_embedded' => true,
+                ];
+
+                // Handle options and convert text-based correct answer to letter
+                if (isset($question['options'])) {
+                    $optionsData = $this->normalizeQuestionOptionsWithAnswer(
+                        $question['options'],
+                        $question['correct_answer'] ?? $question['answer'] ?? null
+                    );
+
+                    $normalized['options'] = $optionsData['options'];
+                    $normalized['answer'] = $optionsData['answer'];
+                } else {
+                    $normalized['options'] = $this->extractOptions($question);
+                    $normalized['answer'] = $question['correct_answer'] ?? $question['answer'] ?? null;
+                }
+
+                $allQuestions->push($normalized);
+            }
+        }
+
+        return $allQuestions;
+    }
+
+    /**
+     * Normalize question options to use A-E indexing and convert text answer to letter
+     */
+    public function normalizeQuestionOptionsWithAnswer(array $options, $correctAnswerText): array
+    {
+        $letters = ['A', 'B', 'C', 'D', 'E'];
+        $normalized = [];
+        $correctAnswerLetter = null;
+
+        foreach ($options as $index => $optionText) {
+            // If already using letter indices, keep them
+            if (is_string($index) && in_array($index, $letters)) {
+                $letterIndex = $index;
+            } else {
+                // Convert numeric index to letter
+                $letterIndex = is_numeric($index) ? ($letters[$index] ?? 'A') : 'A';
+            }
+
+            $normalized[$letterIndex] = $optionText;
+
+            // Check if this option matches the correct answer text
+            if ($correctAnswerText && strcasecmp(trim($optionText), trim($correctAnswerText)) === 0) {
+                $correctAnswerLetter = $letterIndex;
+            }
+        }
+
+        // If correct answer is already a letter, use it
+        if ($correctAnswerText && in_array(strtoupper($correctAnswerText), $letters)) {
+            $correctAnswerLetter = strtoupper($correctAnswerText);
+        }
+
+        // Log warning if we couldn't match the text to a letter
+        if (!$correctAnswerLetter && $correctAnswerText) {
+            \Log::warning('Could not match correct answer text to option', [
+                'correct_answer_text' => $correctAnswerText,
+                'options' => $normalized
+            ]);
+
+            // Fallback: if correctAnswerText is numeric, use it as index
+            if (is_numeric($correctAnswerText)) {
+                $correctAnswerLetter = $letters[$correctAnswerText] ?? null;
+            }
+        }
+
+        return [
+            'options' => $normalized,
+            'answer' => $correctAnswerLetter
+        ];
+    }
+
+    /**
+     * Normalize question options to use A-E indexing (without answer conversion)
+     */
+    public function normalizeQuestionOptions(array $options): array
+    {
+        $letters = ['A', 'B', 'C', 'D', 'E'];
+        $normalized = [];
+
+        foreach ($options as $index => $optionText) {
+            // If already using letter indices, keep them
+            if (is_string($index) && in_array($index, $letters)) {
+                $normalized[$index] = $optionText;
+            } else {
+                // Convert numeric index to letter
+                $letterIndex = is_numeric($index) ? ($letters[$index] ?? 'A') : 'A';
+                $normalized[$letterIndex] = $optionText;
+            }
+        }
+
+        return $normalized;
+    }
+    /**
+     * Extract options from embedded question
+     */
+    public function extractOptions($question): ?array
+    {
+        // For multiple choice questions
+        if (isset($question['options'])) {
+            return $this->normalizeQuestionOptions($question['options']);
+        }
+
+        // For true/false questions
+        if (isset($question['type']) && ($question['type'] === 'true_false' || $question['type'] === 'true_or_false_question')) {
+            return ['A' => 'True', 'B' => 'False'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalize question type names
+     */
+    public function normalizeQuestionType($type): string
+    {
+        return match($type) {
+            'multiple_choice', 'multiple_choice_question' => 'multiple_choice_question',
+            'true_false', 'true_or_false_question' => 'true_or_false_question',
+            'essay', 'essay_question' => 'essay_question',
+            default => $type
+        };
     }
 }

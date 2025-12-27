@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Services\NewsletterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -10,11 +11,6 @@ use App\Mail\ContactFormMail;
 
 class ContactController extends Controller
 {
-    public function show()
-    {
-        return view('contact');
-    }
-
     public function submit(Request $request)
     {
 
@@ -28,17 +24,17 @@ class ContactController extends Controller
             'message' => 'required|string|max:2000',
             'newsletter' => ['in:true,false,1,0']
         ]);
+        $validated['newsletter'] = $validated['newsletter'] ?? false;
+
 
         try {
-            // Send email to admin
 
             Mail::to(config('company.email', 'allacademies2023@gmail.com'))
                 ->send(new ContactFormMail($validated));
 
-            // If newsletter subscription is requested, handle it here
+
             if ($validated['newsletter']) {
-                // Add to newsletter subscription logic
-                // This could be added to a newsletter service or database
+                app(NewsletterService::class)->subscribe($validated['email']);
             }
 
             if ($request->wantsJson()) {

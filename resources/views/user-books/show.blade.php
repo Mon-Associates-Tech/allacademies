@@ -1,4 +1,7 @@
 <x-layouts.app>
+        @if(auth()->check() && !$has_token_subscription ?? false)
+        <x-alert.token-subscription-banner />
+    @else
     @php
         $cover = $userBook->cover_image ? asset('storage/' . $userBook->cover_image) : asset('images/book-cover.png');
     @endphp
@@ -158,6 +161,7 @@
                             <div class="mt-6 space-y-3">
                                 <!-- Primary Action -->
                                 @if($userBook->content_url)
+                                <div class="flex flex-col space-y-3">
                                     <x-button.primary
                                         onclick="Livewire.dispatch('openUserBookPDFReader', {bookId: {{ $userBook->id }}})"
                                         class="px-4 py-3 flex w-full text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
@@ -169,6 +173,29 @@
                                         </svg>
                                         <span>Read Now</span>
                                     </x-button.primary>
+
+                                        <a href="{{ route('learning.quiz') }}?bookId={{$userBook->id}}"
+                                       class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        <svg class="w-5 h-5 mr-2 text-blue-500 group-hover:scale-110 transition-transform"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                        </svg>
+                                        <span class="font-medium">Take Quiz</span>
+                                    </a>
+
+                                    @if($userBook->user_id === auth()->id())
+                                        <a href="{{ route('user-books.manage-shares', $userBook) }}"
+                                           class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                                            </svg>
+                                            Manage Sharing
+                                        </a>
+                                    @endif
+                                </div>
+
                                 @endif
 
                                 <!-- Secondary Actions Grid -->
@@ -610,32 +637,75 @@
                                                     </div>
 
                                                     <!-- Audio Player -->
-                                                    @if($userBook->single_audio)
-                                                        <div class="mb-6">
-                                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
-                                                            <audio controls class="w-full">
-                                                                <source src="{{ $userBook->single_audio }}" type="audio/mpeg">
-                                                                Your browser does not support the audio element.
-                                                            </audio>
-                                                        </div>
-                                                    @endif
+                                                  {{-- Full Book Audio (if available) --}}
 
-                                                    @if($userBook->chapter_audios && count($userBook->chapter_audios) > 0)
-                                                        <div>
-                                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chapter Audios</h4>
-                                                            <div class="space-y-3">
-                                                                @foreach($userBook->chapter_audios as $index => $audioUrl)
-                                                                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                                        <span class="text-gray-700 dark:text-gray-300">Chapter {{ $index + 1 }}</span>
-                                                                        <audio controls class="w-64">
-                                                                            <source src="{{ $audioUrl }}" type="audio/mpeg">
-                                                                            Your browser does not support the audio element.
-                                                                        </audio>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        </div>
-                                                    @endif
+                                                  {{-- Debug: see what chapter_audios contains --}}
+
+@if($userBook->single_audio)
+    <div class="mb-6">
+        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
+        <audio controls class="w-full">
+            <source src="{{ $userBook->single_audio }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+@endif
+
+{{-- Chapter Audios (multi-volume) --}}
+@if($userBook->chapter_audios && count($userBook->chapter_audios) > 0)
+    <div>
+        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chapter Audios</h4>
+        <div class="space-y-3">
+            @foreach($userBook->chapter_audios as $index => $audioUrl)
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span class="text-gray-700 dark:text-gray-300">Volume {{ $index + 1 }}</span>
+                    <audio controls class="w-64">
+                        <source src="{{ $audioUrl }}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
+                                                    <!-- Audio Player -->
+{{-- @if($userBook->single_audio)
+    <div class="mb-6">
+        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Full Book Audio</h4>
+        <audio controls class="w-full">
+            <source src="{{ Storage::url($userBook->single_audio) }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+@endif
+
+@if(!empty($userBook->chapter_audios))
+    @php
+        $chapterAudios = is_array($userBook->chapter_audios)
+            ? $userBook->chapter_audios
+            : json_decode($userBook->chapter_audios, true);
+    @endphp
+
+    @if(!empty($chapterAudios))
+        <div>
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chapter Audios</h4>
+            <div class="space-y-3">
+                @foreach($chapterAudios as $index => $audioUrl)
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <span class="text-gray-700 dark:text-gray-300">Chapter {{ $index + 1 }}</span>
+                        <audio controls class="w-64">
+                            <source src="{{ asset('storage/' . ltrim($audioUrl, '/')) }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+@endif --}}
+
+
                                                 </div>
                                             @endif
 
@@ -805,5 +875,6 @@
 
         @livewire('user-books.user-book-p-d-f-reader', ['bookId' => $userBook->id, 'config' => ['book' => $userBook]])
     </div>
+    @endif
 </x-layouts.app>
 

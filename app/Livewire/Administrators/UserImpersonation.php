@@ -29,24 +29,7 @@ class UserImpersonation extends Component
 
     public function impersonateUser($userId)
     {
-        $user = User::findOrFail($userId);
-
-        // Check if current user can impersonate
-        if (!Auth::user()->canImpersonate()) {
-            session()->flash('error', 'You do not have permission to impersonate users.');
-            return;
-        }
-
-        // Check if target user can be impersonated
-        if (!$user->canBeImpersonated()) {
-            session()->flash('error', 'This user cannot be impersonated.');
-            return;
-        }
-
-        // Store the current user ID and redirect URL before impersonation
-        session()->put('impersonate_redirect_to', route('dashboard'));
-
-        return redirect()->route('impersonate', $userId);
+        impersonateUser($userId);
     }
 
     public function stopImpersonation()

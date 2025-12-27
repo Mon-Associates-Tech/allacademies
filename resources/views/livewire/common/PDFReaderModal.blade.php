@@ -1,12 +1,12 @@
 <div>
     @if($isVisible && $hasAccess)
-        <div class="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center"
+        <div class="fixed inset-0 z-40 bg-black bg-opacity-95 flex items-center justify-center"
              x-data="pdfReaderAlpine()"
              x-init="init()"
              @keydown.escape="handleEscape()"
              @fullscreenchange="handleFullscreenChange()">
 
-            <div class="w-full h-full max-w-7xl mx-auto p-4t flex flex-col"
+            <div class="w-full h-full max-w-full mx-auto p-4t flex flex-col"
                  :class="{ 'max-w-none p-0': isFullscreen }">
 
                 <!-- Reader Header -->
@@ -158,8 +158,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <!-- PDF.js reader will be injected here -->
                 </div>
 
                 <!-- Mobile Controls -->

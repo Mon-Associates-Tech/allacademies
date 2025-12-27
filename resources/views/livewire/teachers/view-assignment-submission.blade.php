@@ -7,10 +7,10 @@
                     <div class="flex-1 min-w-0">
 
                         <nav class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            <a href="{{ route('teacher.assignments.index') }}"
+                            <a href="{{ route('teachers.assignments.index') }}"
                                class="hover:text-gray-700 dark:hover:text-gray-300">Assignments</a>
                             <span>/</span>
-                            <a href="{{ route('teacher.assignments.show', ['assignment' => $assignment]) }}"
+                            <a href="{{ route('teachers.assignments.show', ['assignment' => $assignment]) }}"
 
                                class="hover:text-gray-700 dark:hover:text-gray-300">{{ $assignment->title }}</a>
                             <span>/</span>

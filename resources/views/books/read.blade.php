@@ -17,17 +17,3 @@
             </iframe>
     </section>
 </x-layouts.app>
-
-{{--<x-layouts.app>--}}
-{{--    <div class="min-h-screen bg-gray-100">--}}
-{{--        <livewire:common.p-d-f-reader-component :book-id="$book->id" />--}}
-{{--    </div>--}}
-
-{{--    <script>--}}
-{{--        // Auto-open the reader when page loads--}}
-{{--        document.addEventListener('DOMContentLoaded', function() {--}}
-{{--            window.Livewire.dispatch('openPDFReader', {{ $book->id }});--}}
-
-{{--        });--}}
-{{--    </script>--}}
-{{--</x-layouts.app>--}}

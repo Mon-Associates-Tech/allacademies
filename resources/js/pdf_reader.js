@@ -89,6 +89,20 @@ container.innerHTML = `
                 ` : ''}
             </div>
 
+            <div>
+              <button
+
+                                        onclick="window.Modal.open('book-notes', {})"
+                                        class="flex items-center justify-center px-3 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none"
+                                             stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium">Notes</span>
+                                    </button>
+</div>
+
             <!-- Page Navigation -->
             <div class="flex items-center space-x-2">
                 <button id="prev-page" class="px-2 py-1 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">

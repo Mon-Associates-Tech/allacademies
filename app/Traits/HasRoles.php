@@ -55,52 +55,57 @@ trait HasRoles
         return $this->attributes['role'] ?? null;
     }
 
+
     /**
      * Get all role names for this user
      */
     public function getRoleNames(): array
     {
+        $roleNames = [];
+    
+        // Load all roles relationships without filtering
         if (!$this->relationLoaded('roles')) {
             $this->load('roles');
         }
+    
+        // Get all role names from the relationship
+        $roleNames = $this->roles()
+            ->get()
+            ->pluck('name')
+            ->toArray();
 
-        $roleNames = $this->roles->pluck('name')->toArray();
 
-        // Also include a primary role if it exists and isn't already in the list
-        $primaryRoleName = null;
+    
+        // Add primary role if it exists
         if ($this->role_id) {
             if (!$this->relationLoaded('primaryRole')) {
                 $this->load('primaryRole');
             }
-
-            if ($this->primaryRole) {
-                $primaryRoleName = $this->primaryRole->name;
+    
+            if ($this->primaryRole && !in_array($this->primaryRole->name, $roleNames)) {
+                $roleNames[] = $this->primaryRole->name;
             }
         }
+    
+    if (isset($this->attributes['role'])) {
+        $stringRole = $this->attributes['role'] instanceof UserRole
+            ? $this->attributes['role']->value
+            : $this->attributes['role'];
 
-        // Add string role as fallback, handling enum value
-        $stringRole = null;
-        if (isset($this->attributes['role'])) {
-            $stringRole = $this->attributes['role'] instanceof UserRole
-                ? $this->attributes['role']->value
-                : $this->attributes['role'];
+        if ($stringRole && !in_array($stringRole, $roleNames)) {
+            $roleNames[] = $stringRole;
         }
-
-        $allRoles = array_filter(array_unique(array_merge(
-            $roleNames,
-            $primaryRoleName ? [$primaryRoleName] : [],
-            $stringRole ? [$stringRole] : $stringRole
-        )));
-
-        return array_values($allRoles);
     }
+
+    return array_values(array_filter($roleNames));
+}
 
     /**
      * Check if user has a specific role (checks all possible role sources)
      */
     public function hasRole(string $roleName): bool
     {
-        return in_array($roleName, $this->getRoleNames(), true);
+        return in_array($roleName, $this->getRoleNames());
     }
 
     /**

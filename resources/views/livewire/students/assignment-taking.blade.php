@@ -499,4 +499,76 @@
             });
         </script>
     @endif
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                @if($restrictNavigation && $step === 'taking')
+                let tabSwitchCount = {{ $tabSwitchCount }};
+                let isVisible = true;
+
+                // Detect tab/window visibility changes
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden && isVisible) {
+                        isVisible = false;
+                        tabSwitchCount++;
+
+                        // Call Livewire method to record the switch
+                        @this.call('recordTabSwitch');
+                    } else if (!document.hidden) {
+                        isVisible = true;
+                    }
+                });
+
+                // Detect focus loss
+                window.addEventListener('blur', function() {
+                    if (isVisible) {
+                        // Window lost focus but tab is still visible
+                        setTimeout(function() {
+                            if (!document.hasFocus()) {
+                                @this.call('recordTabSwitch');
+                            }
+                        }, 100);
+                    }
+                });
+
+                // Prevent right-click
+                document.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    alert('Right-click is disabled during the assignment.');
+                });
+
+                // Warn before leaving page
+                window.addEventListener('beforeunload', function(e) {
+                    e.preventDefault();
+                    e.returnValue = 'You have an assignment in progress. Are you sure you want to leave? This may count as a violation.';
+                    return e.returnValue;
+                });
+
+                // Disable certain keyboard shortcuts
+                document.addEventListener('keydown', function(e) {
+                    // Prevent Alt+Tab detection (limited)
+                    if (e.altKey && e.key === 'Tab') {
+                        e.preventDefault();
+                    }
+
+                    // Prevent F12 (DevTools)
+                    if (e.key === 'F12') {
+                        e.preventDefault();
+                        alert('Developer tools are disabled during the assignment.');
+                    }
+
+                    // Prevent Ctrl+Shift+I/J/C (DevTools)
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
+                        e.preventDefault();
+                        alert('This shortcut is disabled during the assignment.');
+                    }
+                });
+                @endif
+            });
+
+            // Listen for violation warnings
+            window.addEventListener('show-violation-warning', event => {
+                alert(event.detail.message);
+            });
+        </script>
 </div>

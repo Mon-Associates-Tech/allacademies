@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityTrailController;
+use App\Http\Controllers\Admin\SchoolPaymentController;
 use App\Http\Controllers\BookController;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
@@ -20,9 +21,10 @@ use App\Livewire\Common\Messages\MessageEdit;
 use App\Livewire\Common\Messages\MessageIndex;
 use App\Livewire\Common\Messages\MessageShow;
 use App\Livewire\School\SchoolDetails;
-
 use App\Livewire\Changelogs\ChangelogList;
 use App\Livewire\Changelogs\CreateChangelog;
+use App\Livewire\SchoolSettings\LetterheadSettings;
+use Illuminate\Support\Facades\Route;
 
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
@@ -89,4 +91,11 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('students/{student}/documents', \App\Livewire\Students\DocumentGenerator::class)
         ->name('students.documents');
 
+    Route::get('/school-settings/letterhead', LetterheadSettings::class)
+        ->name('school-settings.letterhead');
+
+    // School Payments/Transactions
+    Route::get('/transactions', [SchoolPaymentController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{payment}', [SchoolPaymentController::class, 'show'])->name('transactions.show');
+    Route::post('/transactions/export', [SchoolPaymentController::class, 'export'])->name('transactions.export');
 });

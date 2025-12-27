@@ -1,8 +1,7 @@
 <section>
-
     <div class="space-y-6">
         <!-- Header Section -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div class="bg-white border border-gray-200 rounded-t-xl shadow-sm">
             <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-xl">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
@@ -174,6 +173,7 @@
                                                   label="Duration (Minutes)"
                                                   type="text"
                                                   required
+                                                  info-position="bottom"
                                                   info="The duration of the examination"
                                                   placeholder="e.g., 120"
                                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pr-16 transition-colors duration-200"></x-form.input>

@@ -2,12 +2,17 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\AcademicSubject as Subject;
+use App\Models\Assessment;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\AcademicSubject as Subject;
+use App\Models\Student;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Log;
 
 class PerformanceOverview extends Component
 {
@@ -30,27 +35,14 @@ class PerformanceOverview extends Component
         $this->generateInsights();
     }
 
-    public function updatedSelectedPeriod()
-    {
-        $this->loadPerformanceData();
-        $this->generateInsights();
-        $this->dispatch('periodChanged', $this->selectedPeriod);
-    }
-
-    public function updatedSelectedSubject()
-    {
-        $this->loadPerformanceData();
-        $this->generateInsights();
-        $this->dispatch('subjectChanged', $this->selectedSubject);
-    }
-
     public function loadSubjects()
     {
-        $student = Auth::user()->student;
+        $student = getStudent(auth()->id(), withoutScopes: true);
+
         if (!$student) {
             $this->subjects = [];
-            return;
         }
+
 
         // Get subjects that have assignment submissions for this student
         $subjectsWithSubmissions = AssignmentSubmission::where('student_id', $student->id)
@@ -77,40 +69,111 @@ class PerformanceOverview extends Component
 
     public function loadPerformanceData()
     {
-        $student = Auth::user()->student;
-        if (!$student) return;
+        try {
+            $student = Auth::user()->student;
 
-        // Get all assignments targeted to this student
-        $allAssignments = $this->getStudentAssignments($student);
+            if (!$student) {
+                $student = Student::withoutGlobalScopes()
+                    ->where('user_id', Auth::id())
+                    ->first();
+            }
 
-        // Get submissions for these assignments
-        $submissions = AssignmentSubmission::with(['assignment.academicSubject', 'assignment'])
-            ->where('student_id', $student->id)
-            ->whereIn('assignment_id', $allAssignments->pluck('id'))
-            ->get();
+            if (!$student) {
+                Log::warning('No student found in loadPerformanceData', ['user_id' => Auth::id()]);
+                $this->performanceData = [];
+                $this->overallStats = $this->getEmptyStats();
+                $this->trendData = [];
+                return;
+            }
 
-        // Apply period filter to submissions
-        if ($this->selectedPeriod !== 'all') {
-            $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
-            $submissions = $submissions->where('submitted_at', '>=', $startDate);
+            // Get all assignments targeted to this student
+            $allAssignments = $this->getStudentAssignments($student);
+
+            Log::info('Assignments loaded', [
+                'count' => $allAssignments->count(),
+                'student_id' => $student->id
+            ]);
+
+            // Get submissions for these assignments
+            $submissions = AssignmentSubmission::with(['assignment.academicSubject'])
+                ->where('student_id', $student->id)
+                ->whereIn('assignment_id', $allAssignments->pluck('id'))
+                ->whereIn('status', ['graded', 'submitted', 'in_progress'])
+                ->get();
+
+            Log::info('Submissions loaded', [
+                'total' => $submissions->count(),
+                'graded' => $submissions->where('status', 'graded')->count(),
+                'student_id' => $student->id
+            ]);
+
+            // Apply period filter to submissions
+            if ($this->selectedPeriod !== 'all') {
+                $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
+                if ($startDate) {
+                    $submissions = $submissions->filter(function ($submission) use ($startDate) {
+                        return $submission->submitted_at && $submission->submitted_at >= $startDate;
+                    });
+                }
+            }
+
+            // Apply subject filter
+            if ($this->selectedSubject) {
+                $submissions = $submissions->filter(function ($submission) {
+                    return $submission->assignment
+                        && $submission->assignment->academic_subject_id == $this->selectedSubject;
+                });
+
+                // Filter assignments too
+                $allAssignments = $allAssignments->filter(function ($assignment) {
+                    return $assignment->academic_subject_id == $this->selectedSubject;
+                });
+            }
+
+            // Calculate metrics only for graded submissions
+            $gradedSubmissions = $submissions->where('status', 'graded');
+
+            Log::info('Processing metrics', [
+                'graded_count' => $gradedSubmissions->count(),
+                'total_assignments' => $allAssignments->count()
+            ]);
+
+            $this->calculatePerformanceMetrics($gradedSubmissions, []);
+            $this->calculateOverallStats($submissions, [], $allAssignments);
+            $this->calculateTrendData($gradedSubmissions, []);
+
+            Log::info('Performance data calculated', [
+                'performance_items' => count($this->performanceData),
+                'has_overall_stats' => !empty($this->overallStats),
+                'trend_items' => count($this->trendData)
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error loading performance data', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->performanceData = [];
+            $this->overallStats = $this->getEmptyStats();
+            $this->trendData = [];
+
+            session()->flash('error', 'Unable to load performance data. Please try again.');
         }
+    }
 
-        // Apply subject filter
-        if ($this->selectedSubject) {
-            $submissions = $submissions->filter(function ($submission) {
-                return $submission->assignment->academic_subject_id == $this->selectedSubject;
-            });
-
-            // Filter assignments too
-            $allAssignments = $allAssignments->where('academic_subject_id', $this->selectedSubject);
-        }
-
-        // Calculate metrics only for graded submissions
-        $gradedSubmissions = $submissions->where('status', 'graded');
-
-        $this->calculatePerformanceMetrics($gradedSubmissions);
-        $this->calculateOverallStats($submissions, $allAssignments);
-        $this->calculateTrendData($gradedSubmissions);
+    private function getEmptyStats(): array
+    {
+        return [
+            'total_assignments' => 0,
+            'average_percentage' => 0,
+            'overall_grade' => 'N/A',
+            'completed_assignments' => 0,
+            'pending_assignments' => 0,
+            'completion_rate' => 0,
+            'study_streak' => 0,
+            'total_subjects' => 0,
+        ];
     }
 
     /**
@@ -143,45 +206,6 @@ class PerformanceOverview extends Component
             ->get();
     }
 
-    /**
-     * Load upcoming and pending assignments for the student
-     */
-    private function loadUpcomingAndPendingAssignments($allAssignments, $submissions)
-    {
-        $submittedAssignmentIds = $submissions->pluck('assignment_id')->unique();
-
-        // Upcoming assignments (not started, starts in the future)
-        $this->upcomingAssignments = $allAssignments
-            ->whereNotIn('id', $submittedAssignmentIds)
-            ->where('starts_at', '>', now())
-            ->sortBy('starts_at')
-            ->take(5)
-            ->values()
-            ->toArray();
-
-        // Pending assignments (available now, not completed)
-        $this->pendingAssignments = $allAssignments
-            ->filter(function ($assignment) use ($submissions) {
-                $submission = $submissions->firstWhere('assignment_id', $assignment->id);
-
-                return $assignment->starts_at <= now()
-                    && $assignment->ends_at > now()
-                    && (!$submission || !in_array($submission->status, ['graded', 'submitted']));
-            })
-            ->sortBy('ends_at')
-            ->take(5)
-            ->map(function ($assignment) use ($submissions) {
-                $submission = $submissions->firstWhere('assignment_id', $assignment->id);
-
-                return [
-                    'assignment' => $assignment,
-                    'status' => $submission ? $submission->status : 'not_started',
-                    'time_remaining' => now()->diffInHours($assignment->ends_at),
-                ];
-            })
-            ->values()
-            ->toArray();
-    }
     private function getStartDateForPeriod($period)
     {
         return match ($period) {
@@ -193,161 +217,264 @@ class PerformanceOverview extends Component
         };
     }
 
-    private function calculatePerformanceMetrics($submissions)
+    private function calculatePerformanceMetrics($submissions, $assessments = [])
     {
-        if ($submissions->isEmpty()) {
-            $this->performanceData = [];
-            return;
-        }
+        try {
+            $allData = collect();
 
-        $this->performanceData = $submissions
-            ->groupBy(function ($submission) {
-                return $submission->assignment->academic_subject_id;
-            })
-            ->map(function ($group, $subjectId) {
-                $subject = $group->first()->assignment->academicSubject;
-                $subjectName = $subject ? $subject->name : 'Unknown Subject';
+            // Add submissions data
+            foreach ($submissions as $submission) {
+                if (!$submission->assignment) {
+                    Log::warning('Submission missing assignment', ['submission_id' => $submission->id]);
+                    continue;
+                }
 
-                // Filter out submissions with null scores
-                $validSubmissions = $group->filter(function($submission) {
-                    return $submission->score !== null && $submission->total_marks !== null && $submission->total_marks > 0;
-                });
+                if ($submission->score !== null && $submission->total_marks > 0) {
+                    $allData->push([
+                        'subject_id' => $submission->assignment->academic_subject_id,
+                        'subject_name' => $submission->assignment->academicSubject?->name ?? 'Unknown',
+                        'score' => $submission->score,
+                        'max_score' => $submission->total_marks,
+                        'date' => $submission->submitted_at ?? now(),
+                        'type' => 'assignment'
+                    ]);
+                }
+            }
 
-                if ($validSubmissions->isEmpty()) {
+            // Add assessments data
+            $assessmentsCollection = is_array($assessments) ? collect($assessments) : collect();
+            foreach ($assessmentsCollection as $assessment) {
+                if ($assessment->score !== null && $assessment->max_score > 0) {
+                    $allData->push([
+                        'subject_id' => $assessment->academic_subject_id,
+                        'subject_name' => $assessment->academicSubject?->name ?? 'Unknown',
+                        'score' => $assessment->score,
+                        'max_score' => $assessment->max_score,
+                        'date' => $assessment->created_at ?? now(),
+                        'type' => 'assessment'
+                    ]);
+                }
+            }
+
+            Log::info('Performance metrics data collected', [
+                'total_items' => $allData->count(),
+                'subjects' => $allData->pluck('subject_id')->unique()->count()
+            ]);
+
+            if ($allData->isEmpty()) {
+                Log::info('No performance data to display');
+                $this->performanceData = [];
+                return;
+            }
+
+            $this->performanceData = $allData
+                ->groupBy('subject_id')
+                ->map(function ($group) {
+                    $subjectName = $group->first()['subject_name'];
+
+                    $validItems = $group->filter(function ($item) {
+                        return $item['score'] !== null && $item['max_score'] > 0;
+                    });
+
+                    if ($validItems->isEmpty()) {
+                        return null; // Filter out later
+                    }
+
+                    $scores = $validItems->map(function ($item) {
+                        return ($item['score'] / $item['max_score']) * 100;
+                    });
+
+                    $totalScore = $validItems->sum('score');
+                    $totalMaxScore = $validItems->sum('max_score');
+                    $averagePercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
+
+                    // Calculate trend
+                    $sortedItems = $validItems->sortByDesc('date');
+                    $recent = $sortedItems->take(3);
+                    $previous = $sortedItems->skip(3)->take(3);
+
+                    $recentAvg = $recent->count() > 0 ? $recent->map(function ($item) {
+                        return ($item['score'] / $item['max_score']) * 100;
+                    })->avg() : 0;
+
+                    $previousAvg = $previous->count() > 0 ? $previous->map(function ($item) {
+                        return ($item['score'] / $item['max_score']) * 100;
+                    })->avg() : 0;
+
+                    $trend = $recentAvg > $previousAvg ? 'up' : ($recentAvg < $previousAvg ? 'down' : 'stable');
+
                     return [
                         'subject' => $subjectName,
                         'total_assignments' => $group->count(),
-                        'average_score' => 0,
-                        'highest_score' => 0,
-                        'lowest_score' => 0,
-                        'percentage' => 0,
-                        'grade' => 'N/A',
-                        'trend' => 'stable',
-                        'recent_performance' => 0,
-                        'improvement' => 0,
+                        'average_score' => round($scores->avg(), 2),
+                        'highest_score' => round($scores->max(), 2),
+                        'lowest_score' => round($scores->min(), 2),
+                        'percentage' => round($averagePercentage, 2),
+                        'grade' => $this->calculateGrade($averagePercentage),
+                        'trend' => $trend,
+                        'recent_performance' => round($recentAvg, 2),
+                        'improvement' => round($recentAvg - $previousAvg, 2),
                     ];
+                })
+                ->filter() // Remove nulls
+                ->sortByDesc('percentage')
+                ->values()
+                ->toArray();
+
+            Log::info('Performance metrics calculated', [
+                'subjects_count' => count($this->performanceData)
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error calculating performance metrics', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->performanceData = [];
+        }
+    }
+
+    private function calculateGrade($percentage)
+    {
+        return match (true) {
+            $percentage >= 97 => 'A+',
+            $percentage >= 93 => 'A',
+            $percentage >= 90 => 'A-',
+            $percentage >= 87 => 'B+',
+            $percentage >= 83 => 'B',
+            $percentage >= 80 => 'B-',
+            $percentage >= 77 => 'C+',
+            $percentage >= 73 => 'C',
+            $percentage >= 70 => 'C-',
+            $percentage >= 67 => 'D+',
+            $percentage >= 65 => 'D',
+            default => 'F',
+        };
+    }
+
+    private function calculateOverallStats($submissions, $assessments, $allAssignments)
+    {
+        try {
+            $student = Auth::user()->student;
+
+            if (!$student) {
+                $student = Student::withoutGlobalScopes()
+                    ->where('user_id', Auth::id())
+                    ->first();
+            }
+
+            if (!$student) {
+                $this->overallStats = $this->getEmptyStats();
+                return;
+            }
+
+            // Convert collections properly
+            $submissionsCollection = $submissions instanceof Collection
+                ? $submissions
+                : collect($submissions);
+
+            $assessmentsCollection = is_array($assessments)
+                ? collect($assessments)
+                : ($assessments instanceof Collection ? $assessments : collect());
+
+            $assignmentsCollection = $allAssignments instanceof Collection
+                ? $allAssignments
+                : collect($allAssignments);
+
+            // Apply period filter to assignments
+            if ($this->selectedPeriod !== 'all') {
+                $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
+                if ($startDate) {
+                    $assignmentsCollection = $assignmentsCollection->filter(function ($assignment) use ($startDate) {
+                        return $assignment->starts_at && $assignment->starts_at >= $startDate;
+                    });
                 }
+            }
 
-                $scores = $validSubmissions->pluck('score');
-                $totalMarks = $validSubmissions->pluck('total_marks');
+            $totalItems = $assignmentsCollection->count() + $assessmentsCollection->count();
 
-                $totalScore = $scores->sum();
-                $totalMaxScore = $totalMarks->sum();
-                $averagePercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
+            // Count graded items
+            $gradedSubmissions = $submissionsCollection->where('status', 'graded');
+            $gradedAssessments = $assessmentsCollection->whereIn('status', [
+                Assessment::STATUS_COMPLETED,
+                Assessment::STATUS_GRADED
+            ]);
 
-                // Calculate trend (compare last 3 submissions with previous 3)
-                $sortedSubmissions = $validSubmissions->sortByDesc('submitted_at');
-                $recent = $sortedSubmissions->take(3);
-                $previous = $sortedSubmissions->skip(3)->take(3);
+            $totalGraded = $gradedSubmissions->count() + $gradedAssessments->count();
 
-                $recentAvg = $recent->count() > 0 ? $recent->avg(function($s) {
-                    return $s->total_marks > 0 ? ($s->score / $s->total_marks) * 100 : 0;
-                }) : 0;
+            // Combine all graded items for statistics
+            $allGradedData = collect();
 
-                $previousAvg = $previous->count() > 0 ? $previous->avg(function($s) {
-                    return $s->total_marks > 0 ? ($s->score / $s->total_marks) * 100 : 0;
-                }) : 0;
+            foreach ($gradedSubmissions as $submission) {
+                if ($submission->score !== null && $submission->total_marks > 0 && $submission->assignment) {
+                    $allGradedData->push([
+                        'score' => $submission->score,
+                        'max_score' => $submission->total_marks,
+                        'date' => $submission->submitted_at ?? now(),
+                        'subject_id' => $submission->assignment->academic_subject_id
+                    ]);
+                }
+            }
 
-                $trend = $recentAvg > $previousAvg ? 'up' : ($recentAvg < $previousAvg ? 'down' : 'stable');
+            foreach ($gradedAssessments as $assessment) {
+                if ($assessment->score !== null && $assessment->max_score > 0) {
+                    $allGradedData->push([
+                        'score' => $assessment->score,
+                        'max_score' => $assessment->max_score,
+                        'date' => $assessment->created_at ?? now(),
+                        'subject_id' => $assessment->academic_subject_id
+                    ]);
+                }
+            }
 
-                return [
-                    'subject' => $subjectName,
-                    'total_assignments' => $group->count(),
-                    'average_score' => round($scores->avg(), 2),
-                    'highest_score' => $scores->max(),
-                    'lowest_score' => $scores->min(),
-                    'percentage' => round($averagePercentage, 2),
-                    'grade' => $this->calculateGrade($averagePercentage),
-                    'trend' => $trend,
-                    'recent_performance' => round($recentAvg, 2),
-                    'improvement' => round($recentAvg - $previousAvg, 2),
+            if ($allGradedData->isEmpty()) {
+                $this->overallStats = [
+                    'total_assignments' => $totalItems,
+                    'available_assignments' => $assignmentsCollection->filter(function ($a) {
+                        return $a->ends_at && $a->ends_at > now();
+                    })->count(),
+                    'average_percentage' => 0,
+                    'overall_grade' => 'N/A',
+                    'completed_assignments' => $totalGraded,
+                    'submitted_assignments' => $submissionsCollection->whereIn('status', ['submitted', 'in_progress'])->count(),
+                    'pending_assignments' => max(0, $totalItems - $totalGraded),
+                    'completion_rate' => $totalItems > 0 ? round(($totalGraded / $totalItems) * 100, 2) : 0,
+                    'study_streak' => $this->calculateStudyStreak($student),
+                    'total_subjects' => 0,
                 ];
-            })
-            ->sortByDesc('percentage')
-            ->values()
-            ->toArray();
-    }
 
-    private function calculateOverallStats($submissions, $allAssignments)
-    {
-        $student = Auth::user()->student;
-        if (!$student) {
-            $this->overallStats = $this->getEmptyStats();
-            return;
-        }
+                Log::info('Overall stats (empty data)', $this->overallStats);
+                return;
+            }
 
-        // Apply period filter to assignments
-        if ($this->selectedPeriod !== 'all') {
-            $startDate = $this->getStartDateForPeriod($this->selectedPeriod);
-            $allAssignments = $allAssignments->where('starts_at', '>=', $startDate);
-        }
+            $totalScore = $allGradedData->sum('score');
+            $totalMaxScore = $allGradedData->sum('max_score');
+            $overallPercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
 
-        $totalAssignments = $allAssignments->count();
-
-        // Count by submission status
-        $gradedSubmissions = $submissions->where('status', 'graded');
-        $submittedSubmissions = $submissions->whereIn('status', ['submitted', 'in_progress']);
-        $notStartedCount = $totalAssignments - $submissions->count();
-
-        if ($gradedSubmissions->isEmpty()) {
             $this->overallStats = [
-                'total_assignments' => $totalAssignments,
-                'available_assignments' => $allAssignments->where('ends_at', '>', now())->count(),
-                'average_percentage' => 0,
-                'overall_grade' => 'N/A',
-                'completed_assignments' => $gradedSubmissions->count(),
-                'submitted_assignments' => $submittedSubmissions->count(),
-                'pending_assignments' => $notStartedCount,
-                'completion_rate' => $totalAssignments > 0 ? round(($gradedSubmissions->count() / $totalAssignments) * 100, 2) : 0,
+                'total_assignments' => $totalItems,
+                'available_assignments' => $assignmentsCollection->filter(function ($a) {
+                    return $a->ends_at && $a->ends_at > now();
+                })->count(),
+                'average_percentage' => round($overallPercentage, 2),
+                'overall_grade' => $this->calculateGrade($overallPercentage),
+                'completed_assignments' => $totalGraded,
+                'submitted_assignments' => $submissionsCollection->whereIn('status', ['submitted', 'in_progress'])->count(),
+                'pending_assignments' => max(0, $totalItems - $totalGraded),
+                'completion_rate' => $totalItems > 0 ? round(($totalGraded / $totalItems) * 100, 2) : 0,
                 'study_streak' => $this->calculateStudyStreak($student),
-                'total_subjects' => 0,
+                'total_subjects' => $allGradedData->pluck('subject_id')->filter()->unique()->count(),
             ];
-            return;
+
+            Log::info('Overall stats calculated', $this->overallStats);
+
+        } catch (Exception $e) {
+            Log::error('Error calculating overall stats', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->overallStats = $this->getEmptyStats();
         }
-
-        // Calculate scores only from graded submissions with valid scores
-        $scores = $gradedSubmissions->filter(function($submission) {
-            return $submission->score !== null && $submission->total_marks !== null && $submission->total_marks > 0;
-        });
-
-        $totalScore = $scores->sum('score');
-        $totalMaxScore = $scores->sum('total_marks');
-        $overallPercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
-
-        $this->overallStats = [
-            'total_assignments' => $totalAssignments,
-            'available_assignments' => $allAssignments->where('ends_at', '>', now())->count(),
-            'average_percentage' => round($overallPercentage, 2),
-            'overall_grade' => $this->calculateGrade($overallPercentage),
-            'completed_assignments' => $gradedSubmissions->count(),
-            'submitted_assignments' => $submittedSubmissions->count(),
-            'pending_assignments' => $notStartedCount,
-            'completion_rate' => $totalAssignments > 0 ? round(($gradedSubmissions->count() / $totalAssignments) * 100, 2) : 0,
-            'study_streak' => $this->calculateStudyStreak($student),
-            'total_subjects' => $gradedSubmissions->map(function($s) {
-                return $s->assignment->academic_subject_id;
-            })->unique()->count(),
-        ];
-    }
-
-    private function calculateTrendData($submissions)
-    {
-        // Group submissions by week for trend analysis
-        $weeklyData = $submissions->groupBy(function ($submission) {
-            return $submission->submitted_at->format('Y-W');
-        })->map(function ($group) {
-            $scores = $group->pluck('score');
-            $totalMarks = $group->pluck('total_marks');
-            $percentage = $totalMarks->sum() > 0 ? ($scores->sum() / $totalMarks->sum()) * 100 : 0;
-
-            return [
-                'week' => $group->first()->submitted_at->format('M d'),
-                'percentage' => round($percentage, 1),
-                'count' => $group->count()
-            ];
-        })->take(8)->reverse()->values();
-
-        $this->trendData = $weeklyData->toArray();
     }
 
     private function calculateStudyStreak($student)
@@ -369,6 +496,50 @@ class PerformanceOverview extends Component
         }
 
         return $consecutiveDays;
+    }
+
+    private function calculateTrendData($submissions, $assessments)
+    {
+        $allData = collect();
+
+        // Add submissions
+        foreach ($submissions as $submission) {
+            if ($submission->score !== null && $submission->total_marks > 0 && $submission->submitted_at) {
+                $allData->push([
+                    'date' => $submission->submitted_at,
+                    'percentage' => ($submission->score / $submission->total_marks) * 100
+                ]);
+            }
+        }
+
+        // Add assessments
+        $assessmentsCollection = is_array($assessments) ? collect($assessments) : $assessments;
+        foreach ($assessmentsCollection as $assessment) {
+            if ($assessment->score !== null && $assessment->max_score > 0 && $assessment->created_at) {
+                $allData->push([
+                    'date' => $assessment->created_at,
+                    'percentage' => ($assessment->score / $assessment->max_score) * 100
+                ]);
+            }
+        }
+
+        if ($allData->isEmpty()) {
+            $this->trendData = [];
+            return;
+        }
+
+        // Group by week for trend analysis
+        $weeklyData = $allData->groupBy(function ($item) {
+            return $item['date']->format('Y-W');
+        })->map(function ($group) {
+            return [
+                'week' => $group->first()['date']->format('M d'),
+                'percentage' => round($group->avg('percentage'), 1),
+                'count' => $group->count()
+            ];
+        })->take(8)->reverse()->values();
+
+        $this->trendData = $weeklyData->toArray();
     }
 
     private function generateInsights()
@@ -439,22 +610,18 @@ class PerformanceOverview extends Component
         $this->insights = $insights;
     }
 
-    private function calculateGrade($percentage)
+    public function updatedSelectedPeriod()
     {
-        return match (true) {
-            $percentage >= 97 => 'A+',
-            $percentage >= 93 => 'A',
-            $percentage >= 90 => 'A-',
-            $percentage >= 87 => 'B+',
-            $percentage >= 83 => 'B',
-            $percentage >= 80 => 'B-',
-            $percentage >= 77 => 'C+',
-            $percentage >= 73 => 'C',
-            $percentage >= 70 => 'C-',
-            $percentage >= 67 => 'D+',
-            $percentage >= 65 => 'D',
-            default => 'F',
-        };
+        $this->loadPerformanceData();
+        $this->generateInsights();
+        $this->dispatch('periodChanged', $this->selectedPeriod);
+    }
+
+    public function updatedSelectedSubject()
+    {
+        $this->loadPerformanceData();
+        $this->generateInsights();
+        $this->dispatch('subjectChanged', $this->selectedSubject);
     }
 
     public function exportData()
@@ -472,17 +639,43 @@ class PerformanceOverview extends Component
         return view('livewire.students.performance-overview');
     }
 
-    private function getEmptyStats(): array
+    /**
+     * Load upcoming and pending assignments for the student
+     */
+    private function loadUpcomingAndPendingAssignments($allAssignments, $submissions)
     {
-        return [
-            'total_assignments' => 0,
-            'average_percentage' => 0,
-            'overall_grade' => 'N/A',
-            'completed_assignments' => 0,
-            'pending_assignments' => 0,
-            'completion_rate' => 0,
-            'study_streak' => 0,
-            'total_subjects' => 0,
-        ];
+        $submittedAssignmentIds = $submissions->pluck('assignment_id')->unique();
+
+        // Upcoming assignments (not started, starts in the future)
+        $this->upcomingAssignments = $allAssignments
+            ->whereNotIn('id', $submittedAssignmentIds)
+            ->where('starts_at', '>', now())
+            ->sortBy('starts_at')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        // Pending assignments (available now, not completed)
+        $this->pendingAssignments = $allAssignments
+            ->filter(function ($assignment) use ($submissions) {
+                $submission = $submissions->firstWhere('assignment_id', $assignment->id);
+
+                return $assignment->starts_at <= now()
+                    && $assignment->ends_at > now()
+                    && (!$submission || !in_array($submission->status, ['graded', 'submitted']));
+            })
+            ->sortBy('ends_at')
+            ->take(5)
+            ->map(function ($assignment) use ($submissions) {
+                $submission = $submissions->firstWhere('assignment_id', $assignment->id);
+
+                return [
+                    'assignment' => $assignment,
+                    'status' => $submission ? $submission->status : 'not_started',
+                    'time_remaining' => now()->diffInHours($assignment->ends_at),
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 }

@@ -75,12 +75,12 @@ class UserBookForm extends Component
         'annualSubscriptionFee' => 'nullable|numeric|min:0|max:999999.99',
         'subscriptionConditions' => 'nullable|string',
         'coverImage' => 'nullable|image|max:2048',
-        'pdfFile' => 'nullable|mimes:pdf|max:102400',
-        'samplePdfFile' => 'nullable|mimes:pdf|max:10240',
-        'singleAudio' => 'nullable|file|mimes:mp3,wav,ogg|max:51200',
-        'singleVideo' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:524288',
-        'chapterAudios.*' => 'nullable|file|mimes:mp3,wav,ogg|max:51200',
-        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:102400',
+        'pdfFile' => 'nullable|mimes:pdf|max:1024000',
+        'samplePdfFile' => 'nullable|mimes:pdf|max:102400',
+        'singleAudio' => 'nullable|file|mimes:mp3,wav,ogg|max:512000',
+        'singleVideo' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:5242880',
+        'chapterAudios.*' => 'nullable|file|mimes:mp3,wav,ogg|max:512000',
+        'chapterVideos.*' => 'nullable|file|mimes:mp4,mov,avi,mkv,webm|max:1024000',
         'status' => 'required|in:draft,published,archived',
         'emails' => 'nullable|string',
 
@@ -150,7 +150,7 @@ public function loadUserBookData(): void
 
     // Pre-fill emails with existing shares
     $existingShares = $this->userBook->shares()->where('status', 'pending')->get();
-    dd($this->userBook->with('shares')->get());
+
     if ($existingShares->isNotEmpty()) {
         $this->emails = $existingShares->pluck('shared_to_email')->implode(', ');
     }

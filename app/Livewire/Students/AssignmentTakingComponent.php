@@ -8,6 +8,7 @@ use App\Models\Assessment;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\AssessmentResponse;
+use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -37,6 +38,12 @@ class AssignmentTakingComponent extends Component
     public $showReview = false;
     public $darkMode = false;
 
+    public $tabSwitchCount = 0;
+    public $maxTabSwitches = null;
+    public $showViolationWarning = false;
+    public $violationMessage = '';
+    public $restrictNavigation = false;
+
     // Services
     protected RandomQuestionSelectionService $questionService;
 
@@ -58,17 +65,19 @@ class AssignmentTakingComponent extends Component
             $this->loadAssignment();
         } else {
             session()->flash('error', 'No assignment specified.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
     }
 
     public function loadAssignment()
     {
         $student = Auth::user()->student;
-
+        if(!$student){
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
         if (!$student) {
             session()->flash('error', 'Student profile not found.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
 
         // Load the assignment
@@ -77,26 +86,30 @@ class AssignmentTakingComponent extends Component
 
         if (!$this->assignment) {
             session()->flash('error', 'Assignment not found.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
+
+        $this->restrictNavigation = $this->assignment->restrict_navigation ?? false;
+        $this->maxTabSwitches = $this->assignment->max_tab_switches;
+
 
         // Check if student is eligible
         if (!$this->canStartAssignment()) {
             session()->flash('error', 'You are not eligible to take this assignment.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
 
         // Check if assignment is within time bounds
         if (!$this->isAssignmentActive()) {
             session()->flash('error', 'Assignment is not currently active.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
 
         // Check if already submitted
         $existingSubmission = $this->getExistingSubmission();
         if ($existingSubmission && in_array($existingSubmission->status, ['submitted', 'graded'])) {
             session()->flash('error', 'You have already completed this assignment.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
 
         // If there's an in-progress submission, resume it
@@ -107,9 +120,70 @@ class AssignmentTakingComponent extends Component
         }
     }
 
+    public function recordTabSwitch()
+    {
+        if (!$this->restrictNavigation || !$this->assignmentSubmission) {
+            return;
+        }
+
+        $this->tabSwitchCount++;
+
+        // Log the violation
+        $violations = $this->assignmentSubmission->violation_logs ?? [];
+        $violations[] = [
+            'type' => 'tab_switch',
+            'timestamp' => now()->toISOString(),
+            'count' => $this->tabSwitchCount,
+        ];
+
+        $this->assignmentSubmission->update([
+            'tab_switch_count' => $this->tabSwitchCount,
+            'violation_logs' => $violations,
+        ]);
+
+        // Check if exceeded limit
+        if ($this->maxTabSwitches && $this->tabSwitchCount >= $this->maxTabSwitches) {
+            $this->handleViolation();
+        } else {
+            $remaining = $this->maxTabSwitches ? ($this->maxTabSwitches - $this->tabSwitchCount) : 'unlimited';
+            $this->showViolationWarning = true;
+            $this->violationMessage = "Warning: You switched tabs/windows. Remaining switches: {$remaining}";
+
+            $this->dispatch('show-violation-warning', message: $this->violationMessage);
+        }
+    }
+
+    private function handleViolation()
+    {
+        if ($this->assignment->auto_submit_on_violation) {
+            // Auto-submit and mark as violated
+            $this->assignmentSubmission->update([
+                'cancelled_due_to_violation' => true,
+                'status' => 'cancelled',
+                'submitted_at' => now(),
+            ]);
+
+            $this->isSubmitted = true;
+            $this->isTimerActive = false;
+            $this->step = 'violation';
+
+            Log::warning('Assignment cancelled due to violation', [
+                'submission_id' => $this->assignmentSubmission->id,
+                'student_id' => $this->assignmentSubmission->student_id,
+                'tab_switches' => $this->tabSwitchCount,
+            ]);
+
+            session()->flash('error', 'Your assignment has been automatically cancelled due to excessive tab switching.');
+        }
+    }
+
     private function getExistingSubmission()
     {
         $student = Auth::user()->student;
+
+        if(!$student){
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
 
         return AssignmentSubmission::where('assignment_id', $this->assignment->id)
             ->where('student_id', $student->id)
@@ -164,6 +238,10 @@ class AssignmentTakingComponent extends Component
     private function canStartAssignment()
     {
         $student = Auth::user()->student;
+
+        if(!$student){
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
 
         if ($this->assignment->status !== 'published') {
             return false;
@@ -228,7 +306,7 @@ class AssignmentTakingComponent extends Component
 
             if (empty($this->questions)) {
                 session()->flash('error', 'No questions available for this assignment.');
-                return redirect()->route('student.assignments');
+                return redirect()->route('students.assignments');
             }
 
             // Create assignment submission record
@@ -259,13 +337,17 @@ class AssignmentTakingComponent extends Component
             ]);
 
             session()->flash('error', 'Failed to start assignment. Please try again.');
-            return redirect()->route('student.assignments');
+            return redirect()->route('students.assignments');
         }
     }
 
     private function createAssignmentSubmission()
     {
         $student = Auth::user()->student;
+
+        if(!$student){
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
 
         $this->assignmentSubmission = AssignmentSubmission::create([
             'assignment_id' => $this->assignment->id,
@@ -286,6 +368,19 @@ class AssignmentTakingComponent extends Component
 
     private function generateQuestionsFromAssignment()
     {
+        // Check if assignment has embedded questions (book-based)
+        if ($this->assignment->hasEmbeddedQuestions()) {
+            $this->questions = $this->assignment->getEmbeddedQuestions()->toArray();
+
+            Log::info("Loaded embedded questions from book-based assignment", [
+                'assignment_id' => $this->assignment->id,
+                'question_count' => count($this->questions)
+            ]);
+
+            return;
+        }
+
+        // Otherwise, generate from database questions (existing logic)
         $questions = [];
         $questionsConfig = $this->assignment->questions ?? [];
 
@@ -297,7 +392,7 @@ class AssignmentTakingComponent extends Component
             if (!empty($questionConfig['specific_ids'])) {
                 $generatedForThisType = $this->getQuestionsByIds($questionConfig['type'], $questionConfig['specific_ids']);
             } else {
-                // Generate questions based on criteria
+                // ... existing generation logic ...
                 $config = [
                     'subject_id' => $this->assignment->academic_subject_id,
                     'question_types' => [$questionConfig['type'] => true],
@@ -305,9 +400,7 @@ class AssignmentTakingComponent extends Component
                     'difficulty' => $questionConfig['difficulty'] ?? 'all',
                 ];
 
-                // Handle topic/subtopic filtering
                 if (!empty($questionConfig['subtopic_ids'])) {
-                    // For each subtopic, we'll generate a portion of questions
                     $subtopicIds = $questionConfig['subtopic_ids'];
                     $questionsPerSubtopic = max(1, ceil($requestedCount / count($subtopicIds)));
 
@@ -321,13 +414,11 @@ class AssignmentTakingComponent extends Component
                         $formattedQuestions = $this->questionService->formatQuestionsForAssessment($generatedQuestions);
                         $generatedForThisType = array_merge($generatedForThisType, $formattedQuestions->toArray());
 
-                        // Stop if we have enough questions
                         if (count($generatedForThisType) >= $requestedCount) {
                             break;
                         }
                     }
                 } elseif (!empty($questionConfig['topic_ids'])) {
-                    // For each topic, we'll generate a portion of questions
                     $topicIds = $questionConfig['topic_ids'];
                     $questionsPerTopic = max(1, ceil($requestedCount / count($topicIds)));
 
@@ -341,29 +432,23 @@ class AssignmentTakingComponent extends Component
                         $formattedQuestions = $this->questionService->formatQuestionsForAssessment($generatedQuestions);
                         $generatedForThisType = array_merge($generatedForThisType, $formattedQuestions->toArray());
 
-                        // Stop if we have enough questions
                         if (count($generatedForThisType) >= $requestedCount) {
                             break;
                         }
                     }
                 } else {
-                    // Generate questions for the entire subject
                     $generatedQuestions = $this->questionService->generateQuestions($config);
                     $formattedQuestions = $this->questionService->formatQuestionsForAssessment($generatedQuestions);
                     $generatedForThisType = $formattedQuestions->toArray();
                 }
             }
 
-            // Ensure we only take the requested number of questions
             if (count($generatedForThisType) > $requestedCount) {
-                // Shuffle and take only the requested count
                 shuffle($generatedForThisType);
                 $generatedForThisType = array_slice($generatedForThisType, 0, $requestedCount);
             }
 
             $questions = array_merge($questions, $generatedForThisType);
-
-            Log::info("Generated {" . count($generatedForThisType) . "} questions for type {$questionConfig['type']}, requested: {$requestedCount}");
         }
 
         // Shuffle questions if assignment is randomized
@@ -373,19 +458,11 @@ class AssignmentTakingComponent extends Component
 
         $this->questions = $questions;
 
-        $expectedTotal = collect($questionsConfig)->sum('count');
-        Log::info("Total questions generated for assignment: " . count($this->questions), [
+        Log::info("Generated questions from database for assignment", [
             'assignment_id' => $this->assignment->id,
-            'expected_total' => $expectedTotal,
-            'actual_total' => count($this->questions)
+            'question_count' => count($this->questions)
         ]);
-
-        // Warn if we don't have the expected number of questions
-        if (count($this->questions) !== $expectedTotal) {
-            Log::warning("Question count mismatch for assignment {$this->assignment->id}. Expected: {$expectedTotal}, Got: " . count($this->questions));
-        }
     }
-
     private function getQuestionsByIds($type, $ids)
     {
         $model = match($type) {
@@ -402,6 +479,10 @@ class AssignmentTakingComponent extends Component
     private function createAssessment()
     {
         $student = Auth::user()->student;
+
+        if(!$student){
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
 
         if (!$student) {
             throw new \Exception('Student profile not found.');
@@ -779,38 +860,103 @@ class AssignmentTakingComponent extends Component
         };
     }
 
+    /**
+     * Normalize answer to letter format (A-E) or match against option text
+     */
+    private function normalizeAnswerToLetter($answer, $options = null): string
+    {
+        $letters = ['A', 'B', 'C', 'D', 'E'];
+
+        // If it's already a letter, return it uppercase
+        if (is_string($answer) && strlen($answer) === 1 && in_array(strtoupper($answer), $letters)) {
+            return strtoupper($answer);
+        }
+
+        // If it's numeric, convert to letter
+        if (is_numeric($answer)) {
+            return $letters[$answer] ?? strtoupper((string)$answer);
+        }
+
+        // If it's text and we have options, try to match it to an option
+        if (is_string($answer) && $options) {
+            foreach ($options as $letter => $optionText) {
+                if (strcasecmp(trim($optionText), trim($answer)) === 0) {
+                    return strtoupper($letter);
+                }
+            }
+        }
+
+        // Default: return uppercase version
+        return strtoupper((string)$answer);
+    }
+
     private function gradeMultipleChoice($question, $response)
     {
-        Log::info('Grading multiple choice question', [$question, $response]);
+        Log::info('Grading multiple choice question', [
+            'question' => $question,
+            'response' => $response
+        ]);
 
-        $correctAnswer = $question['answer'];
-        $isCorrect = strtoupper($response) === strtoupper($correctAnswer);
+        $correctAnswer = $question['answer'] ?? $question['correct_answer'] ?? null;
+        $options = $question['options'] ?? null;
+
+        if (!$correctAnswer) {
+            return [
+                'is_correct' => null,
+                'score_earned' => 0,
+                'feedback' => 'No correct answer defined for this question',
+                'question_id' => $question['id'],
+                'question_type' => $question['type'],
+                'needs_manual_grading' => true
+            ];
+        }
+
+        // Normalize both the response and correct answer to letter format
+        $normalizedResponse = $this->normalizeAnswerToLetter($response, $options);
+        $normalizedCorrectAnswer = $this->normalizeAnswerToLetter($correctAnswer, $options);
+
+        $isCorrect = $normalizedResponse === $normalizedCorrectAnswer;
 
         return [
             'is_correct' => $isCorrect,
             'score_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
-            'feedback' => $isCorrect ? 'Correct!' : "Incorrect. The correct answer was {$correctAnswer}",
+            'feedback' => $isCorrect ? 'Correct!' : "Incorrect. The correct answer was {$normalizedCorrectAnswer}",
             'question_id' => $question['id'],
             'question_type' => $question['type'],
-            'selected_option' => $response,
-            'correct_answer' => $correctAnswer
+            'selected_option' => $normalizedResponse,
+            'correct_answer' => $normalizedCorrectAnswer,
+            'explanation' => $isCorrect ? null : ($question['explanation'] ?? null)
         ];
     }
 
     private function gradeTrueFalse($question, $response)
     {
-        $correctAnswer = filter_var($question['answer'], FILTER_VALIDATE_BOOLEAN);
+        $correctAnswer = $question['answer'] ?? $question['correct_answer'] ?? null;
+
+        if ($correctAnswer === null) {
+            return [
+                'is_correct' => null,
+                'score_earned' => 0,
+                'feedback' => 'No correct answer defined for this question',
+                'question_id' => $question['id'],
+                'question_type' => $question['type'],
+                'needs_manual_grading' => true
+            ];
+        }
+
+        $correctAnswerBoolean = filter_var($correctAnswer, FILTER_VALIDATE_BOOLEAN);
         $responseBoolean = $response === 'true' || $response === 'True';
-        $isCorrect = $responseBoolean === $correctAnswer;
+        $isCorrect = $responseBoolean === $correctAnswerBoolean;
 
         return [
             'is_correct' => $isCorrect,
             'score_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
-            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was ' . ($correctAnswer ? 'True' : 'False'),
+            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was ' . ($correctAnswerBoolean ? 'True' : 'False'),
             'question_id' => $question['id'],
             'question_type' => $question['type'],
             'selected_answer' => $response,
-            'correct_answer' => $correctAnswer
+            'correct_answer' => $correctAnswerBoolean,
+            'explanation' => $isCorrect ? null : ($question['explanation'] ?? null)
         ];
     }
 
@@ -854,7 +1000,7 @@ class AssignmentTakingComponent extends Component
 
     public function backToAssignments()
     {
-        return redirect()->route('student.assignments');
+        return redirect()->route('students.assignments');
     }
 
     public function getGrade($percentage)

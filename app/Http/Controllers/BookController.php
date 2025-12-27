@@ -165,7 +165,7 @@ class BookController extends Controller
             return response()->json(['error' => 'Already subscribed to this book'], 400);
         }
 
-        // Free book - direct subscription
+        // Free book - direct subscription 
         if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
             $subscription = BookSubscription::create([
                 'user_id' => $user->id,
@@ -309,5 +309,31 @@ class BookController extends Controller
             ->get();
 
         return response()->json(['books' => $featuredBooks]);
+    }
+
+    /**
+     * Public book view for unauthenticated users (shared links)
+     */
+    public function publicShow(Book $book)
+    {
+        // Only show published books
+        if ($book->status !== PublishingStatus::PUBLISHED->value) {
+            abort(404);
+        }
+
+        $book->load([
+            'author',
+            'bookCategory',
+            'categories',
+        ]);
+
+        // Get a few approved reviews without user data for privacy
+        $recentReviews = $book->reviews()
+            ->approved()
+            ->latest()
+            ->limit(3)
+            ->get();
+
+        return view('books.public-show', compact('book', 'recentReviews'));
     }
 }

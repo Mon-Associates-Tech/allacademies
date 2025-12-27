@@ -75,7 +75,7 @@ class ExaminationSectionProcessor
         return $docxText;
     }
 
-    private function processPdfDocument(string $path): array
+    private function processPdfDocumentDep(string $path): array
     {
         $outputDir = storage_path('app/public/pdf_pages');
 
@@ -97,5 +97,21 @@ class ExaminationSectionProcessor
         }
 
         return $images;
+    }
+
+    private function processPdfDocument(string $path): array
+    {
+        try {
+            $pdfExtractor = app(PdfContentExtractionService::class);
+
+            return $pdfExtractor->convertPagesToImages($path, [
+                'resolution' => 300,
+                'format' => 'jpg',
+                'output_dir' => 'pdf_pages'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("PDF to image conversion failed: {$e->getMessage()}");
+            return [];
+        }
     }
 }

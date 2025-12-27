@@ -50,6 +50,13 @@ class StudentManagement extends Component
     public $selectedTeachersForGroup = [];
     public $selectedTeachersForLevel = [];
 
+    // Filter properties
+    public $filterAcademicGroup = '';
+    public $filterAcademicLevel = '';
+    public $filterStudentGroup = '';
+    public $filterTeacher = '';
+    public $filterSubject = '';
+
     // Collections
     public $studentGroups;
     public $academicGroups;
@@ -94,6 +101,49 @@ class StudentManagement extends Component
         $this->showFormModal = true;
         $this->formMode = 'create';
     }
+
+    public function updatedFilterAcademicGroup()
+    {
+        $this->filterAcademicLevel = ''; // Reset level when group changes
+        $this->resetPage();
+    }
+
+    public function updatedFilterAcademicLevel()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterStudentGroup()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterTeacher()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterSubject()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSearchTerm()
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->filterAcademicGroup = '';
+        $this->filterAcademicLevel = '';
+        $this->filterStudentGroup = '';
+        $this->filterTeacher = '';
+        $this->filterSubject = '';
+        $this->searchTerm = '';
+        $this->resetPage();
+    }
+
 
     public function resetForm()
     {
@@ -423,8 +473,6 @@ class StudentManagement extends Component
         $this->js('window.Modal.close("student-add-form")');
     }
 
-    // Existing methods (keeping them unchanged)
-
     private function assignIndividualSubjects($student)
     {
         // Clear existing individual assignments
@@ -627,28 +675,62 @@ class StudentManagement extends Component
 
     public function render()
     {
-        $students = Student::whereHas('user', function ($query) {
-            $query->where('name', 'like', '%' . $this->searchTerm . '%')
-                ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
-        })
-            ->orWhereHas('studentGroup', function ($query) {
-                $query->where('name', 'like', '%' . $this->searchTerm . '%');
-            })
-            ->orWhereHas('academicGroup', function ($query) {
-                $query->where('name', 'like', '%' . $this->searchTerm . '%');
-            })
-            ->orWhereHas('academicLevel', function ($query) {
-                $query->where('name', 'like', '%' . $this->searchTerm . '%');
-            })
-            ->with([
-                'user',
-                'studentGroup',
-                'academicGroup',
-                'academicLevel.academicSubjects',
-                'teachers.user',
-                'individualSubjects'
-            ])
-            ->paginate(10);
+        // Start with base query
+        $query = Student::withoutGlobalScopes();
+
+        // Search filter
+        if ($this->searchTerm) {
+            $query->whereHas('user', function ($q) {
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+            });
+        }
+
+        // Academic Group filter
+        if ($this->filterAcademicGroup) {
+            $query->where('academic_group_id', $this->filterAcademicGroup);
+        }
+
+        // Academic Level filter
+        if ($this->filterAcademicLevel) {
+            $query->where('academic_level_id', $this->filterAcademicLevel);
+        }
+
+        // Student Group filter
+        if ($this->filterStudentGroup) {
+            $query->where('student_group_id', $this->filterStudentGroup);
+        }
+
+        // Teacher filter
+        if ($this->filterTeacher) {
+            $query->whereHas('teachers', function ($q) {
+                $q->where('teachers.id', $this->filterTeacher);
+            });
+        }
+
+        // Subject filter
+        if ($this->filterSubject) {
+            $query->where(function ($q) {
+                // Students who have the subject through their academic level
+                $q->whereHas('academicLevel.academicSubjects', function ($subQuery) {
+                    $subQuery->where('academic_subjects.id', $this->filterSubject);
+                })
+                    // OR students who have the subject individually assigned
+                    ->orWhereHas('individualSubjects', function ($subQuery) {
+                        $subQuery->where('academic_subjects.id', $this->filterSubject)
+                            ->where('student_subject.is_active', true);
+                    });
+            });
+        }
+
+        $students = $query->with([
+            'user',
+            'studentGroup',
+            'academicGroup',
+            'academicLevel.academicSubjects',
+            'teachers.user',
+            'individualSubjects'
+        ])->paginate(10);
 
         // Get teachers assigned to current academic group and level for display
         $groupTeachers = collect();
@@ -664,10 +746,34 @@ class StudentManagement extends Component
             $levelTeachers = $level ? $level->teachers : collect();
         }
 
+        // Get available filter options
+        $filterAcademicGroups = AcademicGroup::all();
+        $filterAcademicLevels = $this->filterAcademicGroup
+            ? AcademicLevel::where('academic_group_id', $this->filterAcademicGroup)->get()
+            : AcademicLevel::all();
+        $filterStudentGroups = StudentGroup::all();
+        $filterTeachers = Teacher::with('user')->get();
+        $filterSubjects = AcademicSubject::with('academicLevel')->get();
+
+        // Count active filters
+        $activeFiltersCount = collect([
+            $this->filterAcademicGroup,
+            $this->filterAcademicLevel,
+            $this->filterStudentGroup,
+            $this->filterTeacher,
+            $this->filterSubject
+        ])->filter()->count();
+
         return view('livewire.administrators.student-management', [
             'students' => $students,
             'groupTeachers' => $groupTeachers,
             'levelTeachers' => $levelTeachers,
+            'filterAcademicGroups' => $filterAcademicGroups,
+            'filterAcademicLevels' => $filterAcademicLevels,
+            'filterStudentGroups' => $filterStudentGroups,
+            'filterTeachers' => $filterTeachers,
+            'filterSubjects' => $filterSubjects,
+            'activeFiltersCount' => $activeFiltersCount,
         ]);
     }
 }

@@ -110,8 +110,8 @@ public function mount()
         $student = $this->student;
 
         // Start with basic query
-        $query = \App\Models\Assignment::where('status', 'published')
-            ->where('starts_at', '<=', now());
+        $query = \App\Models\Assignment::where('status', 'published');
+//            ->where('starts_at', '<=', now());
 //            ->where('ends_at', '>', now());
 
         // Log the basic query count

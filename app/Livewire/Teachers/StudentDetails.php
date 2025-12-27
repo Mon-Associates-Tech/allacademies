@@ -20,8 +20,8 @@ class StudentDetails extends Component
 
     public function mount(Student $student)
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
 
+        $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         // Check if the teacher has access to this student
         $hasAccess = $this->teacher->hasAccessToStudent($student);
 
