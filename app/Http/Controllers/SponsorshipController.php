@@ -160,4 +160,17 @@ class SponsorshipController extends Controller
             'stats' => $stats,
         ]);
     }
+
+    /**
+     * Display listing of user's own contributions
+     */
+    public function myContributions()
+    {
+        $user = auth()->user();
+        $contributions = $this->sponsorshipService->getUserContributions($user);
+
+        return view('sponsorship.user.my-contributions', [
+            'contributions' => $contributions,
+        ]);
+    }
 }
