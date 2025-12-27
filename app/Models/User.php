@@ -667,4 +667,137 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot('can_edit')
             ->withTimestamps();
     }
+
+    /**
+     * ============================================
+     * SPONSORSHIP RELATIONSHIPS
+     * ============================================
+     */
+
+    /**
+     * Get the sponsorship programs created by this user (as benefactor)
+     */
+    public function sponsorshipPrograms(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipProgram::class);
+    }
+
+    /**
+     * Get active sponsorship programs created by this user
+     */
+    public function activeSponsorshipPrograms(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipProgram::class)
+            ->where('status', 'active');
+    }
+
+    /**
+     * Get the sponsor offers created by this user (as sponsor)
+     */
+    public function sponsorOffers(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorOffer::class);
+    }
+
+    /**
+     * Get active sponsor offers created by this user
+     */
+    public function activeSponsorOffers(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorOffer::class)
+            ->where('status', 'open');
+    }
+
+    /**
+     * Get the bids submitted by this user (as benefactor)
+     */
+    public function sponsorshipBids(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipBid::class);
+    }
+
+    /**
+     * Get pending bids submitted by this user
+     */
+    public function pendingSponsorshipBids(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipBid::class)
+            ->where('status', 'pending');
+    }
+
+    /**
+     * Get the contributions made by this user (as donor/sponsor)
+     */
+    public function sponsorshipContributions(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipContribution::class);
+    }
+
+    /**
+     * Get successful contributions made by this user
+     */
+    public function successfulSponsorshipContributions(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipContribution::class)
+            ->where('status', 'completed');
+    }
+
+    /**
+     * Get programs verified by this user (as reviewer)
+     */
+    public function verifiedPrograms(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipProgram::class, 'verified_by');
+    }
+
+    /**
+     * Check if user is a benefactor
+     */
+    public function isBenefactor(): bool
+    {
+        return $this->role === \App\Enums\UserRole::BENEFACTOR || $this->hasRole('benefactor');
+    }
+
+    /**
+     * Check if user is a sponsor
+     */
+    public function isSponsor(): bool
+    {
+        return $this->role === \App\Enums\UserRole::SPONSOR || $this->hasRole('sponsor');
+    }
+
+    /**
+     * Check if user is a reviewer
+     */
+    public function isReviewer(): bool
+    {
+        return $this->role === \App\Enums\UserRole::REVIEWER || $this->hasRole('reviewer') || $this->hasRole('owner');
+    }
+
+    /**
+     * Get total amount raised across all user's programs
+     */
+    public function getTotalAmountRaisedAttribute(): float
+    {
+        return $this->sponsorshipPrograms()
+            ->sum('amount_raised');
+    }
+
+    /**
+     * Get total amount contributed by this user
+     */
+    public function getTotalAmountContributedAttribute(): float
+    {
+        return $this->successfulSponsorshipContributions()
+            ->sum('amount');
+    }
+
+    /**
+     * Get total sponsorship offers value
+     */
+    public function getTotalOffersValueAttribute(): float
+    {
+        return $this->sponsorOffers()
+            ->sum('amount_offered');
+    }
 }

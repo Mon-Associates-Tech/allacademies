@@ -502,6 +502,7 @@ include_once 'librarian.php';
 include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'academic.php';
+include_once 'sponsorship.php';
 
 //
 include_once 'subscriber.php';
