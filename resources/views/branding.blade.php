@@ -129,6 +129,55 @@
             </div>
         </div>
 
+        <section>
+            <!-- Video Demo Section -->
+            <div id="demo" class="py-24 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                        <div
+                            class="inline-flex items-center px-4 py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 font-semibold text-sm mb-4">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Watch Demo
+                        </div>
+                        <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
+                            See the Platform <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">In Action</span>
+                        </h2>
+                        <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                            Take a guided tour through our features and see how we transform the learning
+                            experience for students and educators.
+                        </p>
+                    </div>
+
+                    <div class="relative max-w-5xl mx-auto">
+                        <!-- Decorative Elements -->
+                        <div
+                            class="absolute -top-10 -left-10 w-40 h-40 bg-red-300 dark:bg-red-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                        <div
+                            class="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-300 dark:bg-orange-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+
+                        <div
+                            class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
+                            <!-- Video Player -->
+                            <div class="aspect-w-16 aspect-h-9">
+                                <video class="w-full h-full object-cover" controls preload="none"
+                                       poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=675&fit=crop">
+                                    <!-- Replace with your actual demo video path -->
+                                    <source src="{{ asset('media/video/platform-demo.mp4') }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Features Section -->
         <div id="features" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
             <div class="max-w-7xl mx-auto">
@@ -1140,52 +1189,7 @@
                             }
                         </style>
                     </div>
-                    <!-- Video Demo Section -->
-                    <div id="demo" class="py-24 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
-                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div class="text-center mb-16">
-                                <div
-                                    class="inline-flex items-center px-4 py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 font-semibold text-sm mb-4">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    Watch Demo
-                                </div>
-                                <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-6">
-                                    See the Platform <span
-                                        class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">In Action</span>
-                                </h2>
-                                <p class="max-w-3xl text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
-                                    Take a guided tour through our features and see how we transform the learning
-                                    experience for students and educators.
-                                </p>
-                            </div>
 
-                            <div class="relative max-w-5xl mx-auto">
-                                <!-- Decorative Elements -->
-                                <div
-                                    class="absolute -top-10 -left-10 w-40 h-40 bg-red-300 dark:bg-red-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                                <div
-                                    class="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-300 dark:bg-orange-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-
-                                <div
-                                    class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
-                                    <!-- Video Player -->
-                                    <div class="aspect-w-16 aspect-h-9">
-                                        <video class="w-full h-full object-cover" controls preload="none"
-                                               poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=675&fit=crop">
-                                            <!-- Replace with your actual demo video path -->
-                                            <source src="{{ asset('media/video/platform-demo.mp4') }}" type="video/mp4">
-                                            Your browser does not support the video tag.
-                                        </video>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <!-- Pricing Section -->
                 <div id="pricing" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
