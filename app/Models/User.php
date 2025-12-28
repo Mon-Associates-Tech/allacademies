@@ -9,6 +9,7 @@ use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
 use App\Support\TokenSubscriptionStatus;
 use App\Traits\HasAvatar;
+use App\Traits\HasMultipleSubaccounts;
 use App\Traits\HasRoles;
 use App\Traits\HasTeams;
 use App\Traits\Trackable;
@@ -39,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use Impersonate;
     use HasRoles;
     use HasTeams;
+    use HasMultipleSubaccounts;
 
 
     protected $fillable = [
@@ -646,14 +648,6 @@ class User extends Authenticatable implements MustVerifyEmail
             UserRole::AUTHOR,
             UserRole::LIBRARIAN,
         ]);
-    }
-
-    /**
-     * Get the user's subaccount (for direct user payments)
-     */
-    public function subaccount(): MorphOne
-    {
-        return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 
     public function notes()
