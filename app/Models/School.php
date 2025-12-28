@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\HasMultipleSubaccounts;
+use App\Traits\HasMultipleSubAccounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 class School extends Model
 {
     use HasFactory;
-    use HasMultipleSubaccounts;
+    use HasMultipleSubAccounts;
 
     protected $fillable = [
         // Basic information

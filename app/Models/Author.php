@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToSchoolEnhanced;
-use App\Traits\HasMultipleSubaccounts;
+use App\Traits\HasMultipleSubAccounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -12,7 +12,7 @@ class Author extends Model
 {
     use HasFactory;
     use BelongsToSchoolEnhanced;
-    use HasMultipleSubaccounts;
+    use HasMultipleSubAccounts;
 
     protected static bool $schoolRestricted = false;
 

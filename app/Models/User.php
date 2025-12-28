@@ -9,7 +9,7 @@ use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
 use App\Support\TokenSubscriptionStatus;
 use App\Traits\HasAvatar;
-use App\Traits\HasMultipleSubaccounts;
+use App\Traits\HasMultipleSubAccounts;
 use App\Traits\HasRoles;
 use App\Traits\HasTeams;
 use App\Traits\Trackable;
@@ -40,7 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use Impersonate;
     use HasRoles;
     use HasTeams;
-    use HasMultipleSubaccounts;
+    use HasMultipleSubAccounts;
 
 
     protected $fillable = [
