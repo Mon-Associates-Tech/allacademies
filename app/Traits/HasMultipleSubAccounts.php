@@ -6,7 +6,7 @@ use App\Models\Subaccount;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-trait HasMultipleSubaccounts
+trait HasMultipleSubAccounts
 {
     /**
      * Get all subaccounts for this model (polymorphic one-to-many)
