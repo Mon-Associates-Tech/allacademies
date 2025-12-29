@@ -7,6 +7,7 @@ use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicSubject extends Model
@@ -174,8 +175,23 @@ class AcademicSubject extends Model
         return $this->hasMany(Assignment::class);
     }
 
-    public function notes()
+    public function subjectNotes()
     {
         return $this->hasMany(Note::class);
+    }
+
+    public function resources(): MorphMany
+    {
+        return $this->morphMany(AcademicResource::class, 'resourceable');
+    }
+
+    public function todos(): MorphMany
+    {
+        return $this->morphMany(Todo::class, 'todoable');
+    }
+
+    public function notes(): MorphMany
+    {
+        return $this->morphMany(Note::class, 'noteable');
     }
 }

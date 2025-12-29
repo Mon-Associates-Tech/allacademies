@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Note extends Model implements CalendarEventable
 {
@@ -20,6 +21,8 @@ class Note extends Model implements CalendarEventable
         'user_id',
         'book_id',
         'academic_subject_id',
+        'noteable_type',
+        'noteable_id',
         'is_public'
     ];
 
@@ -228,5 +231,178 @@ class Note extends Model implements CalendarEventable
     public function attachments(): HasMany
     {
         return $this->hasMany(NoteAttachment::class);
+    }
+
+    /**
+     * Get the parent noteable model (AcademicGroup, AcademicLevel, AcademicSubject, AcademicTopic, AcademicSubtopic)
+     */
+    public function noteable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Get the hierarchy path for breadcrumb
+     */
+    public function getHierarchyPathAttribute(): array
+    {
+        $path = [];
+        $noteable = $this->noteable;
+
+        if (!$noteable) {
+            return $path;
+        }
+
+        if ($noteable instanceof AcademicSubtopic) {
+            $topic = $noteable->academicTopic;
+            $subject = $topic->academicSubject;
+            $level = $subject->academicLevel;
+            $group = $level->academicGroup;
+
+            $path = [
+                ['type' => 'group', 'id' => $group->id, 'name' => $group->name],
+                ['type' => 'level', 'id' => $level->id, 'name' => $level->name],
+                ['type' => 'subject', 'id' => $subject->id, 'name' => $subject->name],
+                ['type' => 'topic', 'id' => $topic->id, 'name' => $topic->name],
+                ['type' => 'subtopic', 'id' => $noteable->id, 'name' => $noteable->name],
+            ];
+        } elseif ($noteable instanceof AcademicTopic) {
+            $subject = $noteable->academicSubject;
+            $level = $subject->academicLevel;
+            $group = $level->academicGroup;
+
+            $path = [
+                ['type' => 'group', 'id' => $group->id, 'name' => $group->name],
+                ['type' => 'level', 'id' => $level->id, 'name' => $level->name],
+                ['type' => 'subject', 'id' => $subject->id, 'name' => $subject->name],
+                ['type' => 'topic', 'id' => $noteable->id, 'name' => $noteable->name],
+            ];
+        } elseif ($noteable instanceof AcademicSubject) {
+            $level = $noteable->academicLevel;
+            $group = $level->academicGroup;
+
+            $path = [
+                ['type' => 'group', 'id' => $group->id, 'name' => $group->name],
+                ['type' => 'level', 'id' => $level->id, 'name' => $level->name],
+                ['type' => 'subject', 'id' => $noteable->id, 'name' => $noteable->name],
+            ];
+        } elseif ($noteable instanceof AcademicLevel) {
+            $group = $noteable->academicGroup;
+
+            $path = [
+                ['type' => 'group', 'id' => $group->id, 'name' => $group->name],
+                ['type' => 'level', 'id' => $noteable->id, 'name' => $noteable->name],
+            ];
+        } elseif ($noteable instanceof AcademicGroup) {
+            $path = [
+                ['type' => 'group', 'id' => $noteable->id, 'name' => $noteable->name],
+            ];
+        }
+
+        return $path;
+    }
+
+    /**
+     * Export note as PDF (HTML format for browser printing)
+     */
+    public function toHtmlForPdf(): string
+    {
+        $content = "<html><head><title>{$this->title}</title>";
+        $content .= "<style>body{font-family:Arial,sans-serif;margin:40px;line-height:1.6;}h1{color:#333;}";
+        $content .= ".meta{color:#666;font-size:14px;margin-bottom:20px;}.content{margin-top:20px;}</style></head><body>";
+        $content .= "<h1>{$this->title}</h1>";
+        $content .= "<div class='meta'>By " . ($this->user->name ?? 'Unknown') . " on {$this->created_at->format('F d, Y')}</div>";
+        $content .= "<div class='content'>{$this->content}</div>";
+        $content .= "</body></html>";
+
+        return $content;
+    }
+
+    /**
+     * Export note as Markdown
+     */
+    public function toMarkdown(): string
+    {
+        $content = "# {$this->title}\n\n";
+        $content .= "*By " . ($this->user->name ?? 'Unknown') . " on {$this->created_at->format('F d, Y')}*\n\n";
+        $content .= "---\n\n";
+        $content .= strip_tags($this->content) . "\n";
+
+        return $content;
+    }
+
+    /**
+     * Export note as Plain Text
+     */
+    public function toPlainText(): string
+    {
+        $content = strtoupper($this->title) . "\n";
+        $content .= str_repeat("=", strlen($this->title)) . "\n\n";
+        $content .= "By " . ($this->user->name ?? 'Unknown') . " on {$this->created_at->format('F d, Y')}\n\n";
+        $content .= str_repeat("-", 50) . "\n\n";
+        $content .= strip_tags($this->content) . "\n";
+
+        return $content;
+    }
+
+    /**
+     * Export multiple notes as PDF (HTML format)
+     */
+    public static function collectionToHtmlForPdf($notes): string
+    {
+        $content = "<html><head><title>Notes Export</title>";
+        $content .= "<style>body{font-family:Arial,sans-serif;margin:40px;line-height:1.6;}h1,h2{color:#333;}";
+        $content .= ".meta{color:#666;font-size:14px;margin-bottom:20px;}.note{margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid #ccc;}</style></head><body>";
+        $content .= "<h1>Notes Export</h1>";
+
+        foreach ($notes as $note) {
+            $content .= "<div class='note'>";
+            $content .= "<h2>{$note->title}</h2>";
+            $content .= "<div class='meta'>By " . ($note->user->name ?? 'Unknown') . " on {$note->created_at->format('F d, Y')}</div>";
+            $content .= "<div class='content'>{$note->content}</div>";
+            $content .= "</div>";
+        }
+
+        $content .= "</body></html>";
+
+        return $content;
+    }
+
+    /**
+     * Export multiple notes as Markdown
+     */
+    public static function collectionToMarkdown($notes): string
+    {
+        $content = "# Notes Export\n\n";
+        $content .= "Exported on " . now()->format('F d, Y') . "\n\n";
+        $content .= "---\n\n";
+
+        foreach ($notes as $note) {
+            $content .= "## {$note->title}\n\n";
+            $content .= "*By " . ($note->user->name ?? 'Unknown') . " on {$note->created_at->format('F d, Y')}*\n\n";
+            $content .= strip_tags($note->content) . "\n\n";
+            $content .= "---\n\n";
+        }
+
+        return $content;
+    }
+
+    /**
+     * Export multiple notes as Plain Text
+     */
+    public static function collectionToPlainText($notes): string
+    {
+        $content = "NOTES EXPORT\n";
+        $content .= str_repeat("=", 50) . "\n";
+        $content .= "Exported on " . now()->format('F d, Y') . "\n\n";
+
+        foreach ($notes as $note) {
+            $content .= strtoupper($note->title) . "\n";
+            $content .= "By " . ($note->user->name ?? 'Unknown') . " on {$note->created_at->format('F d, Y')}\n\n";
+            $content .= strip_tags($note->content) . "\n\n";
+            $content .= str_repeat("-", 50) . "\n\n";
+        }
+
+        return $content;
     }
 }

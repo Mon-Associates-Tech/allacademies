@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicLevel extends Model
@@ -121,5 +122,20 @@ class AcademicLevel extends Model
         return $query->whereHas('schools', function($q) use ($user) {
             $q->where('school_id', $user->school_id)->where('is_active', true);
         });
+    }
+
+    public function resources(): MorphMany
+    {
+        return $this->morphMany(AcademicResource::class, 'resourceable');
+    }
+
+    public function todos(): MorphMany
+    {
+        return $this->morphMany(Todo::class, 'todoable');
+    }
+
+    public function notes(): MorphMany
+    {
+        return $this->morphMany(Note::class, 'noteable');
     }
 }

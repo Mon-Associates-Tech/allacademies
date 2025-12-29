@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicTopic extends Model
@@ -62,5 +63,18 @@ class AcademicTopic extends Model
         return $this->morphMany(Question::class, 'questionable');
     }
 
+    public function resources(): MorphMany
+    {
+        return $this->morphMany(AcademicResource::class, 'resourceable');
+    }
 
+    public function todos(): MorphMany
+    {
+        return $this->morphMany(Todo::class, 'todoable');
+    }
+
+    public function notes(): MorphMany
+    {
+        return $this->morphMany(Note::class, 'noteable');
+    }
 }
