@@ -236,6 +236,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserTokenSubscription::class);
     }
 
+    public function subscriptionCycles(): HasMany
+    {
+        return $this->hasMany(\App\Models\Chat\SubscriptionCycle::class);
+    }
+
     // Multi-tenant role checking
 
     public function subscriptions(): User|HasMany

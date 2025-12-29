@@ -139,42 +139,7 @@
                         </div>
                     @endif
 
-                    {{-- Trial Eligibility Banner --}}
-                    @if($isEligibleForTrial && $trialPackage)
-                        <div class="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border-2 border-green-300 dark:border-green-700 shadow-lg hover:shadow-xl transition-all duration-300 animate-slideIn">
-                            <div class="flex items-start gap-4">
-                                <div class="flex-shrink-0 text-4xl animate-bounce">🎉</div>
-                                <div class="flex-1">
-                                    <h3 class="text-xl font-bold text-green-900 dark:text-green-100 mb-2">
-                                        You're Eligible for a FREE Trial!
-                                    </h3>
-                                    <p class="text-green-800 dark:text-green-200 text-base mb-4">
-                                        Get <strong class="text-lg">{{ number_format($trialPackage->token_limit) }} free messengers</strong> for <strong>7 days</strong>—absolutely risk-free!
-                                    </p>
-                                    <div class="flex gap-2 flex-wrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 shadow-sm">
-                                            ✓ No credit card required
-                                        </span>
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 shadow-sm">
-                                            ✓ Start immediately
-                                        </span>
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 shadow-sm">
-                                            ✓ Full feature access
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @elseif(!$isEligibleForTrial)
-                        <div class="mb-8 bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-800 max-w-2xl mx-auto animate-fadeIn shadow-sm">
-                            <p class="text-blue-800 dark:text-blue-200 text-sm flex items-start gap-3">
-                                <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                                <span><strong>Trial Already Used:</strong> You've already used your free trial. Choose a paid package below to continue using Messenger features.</span>
-                            </p>
-                        </div>
-                    @endif
+
 
                     {{-- Package Cards Grid --}}
                     <div class="mb-8">
@@ -185,84 +150,49 @@
                                     <thead>
                                         <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-200 dark:border-gray-700">
                                             <th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white">Feature</th>
-                                            @if($isEligibleForTrial && $trialPackage)
-                                                <th class="px-6 py-4 text-center text-sm font-bold text-green-700 dark:text-green-300">
-                                                    <div class="flex items-center justify-center gap-2">
-                                                        <span>Free Trial</span>
-                                                        <span class="text-xs bg-green-200 dark:bg-green-900 text-green-800 dark:text-green-100 px-2 py-1 rounded-full">7 Days</span>
-                                                    </div>
-                                                </th>
-                                            @endif
-                                            @foreach($packages as $pkg)
-                                                <th class="px-6 py-4 text-center text-sm font-bold {{ $pkg->name === 'Premium' ? 'text-purple-700 dark:text-purple-300' : 'text-blue-700 dark:text-blue-300' }}">
-                                                    {{ $pkg->name }}
+                                            @foreach($pricingTiers as $tier)
+                                                <th class="px-6 py-4 text-center text-sm font-bold {{ $tier->name === 'Premium' ? 'text-purple-700 dark:text-purple-300' : 'text-blue-700 dark:text-blue-300' }}">
+                                                    {{ $tier->name }}
                                                 </th>
                                             @endforeach
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Price</td>
-                                            @if($isEligibleForTrial && $trialPackage)
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Initial Price (6 months)</td>
+                                            @foreach($pricingTiers as $tier)
                                                 <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">FREE</span>
-                                                </td>
-                                            @endif
-                                            @foreach($packages as $pkg)
-                                                <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-2xl font-bold {{ $pkg->name === 'Premium' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }}">GH₵ {{ number_format($pkg->price, 2) }}</span>
+                                                    <span class="text-2xl font-bold {{ $tier->name === 'Premium' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }}">GH₵ {{ number_format($tier->initial_price, 2) }}</span>
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Messengers</td>
-                                            @if($isEligibleForTrial && $trialPackage)
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Reduced Price (after 6 months)</td>
+                                            @foreach($pricingTiers as $tier)
                                                 <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($trialPackage->token_limit) }}</span>
-                                                </td>
-                                            @endif
-                                            @foreach($packages as $pkg)
-                                                <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-2xl font-bold {{ $pkg->name === 'Premium' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }}">{{ number_format($pkg->token_limit) }}</span>
+                                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">GH₵ {{ number_format($tier->subsequent_price, 2) }}</span>
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors bg-blue-50/50 dark:bg-blue-900/10">
-                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Cost per Messenger</td>
-                                            @if($isEligibleForTrial && $trialPackage)
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Monthly Tokens</td>
+                                            @foreach($pricingTiers as $tier)
                                                 <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-lg font-bold text-green-600 dark:text-green-400">FREE</span>
-                                                </td>
-                                            @endif
-                                            @foreach($packages as $pkg)
-                                                <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-lg font-bold {{ $pkg->name === 'Premium' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }}">GH₵ {{ number_format($pkg->price / $pkg->token_limit, 4) }}</span>
+                                                    <span class="text-2xl font-bold {{ $tier->name === 'Premium' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }}">{{ number_format($tier->monthly_token_limit) }}</span>
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Duration</td>
-                                            @if($isEligibleForTrial && $trialPackage)
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Billing</td>
+                                            @foreach($pricingTiers as $tier)
                                                 <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-300">7 days</span>
-                                                </td>
-                                            @endif
-                                            @foreach($packages as $pkg)
-                                                <td class="px-6 py-4 text-center text-sm">
-                                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Forever</span>
+                                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Monthly Recurring</span>
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">All Features</td>
-                                            @if($isEligibleForTrial && $trialPackage)
-                                                <td class="px-6 py-4 text-center">
-                                                    <svg class="w-6 h-6 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                </td>
-                                            @endif
-                                            @foreach($packages as $pkg)
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Auto Reset</td>
+                                            @foreach($pricingTiers as $tier)
                                                 <td class="px-6 py-4 text-center">
                                                     <svg class="w-6 h-6 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -271,15 +201,8 @@
                                             @endforeach
                                         </tr>
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Priority Support</td>
-                                            @if($isEligibleForTrial && $trialPackage)
-                                                <td class="px-6 py-4 text-center">
-                                                    <svg class="w-6 h-6 text-gray-300 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                </td>
-                                            @endif
-                                            @foreach($packages as $pkg)
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Cancel Anytime</td>
+                                            @foreach($pricingTiers as $tier)
                                                 <td class="px-6 py-4 text-center">
                                                     <svg class="w-6 h-6 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -293,220 +216,142 @@
                         </div>
 
                         {{-- Value Indicators --}}
-                        @if($packages->count() > 1)
-                            <div class="mt-8 grid md:grid-cols-{{ $packages->count() }} gap-4 max-w-4xl mx-auto">
-                                @php
-                                    $sortedByValue = $packages->sortBy(fn($p) => $p->price / $p->token_limit);
-                                    $bestValue = $sortedByValue->first();
-                                @endphp
-                                @foreach($packages as $pkg)
-                                    @php
-                                        $costPer = $pkg->price / $pkg->token_limit;
-                                        $bestCostPer = $bestValue->price / $bestValue->token_limit;
-                                        $savings = (1 - ($costPer / $bestCostPer)) * 100;
-                                    @endphp
-                                    @if($pkg->id === $bestValue->id && $savings > 0)
-                                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4 text-center">
-                                            <div class="flex items-center justify-center gap-2 mb-2">
-                                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                </svg>
-                                                <span class="text-sm font-bold text-green-700 dark:text-green-300">Best Value</span>
-                                            </div>
-                                            <p class="text-xs text-green-600 dark:text-green-400 font-semibold">
-                                                Save {{ number_format($savings, 1) }}% vs other plans
-                                            </p>
-                                        </div>
-                                    @endif
-                                @endforeach
+                        @if($pricingTiers->count() > 1)
+                            <div class="mt-8 grid md:grid-cols-{{ $pricingTiers->count() }} gap-4 max-w-4xl mx-auto">
                             </div>
                         @endif
-                        <div class="grid md:grid-cols-2 {{ $isEligibleForTrial && $trialPackage ? 'lg:grid-cols-3' : '' }} gap-6 max-w-4xl mx-auto">
-                            {{-- Free Trial Package --}}
-                            @if($isEligibleForTrial && $trialPackage)
-                                <form action="{{ route('token-subscriptions.store') }}" method="POST" class="h-full group/form" x-data="{ submitting: false }" @submit="submitting = true">
-                                    @csrf
-                                    <input type="hidden" name="package_id" value="{{ $trialPackage->id }}">
-                                    <div class="h-full flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-green-200 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 transform hover:scale-105 hover:-translate-y-1 animate-fadeInUp" style="animation-delay: 0.1s;">
-                                        {{-- Badge --}}
-                                        <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center py-3 px-4 text-xs font-bold uppercase tracking-widest relative overflow-hidden">
-                                            <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
-                                            <span class="relative">🎁 FREE TRIAL - 7 DAYS</span>
-                                        </div>
+                        <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
 
-                                        {{-- Content --}}
-                                        <div class="p-6 flex flex-col flex-1">
-                                            {{-- Title --}}
-                                            <div class="mb-6">
-                                                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                                    {{ $trialPackage->name }}
-                                                </h3>
-                                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                                    Perfect for trying our features risk-free
-                                                </p>
-                                            </div>
-
-                                            {{-- Price --}}
-                                            <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors">
-                                                <div class="text-center">
-                                                    <div class="text-4xl font-bold text-green-600 dark:text-green-400 mb-1">FREE</div>
-                                                    <p class="text-xs text-gray-600 dark:text-gray-400">No payment required</p>
+                            {{-- Paid Pricing Tiers (Monthly Incremental Pricing) --}}
+                            @if($pricingTiers && $pricingTiers->count() > 0)
+                                @foreach($pricingTiers as $tier)
+                                    @php
+                                        $isPremium = $tier->name === 'Premium';
+                                        $isBasic = $tier->name === 'Basic';
+                                    @endphp
+                                    <form action="{{ route('token-subscriptions.store') }}" method="POST" class="h-full group/form" x-data="{ submitting: false }" @submit="submitting = true">
+                                        @csrf
+                                        <input type="hidden" name="pricing_tier_id" value="{{ $tier->id }}">
+                                        <div class="h-full flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 {{ $isPremium ? 'border-purple-200 dark:border-purple-700 hover:border-purple-400 dark:hover:border-purple-600' : 'border-blue-200 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-600' }} transform hover:scale-105 hover:-translate-y-1 animate-fadeInUp {{ $isPremium ? 'ring-2 ring-purple-400 ring-offset-2 dark:ring-offset-gray-900' : '' }}" style="animation-delay: {{ $loop->index === 0 ? '0.2s' : '0.3s' }};">
+                                            {{-- Premium Badge --}}
+                                            @if($isPremium)
+                                                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 z-50">
+                                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
+                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                        </svg>
+                                                        RECOMMENDED
+                                                    </span>
                                                 </div>
+                                            @endif
+
+                                            {{-- Header Badge --}}
+                                            <div class="bg-gradient-to-r rounded-t-2xl {{ $isPremium ? 'from-purple-500 to-pink-600' : 'from-blue-500 to-cyan-600' }} text-white text-center py-3 px-4 text-xs font-bold uppercase tracking-widest relative overflow-hidden">
+                                                <div class="absolute inset-0 bg-white/10 animate-pulse"></div>
+                                                <span class="relative">{{ $isPremium ? '👑 Premium Plan' : '⭐ Basic Plan' }}</span>
                                             </div>
 
-                                            {{-- Messengers Count --}}
-                                            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                                                <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-semibold">Free Messengers</p>
-                                                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                                                    {{ number_format($trialPackage->token_limit) }}
-                                                </p>
+                                            {{-- Content --}}
+                                            <div class="p-6 flex flex-col flex-1">
+                                                {{-- Title & Description --}}
+                                                <div class="mb-6">
+                                                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                                        {{ $tier->name }}
+                                                    </h3>
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                        {{ $tier->description }}
+                                                    </p>
+                                                </div>
+
+                                                {{-- Pricing Structure --}}
+                                                <div class="mb-6 space-y-3">
+                                                    {{-- Initial Period --}}
+                                                    <div class="p-4 bg-gradient-to-br {{ $isPremium ? 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' : 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' }} rounded-xl border {{ $isPremium ? 'border-purple-200 dark:border-purple-700' : 'border-blue-200 dark:border-blue-700' }}">
+                                                        <div class="flex justify-between items-start mb-2">
+                                                            <div>
+                                                                <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">First 6 Months</p>
+                                                                <p class="text-2xl font-bold {{ $isPremium ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }} mt-1">GH₵ {{ number_format($tier->initial_price, 2) }}/month</p>
+                                                            </div>
+                                                            <span class="inline-block px-2 py-1 bg-{{ $isPremium ? 'purple' : 'blue' }}-200 dark:bg-{{ $isPremium ? 'purple' : 'blue' }}-800 rounded text-xs font-semibold text-{{ $isPremium ? 'purple' : 'blue' }}-700 dark:text-{{ $isPremium ? 'purple' : 'blue' }}-200">Introductory</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Subsequent Period --}}
+                                                    <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-700">
+                                                        <div class="flex justify-between items-start mb-2">
+                                                            <div>
+                                                                <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">After 6 Months</p>
+                                                                <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">GH₵ {{ number_format($tier->subsequent_price, 2) }}/month</p>
+                                                            </div>
+                                                            <span class="inline-block px-2 py-1 bg-green-200 dark:bg-green-800 rounded text-xs font-semibold text-green-700 dark:text-green-200">Reduced</span>
+                                                        </div>
+                                                        <p class="text-xs text-green-700 dark:text-green-300 mt-2 font-medium">
+                                                            💰 Save GH₵ {{ number_format($tier->initial_price - $tier->subsequent_price, 2) }}/month after initial period
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Monthly Tokens --}}
+                                                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-semibold">Monthly Token Allowance</p>
+                                                    <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                                                        {{ number_format($tier->monthly_token_limit) }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                                                        🔄 Tokens reset on the 1st of each month
+                                                    </p>
+                                                </div>
+
+                                                {{-- Key Features --}}
+                                                <ul class="space-y-3 mb-6 flex-1">
+                                                    <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
+                                                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <span class="text-gray-700 dark:text-gray-300">{{ $tier->monthly_token_limit / 1000 }}K tokens per month</span>
+                                                    </li>
+                                                    <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
+                                                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <span class="text-gray-700 dark:text-gray-300">Monthly pricing reset</span>
+                                                    </li>
+                                                    <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
+                                                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <span class="text-gray-700 dark:text-gray-300">Automatic price reduction</span>
+                                                    </li>
+                                                    <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
+                                                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <span class="text-gray-700 dark:text-gray-300">Cancel anytime</span>
+                                                    </li>
+                                                </ul>
+
+                                                {{-- CTA Button --}}
+                                                <button
+                                                    type="submit"
+                                                    :disabled="submitting"
+                                                    class="w-full py-3 px-4 {{ $isPremium ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-purple-400 disabled:to-pink-400' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-blue-400 disabled:to-cyan-400' }} disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md group/btn relative overflow-hidden">
+                                                    <div class="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                                    <span class="flex items-center justify-center gap-2 relative z-10">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                                        </svg>
+                                                        <span x-text="submitting ? 'Processing...' : 'Subscribe Now'"></span>
+                                                    </span>
+                                                </button>
                                             </div>
-
-                                            {{-- Features --}}
-                                            <ul class="space-y-3 mb-6 flex-1">
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Instant activation</span>
-                                                </li>
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">All messenger features</span>
-                                                </li>
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">7 days full access</span>
-                                                </li>
-                                            </ul>
-
-                                            {{-- CTA Button --}}
-                                            <button
-                                                type="submit"
-                                                :disabled="submitting"
-                                                class="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-green-400 disabled:to-emerald-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md group/btn relative overflow-hidden">
-                                                <div class="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                                <span class="flex items-center justify-center gap-2 relative z-10">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                                                    </svg>
-                                                    <span x-text="submitting ? 'Processing...' : 'Activate Free Trial'"></span>
-                                                </span>
-                                            </button>
                                         </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                @endforeach
+                            @else
+                                <div class="col-span-full text-center py-12">
+                                    <p class="text-gray-600 dark:text-gray-400 text-lg">Pricing tiers are not available at the moment. Please try again later.</p>
+                                </div>
                             @endif
-
-                            {{-- Paid Packages --}}
-                            @foreach($packages as $pkg)
-                                @php
-                                    $sortedByValue = $packages->sortBy(fn($p) => $p->price / $p->token_limit);
-                                    $bestValue = $sortedByValue->first();
-                                    $isBestValue = $pkg->id === $bestValue->id;
-                                @endphp
-                                <form action="{{ route('token-subscriptions.store') }}" method="POST" class="h-full group/form" x-data="{ submitting: false }" @submit="submitting = true">
-                                    @csrf
-                                    <input type="hidden" name="package_id" value="{{ $pkg->id }}">
-                                    <div class="h-full flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300  border-2 {{ $pkg->name === 'Premium' ? 'border-purple-200 dark:border-purple-700 hover:border-purple-400 dark:hover:border-purple-600' : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600' }} transform hover:scale-105 hover:-translate-y-1 animate-fadeInUp {{ $isBestValue ? 'ring-2 ring-green-400 ring-offset-2 dark:ring-offset-gray-900' : '' }}" style="animation-delay: {{ $loop->index === 0 ? '0.2s' : '0.3s' }};">
-                                        {{-- Best Value Badge --}}
-                                        @if($isBestValue)
-                                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 z-50">
-                                                <span class="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
-                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                    </svg>
-                                                    RECOMMENDED
-                                                </span>
-                                            </div>
-                                        @endif
-
-                                        {{-- Badge --}}
-                                        <div class="bg-gradient-to-r rounded-t-2xl {{ $pkg->name === 'Premium' ? 'from-purple-500 to-purple-600' : 'from-blue-500 to-blue-600' }} text-white text-center py-3 px-4 text-xs font-bold uppercase tracking-widest relative overflow-hidden">
-                                            <div class="absolute inset-0 bg-white/10 animate-pulse"></div>
-                                            <span class="relative">{{ $pkg->name === 'Premium' ? '👑 BEST VALUE' : '⭐ MOST POPULAR' }}</span>
-                                        </div>
-
-                                        {{-- Content --}}
-                                        <div class="p-6 flex flex-col flex-1">
-                                            {{-- Title --}}
-                                            <div class="mb-6">
-                                                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                                    {{ $pkg->name }} Plan
-                                                </h3>
-                                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ $pkg->description }}
-                                                </p>
-                                            </div>
-
-                                            {{-- Price --}}
-                                            <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-                                                <div class="text-center">
-                                                    <div class="text-4xl font-bold text-gray-900 dark:text-white">GH₵ <span class="text-3xl">{{ number_format($pkg->price, 2) }}</span></div>
-                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 font-medium">One-time payment</p>
-                                                </div>
-                                            </div>
-
-                                            {{-- Messengers Count --}}
-                                            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                                                <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-semibold">Total Messengers</p>
-                                                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                                                    {{ number_format($pkg->token_limit) }}
-                                                </p>
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
-                                                    ~ GH₵ {{ number_format($pkg->price / $pkg->token_limit, 4) }} per messenger
-                                                </p>
-                                            </div>
-
-                                            {{-- Features --}}
-                                            <ul class="space-y-3 mb-6 flex-1">
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Messengers never expire</span>
-                                                </li>
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">All messenger features</span>
-                                                </li>
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Priority support</span>
-                                                </li>
-                                                <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
-                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                    <span class="text-gray-700 dark:text-gray-300">Secure Paystack payment</span>
-                                                </li>
-                                            </ul>
-
-                                            {{-- CTA Button --}}
-                                            <button
-                                                type="submit"
-                                                :disabled="submitting"
-                                                class="w-full py-3 px-4 {{ $pkg->name === 'Premium' ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-purple-400 disabled:to-purple-500' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-blue-400 disabled:to-indigo-500' }} disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md group/btn relative overflow-hidden">
-                                                <div class="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                                <span class="flex items-center justify-center gap-2 relative z-10">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                                                    </svg>
-                                                    <span x-text="submitting ? 'Processing...' : 'Continue to Payment'"></span>
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            @endforeach
                         </div>
 
                         {{-- Error Message --}}

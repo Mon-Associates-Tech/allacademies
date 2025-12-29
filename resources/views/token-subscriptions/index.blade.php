@@ -89,19 +89,19 @@
                     </div>
                 </div>
 
-                {{-- Active Subscription Card --}}
-                @if($activeSubscription)
+                {{-- Current Monthly Cycle Card --}}
+                @if($currentCycle)
                     <div class="mb-8">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Active Subscription
+                            Current Monthly Cycle
                         </h2>
 
                         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                             {{-- Header Section --}}
-                            <div class="relative overflow-hidden bg-gradient-to-r from-green-500 to-emerald-600 p-6">
+                            <div class="relative overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-600 p-6">
                                 <div class="absolute inset-0 opacity-10">
                                     <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
                                     <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
@@ -110,35 +110,15 @@
                                 <div class="relative flex items-start justify-between">
                                     <div>
                                         <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="text-2xl font-bold text-white">{{ $activeSubscription->package->name }}</h3>
-                                            @if($activeSubscription->package->isFree())
-                                                <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-                                                    🎁 FREE TRIAL
-                                                </span>
-                                            @endif
-                                            @if($activeSubscription->action_type === 'upgrade')
-                                                <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-                                                    ⬆️ UPGRADED
-                                                </span>
-                                            @endif
+                                            <h3 class="text-2xl font-bold text-white">{{ $currentCycle->pricingTier->name }} Plan</h3>
+                                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
+                                                Month {{ $currentCycle->cycle_number }}
+                                            </span>
                                         </div>
-                                        <div class="flex items-center gap-2 text-white/90">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                            </svg>
-                                            <span>{{ $activeSubscription->package->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</span>
-                                        </div>
-                                        @if($activeSubscription->expires_at)
-                                            <p class="text-sm text-white/80 mt-2 flex items-center">
-                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                                Expires: {{ $activeSubscription->expires_at->format('M d, Y') }} ({{ $activeSubscription->expires_at->diffForHumans() }})
-                                            </p>
-                                        @endif
+                                        <p class="text-white/90">GH₵ {{ number_format($currentCycle->current_price, 2) }}/month • {{ number_format($currentCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
                                     </div>
                                     <span class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-                                        ✓ Active
+                                        ✓ {{ ucfirst($currentCycle->status) }}
                                     </span>
                                 </div>
                             </div>
@@ -148,80 +128,49 @@
                                 <div class="grid grid-cols-3 gap-4 mb-6">
                                     <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Available</p>
-                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($activeSubscription->tokens_remaining) }}</p>
+                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->tokens_used) }}</p>
                                     </div>
-                                    <div class="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                    <div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Used</p>
-                                        <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ number_format($activeSubscription->tokens_used) }}</p>
+                                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->tokens_used) }}</p>
                                     </div>
                                     <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total</p>
-                                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($activeSubscription->tokens_purchased) }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total/Month</p>
+                                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($currentCycle->tokens_allocated) }}</p>
                                     </div>
                                 </div>
 
                                 {{-- Progress Bar --}}
                                 <div class="mb-4">
+                                    @php
+                                        $usagePercent = ($currentCycle->tokens_used / $currentCycle->tokens_allocated) * 100;
+                                    @endphp
                                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                        <span>Messenger Usage</span>
-                                        <span class="font-semibold">{{ number_format($activeSubscription->remaining_percentage, 1) }}% remaining</span>
+                                        <span>Token Usage Progress</span>
+                                        <span class="font-semibold">{{ round($usagePercent, 1) }}%</span>
                                     </div>
                                     <div class="relative w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div class="h-full rounded-full transition-all duration-500 {{ $activeSubscription->remaining_percentage <= 10 ? 'bg-gradient-to-r from-red-500 to-pink-500' : ($activeSubscription->remaining_percentage <= 30 ? 'bg-gradient-to-r from-orange-500 to-yellow-500' : 'bg-gradient-to-r from-green-500 to-emerald-500') }}"
-                                             style="width: {{ $activeSubscription->remaining_percentage }}%">
+                                        <div class="h-full rounded-full transition-all duration-500 {{ $usagePercent >= 90 ? 'bg-gradient-to-r from-red-500 to-pink-500' : ($usagePercent >= 70 ? 'bg-gradient-to-r from-orange-500 to-yellow-500' : 'bg-gradient-to-r from-blue-500 to-cyan-500') }}"
+                                             style="width: {{ $usagePercent }}%">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <a href="{{ route('token-subscriptions.show', $activeSubscription->id) }}"
-                                       class="inline-flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <span class="font-semibold">Cycle:</span> {{ $currentCycle->cycle_start_date->format('M d') }} - {{ $currentCycle->cycle_end_date->format('M d, Y') }}
+                                    </div>
+                                    <a href="{{ route('token-subscriptions.show', $currentCycle->id) }}"
+                                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm">
                                         View Details
                                         <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                         </svg>
                                     </a>
-
-                                    @if($activeSubscription->isNearingDepletion())
-                                        <a href="{{ route('token-subscriptions.create') }}"
-                                           class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors text-sm">
-                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                            </svg>
-                                            Top Up Now
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    {{-- Free Trial Upgrade Notice --}}
-                    @if($activeSubscription->package->isFree() && $activeSubscription->expires_at)
-                        <div class="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-l-4 border-yellow-400 p-6 rounded-r-xl">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div class="ml-4 flex-1">
-                                    <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">⏰ Free Trial Ending Soon</h3>
-                                    <p class="text-yellow-700 dark:text-yellow-300 mt-2">
-                                        Your free trial will expire in {{ $activeSubscription->expires_at->diffForHumans(null, true) }}.
-                                        Upgrade now to continue using AI features without interruption.
-                                    </p>
-                                    <a href="{{ route('token-subscriptions.create') }}"
-                                       class="mt-4 inline-flex items-center px-5 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors shadow-lg">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                                        </svg>
-                                        View Upgrade Options
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                 @else
                     {{-- No Active Subscription --}}
                     <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-12 text-center border border-gray-200 dark:border-gray-700">

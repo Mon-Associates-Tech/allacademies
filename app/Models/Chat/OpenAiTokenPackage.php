@@ -5,6 +5,7 @@ namespace App\Models\Chat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OpenAiTokenPackage extends Model
 {
@@ -18,7 +19,8 @@ class OpenAiTokenPackage extends Model
         'price',
         'description',
         'is_active',
-        'is_free'
+        'is_free',
+        'pricing_tier_id'
     ];
 
     protected $casts = [
@@ -31,6 +33,11 @@ class OpenAiTokenPackage extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(UserTokenSubscription::class, 'package_id');
+    }
+
+    public function pricingTier(): BelongsTo
+    {
+        return $this->belongsTo(PricingTier::class, 'pricing_tier_id');
     }
 
     public function scopeActive($query)
