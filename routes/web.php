@@ -383,13 +383,13 @@ Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, '
     ->name('subscriptions.toggle-test-mode')
     ->middleware('auth');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
-    Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
-    Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
-    Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
-
-    Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
+        Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
+        Route::post('/token-subscriptions/checkout', [TokenSubscriptionController::class, 'checkout'])->name('token-subscriptions.checkout');
+        Route::post('/token-subscriptions/process-payment', [TokenSubscriptionController::class, 'processPayment'])->name('token-subscriptions.process-payment');
+        Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
+        Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');    Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
 
     // View a specific user's performance (for parents/teachers)
     Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');

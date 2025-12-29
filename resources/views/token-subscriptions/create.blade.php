@@ -220,19 +220,26 @@
                             <div class="mt-8 grid md:grid-cols-{{ $pricingTiers->count() }} gap-4 max-w-4xl mx-auto">
                             </div>
                         @endif
-                        <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        
+                        {{-- Step 1: Tier Selection --}}
+                        <div class="mb-12" x-data="{ selectedTier: null, selectedMonths: 1 }">
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Step 1: Choose Your Tier</h2>
+                            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
 
-                            {{-- Paid Pricing Tiers (Monthly Incremental Pricing) --}}
-                            @if($pricingTiers && $pricingTiers->count() > 0)
-                                @foreach($pricingTiers as $tier)
-                                    @php
-                                        $isPremium = $tier->name === 'Premium';
-                                        $isBasic = $tier->name === 'Basic';
-                                    @endphp
-                                    <form action="{{ route('token-subscriptions.store') }}" method="POST" class="h-full group/form" x-data="{ submitting: false }" @submit="submitting = true">
-                                        @csrf
-                                        <input type="hidden" name="pricing_tier_id" value="{{ $tier->id }}">
-                                        <div class="h-full flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 {{ $isPremium ? 'border-purple-200 dark:border-purple-700 hover:border-purple-400 dark:hover:border-purple-600' : 'border-blue-200 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-600' }} transform hover:scale-105 hover:-translate-y-1 animate-fadeInUp {{ $isPremium ? 'ring-2 ring-purple-400 ring-offset-2 dark:ring-offset-gray-900' : '' }}" style="animation-delay: {{ $loop->index === 0 ? '0.2s' : '0.3s' }};">
+                                {{-- Paid Pricing Tiers (Monthly Incremental Pricing) --}}
+                                @if($pricingTiers && $pricingTiers->count() > 0)
+                                    @foreach($pricingTiers as $tier)
+                                        @php
+                                            $isPremium = $tier->name === 'Premium';
+                                            $isBasic = $tier->name === 'Basic';
+                                        @endphp
+                                        <button
+                                            @click="selectedTier = {{ $tier->id }}"
+                                            type="button"
+                                            class="text-left h-full group/form transition-all duration-300 border-2 {{ $isPremium ? 'border-purple-200 dark:border-purple-700' : 'border-blue-200 dark:border-blue-700' }} rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden transform hover:scale-105 hover:-translate-y-1 animate-fadeInUp {{ $isPremium ? 'ring-2 ring-purple-400 ring-offset-2 dark:ring-offset-gray-900' : '' }}" style="animation-delay: {{ $loop->index === 0 ? '0.2s' : '0.3s' }};" :class="{ 
+                                                'bg-gradient-to-br {{ $isPremium ? 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' : 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' }}': selectedTier === {{ $tier->id }},
+                                                'bg-white dark:bg-gray-800': selectedTier !== {{ $tier->id }}
+                                            }">
                                             {{-- Premium Badge --}}
                                             @if($isPremium)
                                                 <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 z-50">
@@ -252,7 +259,16 @@
                                             </div>
 
                                             {{-- Content --}}
-                                            <div class="p-6 flex flex-col flex-1">
+                                            <div class="p-6 flex flex-col flex-1 relative">
+                                                {{-- Selection Indicator --}}
+                                                <div class="absolute top-4 right-4">
+                                                    <div :class="{ 'opacity-100': selectedTier === {{ $tier->id }}, 'opacity-0': selectedTier !== {{ $tier->id }} }" class="transition-opacity duration-300">
+                                                        <svg class="w-6 h-6 {{ $isPremium ? 'text-purple-600' : 'text-blue-600' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+
                                                 {{-- Title & Description --}}
                                                 <div class="mb-6">
                                                     <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -272,7 +288,7 @@
                                                                 <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">First 6 Months</p>
                                                                 <p class="text-2xl font-bold {{ $isPremium ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }} mt-1">GH₵ {{ number_format($tier->initial_price, 2) }}/month</p>
                                                             </div>
-                                                            <span class="inline-block px-2 py-1 bg-{{ $isPremium ? 'purple' : 'blue' }}-200 dark:bg-{{ $isPremium ? 'purple' : 'blue' }}-800 rounded text-xs font-semibold text-{{ $isPremium ? 'purple' : 'blue' }}-700 dark:text-{{ $isPremium ? 'purple' : 'blue' }}-200">Introductory</span>
+                                                            <span class="inline-block px-2 py-1 bg-{{ $isPremium ? 'purple' : 'blue' }}-200 dark:bg-{{ $isPremium ? 'purple' : 'blue' }}-800 rounded text-xs font-semibold text-{{ $isPremium ? 'purple' : 'blue' }}-700 dark:text-{{ $isPremium ? 'purple' : 'blue' }}-200">Intro</span>
                                                         </div>
                                                     </div>
 
@@ -285,9 +301,6 @@
                                                             </div>
                                                             <span class="inline-block px-2 py-1 bg-green-200 dark:bg-green-800 rounded text-xs font-semibold text-green-700 dark:text-green-200">Reduced</span>
                                                         </div>
-                                                        <p class="text-xs text-green-700 dark:text-green-300 mt-2 font-medium">
-                                                            💰 Save GH₵ {{ number_format($tier->initial_price - $tier->subsequent_price, 2) }}/month after initial period
-                                                        </p>
                                                     </div>
                                                 </div>
 
@@ -329,29 +342,77 @@
                                                         <span class="text-gray-700 dark:text-gray-300">Cancel anytime</span>
                                                     </li>
                                                 </ul>
+                                            </div>
+                                        </button>
+                                    @endforeach
+                                @else
+                                    <div class="col-span-full text-center py-12">
+                                        <p class="text-gray-600 dark:text-gray-400 text-lg">Pricing tiers are not available at the moment. Please try again later.</p>
+                                    </div>
+                                @endif
+                            </div>
 
-                                                {{-- CTA Button --}}
-                                                <button
-                                                    type="submit"
-                                                    :disabled="submitting"
-                                                    class="w-full py-3 px-4 {{ $isPremium ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-purple-400 disabled:to-pink-400' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-blue-400 disabled:to-cyan-400' }} disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md group/btn relative overflow-hidden">
-                                                    <div class="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                                    <span class="flex items-center justify-center gap-2 relative z-10">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                                                        </svg>
-                                                        <span x-text="submitting ? 'Processing...' : 'Subscribe Now'"></span>
-                                                    </span>
-                                                </button>
+                            {{-- Step 2: Duration Selection --}}
+                            <div x-show="selectedTier" x-transition class="mb-12 max-w-4xl mx-auto">
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Step 2: Select Duration (Months)</h2>
+                                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8">
+                                    <p class="text-gray-600 dark:text-gray-400 mb-6">How many months would you like to subscribe for?</p>
+                                    
+                                    {{-- Month Options Grid --}}
+                                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-8">
+                                        @for ($m = 1; $m <= 12; $m++)
+                                            <button
+                                                @click="selectedMonths = {{ $m }}"
+                                                type="button"
+                                                class="py-3 px-2 rounded-lg font-semibold text-sm transition-all duration-300 border-2"
+                                                :class="{
+                                                    'bg-blue-600 dark:bg-blue-700 text-white border-blue-600 dark:border-blue-700': selectedMonths === {{ $m }},
+                                                    'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 hover:border-blue-400': selectedMonths !== {{ $m }}
+                                                }">
+                                                {{ $m }}mo
+                                            </button>
+                                        @endfor
+                                    </div>
+
+                                    {{-- Price Calculation --}}
+                                    <template x-if="selectedTier">
+                                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Price Breakdown</h3>
+                                            <div class="space-y-3">
+                                                <div class="flex justify-between items-center pb-3 border-b border-blue-200 dark:border-blue-700">
+                                                    <span class="text-gray-600 dark:text-gray-400">Selected Duration</span>
+                                                    <span class="font-semibold text-gray-900 dark:text-white" x-text="`${selectedMonths} month(s)`"></span>
+                                                </div>
+                                                <div class="flex justify-between items-center pb-3 border-b border-blue-200 dark:border-blue-700">
+                                                    <span class="text-gray-600 dark:text-gray-400">Monthly Rate</span>
+                                                    <span class="font-semibold text-gray-900 dark:text-white" x-text="selectedTier === 1 ? 'GH₵ {{ number_format($pricingTiers->first()->initial_price, 2) }}' : 'GH₵ {{ number_format($pricingTiers->last()->initial_price, 2) }}'"></span>
+                                                </div>
+                                                <div class="flex justify-between items-center pt-3">
+                                                    <span class="text-lg font-bold text-gray-900 dark:text-white">Total Cost</span>
+                                                    <span class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="`GH₵ ${(selectedMonths * (selectedTier === 1 ? {{ $pricingTiers->first()->initial_price }} : {{ $pricingTiers->last()->initial_price }})).toFixed(2)}`"></span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </form>
-                                @endforeach
-                            @else
-                                <div class="col-span-full text-center py-12">
-                                    <p class="text-gray-600 dark:text-gray-400 text-lg">Pricing tiers are not available at the moment. Please try again later.</p>
+                                    </template>
+
+                                    {{-- Continue to Payment Button --}}
+                                    <div class="mt-8">
+                                        <form action="{{ route('token-subscriptions.checkout') }}" method="POST" x-show="selectedTier">
+                                            @csrf
+                                            <input type="hidden" name="pricing_tier_id" :value="selectedTier">
+                                            <input type="hidden" name="months" :value="selectedMonths">
+                                            <button
+                                                type="submit"
+                                                class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                                </svg>
+                                                Proceed to Payment
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                            @endif
+                            </div>
                         </div>
 
                         {{-- Error Message --}}
