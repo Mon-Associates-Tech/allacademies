@@ -144,8 +144,13 @@ class TokenSubscriptionService
 
             if ($currentActive && $currentActive->id !== $subscription->id) {
                 // Carry over remaining tokens if needed
+                // Get the token limit from either package or pricing tier
+                $tokenLimit = $subscription->package 
+                    ? $subscription->package->token_limit 
+                    : $subscription->pricingTier?->monthly_token_limit ?? $subscription->tokens_purchased;
+                
                 if ($currentActive->tokens_remaining > 0 &&
-                    $subscription->tokens_purchased == $subscription->package->token_limit) {
+                    $subscription->tokens_purchased == $tokenLimit) {
 
                     $carryOverTokens = $currentActive->tokens_remaining;
 
@@ -163,7 +168,7 @@ class TokenSubscriptionService
                 }
 
                 // Deactivate old subscription
-                $currentActive->deactivate('replaced');
+                $currentActive->deactivate(TokenSubscriptionStatus::REPLACED);
                 $currentActive->replaced_by_id = $subscription->id;
                 $currentActive->save();
 
@@ -257,7 +262,7 @@ class TokenSubscriptionService
             return 'purchase';
         }
 
-        $currentPrice = $current->package->price;
+        $currentPrice = $current->package ? $current->package->price : $current->pricingTier?->initial_price ?? 0;
         $newPrice = $new->price;
 
         if ($newPrice > $currentPrice) return 'upgrade';

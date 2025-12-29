@@ -39,6 +39,7 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TokenPaymentController;
 use App\Http\Controllers\TokenSubscriptionController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
@@ -395,8 +396,12 @@ Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, '
     Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
 
     // Token Payment Routes
-    Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
-    Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
+//    Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
+//    Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
+        Route::prefix('token-payments')->name('token-payments.')->group(function () {
+            Route::get('/token/{subscription}/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
+            Route::get('/callback', [TokenPaymentController::class, 'callback'])->name('callback');
+        });
 
     Route::get('/user-books/create', fn() => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
     Route::get('/user-books/shared', fn() => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');

@@ -36,6 +36,7 @@ class UserTokenSubscription extends Model
     protected $fillable = [
         'user_id',
         'package_id',
+        'pricing_tier_id',
         'reference',
         'tokens_purchased',
         'tokens_used',
@@ -82,6 +83,11 @@ class UserTokenSubscription extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(OpenAiTokenPackage::class, 'package_id');
+    }
+
+    public function pricingTier(): BelongsTo
+    {
+        return $this->belongsTo(PricingTier::class);
     }
 
     public function usageLogs(): HasMany

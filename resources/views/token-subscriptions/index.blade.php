@@ -12,11 +12,11 @@
 
                         @if($activeSubscription)
                             <a href="{{ route('token-subscriptions.create') }}"
-                               class="inline-flex items-center px-5 py-2.5 {{ $activeSubscription->package->isFree() ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' }} text-white rounded-lg font-medium transition-all shadow-lg">
+                               class="inline-flex items-center px-5 py-2.5 {{ $activeSubscription->package && $activeSubscription->package->isFree() ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' }} text-white rounded-lg font-medium transition-all shadow-lg">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                 </svg>
-                                {{ $activeSubscription->package->isFree() ? 'Upgrade Package' : 'Change Package' }}
+                                {{ $activeSubscription->package && $activeSubscription->package->isFree() ? 'Upgrade Package' : 'Change Package' }}
                             </a>
                         @else
                             <a href="{{ route('token-subscriptions.create') }}"
