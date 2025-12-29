@@ -9,6 +9,7 @@ use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
 use App\Models\AcademicGroup;
 use App\Models\School;
+use App\Models\Subaccount;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -26,6 +27,9 @@ class FeeStructureSetup extends Component
     public $academic_level_id = '';
     public $academic_period_id = ''; // Replaces current_term_id
     public $payment_type = '';
+    public $custom_payment_type = ''; // For custom payment types
+    public $use_custom_payment_type = false; // Toggle between predefined and custom
+    public $subaccount_id = ''; // Account to receive payment
     public $amount = '';
     public $due_date = '';
     public $payment_period = '';
@@ -50,6 +54,7 @@ class FeeStructureSetup extends Component
     public $academicPeriods = [];
     public $paymentTypes = [];
     public $paymentPeriods = [];
+    public $schoolSubaccounts = []; // Available subaccounts for the school
 
     public $showFormModal = false;
     public $formMode = 'create';
@@ -66,7 +71,9 @@ class FeeStructureSetup extends Component
             'academic_period_id' => 'nullable|exists:academic_periods,id',
             'academic_group_id' => 'nullable|exists:academic_groups,id',
             'academic_level_id' => 'nullable|exists:academic_levels,id',
-            'payment_type' => 'required|string',
+            'payment_type' => $this->use_custom_payment_type ? 'nullable' : 'required|string',
+            'custom_payment_type' => $this->use_custom_payment_type ? 'required|string|max:255' : 'nullable',
+            'subaccount_id' => 'nullable|exists:subaccounts,id',
             'amount' => 'required|numeric|min:0',
             'due_date' => 'nullable|date',
             'payment_period' => 'nullable|string',
@@ -96,8 +103,41 @@ class FeeStructureSetup extends Component
     {
         $this->loadAcademicYears();
         $this->loadAcademicGroups();
+        $this->loadSchoolSubaccounts();
         $this->paymentTypes = SchoolPaymentStructure::paymentTypes();
         $this->paymentPeriods = SchoolPaymentStructure::paymentPeriods();
+    }
+
+    /**
+     * Load all active subaccounts for the school
+     */
+    public function loadSchoolSubaccounts()
+    {
+        $schoolId = $this->getSchoolId();
+
+        if (!$schoolId) {
+            $this->schoolSubaccounts = collect();
+            return;
+        }
+
+
+        $this->schoolSubaccounts = Subaccount::whereIn('subaccountable_type', [School::class, 'school'])
+            ->where('subaccountable_id', $schoolId)
+            ->where('status', 'active')
+            ->orderBy('is_primary', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($account) {
+                return [
+                    'id' => $account->id,
+                    'label' => ($account->is_primary ? '[Primary] ' : '') . ($account->name ?? $account->business_name),
+                    'name' => $account->name,
+                    'business_name' => $account->business_name,
+                    'bank' => $account->settlement_bank,
+                    'account_number' => $account->account_number,
+                ];
+            })
+            ->toArray();
     }
 
     public function loadAcademicYears()
@@ -206,6 +246,7 @@ class FeeStructureSetup extends Component
         $this->resetForm();
         $this->loadAcademicYears();
         $this->loadAcademicGroups();
+        $this->loadSchoolSubaccounts();
         $this->showFormModal = true;
         $this->formMode = 'create';
     }
@@ -219,6 +260,9 @@ class FeeStructureSetup extends Component
             'academic_level_id',
             'academic_period_id',
             'payment_type',
+            'custom_payment_type',
+            'use_custom_payment_type',
+            'subaccount_id',
             'amount',
             'due_date',
             'payment_period',
@@ -232,6 +276,7 @@ class FeeStructureSetup extends Component
         ]);
         $this->is_mandatory = true;
         $this->allow_partial_payment = false;
+        $this->use_custom_payment_type = false;
         $this->academicLevels = [];
         $this->academicPeriods = [];
         $this->resetErrorBag();
@@ -272,7 +317,20 @@ class FeeStructureSetup extends Component
         $this->academic_group_id = $fee->academic_group_id;
         $this->academic_level_id = $fee->academic_level_id;
         $this->academic_period_id = $fee->academic_period_id;
-        $this->payment_type = $fee->payment_type;
+        $this->subaccount_id = $fee->subaccount_id;
+
+        // Determine if payment type is custom
+        $predefinedTypes = SchoolPaymentStructure::paymentTypes();
+        if (in_array($fee->payment_type, array_keys($predefinedTypes))) {
+            $this->use_custom_payment_type = false;
+            $this->payment_type = $fee->payment_type;
+            $this->custom_payment_type = '';
+        } else {
+            $this->use_custom_payment_type = true;
+            $this->custom_payment_type = $fee->payment_type;
+            $this->payment_type = '';
+        }
+
         $this->amount = $fee->amount;
         $this->due_date = $fee->due_date?->format('Y-m-d');
         $this->payment_period = $fee->payment_period;
@@ -334,6 +392,9 @@ class FeeStructureSetup extends Component
                 $this->academic_period_id = $period->id;
             }
 
+            // Determine payment type (custom or predefined)
+            $finalPaymentType = $this->use_custom_payment_type ? $this->custom_payment_type : $this->payment_type;
+
             $data = [
                 'school_id' => $schoolId,
                 'name' => $this->name,
@@ -341,7 +402,8 @@ class FeeStructureSetup extends Component
                 'academic_period_id' => $this->academic_period_id ?: null,
                 'academic_group_id' => $this->academic_group_id ?: null,
                 'academic_level_id' => $this->academic_level_id ?: null,
-                'payment_type' => $this->payment_type,
+                'payment_type' => $finalPaymentType,
+                'subaccount_id' => $this->subaccount_id ?: null,
                 'amount' => $this->amount,
                 'due_date' => $this->due_date ?: null,
                 'payment_period' => $this->payment_period ?: null,
@@ -366,7 +428,7 @@ class FeeStructureSetup extends Component
             $this->closeModal();
         } catch (Exception $e) {
             session()->flash('error', 'Failed to save payment structure: ' . $e->getMessage());
-            Log::error('Payment structure save error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Payment structure save error: ' . $e->getMessage());
         }
     }
 
