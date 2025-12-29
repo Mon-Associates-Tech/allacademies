@@ -360,6 +360,91 @@ if (!function_exists('getTimeRemaining')) {
         return $user->school_id;
     }
 
+
+    if (!function_exists('getCurrentSchoolContext')) {
+        /**
+         * Get the current school context for the authenticated user
+         * 
+         * Handles school switching for owners/super admins
+         * Returns the user's school for regular users
+         *
+         * @return \App\Models\School|null
+         */
+        function getCurrentSchoolContext(): ?\App\Models\School
+        {
+            $user = Auth::user();
+    
+            if (!$user) {
+                return null;
+            }
+    
+            // For owners/super admins, check for switched school context
+            if ($user->hasRole('owner') || $user->isSuperAdmin()) {
+                // Check if a specific school is bound in the app container
+                if (app()->bound('current_school')) {
+                    try {
+                        $school = app('current_school');
+                        if ($school instanceof \App\Models\School) {
+                            return $school;
+                        }
+                    } catch (\Exception $e) {
+                        // Fall through to next check
+                    }
+                }
+    
+                // Check session for switched school ID
+                $sessionSchoolId = session('current_school_id');
+                if ($sessionSchoolId) {
+                    try {
+                        $school = \App\Models\School::find($sessionSchoolId);
+                        if ($school) {
+                            return $school;
+                        }
+                    } catch (\Exception $e) {
+                        // Fall through to user's default school
+                    }
+                }
+    
+                // If viewing "all schools" or no context set, return null
+                if (session()->has('current_school_id') && session('current_school_id') === null) {
+                    return null;
+                }
+    
+                // Default to user's own school if they have one
+                return $user->school ?? null;
+            }
+    
+            // For regular users, return their assigned school
+            return $user->school ?? null;
+        }
+    }
+    
+    if (!function_exists('isViewingAllSchools')) {
+        /**
+         * Check if the user is viewing all schools context
+         * 
+         * @return bool
+         */
+        function isViewingAllSchools(): bool
+        {
+            $user = Auth::user();
+    
+            if (!$user || (!$user->hasRole('owner') && !$user->isSuperAdmin())) {
+                return false;
+            }
+    
+            // Check if current_school_id is explicitly set to null in session
+            if (session()->has('current_school_id') && session('current_school_id') === null) {
+                return true;
+            }
+    
+            // Check if no school context is bound
+            $currentSchool = getCurrentSchoolContext();
+            
+            return $currentSchool === null;
+        }
+    }
+
     /**
      * Get a student based on provided parameters
      *
@@ -422,4 +507,5 @@ if (!function_exists('getTimeRemaining')) {
         // No parameters and no authenticated user
         return null;
     }
+
 }

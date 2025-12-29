@@ -58,7 +58,7 @@
 
 <x-alert.impersonation-banner></x-alert.impersonation-banner>
 @if(auth()->check() && auth()->user()->canAccessCrossSchool())
-    {{--    <livewire:administrators.school-switcher />--}}
+        <livewire:administrators.school-switcher />
 @endif
 <!-- Page wrapper -->
 <div class="flex h-screen overflow-hidden">

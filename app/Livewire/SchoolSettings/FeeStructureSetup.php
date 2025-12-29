@@ -205,6 +205,27 @@ class FeeStructureSetup extends Component
         $this->loadAcademicPeriods();
     }
 
+    public function updatedAcademicGroupId($value)
+    {
+        $this->academic_level_id = '';
+        $this->loadAcademicLevels();
+    }
+
+    public function loadAcademicLevels()
+    {
+        $schoolId = $this->getSchoolId();
+
+        if (!$schoolId || !$this->academic_group_id) {
+            $this->academicLevels = [];
+            return;
+        }
+
+        $this->academicLevels = AcademicLevel::where('school_id', $schoolId)
+            ->where('academic_group_id', $this->academic_group_id)
+            ->orderBy('name')
+            ->get();
+    }
+
     public function loadAcademicPeriods()
     {
         $schoolId = $this->getSchoolId();
@@ -224,28 +245,12 @@ class FeeStructureSetup extends Component
         }
     }
 
-    public function updatedAcademicGroupId($value)
-    {
-        $this->academic_level_id = '';
-        $this->loadAcademicLevels();
-    }
-
-    public function loadAcademicLevels()
-    {
-        if ($this->academic_group_id) {
-            $this->academicLevels = AcademicLevel::where('academic_group_id', $this->academic_group_id)
-                ->orderBy('name')
-                ->get();
-        } else {
-            $this->academicLevels = [];
-        }
-    }
-
     public function showCreateForm()
     {
         $this->resetForm();
         $this->loadAcademicYears();
         $this->loadAcademicGroups();
+        $this->loadAcademicLevels();
         $this->loadSchoolSubaccounts();
         $this->showFormModal = true;
         $this->formMode = 'create';
@@ -318,6 +323,9 @@ class FeeStructureSetup extends Component
         $this->academic_level_id = $fee->academic_level_id;
         $this->academic_period_id = $fee->academic_period_id;
         $this->subaccount_id = $fee->subaccount_id;
+
+        // Load academic levels for the selected group
+        $this->loadAcademicLevels();
 
         // Determine if payment type is custom
         $predefinedTypes = SchoolPaymentStructure::paymentTypes();
