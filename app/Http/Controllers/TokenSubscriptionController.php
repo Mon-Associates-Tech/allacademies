@@ -9,6 +9,7 @@ use App\Models\Chat\UserTokenSubscription;
 use App\Models\User;
 use App\Services\TokenSubscriptionService;
 use App\Services\SubscriptionCycleService;
+use App\Support\TokenSubscriptionStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +31,9 @@ class TokenSubscriptionController extends Controller
 
         $activeSubscription = $user->activeTokenSubscription;
         $subscriptionHistory = $user->subscriptionHistory;
-        $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
+        $pendingSubscription = $user->tokenSubscriptions()
+            ->where('status', TokenSubscriptionStatus::PENDING->value)
+            ->first();
 
         // Get current active subscription cycle
         $currentCycle = $user->subscriptionCycles()
@@ -48,6 +51,7 @@ class TokenSubscriptionController extends Controller
             'stats'
         ));
     }
+
     public function create(Request $request)
     {
         /** @var User $user */
@@ -55,7 +59,10 @@ class TokenSubscriptionController extends Controller
         $currentSubscription = $user->activeTokenSubscription;
 
         // Check for pending payment
-        $pendingSubscription = $user->tokenSubscriptions()->where('status', 'pending')->first();
+        $pendingSubscription = $user->tokenSubscriptions()
+            ->where('status', TokenSubscriptionStatus::PENDING->value)
+            ->first();
+        
         if ($pendingSubscription) {
             return redirect()
                 ->route('token-payments.initialize', $pendingSubscription->id)
@@ -70,13 +77,11 @@ class TokenSubscriptionController extends Controller
             ->get();
 
         return view('token-subscriptions.create', compact(
-                'pricingTiers',
-                'pricingTier',
-                'currentSubscription'
-            )
-        );
+            'pricingTiers',
+            'pricingTier',
+            'currentSubscription'
+        ));
     }
-
 
     public function store(Request $request)
     {
@@ -88,20 +93,20 @@ class TokenSubscriptionController extends Controller
         $user = Auth::user();
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
 
-        // Check if user already has an active subscription
+        // Check if user already has an active subscription to the same tier
         $activeSubscription = $user->subscriptionCycles()
             ->where('status', 'active')
+            ->where('pricing_tier_id', $pricingTier->id)
             ->latest()
             ->first();
 
-        if ($activeSubscription && $activeSubscription->pricing_tier_id === $pricingTier->id) {
-            // Same tier - treat as top-up
+        if ($activeSubscription) {
             return redirect()
                 ->route('token-subscriptions.index')
                 ->with('info', 'You already have an active subscription to this tier.');
         }
 
-        // Create or upgrade subscription cycle
+        // Create subscription cycle
         $subscriptionCycle = $this->cycleService->createCycle(
             $user,
             $pricingTier,
@@ -152,91 +157,79 @@ class TokenSubscriptionController extends Controller
         ]);
     }
 
-public function processPayment(Request $request)
-{
-    $request->validate([
-        'pricing_tier_id' => 'required|exists:pricing_tiers,id',
-        'months' => 'required|integer|min:1|max:12',
-    ]);
-
-    /** @var User $user */
-    $user = Auth::user();
-    $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
-    $months = (int) $request->input('months');
-
-    // Calculate total price
-    $monthlyRate = $pricingTier->initial_price;
-    $totalPrice = $monthlyRate * $months;
-
-    // Get the next cycle number for this user across ALL pricing tiers
-    $lastCycle = $user->subscriptionCycles()
-        ->orderBy('cycle_number', 'desc')
-        ->first();
-
-    $nextCycleNumber = ($lastCycle ? $lastCycle->cycle_number : 0) + 1;
-
-    // Create subscription cycles for each month
-    $cycleStartDate = now();
-    $createdCycles = [];
-    for ($i = 0; $i < $months; $i++) {
-        $cycle = $this->cycleService->createCycle(
-            $user,
-            $pricingTier,
-            $cycleStartDate->copy()->addMonths($i),
-            $nextCycleNumber + $i,
-            $totalPrice / $months  // Price per cycle
-        );
-        $createdCycles[] = $cycle;
-    }
-
-    // Find or create the user token subscription
-    // If there's already a pending subscription, use that
-    $pendingSubscription = $user->tokenSubscriptions()
-        ->where('status', 'pending')
-        ->where('pricing_tier_id', $pricingTier->id)
-        ->first();
-
-    if (!$pendingSubscription) {
-        // Create a new pending subscription if none exists
-        $tokensPurchased = $pricingTier->monthly_token_limit * $months;
-        $pendingSubscription = UserTokenSubscription::create([
-            'user_id' => $user->id,
-            'pricing_tier_id' => $pricingTier->id,
-            'status' => 'pending',
-            'reference' => 'TOKEN-' . $user->id . '-' . time(),
-            'package_id' => null,
-            'purchased_at' => now(),
-            'expires_at' => now()->addMonths($months),
-            'tokens_purchased' => $tokensPurchased,
-            'tokens_used' => 0,
-            'tokens_remaining' => $tokensPurchased,
+    public function processPayment(Request $request)
+    {
+        $request->validate([
+            'pricing_tier_id' => 'required|exists:pricing_tiers,id',
+            'months' => 'required|integer|min:1|max:12',
         ]);
+
+        /** @var User $user */
+        $user = Auth::user();
+        $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
+        $months = (int) $request->input('months');
+
+        // Calculate total price
+        $monthlyRate = $pricingTier->initial_price;
+        $totalPrice = $monthlyRate * $months;
+
+        // Get the next cycle number for this user
+        $lastCycle = $user->subscriptionCycles()
+            ->orderBy('cycle_number', 'desc')
+            ->first();
+
+        $nextCycleNumber = ($lastCycle ? $lastCycle->cycle_number : 0) + 1;
+
+        // Create subscription cycles for each month
+        $cycleStartDate = now();
+        for ($i = 0; $i < $months; $i++) {
+            $this->cycleService->createCycle(
+                $user,
+                $pricingTier,
+                $cycleStartDate->copy()->addMonths($i),
+                $nextCycleNumber + $i,
+                $totalPrice / $months
+            );
+        }
+
+        // Find or create the pending subscription
+        $pendingSubscription = $user->tokenSubscriptions()
+            ->where('status', TokenSubscriptionStatus::PENDING->value)
+            ->where('pricing_tier_id', $pricingTier->id)
+            ->first();
+
+        if (!$pendingSubscription) {
+            $tokensPurchased = $pricingTier->monthly_token_limit * $months;
+            $pendingSubscription = UserTokenSubscription::create([
+                'user_id' => $user->id,
+                'pricing_tier_id' => $pricingTier->id,
+                'status' => TokenSubscriptionStatus::PENDING->value,
+                'reference' => 'TOKEN-' . $user->id . '-' . time(),
+                'package_id' => null,
+                'purchased_at' => now(),
+                'expires_at' => now()->addMonths($months),
+                'tokens_purchased' => $tokensPurchased,
+                'tokens_used' => 0,
+                'tokens_remaining' => $tokensPurchased,
+            ]);
+        } else {
+            // Update existing pending subscription
+            $tokensPurchased = $pricingTier->monthly_token_limit * $months;
+            $pendingSubscription->update([
+                'reference' => 'TOKEN-' . $user->id . '-' . time(),
+                'expires_at' => now()->addMonths($months),
+                'tokens_purchased' => $tokensPurchased,
+                'tokens_remaining' => $tokensPurchased,
+            ]);
+        }
+
+        // Redirect to payment
+        return redirect()->route('token-payments.initialize', $pendingSubscription->id)
+            ->with('success', 'Ready for payment. Please complete your transaction.');
     }
-
-    // Update the pending subscription with the new reference and details
-    $tokensPurchased = $pricingTier->monthly_token_limit * $months;
-    $pendingSubscription->update([
-        'reference' => 'TOKEN-' . $user->id . '-' . time(),
-        'expires_at' => now()->addMonths($months),
-        'tokens_purchased' => $tokensPurchased,
-        'tokens_remaining' => $tokensPurchased,
-    ]);
-
-    // Redirect to payment with the subscription ID
-    return redirect()->route('token-payments.initialize', $pendingSubscription->id)
-        ->with([
-            'amount' => $totalPrice * 100,  // Convert to kobo for Paystack
-            'reference' => 'SUB-' . $user->id . '-' . time(),
-            'email' => $user->email,
-            'type' => 'token_subscription',
-            'pricing_tier_id' => $pricingTier->id,
-            'months' => $months,
-        ]);
-}
 
     public function show($subscription)
     {
-
         /** @var User $user */
         $user = Auth::user();
 
