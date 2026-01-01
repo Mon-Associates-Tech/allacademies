@@ -16,7 +16,7 @@ class ShareNoteRecipientsSelect extends Component
     public string $shareType = 'individual';
     public string $placeholder = 'Search and select recipients...';
     public string $name = 'selectedRecipients';
-    public int $schoolId;
+    public ?int $schoolId = null;
 
     public bool $dropdownOpen = false;
 
@@ -27,7 +27,7 @@ class ShareNoteRecipientsSelect extends Component
     public function mount(
         string $shareType,
         array $selected = [],
-        int $schoolId,
+        ?int $schoolId = null,
         string $placeholder = 'Search and select recipients...',
         string $name = 'selectedRecipients'
     ): void
@@ -74,9 +74,12 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadIndividuals(): array
     {
-        $query = User::where('school_id', $this->schoolId)
-            ->where('id', '!=', auth()->id())
+        $query = User::where('id', '!=', auth()->id())
             ->where('is_active', true);
+
+        if ($this->schoolId !== null) {
+            $query->where('school_id', $this->schoolId);
+        }
 
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -108,18 +111,24 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadAcademicGroups(): array
     {
-        $query = AcademicGroup::forSchool($this->schoolId);
+        $query = AcademicGroup::query();
+
+        if ($this->schoolId !== null) {
+            $query->forSchool($this->schoolId);
+        }
 
         if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('name', 'LIKE', '%' . $this->search . '%')
-                  ->orWhere('tag', 'LIKE', '%' . $this->search . '%');
+                    ->orWhere('tag', 'LIKE', '%' . $this->search . '%');
             });
         }
 
         return $query->withCount(['students' => function($q) {
+            if ($this->schoolId !== null) {
                 $q->where('school_id', $this->schoolId);
-            }])
+            }
+        }])
             ->orderBy('name')
             ->limit(50)
             ->get()
@@ -134,7 +143,9 @@ class ShareNoteRecipientsSelect extends Component
     {
         return AcademicGroup::whereIn('id', $this->selected)
             ->withCount(['students' => function($q) {
-                $q->where('school_id', $this->schoolId);
+                if ($this->schoolId !== null) {
+                    $q->where('school_id', $this->schoolId);
+                }
             }])
             ->get()
             ->map(fn($group) => [
@@ -146,19 +157,25 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadAcademicLevels(): array
     {
-        $query = AcademicLevel::forSchool($this->schoolId)
+        $query = AcademicLevel::query()
             ->with('academicGroup');
+
+        if ($this->schoolId !== null) {
+            $query->forSchool($this->schoolId);
+        }
 
         if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('name', 'LIKE', '%' . $this->search . '%')
-                  ->orWhere('label', 'LIKE', '%' . $this->search . '%');
+                    ->orWhere('label', 'LIKE', '%' . $this->search . '%');
             });
         }
 
         return $query->withCount(['students' => function($q) {
+            if ($this->schoolId !== null) {
                 $q->where('school_id', $this->schoolId);
-            }])
+            }
+        }])
             ->orderBy('name')
             ->limit(50)
             ->get()
@@ -173,7 +190,9 @@ class ShareNoteRecipientsSelect extends Component
     {
         return AcademicLevel::whereIn('id', $this->selected)
             ->withCount(['students' => function($q) {
-                $q->where('school_id', $this->schoolId);
+                if ($this->schoolId !== null) {
+                    $q->where('school_id', $this->schoolId);
+                }
             }])
             ->get()
             ->map(fn($level) => [
@@ -185,9 +204,13 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadStudentGroups(): array
     {
-        $query = StudentGroup::where('school_id', $this->schoolId)
+        $query = StudentGroup::query()
             ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
             ->active();
+
+        if ($this->schoolId !== null) {
+            $query->where('school_id', $this->schoolId);
+        }
 
         if (!empty($this->search)) {
             $query->where(function($q) {
