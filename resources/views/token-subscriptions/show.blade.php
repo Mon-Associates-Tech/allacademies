@@ -68,12 +68,13 @@
                             <div class="space-y-4">
                                 {{-- Stats Row --}}
                                 @php
-                                    $usagePercent = ($subscriptionCycle->tokens_used / $subscriptionCycle->tokens_allocated) * 100;
+                                    $usagePercent = ($subscriptionCycle->usageLogs->sum('total_tokens') / $subscriptionCycle->tokens_allocated) * 100;
+                                    $usageLogs = $subscriptionCycle->usageLogs()->latest()->paginate(20);
                                 @endphp
                                 <div class="grid grid-cols-3 gap-4">
                                     <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                                         <p class="text-white/70 text-sm mb-1">Available</p>
-                                        <p class="text-2xl font-bold text-white">{{ number_format($subscriptionCycle->tokens_allocated - $subscriptionCycle->tokens_used) }}</p>
+                                        <p class="text-2xl font-bold text-white">{{ number_format($subscriptionCycle->tokens_allocated - $subscriptionCycle->usageLogs->sum('total_tokens')) }}</p>
                                         <p class="text-white/60 text-xs mt-1">{{ round(100 - $usagePercent, 1) }}%</p>
                                     </div>
                                     <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
@@ -133,10 +134,6 @@
                                     </h3>
                                     <div class="grid sm:grid-cols-2 gap-4">
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">Cycle Number</p>
-                                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">#{{ $subscriptionCycle->cycle_number }}</p>
-                                        </div>
-                                        <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                             <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Price</p>
                                             <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">GH₵ {{ number_format($subscriptionCycle->current_price, 2) }}</p>
                                         </div>
@@ -171,6 +168,76 @@
                                     </div>
                                 </div>
 
+                                {{-- Token Usage Breakdown --}}
+                                <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                        </svg>
+                                        Token Usage Breakdown
+                                    </h3>
+
+                                    @if($subscriptionCycle->usageLogs->count() > 0)
+                                        <div class="grid sm:grid-cols-3 gap-4 mb-6">
+                                            <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Total Input Tokens</p>
+                                                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($subscriptionCycle->usageLogs->sum('prompt_tokens')) }}</p>
+                                            </div>
+                                            <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Total Output Tokens</p>
+                                                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($subscriptionCycle->usageLogs->sum('completion_tokens')) }}</p>
+                                            </div>
+                                            <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Total Tokens</p>
+                                                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($subscriptionCycle->usageLogs->sum('total_tokens')) }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                                                    <thead class="bg-gray-50 dark:bg-gray-600">
+                                                        <tr>
+{{--                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Model</th>--}}
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Input Tokens</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Output Tokens</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Tokens</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Request Type</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                                        @foreach($subscriptionCycle->usageLogs->take(10) as $log)
+                                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+{{--                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ $log->model ?: 'N/A' }}</td>--}}
+                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ number_format($log->prompt_tokens) }}</td>
+                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ number_format($log->completion_tokens) }}</td>
+                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ number_format($log->total_tokens) }}</td>
+                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ $log->request_type }}</td>
+                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $log->created_at->format('M d, Y H:i') }}</td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            @if($subscriptionCycle->usageLogs->count() > 10)
+                                                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-600 text-center">
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400">Showing latest 10 records of {{ $subscriptionCycle->usageLogs->count() }} total</p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="p-6 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600 text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No usage logs</h3>
+                                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Your token usage will appear here once you start using the service.</p>
+                                        </div>
+                                    @endif
+                                </div>
+
                                 {{-- Pricing Breakdown --}}
                                 <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -194,7 +261,7 @@
                             </div>
 
                             {{-- Right Column - Circular Progress & Actions --}}
-                            <div class="space-y-6">
+                            <div class="space-y-6 mt-8">
                                 {{-- Circular Progress --}}
                                 <div class="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700/30 dark:to-blue-900/10 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 text-center">Token Status</h3>
@@ -215,7 +282,7 @@
                                     <div class="space-y-2">
                                         <div class="flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-gray-400">Used</span>
-                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_used) }}</span>
+                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->usageLogs->sum('total_tokens')) }}</span>
                                         </div>
                                         <div class="flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-gray-400">Available</span>

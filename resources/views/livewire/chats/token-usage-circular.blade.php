@@ -3,7 +3,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <div class="text-center">
                 <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">AI Tokens</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">{{ $subscription->package->name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">{{ $subscription->package?->name }}</p>
 
                 {{-- Circular Progress --}}
                 <div class="relative inline-flex items-center justify-center">

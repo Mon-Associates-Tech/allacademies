@@ -63,7 +63,7 @@ class AcademicChatService
         return $this->handleTextGeneration($parameters, $conversationHistory);
     }
 
-    protected function handleImageGeneration($parameters)
+    protected function handleImageGeneration($parameters): array
     {
         $user = auth()->user();
         $model = $this->modelSelectionService->getImageModelForUser($user);
@@ -88,7 +88,7 @@ class AcademicChatService
         ];
     }
 
-    protected function prepareImagePrompt($parameters)
+    protected function prepareImagePrompt($parameters): string
     {
         // Create a detailed prompt for image generation
         $description = $parameters['input'] ?? 'Generate an educational image';
@@ -117,7 +117,7 @@ class AcademicChatService
         return $prompt;
     }
 
-    protected function handleTextGeneration($parameters, $conversationHistory)
+    protected function handleTextGeneration($parameters, $conversationHistory): array
     {
         $user = auth()->user();
         $model = $this->modelSelectionService->getTextModelForUser($user);
@@ -254,7 +254,7 @@ class AcademicChatService
         return $systemPrompt;
     }
 
-    protected function prepareTextPrompt($parameters)
+    protected function prepareTextPrompt($parameters): string
     {
         $prompt = "User request: " . ($parameters['input'] ?? '');
 

@@ -32,7 +32,7 @@
                     </span>
                 </div>
                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ $subscription->package->name }}
+                    {{ $subscription->package?->name }}
                 </span>
             </div>
 

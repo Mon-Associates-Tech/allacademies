@@ -62,7 +62,7 @@ class TokenSubscriptionController extends Controller
         $pendingSubscription = $user->tokenSubscriptions()
             ->where('status', TokenSubscriptionStatus::PENDING->value)
             ->first();
-        
+
         if ($pendingSubscription) {
             return redirect()
                 ->route('token-payments.initialize', $pendingSubscription->id)
@@ -228,30 +228,31 @@ class TokenSubscriptionController extends Controller
             ->with('success', 'Ready for payment. Please complete your transaction.');
     }
 
-    public function show($subscription)
-    {
-        /** @var User $user */
-        $user = Auth::user();
+public function show($subscription)
+{
+    /** @var User $user */
+    $user = Auth::user();
 
-        // Try to get as SubscriptionCycle first
-        $subscriptionCycle = SubscriptionCycle::find($subscription);
-        if ($subscriptionCycle) {
-            if ($subscriptionCycle->user_id !== $user->id) {
-                abort(403, 'Unauthorized access to this subscription cycle.');
-            }
-            return view('token-subscriptions.show', ['subscriptionCycle' => $subscriptionCycle]);
+    // Try to get as SubscriptionCycle first
+    $subscriptionCycle = SubscriptionCycle::with('usageLogs', 'pricingTier')->find($subscription);
+    if ($subscriptionCycle) {
+        if ($subscriptionCycle->user_id !== $user->id) {
+            abort(403, 'Unauthorized access to this subscription cycle.');
         }
-
-        // Try to get as UserTokenSubscription (legacy system)
-        $userSubscription = UserTokenSubscription::find($subscription);
-        if ($userSubscription) {
-            if ($userSubscription->user_id !== $user->id) {
-                abort(403, 'Unauthorized access to this subscription.');
-            }
-            return view('token-subscriptions.show-legacy', ['subscription' => $userSubscription]);
-        }
-
-        // Model not found
-        abort(404, 'Subscription not found.');
+        return view('token-subscriptions.show', ['subscriptionCycle' => $subscriptionCycle]);
     }
+
+    // Try to get as UserTokenSubscription (legacy system)
+    $userSubscription = UserTokenSubscription::with('usageLogs', 'pricingTier')->find($subscription);
+    if ($userSubscription) {
+        if ($userSubscription->user_id !== $user->id) {
+            abort(403, 'Unauthorized access to this subscription.');
+        }
+        return view('token-subscriptions.show-legacy', ['subscription' => $userSubscription]);
+    }
+
+    // Model not found
+    abort(404, 'Subscription not found.');
+}
+
 }

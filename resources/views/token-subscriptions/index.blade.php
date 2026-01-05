@@ -128,11 +128,11 @@
                                 <div class="grid grid-cols-3 gap-4 mb-6">
                                     <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Available</p>
-                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->tokens_used) }}</p>
+                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->usageLogs->sum('total_tokens')) }}</p>
                                     </div>
                                     <div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Used</p>
-                                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->tokens_used) }}</p>
+                                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->usageLogs->sum('total_tokens')) }}</p>
                                     </div>
                                     <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total/Month</p>
@@ -143,7 +143,7 @@
                                 {{-- Progress Bar --}}
                                 <div class="mb-4">
                                     @php
-                                        $usagePercent = ($currentCycle->tokens_used / $currentCycle->tokens_allocated) * 100;
+                                        $usagePercent = ($currentCycle->usageLogs->sum('total_tokens') / $currentCycle->tokens_allocated) * 100;
                                     @endphp
                                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                                         <span>Token Usage Progress</span>

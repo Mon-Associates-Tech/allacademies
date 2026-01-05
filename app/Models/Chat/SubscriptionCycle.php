@@ -49,6 +49,11 @@ class SubscriptionCycle extends Model
         return $this->belongsTo(PricingTier::class, 'pricing_tier_id');
     }
 
+    public function usageLogs()
+    {
+        return $this->hasMany(OpenAiTokenUsageLog::class, 'subscription_cycle_id');
+    }
+
     /**
      * Get the remaining tokens for this cycle
      */
