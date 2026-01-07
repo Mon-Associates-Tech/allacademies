@@ -123,6 +123,25 @@ class PricingTier extends Model
         return strtolower($this->name) === 'premium';
     }
 
+    /**
+     * Calculate tokens from an amount based on the initial pricing rate
+     * Uses: tokens_per_currency = monthly_token_limit / initial_price
+     * 
+     * Example: If tier allocates 7000 tokens for $10 initial price:
+     * tokens_per_currency = 7000 / 10 = 700 tokens per $1
+     * For a $23 topup: 23 * 700 = 16,100 tokens
+     */
+    public function calculateTokensFromAmount(float $amount): int
+    {
+        if ($this->initial_price <= 0) {
+            return 0;
+        }
+
+        $tokensPerCurrency = $this->monthly_token_limit / (float) $this->initial_price;
+
+        return intval($amount * $tokensPerCurrency);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

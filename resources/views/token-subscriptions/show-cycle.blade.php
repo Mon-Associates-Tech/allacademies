@@ -15,15 +15,24 @@
                         <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $subscriptionCycle->pricingTier->name }} Plan • Month {{ $subscriptionCycle->cycle_number }}</p>
                     </div>
 
-                    {{-- Quick Action Button --}}
+                    {{-- Quick Action Buttons --}}
                     @if($subscriptionCycle->status === 'active')
-                        <a href="{{ route('token-subscriptions.create') }}"
-                           class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Upgrade Tier
-                        </a>
+                        <div class="flex gap-3">
+                            <a href="{{ route('token-subscriptions.topup', $subscriptionCycle->id) }}"
+                               class="inline-flex items-center px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors shadow-lg">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Topup Tokens
+                            </a>
+                            <a href="{{ route('token-subscriptions.create') }}"
+                               class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                                </svg>
+                                Upgrade Tier
+                            </a>
+                        </div>
                     @endif
                 </div>
 
@@ -185,7 +194,7 @@
                                         </svg>
                                         Pricing Information
                                     </h3>
-                                    <div class="grid sm:grid-cols-2 gap-4">
+                                    <div class="grid sm:grid-cols-1 gap-4">
                                         <div class="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                                             <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Increment (Cycle {{ $subscriptionCycle->cycle_number }})</p>
                                             <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">GH₵ {{ number_format($subscriptionCycle->pricingTier->getMonthlyPriceIncrement($subscriptionCycle->cycle_number), 2) }}</p>
@@ -233,23 +242,23 @@
                                     <div class="space-y-2">
                                         <div class="flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-gray-400">Base Allocation</span>
-                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->pricingTier->monthly_token_limit) }}</span>
+                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->getBaseTokensAllocated()) }}</span>
                                         </div>
                                         <div class="flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-gray-400">Topup Tokens</span>
-                                            <span class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format(max(0, $subscriptionCycle->tokens_allocated - $subscriptionCycle->pricingTier->monthly_token_limit)) }}</span>
+                                            <span class="font-semibold text-green-600 dark:text-green-400">{{ number_format($subscriptionCycle->topup_tokens_allocated) }}</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                                            <span class="text-gray-600 dark:text-gray-400">Total Allocated</span>
+                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_allocated) }}</span>
                                         </div>
                                         <div class="flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-gray-400">Used</span>
                                             <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_used) }}</span>
                                         </div>
                                         <div class="flex justify-between text-sm">
-                                            <span class="text-gray-600 dark:text-gray-400">Available</span>
-                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_allocated - $subscriptionCycle->tokens_used) }}</span>
-                                        </div>
-                                        <div class="flex justify-between text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                                            <span class="text-gray-600 dark:text-gray-400">Total Allocated</span>
-                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_allocated) }}</span>
+                                            <span class="text-gray-600 dark:text-gray-400">Remaining</span>
+                                            <span class="font-semibold text-green-600 dark:text-green-400">{{ number_format($subscriptionCycle->getTokensRemainingAttribute()) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -263,12 +272,15 @@
                                             <p class="text-sm font-semibold text-gray-900 dark:text-white">Resets every 30 days on {{ $subscriptionCycle->cycle_start_date->format('M d') }}</p>
                                         </div>
                                         <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
-                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Base Allocation</p>
-                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Base Allocation Remaining</p>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->getBaseTokensRemaining()) }} tokens</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Resets each cycle</p>
                                         </div>
                                         <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
-                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Topup Tokens</p>
-                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format(max(0, $subscriptionCycle->tokens_allocated - $subscriptionCycle->pricingTier->monthly_token_limit)) }} carried forward</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Topup Tokens Remaining</p>
+                                            <p class="text-sm font-semibold text-green-600 dark:text-green-400">{{ number_format($subscriptionCycle->getTopupTokensRemaining()) }} tokens</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Carries over automatically</p>
+                                        </div>
                                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Unused topups carry over automatically</p>
                                         </div>
                                     </div>

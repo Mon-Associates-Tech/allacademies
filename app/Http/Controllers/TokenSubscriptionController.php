@@ -313,12 +313,13 @@ class TokenSubscriptionController extends Controller
 
     /**
      * Process a topup purchase for an existing subscription
+     * Simple topup: user purchases an amount and tokens are added to current cycle
      */
     public function processTopup(Request $request)
     {
         $request->validate([
             'cycle_id' => 'required|exists:subscription_cycles,id',
-            'months' => 'required|integer|min:1|max:12',
+            'amount' => 'required|numeric|min:10',
         ]);
 
         /** @var User $user */
@@ -332,56 +333,38 @@ class TokenSubscriptionController extends Controller
             abort(404, 'Subscription cycle not found.');
         }
 
-        $pricingTier = $cycle->pricingTier;
-        $months = (int) $request->input('months');
-
-        // Generate a group ID to link all topup cycles from this purchase
-        $topupGroupId = \Illuminate\Support\Str::uuid()->toString();
-
-        // Create topup cycles starting from the next month
-        $cycleStartDate = $cycle->cycle_end_date;
-        $totalPrice = 0;
-
-        for ($i = 0; $i < $months; $i++) {
-            $monthPos = $i + 1;
-
-            // Calculate price for this topup month position
-            $monthlyPrice = $monthPos <= $pricingTier->initial_period_months
-                ? (float) $pricingTier->initial_price
-                : (float) $pricingTier->subsequent_price;
-
-            $totalPrice += $monthlyPrice;
-
-            // Calculate the start date for this topup cycle
-            $topupCycleStart = $cycleStartDate->copy()->addDays($i * 30);
-
-            // Create topup cycle with is_topup = true
-            $this->cycleService->createCycle(
-                $user,
-                $pricingTier,
-                $topupCycleStart,
-                $cycle->cycle_number + $i + 1,
-                $totalPrice,
-                $topupGroupId,
-                true  // is_topup
-            );
+        if (! $cycle->isActive()) {
+            return redirect()
+                ->route('token-subscriptions.show', $cycle->id)
+                ->with('error', 'Can only topup an active cycle.');
         }
 
-        // Create pending topup subscription
-        $tokensPurchased = $pricingTier->monthly_token_limit * $months;
+        $amount = (float) $request->input('amount');
+
+        // Create pending topup subscription for payment processing
         $topupSubscription = UserTokenSubscription::create([
             'user_id' => $user->id,
-            'pricing_tier_id' => $pricingTier->id,
-            'amount' => $totalPrice,
+            'pricing_tier_id' => $cycle->pricing_tier_id,
+            'amount' => $amount,
             'status' => TokenSubscriptionStatus::PENDING->value,
-            'reference' => 'TOPUP-'.$user->id.'-'.time(),
+            'reference' => 'TOPUP-'.$user->id.'-'.time().'-'.strtoupper(\Illuminate\Support\Str::random(6)),
             'package_id' => null,
             'purchased_at' => now(),
-            'expires_at' => now()->addMonths($months),
-            'tokens_purchased' => $tokensPurchased,
+            'expires_at' => now()->addMonths(1),
+            'tokens_purchased' => 0,
             'tokens_used' => 0,
-            'tokens_remaining' => $tokensPurchased,
+            'tokens_remaining' => 0,
             'action_type' => 'topup',
+        ]);
+
+        // Store topup info in session for payment processing
+        session([
+            'topup_info' => [
+                'subscription_id' => $topupSubscription->id,
+                'cycle_id' => $cycle->id,
+                'amount' => $amount,
+                'pricing_tier_id' => $cycle->pricing_tier_id,
+            ],
         ]);
 
         // Redirect to payment

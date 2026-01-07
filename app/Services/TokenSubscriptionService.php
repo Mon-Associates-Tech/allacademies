@@ -75,6 +75,13 @@ class TokenSubscriptionService
     public function activateSubscription(UserTokenSubscription $subscription): void
     {
         DB::transaction(function () use ($subscription) {
+            // Check if this is a topup for a subscription cycle (new system)
+            if ($subscription->action_type === 'topup') {
+                $this->activateTopup($subscription);
+
+                return;
+            }
+
             Log::info('activateSubscription called', [
                 'subscription_id' => $subscription->id,
                 'status' => $subscription->status,
@@ -185,6 +192,90 @@ class TokenSubscriptionService
                 'tokens_remaining' => $subscription->tokens_remaining,
             ]);
         });
+    }
+
+    /**
+     * Activate a topup subscription - adds tokens to current cycle
+     */
+    protected function activateTopup(UserTokenSubscription $topupSubscription): void
+    {
+        $user = $topupSubscription->user;
+        $topupInfo = session('topup_info');
+
+        if (! $topupInfo) {
+            Log::error('Topup session info missing', [
+                'subscription_id' => $topupSubscription->id,
+            ]);
+
+            throw new \Exception('Topup session information missing.');
+        }
+
+        $cycleId = $topupInfo['cycle_id'];
+        $amount = $topupInfo['amount'];
+        $pricingTierId = $topupInfo['pricing_tier_id'];
+
+        $cycle = $user->subscriptionCycles()
+            ->where('id', $cycleId)
+            ->first();
+
+        if (! $cycle) {
+            Log::error('Topup cycle not found', [
+                'cycle_id' => $cycleId,
+                'user_id' => $user->id,
+            ]);
+
+            throw new \Exception('Subscription cycle not found for topup.');
+        }
+
+        // Get the pricing tier to calculate tokens from amount
+        $pricingTier = $cycle->pricingTier;
+
+        if (! $pricingTier) {
+            Log::error('Pricing tier not found for topup', [
+                'cycle_id' => $cycleId,
+                'pricing_tier_id' => $pricingTierId,
+            ]);
+
+            throw new \Exception('Pricing tier not found for topup.');
+        }
+
+        // Calculate tokens based on the pricing tier's rate
+        // Example: 7000 tokens for $10 = 700 tokens per $1
+        // So $23 topup = 23 * 700 = 16,100 tokens
+        $topupTokens = $pricingTier->calculateTokensFromAmount((float) $amount);
+
+        if ($topupTokens <= 0) {
+            Log::warning('Topup calculated to zero tokens', [
+                'amount' => $amount,
+                'pricing_tier_id' => $pricingTier->id,
+                'initial_price' => $pricingTier->initial_price,
+                'monthly_token_limit' => $pricingTier->monthly_token_limit,
+            ]);
+        }
+
+        // Add topup tokens to the current cycle
+        $cycle->addTopupTokens($topupTokens);
+
+        // Mark topup subscription as completed
+        $topupSubscription->status = TokenSubscriptionStatus::ACTIVE;
+        $topupSubscription->tokens_purchased = $topupTokens;
+        $topupSubscription->tokens_remaining = $topupTokens;
+        $topupSubscription->purchased_at = now();
+        $topupSubscription->activated_at = now();
+        $topupSubscription->save();
+
+        Log::info('Topup activated successfully', [
+            'subscription_id' => $topupSubscription->id,
+            'cycle_id' => $cycle->id,
+            'amount' => $amount,
+            'topup_tokens' => $topupTokens,
+            'user_id' => $user->id,
+            'pricing_tier_id' => $pricingTier->id,
+            'tokens_per_currency' => $pricingTier->monthly_token_limit / (float) $pricingTier->initial_price,
+        ]);
+
+        // Clear topup session
+        session()->forget('topup_info');
     }
 
     /**

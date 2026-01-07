@@ -19,68 +19,73 @@ use Illuminate\Support\Facades\Log;
 class SubscriptionTopupService
 {
     /**
-     * Process a topup for a user
+     * Process a topup for a user - add topup tokens to current active cycle
+     * This is called when a user purchases additional tokens
      */
-    public function processTopup(User $user, int $tokens): ?SubscriptionCycle
+    public function processTopup(User $user, int $topupTokens): ?SubscriptionCycle
     {
-        if ($tokens <= 0) {
+        if ($topupTokens <= 0) {
             Log::warning('Invalid topup amount', [
                 'user_id' => $user->id,
-                'tokens' => $tokens,
+                'tokens' => $topupTokens,
             ]);
 
             return null;
         }
 
-        return DB::transaction(function () use ($user, $tokens) {
+        return DB::transaction(function () use ($user, $topupTokens) {
             $currentCycle = $user->getCurrentActiveCycle();
 
             if (! $currentCycle) {
                 Log::warning('No active subscription cycle found for topup', [
                     'user_id' => $user->id,
-                    'tokens' => $tokens,
+                    'topup_tokens' => $topupTokens,
                 ]);
 
                 return null;
             }
 
-            // Add topup tokens to current cycle
-            $currentCycle->addTopupTokens($tokens);
+            // Add topup tokens to current cycle (not replacing, just adding)
+            $success = $currentCycle->addTopupTokens($topupTokens);
 
-            Log::info('Topup processed for user', [
-                'user_id' => $user->id,
-                'cycle_id' => $currentCycle->id,
-                'cycle_number' => $currentCycle->cycle_number,
-                'topup_tokens' => $tokens,
-                'total_allocated' => $currentCycle->tokens_allocated,
-            ]);
+            if ($success) {
+                Log::info('Topup processed and added to current cycle', [
+                    'user_id' => $user->id,
+                    'cycle_id' => $currentCycle->id,
+                    'cycle_number' => $currentCycle->cycle_number,
+                    'topup_tokens' => $topupTokens,
+                    'total_tokens_allocated' => $currentCycle->tokens_allocated,
+                    'topup_tokens_allocated' => $currentCycle->topup_tokens_allocated,
+                ]);
+            }
 
             return $currentCycle;
         });
     }
 
     /**
-     * Get topup amount for a cycle
-     * Returns the portion of tokens allocated that came from topups
+     * Get topup amount for a cycle (total topup tokens in this cycle)
      */
     public function getTopupAmount(SubscriptionCycle $cycle): int
     {
-        $baseAllocation = $cycle->pricingTier->monthly_token_limit;
+        return $cycle->topup_tokens_allocated;
+    }
 
-        return max(0, $cycle->tokens_allocated - $baseAllocation);
+    /**
+     * Get unused topup tokens in a cycle
+     */
+    public function getUnusedTopupAmount(SubscriptionCycle $cycle): int
+    {
+        return $cycle->calculateUnusedTopupTokens();
     }
 
     /**
      * Calculate topup carryover to next cycle
-     * Only unused topup tokens carry over
+     * Only unused topup tokens carry over, not base allocation
      */
     public function calculateTopupCarryover(SubscriptionCycle $currentCycle): int
     {
-        $topupAmount = $this->getTopupAmount($currentCycle);
-        $topupUsed = min($topupAmount, $currentCycle->tokens_used);
-        $topupRemaining = max(0, $topupAmount - $topupUsed);
-
-        return $topupRemaining;
+        return $currentCycle->calculateUnusedTopupTokens();
     }
 
     /**
@@ -90,35 +95,7 @@ class SubscriptionTopupService
      */
     public function carryoverTopupTokens(SubscriptionCycle $currentCycle): int
     {
-        $carryoverAmount = $this->calculateTopupCarryover($currentCycle);
-
-        if ($carryoverAmount <= 0) {
-            return 0;
-        }
-
-        $nextCycle = $currentCycle->user->getNextUpcomingCycle();
-
-        if (! $nextCycle) {
-            Log::info('No next cycle to carryover topup tokens', [
-                'user_id' => $currentCycle->user_id,
-                'cycle_id' => $currentCycle->id,
-                'carryover_amount' => $carryoverAmount,
-            ]);
-
-            return 0;
-        }
-
-        // Add topup tokens to next cycle (not as regular allocation)
-        $nextCycle->addTopupTokens($carryoverAmount, false);
-
-        Log::info('Topup tokens carried over to next cycle', [
-            'user_id' => $currentCycle->user_id,
-            'current_cycle_id' => $currentCycle->id,
-            'next_cycle_id' => $nextCycle->id,
-            'carryover_amount' => $carryoverAmount,
-        ]);
-
-        return $carryoverAmount;
+        return $currentCycle->carryoverUnusedTopupTokens();
     }
 
     /**
@@ -127,18 +104,40 @@ class SubscriptionTopupService
     public function getTopupHistory(User $user): \Illuminate\Support\Collection
     {
         return $user->subscriptionCycles()
-            ->where('status', 'expired')
+            ->where('topup_tokens_allocated', '>', 0)
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function (SubscriptionCycle $cycle) {
                 return [
                     'cycle_id' => $cycle->id,
                     'cycle_number' => $cycle->cycle_number,
                     'topup_amount' => $this->getTopupAmount($cycle),
-                    'topup_used' => min($this->getTopupAmount($cycle), $cycle->tokens_used),
-                    'topup_remaining' => $this->calculateTopupCarryover($cycle),
+                    'topup_used' => min($this->getTopupAmount($cycle), max(0, $cycle->tokens_used - $cycle->getBaseTokensAllocated())),
+                    'topup_remaining' => $this->getUnusedTopupAmount($cycle),
                     'cycle_start_date' => $cycle->cycle_start_date,
                     'cycle_end_date' => $cycle->cycle_end_date,
+                    'status' => $cycle->status,
                 ];
             });
+    }
+
+    /**
+     * Get current topup tokens for a user (in active cycle)
+     */
+    public function getCurrentTopupTokens(User $user): int
+    {
+        $cycle = $user->getCurrentActiveCycle();
+
+        return $cycle ? $cycle->topup_tokens_allocated : 0;
+    }
+
+    /**
+     * Get remaining topup tokens for a user (in active cycle)
+     */
+    public function getRemainingTopupTokens(User $user): int
+    {
+        $cycle = $user->getCurrentActiveCycle();
+
+        return $cycle ? $cycle->getTopupTokensRemaining() : 0;
     }
 }
