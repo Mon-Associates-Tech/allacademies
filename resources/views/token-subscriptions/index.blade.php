@@ -31,12 +31,12 @@
                 </div>
 
                 {{-- Stats Grid --}}
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Subscriptions</p>
-                                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_subscriptions'] }}</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_subscriptions'] }}</p>
                             </div>
                             <div class="flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                                 <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +50,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Spent</p>
-                                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">GH₵{{ number_format($stats['total_spent'], 2) }}</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">GH₵{{ number_format($stats['total_spent'], 2) }}</p>
                             </div>
                             <div class="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg">
                                 <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,8 +63,8 @@
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Messengers Purchased</p>
-                                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total_tokens_purchased']) }}</p>
+                                <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Lifetime Messengers</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total_tokens_purchased']) }}</p>
                             </div>
                             <div class="flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                                 <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +78,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Messengers Used</p>
-                                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total_tokens_used']) }}</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total_tokens_used']) }}</p>
                             </div>
                             <div class="flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
                                 <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,34 +107,35 @@
                                         <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
                                     </div>
 
-                                    <div class="relative flex items-start justify-between">
+                                    <div class="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                                         <div>
-                                            <div class="flex items-center gap-3 mb-2">
-                                                <h3 class="text-2xl font-bold text-white">{{ $currentCycle->pricingTier->name }} Plan</h3>
-                                                <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
+                                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                                <h3 class="text-lg sm:text-2xl font-bold text-white">{{ $currentCycle->pricingTier->name }} Plan</h3>
+                                                <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-semibold text-white border border-white/30 w-fit">
                                                     Month {{ $currentCycle->cycle_number }}
                                                 </span>
                                             </div>
-                                            <p class="text-white/90">GH₵ {{ number_format($currentCycle->current_price, 2) }} total (cumulative) • {{ number_format($currentCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
+                                            <p class="text-xs sm:text-sm text-white/90">GH₵ {{ number_format($currentCycle->current_price, 2) }} total (cumulative) • {{ number_format($currentCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
                                         </div>
-                                        <span class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
+                                        <span class="inline-flex items-center px-3 sm:px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-semibold text-white border border-white/30 w-fit whitespace-nowrap">
                                             ✓ {{ ucfirst($currentCycle->status) }}
                                         </span>
                                     </div>
                                 </div>                            {{-- Progress Section --}}
-                            <div class="p-6">
-                                <div class="grid grid-cols-3 gap-4 mb-6">
-                                    <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Available</p>
-                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->tokens_used) }}</p>
+                            <div class="p-4 sm:p-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                                    <div class="text-center p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Available</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->tokens_used) }}</p>
                                     </div>
-                                    <div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Used</p>
-                                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->tokens_used) }}</p>
+                                    <div class="text-center p-3 sm:p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Used</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->tokens_used) }}</p>
                                     </div>
-                                    <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Topup</p>
-                                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format(max(0, $currentCycle->tokens_allocated - $currentCycle->pricingTier->monthly_token_limit)) }}</p>
+                                    <div class="text-center p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Topup</p>
+                                        <p class="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format(max(0, $currentCycle->tokens_allocated - $currentCycle->pricingTier->monthly_token_limit)) }}</p>
+                                    </div>
                                     </div>
 
                                 {{-- Progress Bar --}}
@@ -153,14 +154,14 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                                         <span class="font-semibold">Anniversary Cycle:</span> {{ $currentCycle->cycle_start_date->format('M d') }} - {{ $currentCycle->cycle_end_date->format('M d, Y') }}
                                         <br>
                                         <span class="text-xs">{{ $currentCycle->getRemainingDays() }} days remaining</span>
                                     </div>
                                     <a href="{{ route('token-subscriptions.show', $currentCycle->id) }}"
-                                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm">
+                                       class="inline-flex items-center justify-center sm:justify-start px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm w-full sm:w-auto">
                                         View Details
                                         <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -172,18 +173,18 @@
                     </div>
                 @else
                     {{-- No Active Subscription --}}
-                    <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                        <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-6">
-                            <svg class="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-12 text-center border border-gray-200 dark:border-gray-700">
+                        <div class="inline-flex items-center justify-center w-16 sm:w-20 h-16 sm:h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4 sm:mb-6">
+                            <svg class="w-8 sm:w-10 h-8 sm:h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                             </svg>
                         </div>
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Active Subscription</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">No Active Subscription</h3>
+                        <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 max-w-md mx-auto">
                             Get started with AI-powered learning by choosing a token package that fits your needs.
                         </p>
                         <a href="{{ route('token-subscriptions.create') }}"
-                           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all shadow-lg">
+                           class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all shadow-lg w-full sm:w-auto text-sm">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
@@ -194,7 +195,7 @@
 
                 {{-- Subscription History --}}
                 @if($subscriptionHistory->count() > 0)
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="bg-white mt-4 dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                         <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                                 <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,14 +206,15 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Your past subscriptions and upgrades</p>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        {{-- Desktop Table View --}}
+                        <div class="hidden md:block overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Package</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Messengers Used</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Active Period</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Messengers</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Period</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
                                 </tr>
@@ -222,7 +224,7 @@
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $sub->package?->name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $sub->package?->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $sub->package?->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full
@@ -259,6 +261,59 @@
                                 @endforeach
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- Mobile Card View --}}
+                        <div class="md:hidden space-y-4 p-4">
+                            @foreach($subscriptionHistory as $sub)
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                                    {{-- Header with Package and Action --}}
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900 dark:text-white">{{ $sub->package?->name }}</h4>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $sub->package?->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</p>
+                                        </div>
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
+                                            {{ $sub->action_type === 'trial' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
+                                            {{ $sub->action_type === 'upgrade' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
+                                            {{ $sub->action_type === 'downgrade' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
+                                            {{ $sub->action_type === 'purchase' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}">
+                                            {{ ucfirst($sub->action_type) }}
+                                        </span>
+                                    </div>
+
+                                    {{-- Stats Grid --}}
+                                    <div class="grid grid-cols-2 gap-3 mb-3">
+                                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Messengers</p>
+                                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ number_format($sub->tokens_used) }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">of {{ number_format($sub->tokens_purchased) }}</p>
+                                        </div>
+                                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Period</p>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $sub->activated_at ? $sub->activated_at->format('M d') : 'N/A' }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">to {{ $sub->deactivated_at ? $sub->deactivated_at->format('M d') : 'N/A' }}</p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Status and Action --}}
+                                    <div class="flex items-center justify-between">
+                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full
+                                            {{ $sub->status->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
+                                            {{ $sub->status->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
+                                            {{ $sub->status->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
+                                            {{ ucfirst($sub->status->value) }}
+                                        </span>
+                                        <a href="{{ route('token-subscriptions.show', $sub->id) }}"
+                                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors">
+                                            View
+                                            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 @endif

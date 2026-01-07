@@ -21,7 +21,7 @@ return new class extends Migration
             $table->bigInteger('tokens_allocated'); // Monthly token limit from pricing tier
             $table->bigInteger('tokens_used')->default(0);
             $table->decimal('current_price', 10, 2); // Price for this specific cycle
-            $table->enum('status', ['active', 'expired', 'cancelled'])->default('active');
+            $table->enum('status', ['active', 'expired', 'cancelled', 'inactive'])->default('inactive');
             $table->timestamps();
             $table->softDeletes();
 
