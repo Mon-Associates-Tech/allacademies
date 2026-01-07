@@ -33,21 +33,38 @@ class TokenUsageService
         $totalTokens = $usage['total_tokens'] ?? ($promptTokens + $completionTokens);
 
         try {
-            // Primary: Log to SubscriptionCycle and deduct tokens
+            // Primary: Check if user has sufficient tokens
             if (! $subscriptionCycle->hasTokens($totalTokens)) {
                 Log::warning('Insufficient tokens in active subscription cycle.', [
                     'user_id' => $user->id,
                     'required_tokens' => $totalTokens,
                     'available_tokens' => $subscriptionCycle->getTokensRemainingAttribute(),
                     'subscription_cycle_id' => $subscriptionCycle->id,
+                    'cycle_status' => $subscriptionCycle->status,
+                    'cycle_active' => $subscriptionCycle->isActive(),
                 ]);
 
                 return;
             }
 
-            $subscriptionCycle->deductTokens($totalTokens);
+            // Deduct tokens from subscription cycle
+            $deductionSuccess = $subscriptionCycle->deductTokens($totalTokens);
 
-            // Fallback: Create usage log record for historical tracking during transition
+            if (! $deductionSuccess) {
+                Log::error('Failed to deduct tokens from subscription cycle.', [
+                    'user_id' => $user->id,
+                    'subscription_cycle_id' => $subscriptionCycle->id,
+                    'tokens_to_deduct' => $totalTokens,
+                    'tokens_remaining' => $subscriptionCycle->getTokensRemainingAttribute(),
+                ]);
+
+                return;
+            }
+
+            // Reload cycle to get updated values
+            $subscriptionCycle->refresh();
+
+            // Create usage log record for historical tracking
             OpenAiTokenUsageLog::create([
                 'user_id' => $user->id,
                 'subscription_id' => null,
@@ -66,7 +83,8 @@ class TokenUsageService
             Log::info('Token usage logged successfully.', [
                 'user_id' => $user->id,
                 'subscription_cycle_id' => $subscriptionCycle->id,
-                'tokens_used' => $totalTokens,
+                'tokens_deducted' => $totalTokens,
+                'tokens_used_total' => $subscriptionCycle->tokens_used,
                 'tokens_remaining' => $subscriptionCycle->getTokensRemainingAttribute(),
             ]);
         } catch (\Exception $e) {
@@ -74,6 +92,7 @@ class TokenUsageService
                 'user_id' => $user->id,
                 'subscription_cycle_id' => $subscriptionCycle->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }

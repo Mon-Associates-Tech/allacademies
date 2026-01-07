@@ -37,6 +37,10 @@ class SubscriptionCycleService
             $price = $customPrice ?? $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
+            // Determine if this cycle should be active (is within current date range)
+            $isCurrentCycle = now()->between($startDate, $endDate);
+            $status = $isCurrentCycle ? 'active' : 'inactive';
+
             $cycle = SubscriptionCycle::create([
                 'user_id' => $user->id,
                 'pricing_tier_id' => $pricingTier->id,
@@ -47,7 +51,7 @@ class SubscriptionCycleService
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
                 'current_price' => $price,
-                'status' => 'active',
+                'status' => $status,
                 'is_topup' => $isTopup,
             ]);
 
@@ -84,6 +88,10 @@ class SubscriptionCycleService
             $price = $pricingTier->getCumulativePriceUpToCycle(1);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
+            // Determine if this cycle should be active (is within current date range)
+            $isCurrentCycle = now()->between($cycleStartDate, $cycleEndDate);
+            $status = $isCurrentCycle ? 'active' : 'inactive';
+
             // Create the first cycle
             $cycle = SubscriptionCycle::create([
                 'user_id' => $user->id,
@@ -94,7 +102,7 @@ class SubscriptionCycleService
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
                 'current_price' => $price,
-                'status' => 'active',
+                'status' => $status,
             ]);
 
             Log::info('Initial subscription cycles created', [
@@ -120,6 +128,7 @@ class SubscriptionCycleService
             ->where('status', 'active')
             ->where('cycle_start_date', '<=', now())
             ->where('cycle_end_date', '>=', now())
+            ->latest('cycle_number')
             ->first();
     }
 
@@ -129,8 +138,9 @@ class SubscriptionCycleService
     public function getNextUpcomingCycle(User $user): ?SubscriptionCycle
     {
         return $user->subscriptionCycles()
+            ->where('status', 'inactive')
             ->where('cycle_start_date', '>', now())
-            ->orderBy('cycle_start_date')
+            ->oldest('cycle_start_date')
             ->first();
     }
 
@@ -162,6 +172,10 @@ class SubscriptionCycleService
             $newStartDate = $previousEndDate->copy()->startOfDay();
             $newEndDate = $newStartDate->copy()->addDays(30);
 
+            // Determine if this cycle should be active (is within current date range)
+            $isCurrentCycle = now()->between($newStartDate, $newEndDate);
+            $status = $isCurrentCycle ? 'active' : 'inactive';
+
             // Use cumulative price (total cost up to this cycle number)
             $price = $pricingTier->getCumulativePriceUpToCycle($nextCycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
@@ -175,7 +189,7 @@ class SubscriptionCycleService
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
                 'current_price' => $price,
-                'status' => 'active',
+                'status' => $status,
             ]);
 
             Log::info('New subscription cycle created after expiration', [
@@ -277,5 +291,48 @@ class SubscriptionCycleService
         }
 
         return $success;
+    }
+
+    /**
+     * Activate cycles that have reached their start date
+     * This is typically called by a scheduled job to activate upcoming cycles
+     * Returns the number of cycles activated
+     */
+    public function activateCyclesDueForActivation(): int
+    {
+        $activatedCount = SubscriptionCycle::where('status', 'inactive')
+            ->where('cycle_start_date', '<=', now())
+            ->where('cycle_end_date', '>=', now())
+            ->update(['status' => 'active']);
+
+        if ($activatedCount > 0) {
+            Log::info('Subscription cycles activated', [
+                'count' => $activatedCount,
+                'timestamp' => now()->toDateTimeString(),
+            ]);
+        }
+
+        return $activatedCount;
+    }
+
+    /**
+     * Deactivate cycles that have passed their end date
+     * This is typically called by a scheduled job to expire cycles
+     * Returns the number of cycles deactivated
+     */
+    public function deactivateCyclesPastEnd(): int
+    {
+        $deactivatedCount = SubscriptionCycle::where('status', 'active')
+            ->where('cycle_end_date', '<', now())
+            ->update(['status' => 'expired']);
+
+        if ($deactivatedCount > 0) {
+            Log::info('Subscription cycles expired', [
+                'count' => $deactivatedCount,
+                'timestamp' => now()->toDateTimeString(),
+            ]);
+        }
+
+        return $deactivatedCount;
     }
 }

@@ -100,12 +100,36 @@ class SubscriptionCycle extends Model
     public function deductTokens(int $tokens): bool
     {
         if ($this->getTokensRemainingAttribute() < $tokens) {
+            \Illuminate\Support\Facades\Log::warning('Cannot deduct tokens: insufficient remaining.', [
+                'cycle_id' => $this->id,
+                'tokens_requested' => $tokens,
+                'tokens_remaining' => $this->getTokensRemainingAttribute(),
+                'tokens_allocated' => $this->tokens_allocated,
+                'tokens_used' => $this->tokens_used,
+            ]);
+
             return false;
         }
 
         $this->tokens_used += $tokens;
+        $result = $this->save();
 
-        return $this->save();
+        if ($result) {
+            \Illuminate\Support\Facades\Log::debug('Tokens deducted successfully.', [
+                'cycle_id' => $this->id,
+                'tokens_deducted' => $tokens,
+                'tokens_used_before' => $this->tokens_used - $tokens,
+                'tokens_used_after' => $this->tokens_used,
+                'tokens_remaining' => $this->getTokensRemainingAttribute(),
+            ]);
+        } else {
+            \Illuminate\Support\Facades\Log::error('Failed to save cycle after token deduction.', [
+                'cycle_id' => $this->id,
+                'tokens_to_deduct' => $tokens,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

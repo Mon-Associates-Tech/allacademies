@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
+use App\Services\Traits\ResponseExtraction;
 use DOMDocument;
 use Exception;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\IOFactory;
 use RuntimeException;
@@ -14,32 +13,31 @@ use ZipArchive;
 
 class AcademicChatService
 {
-    protected mixed $apiKey;
-    protected string $endpoint = 'https://api.openai.com/v1/responses';
+    use ResponseExtraction;
+
     protected string $model = '';
 
     protected ChatGPTService $chatGPTService;
+
     protected ModelSelectionService $modelSelectionService;
 
     protected TokenUsageService $tokenUsageService;
 
     public function __construct(
-        ChatGPTService        $chatGPTService,
+        ChatGPTService $chatGPTService,
         ModelSelectionService $modelSelectionService,
-        TokenUsageService     $tokenUsageService
-    )
-    {
+        TokenUsageService $tokenUsageService
+    ) {
         $this->chatGPTService = $chatGPTService;
         $this->modelSelectionService = $modelSelectionService;
         $this->tokenUsageService = $tokenUsageService;
-        $this->apiKey = config('openai.openai.api_key');
     }
 
     public function processRequest($parameters, $conversationHistory)
     {
         $user = auth()->user();
 
-        if ($user && !$user->hasOpenAiTokens()) {
+        if ($user && ! $user->hasOpenAiTokens()) {
             return ['success' => false, 'error' => 'Insufficient tokens.'];
         }
 
@@ -71,7 +69,9 @@ class AcademicChatService
 
         $result = $this->chatGPTService->generateImage($prompt, $model);
 
-        if (!$result['success']) return $result;
+        if (! $result['success']) {
+            return $result;
+        }
 
         $responseContent = "Here is the generated image:\n\n";
         $imageData = [];
@@ -84,7 +84,7 @@ class AcademicChatService
             'success' => true,
             'content' => $responseContent,
             'model_used' => $model,
-            'images' => $imageData
+            'images' => $imageData,
         ];
     }
 
@@ -94,25 +94,25 @@ class AcademicChatService
         $description = $parameters['input'] ?? 'Generate an educational image';
 
         $details = [];
-        if (!empty($parameters['subject'])) {
-            $details[] = "Subject: " . $parameters['subject'];
+        if (! empty($parameters['subject'])) {
+            $details[] = 'Subject: '.$parameters['subject'];
         }
 
-        if (!empty($parameters['topics'])) {
-            $details[] = "Topics: " . (is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
+        if (! empty($parameters['topics'])) {
+            $details[] = 'Topics: '.(is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
         }
 
-        if (!empty($parameters['academic_level'])) {
-            $details[] = "Academic level: " . $parameters['academic_level'];
+        if (! empty($parameters['academic_level'])) {
+            $details[] = 'Academic level: '.$parameters['academic_level'];
         }
 
         $prompt = $description;
-        if (!empty($details)) {
-            $prompt .= ". " . implode('. ', $details);
+        if (! empty($details)) {
+            $prompt .= '. '.implode('. ', $details);
         }
 
         // Add style guidance for educational content
-        $prompt .= ". Educational, clear, professional style, suitable for academic purposes";
+        $prompt .= '. Educational, clear, professional style, suitable for academic purposes';
 
         return $prompt;
     }
@@ -132,9 +132,9 @@ class AcademicChatService
         $messages[] = ['role' => 'user', 'content' => $this->prepareTextPrompt($parameters)];
 
         return $this->chatGPTService->chat($messages, $model, [
-            'temperature' => (float)($parameters['creativity_level'] ?? 1.0),
-            'max_output_tokens' => (int)($parameters['response_length'] ?? 10000),
-//            'request_type' => $parameters['request_type'] ?? 'chat'
+            'temperature' => (float) ($parameters['creativity_level'] ?? 1.0),
+            'max_output_tokens' => (int) ($parameters['response_length'] ?? 10000),
+            //            'request_type' => $parameters['request_type'] ?? 'chat'
         ]);
     }
 
@@ -143,19 +143,19 @@ class AcademicChatService
      */
     protected function buildEducationalSystemMessage(array $parameters): string
     {
-        $systemPrompt = "You are an AI educational assistant designed to help students learn effectively. ";
+        $systemPrompt = 'You are an AI educational assistant designed to help students learn effectively. ';
 
         // Age-appropriate communication
         if (isset($parameters['age'])) {
             $age = $parameters['age'];
             if ($age < 12) {
-                $systemPrompt .= "Use simple, friendly language appropriate for elementary students. ";
+                $systemPrompt .= 'Use simple, friendly language appropriate for elementary students. ';
             } elseif ($age < 16) {
-                $systemPrompt .= "Use clear, engaging language appropriate for middle school students. ";
+                $systemPrompt .= 'Use clear, engaging language appropriate for middle school students. ';
             } elseif ($age < 18) {
-                $systemPrompt .= "Use comprehensive language appropriate for high school students. ";
+                $systemPrompt .= 'Use comprehensive language appropriate for high school students. ';
             } else {
-                $systemPrompt .= "Use academic language appropriate for college-level students. ";
+                $systemPrompt .= 'Use academic language appropriate for college-level students. ';
             }
         }
 
@@ -191,16 +191,16 @@ class AcademicChatService
             $style = $parameters['learning_style'];
             switch ($style) {
                 case 'visual':
-                    $systemPrompt .= "Use visual descriptions, diagrams concepts, and examples that can be easily visualized. ";
+                    $systemPrompt .= 'Use visual descriptions, diagrams concepts, and examples that can be easily visualized. ';
                     break;
                 case 'auditory':
-                    $systemPrompt .= "Explain concepts through verbal descriptions, analogies, and step-by-step explanations. ";
+                    $systemPrompt .= 'Explain concepts through verbal descriptions, analogies, and step-by-step explanations. ';
                     break;
                 case 'kinesthetic':
-                    $systemPrompt .= "Suggest hands-on activities, practical applications, and real-world examples. ";
+                    $systemPrompt .= 'Suggest hands-on activities, practical applications, and real-world examples. ';
                     break;
                 case 'reading':
-                    $systemPrompt .= "Provide detailed written explanations with structured information and references. ";
+                    $systemPrompt .= 'Provide detailed written explanations with structured information and references. ';
                     break;
             }
         }
@@ -215,13 +215,13 @@ class AcademicChatService
         if (isset($parameters['accommodations']) && is_array($parameters['accommodations'])) {
             $accommodations = $parameters['accommodations'];
             if (in_array('simplified_language', $accommodations)) {
-                $systemPrompt .= "Use simplified vocabulary and shorter sentences. ";
+                $systemPrompt .= 'Use simplified vocabulary and shorter sentences. ';
             }
             if (in_array('step_by_step', $accommodations)) {
-                $systemPrompt .= "Break down complex concepts into clear, numbered steps. ";
+                $systemPrompt .= 'Break down complex concepts into clear, numbered steps. ';
             }
             if (in_array('examples_heavy', $accommodations)) {
-                $systemPrompt .= "Provide multiple examples for each concept explained. ";
+                $systemPrompt .= 'Provide multiple examples for each concept explained. ';
             }
         }
 
@@ -230,13 +230,13 @@ class AcademicChatService
             $format = $parameters['response_format'];
             switch ($format) {
                 case 'detailed':
-                    $systemPrompt .= "Provide comprehensive, detailed explanations. ";
+                    $systemPrompt .= 'Provide comprehensive, detailed explanations. ';
                     break;
                 case 'concise':
-                    $systemPrompt .= "Keep responses concise and to the point. ";
+                    $systemPrompt .= 'Keep responses concise and to the point. ';
                     break;
                 case 'interactive':
-                    $systemPrompt .= "Make responses interactive by asking follow-up questions. ";
+                    $systemPrompt .= 'Make responses interactive by asking follow-up questions. ';
                     break;
             }
         }
@@ -247,8 +247,8 @@ class AcademicChatService
         $systemPrompt .= "- Use examples relevant to the student's age and interests\n";
         $systemPrompt .= "- If asked about inappropriate content, redirect to educational topics\n";
         $systemPrompt .= "- Encourage critical thinking and curiosity\n";
-        $systemPrompt .= "- Provide sources or suggest further reading when appropriate";
-        $systemPrompt .= "- No greetings is required or acknowledgement of a valid question";
+        $systemPrompt .= '- Provide sources or suggest further reading when appropriate';
+        $systemPrompt .= '- No greetings is required or acknowledgement of a valid question';
         $systemPrompt .= "- Avoid phrases such as 'That's a great question!' or similar";
 
         return $systemPrompt;
@@ -256,22 +256,22 @@ class AcademicChatService
 
     protected function prepareTextPrompt($parameters): string
     {
-        $prompt = "User request: " . ($parameters['input'] ?? '');
+        $prompt = 'User request: '.($parameters['input'] ?? '');
 
         // Add context from parameters
         $context = [];
         foreach ($parameters as $key => $value) {
-            if ($key !== 'input' && !empty($value)) {
+            if ($key !== 'input' && ! empty($value)) {
                 if (is_array($value)) {
-                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . implode(', ', $value);
+                    $context[] = ucfirst(str_replace('_', ' ', $key)).': '.implode(', ', $value);
                 } else {
-                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ": " . $value;
+                    $context[] = ucfirst(str_replace('_', ' ', $key)).': '.$value;
                 }
             }
         }
 
-        if (!empty($context)) {
-            $prompt .= "\n\nContext:\n" . implode("\n", $context);
+        if (! empty($context)) {
+            $prompt .= "\n\nContext:\n".implode("\n", $context);
         }
 
         return $prompt;
@@ -279,6 +279,7 @@ class AcademicChatService
 
     /**
      * Generate educational chat response with context parameters
+     * Prepares educational messages and delegates to ChatGPTService's centralized chat method
      */
     public function chat(array $parameters, array $messages = []): array
     {
@@ -292,12 +293,12 @@ class AcademicChatService
         ]);
 
         // Check if user has active subscription and sufficient tokens
-        if ($user && !$user->hasOpenAiTokens()) {
+        if ($user && ! $user->hasOpenAiTokens()) {
             Log::warning('Insufficient tokens', ['user_id' => $user->id]);
 
             return [
                 'success' => false,
-                'error' => 'Insufficient tokens. Please purchase a token package to continue.'
+                'error' => 'Insufficient tokens. Please purchase a token package to continue.',
             ];
         }
 
@@ -314,7 +315,7 @@ class AcademicChatService
             if (isset($parameters['input'])) {
                 $formattedMessages[] = [
                     'role' => 'user',
-                    'content' => $parameters['input']
+                    'content' => $parameters['input'],
                 ];
             }
         } else {
@@ -323,7 +324,7 @@ class AcademicChatService
             $formattedMessages[] = ['role' => 'system', 'content' => $systemMessage];
 
             // Add conversation history if provided
-            if (!empty($messages)) {
+            if (! empty($messages)) {
                 $formattedMessages = array_merge($formattedMessages, $messages);
             }
 
@@ -331,223 +332,44 @@ class AcademicChatService
             if (isset($parameters['input'])) {
                 $formattedMessages[] = [
                     'role' => 'user',
-                    'content' => $parameters['input']
+                    'content' => $parameters['input'],
                 ];
             }
         }
 
+        // Build request data with educational parameters
         $requestData = [
             'model' => $modelToUse,
             'input' => $formattedMessages,
-            'temperature' => (float)($parameters['creativity_level'] ?? 1.0),
+            'temperature' => (float) ($parameters['creativity_level'] ?? 1.0),
         ];
 
-        $tokenLimit = (int)($parameters['response_length'] ?? 10000);
+        $tokenLimit = (int) ($parameters['response_length'] ?? 10000);
         $requestData['max_output_tokens'] = $tokenLimit;
 
         if (isset($parameters['top_p'])) {
             $requestData['top_p'] = $parameters['top_p'];
         }
 
-        // Rest of the method stays the same...
-        $timeout = config('openai.openai.timeout', 90);
-        $maxRetries = 3;
-        $retryDelay = 2;
-
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            try {
-                $response = Http::withToken($this->apiKey)
-                    ->timeout($timeout)
-                    ->connectTimeout(10)
-                    ->retry(2, 1000)
-                    ->post($this->endpoint, $requestData);
-
-                if ($response->successful()) {
-                    $responseData = $response->json();
-
-                    Log::info('OpenAI Response received', [
-                        'has_output' => isset($responseData['output']),
-                        'has_usage' => isset($responseData['usage']),
-                    ]);
-
-                    $usage = $responseData['usage'] ?? null;
-
-                    if ($user && $usage) {
-                        $this->logTokenUsage($user, $usage, $parameters['request_type'] ?? 'chat', $modelToUse);
-                    }
-
-                    $content = $this->extractContentFromResponsesAPI($responseData);
-
-                    Log::warning('OpenAI Response Content', [
-                        // 'content' => $content
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'content' => $content,
-                        'usage' => $usage,
-                        'model' => $responseData['model'] ?? $modelToUse
-                    ];
-                }
-
-                if (in_array($response->status(), [429, 503, 502])) {
-                    if ($attempt < $maxRetries) {
-                        $waitTime = $retryDelay * $attempt;
-                        Log::warning('OpenAI API rate limit or unavailable, retrying', [
-                            'status' => $response->status(),
-                            'attempt' => $attempt,
-                            'wait_time' => $waitTime,
-                        ]);
-                        sleep($waitTime);
-                        continue;
-                    }
-                }
-
-                Log::error('OpenAI API Error', [
-                    'response' => $response->body(),
-                    'status' => $response->status(),
-                    'attempt' => $attempt,
-                ]);
-
-                return [
-                    'success' => false,
-                    'error' => "API Error: " . $response->body()
-                ];
-
-            } catch (ConnectionException $e) {
-                Log::error('OpenAI Connection Error', [
-                    'error' => $e->getMessage(),
-                    'attempt' => $attempt,
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    $waitTime = $retryDelay * $attempt;
-                    sleep($waitTime);
-                    continue;
-                }
-
-                return [
-                    'success' => false,
-                    'error' => 'Connection timeout. Please try again.'
-                ];
-
-            } catch (Exception $e) {
-                Log::error('Educational Chat Service Error', [
-                    'error' => $e->getMessage(),
-                    'attempt' => $attempt,
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    $waitTime = $retryDelay * $attempt;
-                    sleep($waitTime);
-                    continue;
-                }
-
-                return [
-                    'success' => false,
-                    'error' => 'Service temporarily unavailable. Please try again.'
-                ];
-            }
-        }
-
-        return [
-            'success' => false,
-            'error' => 'Service temporarily unavailable after multiple attempts. Please try again later.'
+        // Delegate to centralized chat request handler with retry logic
+        $requestOptions = [
+            'request_type' => $parameters['request_type'] ?? 'chat',
         ];
-    }
 
-    /**
-     * Log token usage and deduct from user's subscription
-     */
-    protected function logTokenUsage($user, array $usage, string $requestType = 'chat', string $model = null): void
-    {
-        $this->tokenUsageService->logUsage($user, $usage, $requestType, $model);
-    }
+        $result = $this->chatGPTService->chat($formattedMessages, $modelToUse, array_merge($requestOptions, [
+            'temperature' => $requestData['temperature'],
+            'max_output_tokens' => $requestData['max_output_tokens'],
+            'top_p' => $requestData['top_p'] ?? null,
+        ]));
 
-    protected function extractContentFromResponsesAPI(array $responseData): string
-    {
-        if (!isset($responseData['output'])) {
-            Log::warning('No output field in response');
-            return '';
+        if ($result['success']) {
+            Log::info('OpenAI Response received', [
+                'has_content' => ! empty($result['content']),
+                'has_usage' => isset($result['usage']),
+            ]);
         }
 
-        $output = $responseData['output'];
-
-        // Handle direct string output
-        if (is_string($output)) {
-            return $output;
-        }
-
-        // Handle array output - NEW APPROACH
-        if (is_array($output)) {
-            // PRIORITY 1: Look for content array in first output element
-            if (isset($output[0]['content'])) {
-                $fullText = '';
-
-                foreach ($output as $outputItem) {
-                    if (isset($outputItem['content']) && is_array($outputItem['content'])) {
-                        foreach ($outputItem['content'] as $contentPart) {
-                            // Extract text from various possible structures
-                            if (is_string($contentPart)) {
-                                $fullText .= $contentPart;
-                            } elseif (isset($contentPart['text'])) {
-                                $fullText .= $contentPart['text'];
-                            } elseif (isset($contentPart['type']) && $contentPart['type'] === 'output_text' && isset($contentPart['text'])) {
-                                $fullText .= $contentPart['text'];
-                            }
-                        }
-                    }
-                }
-
-                if (!empty($fullText)) {
-                    return $fullText;
-                }
-            }
-
-            // PRIORITY 2: Array of strings
-            if (isset($output[0]) && is_string($output[0])) {
-                return implode('', $output);
-            }
-
-            // PRIORITY 3: Direct text field
-            if (isset($output[0]['text'])) {
-                return $output[0]['text'];
-            }
-        }
-
-        // Final fallback
-        Log::error('Could not extract content from response', [
-            'output_structure' => json_encode($output)
-        ]);
-        return $this->extractTextFromResponse($responseData);
-    }
-
-    private function extractTextFromResponse($response)
-    {
-        if (is_string($response)) {
-            return $response;
-        }
-
-        if (is_array($response)) {
-            // Handle Responses API format
-            if (isset($response[0]['content'][0]['text'])) {
-                return $response[0]['content'][0]['text'];
-            }
-
-            // Handle chat completions format
-            if (isset($response['output'][0]['content']['text'])) {
-                return $response['output'][0]['content']['text'];
-            }
-
-            // Handle other possible formats
-            if (isset($response['content'])) {
-                return is_array($response['content']) ?
-                    ($response['content'][0]['text'] ?? json_encode($response['content'])) :
-                    $response['content'];
-            }
-        }
-
-        return (string)$response;
+        return $result;
     }
 
     /**
@@ -558,29 +380,29 @@ class AcademicChatService
         $errors = [];
 
         // Required parameters
-        if (!isset($parameters['input']) || empty(trim($parameters['input']))) {
+        if (! isset($parameters['input']) || empty(trim($parameters['input']))) {
             $errors[] = 'Message is required';
         }
 
         // Age validation
-        if (isset($parameters['age']) && (!is_numeric($parameters['age']) || $parameters['age'] < 5 || $parameters['age'] > 100)) {
+        if (isset($parameters['age']) && (! is_numeric($parameters['age']) || $parameters['age'] < 5 || $parameters['age'] > 100)) {
             $errors[] = 'Age must be between 5 and 100';
         }
 
         // Academic level validation
         $validLevels = ['elementary', 'middle_school', 'high_school', 'college', 'graduate'];
-        if (isset($parameters['academic_level']) && !in_array($parameters['academic_level'], $validLevels)) {
+        if (isset($parameters['academic_level']) && ! in_array($parameters['academic_level'], $validLevels)) {
             $errors[] = 'Invalid academic level';
         }
 
         // Learning style validation
         $validStyles = ['visual', 'auditory', 'kinesthetic', 'reading'];
-        if (isset($parameters['learning_style']) && !in_array($parameters['learning_style'], $validStyles)) {
+        if (isset($parameters['learning_style']) && ! in_array($parameters['learning_style'], $validStyles)) {
             $errors[] = 'Invalid learning style';
         }
 
         // Creativity level validation
-        if (((isset($parameters['creativity_level']) && (!is_numeric($parameters['creativity_level']))) || $parameters['creativity_level'] < 1)) {
+        if (((isset($parameters['creativity_level']) && (! is_numeric($parameters['creativity_level']))) || $parameters['creativity_level'] < 1)) {
             $errors[] = 'Creativity level must be greater than 1';
         }
 
@@ -599,7 +421,7 @@ class AcademicChatService
             'social_studies' => ['history', 'geography', 'civics', 'economics', 'psychology'],
             'computer_science' => ['programming', 'algorithms', 'data_structures', 'web_development', 'databases'],
             'foreign_languages' => ['spanish', 'french', 'german', 'mandarin', 'japanese'],
-            'arts' => ['visual_arts', 'music', 'theater', 'dance', 'digital_arts']
+            'arts' => ['visual_arts', 'music', 'theater', 'dance', 'digital_arts'],
         ];
     }
 
@@ -617,61 +439,65 @@ class AcademicChatService
                 // Plain text files
                 $content = $file->getContent();
                 if (empty(trim($content))) {
-                    return "The uploaded text file appears to be empty.";
+                    return 'The uploaded text file appears to be empty.';
                 }
+
                 return $content;
             } elseif ($mimeType === 'application/pdf') {
                 // PDF files
                 $content = $this->extractPdfContent($file);
                 if (str_contains($content, 'requires pdftotext')) {
-                    throw new Exception("PDF content extraction failed. Please ensure pdftotext is installed on the server.");
+                    throw new Exception('PDF content extraction failed. Please ensure pdftotext is installed on the server.');
                 }
+
                 return $content;
             } elseif (in_array($mimeType, [
                 'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             ])) {
                 // Word documents
                 $content = $this->extractWordContent($file);
                 if (str_contains($content, 'requires the phpoffice/phpword library')) {
-                    throw new Exception("Word document content extraction failed. Please install the phpoffice/phpword library.");
+                    throw new Exception('Word document content extraction failed. Please install the phpoffice/phpword library.');
                 }
+
                 return $content;
             } elseif (in_array($mimeType, [
                 'application/vnd.ms-excel',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ])) {
                 // Excel documents
                 $content = $this->extractExcelContent($file);
                 if (str_contains($content, 'requires the phpoffice/phpspreadsheet library')) {
-                    throw new Exception("Excel document content extraction failed. Please install the phpoffice/phpspreadsheet library.");
+                    throw new Exception('Excel document content extraction failed. Please install the phpoffice/phpspreadsheet library.');
                 }
+
                 return $content;
             } else {
                 // For other file types, try to get basic content
                 $content = $file->getContent();
-                if (!empty($content) && strlen($content) < 10000) { // Reasonable limit
+                if (! empty($content) && strlen($content) < 10000) { // Reasonable limit
                     return $content;
                 }
 
                 // If all else fails, return file info
-                return "File uploaded:\n" .
-                    "- Name: " . $originalName . "\n" .
-                    "- Size: " . $file->getSize() . " bytes\n" .
-                    "- Type: " . $mimeType . "\n" .
-                    "Note: Content could not be automatically extracted from this file type.";
+                return "File uploaded:\n".
+                    '- Name: '.$originalName."\n".
+                    '- Size: '.$file->getSize()." bytes\n".
+                    '- Type: '.$mimeType."\n".
+                    'Note: Content could not be automatically extracted from this file type.';
             }
         } catch (Exception $e) {
             \Log::error('File extraction error', [
                 'error' => $e->getMessage(),
                 'file' => $originalName,
-                'mime_type' => $mimeType
+                'mime_type' => $mimeType,
             ]);
 
             // Return a more informative error message
-            return "Error processing file: " . $originalName . "\n" .
-                "Issue: " . $e->getMessage() . "\n" .
-                "Please try uploading a plain text file (.txt) or ensure the required extraction tools are installed.";
+            return 'Error processing file: '.$originalName."\n".
+                'Issue: '.$e->getMessage()."\n".
+                'Please try uploading a plain text file (.txt) or ensure the required extraction tools are installed.';
         }
     }
 
@@ -682,17 +508,18 @@ class AcademicChatService
     {
         try {
             $pdfExtractor = app(PdfContentExtractionService::class);
+
             return $pdfExtractor->extractFromUploadedFile($file, [
                 'preserve_layout' => true,
-                'method' => 'auto'
+                'method' => 'auto',
             ]);
         } catch (Exception $e) {
             Log::error("PDF extraction failed: {$e->getMessage()}");
 
-            return "PDF file content extraction failed.\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n" .
-                "Error: " . $e->getMessage();
+            return "PDF file content extraction failed.\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n".
+                'Error: '.$e->getMessage();
         }
     }
 
@@ -703,10 +530,10 @@ class AcademicChatService
     {
         // For .doc files
         if ($file->getMimeType() === 'application/msword') {
-            return "Word document (.doc) uploaded.\n" .
-                "Full content extraction for .doc files requires the phpoffice/phpword library.\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n";
+            return "Word document (.doc) uploaded.\n".
+                "Full content extraction for .doc files requires the phpoffice/phpword library.\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n";
         }
 
         // For .docx files
@@ -714,27 +541,27 @@ class AcademicChatService
             $tmpFile = $file->getRealPath();
 
             // Try to extract basic text content from DOCX (XML-based format)
-            $zip = new ZipArchive();
-            if ($zip->open($tmpFile) === TRUE) {
+            $zip = new ZipArchive;
+            if ($zip->open($tmpFile) === true) {
                 $content = '';
                 // Read document.xml which contains the main text
                 if ($zip->locateName('word/document.xml') !== false) {
                     $xml = $zip->getFromName('word/document.xml');
-                    $dom = new DOMDocument();
+                    $dom = new DOMDocument;
                     $dom->loadXML($xml, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
                     $content = strip_tags($dom->textContent);
                 }
                 $zip->close();
 
-                if (!empty($content)) {
+                if (! empty($content)) {
                     return trim($content);
                 }
             }
 
             // Fallback if XML parsing fails
-            return "Word document (.docx) uploaded.\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n";
+            return "Word document (.docx) uploaded.\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n";
         }
 
         return "Unsupported Word document format.\n";
@@ -747,10 +574,10 @@ class AcademicChatService
     {
         // For .xls files
         if ($file->getMimeType() === 'application/vnd.ms-excel') {
-            return "Excel document (.xls) uploaded.\n" .
-                "Full content extraction for .xls files requires the phpoffice/phpspreadsheet library.\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n";
+            return "Excel document (.xls) uploaded.\n".
+                "Full content extraction for .xls files requires the phpoffice/phpspreadsheet library.\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n";
         }
 
         // For .xlsx files
@@ -758,27 +585,27 @@ class AcademicChatService
             $tmpFile = $file->getRealPath();
 
             // Try to extract basic information from XLSX (XML-based format)
-            $zip = new ZipArchive();
-            if ($zip->open($tmpFile) === TRUE) {
+            $zip = new ZipArchive;
+            if ($zip->open($tmpFile) === true) {
                 $content = '';
                 // Read sharedStrings.xml which contains cell values
                 if ($zip->locateName('xl/sharedStrings.xml') !== false) {
                     $xml = $zip->getFromName('xl/sharedStrings.xml');
-                    $dom = new DOMDocument();
+                    $dom = new DOMDocument;
                     $dom->loadXML($xml, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
                     $content = strip_tags($dom->textContent);
                 }
                 $zip->close();
 
-                if (!empty($content)) {
-                    return "Excel spreadsheet content (text values only):\n" . trim($content);
+                if (! empty($content)) {
+                    return "Excel spreadsheet content (text values only):\n".trim($content);
                 }
             }
 
             // Fallback if XML parsing fails
-            return "Excel document (.xlsx) uploaded.\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n";
+            return "Excel document (.xlsx) uploaded.\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n";
         }
 
         return "Unsupported Excel document format.\n";
@@ -786,9 +613,6 @@ class AcademicChatService
 
     /**
      * Extract content from various file types
-     *
-     * @param UploadedFile $file
-     * @return string
      */
     public function extractFileContent(UploadedFile $file): string
     {
@@ -798,22 +622,19 @@ class AcademicChatService
             'pdf' => $this->extractPdfContent($file),
             'txt' => file_get_contents($file->getRealPath()),
             'doc', 'docx' => $this->extractDocxContent($file),
-            default => "Unsupported file type: {$extension}\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n"
+            default => "Unsupported file type: {$extension}\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n"
         };
     }
 
     /**
      * Extract content from DOCX files
-     *
-     * @param UploadedFile $file
-     * @return string
      */
     protected function extractDocxContent(UploadedFile $file): string
     {
         try {
-            if (!class_exists(IOFactory::class)) {
+            if (! class_exists(IOFactory::class)) {
                 throw new RuntimeException('PhpWord library not available');
             }
 
@@ -824,11 +645,11 @@ class AcademicChatService
             foreach ($phpWord->getSections() as $section) {
                 foreach ($section->getElements() as $element) {
                     if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
+                        $text .= $element->getText()."\n";
                     } elseif (method_exists($element, 'getElements')) {
                         foreach ($element->getElements() as $childElement) {
                             if (method_exists($childElement, 'getText')) {
-                                $text .= $childElement->getText() . "\n";
+                                $text .= $childElement->getText()."\n";
                             }
                         }
                     }
@@ -839,75 +660,12 @@ class AcademicChatService
         } catch (Exception $e) {
             Log::error('DOCX processing failed', [
                 'error' => $e->getMessage(),
-                'file' => $file->getClientOriginalName()
+                'file' => $file->getClientOriginalName(),
             ]);
 
-            return "Error processing document: " . $e->getMessage() . "\n" .
-                "File name: " . $file->getClientOriginalName() . "\n" .
-                "File size: " . $file->getSize() . " bytes\n";
+            return 'Error processing document: '.$e->getMessage()."\n".
+                'File name: '.$file->getClientOriginalName()."\n".
+                'File size: '.$file->getSize()." bytes\n";
         }
     }
-
-    protected function normalizeTextResponse($content): array
-    {
-        $raw = $content;
-        $textSegments = [];
-
-        if (is_string($content)) {
-            $textSegments[] = $content;
-        } elseif (is_array($content)) {
-            foreach ($content as $item) {
-                if (is_string($item)) {
-                    $textSegments[] = $item;
-                    continue;
-                }
-
-                if (isset($item['content'])) {
-                    $segments = $item['content'];
-
-                    if (is_array($segments)) {
-                        foreach ($segments as $segment) {
-                            if (is_string($segment)) {
-                                $textSegments[] = $segment;
-                                continue;
-                            }
-
-                            if (isset($segment['text']) && is_string($segment['text'])) {
-                                $textSegments[] = $segment['text'];
-                            }
-                        }
-                    } elseif (is_string($segments)) {
-                        $textSegments[] = $segments;
-                    }
-                } elseif (isset($item['text']) && is_string($item['text'])) {
-                    $textSegments[] = $item['text'];
-                }
-            }
-        }
-
-        $text = trim(implode("\n\n", array_filter($textSegments, static fn($segment) => trim($segment) !== '')));
-
-        if ($text === '' && is_array($content)) {
-            $text = trim(json_encode($content));
-        }
-
-        return [
-            'text' => $text,
-            'raw' => $raw,
-        ];
-    }
-
-    protected function isCommandAvailable(string $command): bool
-    {
-        if (!function_exists('exec')) {
-            return false;
-        }
-
-        $output = [];
-        $returnCode = 0;
-        @exec("which {$command} 2>&1", $output, $returnCode);
-
-        return $returnCode === 0;
-    }
-
 }
