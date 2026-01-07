@@ -20,23 +20,27 @@ class SubscriptionCycleService
 
     /**
      * Create a new subscription cycle for a user
+     * Each cycle is 30 days from the subscription start date (anniversary date)
+     * Price stored is the cumulative total cost up to this cycle
      *
-     * @param User $user
-     * @param PricingTier $pricingTier
-     * @param Carbon $startDate
-     * @param int $cycleNumber
-     * @return SubscriptionCycle
+     * @param  float|null  $customPrice  Optional custom cumulative price for the cycle
+     * @param  string|null  $groupId  Optional UUID to group cycles from the same purchase
+     * @param  bool  $isTopup  Whether this is a topup cycle (default: false)
      */
-    public function createCycle(User $user, PricingTier $pricingTier, Carbon $startDate, int $cycleNumber): SubscriptionCycle
+    public function createCycle(User $user, PricingTier $pricingTier, Carbon $startDate, int $cycleNumber, ?float $customPrice = null, ?string $groupId = null, bool $isTopup = false): SubscriptionCycle
     {
-        return DB::transaction(function () use ($user, $pricingTier, $startDate, $cycleNumber) {
-            $endDate = $startDate->copy()->addMonth();
-            $price = $this->pricingService->getPriceForCycle($pricingTier, $cycleNumber);
+        return DB::transaction(function () use ($user, $pricingTier, $startDate, $cycleNumber, $customPrice, $groupId, $isTopup) {
+            // Cycle ends 30 days after start (anniversary date model)
+            $endDate = $startDate->copy()->addDays(30);
+
+            // Use cumulative price (total cost up to this cycle)
+            $price = $customPrice ?? $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             $cycle = SubscriptionCycle::create([
                 'user_id' => $user->id,
                 'pricing_tier_id' => $pricingTier->id,
+                'subscription_group_id' => $groupId,
                 'cycle_number' => $cycleNumber,
                 'cycle_start_date' => $startDate,
                 'cycle_end_date' => $endDate,
@@ -44,6 +48,7 @@ class SubscriptionCycleService
                 'tokens_used' => 0,
                 'current_price' => $price,
                 'status' => 'active',
+                'is_topup' => $isTopup,
             ]);
 
             Log::info('Subscription cycle created', [
@@ -52,7 +57,11 @@ class SubscriptionCycleService
                 'cycle_number' => $cycleNumber,
                 'pricing_tier' => $pricingTier->name,
                 'token_limit' => $tokenLimit,
-                'price' => $price,
+                'cumulative_price' => $price,
+                'cycle_start' => $startDate->toDateString(),
+                'cycle_end' => $endDate->toDateString(),
+                'group_id' => $groupId,
+                'is_topup' => $isTopup,
             ]);
 
             return $cycle;
@@ -61,21 +70,18 @@ class SubscriptionCycleService
 
     /**
      * Create initial cycle(s) for a new subscription
-     * If subscription starts mid-month, create prorated first cycle
-     *
-     * @param User $user
-     * @param PricingTier $pricingTier
-     * @param Carbon $subscriptionStartDate
-     * @return SubscriptionCycle
+     * Each cycle is 30 days from subscription start date (anniversary model)
+     * Price is cumulative from the subscription start
      */
     public function initializeSubscriptionCycles(User $user, PricingTier $pricingTier, Carbon $subscriptionStartDate): SubscriptionCycle
     {
         return DB::transaction(function () use ($user, $pricingTier, $subscriptionStartDate) {
-            // Calculate when the next month starts (for first cycle end date)
+            // Calculate cycle dates using anniversary model (30 days from start date)
             $cycleStartDate = $subscriptionStartDate->copy()->startOfDay();
-            $cycleEndDate = $subscriptionStartDate->copy()->endOfMonth();
+            $cycleEndDate = $subscriptionStartDate->copy()->addDays(30);
 
-            $price = $this->pricingService->getPriceForCycle($pricingTier, 1);
+            // Cycle 1 uses initial_price (cumulative is just initial_price for cycle 1)
+            $price = $pricingTier->getCumulativePriceUpToCycle(1);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             // Create the first cycle
@@ -96,6 +102,9 @@ class SubscriptionCycleService
                 'cycle_id' => $cycle->id,
                 'pricing_tier' => $pricingTier->name,
                 'subscription_start_date' => $subscriptionStartDate,
+                'cumulative_price' => $price,
+                'cycle_start' => $cycleStartDate->toDateString(),
+                'cycle_end' => $cycleEndDate->toDateString(),
             ]);
 
             return $cycle;
@@ -104,9 +113,6 @@ class SubscriptionCycleService
 
     /**
      * Get the current active cycle for a user
-     *
-     * @param User $user
-     * @return SubscriptionCycle|null
      */
     public function getCurrentActiveCycle(User $user): ?SubscriptionCycle
     {
@@ -119,9 +125,6 @@ class SubscriptionCycleService
 
     /**
      * Get the next upcoming cycle for a user
-     *
-     * @param User $user
-     * @return SubscriptionCycle|null
      */
     public function getNextUpcomingCycle(User $user): ?SubscriptionCycle
     {
@@ -132,17 +135,15 @@ class SubscriptionCycleService
     }
 
     /**
-     * Reset monthly cycle for a user
+     * Reset monthly cycle for a user (called when cycle expires)
      * Marks current cycle as expired and creates a new one
-     *
-     * @param User $user
-     * @param PricingTier $pricingTier
-     * @return SubscriptionCycle
+     * Uses anniversary date model (30 days from previous start date)
+     * Price is cumulative total cost up to the new cycle
      */
     public function resetMonthlyTokens(User $user, PricingTier $pricingTier): SubscriptionCycle
     {
         return DB::transaction(function () use ($user, $pricingTier) {
-            $currentCycle = $this->getCurrentActiveCycle($user);
+            $currentCycle = $user->getCurrentActiveCycle();
 
             if ($currentCycle) {
                 // Mark current cycle as expired
@@ -155,12 +156,14 @@ class SubscriptionCycleService
                 ]);
             }
 
-            // Create new cycle
+            // Create new cycle starting from anniversary of previous cycle end
             $nextCycleNumber = $currentCycle ? $currentCycle->cycle_number + 1 : 1;
-            $newStartDate = now()->startOfDay();
-            $newEndDate = now()->endOfMonth();
+            $previousEndDate = $currentCycle ? $currentCycle->cycle_end_date : now();
+            $newStartDate = $previousEndDate->copy()->startOfDay();
+            $newEndDate = $newStartDate->copy()->addDays(30);
 
-            $price = $this->pricingService->getPriceForCycle($pricingTier, $nextCycleNumber);
+            // Use cumulative price (total cost up to this cycle number)
+            $price = $pricingTier->getCumulativePriceUpToCycle($nextCycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             $newCycle = SubscriptionCycle::create([
@@ -175,12 +178,14 @@ class SubscriptionCycleService
                 'status' => 'active',
             ]);
 
-            Log::info('New subscription cycle created', [
+            Log::info('New subscription cycle created after expiration', [
                 'user_id' => $user->id,
                 'cycle_id' => $newCycle->id,
                 'cycle_number' => $nextCycleNumber,
                 'token_limit' => $tokenLimit,
-                'price' => $price,
+                'cumulative_price' => $price,
+                'cycle_start' => $newStartDate->toDateString(),
+                'cycle_end' => $newEndDate->toDateString(),
             ]);
 
             return $newCycle;
@@ -190,9 +195,6 @@ class SubscriptionCycleService
     /**
      * Get all subscription cycles for a user within a date range
      *
-     * @param User $user
-     * @param Carbon $startDate
-     * @param Carbon $endDate
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUserCyclesInRange(User $user, Carbon $startDate, Carbon $endDate)
@@ -205,15 +207,12 @@ class SubscriptionCycleService
 
     /**
      * Get statistics for a user's current cycle
-     *
-     * @param User $user
-     * @return array|null
      */
     public function getCurrentCycleStats(User $user): ?array
     {
         $cycle = $this->getCurrentActiveCycle($user);
 
-        if (!$cycle) {
+        if (! $cycle) {
             return null;
         }
 
@@ -235,33 +234,27 @@ class SubscriptionCycleService
 
     /**
      * Check if a user has enough tokens in current cycle
-     *
-     * @param User $user
-     * @param int $requiredTokens
-     * @return bool
      */
     public function hasAvailableTokens(User $user, int $requiredTokens = 1): bool
     {
         $cycle = $this->getCurrentActiveCycle($user);
+
         return $cycle ? $cycle->hasTokens($requiredTokens) : false;
     }
 
     /**
      * Deduct tokens from user's current cycle
-     *
-     * @param User $user
-     * @param int $tokens
-     * @return bool
      */
     public function deductTokens(User $user, int $tokens): bool
     {
         $cycle = $this->getCurrentActiveCycle($user);
 
-        if (!$cycle) {
+        if (! $cycle) {
             Log::warning('No active subscription cycle found', [
                 'user_id' => $user->id,
                 'tokens_requested' => $tokens,
             ]);
+
             return false;
         }
 

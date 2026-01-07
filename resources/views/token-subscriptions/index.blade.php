@@ -89,61 +89,58 @@
                     </div>
                 </div>
 
-                {{-- Current Monthly Cycle Card --}}
+                {{-- Current Anniversary Cycle Card --}}
                 @if($currentCycle)
                     <div class="mb-8">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                             <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Current Monthly Cycle
+                            Current Subscription Cycle
                         </h2>
 
                         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                             {{-- Header Section --}}
-                            <div class="relative overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-600 p-6">
-                                <div class="absolute inset-0 opacity-10">
-                                    <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-                                    <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-                                </div>
-
-                                <div class="relative flex items-start justify-between">
-                                    <div>
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="text-2xl font-bold text-white">{{ $currentCycle->pricingTier->name }} Plan</h3>
-                                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-                                                Month {{ $currentCycle->cycle_number }}
-                                            </span>
-                                        </div>
-                                        <p class="text-white/90">GH₵ {{ number_format($currentCycle->current_price, 2) }}/month • {{ number_format($currentCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
+                                <div class="relative overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-600 p-6">
+                                    <div class="absolute inset-0 opacity-10">
+                                        <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                                        <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
                                     </div>
-                                    <span class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
-                                        ✓ {{ ucfirst($currentCycle->status) }}
-                                    </span>
-                                </div>
-                            </div>
 
-                            {{-- Progress Section --}}
+                                    <div class="relative flex items-start justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-3 mb-2">
+                                                <h3 class="text-2xl font-bold text-white">{{ $currentCycle->pricingTier->name }} Plan</h3>
+                                                <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
+                                                    Month {{ $currentCycle->cycle_number }}
+                                                </span>
+                                            </div>
+                                            <p class="text-white/90">GH₵ {{ number_format($currentCycle->current_price, 2) }} total (cumulative) • {{ number_format($currentCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
+                                        </div>
+                                        <span class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/30">
+                                            ✓ {{ ucfirst($currentCycle->status) }}
+                                        </span>
+                                    </div>
+                                </div>                            {{-- Progress Section --}}
                             <div class="p-6">
                                 <div class="grid grid-cols-3 gap-4 mb-6">
                                     <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Available</p>
-                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->usageLogs->sum('total_tokens')) }}</p>
+                                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($currentCycle->tokens_allocated - $currentCycle->tokens_used) }}</p>
                                     </div>
                                     <div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
                                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Used</p>
-                                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->usageLogs->sum('total_tokens')) }}</p>
+                                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ number_format($currentCycle->tokens_used) }}</p>
                                     </div>
                                     <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total/Month</p>
-                                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($currentCycle->tokens_allocated) }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Topup</p>
+                                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format(max(0, $currentCycle->tokens_allocated - $currentCycle->pricingTier->monthly_token_limit)) }}</p>
                                     </div>
-                                </div>
 
                                 {{-- Progress Bar --}}
                                 <div class="mb-4">
                                     @php
-                                        $usagePercent = ($currentCycle->usageLogs->sum('total_tokens') / $currentCycle->tokens_allocated) * 100;
+                                        $usagePercent = ($currentCycle->tokens_used / $currentCycle->tokens_allocated) * 100;
                                     @endphp
                                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                                         <span>Token Usage Progress</span>
@@ -158,7 +155,9 @@
 
                                 <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <div class="text-sm text-gray-600 dark:text-gray-400">
-                                        <span class="font-semibold">Cycle:</span> {{ $currentCycle->cycle_start_date->format('M d') }} - {{ $currentCycle->cycle_end_date->format('M d, Y') }}
+                                        <span class="font-semibold">Anniversary Cycle:</span> {{ $currentCycle->cycle_start_date->format('M d') }} - {{ $currentCycle->cycle_end_date->format('M d, Y') }}
+                                        <br>
+                                        <span class="text-xs">{{ $currentCycle->getRemainingDays() }} days remaining</span>
                                     </div>
                                     <a href="{{ route('token-subscriptions.show', $currentCycle->id) }}"
                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm">
@@ -222,8 +221,8 @@
                                 @foreach($subscriptionHistory as $sub)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $sub->package->name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $sub->package->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $sub->package?->name }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $sub->package?->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full

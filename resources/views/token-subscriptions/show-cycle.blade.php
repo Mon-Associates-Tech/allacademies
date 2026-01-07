@@ -137,16 +137,29 @@
                                             <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">#{{ $subscriptionCycle->cycle_number }}</p>
                                         </div>
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Days Remaining</p>
+                                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ $subscriptionCycle->getRemainingDays() }} days</p>
+                                            @if($subscriptionCycle->isEndingSoon())
+                                                <p class="text-xs text-orange-600 dark:text-orange-400 mt-1">Ending soon</p>
+                                            @endif
+                                        </div>
+                                        <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                             <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Price</p>
                                             <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">GH₵ {{ number_format($subscriptionCycle->current_price, 2) }}</p>
                                         </div>
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">Start Date</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Tier</p>
+                                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ $subscriptionCycle->pricingTier->name }}</p>
+                                        </div>
+                                        <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Start Date (Anniversary)</p>
                                             <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ $subscriptionCycle->cycle_start_date->format('M d, Y') }}</p>
                                         </div>
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                             <p class="text-sm text-gray-600 dark:text-gray-400">End Date</p>
                                             <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ $subscriptionCycle->cycle_end_date->format('M d, Y') }}</p>
+                                        </div>
+                                    </div>
                                         </div>
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                             <p class="text-sm text-gray-600 dark:text-gray-400">Pricing Period</p>
@@ -164,31 +177,36 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Monthly Token Allocation</p>
-                                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($subscriptionCycle->tokens_allocated) }} tokens</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Resets on the 1st of each month</p>
-                                    </div>
-                                </div>
-
                                 {{-- Pricing Breakdown --}}
                                 <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                         <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
-                                        Pricing Breakdown
+                                        Pricing Information
                                     </h3>
                                     <div class="grid sm:grid-cols-2 gap-4">
-                                        <div class="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">First 6 Months (Introductory)</p>
-                                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">GH₵ {{ number_format($subscriptionCycle->pricingTier->initial_price, 2) }}/month</p>
+                                        <div class="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Increment (Cycle {{ $subscriptionCycle->cycle_number }})</p>
+                                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">GH₵ {{ number_format($subscriptionCycle->pricingTier->getMonthlyPriceIncrement($subscriptionCycle->cycle_number), 2) }}</p>
+                                            @if($subscriptionCycle->cycle_number <= $subscriptionCycle->pricingTier->initial_period_months)
+                                                <p class="text-xs text-blue-700 dark:text-blue-300 mt-2">Initial rate (first {{ $subscriptionCycle->pricingTier->initial_period_months }} months)</p>
+                                            @else
+                                                <p class="text-xs text-blue-700 dark:text-blue-300 mt-2">Reduced rate (after month {{ $subscriptionCycle->pricingTier->initial_period_months }})</p>
+                                            @endif
                                         </div>
-                                        <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-700">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">After 6 Months</p>
-                                            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">GH₵ {{ number_format($subscriptionCycle->pricingTier->subsequent_price, 2) }}/month</p>
-                                            <p class="text-xs text-green-700 dark:text-green-300 mt-2">💰 Save GH₵ {{ number_format($subscriptionCycle->pricingTier->initial_price - $subscriptionCycle->pricingTier->subsequent_price, 2) }}/month</p>
+                                        <div class="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Cumulative Total to Date</p>
+                                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">GH₵ {{ number_format($subscriptionCycle->current_price, 2) }}</p>
+                                            <p class="text-xs text-purple-700 dark:text-purple-300 mt-2">Total amount paid through this cycle</p>
                                         </div>
+                                    </div>
+
+                                    {{-- Pricing Structure Explanation --}}
+                                    <div class="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                                        <p class="text-sm text-amber-900 dark:text-amber-100">
+                                            <span class="font-semibold">📋 Pricing Structure:</span> Month 1-{{ $subscriptionCycle->pricingTier->initial_period_months }}: <strong>GH₵{{ number_format($subscriptionCycle->pricingTier->initial_price, 2) }}/month</strong> | Month {{ $subscriptionCycle->pricingTier->initial_period_months + 1 }}+: <strong>GH₵{{ number_format($subscriptionCycle->pricingTier->subsequent_price, 2) }}/month</strong>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -214,6 +232,14 @@
 
                                     <div class="space-y-2">
                                         <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600 dark:text-gray-400">Base Allocation</span>
+                                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->pricingTier->monthly_token_limit) }}</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600 dark:text-gray-400">Topup Tokens</span>
+                                            <span class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format(max(0, $subscriptionCycle->tokens_allocated - $subscriptionCycle->pricingTier->monthly_token_limit)) }}</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-gray-400">Used</span>
                                             <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_used) }}</span>
                                         </div>
@@ -222,7 +248,7 @@
                                             <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_allocated - $subscriptionCycle->tokens_used) }}</span>
                                         </div>
                                         <div class="flex justify-between text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                                            <span class="text-gray-600 dark:text-gray-400">Total</span>
+                                            <span class="text-gray-600 dark:text-gray-400">Total Allocated</span>
                                             <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->tokens_allocated) }}</span>
                                         </div>
                                     </div>
@@ -230,7 +256,22 @@
 
                                 {{-- Quick Actions --}}
                                 <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cycle & Topup Information</h3>
+                                    <div class="space-y-3 mb-4">
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Anniversary Cycle</p>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">Resets every 30 days on {{ $subscriptionCycle->cycle_start_date->format('M d') }}</p>
+                                        </div>
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Base Allocation</p>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->pricingTier->monthly_token_limit) }} tokens/month</p>
+                                        </div>
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Topup Tokens</p>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format(max(0, $subscriptionCycle->tokens_allocated - $subscriptionCycle->pricingTier->monthly_token_limit)) }} carried forward</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Unused topups carry over automatically</p>
+                                        </div>
+                                    </div>
                                     <div class="space-y-3">
                                         <a href="{{ route('token-subscriptions.index') }}"
                                            class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">

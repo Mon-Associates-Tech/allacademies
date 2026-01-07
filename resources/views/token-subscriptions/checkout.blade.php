@@ -97,7 +97,13 @@
                                         <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
-                                        <span class="text-gray-700 dark:text-gray-300">Automatic monthly token reset</span>
+                                        <span class="text-gray-700 dark:text-gray-300">30-day anniversary cycles (not calendar months)</span>
+                                    </li>
+                                    <li class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                        <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-gray-700 dark:text-gray-300">Automatic topup carryover to next cycle</span>
                                     </li>
                                     <li class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                         <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -134,17 +140,30 @@
                             <div class="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700/30 dark:to-blue-900/10 rounded-xl p-6 border border-gray-200 dark:border-gray-700 sticky top-20">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Order Summary</h3>
 
-                                {{-- Price Breakdown --}}
-                                <div class="space-y-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 dark:text-gray-400">Monthly Rate</span>
-                                        <span class="font-semibold text-gray-900 dark:text-white">GH₵ {{ number_format($monthlyRate, 2) }}</span>
+                                {{-- Price Breakdown Table --}}
+                                @if(isset($priceBreakdown) && count($priceBreakdown) > 0)
+                                    <div class="space-y-2 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                                        <div class="grid grid-cols-3 gap-2 mb-2 text-xs font-semibold text-gray-600 dark:text-gray-400">
+                                            <span>Month</span>
+                                            <span class="text-right">Monthly Cost</span>
+                                            <span class="text-right">Cumulative</span>
+                                        </div>
+                                        @foreach($priceBreakdown as $cycleNum => $pricing)
+                                            <div class="grid grid-cols-3 gap-2 text-sm p-2 bg-white dark:bg-gray-800/50 rounded">
+                                                <span class="text-gray-700 dark:text-gray-300">Month {{ $cycleNum }}</span>
+                                                <span class="text-right font-semibold text-gray-900 dark:text-white">GH₵ {{ number_format($pricing['monthly_increment'], 2) }}</span>
+                                                <span class="text-right font-semibold text-blue-600 dark:text-blue-400">GH₵ {{ number_format($pricing['cumulative'], 2) }}</span>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 dark:text-gray-400">× {{ $months }} Month{{ $months > 1 ? 's' : '' }}</span>
-                                        <span class="font-semibold text-gray-900 dark:text-white">GH₵ {{ number_format($totalPrice, 2) }}</span>
+                                @else
+                                    <div class="space-y-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 dark:text-gray-400">× {{ $months }} Month{{ $months > 1 ? 's' : '' }}</span>
+                                            <span class="font-semibold text-gray-900 dark:text-white">GH₵ {{ number_format($totalPrice, 2) }}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
 
                                 {{-- Total --}}
                                 <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-4">
@@ -204,6 +223,43 @@
                     </div>
                 </div>
 
+                {{-- How the Cycle Works --}}
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-2xl p-8 border border-indigo-200 dark:border-indigo-800">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                            <svg class="w-6 h-6 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            About 30-Day Anniversary Cycles
+                        </h2>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                <h3 class="font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
+                                    <svg class="w-5 h-5 text-indigo-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Your Anniversary Date
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Your subscription cycle resets 30 days from today, not on the 1st of each month. This gives you consistent service for exactly 30 days.</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                <h3 class="font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
+                                    <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Smart Topup Carryover
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">When your cycle resets, unused topup tokens carry over to the next cycle. Your base allocation always resets for fair usage.</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg border border-indigo-300 dark:border-indigo-700">
+                            <p class="text-sm text-indigo-900 dark:text-indigo-100">
+                                <span class="font-semibold">Example:</span> If you start today ({{ now()->format('M d, Y') }}), your cycle resets on {{ now()->addDays(30)->format('M d, Y') }} and gives you a fresh set of tokens for another 30 days.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- FAQ Section --}}
                 <div class="mt-12">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Common Questions</h2>
@@ -213,18 +269,36 @@
                                 <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd"/>
                                 </svg>
-                                When will my subscription start?
+                                When does my cycle reset?
                             </h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-sm">Your subscription begins immediately after successful payment. Tokens are added to your account right away.</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Your cycle resets 30 days from when you activate your subscription, not on calendar months. You'll receive a notification when it's about to reset.</p>
                         </div>
                         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                             <h3 class="font-bold text-gray-900 dark:text-white mb-2 flex items-center">
                                 <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM16 2a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0V6h-1a1 1 0 110-2h1V3a1 1 0 011-1z" clip-rule="evenodd"/>
                                 </svg>
-                                Can I change my subscription later?
+                                What happens to unused tokens?
                             </h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-sm">Yes! You can upgrade, downgrade, or cancel your subscription anytime from your account settings.</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">If you buy extra tokens (topups), unused topups automatically carry over to your next cycle. Your base allocation always resets for fair usage.</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-2 flex items-center">
+                                <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2zm-6 4a3 3 0 016 0H7z" clip-rule="evenodd"/>
+                                </svg>
+                                Can I upgrade my plan?
+                            </h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Yes! You can upgrade or downgrade anytime. Changes take effect at the start of your next cycle.</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-2 flex items-center">
+                                <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 17v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd"/>
+                                </svg>
+                                When will my subscription start?
+                            </h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Your subscription begins immediately after successful payment. Tokens are added to your account right away, and your 30-day cycle starts now.</p>
                         </div>
                     </div>
                 </div>

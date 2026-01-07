@@ -2,22 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Chat\UserTokenSubscription;
-use App\Services\TokenSubscriptionService;
-use App\Services\PaystackService;
-use App\Support\TokenSubscriptionStatus;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use App\Models\Payment;
 use App\Enums\PaymentStatus;
+use App\Models\Chat\UserTokenSubscription;
+use App\Models\Payment;
+use App\Services\PaystackService;
+use App\Services\TokenSubscriptionService;
+use App\Support\TokenSubscriptionStatus;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TokenPaymentController extends Controller
 {
     protected $paystack;
+
     protected $subscriptionService;
 
     public function __construct(PaystackService $paystack, TokenSubscriptionService $subscriptionService)
@@ -44,7 +46,7 @@ class TokenPaymentController extends Controller
             \Log::warning('Invalid subscription status for payment', [
                 'subscription_id' => $subscription->id,
                 'status' => $subscription->status,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return redirect()
@@ -56,7 +58,7 @@ class TokenPaymentController extends Controller
         if ($subscription->package && $subscription->package->isFree()) {
             \Log::warning('Free package reached payment initialization', [
                 'subscription_id' => $subscription->id,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return redirect()
@@ -74,7 +76,7 @@ class TokenPaymentController extends Controller
                 \Log::warning('Duplicate payment attempt', [
                     'subscription_id' => $subscription->id,
                     'reference' => $subscription->reference,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
                 ]);
 
                 return redirect()
@@ -84,16 +86,16 @@ class TokenPaymentController extends Controller
         }
 
         // Generate a fresh unique reference for Paystack
-        $paystackReference = 'TOKEN-' . $subscription->id . '-' . time() . '-' . strtoupper(Str::random(6));
+        $paystackReference = 'TOKEN-'.$subscription->id.'-'.time().'-'.strtoupper(Str::random(6));
 
         // Calculate the correct amount to charge
         $amount = $this->calculateSubscriptionAmount($subscription);
-        
+
         if ($amount <= 0) {
             \Log::error('Invalid subscription amount', [
                 'subscription_id' => $subscription->id,
                 'amount' => $amount,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return redirect()
@@ -101,8 +103,8 @@ class TokenPaymentController extends Controller
                 ->with('error', 'Unable to determine subscription price. Please contact support.');
         }
 
-        $packageName = $subscription->package 
-            ? $subscription->package->name 
+        $packageName = $subscription->package
+            ? $subscription->package->name
             : ($subscription->pricingTier?->name ?? 'Token Subscription');
 
         $data = [
@@ -129,7 +131,7 @@ class TokenPaymentController extends Controller
                 'subscription_id' => $subscription->id,
                 'reference' => $paystackReference,
                 'amount' => $amount,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return redirect($response['data']['authorization_url']);
@@ -137,7 +139,7 @@ class TokenPaymentController extends Controller
             \Log::error('Paystack initialization failed', [
                 'subscription_id' => $subscription->id,
                 'error' => $e->getMessage(),
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return redirect()
@@ -152,9 +154,10 @@ class TokenPaymentController extends Controller
     public function callback(Request $request)
     {
         $reference = $request->query('reference');
-        
-        if (!$reference) {
+
+        if (! $reference) {
             \Log::warning('Payment callback without reference');
+
             return redirect()
                 ->route('token-subscriptions.index')
                 ->with('error', 'Invalid payment callback.');
@@ -163,10 +166,10 @@ class TokenPaymentController extends Controller
         try {
             $response = $this->paystack->verifyTransaction($reference);
 
-            if (!$response['status'] || $response['data']['status'] !== 'success') {
+            if (! $response['status'] || $response['data']['status'] !== 'success') {
                 \Log::warning('Payment verification failed', [
                     'reference' => $reference,
-                    'response_status' => $response['data']['status'] ?? 'unknown'
+                    'response_status' => $response['data']['status'] ?? 'unknown',
                 ]);
 
                 return redirect()
@@ -177,9 +180,9 @@ class TokenPaymentController extends Controller
             $paymentDetails = $response['data'];
             $subscriptionId = $paymentDetails['metadata']['subscription_id'] ?? null;
 
-            if (!$subscriptionId) {
+            if (! $subscriptionId) {
                 \Log::error('Payment callback missing subscription ID', [
-                    'reference' => $reference
+                    'reference' => $reference,
                 ]);
 
                 return redirect()
@@ -195,7 +198,7 @@ class TokenPaymentController extends Controller
                 \Log::warning('Unauthorized payment callback attempt', [
                     'subscription_id' => $subscription->id,
                     'user_id' => $user->id,
-                    'reference' => $reference
+                    'reference' => $reference,
                 ]);
 
                 return redirect()
@@ -212,7 +215,7 @@ class TokenPaymentController extends Controller
                     'subscription_id' => $subscription->id,
                     'expected' => $expectedAmount,
                     'paid' => $paidAmount,
-                    'reference' => $reference
+                    'reference' => $reference,
                 ]);
 
                 // Still process but log the discrepancy
@@ -235,7 +238,7 @@ class TokenPaymentController extends Controller
             \Log::info('Payment processed successfully', [
                 'subscription_id' => $subscription->id,
                 'reference' => $reference,
-                'amount' => $expectedAmount
+                'amount' => $expectedAmount,
             ]);
 
             // Check if it was a top-up (linked to another active subscription)
@@ -248,7 +251,7 @@ class TokenPaymentController extends Controller
 
                     return redirect()
                         ->route('token-subscriptions.show', $mainSubscription)
-                        ->with('success', 'Tokens added successfully! New balance: ' . number_format($mainSubscription->tokens_remaining) . ' tokens');
+                        ->with('success', 'Tokens added successfully! New balance: '.number_format($mainSubscription->tokens_remaining).' tokens');
                 }
             }
 
@@ -261,7 +264,7 @@ class TokenPaymentController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             \Log::error('Subscription not found in callback', [
                 'reference' => $reference,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -270,7 +273,7 @@ class TokenPaymentController extends Controller
         } catch (Exception $e) {
             \Log::error('Payment callback processing failed', [
                 'reference' => $reference,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -281,12 +284,14 @@ class TokenPaymentController extends Controller
 
     /**
      * Calculate the amount to charge for a subscription
-     * 
-     * @param UserTokenSubscription $subscription
-     * @return float
      */
     private function calculateSubscriptionAmount(UserTokenSubscription $subscription): float
     {
+        // If amount is explicitly set (for multi-month purchases), use it
+        if ($subscription->amount) {
+            return (float) $subscription->amount;
+        }
+
         // Pricing from package
         if ($subscription->package) {
             return (float) $subscription->package->price;
@@ -301,10 +306,9 @@ class TokenPaymentController extends Controller
         \Log::warning('Could not determine subscription price', [
             'subscription_id' => $subscription->id,
             'package_id' => $subscription->package_id,
-            'pricing_tier_id' => $subscription->pricing_tier_id
+            'pricing_tier_id' => $subscription->pricing_tier_id,
         ]);
 
         return 0;
     }
 }
-

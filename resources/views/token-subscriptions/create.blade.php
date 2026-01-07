@@ -39,10 +39,10 @@
                             <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">✨ Unlock Messenger Features</span>
                         </div>
                         <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4">
-                            Choose Your Messenger Package
+                            Choose Your Subscription Plan
                         </h1>
                         <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                            Unlock powerful Messenger features to enhance your learning experience. Pay once, use forever.
+                            Get unlimited tokens on a 30-day anniversary cycle. Only unused topup tokens carry over to the next cycle.
                         </p>
                     </div>
 
@@ -103,7 +103,7 @@
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                                         Your Current Package: 
                                         <span class="text-indigo-600 dark:text-indigo-400 bg-indigo-100/50 dark:bg-indigo-900/30 px-3 py-1 rounded-full text-sm">
-                                            {{ $currentSubscription->package->name }}
+                                            {{ $currentSubscription->package?->name ?? $currentSubscription->pricingTier?->name ?? 'Active Subscription' }}
                                         </span>
                                     </h3>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -116,7 +116,7 @@
                                         <div class="bg-white dark:bg-gray-800/50 rounded-lg p-3 transform transition-transform duration-300 hover:scale-105">
                                             <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-semibold">Model Type</p>
                                             <p class="text-lg font-semibold text-gray-900 dark:text-white mt-1">
-                                                {{ $currentSubscription->package->name === 'Premium' ? '⚡ Advanced' : '✓ Basic' }}
+                                                {{ ($currentSubscription->package?->name ?? $currentSubscription->pricingTier?->name) === 'Premium' ? '⚡ Advanced' : '✓ Basic' }}
                                             </p>
                                         </div>
                                         <div class="bg-white dark:bg-gray-800/50 rounded-lg p-3 transform transition-transform duration-300 hover:scale-105">
@@ -139,7 +139,45 @@
                         </div>
                     @endif
 
-
+                    {{-- How It Works Section --}}
+                    <div class="mb-12 max-w-4xl mx-auto">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border border-blue-200 dark:border-blue-800">
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                How Anniversary Cycles Work
+                            </h2>
+                            <div class="grid md:grid-cols-3 gap-6">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-blue-600 text-white font-bold">1</div>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-3">30-Day Cycle</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Your subscription resets every 30 days from the date you signed up (anniversary date), not on calendar months.</p>
+                                </div>
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-indigo-600 text-white font-bold">2</div>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-3">Token Reset</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Your base allocation resets on each anniversary date. You get a fresh set of tokens to use for another 30 days.</p>
+                                </div>
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-green-600 text-white font-bold">3</div>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-3">Smart Topups</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Only unused topup tokens carry over. Base allocation always resets, ensuring fair usage across cycles.</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg border border-blue-300 dark:border-blue-700">
+                                <p class="text-sm text-blue-900 dark:text-blue-100">
+                                    <span class="font-semibold">Example:</span> If you sign up on January 15th, your cycle resets every 15th of the month (not the 1st).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Package Cards Grid --}}
                     <div class="mb-8">

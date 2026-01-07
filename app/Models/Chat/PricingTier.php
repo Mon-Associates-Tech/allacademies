@@ -41,19 +41,64 @@ class PricingTier extends Model
 
     /**
      * Determine if user is in the initial pricing period
-     * @param \DateTime $subscriptionStartDate
-     * @return bool
      */
     public function isInInitialPeriod(\DateTime $subscriptionStartDate): bool
     {
         $monthsElapsed = now()->diffInMonths($subscriptionStartDate);
+
         return $monthsElapsed < $this->initial_period_months;
     }
 
     /**
-     * Get the current price based on subscription start date
-     * @param \DateTime $subscriptionStartDate
-     * @return float
+     * Get the monthly price increment based on the cycle number
+     * Months 1-6 use initial_price, Month 7+ uses subsequent_price
+     *
+     * @param  int  $cycleNumber  The cycle number (1-based)
+     * @return float The monthly price increment
+     */
+    public function getMonthlyPriceIncrement(int $cycleNumber): float
+    {
+        return $cycleNumber <= $this->initial_period_months
+            ? (float) $this->initial_price
+            : (float) $this->subsequent_price;
+    }
+
+    /**
+     * Get the cumulative total price up to and including a specific cycle
+     * Example: Basic plan with initial=$10, subsequent=$5
+     * Cycle 1: $10
+     * Cycle 2: $20
+     * Cycle 6: $60
+     * Cycle 7: $65 (60 + 5)
+     * Cycle 8: $70 (65 + 5)
+     *
+     * @param  int  $cycleNumber  The cycle number (1-based)
+     * @return float The total cumulative price
+     */
+    public function getCumulativePriceUpToCycle(int $cycleNumber): float
+    {
+        $totalPrice = 0;
+
+        for ($i = 1; $i <= $cycleNumber; $i++) {
+            $totalPrice += $this->getMonthlyPriceIncrement($i);
+        }
+
+        return $totalPrice;
+    }
+
+    /**
+     * Get the price for a specific cycle (price delta, not cumulative)
+     *
+     * @param  int  $cycleNumber  The cycle number (1-based)
+     * @return float The price for this cycle only
+     */
+    public function getPriceForCycle(int $cycleNumber): float
+    {
+        return $this->getMonthlyPriceIncrement($cycleNumber);
+    }
+
+    /**
+     * Get the current price based on subscription start date (legacy method)
      */
     public function getCurrentPrice(\DateTime $subscriptionStartDate): float
     {

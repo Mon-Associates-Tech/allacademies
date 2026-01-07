@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OpenAiTokenUsageLog extends Model
 {
     use HasFactory;
+
     protected $table = 'openai_token_usage_logs';
 
     protected $fillable = [
         'user_id',
         'subscription_id',
+        'subscription_cycle_id',
         'model',
         'prompt_tokens', // tracks input_tokens
         'completion_tokens', // tracks output_tokens
@@ -38,10 +40,9 @@ class OpenAiTokenUsageLog extends Model
     {
         return $this->belongsTo(UserTokenSubscription::class, 'subscription_id');
     }
-    public function subscriptionCycle()
-{
-    return $this->belongsTo(SubscriptionCycle::class, 'subscription_cycle_id');
-}
 
-
+    public function subscriptionCycle(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionCycle::class, 'subscription_cycle_id');
+    }
 }

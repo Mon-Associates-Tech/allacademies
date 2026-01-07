@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\PricingTier;
 use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\User;
-use App\Services\TokenSubscriptionService;
 use App\Services\SubscriptionCycleService;
+use App\Services\TokenSubscriptionService;
 use App\Support\TokenSubscriptionStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 class TokenSubscriptionController extends Controller
 {
     protected TokenSubscriptionService $subscriptionService;
+
     protected SubscriptionCycleService $cycleService;
 
     public function __construct(TokenSubscriptionService $subscriptionService, SubscriptionCycleService $cycleService)
@@ -129,11 +129,25 @@ class TokenSubscriptionController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
-        $months = $request->input('months');
+        $months = (int) $request->input('months');
 
-        // Calculate total price based on months
-        $monthlyRate = $pricingTier->initial_price;
-        $totalPrice = $monthlyRate * $months;
+        // Calculate pricing based on the months being purchased (not cycle_number from DB)
+        // Months 1-6 use initial_price, 7+ use subsequent_price
+        $totalPrice = 0;
+        $priceBreakdown = [];
+
+        for ($monthPos = 1; $monthPos <= $months; $monthPos++) {
+            $monthlyPrice = $monthPos <= $pricingTier->initial_period_months
+                ? (float) $pricingTier->initial_price
+                : (float) $pricingTier->subsequent_price;
+
+            $totalPrice += $monthlyPrice;
+
+            $priceBreakdown[$monthPos] = [
+                'monthly_increment' => $monthlyPrice,
+                'cumulative' => $totalPrice,
+            ];
+        }
 
         // Store in session for payment processing
         session([
@@ -141,18 +155,18 @@ class TokenSubscriptionController extends Controller
                 'pricing_tier_id' => $pricingTier->id,
                 'pricing_tier_name' => $pricingTier->name,
                 'months' => $months,
-                'monthly_rate' => $monthlyRate,
                 'total_price' => $totalPrice,
                 'monthly_token_limit' => $pricingTier->monthly_token_limit,
-            ]
+                'price_breakdown' => $priceBreakdown,
+            ],
         ]);
 
         // Show payment page
         return view('token-subscriptions.checkout', [
             'pricingTier' => $pricingTier,
             'months' => $months,
-            'monthlyRate' => $monthlyRate,
             'totalPrice' => $totalPrice,
+            'priceBreakdown' => $priceBreakdown,
             'user' => $user,
         ]);
     }
@@ -169,26 +183,41 @@ class TokenSubscriptionController extends Controller
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
 
-        // Calculate total price
-        $monthlyRate = $pricingTier->initial_price;
-        $totalPrice = $monthlyRate * $months;
+        // Generate a group ID to link all cycles from this purchase
+        $subscriptionGroupId = \Illuminate\Support\Str::uuid()->toString();
 
         // Get the next cycle number for this user
         $lastCycle = $user->subscriptionCycles()
             ->orderBy('cycle_number', 'desc')
             ->first();
-
         $nextCycleNumber = ($lastCycle ? $lastCycle->cycle_number : 0) + 1;
 
-        // Create subscription cycles for each month
-        $cycleStartDate = now();
+        // Create subscription cycles for each month using anniversary dates
+        // Pricing is based on position within this purchase (1-10), not cycle_number from DB
+        $cycleStartDate = $lastCycle ? $lastCycle->cycle_end_date : now();
+        $totalPrice = 0;
+
         for ($i = 0; $i < $months; $i++) {
+            $currentCycleNumber = $nextCycleNumber + $i;
+            $monthPos = $i + 1; // Position within this purchase (1-10)
+
+            // Calculate price for this month position (1-6 = initial, 7+ = subsequent)
+            $monthlyPrice = $monthPos <= $pricingTier->initial_period_months
+                ? (float) $pricingTier->initial_price
+                : (float) $pricingTier->subsequent_price;
+
+            $totalPrice += $monthlyPrice;
+
+            // Calculate the start date for this cycle (30 days from previous cycle end)
+            $cycleStart = $cycleStartDate->copy()->addDays($i * 30);
+
             $this->cycleService->createCycle(
                 $user,
                 $pricingTier,
-                $cycleStartDate->copy()->addMonths($i),
-                $nextCycleNumber + $i,
-                $totalPrice / $months
+                $cycleStart,
+                $currentCycleNumber,
+                $totalPrice,
+                $subscriptionGroupId
             );
         }
 
@@ -198,13 +227,14 @@ class TokenSubscriptionController extends Controller
             ->where('pricing_tier_id', $pricingTier->id)
             ->first();
 
-        if (!$pendingSubscription) {
+        if (! $pendingSubscription) {
             $tokensPurchased = $pricingTier->monthly_token_limit * $months;
             $pendingSubscription = UserTokenSubscription::create([
                 'user_id' => $user->id,
                 'pricing_tier_id' => $pricingTier->id,
+                'amount' => $totalPrice,
                 'status' => TokenSubscriptionStatus::PENDING->value,
-                'reference' => 'TOKEN-' . $user->id . '-' . time(),
+                'reference' => 'TOKEN-'.$user->id.'-'.time(),
                 'package_id' => null,
                 'purchased_at' => now(),
                 'expires_at' => now()->addMonths($months),
@@ -216,7 +246,8 @@ class TokenSubscriptionController extends Controller
             // Update existing pending subscription
             $tokensPurchased = $pricingTier->monthly_token_limit * $months;
             $pendingSubscription->update([
-                'reference' => 'TOKEN-' . $user->id . '-' . time(),
+                'amount' => $totalPrice,
+                'reference' => 'TOKEN-'.$user->id.'-'.time(),
                 'expires_at' => now()->addMonths($months),
                 'tokens_purchased' => $tokensPurchased,
                 'tokens_remaining' => $tokensPurchased,
@@ -228,31 +259,133 @@ class TokenSubscriptionController extends Controller
             ->with('success', 'Ready for payment. Please complete your transaction.');
     }
 
-public function show($subscription)
-{
-    /** @var User $user */
-    $user = Auth::user();
+    public function show($subscription)
+    {
+        /** @var User $user */
+        $user = Auth::user();
 
-    // Try to get as SubscriptionCycle first
-    $subscriptionCycle = SubscriptionCycle::with('usageLogs', 'pricingTier')->find($subscription);
-    if ($subscriptionCycle) {
-        if ($subscriptionCycle->user_id !== $user->id) {
-            abort(403, 'Unauthorized access to this subscription cycle.');
+        // Priority: Try to get as SubscriptionCycle first (new system)
+        $subscriptionCycle = SubscriptionCycle::with('usageLogs', 'pricingTier')
+            ->forUser($user->id)
+            ->find($subscription);
+
+        if ($subscriptionCycle) {
+            return view('token-subscriptions.show-cycle', [
+                'subscriptionCycle' => $subscriptionCycle,
+                'usageLogs' => $subscriptionCycle->usageLogs()->latest()->paginate(15),
+            ]);
         }
-        return view('token-subscriptions.show', ['subscriptionCycle' => $subscriptionCycle]);
+
+        // Fallback: Try to get as UserTokenSubscription (legacy system)
+        $userSubscription = UserTokenSubscription::with('usageLogs', 'pricingTier')
+            ->find($subscription);
+        if ($userSubscription && $userSubscription->user_id === $user->id) {
+            return view('token-subscriptions.show-legacy', [
+                'subscription' => $userSubscription,
+                'usageLogs' => $userSubscription->usageLogs()->latest()->paginate(15),
+            ]);
+        }
+
+        abort(404, 'Subscription not found.');
     }
 
-    // Try to get as UserTokenSubscription (legacy system)
-    $userSubscription = UserTokenSubscription::with('usageLogs', 'pricingTier')->find($subscription);
-    if ($userSubscription) {
-        if ($userSubscription->user_id !== $user->id) {
-            abort(403, 'Unauthorized access to this subscription.');
+    /**
+     * Show topup options for an existing subscription cycle
+     */
+    public function topup($cycleId)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $cycle = SubscriptionCycle::with('pricingTier')
+            ->forUser($user->id)
+            ->find($cycleId);
+
+        if (! $cycle) {
+            abort(404, 'Subscription cycle not found.');
         }
-        return view('token-subscriptions.show-legacy', ['subscription' => $userSubscription]);
+
+        return view('token-subscriptions.topup', [
+            'cycle' => $cycle,
+            'pricingTier' => $cycle->pricingTier,
+        ]);
     }
 
-    // Model not found
-    abort(404, 'Subscription not found.');
-}
+    /**
+     * Process a topup purchase for an existing subscription
+     */
+    public function processTopup(Request $request)
+    {
+        $request->validate([
+            'cycle_id' => 'required|exists:subscription_cycles,id',
+            'months' => 'required|integer|min:1|max:12',
+        ]);
 
+        /** @var User $user */
+        $user = Auth::user();
+
+        $cycle = SubscriptionCycle::with('pricingTier')
+            ->forUser($user->id)
+            ->find($request->cycle_id);
+
+        if (! $cycle) {
+            abort(404, 'Subscription cycle not found.');
+        }
+
+        $pricingTier = $cycle->pricingTier;
+        $months = (int) $request->input('months');
+
+        // Generate a group ID to link all topup cycles from this purchase
+        $topupGroupId = \Illuminate\Support\Str::uuid()->toString();
+
+        // Create topup cycles starting from the next month
+        $cycleStartDate = $cycle->cycle_end_date;
+        $totalPrice = 0;
+
+        for ($i = 0; $i < $months; $i++) {
+            $monthPos = $i + 1;
+
+            // Calculate price for this topup month position
+            $monthlyPrice = $monthPos <= $pricingTier->initial_period_months
+                ? (float) $pricingTier->initial_price
+                : (float) $pricingTier->subsequent_price;
+
+            $totalPrice += $monthlyPrice;
+
+            // Calculate the start date for this topup cycle
+            $topupCycleStart = $cycleStartDate->copy()->addDays($i * 30);
+
+            // Create topup cycle with is_topup = true
+            $this->cycleService->createCycle(
+                $user,
+                $pricingTier,
+                $topupCycleStart,
+                $cycle->cycle_number + $i + 1,
+                $totalPrice,
+                $topupGroupId,
+                true  // is_topup
+            );
+        }
+
+        // Create pending topup subscription
+        $tokensPurchased = $pricingTier->monthly_token_limit * $months;
+        $topupSubscription = UserTokenSubscription::create([
+            'user_id' => $user->id,
+            'pricing_tier_id' => $pricingTier->id,
+            'amount' => $totalPrice,
+            'status' => TokenSubscriptionStatus::PENDING->value,
+            'reference' => 'TOPUP-'.$user->id.'-'.time(),
+            'package_id' => null,
+            'purchased_at' => now(),
+            'expires_at' => now()->addMonths($months),
+            'tokens_purchased' => $tokensPurchased,
+            'tokens_used' => 0,
+            'tokens_remaining' => $tokensPurchased,
+            'action_type' => 'topup',
+        ]);
+
+        // Redirect to payment
+        return redirect()->route('token-payments.initialize', $topupSubscription->id)
+            ->with('success', 'Ready for topup payment. Please complete your transaction.');
+    }
 }

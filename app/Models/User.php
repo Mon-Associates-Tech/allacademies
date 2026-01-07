@@ -11,6 +11,7 @@ use App\Support\TokenSubscriptionStatus;
 use App\Traits\HasAvatar;
 use App\Traits\HasMultipleSubAccounts;
 use App\Traits\HasRoles;
+use App\Traits\HasSubscriptionCycles;
 use App\Traits\HasTeams;
 use App\Traits\Trackable;
 use Exception;
@@ -19,7 +20,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
@@ -33,26 +33,26 @@ use Log;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
-    use HasFactory;
-    use Notifiable;
     use HasAvatar;
-    use Trackable;
-    use Impersonate;
-    use HasRoles;
-    use HasTeams;
+    use HasFactory;
     use HasMultipleSubAccounts;
-
+    use HasRoles;
+    use HasSubscriptionCycles;
+    use HasTeams;
+    use Impersonate;
+    use Notifiable;
+    use Trackable;
 
     protected $fillable = [
         'school_id', 'name', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
-        'country_code', 'gender', 'cover_image'
+        'country_code', 'gender', 'cover_image',
     ];
 
     protected $hidden = [
-        'password', 'remember_token', 'two_factor_code'
+        'password', 'remember_token', 'two_factor_code',
     ];
 
     protected $casts = [
@@ -69,11 +69,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     ];
 
-
     protected static function booted(): void
     {
         parent::booted();
-
 
         static::created(static function ($user) {
             $user->handleRoleChange();
@@ -86,7 +84,8 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         });
 
-        static::observe(new class {
+        static::observe(new class
+        {
             public function verified(User $user): void
             {
                 $user->createFreeTrialSubscription();
@@ -105,7 +104,6 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
         $role = $this->role instanceof UserRole ? $this->role->value : $this->role;
 
-
         if (isset($roleModels[$role])) {
             $modelClass = $roleModels[$role];
             $data = ['user_id' => $this->id];
@@ -120,7 +118,7 @@ class User extends Authenticatable implements MustVerifyEmail
                         if (method_exists($modelClass, 'generateEmployeeId')) {
                             $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
                         } else {
-                            $data['employee_id'] = 'EMP' . time() . rand(100, 999);
+                            $data['employee_id'] = 'EMP'.time().rand(100, 999);
                         }
                         $data['hire_date'] = now();
                         $data['employment_type'] = 'full_time';
@@ -131,7 +129,7 @@ class User extends Authenticatable implements MustVerifyEmail
                         if (method_exists($modelClass, 'generateEmployeeId')) {
                             $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
                         } else {
-                            $data['employee_id'] = 'LIB' . time() . rand(100, 999);
+                            $data['employee_id'] = 'LIB'.time().rand(100, 999);
                         }
                         $data['hire_date'] = now();
                         $data['status'] = 'active';
@@ -141,7 +139,7 @@ class User extends Authenticatable implements MustVerifyEmail
                         if (method_exists($modelClass, 'generateStudentId')) {
                             $data['student_id'] = $modelClass::generateStudentId($this->school_id);
                         } else {
-                            $data['student_id'] = 'STU' . time() . rand(100, 999);
+                            $data['student_id'] = 'STU'.time().rand(100, 999);
                         }
                         $data['admission_date'] = now();
                         $data['status'] = 'active';
@@ -151,21 +149,21 @@ class User extends Authenticatable implements MustVerifyEmail
 
             // Ensure required fields have values
             if ($role === 'student' && empty($data['student_id'])) {
-                $data['student_id'] = 'STU' . $this->id . time();
+                $data['student_id'] = 'STU'.$this->id.time();
             }
 
             if (in_array($role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
-                $data['employee_id'] = strtoupper(substr($role, 0, 3)) . $this->id . time();
+                $data['employee_id'] = strtoupper(substr($role, 0, 3)).$this->id.time();
             }
 
             try {
                 $modelClass::firstOrCreate(['user_id' => $this->id], $data);
             } catch (Exception $e) {
-                Log::error('Failed to create role model', [
+                \Log::error('Failed to create role model', [
                     'user_id' => $this->id,
                     'role' => $role,
                     'data' => $data,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 // Fallback: try without the additional data
@@ -176,13 +174,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Create a free trial subscription for new users
-     *
      */
     public function createFreeTrialSubscription(bool $force = false): void
     {
 
         // Only check email verification if not forcing creation
-        if (!$force && !$this->hasVerifiedEmail()) {
+        if (! $force && ! $this->hasVerifiedEmail()) {
             return;
         }
 
@@ -201,8 +198,9 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('is_active', true)
             ->first();
 
-        if (!$freePackage) {
+        if (! $freePackage) {
             Log::warning('No free trial package available for user', ['user_id' => $this->id]);
+
             return;
         }
 
@@ -236,10 +234,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserTokenSubscription::class);
     }
 
-    public function subscriptionCycles(): HasMany
-    {
-        return $this->hasMany(\App\Models\Chat\SubscriptionCycle::class);
-    }
+    // Subscription cycle relationships are handled by HasSubscriptionCycles trait
 
     // Multi-tenant role checking
 
@@ -275,14 +270,16 @@ class User extends Authenticatable implements MustVerifyEmail
         $user = self::findOrFail($userId);
 
         // Check if current user can impersonate
-        if (!Auth::user()->canImpersonate()) {
+        if (! Auth::user()->canImpersonate()) {
             session()->flash('error', 'You do not have permission to impersonate users.');
+
             return;
         }
 
         // Check if target user can be impersonated
-        if (!$user->canBeImpersonated()) {
+        if (! $user->canBeImpersonated()) {
             session()->flash('error', 'This user cannot be impersonated.');
+
             return;
         }
 
@@ -308,8 +305,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canBeImpersonated(): bool
     {
-        return !$this->isSuperAdmin() &&
-            !in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
+        return ! $this->isSuperAdmin() &&
+            ! in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
             ($this->is_active ?? true);
     }
 
@@ -321,12 +318,24 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getPrimarySchoolRole(): ?string
     {
-        if ($this->student) return 'student';
-        if ($this->teacher) return 'teacher';
-        if ($this->admin) return 'admin';
-        if ($this->librarian) return 'librarian';
-        if ($this->accountant) return 'accountant';
-        if ($this->parent) return 'parent';
+        if ($this->student) {
+            return 'student';
+        }
+        if ($this->teacher) {
+            return 'teacher';
+        }
+        if ($this->admin) {
+            return 'admin';
+        }
+        if ($this->librarian) {
+            return 'librarian';
+        }
+        if ($this->accountant) {
+            return 'accountant';
+        }
+        if ($this->parent) {
+            return 'parent';
+        }
 
         return null;
     }
@@ -346,6 +355,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($role instanceof UserRole) {
             return $query->where('role', $role->value);
         }
+
         return $query->where('role', $role);
     }
 
@@ -394,7 +404,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return !$this->school_id;
+        return ! $this->school_id;
     }
 
     /**
@@ -447,7 +457,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('0=1'); // No results for unauthenticated users
         }
 
@@ -459,6 +469,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 if ($schoolId !== null) { // Explicitly check for null
                     return $query->where('school_id', $schoolId);
                 }
+
                 // If current_school_id is explicitly set to null, they want to see all schools
                 return $query;
             }
@@ -480,7 +491,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('0=1'); // No results for unauthenticated users
         }
 
@@ -491,6 +502,7 @@ class User extends Authenticatable implements MustVerifyEmail
             if ($currentSchoolId) {
                 return $query->where('school_id', $currentSchoolId);
             }
+
             // If in "all schools" view, don't apply scoping
             return $query;
         }
@@ -567,7 +579,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(OpenAiTokenUsageLog::class);
     }
 
-
     /**
      * Check if a user has sufficient tokens
      * Only applies to users with 'subscriber' role
@@ -577,13 +588,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $subscription = $this->activeTokenSubscription;
 
-        if (!$subscription) {
+        if (! $subscription) {
             return false;
         }
 
         // Check if expired
         if ($subscription->isExpired()) {
             $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
+
             return false;
         }
 
@@ -598,7 +610,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $subscription = $this->activeTokenSubscription;
 
-        if (!$subscription) {
+        if (! $subscription) {
             return true;
         }
 
@@ -621,7 +633,7 @@ class User extends Authenticatable implements MustVerifyEmail
         // For subscribers, check their subscription package
         $subscription = $this->activeTokenSubscription;
 
-        if (!$subscription || !$subscription->package) {
+        if (! $subscription || ! $subscription->package) {
             return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 

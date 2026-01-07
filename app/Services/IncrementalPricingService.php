@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Chat\PricingTier;
-use App\Models\Chat\SubscriptionCycle;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -13,11 +12,6 @@ class IncrementalPricingService
     /**
      * Get the current price for a user's subscription
      * Determines whether user is in initial or subsequent pricing period
-     *
-     * @param User $user
-     * @param PricingTier $pricingTier
-     * @param Carbon $subscriptionStartDate
-     * @return float
      */
     public function getCurrentPrice(User $user, PricingTier $pricingTier, Carbon $subscriptionStartDate): float
     {
@@ -27,6 +21,7 @@ class IncrementalPricingService
                 'pricing_tier' => $pricingTier->name,
                 'price' => $pricingTier->initial_price,
             ]);
+
             return (float) $pricingTier->initial_price;
         }
 
@@ -35,14 +30,12 @@ class IncrementalPricingService
             'pricing_tier' => $pricingTier->name,
             'price' => $pricingTier->subsequent_price,
         ]);
+
         return (float) $pricingTier->subsequent_price;
     }
 
     /**
      * Get the monthly token limit for a pricing tier
-     *
-     * @param PricingTier $pricingTier
-     * @return int
      */
     public function getMonthlyTokenLimit(PricingTier $pricingTier): int
     {
@@ -51,9 +44,6 @@ class IncrementalPricingService
 
     /**
      * Calculate the number of months elapsed since subscription start
-     *
-     * @param Carbon $subscriptionStartDate
-     * @return int
      */
     public function getMonthsElapsed(Carbon $subscriptionStartDate): int
     {
@@ -62,10 +52,6 @@ class IncrementalPricingService
 
     /**
      * Determine if a user is in the initial pricing period
-     *
-     * @param Carbon $subscriptionStartDate
-     * @param int $initialPeriodMonths
-     * @return bool
      */
     public function isInInitialPeriod(Carbon $subscriptionStartDate, int $initialPeriodMonths = 6): bool
     {
@@ -74,9 +60,6 @@ class IncrementalPricingService
 
     /**
      * Get the number of the current cycle (starting from 1)
-     *
-     * @param Carbon $subscriptionStartDate
-     * @return int
      */
     public function getCurrentCycleNumber(Carbon $subscriptionStartDate): int
     {
@@ -84,29 +67,32 @@ class IncrementalPricingService
     }
 
     /**
-     * Calculate price for a specific month/cycle
-     *
-     * @param PricingTier $pricingTier
-     * @param int $cycleNumber
-     * @return float
+     * Calculate price for a specific cycle (monthly increment only)
+     * Month 1-6: uses initial_price
+     * Month 7+: uses subsequent_price
      */
     public function getPriceForCycle(PricingTier $pricingTier, int $cycleNumber): float
     {
-        if ($cycleNumber <= $pricingTier->initial_period_months) {
-            return (float) $pricingTier->initial_price;
-        }
+        return $pricingTier->getMonthlyPriceIncrement($cycleNumber);
+    }
 
-        return (float) $pricingTier->subsequent_price;
+    /**
+     * Get cumulative total price up to and including a specific cycle
+     * Example: Basic $10 initial, $5 subsequent
+     * Cycle 1: $10
+     * Cycle 2: $20
+     * Cycle 6: $60
+     * Cycle 7: $65 (60 + 5)
+     * Cycle 8: $70 (65 + 5)
+     */
+    public function getCumulativePriceForCycle(PricingTier $pricingTier, int $cycleNumber): float
+    {
+        return $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
     }
 
     /**
      * Get total cost for a subscription period
-     * Sums up all cycles from subscription start to now
-     *
-     * @param User $user
-     * @param PricingTier $pricingTier
-     * @param Carbon $subscriptionStartDate
-     * @return float
+     * Sums up all monthly increments from subscription start to now
      */
     public function calculateTotalCost(User $user, PricingTier $pricingTier, Carbon $subscriptionStartDate): float
     {
@@ -114,7 +100,7 @@ class IncrementalPricingService
         $cyclesCompleted = $this->getCurrentCycleNumber($subscriptionStartDate) - 1;
 
         for ($cycle = 1; $cycle <= $cyclesCompleted; $cycle++) {
-            $totalCost += $this->getPriceForCycle($pricingTier, $cycle);
+            $totalCost += $pricingTier->getMonthlyPriceIncrement($cycle);
         }
 
         Log::info('Total cost calculated', [
@@ -128,19 +114,24 @@ class IncrementalPricingService
     }
 
     /**
+     * Get cumulative cost up to a specific cycle
+     * Returns the total amount paid including all cycles up to cycleNumber
+     */
+    public function getCumulativeCost(PricingTier $pricingTier, int $cycleNumber): float
+    {
+        return $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+    }
+
+    /**
      * Get summary of pricing for display
-     *
-     * @param PricingTier $pricingTier
-     * @param Carbon $subscriptionStartDate
-     * @return array
      */
     public function getPricingSummary(PricingTier $pricingTier, Carbon $subscriptionStartDate): array
     {
         $monthsElapsed = $this->getMonthsElapsed($subscriptionStartDate);
         $currentCycle = $this->getCurrentCycleNumber($subscriptionStartDate);
         $isInitialPeriod = $this->isInInitialPeriod($subscriptionStartDate, $pricingTier->initial_period_months);
-        $monthsUntilChangePrice = $isInitialPeriod 
-            ? $pricingTier->initial_period_months - $monthsElapsed 
+        $monthsUntilChangePrice = $isInitialPeriod
+            ? $pricingTier->initial_period_months - $monthsElapsed
             : 0;
 
         return [
