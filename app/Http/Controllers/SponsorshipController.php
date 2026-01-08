@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SponsorOffer;
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipOffer;
+use App\Models\SponsorshipProject;
 use App\Services\SponsorshipService;
 use Illuminate\Http\Request;
 
@@ -17,11 +17,11 @@ class SponsorshipController extends Controller
     }
 
     /**
-     * Display listing of active sponsorship programs
+     * Display listing of active sponsorships projects
      */
     public function index(Request $request)
     {
-        $query = SponsorshipProgram::active()
+        $query = SponsorshipProject::active()
             ->with(['user', 'beneficiaries', 'school'])
             ->withCount('contributions');
 
@@ -40,40 +40,41 @@ class SponsorshipController extends Controller
             });
         }
 
-        $programs = $query->orderBy('created_at', 'desc')->paginate(12);
+        $projects = $query->orderBy('created_at', 'desc')->paginate(12);
 
-        // Calculate stats for each program
-        $programs->getCollection()->transform(function ($program) {
-            $program->goal_amount = $program->amount_goal;
-            $program->realized_amount = $program->amount_raised;
-            $program->left_amount = $program->amount_left;
-            $program->progress_percentage = $program->progress_percentage;
-            return $program;
+        // Calculate stats for each project
+        $projects->getCollection()->transform(function ($project) {
+            $project->goal_amount = $project->amount_goal;
+            $project->realized_amount = $project->amount_raised;
+            $project->left_amount = $project->amount_left;
+            $project->progress_percentage = $project->progress_percentage;
+
+            return $project;
         });
 
-        return view('sponsorship.public.index', [
-            'programs' => $programs,
-            'types' => SponsorshipProgram::getTypes(),
+        return view('sponsorships.public.index', [
+            'projects' => $projects,
+            'types' => SponsorshipProject::getTypes(),
             'selectedType' => $request->type,
         ]);
     }
 
     /**
-     * Display a specific sponsorship program
+     * Display a specific sponsorships project
      */
-    public function show(SponsorshipProgram $program)
+    public function show(SponsorshipProject $project)
     {
-        // Only show active programs publicly
-        if (!$program->isActive()) {
+        // Only show active projects publicly
+        if (!$project->isActive()) {
             abort(404);
         }
 
-        $program->load(['user', 'beneficiaries', 'school', 'contributions' => function ($q) {
+        $project->load(['user', 'beneficiaries', 'school', 'contributions' => function ($q) {
             $q->completed()->latest()->limit(10);
-        }]);
+        }])->loadCount('contributions');
 
-        return view('sponsorship.public.show', [
-            'program' => $program,
+        return view('sponsorships.public.show', [
+            'project' => $project,
         ]);
     }
 
@@ -82,7 +83,7 @@ class SponsorshipController extends Controller
      */
     public function offers(Request $request)
     {
-        $query = SponsorOffer::open()
+        $query = SponsorshipOffer::open()
             ->with('user')
             ->withCount(['bids', 'acceptedBids']);
 
@@ -98,7 +99,7 @@ class SponsorshipController extends Controller
 
         $offers = $query->orderBy('created_at', 'desc')->paginate(12);
 
-        return view('sponsorship.public.offers', [
+        return view('sponsorships.public.offers', [
             'offers' => $offers,
         ]);
     }
@@ -106,27 +107,27 @@ class SponsorshipController extends Controller
     /**
      * Display a specific sponsor offer
      */
-    public function showOffer(SponsorOffer $offer)
+    public function showOffer(SponsorshipOffer $offer)
     {
         if (!$offer->isOpen()) {
             abort(404);
         }
 
         $offer->load(['user', 'bids' => function ($q) {
-            $q->accepted()->with('sponsorshipProgram');
+            $q->accepted()->with('sponsorshipProject');
         }]);
 
-        // Get active programs for bidding (if user is logged in and is a benefactor)
-        $userPrograms = collect();
+        // Get active projects for bidding (if user is logged in and is a benefactor)
+        $userProjects = collect();
         if (auth()->check()) {
-            $userPrograms = SponsorshipProgram::where('user_id', auth()->id())
+            $userProjects = SponsorshipProject::where('user_id', auth()->id())
                 ->active()
                 ->get();
         }
 
-        return view('sponsorship.public.offer-detail', [
+        return view('sponsorships.public.offer-detail', [
             'offer' => $offer,
-            'userPrograms' => $userPrograms,
+            'userProjects' => $userProjects,
         ]);
     }
 
@@ -135,29 +136,44 @@ class SponsorshipController extends Controller
      */
     public function landing()
     {
-        $featuredPrograms = SponsorshipProgram::active()
+        $featuredProjects = SponsorshipProject::active()
             ->with(['user', 'beneficiaries'])
             ->orderBy('amount_raised', 'desc')
             ->limit(6)
             ->get();
 
-        $featuredOffers = SponsorOffer::open()
+        $featuredOffers = SponsorshipOffer::open()
             ->with('user')
             ->orderBy('amount_offered', 'desc')
             ->limit(6)
             ->get();
 
         $stats = [
-            'total_programs' => SponsorshipProgram::active()->count(),
-            'total_offers' => SponsorOffer::open()->count(),
-            'total_raised' => SponsorshipProgram::active()->sum('amount_raised'),
+            'total_projects' => SponsorshipProject::active()->count(),
+            'total_offers' => SponsorshipOffer::open()->count(),
+            'total_raised' => SponsorshipProject::active()->sum('amount_raised'),
             'total_beneficiaries' => \App\Models\SponsorshipBeneficiary::count(),
         ];
 
-        return view('sponsorship.public.landing', [
-            'featuredPrograms' => $featuredPrograms,
+        return view('sponsorships.public.landing', [
+            'featuredProjects' => $featuredProjects,
             'featuredOffers' => $featuredOffers,
             'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Display user's contributions
+     */
+    public function myContributions()
+    {
+        $contributions = \App\Models\SponsorshipContribution::where('user_id', auth()->id())
+            ->with(['sponsorshipProject.user', 'sponsorshipProject.school'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('sponsorships.contributions.index', [
+            'contributions' => $contributions,
         ]);
     }
 }

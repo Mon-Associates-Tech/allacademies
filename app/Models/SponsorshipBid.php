@@ -10,38 +10,48 @@ class SponsorshipBid extends Model
 {
     use HasFactory;
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_ACCEPTED = 'accepted';
+    const STATUS_REJECTED = 'rejected';
     protected $fillable = [
-        'sponsor_offer_id',
-        'sponsorship_program_id',
+        'sponsorship_offer_id',
+        'sponsorship_project_id',
         'user_id',
         'message',
         'status',
         'rejection_reason',
         'responded_at',
     ];
-
     protected $casts = [
         'responded_at' => 'datetime',
     ];
 
-    const STATUS_PENDING = 'pending';
-    const STATUS_ACCEPTED = 'accepted';
-    const STATUS_REJECTED = 'rejected';
-
     /**
-     * Get the sponsor offer this bid is for
+     * Get available statuses
      */
-    public function sponsorOffer(): BelongsTo
+    public static function getStatuses(): array
     {
-        return $this->belongsTo(SponsorOffer::class);
+        return [
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_ACCEPTED => 'Accepted',
+            self::STATUS_REJECTED => 'Rejected',
+        ];
     }
 
     /**
-     * Get the sponsorship program being bid
+     * Get the sponsorships offer this bid is for
      */
-    public function sponsorshipProgram(): BelongsTo
+    public function sponsorshipOffer(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipProgram::class);
+        return $this->belongsTo(SponsorshipOffer::class);
+    }
+
+    /**
+     * Get the sponsorships project being bid
+     */
+    public function sponsorshipProject(): BelongsTo
+    {
+        return $this->belongsTo(SponsorshipProject::class);
     }
 
     /**
@@ -105,7 +115,7 @@ class SponsorshipBid extends Model
     /**
      * Reject the bid
      */
-    public function reject(string $reason = null): bool
+    public function reject(?string $reason = null): bool
     {
         if ($this->status !== self::STATUS_PENDING) {
             return false;
@@ -142,17 +152,5 @@ class SponsorshipBid extends Model
     public function scopeRejected($query)
     {
         return $query->where('status', self::STATUS_REJECTED);
-    }
-
-    /**
-     * Get available statuses
-     */
-    public static function getStatuses(): array
-    {
-        return [
-            self::STATUS_PENDING => 'Pending',
-            self::STATUS_ACCEPTED => 'Accepted',
-            self::STATUS_REJECTED => 'Rejected',
-        ];
     }
 }

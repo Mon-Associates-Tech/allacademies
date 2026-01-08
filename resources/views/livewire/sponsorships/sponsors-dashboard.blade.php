@@ -167,6 +167,8 @@
                                 {{ $offer->expires_at ? $offer->expires_at->format('M d, Y') : 'No expiration' }}
                             </td>
                             <td class="inline-flex px-6 py-4 text-right text-sm font-medium space-x-2">
+                                <a href="{{ route('sponsorships.offers.show', $offer) }}"
+                                   class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">View</a>
                                 <a href="{{ route('sponsorships.offers.edit', $offer) }}"
                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400">Edit</a>
                                 @if($offer->status === 'open')
@@ -208,7 +210,7 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                     <div class="flex items-start justify-between mb-4">
                         <div>
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $bid->sponsorshipProgram->name }}</h3>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $bid->sponsorshipProject->name }}</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 For offer: <span class="font-medium">{{ $bid->sponsorOffer->title }}</span>
                             </p>
@@ -237,13 +239,13 @@
 
                     <div class="grid grid-cols-3 gap-4 mb-4 text-sm">
                         <div>
-                            <p class="text-gray-600 dark:text-gray-400">Program Goal</p>
+                            <p class="text-gray-600 dark:text-gray-400">Project Goal</p>
                             <p class="font-bold text-gray-900 dark:text-white">
-                                GHS {{ number_format($bid->sponsorshipProgram->amount_goal, 2) }}</p>
+                                GHS {{ number_format($bid->sponsorshipProject->amount_goal, 2) }}</p>
                         </div>
                         <div>
                             <p class="text-gray-600 dark:text-gray-400">Beneficiaries</p>
-                            <p class="font-bold text-gray-900 dark:text-white">{{ $bid->sponsorshipProgram->affected_individuals ?? 'N/A' }}</p>
+                            <p class="font-bold text-gray-900 dark:text-white">{{ $bid->sponsorshipProject->affected_individuals ?? 'N/A' }}</p>
                         </div>
                         <div>
                             <p class="text-gray-600 dark:text-gray-400">Applied</p>

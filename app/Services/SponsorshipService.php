@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\SponsorOffer;
 use App\Models\SponsorshipBeneficiary;
 use App\Models\SponsorshipBid;
 use App\Models\SponsorshipContribution;
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipOffer;
+use App\Models\SponsorshipProject;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 class SponsorshipService
 {
     protected PaystackService $paystack;
+
     protected PaymentSetupService $paymentSetup;
 
     public function __construct(PaystackService $paystack, PaymentSetupService $paymentSetup)
@@ -24,101 +25,41 @@ class SponsorshipService
     }
 
     /**
-     * Create a new sponsorship program
+     * Create a new sponsorships project
      */
-    public function createProgram(User $user, array $data): SponsorshipProgram
+    public function createProject(User $user, array $data): SponsorshipProject
     {
         return DB::transaction(function () use ($user, $data) {
-            $program = SponsorshipProgram::create([
+            $project = SponsorshipProject::create([
                 'user_id' => $user->id,
                 'school_id' => $data['school_id'] ?? null,
-                'type' => $data['type'] ?? SponsorshipProgram::TYPE_PROJECT,
+                'type' => $data['type'] ?? SponsorshipProject::TYPE_PROJECT,
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'affected_individuals' => $data['affected_individuals'] ?? null,
                 'amount_goal' => $data['amount_goal'] ?? 0,
                 'deadline' => $data['deadline'] ?? null,
-                'status' => SponsorshipProgram::STATUS_DRAFT,
+                'status' => SponsorshipProject::STATUS_DRAFT,
                 'metadata' => $data['metadata'] ?? null,
             ]);
 
             // Add beneficiaries if provided
             if (!empty($data['beneficiaries'])) {
                 foreach ($data['beneficiaries'] as $beneficiary) {
-                    $this->addBeneficiary($program, $beneficiary);
+                    $this->addBeneficiary($project, $beneficiary);
                 }
             }
 
-            return $program;
+            return $project;
         });
     }
 
     /**
-     * Update a sponsorship program
+     * Add a beneficiary to a project
      */
-    public function updateProgram(SponsorshipProgram $program, array $data): SponsorshipProgram
+    public function addBeneficiary(SponsorshipProject $project, array $data): SponsorshipBeneficiary
     {
-        $program->update([
-            'name' => $data['name'] ?? $program->name,
-            'type' => $data['type'] ?? $program->type,
-            'description' => $data['description'] ?? $program->description,
-            'affected_individuals' => $data['affected_individuals'] ?? $program->affected_individuals,
-            'amount_goal' => $data['amount_goal'] ?? $program->amount_goal,
-            'deadline' => $data['deadline'] ?? $program->deadline,
-            'metadata' => $data['metadata'] ?? $program->metadata,
-        ]);
-
-        return $program->fresh();
-    }
-
-    /**
-     * Submit a program for verification
-     */
-    public function submitForVerification(SponsorshipProgram $program): bool
-    {
-        if ($program->status !== SponsorshipProgram::STATUS_DRAFT) {
-            return false;
-        }
-
-        // Validate program has required fields
-        if (empty($program->name) || $program->amount_goal <= 0) {
-            return false;
-        }
-
-        return $program->submitForVerification();
-    }
-
-    /**
-     * Verify/approve a program
-     */
-    public function verifyProgram(SponsorshipProgram $program, User $verifier): bool
-    {
-        // Check if verifier has permission (owner or reviewer role)
-        if (!$verifier->hasRole('owner') && !$verifier->hasRole('reviewer')) {
-            return false;
-        }
-
-        return $program->verify($verifier);
-    }
-
-    /**
-     * Reject a program
-     */
-    public function rejectProgram(SponsorshipProgram $program, User $verifier, string $reason): bool
-    {
-        if (!$verifier->hasRole('owner') && !$verifier->hasRole('reviewer')) {
-            return false;
-        }
-
-        return $program->reject($verifier, $reason);
-    }
-
-    /**
-     * Add a beneficiary to a program
-     */
-    public function addBeneficiary(SponsorshipProgram $program, array $data): SponsorshipBeneficiary
-    {
-        return $program->beneficiaries()->create([
+        return $project->beneficiaries()->create([
             'beneficiary_type' => $data['beneficiary_type'] ?? SponsorshipBeneficiary::TYPE_INDIVIDUAL,
             'student_id' => $data['student_id'] ?? null,
             'beneficiary_name' => $data['beneficiary_name'],
@@ -130,17 +71,77 @@ class SponsorshipService
     }
 
     /**
+     * Update a sponsorships project
+     */
+    public function updateProject(SponsorshipProject $project, array $data): SponsorshipProject
+    {
+        $project->update([
+            'name' => $data['name'] ?? $project->name,
+            'type' => $data['type'] ?? $project->type,
+            'description' => $data['description'] ?? $project->description,
+            'affected_individuals' => $data['affected_individuals'] ?? $project->affected_individuals,
+            'amount_goal' => $data['amount_goal'] ?? $project->amount_goal,
+            'deadline' => $data['deadline'] ?? $project->deadline,
+            'metadata' => $data['metadata'] ?? $project->metadata,
+        ]);
+
+        return $project->fresh();
+    }
+
+    /**
+     * Submit a project for verification
+     */
+    public function submitForVerification(SponsorshipProject $project): bool
+    {
+        if ($project->status !== SponsorshipProject::STATUS_DRAFT) {
+            return false;
+        }
+
+        // Validate project has required fields
+        if (empty($project->name) || $project->amount_goal <= 0) {
+            return false;
+        }
+
+        return $project->submitForVerification();
+    }
+
+    /**
+     * Verify/approve a project
+     */
+    public function verifyProject(SponsorshipProject $project, User $verifier): bool
+    {
+        // Check if verifier has permission (owner or reviewer role)
+        if (!$verifier->hasRole('owner') && !$verifier->hasRole('reviewer')) {
+            return false;
+        }
+
+        return $project->verify($verifier);
+    }
+
+    /**
+     * Reject a project
+     */
+    public function rejectProject(SponsorshipProject $project, User $verifier, string $reason): bool
+    {
+        if (!$verifier->hasRole('owner') && !$verifier->hasRole('reviewer')) {
+            return false;
+        }
+
+        return $project->reject($verifier, $reason);
+    }
+
+    /**
      * Create a sponsor offer
      */
-    public function createSponsorOffer(User $sponsor, array $data): SponsorOffer
+    public function createSponsorshipOffer(User $sponsor, array $data): SponsorshipOffer
     {
-        return SponsorOffer::create([
+        return SponsorshipOffer::create([
             'user_id' => $sponsor->id,
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'amount_offered' => $data['amount_offered'] ?? 0,
             'criteria' => $data['criteria'] ?? null,
-            'status' => SponsorOffer::STATUS_OPEN,
+            'status' => SponsorshipOffer::STATUS_OPEN,
             'accepts_bids' => $data['accepts_bids'] ?? true,
             'expires_at' => $data['expires_at'] ?? null,
             'metadata' => $data['metadata'] ?? null,
@@ -150,7 +151,7 @@ class SponsorshipService
     /**
      * Update a sponsor offer
      */
-    public function updateSponsorOffer(SponsorOffer $offer, array $data): SponsorOffer
+    public function updateSponsorshipOffer(SponsorshipOffer $offer, array $data): SponsorshipOffer
     {
         $offer->update([
             'title' => $data['title'] ?? $offer->title,
@@ -168,21 +169,21 @@ class SponsorshipService
     /**
      * Submit a bid from a benefactor to a sponsor offer
      */
-    public function submitBid(SponsorOffer $offer, SponsorshipProgram $program, User $bidder, string $message = null): ?SponsorshipBid
+    public function submitBid(SponsorshipOffer $offer, SponsorshipProject $project, User $bidder, ?string $message = null): ?SponsorshipBid
     {
         // Check if offer accepts bids
         if (!$offer->canAcceptBids()) {
             return null;
         }
 
-        // Check if program is active
-        if (!$program->isActive()) {
+        // Check if project is active
+        if (!$project->isActive()) {
             return null;
         }
 
         // Check if bid already exists
-        $existingBid = SponsorshipBid::where('sponsor_offer_id', $offer->id)
-            ->where('sponsorship_program_id', $program->id)
+        $existingBid = SponsorshipBid::where('sponsorship_offer_id', $offer->id)
+            ->where('sponsorship_project_id', $project->id)
             ->where('user_id', $bidder->id)
             ->first();
 
@@ -191,8 +192,8 @@ class SponsorshipService
         }
 
         return SponsorshipBid::create([
-            'sponsor_offer_id' => $offer->id,
-            'sponsorship_program_id' => $program->id,
+            'sponsorship_offer_id' => $offer->id,
+            'sponsorship_project_id' => $project->id,
             'user_id' => $bidder->id,
             'message' => $message,
             'status' => SponsorshipBid::STATUS_PENDING,
@@ -215,7 +216,7 @@ class SponsorshipService
     /**
      * Reject a bid
      */
-    public function rejectBid(SponsorshipBid $bid, User $sponsor, string $reason = null): bool
+    public function rejectBid(SponsorshipBid $bid, User $sponsor, ?string $reason = null): bool
     {
         if ($bid->sponsorOffer->user_id !== $sponsor->id) {
             return false;
@@ -240,8 +241,8 @@ class SponsorshipService
 
         return DB::transaction(function () use ($data, $amount, $platformFee, $netAmount, $totalCharged, $sponsorCoversFee, $reference) {
             $contribution = SponsorshipContribution::create([
-                'sponsorship_program_id' => $data['sponsorship_program_id'] ?? null,
-                'sponsor_offer_id' => $data['sponsor_offer_id'] ?? null,
+                'sponsorship_project_id' => $data['sponsorship_project_id'] ?? null,
+                'sponsorship_offer_id' => $data['sponsorship_offer_id'] ?? null,
                 'user_id' => $data['user_id'] ?? null,
                 'payer_name' => $data['payer_name'] ?? null,
                 'payer_email' => $data['payer_email'],
@@ -275,18 +276,18 @@ class SponsorshipService
                 'callback_url' => $callbackUrl,
                 'metadata' => [
                     'contribution_id' => $contribution->id,
-                    'sponsorship_program_id' => $contribution->sponsorship_program_id,
-                    'sponsor_offer_id' => $contribution->sponsor_offer_id,
+                    'sponsorship_project_id' => $contribution->sponsorship_project_id,
+                    'sponsorship_offer_id' => $contribution->sponsorship_offer_id,
                     'platform_fee' => $contribution->platform_fee,
                     'net_amount' => $contribution->net_amount,
                 ],
             ];
 
             // Add subaccount if benefactor has one set up
-            if ($contribution->sponsorship_program_id) {
-                $program = $contribution->sponsorshipProgram;
-                if ($program && $program->user && $this->paymentSetup->hasValidSubaccount($program->user)) {
-                    $subaccount = $this->paymentSetup->getSubaccount($program->user);
+            if ($contribution->sponsorship_project_id) {
+                $project = $contribution->sponsorshipProject;
+                if ($project && $project->user && $this->paymentSetup->hasValidSubaccount($project->user)) {
+                    $subaccount = $this->paymentSetup->getSubaccount($project->user);
                     $paymentData['subaccount'] = $subaccount->subaccount_code;
                     $paymentData['bearer'] = 'account';
                 }
@@ -299,6 +300,7 @@ class SponsorshipService
                     'contribution_id' => $contribution->id,
                     'response' => $response,
                 ]);
+
                 return null;
             }
 
@@ -318,6 +320,7 @@ class SponsorshipService
                 'contribution_id' => $contribution->id,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -353,27 +356,28 @@ class SponsorshipService
                 'reference' => $reference,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
-     * Get programs pending verification
+     * Get projects pending verification
      */
-    public function getPendingVerificationPrograms()
+    public function getPendingVerificationProjects()
     {
-        return SponsorshipProgram::pendingVerification()
+        return SponsorshipProject::pendingVerification()
             ->with(['user', 'beneficiaries'])
             ->orderBy('created_at', 'asc')
             ->get();
     }
 
     /**
-     * Get active programs
+     * Get active projects
      */
-    public function getActivePrograms()
+    public function getActiveProjects()
     {
-        return SponsorshipProgram::active()
+        return SponsorshipProject::active()
             ->with(['user', 'beneficiaries'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -384,18 +388,18 @@ class SponsorshipService
      */
     public function getOpenOffers()
     {
-        return SponsorOffer::open()
+        return SponsorshipOffer::open()
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->get();
     }
 
     /**
-     * Get user's programs (as benefactor)
+     * Get user's projects (as benefactor)
      */
-    public function getUserPrograms(User $user)
+    public function getUserProjects(User $user)
     {
-        return SponsorshipProgram::where('user_id', $user->id)
+        return SponsorshipProject::where('user_id', $user->id)
             ->with(['beneficiaries', 'contributions'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -406,8 +410,8 @@ class SponsorshipService
      */
     public function getUserOffers(User $user)
     {
-        return SponsorOffer::where('user_id', $user->id)
-            ->with(['bids.sponsorshipProgram', 'contributions'])
+        return SponsorshipOffer::where('user_id', $user->id)
+            ->with(['bids.sponsorshipProjects', 'contributions'])
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -418,7 +422,7 @@ class SponsorshipService
     public function getUserContributions(User $user)
     {
         return SponsorshipContribution::where('user_id', $user->id)
-            ->with(['sponsorshipProgram', 'sponsorOffer'])
+            ->with(['sponsorshipProject', 'sponsorshipOffer'])
             ->orderBy('created_at', 'desc')
             ->get();
     }

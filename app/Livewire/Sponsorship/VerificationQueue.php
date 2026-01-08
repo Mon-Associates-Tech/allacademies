@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Sponsorship;
 
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipProject;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -13,7 +13,9 @@ class VerificationQueue extends Component
     use WithPagination;
 
     public $activeTab = 'pending'; // pending, verified, rejected
+
     public $search = '';
+
     public $selectedType = '';
 
     // Expanded programs tracking
@@ -21,7 +23,9 @@ class VerificationQueue extends Component
 
     // Modal state
     public $showRejectModal = false;
+
     public $rejectingProgramId = null;
+
     public $rejectionReason = '';
 
     protected $rules = [
@@ -41,7 +45,6 @@ class VerificationQueue extends Component
     {
         $this->resetPage();
     }
-
 
     public function toggleExpand($programId)
     {
@@ -66,11 +69,11 @@ class VerificationQueue extends Component
 
     public function approve($programId)
     {
-        $program = SponsorshipProgram::pendingVerification()->findOrFail($programId);
+        $program = SponsorshipProject::pendingVerification()->findOrFail($programId);
 
         $sponsorshipService = app(SponsorshipService::class);
 
-        if ($sponsorshipService->verifyProgram($program, Auth::user())) {
+        if ($sponsorshipService->verifyProject($program, Auth::user())) {
             session()->flash('message', 'Program approved successfully.');
         } else {
             session()->flash('error', 'Unable to approve program. You may not have permission.');
@@ -84,22 +87,15 @@ class VerificationQueue extends Component
         $this->showRejectModal = true;
     }
 
-    public function closeRejectModal()
-    {
-        $this->showRejectModal = false;
-        $this->rejectingProgramId = null;
-        $this->rejectionReason = '';
-    }
-
     public function reject()
     {
         $this->validate();
 
-        $program = SponsorshipProgram::pendingVerification()->findOrFail($this->rejectingProgramId);
+        $program = SponsorshipProject::pendingVerification()->findOrFail($this->rejectingProgramId);
 
         $sponsorshipService = app(SponsorshipService::class);
 
-        if ($sponsorshipService->rejectProgram($program, Auth::user(), $this->rejectionReason)) {
+        if ($sponsorshipService->rejectProject($program, Auth::user(), $this->rejectionReason)) {
             session()->flash('message', 'Program rejected and returned to draft.');
             $this->closeRejectModal();
         } else {
@@ -107,21 +103,28 @@ class VerificationQueue extends Component
         }
     }
 
+    public function closeRejectModal()
+    {
+        $this->showRejectModal = false;
+        $this->rejectingProgramId = null;
+        $this->rejectionReason = '';
+    }
+
     public function render()
     {
         // Build query based on active tab
-        $query = SponsorshipProgram::query()->with(['user', 'beneficiaries', 'school']);
+        $query = SponsorshipProject::query()->with(['user', 'beneficiaries', 'school']);
 
         switch ($this->activeTab) {
             case 'verified':
-                $query->where('status', SponsorshipProgram::STATUS_ACTIVE);
+                $query->where('status', SponsorshipProject::STATUS_ACTIVE);
                 break;
             case 'rejected':
-                $query->where('status', SponsorshipProgram::STATUS_DRAFT)
+                $query->where('status', SponsorshipProject::STATUS_DRAFT)
                     ->whereNotNull('rejected_at');
                 break;
             default: // pending
-                $query->where('status', SponsorshipProgram::STATUS_PENDING_VERIFICATION);
+                $query->where('status', SponsorshipProject::STATUS_PENDING_VERIFICATION);
         }
 
         // Apply filters
@@ -151,17 +154,17 @@ class VerificationQueue extends Component
 
         // Stats
         $stats = [
-            'pending_count' => SponsorshipProgram::pendingVerification()->count(),
-            'approved_today' => SponsorshipProgram::where('status', SponsorshipProgram::STATUS_ACTIVE)
+            'pending_count' => SponsorshipProject::pendingVerification()->count(),
+            'approved_today' => SponsorshipProject::where('status', SponsorshipProject::STATUS_ACTIVE)
                 ->whereDate('verified_at', today())->count(),
-            'verified_total' => SponsorshipProgram::where('status', SponsorshipProgram::STATUS_ACTIVE)->count(),
-            'rejected_total' => SponsorshipProgram::where('status', SponsorshipProgram::STATUS_DRAFT)
+            'verified_total' => SponsorshipProject::where('status', SponsorshipProject::STATUS_ACTIVE)->count(),
+            'rejected_total' => SponsorshipProject::where('status', SponsorshipProject::STATUS_DRAFT)
                 ->whereNotNull('rejected_at')->count(),
         ];
 
         return view('livewire.sponsorship.verification-queue', [
             'programs' => $programs,
-            'types' => SponsorshipProgram::getTypes(),
+            'types' => SponsorshipProject::getTypes(),
             'stats' => $stats,
         ]);
     }

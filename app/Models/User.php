@@ -32,25 +32,24 @@ use Log;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
-    use HasFactory;
-    use Notifiable;
     use HasAvatar;
-    use Trackable;
-    use Impersonate;
+    use HasFactory;
     use HasRoles;
     use HasTeams;
-
+    use Impersonate;
+    use Notifiable;
+    use Trackable;
 
     protected $fillable = [
         'school_id', 'name', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
-        'country_code', 'gender', 'cover_image'
+        'country_code', 'gender', 'cover_image',
     ];
 
     protected $hidden = [
-        'password', 'remember_token', 'two_factor_code'
+        'password', 'remember_token', 'two_factor_code',
     ];
 
     protected $casts = [
@@ -67,11 +66,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     ];
 
-
     protected static function booted(): void
     {
         parent::booted();
-
 
         static::created(static function ($user) {
             $user->handleRoleChange();
@@ -102,7 +99,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'parent' => StudentParent::class,
         ];
         $role = $this->role instanceof UserRole ? $this->role->value : $this->role;
-
 
         if (isset($roleModels[$role])) {
             $modelClass = $roleModels[$role];
@@ -163,7 +159,7 @@ class User extends Authenticatable implements MustVerifyEmail
                     'user_id' => $this->id,
                     'role' => $role,
                     'data' => $data,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 // Fallback: try without the additional data
@@ -174,7 +170,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Create a free trial subscription for new users
-     *
      */
     public function createFreeTrialSubscription(bool $force = false): void
     {
@@ -201,6 +196,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         if (!$freePackage) {
             Log::warning('No free trial package available for user', ['user_id' => $this->id]);
+
             return;
         }
 
@@ -270,12 +266,14 @@ class User extends Authenticatable implements MustVerifyEmail
         // Check if current user can impersonate
         if (!Auth::user()->canImpersonate()) {
             session()->flash('error', 'You do not have permission to impersonate users.');
+
             return;
         }
 
         // Check if target user can be impersonated
         if (!$user->canBeImpersonated()) {
             session()->flash('error', 'This user cannot be impersonated.');
+
             return;
         }
 
@@ -314,12 +312,24 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getPrimarySchoolRole(): ?string
     {
-        if ($this->student) return 'student';
-        if ($this->teacher) return 'teacher';
-        if ($this->admin) return 'admin';
-        if ($this->librarian) return 'librarian';
-        if ($this->accountant) return 'accountant';
-        if ($this->parent) return 'parent';
+        if ($this->student) {
+            return 'student';
+        }
+        if ($this->teacher) {
+            return 'teacher';
+        }
+        if ($this->admin) {
+            return 'admin';
+        }
+        if ($this->librarian) {
+            return 'librarian';
+        }
+        if ($this->accountant) {
+            return 'accountant';
+        }
+        if ($this->parent) {
+            return 'parent';
+        }
 
         return null;
     }
@@ -339,6 +349,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($role instanceof UserRole) {
             return $query->where('role', $role->value);
         }
+
         return $query->where('role', $role);
     }
 
@@ -452,6 +463,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 if ($schoolId !== null) { // Explicitly check for null
                     return $query->where('school_id', $schoolId);
                 }
+
                 // If current_school_id is explicitly set to null, they want to see all schools
                 return $query;
             }
@@ -484,6 +496,7 @@ class User extends Authenticatable implements MustVerifyEmail
             if ($currentSchoolId) {
                 return $query->where('school_id', $currentSchoolId);
             }
+
             // If in "all schools" view, don't apply scoping
             return $query;
         }
@@ -560,7 +573,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(OpenAiTokenUsageLog::class);
     }
 
-
     /**
      * Check if a user has sufficient tokens
      * Only applies to users with 'subscriber' role
@@ -577,6 +589,7 @@ class User extends Authenticatable implements MustVerifyEmail
         // Check if expired
         if ($subscription->isExpired()) {
             $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
+
             return false;
         }
 
@@ -675,28 +688,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
 
     /**
-     * Get the sponsorship programs created by this user (as benefactor)
-     */
-    public function sponsorshipPrograms(): HasMany
-    {
-        return $this->hasMany(\App\Models\SponsorshipProgram::class);
-    }
-
-    /**
-     * Get active sponsorship programs created by this user
+     * Get active sponsorships programs created by this user
      */
     public function activeSponsorshipPrograms(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipProgram::class)
+        return $this->hasMany(\App\Models\SponsorshipProject::class)
             ->where('status', 'active');
-    }
-
-    /**
-     * Get the sponsor offers created by this user (as sponsor)
-     */
-    public function sponsorOffers(): HasMany
-    {
-        return $this->hasMany(\App\Models\SponsorOffer::class);
     }
 
     /**
@@ -704,7 +701,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function activeSponsorOffers(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorOffer::class)
+        return $this->hasMany(\App\Models\SponsorshipOffer::class)
             ->where('status', 'open');
     }
 
@@ -734,20 +731,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get successful contributions made by this user
-     */
-    public function successfulSponsorshipContributions(): HasMany
-    {
-        return $this->hasMany(\App\Models\SponsorshipContribution::class)
-            ->where('status', 'completed');
-    }
-
-    /**
      * Get programs verified by this user (as reviewer)
      */
     public function verifiedPrograms(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipProgram::class, 'verified_by');
+        return $this->hasMany(\App\Models\SponsorshipProject::class, 'verified_by');
     }
 
     /**
@@ -784,6 +772,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the sponsorships programs created by this user (as benefactor)
+     */
+    public function sponsorshipPrograms(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipProject::class);
+    }
+
+    /**
      * Get total amount contributed by this user
      */
     public function getTotalAmountContributedAttribute(): float
@@ -793,11 +789,28 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get total sponsorship offers value
+     * Get successful contributions made by this user
+     */
+    public function successfulSponsorshipContributions(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipContribution::class)
+            ->where('status', 'completed');
+    }
+
+    /**
+     * Get total sponsorships offers value
      */
     public function getTotalOffersValueAttribute(): float
     {
         return $this->sponsorOffers()
             ->sum('amount_offered');
+    }
+
+    /**
+     * Get the sponsor offers created by this user (as sponsor)
+     */
+    public function sponsorOffers(): HasMany
+    {
+        return $this->hasMany(\App\Models\SponsorshipOffer::class);
     }
 }

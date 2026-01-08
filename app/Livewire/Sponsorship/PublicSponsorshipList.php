@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Sponsorship;
 
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipProject;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,7 +11,9 @@ class PublicSponsorshipList extends Component
     use WithPagination;
 
     public $search = '';
+
     public $selectedType = '';
+
     public $sortBy = 'latest';
 
     protected $queryString = [
@@ -32,7 +34,7 @@ class PublicSponsorshipList extends Component
 
     public function render()
     {
-        $query = SponsorshipProgram::active()
+        $query = SponsorshipProject::active()
             ->with(['user', 'beneficiaries', 'school']);
 
         // Search
@@ -68,19 +70,20 @@ class PublicSponsorshipList extends Component
                 $query->orderBy('created_at', 'desc');
         }
 
-        $programs = $query->paginate(12);
+        $projects = $query->paginate(12);
 
         // Add computed attributes
-        $programs->getCollection()->transform(function ($program) {
-            $program->goal_amount = $program->amount_goal;
-            $program->realized_amount = $program->amount_raised;
-            $program->left_amount = $program->amount_left;
-            return $program;
+        $projects->getCollection()->transform(function ($project) {
+            $project->goal_amount = $project->amount_goal;
+            $project->realized_amount = $project->amount_raised;
+            $project->left_amount = $project->amount_left;
+
+            return $project;
         });
 
-        return view('livewire.sponsorship.public-sponsorship-list', [
-            'programs' => $programs,
-            'types' => SponsorshipProgram::getTypes(),
-        ])->layout('components.layouts.guest', ['pageName' => 'Sponsorship Programs']);
+        return view('livewire.sponsorships.public-sponsorship-list', [
+            'projects' => $projects,
+            'types' => SponsorshipProject::getTypes(),
+        ])->layout('components.layouts.guest', ['pageName' => 'Sponsorship Projects']);
     }
 }

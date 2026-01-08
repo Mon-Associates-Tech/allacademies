@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Sponsorship;
 
-use App\Models\SponsorOffer;
+use App\Models\SponsorshipOffer;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -38,7 +38,7 @@ class SponsorOfferForm extends Component
     {
 
         if ($offer) {
-            $offerModel = SponsorOffer::where('user_id', Auth::id())
+            $offerModel = SponsorshipOffer::where('user_id', Auth::id())
                 ->findOrFail($offer);
 
             $this->offerId = $offerModel->id;
@@ -60,7 +60,7 @@ class SponsorOfferForm extends Component
 
     public function getIsEditingProperty()
     {
-        return ! is_null($this->offerId);
+        return !is_null($this->offerId);
     }
 
     public function save()
@@ -79,13 +79,13 @@ class SponsorOfferForm extends Component
         ];
 
         if ($this->offerId) {
-            $offer = SponsorOffer::where('user_id', Auth::id())
+            $offer = SponsorshipOffer::where('user_id', Auth::id())
                 ->findOrFail($this->offerId);
 
-            $sponsorshipService->updateSponsorOffer($offer, $data);
+            $sponsorshipService->updateSponsorshipOffer($offer, $data);
             session()->flash('message', 'Offer updated successfully.');
         } else {
-            $sponsorshipService->createSponsorOffer(Auth::user(), $data);
+            $sponsorshipService->createSponsorshipOffer(Auth::user(), $data);
             session()->flash('message', 'Offer created successfully.');
         }
 
@@ -94,8 +94,8 @@ class SponsorOfferForm extends Component
 
     public function render()
     {
-        return view('livewire.sponsorship.sponsor-offer-form', [
-            'isEditing' => ! is_null($this->offerId),
+        return view('livewire.sponsorships.sponsor-offer-form', [
+            'isEditing' => !is_null($this->offerId),
         ]);
     }
 }

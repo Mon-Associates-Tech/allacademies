@@ -10,8 +10,12 @@ class SponsorshipBeneficiary extends Model
 {
     use HasFactory;
 
+    const TYPE_INDIVIDUAL = 'individual';
+    const TYPE_STUDENT = 'student';
+    const TYPE_GROUP = 'group';
+    const TYPE_ORGANIZATION = 'organization';
     protected $fillable = [
-        'sponsorship_program_id',
+        'sponsorship_project_id',
         'beneficiary_type',
         'student_id',
         'beneficiary_name',
@@ -20,22 +24,29 @@ class SponsorshipBeneficiary extends Model
         'beneficiary_description',
         'beneficiary_details',
     ];
-
     protected $casts = [
         'beneficiary_details' => 'array',
     ];
 
-    const TYPE_INDIVIDUAL = 'individual';
-    const TYPE_STUDENT = 'student';
-    const TYPE_GROUP = 'group';
-    const TYPE_ORGANIZATION = 'organization';
+    /**
+     * Get available types
+     */
+    public static function getTypes(): array
+    {
+        return [
+            self::TYPE_INDIVIDUAL => 'Individual',
+            self::TYPE_STUDENT => 'Student',
+            self::TYPE_GROUP => 'Group',
+            self::TYPE_ORGANIZATION => 'Organization',
+        ];
+    }
 
     /**
-     * Get the sponsorship program this beneficiary belongs to
+     * Get the sponsorships project this beneficiary belongs to
      */
-    public function sponsorshipProgram(): BelongsTo
+    public function sponsorshipProject(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipProgram::class);
+        return $this->belongsTo(SponsorshipProject::class);
     }
 
     /**
@@ -44,14 +55,6 @@ class SponsorshipBeneficiary extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
-    }
-
-    /**
-     * Check if this beneficiary is a student
-     */
-    public function isStudent(): bool
-    {
-        return $this->beneficiary_type === self::TYPE_STUDENT && $this->student_id !== null;
     }
 
     /**
@@ -86,7 +89,16 @@ class SponsorshipBeneficiary extends Model
         if ($this->isStudent() && $this->student) {
             return $this->student->user->name ?? $this->beneficiary_name;
         }
+
         return $this->beneficiary_name;
+    }
+
+    /**
+     * Check if this beneficiary is a student
+     */
+    public function isStudent(): bool
+    {
+        return $this->beneficiary_type === self::TYPE_STUDENT && $this->student_id !== null;
     }
 
     /**
@@ -97,6 +109,7 @@ class SponsorshipBeneficiary extends Model
         if ($this->isStudent() && $this->student) {
             return $this->student->user->email ?? $this->beneficiary_email;
         }
+
         return $this->beneficiary_email;
     }
 
@@ -122,18 +135,5 @@ class SponsorshipBeneficiary extends Model
     public function scopeIndividuals($query)
     {
         return $query->where('beneficiary_type', self::TYPE_INDIVIDUAL);
-    }
-
-    /**
-     * Get available types
-     */
-    public static function getTypes(): array
-    {
-        return [
-            self::TYPE_INDIVIDUAL => 'Individual',
-            self::TYPE_STUDENT => 'Student',
-            self::TYPE_GROUP => 'Group',
-            self::TYPE_ORGANIZATION => 'Organization',
-        ];
     }
 }

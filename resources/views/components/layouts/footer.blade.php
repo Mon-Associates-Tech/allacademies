@@ -275,21 +275,21 @@
                     Sponsorship
                 </h3>
                 <ul class="space-y-3">
-                    <li><a href="{{ route('sponsorship.programs.index') }}"
+                    <li><a href="{{ route('sponsorships.projects.index') }}"
                            class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-                            Browse Programs
+                            Browse Projects
                         </a></li>
-                    <li><a href="{{ route('sponsorship.offers.index') }}"
+                    <li><a href="{{ route('sponsorships.offers.index') }}"
                            class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-                            Sponsor Offers
+                            Sponsorships
                         </a></li>
                     <li><a href="{{ route('financial-aid') }}"
                            class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">

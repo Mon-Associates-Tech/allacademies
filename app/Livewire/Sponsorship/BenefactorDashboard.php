@@ -3,7 +3,7 @@
 namespace App\Livewire\Sponsorship;
 
 use App\Models\SponsorshipContribution;
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipProject;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -14,6 +14,7 @@ class BenefactorDashboard extends Component
     use WithPagination;
 
     public $statusFilter = '';
+
     public $search = '';
 
     public function updatingSearch()
@@ -28,8 +29,8 @@ class BenefactorDashboard extends Component
 
     public function submitForVerification($programId)
     {
-        $program = SponsorshipProgram::where('user_id', Auth::id())
-            ->where('status', SponsorshipProgram::STATUS_DRAFT)
+        $program = SponsorshipProject::where('user_id', Auth::id())
+            ->where('status', SponsorshipProject::STATUS_DRAFT)
             ->findOrFail($programId);
 
         $sponsorshipService = app(SponsorshipService::class);
@@ -43,8 +44,8 @@ class BenefactorDashboard extends Component
 
     public function deleteProgram($programId)
     {
-        $program = SponsorshipProgram::where('user_id', Auth::id())
-            ->where('status', SponsorshipProgram::STATUS_DRAFT)
+        $program = SponsorshipProject::where('user_id', Auth::id())
+            ->where('status', SponsorshipProject::STATUS_DRAFT)
             ->findOrFail($programId);
 
         $program->beneficiaries()->delete();
@@ -55,18 +56,18 @@ class BenefactorDashboard extends Component
 
     public function cancelProgram($programId)
     {
-        $program = SponsorshipProgram::where('user_id', Auth::id())
-            ->whereIn('status', [SponsorshipProgram::STATUS_ACTIVE, SponsorshipProgram::STATUS_PENDING_VERIFICATION])
+        $program = SponsorshipProject::where('user_id', Auth::id())
+            ->whereIn('status', [SponsorshipProject::STATUS_ACTIVE, SponsorshipProject::STATUS_PENDING_VERIFICATION])
             ->findOrFail($programId);
 
-        $program->update(['status' => SponsorshipProgram::STATUS_CANCELLED]);
+        $program->update(['status' => SponsorshipProject::STATUS_CANCELLED]);
 
         session()->flash('message', 'Program cancelled successfully.');
     }
 
     public function render()
     {
-        $query = SponsorshipProgram::where('user_id', Auth::id())
+        $query = SponsorshipProject::where('user_id', Auth::id())
             ->with(['beneficiaries', 'contributions']);
 
         if ($this->search) {
@@ -85,13 +86,13 @@ class BenefactorDashboard extends Component
 
         // Stats
         $stats = [
-            'total_programs' => SponsorshipProgram::where('user_id', Auth::id())->count(),
-            'active_programs' => SponsorshipProgram::where('user_id', Auth::id())
-                ->where('status', SponsorshipProgram::STATUS_ACTIVE)->count(),
-            'pending_verification' => SponsorshipProgram::where('user_id', Auth::id())
-                ->where('status', SponsorshipProgram::STATUS_PENDING_VERIFICATION)->count(),
-            'total_raised' => SponsorshipProgram::where('user_id', Auth::id())->sum('amount_raised'),
-            'total_contributions' => SponsorshipContribution::whereHas('sponsorshipProgram', function ($q) {
+            'total_programs' => SponsorshipProject::where('user_id', Auth::id())->count(),
+            'active_programs' => SponsorshipProject::where('user_id', Auth::id())
+                ->where('status', SponsorshipProject::STATUS_ACTIVE)->count(),
+            'pending_verification' => SponsorshipProject::where('user_id', Auth::id())
+                ->where('status', SponsorshipProject::STATUS_PENDING_VERIFICATION)->count(),
+            'total_raised' => SponsorshipProject::where('user_id', Auth::id())->sum('amount_raised'),
+            'total_contributions' => SponsorshipContribution::whereHas('sponsorshipProject', function ($q) {
                 $q->where('user_id', Auth::id());
             })->where('status', SponsorshipContribution::STATUS_COMPLETED)->count(),
         ];
@@ -99,7 +100,7 @@ class BenefactorDashboard extends Component
         return view('livewire.sponsorship.benefactor-dashboard', [
             'programs' => $programs,
             'stats' => $stats,
-            'statuses' => SponsorshipProgram::getStatuses(),
+            'statuses' => SponsorshipProject::getStatuses(),
         ]);
     }
 }

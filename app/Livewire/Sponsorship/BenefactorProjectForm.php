@@ -3,14 +3,14 @@
 namespace App\Livewire\Sponsorship;
 
 use App\Models\SponsorshipBeneficiary;
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipProject;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class BenefactorProgramForm extends Component
+class BenefactorProjectForm extends Component
 {
-    public $programId = null;
+    public $projectId = null;
     public $name = '';
     public $type = 'project';
     public $description = '';
@@ -35,22 +35,22 @@ class BenefactorProgramForm extends Component
         'deadline' => 'nullable|date|after:today',
     ];
 
-    public function mount($programId = null)
+    public function mount($projectId = null)
     {
-        if ($programId) {
-            $program = SponsorshipProgram::where('user_id', Auth::id())
-                ->findOrFail($programId);
+        if ($projectId) {
+            $project = SponsorshipProject::where('user_id', Auth::id())
+                ->findOrFail($projectId);
 
-            $this->programId = $program->id;
-            $this->name = $program->name;
-            $this->type = $program->type;
-            $this->description = $program->description;
-            $this->affected_individuals = $program->affected_individuals;
-            $this->amount_goal = $program->amount_goal;
-            $this->deadline = $program->deadline?->format('Y-m-d');
+            $this->projectId = $project->id;
+            $this->name = $project->name;
+            $this->type = $project->type;
+            $this->description = $project->description;
+            $this->affected_individuals = $project->affected_individuals;
+            $this->amount_goal = $project->amount_goal;
+            $this->deadline = $project->deadline?->format('Y-m-d');
 
             // Load existing beneficiaries
-            $this->beneficiaries = $program->beneficiaries->map(function ($b) {
+            $this->beneficiaries = $project->beneficiaries->map(function ($b) {
                 return [
                     'id' => $b->id,
                     'name' => $b->beneficiary_name,
@@ -60,6 +60,92 @@ class BenefactorProgramForm extends Component
                     'description' => $b->beneficiary_description,
                 ];
             })->toArray();
+        }
+    }
+
+    public function removeBeneficiary($index)
+    {
+        unset($this->beneficiaries[$index]);
+        $this->beneficiaries = array_values($this->beneficiaries);
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $sponsorshipService = app(SponsorshipService::class);
+
+        $data = [
+            'name' => $this->name,
+            'type' => $this->type,
+            'description' => $this->description,
+            'affected_individuals' => $this->affected_individuals,
+            'amount_goal' => $this->amount_goal,
+            'deadline' => $this->deadline ?: null,
+        ];
+
+        if ($this->projectId) {
+            $project = SponsorshipProject::where('user_id', Auth::id())
+                ->findOrFail($this->projectId);
+
+            // Only allow editing if in draft status
+            if ($project->status !== SponsorshipProject::STATUS_DRAFT) {
+                session()->flash('error', 'Cannot edit a project that is not in draft status.');
+                return;
+            }
+
+            $project = $sponsorshipService->updateproject($project, $data);
+
+            // Sync beneficiaries
+            $this->syncBeneficiaries($project);
+
+            session()->flash('message', 'project updated successfully.');
+        } else {
+            $project = $sponsorshipService->createproject(Auth::user(), $data);
+
+            // Add beneficiaries
+            foreach ($this->beneficiaries as $beneficiary) {
+                $sponsorshipService->addBeneficiary($project, [
+                    'beneficiary_name' => $beneficiary['name'],
+                    'beneficiary_type' => $beneficiary['type'],
+                    'beneficiary_email' => $beneficiary['email'],
+                    'beneficiary_phone' => $beneficiary['phone'],
+                    'beneficiary_description' => $beneficiary['description'],
+                ]);
+            }
+
+            session()->flash('message', 'project created successfully.');
+        }
+
+        return redirect()->route('sponsorships.benefactor.index');
+    }
+
+    protected function syncBeneficiaries(SponsorshipProject $project)
+    {
+        $existingIds = collect($this->beneficiaries)->pluck('id')->filter()->toArray();
+
+        // Delete removed beneficiaries
+        $project->beneficiaries()->whereNotIn('id', $existingIds)->delete();
+
+        // Update or create beneficiaries
+        foreach ($this->beneficiaries as $beneficiary) {
+            if ($beneficiary['id']) {
+                SponsorshipBeneficiary::where('id', $beneficiary['id'])->update([
+                    'beneficiary_name' => $beneficiary['name'],
+                    'beneficiary_type' => $beneficiary['type'],
+                    'beneficiary_email' => $beneficiary['email'],
+                    'beneficiary_phone' => $beneficiary['phone'],
+                    'beneficiary_description' => $beneficiary['description'],
+                ]);
+            } else {
+                $project->beneficiaries()->create([
+                    'beneficiary_name' => $beneficiary['name'],
+                    'beneficiary_type' => $beneficiary['type'],
+                    'beneficiary_email' => $beneficiary['email'],
+                    'beneficiary_phone' => $beneficiary['phone'],
+                    'beneficiary_description' => $beneficiary['description'],
+                ]);
+            }
         }
     }
 
@@ -83,12 +169,6 @@ class BenefactorProgramForm extends Component
         $this->resetBeneficiaryForm();
     }
 
-    public function removeBeneficiary($index)
-    {
-        unset($this->beneficiaries[$index]);
-        $this->beneficiaries = array_values($this->beneficiaries);
-    }
-
     protected function resetBeneficiaryForm()
     {
         $this->newBeneficiaryName = '';
@@ -98,101 +178,21 @@ class BenefactorProgramForm extends Component
         $this->newBeneficiaryDescription = '';
     }
 
-    public function save()
-    {
-        $this->validate();
-
-        $sponsorshipService = app(SponsorshipService::class);
-
-        $data = [
-            'name' => $this->name,
-            'type' => $this->type,
-            'description' => $this->description,
-            'affected_individuals' => $this->affected_individuals,
-            'amount_goal' => $this->amount_goal,
-            'deadline' => $this->deadline ?: null,
-        ];
-
-        if ($this->programId) {
-            $program = SponsorshipProgram::where('user_id', Auth::id())
-                ->findOrFail($this->programId);
-
-            // Only allow editing if in draft status
-            if ($program->status !== SponsorshipProgram::STATUS_DRAFT) {
-                session()->flash('error', 'Cannot edit a program that is not in draft status.');
-                return;
-            }
-
-            $program = $sponsorshipService->updateProgram($program, $data);
-
-            // Sync beneficiaries
-            $this->syncBeneficiaries($program);
-
-            session()->flash('message', 'Program updated successfully.');
-        } else {
-            $program = $sponsorshipService->createProgram(Auth::user(), $data);
-
-            // Add beneficiaries
-            foreach ($this->beneficiaries as $beneficiary) {
-                $sponsorshipService->addBeneficiary($program, [
-                    'beneficiary_name' => $beneficiary['name'],
-                    'beneficiary_type' => $beneficiary['type'],
-                    'beneficiary_email' => $beneficiary['email'],
-                    'beneficiary_phone' => $beneficiary['phone'],
-                    'beneficiary_description' => $beneficiary['description'],
-                ]);
-            }
-
-            session()->flash('message', 'Program created successfully.');
-        }
-
-        return redirect()->route('sponsorship.benefactor.dashboard');
-    }
-
-    protected function syncBeneficiaries(SponsorshipProgram $program)
-    {
-        $existingIds = collect($this->beneficiaries)->pluck('id')->filter()->toArray();
-
-        // Delete removed beneficiaries
-        $program->beneficiaries()->whereNotIn('id', $existingIds)->delete();
-
-        // Update or create beneficiaries
-        foreach ($this->beneficiaries as $beneficiary) {
-            if ($beneficiary['id']) {
-                SponsorshipBeneficiary::where('id', $beneficiary['id'])->update([
-                    'beneficiary_name' => $beneficiary['name'],
-                    'beneficiary_type' => $beneficiary['type'],
-                    'beneficiary_email' => $beneficiary['email'],
-                    'beneficiary_phone' => $beneficiary['phone'],
-                    'beneficiary_description' => $beneficiary['description'],
-                ]);
-            } else {
-                $program->beneficiaries()->create([
-                    'beneficiary_name' => $beneficiary['name'],
-                    'beneficiary_type' => $beneficiary['type'],
-                    'beneficiary_email' => $beneficiary['email'],
-                    'beneficiary_phone' => $beneficiary['phone'],
-                    'beneficiary_description' => $beneficiary['description'],
-                ]);
-            }
-        }
-    }
-
     public function submitForVerification()
     {
-        if (!$this->programId) {
-            session()->flash('error', 'Please save the program first.');
+        if (!$this->projectId) {
+            session()->flash('error', 'Please save the project first.');
             return;
         }
 
-        $program = SponsorshipProgram::where('user_id', Auth::id())
-            ->findOrFail($this->programId);
+        $project = SponsorshipProject::where('user_id', Auth::id())
+            ->findOrFail($this->projectId);
 
         $sponsorshipService = app(SponsorshipService::class);
 
-        if ($sponsorshipService->submitForVerification($program)) {
-            session()->flash('message', 'Program submitted for verification.');
-            return redirect()->route('sponsorship.benefactor.dashboard');
+        if ($sponsorshipService->submitForVerification($project)) {
+            session()->flash('message', 'project submitted for verification.');
+            return redirect()->route('benefactors.index');
         }
 
         session()->flash('error', 'Unable to submit for verification. Please ensure all required fields are filled.');
@@ -200,8 +200,8 @@ class BenefactorProgramForm extends Component
 
     public function render()
     {
-        return view('livewire.sponsorship.benefactor-program-form', [
-            'types' => SponsorshipProgram::getTypes(),
+        return view('livewire.sponsorships.benefactor-project-form', [
+            'types' => SponsorshipProject::getTypes(),
             'beneficiaryTypes' => SponsorshipBeneficiary::getTypes(),
         ]);
     }
