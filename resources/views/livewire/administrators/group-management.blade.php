@@ -223,14 +223,10 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div
-                                            class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                                                <span class="text-xs font-medium text-blue-600">
-                                                    {{ substr($group->teacher->user->name, 0, 2) }}
-                                                </span>
-                                        </div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $group->teacher->user->name }}
+                                        <x-avatar class="h-8 w-8" :name="$group->getTeacherName()" avatar="{{ $group->teacher?->user?->avatar }}" />
+
+                                        <div class="text-sm font-medium ml-1.5 text-gray-900">
+                                            {{ $group->getTeacherName() }}
                                         </div>
                                     </div>
                                 </td>
@@ -354,12 +350,8 @@
                                             @foreach($studentsInGroup as $student)
                                                 <li class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                                                     <div class="flex items-center">
-                                                        <div
-                                                            class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                                                            <span class="text-xs font-medium text-blue-600">
-                                                                {{ substr($student->user->name, 0, 2) }}
-                                                            </span>
-                                                        </div>
+                                                        <x-avatar class="h-8 w-8 mr-1.5" :name="$student?->user?->name" avatar="{{ $student?->user?->avatar }}" />
+
                                                         <div>
                                                             <div
                                                                 class="text-sm font-medium text-gray-900">{{ $student->user->name }}</div>
@@ -423,12 +415,7 @@
                                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
                                                     >
                                                     <div class="flex items-center flex-1">
-                                                        <div
-                                                            class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-                                                            <span class="text-xs font-medium text-gray-600">
-                                                                {{ substr($student->user->name, 0, 2) }}
-                                                            </span>
-                                                        </div>
+                                                        <x-avatar class="h-8 w-8 mr-1.5" :name="$student->user->name" avatar="{{ $student?->user?->avatar }}" />
                                                         <div>
                                                             <div
                                                                 class="text-sm font-medium text-gray-900">{{ $student->user->name }}</div>

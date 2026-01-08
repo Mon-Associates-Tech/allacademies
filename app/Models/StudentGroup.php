@@ -198,4 +198,29 @@ class StudentGroup extends Model
 
         return false;
     }
+
+    /**
+     * Get teacher initials or fallback
+     */
+    public function getTeacherInitials(): string
+    {
+        if ($this->teacher && $this->teacher->user) {
+            return substr($this->teacher->user->name, 0, 2);
+        }
+
+        return 'N/A';
+    }
+
+    /**
+     * Get teacher name or fallback
+     */
+    public function getTeacherName(): string
+    {
+        if ($this->teacher && $this->teacher->user) {
+            return $this->teacher->user->name;
+        }
+
+        return 'No teacher assigned';
+    }
+
 }

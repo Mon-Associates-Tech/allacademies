@@ -341,26 +341,9 @@ Route::middleware(['auth'])->group(function () {
 
 
 // Include additional route files
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+// (Duplicate) Newsletter routes removed; public definitions are declared above.
 
-// Book Reading Progress Routes
-Route::middleware(['auth'])->group(function () {
-    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
-    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
-    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
-    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
-    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
-
-
-    Route::get('/course-outlines', function () {
-        return view('course-outlines');
-    })->name('course-outlines');
-
-    Route::get('/academic-calendar', function () {
-        return view('academic-calendar');
-    })->name('academic-calendar');
-});
+// (Duplicate) Book reading progress & academic pages block removed; originals exist above in the main auth group.
 
 
 // Adding paystack payment routes
@@ -374,7 +357,7 @@ Route::get('/createSubAccount', [PaymentController::class, 'createSubAccount'])-
 Route::get('/feepayment/{student}', [PaymentController::class, 'showPaymentForm'])->name('feepayment.form');
 Route::post('/feepayment', [PaymentController::class, 'processPayment'])->name('feepayment.process');
 Route::get('/feepayment/callback', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
-Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
+// (Duplicate) Fee payment thank-you route removed; original is defined above.
 Route::get('/feepayment/callback/{student}', [PaymentController::class, 'paymentCallback'])->name('feepayment.student.callback');
 
 Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
@@ -451,7 +434,7 @@ Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])
     \Illuminate\Support\Facades\DB::table('academic_periods')->where('id', $termId)->update(['is_current' => true]);
 
     return back()->with('success', 'Current term has been updated successfully.');
-})->name('academic.term.switch');
+})->middleware(['auth','verified'])->name('academic.term.switch');
 
 
 Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchoolDashboard::class)

@@ -6,6 +6,7 @@ use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\Role;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\Teacher;
@@ -85,55 +86,68 @@ class StudentManagement extends Component
 
     public function mount(): void
     {
-        $this->studentGroups = StudentGroup::all();
-        $this->academicGroups = AcademicGroup::all();
-        $this->allTeachers = Teacher::with('user')->get();
+        $schoolId = getSchoolId();
+
+        // Load school-scoped data
+        if ($schoolId) {
+            $this->studentGroups = StudentGroup::where('school_id', $schoolId)->get();
+
+            // Get academic groups that this school has adopted
+            $this->academicGroups = AcademicGroup::forSchool($schoolId)->get();
+
+            $this->allTeachers = Teacher::where('school_id', $schoolId)->with('user')->get();
+        } else {
+            // For cross-school users without school context
+            $this->studentGroups = collect();
+            $this->academicGroups = collect();
+            $this->allTeachers = collect();
+        }
     }
 
-    public function toggleViewMode()
+    public function toggleViewMode(): void
     {
         $this->viewMode = $this->viewMode === 'card' ? 'list' : 'card';
     }
 
-    public function showCreateForm()
+    public function showCreateForm(): void
     {
         $this->resetForm();
         $this->showFormModal = true;
         $this->formMode = 'create';
     }
 
-    public function updatedFilterAcademicGroup()
+    public function updatedFilterAcademicGroup(): void
     {
         $this->filterAcademicLevel = ''; // Reset level when group changes
         $this->resetPage();
     }
 
-    public function updatedFilterAcademicLevel()
+    public function updatedFilterAcademicLevel(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterStudentGroup()
+    public function updatedFilterStudentGroup(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterTeacher()
+    public function updatedFilterTeacher(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFilterSubject()
+    public function updatedFilterSubject(): void
     {
         $this->resetPage();
     }
 
-    public function updatedSearchTerm()
+    public function updatedSearchTerm(): void
     {
         $this->resetPage();
     }
 
-    public function clearFilters()
+    public function clearFilters(): void
     {
         $this->filterAcademicGroup = '';
         $this->filterAcademicLevel = '';
@@ -145,7 +159,7 @@ class StudentManagement extends Component
     }
 
 
-    public function resetForm()
+    public function resetForm(): void
     {
 
         $this->showFormModal = false;
@@ -170,13 +184,13 @@ class StudentManagement extends Component
         $this->resetValidation();
     }
 
-    public function hideForm()
+    public function hideForm(): void
     {
         $this->showFormModal = false;
         $this->resetForm();
     }
 
-    public function updatedAcademicGroupId()
+    public function updatedAcademicGroupId(): void
     {
         // Reset dependent fields
         $this->academicLevelId = '';
@@ -188,8 +202,14 @@ class StudentManagement extends Component
         $this->availableAdditionalSubjects = [];
         $this->availableTeachers = [];
 
-        if ($this->academicGroupId) {
-            $this->academicLevels = AcademicLevel::where('academic_group_id', $this->academicGroupId)->get();
+        $schoolId = getSchoolId();
+
+        if ($this->academicGroupId && $schoolId) {
+            // Get academic levels for this group that the school has adopted
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+
+            $this->academicLevels = $availableLevels->where('academic_group_id', $this->academicGroupId);
             $this->loadTeachersForGroupManagement();
         } else {
             $this->academicLevels = collect();
@@ -201,38 +221,50 @@ class StudentManagement extends Component
         // Force re-render of the component
         $this->dispatch('$refresh');
     }
-
     // Teacher Management Methods
 
-    public function loadTeachersForGroupManagement()
+    public function loadTeachersForGroupManagement(): void
     {
         if (!$this->academicGroupId) return;
+
+        $schoolId = getSchoolId();
+        if (!$schoolId) return;
 
         $group = AcademicGroup::with('teachers')->find($this->academicGroupId);
         $assignedTeacherIds = $group->teachers->pluck('id')->toArray();
 
-        $this->teachersToAssignToGroup = Teacher::whereNotIn('id', $assignedTeacherIds)
+        $this->teachersToAssignToGroup = Teacher::where('school_id', $schoolId)
+            ->whereNotIn('id', $assignedTeacherIds)
             ->with('user')->get();
     }
 
-    public function updatedAcademicLevelId()
+    public function updatedAcademicLevelId(): void
     {
         $this->primaryTeacherId = '';
         $this->selectedTeachers = [];
         $this->additionalSubjects = [];
         $this->removedSubjects = [];
 
-        if ($this->academicLevelId) {
+        $schoolId = getSchoolId();
+
+        if ($this->academicLevelId && $schoolId) {
             // Load subjects for this academic level
             $this->levelSubjects = AcademicSubject::where('academic_level_id', $this->academicLevelId)->get();
 
-            // Load subjects from other levels that can be added individually
-            $this->availableAdditionalSubjects = AcademicSubject::where('academic_level_id', '!=', $this->academicLevelId)->get();
+            // Load subjects from other levels that the school has adopted
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+            $availableLevelIds = $availableLevels->where('id', '!=', $this->academicLevelId)->pluck('id');
 
-            // Load teachers who belong to this academic level
-            $this->availableTeachers = Teacher::whereHas('academicLevels', function ($query) {
-                $query->where('academic_level_id', $this->academicLevelId);
-            })->with('user')->get();
+            $this->availableAdditionalSubjects = AcademicSubject::whereIn('academic_level_id', $availableLevelIds)->get();
+
+            // Load teachers who belong to this academic level (school scoped)
+            $this->availableTeachers = Teacher::where('school_id', $schoolId)
+                ->whereHas('academicLevels', function ($query) {
+                    $query->where('academic_level_id', $this->academicLevelId);
+                })
+                ->with('user')
+                ->get();
 
             $this->loadTeachersForLevelManagement();
         } else {
@@ -241,19 +273,22 @@ class StudentManagement extends Component
             $this->availableTeachers = [];
         }
     }
-
-    public function loadTeachersForLevelManagement()
+    public function loadTeachersForLevelManagement(): void
     {
         if (!$this->academicLevelId) return;
+
+        $schoolId = getSchoolId();
+        if (!$schoolId) return;
 
         $level = AcademicLevel::with('teachers')->find($this->academicLevelId);
         $assignedTeacherIds = $level->teachers->pluck('id')->toArray();
 
-        $this->teachersToAssignToLevel = Teacher::whereNotIn('id', $assignedTeacherIds)
+        $this->teachersToAssignToLevel = Teacher::where('school_id', $schoolId)
+            ->whereNotIn('id', $assignedTeacherIds)
             ->with('user')->get();
     }
 
-    public function showManageTeachersModal()
+    public function showManageTeachersModal(): void
     {
         $this->showManageTeachers = true;
         $this->loadTeachersForGroupManagement();
@@ -262,7 +297,7 @@ class StudentManagement extends Component
         }
     }
 
-    public function assignTeachersToGroup()
+    public function assignTeachersToGroup(): void
     {
         if (empty($this->selectedTeachersForGroup)) {
             session()->flash('error', 'No teachers selected for group assignment.');
@@ -288,7 +323,7 @@ class StudentManagement extends Component
         session()->flash('message', 'Teachers assigned to academic group successfully!');
     }
 
-    public function assignTeachersToLevel()
+    public function assignTeachersToLevel(): void
     {
         if (empty($this->selectedTeachersForLevel)) {
             session()->flash('error', 'No teachers selected for level assignment.');
@@ -320,7 +355,7 @@ class StudentManagement extends Component
         session()->flash('message', 'Teachers assigned to academic level successfully!');
     }
 
-    public function removeTeacherFromGroup($teacherId)
+    public function removeTeacherFromGroup($teacherId): void
     {
         $group = AcademicGroup::find($this->academicGroupId);
         $group->teachers()->detach($teacherId);
@@ -329,7 +364,7 @@ class StudentManagement extends Component
         session()->flash('message', 'Teacher removed from academic group successfully!');
     }
 
-    public function removeTeacherFromLevel($teacherId)
+    public function removeTeacherFromLevel($teacherId): void
     {
         $level = AcademicLevel::find($this->academicLevelId);
         $level->teachers()->detach($teacherId);
@@ -344,14 +379,14 @@ class StudentManagement extends Component
         session()->flash('message', 'Teacher removed from academic level successfully!');
     }
 
-    public function showCreateTeacherModal()
+    public function showCreateTeacherModal(): void
     {
         $this->showTeacherModal = true;
         $this->isEditingTeacher = false;
         $this->resetTeacherForm();
     }
 
-    public function resetTeacherForm()
+    public function resetTeacherForm(): void
     {
         $this->teacherName = '';
         $this->teacherEmail = '';
@@ -359,8 +394,16 @@ class StudentManagement extends Component
         $this->resetValidation(['teacherName', 'teacherEmail', 'teacherPassword']);
     }
 
-    public function createTeacher()
+    public function createTeacher(): void
     {
+
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school before creating a teacher.');
+            return;
+        }
+
         $this->validate([
             'teacherName' => 'required|min:3',
             'teacherEmail' => 'required|email|unique:users,email',
@@ -380,9 +423,12 @@ class StudentManagement extends Component
             $teacherRole = Role::where('name', 'teacher')->first();
             $user->roles()->attach($teacherRole);
 
+            // Get school ID from context
+
             // Create teacher record
             $teacher = Teacher::create([
                 'user_id' => $user->id,
+                'school_id' => $schoolId, // ✅ Explicitly set school_id
             ]);
 
             // Auto-assign to current academic group and level if selected
@@ -425,7 +471,10 @@ class StudentManagement extends Component
         $this->js('window.Modal.close("teacher-add-form")');
     }
 
-    public function create()
+    /**
+     * @throws \Throwable
+     */
+    public function create(): void
     {
         $this->validate();
 
@@ -436,6 +485,23 @@ class StudentManagement extends Component
                 'name' => $this->name,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
+            ]);
+
+            // Assign student role
+            $studentRole = Role::where('name', 'student')->first();
+            $user->roles()->attach($studentRole);
+
+            // Get school ID from context (for owner/admin scenarios)
+            $schoolId = getSchoolId() ?? auth()->user()->school_id;
+
+            // Create student record
+            $student = Student::create([
+                'user_id' => $user->id,
+                'school_id' => $schoolId, // ✅ Explicitly set school_id
+                'student_group_id' => $this->studentGroupId,
+                'academic_group_id' => $this->academicGroupId,
+                'academic_level_id' => $this->academicLevelId,
+                'student_id' => Student::generateStudentId($schoolId), // ✅ Pass school_id
             ]);
 
             // Assign student role
@@ -473,7 +539,7 @@ class StudentManagement extends Component
         $this->js('window.Modal.close("student-add-form")');
     }
 
-    private function assignIndividualSubjects($student)
+    private function assignIndividualSubjects($student): void
     {
         // Clear existing individual assignments
         $student->individualSubjects()->detach();
@@ -514,34 +580,34 @@ class StudentManagement extends Component
         }
     }
 
-    public function closeManageTeachersModal()
+    public function closeManageTeachersModal(): void
     {
         $this->showManageTeachers = false;
         $this->selectedTeachersForGroup = [];
         $this->selectedTeachersForLevel = [];
     }
 
-    public function closeTeacherModal()
+    public function closeTeacherModal(): void
     {
         $this->showTeacherModal = false;
         $this->resetTeacherForm();
     }
 
-    public function updatedPrimaryTeacherId()
+    public function updatedPrimaryTeacherId(): void
     {
         if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
             $this->selectedTeachers[] = $this->primaryTeacherId;
         }
     }
 
-    public function updatedSelectedTeachers()
+    public function updatedSelectedTeachers(): void
     {
         if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
             $this->primaryTeacherId = '';
         }
     }
 
-    public function edit($studentId)
+    public function edit($studentId): void
     {
         $this->formMode = 'edit';
         $this->showFormModal = true;
@@ -598,7 +664,7 @@ class StudentManagement extends Component
         $this->js('window.Modal.open("student-add-form")');
     }
 
-    public function update()
+    public function update(): void
     {
         $student = Student::with(['user', 'teachers'])->findOrFail($this->editingStudentId);
 
@@ -659,7 +725,7 @@ class StudentManagement extends Component
         $this->js('window.Modal.close("student-add-form")');
     }
 
-    public function delete($studentId)
+    public function delete($studentId): void
     {
         $student = Student::findOrFail($studentId);
         $userId = $student->user_id;
@@ -675,8 +741,19 @@ class StudentManagement extends Component
 
     public function render()
     {
+        $schoolId = getSchoolId();
+
+        if (!$schoolId) {
+            session()->flash('error', 'Please select a school to manage students.');
+        }
+
         // Start with base query
-        $query = Student::withoutGlobalScopes();
+        $query = Student::query();
+
+        // Apply school context
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
+        }
 
         // Search filter
         if ($this->searchTerm) {
@@ -746,14 +823,45 @@ class StudentManagement extends Component
             $levelTeachers = $level ? $level->teachers : collect();
         }
 
-        // Get available filter options
-        $filterAcademicGroups = AcademicGroup::all();
-        $filterAcademicLevels = $this->filterAcademicGroup
-            ? AcademicLevel::where('academic_group_id', $this->filterAcademicGroup)->get()
-            : AcademicLevel::all();
-        $filterStudentGroups = StudentGroup::all();
-        $filterTeachers = Teacher::with('user')->get();
-        $filterSubjects = AcademicSubject::with('academicLevel')->get();
+        // Get available filter options - SCOPED TO CURRENT SCHOOL
+        // Academic groups that the school has adopted
+        $filterAcademicGroups = $schoolId
+            ? AcademicGroup::forSchool($schoolId)->get()
+            : collect();
+
+        // Academic levels - get from school's adopted groups
+        if ($this->filterAcademicGroup && $schoolId) {
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+            $filterAcademicLevels = $availableLevels->where('academic_group_id', $this->filterAcademicGroup);
+        } elseif ($schoolId) {
+            $school = School::find($schoolId);
+            $filterAcademicLevels = $school->getAvailableAcademicLevels();
+        } else {
+            $filterAcademicLevels = collect();
+        }
+
+        // Student groups (school-specific)
+        $filterStudentGroups = $schoolId
+            ? StudentGroup::where('school_id', $schoolId)->get()
+            : collect();
+
+        // Teachers (school-specific)
+        $filterTeachers = $schoolId
+            ? Teacher::where('school_id', $schoolId)->with('user')->get()
+            : collect();
+
+        // Subjects - from school's adopted academic levels
+        if ($schoolId) {
+            $school = School::find($schoolId);
+            $availableLevels = $school->getAvailableAcademicLevels();
+            $levelIds = $availableLevels->pluck('id');
+            $filterSubjects = AcademicSubject::with('academicLevel')
+                ->whereIn('academic_level_id', $levelIds)
+                ->get();
+        } else {
+            $filterSubjects = collect();
+        }
 
         // Count active filters
         $activeFiltersCount = collect([

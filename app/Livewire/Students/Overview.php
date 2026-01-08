@@ -12,6 +12,7 @@ use Livewire\Component;
 class Overview extends Component
 {
     public $student;
+    public string $range = '30d';
 
     // Assignment Stats
     public $totalAssignments = 0;
@@ -41,29 +42,52 @@ class Overview extends Component
     public $performanceChartData = [];
     public $subjectChartData = [];
 
+    // Chart props for Livewire components
+    public array $barLabels = [];
+    public array $barDatasets = [];
+    public array $barOptions = [];
+    public array $pieLabels = [];
+    public array $pieValues = [];
+    public array $pieOptions = [];
+    public float $gaugeValue = 0.0;
+    public int $gaugeMin = 0;
+    public int $gaugeMax = 100;
+    public array $gaugeThresholds = [];
+
     public function mount()
     {
         $user = Auth::user();
-        $this->student = $user->student;
+        $this->student = getStudent();
 
         if (!$this->student) {
-            $this->student = \App\Models\Student::withoutGlobalScopes()
-                ->where('user_id', $user->id)
-                ->first();
+            $this->student = \App\Models\Student::where('user_id', $user->id)->first();
         }
 
         if ($this->student) {
-            $this->loadAssignmentStats();
-            $this->loadSelfAssessmentStats();
-            $this->loadPerformanceData();
-            $this->loadRecentData();
-            $this->loadSubjectPerformance();
+            $this->loadAll();
         }
+    }
+
+    public function updatedRange(): void
+    {
+        if ($this->student) {
+            $this->loadAll();
+        }
+    }
+
+    protected function loadAll(): void
+    {
+        $this->loadAssignmentStats();
+        $this->loadSelfAssessmentStats();
+        $this->loadPerformanceData();
+        $this->loadRecentData();
+        $this->loadSubjectPerformance();
+        $this->prepareCharts();
     }
 
     protected function loadAssignmentStats()
     {
-        $student = $this->student;
+        $student =  getStudent();
 
         // Get all assignments available to student
         $availableAssignments = $this->getAvailableAssignments();
@@ -218,9 +242,12 @@ class Overview extends Component
     {
         $student = $this->student;
 
-        // Get assignment submissions for the last 30 days
+        // Get assignment submissions within selected range
+        $start = $this->rangeStart();
         $submissions = AssignmentSubmission::where('student_id', $student->id)
-            ->where('submitted_at', '>=', now()->subDays(30))
+            ->when($start, function ($q) use ($start) {
+                $q->where('submitted_at', '>=', $start);
+            })
             ->whereIn('status', ['graded', 'completed'])
             ->orderBy('submitted_at')
             ->get();
@@ -252,7 +279,7 @@ class Overview extends Component
 
         // Recent assignments (completed)
         $this->recentAssignments = AssignmentSubmission::where('student_id', $student->id)
-            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->whereIn('status', ['completed', 'submitted', 'graded', 'not_started', 'in_progress'])
             ->with(['assignment.academicSubject', 'assignment.teacher.user'])
             ->orderBy('submitted_at', 'desc')
             ->limit(5)
@@ -285,7 +312,7 @@ class Overview extends Component
 
                 return $assignment->ends_at >= now() &&
                     $assignment->ends_at <= now()->addDays(7) &&
-                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded', 'not_started', 'in_progress']));
             })
             ->sortBy('ends_at')
             ->take(5)
@@ -301,13 +328,17 @@ class Overview extends Component
             ->values();
     }
 
-    protected function loadSubjectPerformance()
+    protected function loadSubjectPerformance(): void
     {
         $student = $this->student;
 
-        // Get submissions grouped by subject
+        // Get submissions grouped by subject (filtered by selected range)
+        $start = $this->rangeStart();
         $submissions = AssignmentSubmission::where('student_id', $student->id)
-            ->whereIn('status', ['graded', 'completed'])
+            ->whereIn('status', ['graded', 'completed', 'in_progress', 'not_started', 'submitted'])
+            ->when($start, function ($q) use ($start) {
+                $q->where('submitted_at', '>=', $start);
+            })
             ->with('assignment.academicSubject')
             ->get();
 
@@ -355,6 +386,82 @@ class Overview extends Component
                 ];
             })
             ->toArray();
+    }
+
+    protected function prepareCharts(): void
+    {
+        // Bar chart: performance by subject
+        $this->barLabels = collect($this->subjectChartData)->pluck('subject')->toArray();
+        $barData = collect($this->subjectChartData)->pluck('score')->toArray();
+        $this->barDatasets = [
+            [
+                'label' => 'Avg Score %',
+                'data' => $barData,
+                'backgroundColor' => '#3b82f6',
+            ]
+        ];
+        $this->barOptions = [
+            'plugins' => [ 'legend' => [ 'display' => true, 'position' => 'bottom' ] ],
+            'scales' => [
+                'y' => [ 'beginAtZero' => true, 'max' => 100 ]
+            ]
+        ];
+
+        // Pie chart: status distribution within selected range
+        [$completed, $ongoing, $overdue] = $this->statusCountsInRange();
+        $this->pieLabels = ['Completed', 'Ongoing', 'Overdue'];
+        $this->pieValues = [ $completed, $ongoing, $overdue ];
+        $this->pieOptions = [ 'plugins' => [ 'legend' => [ 'position' => 'right' ] ] ];
+
+        // Gauge: completion rate within selected range
+        $den = max(1, $completed + $ongoing + $overdue);
+        $rate = ($completed / $den) * 100.0;
+        $this->gaugeValue = round($rate, 1);
+        $this->gaugeMin = 0;
+        $this->gaugeMax = 100;
+        $this->gaugeThresholds = [
+            ['max' => 50, 'color' => '#ef4444', 'label' => 'Low'],
+            ['max' => 80, 'color' => '#f59e0b', 'label' => 'Medium'],
+            ['max' => 100, 'color' => '#10b981', 'label' => 'High'],
+        ];
+    }
+
+    protected function statusCountsInRange(): array
+    {
+        $student = $this->student;
+        $start = $this->rangeStart();
+
+        $completed = AssignmentSubmission::where('student_id', $student->id)
+            ->whereIn('status', ['completed', 'submitted', 'graded'])
+            ->when($start, function ($q) use ($start) { $q->where('submitted_at', '>=', $start); })
+            ->count();
+
+        $ongoing = AssignmentSubmission::where('student_id', $student->id)
+            ->where('status', 'in_progress')
+            ->when($start, function ($q) use ($start) { $q->where('updated_at', '>=', $start); })
+            ->count();
+
+        // Overdue: assignments with due date past now, started before now, in the window, not completed
+        $available = $this->getAvailableAssignments();
+        $subs = AssignmentSubmission::where('student_id', $student->id)->get();
+        $overdue = $available->filter(function ($assignment) use ($subs, $start) {
+            $submission = $subs->where('assignment_id', $assignment->id)->first();
+            $inWindow = $start ? ($assignment->ends_at >= $start) : true;
+            return $inWindow && $assignment->ends_at < now() && (!$submission || !in_array($submission->status, ['completed','submitted','graded']));
+        })->count();
+
+        return [$completed, $ongoing, $overdue];
+    }
+
+    protected function rangeStart(): ?\Carbon\Carbon
+    {
+        return match ($this->range) {
+            '7d' => now()->subDays(7),
+            '30d' => now()->subDays(30),
+            '90d' => now()->subDays(90),
+            'term' => now()->subDays(90),
+            default => now()->subDays(30),
+        };
     }
 
     public function render()

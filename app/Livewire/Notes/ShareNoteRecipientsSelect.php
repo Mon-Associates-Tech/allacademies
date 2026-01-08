@@ -40,7 +40,7 @@ class ShareNoteRecipientsSelect extends Component
     }
 
     #[Computed]
-    public function filteredItems()
+    public function filteredItems(): array
     {
         // Don't load anything if dropdown is closed and no search
         if (!$this->dropdownOpen && empty($this->search)) {
@@ -74,10 +74,12 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadIndividuals(): array
     {
-        $query = User::where('id', '!=', auth()->id())
+        $query = User::query()
+            ->where('id', '!=', auth()->id())
             ->where('is_active', true);
 
-        if ($this->schoolId !== null) {
+        // Only filter by school if provided; for individual searches schoolId is optional
+        if (!empty($this->schoolId)) {
             $query->where('school_id', $this->schoolId);
         }
 
@@ -111,11 +113,11 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadAcademicGroups(): array
     {
-        $query = AcademicGroup::query();
-
-        if ($this->schoolId !== null) {
-            $query->forSchool($this->schoolId);
+        if (empty($this->schoolId)) {
+            return [];
         }
+
+        $query = AcademicGroup::forSchool($this->schoolId);
 
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -141,11 +143,13 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadSelectedAcademicGroups(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         return AcademicGroup::whereIn('id', $this->selected)
             ->withCount(['students' => function($q) {
-                if ($this->schoolId !== null) {
-                    $q->where('school_id', $this->schoolId);
-                }
+                $q->where('school_id', $this->schoolId);
             }])
             ->get()
             ->map(fn($group) => [
@@ -157,12 +161,12 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadAcademicLevels(): array
     {
-        $query = AcademicLevel::query()
-            ->with('academicGroup');
-
-        if ($this->schoolId !== null) {
-            $query->forSchool($this->schoolId);
+        if (empty($this->schoolId)) {
+            return [];
         }
+
+        $query = AcademicLevel::forSchool($this->schoolId)
+            ->with('academicGroup');
 
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -188,11 +192,13 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadSelectedAcademicLevels(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         return AcademicLevel::whereIn('id', $this->selected)
             ->withCount(['students' => function($q) {
-                if ($this->schoolId !== null) {
-                    $q->where('school_id', $this->schoolId);
-                }
+                $q->where('school_id', $this->schoolId);
             }])
             ->get()
             ->map(fn($level) => [
@@ -204,13 +210,13 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadStudentGroups(): array
     {
-        $query = StudentGroup::query()
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
+        $query = StudentGroup::where('school_id', $this->schoolId)
             ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
             ->active();
-
-        if ($this->schoolId !== null) {
-            $query->where('school_id', $this->schoolId);
-        }
 
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -232,6 +238,10 @@ class ShareNoteRecipientsSelect extends Component
 
     private function loadSelectedStudentGroups(): array
     {
+        if (empty($this->schoolId)) {
+            return [];
+        }
+
         return StudentGroup::whereIn('id', $this->selected)
             ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
             ->get()
