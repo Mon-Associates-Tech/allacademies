@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public sponsorship routes (accessible to everyone)
-Route::prefix('sponsorship')->name('sponsorship.')->group(function () {
+Route::prefix('public/sponsorship')->name('sponsorship.')->group(function () {
     // Public listing of active programs
     Route::get('/programs', \App\Livewire\Sponsorship\PublicSponsorshipList::class)
         ->name('programs.index');
@@ -51,10 +51,10 @@ Route::get('/sponsorship/payment/success/{contribution}', [SponsorshipPaymentCon
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Benefactor Routes (for users creating sponsorship programs)
-    Route::prefix('benefactor')->name('benefactor.')->group(function () {
+    Route::prefix('dashboard/benefactor')->name('benefactors.')->group(function () {
         // Dashboard
-        Route::get('/dashboard', \App\Livewire\Sponsorship\BenefactorDashboard::class)
-            ->name('dashboard');
+        Route::get('/', \App\Livewire\Sponsorship\BenefactorDashboard::class)
+            ->name('index');
 
         // Payment setup
         Route::get('/payment-setup', \App\Livewire\Sponsorship\BenefactorPaymentSetup::class)
@@ -77,10 +77,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Sponsor Routes (for users offering sponsorships)
-    Route::prefix('sponsor')->name('sponsor.')->group(function () {
+    Route::prefix('dashboard/sponsorships')->name('sponsorships.')->group(function () {
         // Dashboard
-        Route::get('/dashboard', \App\Livewire\Sponsorship\SponsorDashboard::class)
-            ->name('dashboard');
+        Route::get('/', \App\Livewire\Sponsorship\SponsorDashboard::class)
+            ->name('index');
 
         // Create offer
         Route::get('/offers/create', \App\Livewire\Sponsorship\SponsorOfferForm::class)

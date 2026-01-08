@@ -3,7 +3,7 @@
         <script src="{{ asset('js/tinymce/tinymce.js') }}" referrerpolicy="origin"></script>
         <script>
             // Define the function globally before Alpine loads
-            window.markdownEditor = function(initialMarkdown, editorId, height, wireName) {
+            window.markdownEditor = function (initialMarkdown, editorId, height, wireName) {
                 return {
                     preview: false,
                     markdown: initialMarkdown,
@@ -116,7 +116,7 @@
                                         strict: false,
                                         trust: true
                                     });
-                                } catch(e) {
+                                } catch (e) {
                                     console.error('KaTeX preview rendering error:', e);
                                 }
                             }
@@ -161,7 +161,7 @@
     @endif
 
     @if($info)
-        <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{ $info }}</p>
+        <p class="text-xs tracking-tight !-mt-0 pb-2 text-gray-500 dark:text-gray-400">{{ $info }}</p>
     @endif
 
     <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
@@ -186,7 +186,8 @@
             <div class="ml-auto px-4 py-2">
                 <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
                     <span>Rich text editor</span>
                 </div>
