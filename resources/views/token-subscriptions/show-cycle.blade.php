@@ -12,7 +12,16 @@
                     </a>
                     <div class="flex-1">
                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Subscription Cycle Details</h1>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $subscriptionCycle->pricingTier->name }} Plan • Month {{ $subscriptionCycle->cycle_number }}</p>
+                        @php
+                            $groupCycles = $subscriptionCycle->getCyclesInGroup();
+                            // If no group cycles found, use the current cycle as a single-cycle group
+                            if ($groupCycles->isEmpty()) {
+                                $groupCycles = collect([$subscriptionCycle]);
+                            }
+                            $cyclePosition = $groupCycles->search(fn($c) => $c->id === $subscriptionCycle->id) + 1;
+                            $totalMonths = $groupCycles->count();
+                        @endphp
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $subscriptionCycle->pricingTier->name }} Plan • Month {{ $cyclePosition }} of {{ $totalMonths }}</p>
                     </div>
 
                     {{-- Quick Action Buttons --}}
@@ -142,8 +151,8 @@
                                     </h3>
                                     <div class="grid sm:grid-cols-2 gap-4">
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">Cycle Number</p>
-                                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">#{{ $subscriptionCycle->cycle_number }}</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Month in Subscription</p>
+                                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ $cyclePosition }} of {{ $totalMonths }}</p>
                                         </div>
                                         <div class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                                             <p class="text-sm text-gray-600 dark:text-gray-400">Days Remaining</p>
@@ -196,8 +205,8 @@
                                     </h3>
                                     <div class="grid sm:grid-cols-1 gap-4">
                                         <div class="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Increment (Cycle {{ $subscriptionCycle->cycle_number }})</p>
-                                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">GH₵ {{ number_format($subscriptionCycle->pricingTier->getMonthlyPriceIncrement($subscriptionCycle->cycle_number), 2) }}</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Increment (Month {{ $cyclePosition }})</p>
+                                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">GH₵ {{ number_format($subscriptionCycle->pricingTier->getMonthlyPriceIncrement($cyclePosition), 2) }}</p>
                                             @if($subscriptionCycle->cycle_number <= $subscriptionCycle->pricingTier->initial_period_months)
                                                 <p class="text-xs text-blue-700 dark:text-blue-300 mt-2">Initial rate (first {{ $subscriptionCycle->pricingTier->initial_period_months }} months)</p>
                                             @else
@@ -205,9 +214,13 @@
                                             @endif
                                         </div>
                                         <div class="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">Cumulative Total to Date</p>
-                                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">GH₵ {{ number_format($subscriptionCycle->current_price, 2) }}</p>
-                                            <p class="text-xs text-purple-700 dark:text-purple-300 mt-2">Total amount paid through this cycle</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Cumulative Total for Full Subscription</p>
+                                            @php
+                                                $lastCycleInGroup = $groupCycles->last();
+                                                $totalCumulativePrice = $lastCycleInGroup?->current_price ?? $subscriptionCycle->current_price;
+                                            @endphp
+                                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">GH₵ {{ number_format($totalCumulativePrice, 2) }}</p>
+                                            <p class="text-xs text-purple-700 dark:text-purple-300 mt-2">Total cost for all {{ $totalMonths }} months</p>
                                         </div>
                                     </div>
 
