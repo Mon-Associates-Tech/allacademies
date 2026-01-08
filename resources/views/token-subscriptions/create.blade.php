@@ -57,7 +57,8 @@
                             Choose Your Subscription Plan
                         </h1>
                         <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                            Get unlimited tokens on a 30-day anniversary cycle. Only unused topup tokens carry over to
+                            Get unlimited Messengers on a 30-day anniversary cycle. Only unused topup Messengers carry
+                            over to
                             the next cycle.
                         </p>
                     </div>
@@ -280,16 +281,16 @@
                                                     </div>
                                                 </div>
 
-                                                {{-- Monthly Tokens --}}
+                                                {{-- Monthly Messengers --}}
                                                 <div
                                                     class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
                                                     <p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-semibold">
-                                                        Monthly Token Allowance</p>
+                                                        Monthly Messenger Allowance</p>
                                                     <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
                                                         {{ number_format($tier->monthly_token_limit) }}
                                                     </p>
                                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
-                                                        🔄 Tokens reset after 30 days of purchase
+                                                        🔄 Messengers reset after 30 days of purchase
                                                     </p>
                                                 </div>
 
@@ -302,7 +303,7 @@
                                                                   d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                                                   clip-rule="evenodd"/>
                                                         </svg>
-                                                        <span class="text-gray-700 dark:text-gray-300">{{ $tier->monthly_token_limit / 1000 }}K tokens per month</span>
+                                                        <span class="text-gray-700 dark:text-gray-300">{{ $tier->monthly_token_limit / 1000 }}K Messengers per month</span>
                                                     </li>
                                                     <li class="flex items-start gap-3 text-sm transform transition-transform duration-200 hover:translate-x-1">
                                                         <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
@@ -505,7 +506,7 @@
                                     </tr>
                                     <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors bg-blue-50/50 dark:bg-blue-900/10">
                                         <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">
-                                            Monthly Tokens
+                                            Monthly Messengers
                                         </td>
                                         @foreach($pricingTiers as $tier)
                                             <td class="px-6 py-4 text-center text-sm">
@@ -592,12 +593,14 @@
                                                 class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-indigo-600 text-white font-bold">
                                                 2
                                             </div>
-                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-3">Token
+                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-3">
+                                                Messenger
                                                 Reset</h3>
                                         </div>
                                         <p class="text-sm text-gray-600 dark:text-gray-400">Your base allocation resets
                                             on
-                                            each anniversary date. You get a fresh set of tokens to use for another 30
+                                            each anniversary date. You get a fresh set of Messengers to use for another
+                                            30
                                             days.</p>
                                     </div>
                                     <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
@@ -609,7 +612,7 @@
                                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-3">Smart
                                                 Topups</h3>
                                         </div>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">Only unused topup tokens
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Only unused topup Messengers
                                             carry
                                             over. Base allocation always resets, ensuring fair usage across cycles.</p>
                                     </div>
@@ -627,7 +630,7 @@
 
                     </section>
 
-                    {{-- Token Usage Guide --}}
+                    {{-- Messenger Usage Guide --}}
                     <div
                         class="mb-12 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-8 animate-fadeIn"
                         style="animation-delay: 0.5s;">
