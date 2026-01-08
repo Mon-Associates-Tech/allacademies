@@ -21,6 +21,7 @@ class SchoolPaymentStructure extends Model
         'academic_level_id',
         'name',
         'payment_type',
+        'subaccount_id',
         'amount',
         'currency',
         'due_date',
@@ -84,6 +85,11 @@ class SchoolPaymentStructure extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SchoolPayment::class, 'payment_structure_id');
+    }
+
+    public function subaccount(): BelongsTo
+    {
+        return $this->belongsTo(Subaccount::class);
     }
 
     // Scopes

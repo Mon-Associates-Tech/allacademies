@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasMultipleSubAccounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,6 +14,7 @@ use Illuminate\Support\Collection;
 class School extends Model
 {
     use HasFactory;
+    use HasMultipleSubAccounts;
 
     protected $fillable = [
         // Basic information
@@ -56,15 +58,6 @@ class School extends Model
     ];
 
     // Relationships
-
-
-    /**
-     * Get the school's subaccount (polymorphic)
-     */
-    public function subaccount(): MorphOne
-    {
-        return $this->morphOne(Subaccount::class, 'subaccountable');
-    }
 
     public function settings(): HasMany
     {

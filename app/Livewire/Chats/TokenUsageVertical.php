@@ -12,21 +12,21 @@ class TokenUsageVertical extends Component
 
     protected $listeners = ['tokenUsageUpdated' => 'loadSubscription'];
 
-    public function mount()
+    public function mount(): void
     {
         $this->loadSubscription();
     }
 
-    public function loadSubscription()
+    public function loadSubscription(): void
     {
         $this->subscription = Auth::user()->activeTokenSubscription;
-        
+
         if ($this->subscription && $this->subscription->isNearingDepletion()) {
             $this->showAlert = true;
         }
     }
 
-    public function dismissAlert()
+    public function dismissAlert(): void
     {
         $this->showAlert = false;
     }

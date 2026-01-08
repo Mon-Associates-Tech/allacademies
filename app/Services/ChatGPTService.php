@@ -2,15 +2,21 @@
 
 namespace App\Services;
 
+use App\Services\Traits\ResponseExtraction;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ChatGPTService
 {
+    use ResponseExtraction;
+
     protected mixed $apiKey;
+
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
+
     protected string $imageEndpoint = 'https://api.openai.com/v1/images/generations';
+
     protected TokenUsageService $tokenUsageService;
 
     public function __construct(TokenUsageService $tokenUsageService)
@@ -20,50 +26,127 @@ class ChatGPTService
     }
 
     /**
-     * Unified Chat method that handles HTTP, extraction, and usage logging
+     * Unified Chat method with retry logic and usage logging
+     * Supports both simple message arrays and complex request data
      */
     public function chat($messages, $model = 'gpt-4', array $options = []): array
     {
-        $user = auth()->user();
-
         $requestData = array_merge([
             'model' => $model,
             'input' => $messages,
         ], $options);
 
-        try {
-            $response = Http::withToken($this->apiKey)
-                ->timeout(config('openai.openai.timeout', 90))
-                ->post($this->textEndpoint, $requestData);
+        return $this->sendChatRequest($requestData, $options);
+    }
 
-            if (!$response->successful()) {
-                throw new \RuntimeException("OpenAI API Error: " . $response->body());
+    /**
+     * Central HTTP request handler with retry logic
+     * This method is used by both ChatGPTService and AcademicChatService
+     */
+    protected function sendChatRequest(array $requestData, array $options = []): array
+    {
+        $user = auth()->user();
+        $timeout = config('openai.openai.timeout', 90);
+        $maxRetries = 3;
+        $retryDelay = 2;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $response = Http::withToken($this->apiKey)
+                    ->timeout($timeout)
+                    ->connectTimeout(10)
+                    ->retry(2, 1000)
+                    ->post($this->textEndpoint, $requestData);
+
+                if ($response->successful()) {
+                    $responseData = $response->json();
+                    $usage = $responseData['usage'] ?? null;
+
+                    // Handle usage logging
+                    if ($user && $usage) {
+                        $this->tokenUsageService->logUsage(
+                            $user,
+                            $usage,
+                            $options['request_type'] ?? 'chat',
+                            $requestData['model'] ?? 'gpt-4'
+                        );
+                    }
+
+                    return [
+                        'success' => true,
+                        'content' => $this->extractContent($responseData),
+                        'usage' => $usage,
+                        'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-4',
+                    ];
+                }
+
+                if (in_array($response->status(), [429, 503, 502])) {
+                    if ($attempt < $maxRetries) {
+                        $waitTime = $retryDelay * $attempt;
+                        Log::warning('OpenAI API rate limit or unavailable, retrying', [
+                            'status' => $response->status(),
+                            'attempt' => $attempt,
+                            'wait_time' => $waitTime,
+                        ]);
+                        sleep($waitTime);
+
+                        continue;
+                    }
+                }
+
+                Log::error('OpenAI API Error', [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                    'attempt' => $attempt,
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'API Error: '.$response->body(),
+                ];
+
+            } catch (ConnectionException $e) {
+                Log::error('OpenAI Connection Error', [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt < $maxRetries) {
+                    $waitTime = $retryDelay * $attempt;
+                    sleep($waitTime);
+
+                    continue;
+                }
+
+                return [
+                    'success' => false,
+                    'error' => 'Connection timeout. Please try again.',
+                ];
+
+            } catch (\Exception $e) {
+                Log::error('ChatGPTService Error', [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt < $maxRetries) {
+                    $waitTime = $retryDelay * $attempt;
+                    sleep($waitTime);
+
+                    continue;
+                }
+
+                return [
+                    'success' => false,
+                    'error' => 'Service temporarily unavailable. Please try again.',
+                ];
             }
-
-            $responseData = $response->json();
-            $usage = $responseData['usage'] ?? null;
-
-            // Handle usage logging
-            if ($user && $usage) {
-                $this->tokenUsageService->logUsage(
-                    $user,
-                    $usage,
-                    $options['request_type'] ?? 'chat',
-                    $model
-                );
-            }
-
-            return [
-                'success' => true,
-                'content' => $this->extractContent($responseData),
-                'usage' => $usage,
-                'model' => $responseData['model'] ?? $model
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('ChatGPTService Error', ['error' => $e->getMessage()]);
-            return ['success' => false, 'error' => $e->getMessage()];
         }
+
+        return [
+            'success' => false,
+            'error' => 'Service temporarily unavailable after multiple attempts. Please try again later.',
+        ];
     }
 
     /**
@@ -82,57 +165,36 @@ class ChatGPTService
                     'size' => '1024x1024',
                 ], $options));
 
-            if (!$response->successful()) {
-                throw new \RuntimeException("OpenAI API Error: " . $response->body());
+            if (! $response->successful()) {
+                throw new \RuntimeException('OpenAI API Error: '.$response->body());
             }
 
             $responseData = $response->json();
             $images = $responseData['data'] ?? [];
 
             // Log usage if present in the image response
-            if ($user && !empty($images[0]['usage'])) {
+            if ($user && ! empty($images[0]['usage'])) {
                 $this->tokenUsageService->logUsage($user, $images[0]['usage'], 'image', $model);
             }
 
             return [
                 'success' => true,
                 'images' => $images,
-                'model' => $model
+                'model' => $model,
             ];
         } catch (\Exception $e) {
             Log::error('Image Generation Error', ['error' => $e->getMessage()]);
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
     /**
-     * Centralized extraction logic
+     * Extract content from response data
+     * For enhanced extraction with educational context, use AcademicChatService
      */
     public function extractContent(array $responseData): string
     {
-        if (!isset($responseData['output'])) {
-            return $responseData['choices'][0]['message']['content'] ?? '';
-        }
-
-        $output = $responseData['output'];
-        if (is_string($output)) return $output;
-
-        if (is_array($output)) {
-            if (isset($output[0]['content'])) {
-                $text = '';
-                foreach ($output as $item) {
-                    if (isset($item['content']) && is_array($item['content'])) {
-                        foreach ($item['content'] as $part) {
-                            $text .= is_array($part) ? ($part['text'] ?? '') : $part;
-                        }
-                    }
-                }
-                return $text;
-            }
-            if (isset($output[0]['text'])) return implode("\n", array_column($output, 'text'));
-            return implode("\n", array_filter($output, 'is_string'));
-        }
-
-        return '';
+        return $this->extractContentFromResponsesAPI($responseData);
     }
 }

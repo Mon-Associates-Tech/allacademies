@@ -3,6 +3,7 @@
 namespace App\Livewire\Administrators;
 
 use App\Models\School;
+use Illuminate\Http\RedirectResponse;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,25 +17,25 @@ class SchoolSwitcherPage extends Component
 
     protected $queryString = ['search', 'page'];
 
-    public function mount()
+    public function mount(): void
     {
-        
         if (!auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403);
         }
 
         try {
-            $this->currentSchool = app()->bound('current_school') ? app('current_school') : null;
+            $this->currentSchool = getCurrentSchoolContext();
         } catch (\Exception $e) {
             $this->currentSchool = null;
-        }    }
+        }
+    }
 
-    public function updatingSearch()
+    public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    public function switchToSchool($schoolId)
+    public function switchToSchool($schoolId): void
     {
         if (!auth()->user()->canAccessCrossSchool()) {
             abort(403);
@@ -49,44 +50,46 @@ class SchoolSwitcherPage extends Component
 
         // Set the current school in session
         session()->put('current_school_id', $schoolId);
+
+        // Keep the session alive
+        session()->regenerate(false);
+
         app()->instance('current_school', $school);
 
         $this->currentSchool = $school;
 
         session()->flash('success', "Switched to {$school->name}");
 
-        return redirect()->route('admin.school-switcher');
+        // Don't redirect, stay on the page
+        // return redirect()->route('admin.school-switcher');
     }
 
-public function showAllSchools()
-{
-    if (!auth()->user()->canAccessCrossSchool()) {
-        abort(403);
+    public function showAllSchools(): void
+    {
+        if (!auth()->user()->canAccessCrossSchool()) {
+            abort(403);
+        }
+
+        session()->forget('current_school_id');
+
+        // Keep the session alive
+        session()->regenerate(false);
+
+        if (app()->bound('current_school')) {
+            app()->forgetInstance('current_school');
+        }
+
+        app()->instance('current_school', null);
+
+        $this->currentSchool = null;
+
+        session()->flash('success', 'Now viewing all schools');
+
+        // Don't redirect, stay on the page
+        // return redirect()->route('admin.school-switcher');
     }
 
-    // Clear all school context
-    session()->forget('current_school_id');
-
-    // Remove any bound instances
-    if (app()->bound('current_school')) {
-        // Instead of forgetInstance, just rebind to null
-        app()->singleton('current_school', function () {
-            return null;
-        });
-    }
-
-    // Also explicitly set the instance
-    app()->instance('current_school', null);
-
-    $this->currentSchool = null;
-
-    session()->flash('success', 'Now viewing all schools');
-
-    return redirect()->route('admin.school-switcher');
-}
-
-
-    public function viewSchoolDetails($schoolId)
+    public function viewSchoolDetails($schoolId): RedirectResponse
     {
         return redirect()->route('admin.school-details', $schoolId);
     }
@@ -110,4 +113,3 @@ public function showAllSchools()
         ]);
     }
 }
-
