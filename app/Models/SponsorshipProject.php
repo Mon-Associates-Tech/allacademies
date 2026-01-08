@@ -30,6 +30,8 @@ class SponsorshipProject extends Model
         'rejection_reason',
         'rejected_at',
         'metadata',
+        'images',
+        'videos',
     ];
 
     protected $casts = [
@@ -39,6 +41,8 @@ class SponsorshipProject extends Model
         'verified_at' => 'datetime',
         'rejected_at' => 'datetime',
         'metadata' => 'array',
+        'images' => 'array',
+        'videos' => 'array',
     ];
 
     public const TYPE_PROJECT = 'project';

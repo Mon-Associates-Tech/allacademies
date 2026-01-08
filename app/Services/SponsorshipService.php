@@ -41,6 +41,8 @@ class SponsorshipService
                 'deadline' => $data['deadline'] ?? null,
                 'status' => SponsorshipProject::STATUS_DRAFT,
                 'metadata' => $data['metadata'] ?? null,
+                'images' => $data['images'] ?? [],
+                'videos' => $data['videos'] ?? [],
             ]);
 
             // Add beneficiaries if provided
@@ -83,6 +85,8 @@ class SponsorshipService
             'amount_goal' => $data['amount_goal'] ?? $project->amount_goal,
             'deadline' => $data['deadline'] ?? $project->deadline,
             'metadata' => $data['metadata'] ?? $project->metadata,
+            'images' => $data['images'] ?? $project->images,
+            'videos' => $data['videos'] ?? $project->videos,
         ]);
 
         return $project->fresh();

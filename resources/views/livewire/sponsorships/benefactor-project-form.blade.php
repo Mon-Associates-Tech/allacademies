@@ -2,7 +2,7 @@
     <div class="max-w-4xl mx-auto">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                {{ $projectId ? 'Edit Sponsorship Project' : 'Create Sponsorship Project' }}
+                {{ $offerProject ? 'Edit Sponsorship Project' : 'Create Sponsorship Project' }}
             </h2>
 
             <form wire:submit.prevent="save">
@@ -73,6 +73,99 @@
                     <input type="date" wire:model="deadline"
                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     @error('deadline') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Project Images -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Project Images (Max 10)
+                    </label>
+                    <input type="file" wire:model="images" multiple accept="image/*"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    @error('images.*') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <p class="text-xs text-gray-500 mt-1">Max 10 images, 10MB each</p>
+
+                    <div wire:loading wire:target="images" class="text-sm text-blue-600 mt-2">Uploading...</div>
+
+                    @if(count($existingImages) > 0)
+                        <div class="grid grid-cols-4 gap-3 mt-3">
+                            @foreach($existingImages as $index => $image)
+                                <div class="relative">
+                                    <img src="{{ Storage::url($image) }}" class="w-full h-24 object-cover rounded-lg">
+                                    <button type="button" wire:click="removeImage({{ $index }})"
+                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if(count($tempImages) > 0)
+                        <div class="grid grid-cols-4 gap-3 mt-3">
+                            @foreach($tempImages as $index => $image)
+                                <div class="relative">
+                                    <img src="{{ $image->temporaryUrl() }}" class="w-full h-24 object-cover rounded-lg">
+                                    <button type="button" wire:click="removeTempImage({{ $index }})"
+                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Project Videos -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Project Videos (Max 2)
+                    </label>
+                    <input type="file" wire:model="videos" multiple accept="video/*"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    @error('videos.*') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <p class="text-xs text-gray-500 mt-1">Max 2 videos, 200MB each</p>
+
+                    <div wire:loading wire:target="videos" class="text-sm text-blue-600 mt-2">Uploading...</div>
+
+                    @if(count($existingVideos) > 0)
+                        <div class="space-y-2 mt-3">
+                            @foreach($existingVideos as $index => $video)
+                                <div
+                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ basename($video) }}</span>
+                                    <button type="button" wire:click="removeVideo({{ $index }})"
+                                            class="text-red-600 hover:text-red-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if(count($tempVideos) > 0)
+                        <div class="space-y-2 mt-3">
+                            @foreach($tempVideos as $index => $video)
+                                <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ $video->getClientOriginalName() }}</span>
+                                    <button type="button" wire:click="removeTempVideo({{ $index }})"
+                                            class="text-red-600 hover:text-red-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Beneficiaries Section -->
@@ -197,7 +290,7 @@
                     <button type="submit"
                             class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                             wire:loading.attr="disabled">
-                        <span wire:loading.remove>{{ $projectId ? 'Update Project' : 'Create Project' }}</span>
+                        <span wire:loading.remove>{{ $offerProject ? 'Update Project' : 'Create Project' }}</span>
                         <span wire:loading>Processing...</span>
                     </button>
                 </div>

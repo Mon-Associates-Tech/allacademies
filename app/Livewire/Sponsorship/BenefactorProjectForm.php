@@ -6,11 +6,15 @@ use App\Models\SponsorshipBeneficiary;
 use App\Models\SponsorshipProject;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class BenefactorProjectForm extends Component
 {
-    public $projectId = null;
+    use WithFileUploads;
+
+    public $offerProject = null;
     public $name = '';
     public $type = 'project';
     public $description = '';
@@ -26,6 +30,14 @@ class BenefactorProjectForm extends Component
     public $newBeneficiaryPhone = '';
     public $newBeneficiaryDescription = '';
 
+    // Attachments
+    public $images = [];
+    public $videos = [];
+    public $existingImages = [];
+    public $existingVideos = [];
+    public $tempImages = [];
+    public $tempVideos = [];
+
     protected $rules = [
         'name' => 'required|string|min:3|max:255',
         'type' => 'required|in:project,cause,scholarship,emergency',
@@ -33,21 +45,27 @@ class BenefactorProjectForm extends Component
         'affected_individuals' => 'nullable|string|max:2000',
         'amount_goal' => 'required|numeric|min:1',
         'deadline' => 'nullable|date|after:today',
+        'images.*' => 'nullable|image|max:10240',
+        'videos.*' => 'nullable|mimes:mp4,mov,avi,wmv|max:204800',
     ];
 
-    public function mount($projectId = null)
+    public function mount($project = null)
     {
-        if ($projectId) {
+        if ($project) {
             $project = SponsorshipProject::where('user_id', Auth::id())
-                ->findOrFail($projectId);
+                ->findOrFail($project);
 
-            $this->projectId = $project->id;
+            $this->offerProject = $project->id;
             $this->name = $project->name;
             $this->type = $project->type;
             $this->description = $project->description;
             $this->affected_individuals = $project->affected_individuals;
             $this->amount_goal = $project->amount_goal;
             $this->deadline = $project->deadline?->format('Y-m-d');
+
+            // Load existing attachments
+            $this->existingImages = is_array($project->images) ? $project->images : [];
+            $this->existingVideos = is_array($project->videos) ? $project->videos : [];
 
             // Load existing beneficiaries
             $this->beneficiaries = $project->beneficiaries->map(function ($b) {
@@ -69,11 +87,86 @@ class BenefactorProjectForm extends Component
         $this->beneficiaries = array_values($this->beneficiaries);
     }
 
+    public function updatedImages()
+    {
+        $this->validate(['images.*' => 'image|max:10240']);
+        $this->tempImages = array_merge($this->tempImages, $this->images);
+        $this->images = [];
+    }
+
+    public function updatedVideos()
+    {
+        $this->validate(['videos.*' => 'mimes:mp4,mov,avi,wmv|max:204800']);
+        $this->tempVideos = array_merge($this->tempVideos, $this->videos);
+        $this->videos = [];
+    }
+
+    public function removeTempImage($index)
+    {
+        unset($this->tempImages[$index]);
+        $this->tempImages = array_values($this->tempImages);
+    }
+
+    public function removeTempVideo($index)
+    {
+        unset($this->tempVideos[$index]);
+        $this->tempVideos = array_values($this->tempVideos);
+    }
+
+    public function removeImage($index)
+    {
+        if (isset($this->existingImages[$index])) {
+            Storage::disk('public')->delete($this->existingImages[$index]);
+            unset($this->existingImages[$index]);
+            $this->existingImages = array_values($this->existingImages);
+        }
+    }
+
+    public function removeVideo($index)
+    {
+        if (isset($this->existingVideos[$index])) {
+            Storage::disk('public')->delete($this->existingVideos[$index]);
+            unset($this->existingVideos[$index]);
+            $this->existingVideos = array_values($this->existingVideos);
+        }
+    }
+
     public function save()
     {
-        $this->validate();
+        $this->validate([
+            'name' => 'required|string|min:3|max:255',
+            'type' => 'required|in:project,cause,scholarship,emergency',
+            'description' => 'nullable|string|max:5000',
+            'affected_individuals' => 'nullable|string|max:2000',
+            'amount_goal' => 'required|numeric|min:1',
+            'deadline' => 'nullable|date|after:today',
+            'images.*' => 'nullable|image|max:10240',
+            'videos.*' => 'nullable|mimes:mp4,mov,avi,wmv|max:204800',
+        ]);
+
+        if (count($this->tempImages) + count($this->existingImages) > 10) {
+            session()->flash('error', 'Maximum 10 images allowed.');
+            return;
+        }
+
+        if (count($this->tempVideos) + count($this->existingVideos) > 2) {
+            session()->flash('error', 'Maximum 2 videos allowed.');
+            return;
+        }
 
         $sponsorshipService = app(SponsorshipService::class);
+
+        // Upload new images
+        $imagePaths = $this->existingImages;
+        foreach ($this->tempImages as $image) {
+            $imagePaths[] = $image->store('sponsorship-projects/images', 'public');
+        }
+
+        // Upload new videos
+        $videoPaths = $this->existingVideos;
+        foreach ($this->tempVideos as $video) {
+            $videoPaths[] = $video->store('sponsorship-projects/videos', 'public');
+        }
 
         $data = [
             'name' => $this->name,
@@ -82,11 +175,13 @@ class BenefactorProjectForm extends Component
             'affected_individuals' => $this->affected_individuals,
             'amount_goal' => $this->amount_goal,
             'deadline' => $this->deadline ?: null,
+            'images' => $imagePaths,
+            'videos' => $videoPaths,
         ];
 
-        if ($this->projectId) {
+        if ($this->offerProject) {
             $project = SponsorshipProject::where('user_id', Auth::id())
-                ->findOrFail($this->projectId);
+                ->findOrFail($this->offerProject);
 
             // Only allow editing if in draft status
             if ($project->status !== SponsorshipProject::STATUS_DRAFT) {
@@ -94,16 +189,12 @@ class BenefactorProjectForm extends Component
                 return;
             }
 
-            $project = $sponsorshipService->updateproject($project, $data);
-
-            // Sync beneficiaries
+            $project = $sponsorshipService->updateProject($project, $data);
             $this->syncBeneficiaries($project);
-
-            session()->flash('message', 'project updated successfully.');
+            session()->flash('message', 'Project updated successfully.');
         } else {
-            $project = $sponsorshipService->createproject(Auth::user(), $data);
+            $project = $sponsorshipService->createProject(Auth::user(), $data);
 
-            // Add beneficiaries
             foreach ($this->beneficiaries as $beneficiary) {
                 $sponsorshipService->addBeneficiary($project, [
                     'beneficiary_name' => $beneficiary['name'],
@@ -114,10 +205,10 @@ class BenefactorProjectForm extends Component
                 ]);
             }
 
-            session()->flash('message', 'project created successfully.');
+            session()->flash('message', 'Project created successfully.');
         }
 
-        return redirect()->route('sponsorships.benefactor.index');
+        return $this->redirect(route('benefactors.index'), navigate: true);
     }
 
     protected function syncBeneficiaries(SponsorshipProject $project)
@@ -180,13 +271,13 @@ class BenefactorProjectForm extends Component
 
     public function submitForVerification()
     {
-        if (!$this->projectId) {
+        if (!$this->offerProject) {
             session()->flash('error', 'Please save the project first.');
             return;
         }
 
         $project = SponsorshipProject::where('user_id', Auth::id())
-            ->findOrFail($this->projectId);
+            ->findOrFail($this->offerProject);
 
         $sponsorshipService = app(SponsorshipService::class);
 

@@ -27,42 +27,42 @@ class BenefactorDashboard extends Component
         $this->resetPage();
     }
 
-    public function submitForVerification($programId)
+    public function submitForVerification($projectId)
     {
-        $program = SponsorshipProject::where('user_id', Auth::id())
+        $project = SponsorshipProject::where('user_id', Auth::id())
             ->where('status', SponsorshipProject::STATUS_DRAFT)
-            ->findOrFail($programId);
+            ->findOrFail($projectId);
 
         $sponsorshipService = app(SponsorshipService::class);
 
-        if ($sponsorshipService->submitForVerification($program)) {
-            session()->flash('message', 'Program submitted for verification successfully.');
+        if ($sponsorshipService->submitForVerification($project)) {
+            session()->flash('message', 'Project submitted for verification successfully.');
         } else {
             session()->flash('error', 'Unable to submit for verification. Please ensure all required fields are filled.');
         }
     }
 
-    public function deleteProgram($programId)
+    public function deleteProject($projectId)
     {
-        $program = SponsorshipProject::where('user_id', Auth::id())
+        $project = SponsorshipProject::where('user_id', Auth::id())
             ->where('status', SponsorshipProject::STATUS_DRAFT)
-            ->findOrFail($programId);
+            ->findOrFail($projectId);
 
-        $program->beneficiaries()->delete();
-        $program->delete();
+        $project->beneficiaries()->delete();
+        $project->delete();
 
-        session()->flash('message', 'Program deleted successfully.');
+        session()->flash('message', 'Project deleted successfully.');
     }
 
-    public function cancelProgram($programId)
+    public function cancelProject($projectId)
     {
-        $program = SponsorshipProject::where('user_id', Auth::id())
+        $project = SponsorshipProject::where('user_id', Auth::id())
             ->whereIn('status', [SponsorshipProject::STATUS_ACTIVE, SponsorshipProject::STATUS_PENDING_VERIFICATION])
-            ->findOrFail($programId);
+            ->findOrFail($projectId);
 
-        $program->update(['status' => SponsorshipProject::STATUS_CANCELLED]);
+        $project->update(['status' => SponsorshipProject::STATUS_CANCELLED]);
 
-        session()->flash('message', 'Program cancelled successfully.');
+        session()->flash('message', 'Project cancelled successfully.');
     }
 
     public function render()
@@ -82,12 +82,12 @@ class BenefactorDashboard extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        $programs = $query->orderBy('created_at', 'desc')->paginate(10);
+        $projects = $query->orderBy('created_at', 'desc')->paginate(10);
 
         // Stats
         $stats = [
-            'total_programs' => SponsorshipProject::where('user_id', Auth::id())->count(),
-            'active_programs' => SponsorshipProject::where('user_id', Auth::id())
+            'total_projects' => SponsorshipProject::where('user_id', Auth::id())->count(),
+            'active_projects' => SponsorshipProject::where('user_id', Auth::id())
                 ->where('status', SponsorshipProject::STATUS_ACTIVE)->count(),
             'pending_verification' => SponsorshipProject::where('user_id', Auth::id())
                 ->where('status', SponsorshipProject::STATUS_PENDING_VERIFICATION)->count(),
@@ -97,8 +97,8 @@ class BenefactorDashboard extends Component
             })->where('status', SponsorshipContribution::STATUS_COMPLETED)->count(),
         ];
 
-        return view('livewire.sponsorship.benefactor-dashboard', [
-            'programs' => $programs,
+        return view('livewire.sponsorships.benefactor-dashboard', [
+            'projects' => $projects,
             'stats' => $stats,
             'statuses' => SponsorshipProject::getStatuses(),
         ]);
