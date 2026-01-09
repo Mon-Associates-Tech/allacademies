@@ -2,9 +2,8 @@
 
 @if(auth()->check() && !$has_token_subscription ?? false)
     <div class="absolute inset-0 z-40" 
-         x-data="{}" 
-         @mounted="document.body.style.overflow = 'hidden'"
-         @destroy="document.body.style.overflow = 'auto'"
+         x-data="{ init() { document.body.style.overflow = 'hidden'; }, destroy() { document.body.style.overflow = 'auto'; } }" 
+         x-init="init()"
          x-show="true">
         <!-- Overlay Background - absolute to cover slot area only -->
         <div class="absolute inset-0 bg-black/70 dark:bg-black/80 z-40 pointer-events-auto" role="presentation"></div>
@@ -63,21 +62,4 @@
             </div>
         @endif
     </div>
-
-    <script>
-        // Prevent scroll on body and content area
-        document.body.style.overflow = 'hidden';
-        const contentArea = document.querySelector('[x-ref="contentarea"]');
-        if (contentArea) {
-            contentArea.style.overflow = 'hidden';
-        }
-        
-        // Cleanup when component is removed
-        window.addEventListener('beforeunload', () => {
-            document.body.style.overflow = 'auto';
-            if (contentArea) {
-                contentArea.style.overflow = 'auto';
-            }
-        });
-    </script>
 @endif

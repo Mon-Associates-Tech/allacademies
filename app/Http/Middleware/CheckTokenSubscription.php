@@ -17,22 +17,25 @@ class CheckTokenSubscription
     {
         if (auth()->check()) {
             $user = auth()->user();
-            
-            // Check if user has active token subscription
-            $hasActiveSubscription = $user->hasOpenAiTokens();
-            $activeSubscription = $user->activeTokenSubscription;
-            
-            // Store in request for backend access
-            $request->attributes->set('has_token_subscription', $hasActiveSubscription);
-            $request->attributes->set('user_token_subscription', $activeSubscription);
-            
-            // Share with views (for regular Blade templates)
-            view()->share('has_token_subscription', $hasActiveSubscription);
-            view()->share('user_token_subscription', $activeSubscription);
-            
-            // Store in session for Livewire components to access
-           // session(['has_token_subscription' => $hasActiveSubscription]);
-            //session(['user_token_subscription' => $activeSubscription]);
+
+            try {
+                // Check if user has active subscription cycle with available tokens
+                $user->load('subscriptionCycles');
+                $hasActiveSubscription = $user->subscriptionCycles()->whereStatus('active')->exists();
+                $activeCycle = $user->subscriptionCycles()->whereStatus('active')->first();
+                
+
+                // Share with views (for regular Blade templates)
+                view()->share('has_token_subscription', $hasActiveSubscription);
+                view()->share('user_token_subscription', $activeCycle);
+            } catch (\Exception $e) {
+                // Fallback to false if there's an error
+                view()->share('has_token_subscription', false);
+                view()->share('user_token_subscription', null);
+            }
+        } else {
+            view()->share('has_token_subscription', false);
+            view()->share('user_token_subscription', null);
         }
 
         return $next($request);

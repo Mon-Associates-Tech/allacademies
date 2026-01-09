@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\ResetMonthlySubscriptionCycles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -10,7 +11,7 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @param \Illuminate\Console\Scheduling\Schedule $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
@@ -45,6 +46,11 @@ class Kernel extends ConsoleKernel
             ->everyFiveMinutes()
             ->withoutOverlapping();
 
+        $schedule->job(new ResetMonthlySubscriptionCycles())
+            ->dailyAt('00:00')
+            ->name('reset-monthly-subscription-cycles')
+            ->withoutOverlapping();
+
     }
 
     /**
@@ -54,7 +60,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
