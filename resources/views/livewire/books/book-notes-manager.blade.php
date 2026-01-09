@@ -70,13 +70,18 @@
                 <div class="space-y-4">
                     <x-form.markdown-editor
                         name="newNoteContent"
-                        wire:model="newNoteContent"
                         :height="200"
                         label=""
                     />
                     <div class="flex justify-end">
                         <button
-                            wire:click="saveNote"
+                            type="button"
+                            @click="
+                                const editorId = $el.closest('.space-y-4').querySelector('[data-editor-id]')?.getAttribute('data-editor-id');
+                                const editor = tinymce.get(editorId);
+                                const content = editor ? editor.getContent() : '';
+                                $wire.saveNote(content);
+                            "
                             wire:loading.attr="disabled"
                             class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             <svg wire:loading.remove class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,18 +138,25 @@
                                 <div class="space-y-4">
                                     <x-form.markdown-editor
                                         name="editingContent"
-                                        wire:model="editingContent"
+                                        :value="$editingContent"
                                         :height="200"
                                         label=""
                                     />
                                     <div class="flex justify-end space-x-2">
                                         <button
-                                            wire:click="cancelEdit"
+                                            type="button"
+                                            @click="$wire.cancelEdit()"
                                             class="inline-flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                                             Cancel
                                         </button>
                                         <button
-                                            wire:click="updateNote"
+                                            type="button"
+                                            @click="
+                                                const editorId = $el.closest('.space-y-4').querySelector('[data-editor-id]')?.getAttribute('data-editor-id');
+                                                const editor = tinymce.get(editorId);
+                                                const content = editor ? editor.getContent() : '';
+                                                $wire.updateNote(content);
+                                            "
                                             wire:loading.attr="disabled"
                                             class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors">
                                             <svg wire:loading class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -266,20 +278,27 @@
                                             </span>
                                         </h4>
                                     </div>
-                                    <x-form.rich-editor
+                                    <x-form.markdown-editor
                                         name="editingContent"
-                                        wire:model="editingContent"
+                                        :value="$editingContent"
                                         :height="200"
                                         label=""
                                     />
                                     <div class="flex justify-end space-x-2">
                                         <button
-                                            wire:click="cancelEdit"
+                                            type="button"
+                                            @click="$wire.cancelEdit()"
                                             class="inline-flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                                             Cancel
                                         </button>
                                         <button
-                                            wire:click="updateNote"
+                                            type="button"
+                                            @click="
+                                                const editorId = $el.closest('.space-y-4').querySelector('[data-editor-id]')?.getAttribute('data-editor-id');
+                                                const editor = tinymce.get(editorId);
+                                                const content = editor ? editor.getContent() : '';
+                                                $wire.updateNote(content);
+                                            "
                                             wire:loading.attr="disabled"
                                             class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
                                             <svg wire:loading class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">

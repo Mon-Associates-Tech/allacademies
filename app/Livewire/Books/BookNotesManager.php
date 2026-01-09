@@ -5,9 +5,9 @@ namespace App\Livewire\Books;
 use App\Models\Book;
 use App\Models\Note;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
 
 class BookNotesManager extends Component
 {
@@ -15,11 +15,10 @@ class BookNotesManager extends Component
 
     public Book $book;
     public string $activeTab = 'book-notes';
-    public string $newNoteContent = '';
-    public ?int $editingNoteId = null;
-    public string $editingContent = '';
     public string $searchTerm = '';
     public array $expandedNotes = [];
+    public ?int $editingNoteId = null;
+    public string $editingContent = '';
 
     protected $listeners = ['tabChanged' => 'handleTabChange'];
 
@@ -99,21 +98,23 @@ class BookNotesManager extends Component
         return $query->paginate(10, pageName: 'userNotesPage');
     }
 
-    public function saveNote(): void
+    public function saveNote(string $content): void
     {
-        $this->validate([
-            'newNoteContent' => 'required|string|max:10000'
-        ]);
+
+        if (empty($content)) {
+            $this->dispatch('notify', ['message' => 'Note content is required', 'type' => 'error']);
+            return;
+        }
 
         Note::create([
-            'title' => substr(strip_tags($this->newNoteContent), 0, 50) . '...',
-            'content' => $this->newNoteContent,
+            'title' => substr(strip_tags($content), 0, 50) . '...',
+            'content' => $content,
             'user_id' => Auth::id(),
             'book_id' => $this->book->id,
         ]);
 
-        $this->newNoteContent = '';
         $this->dispatch('notify', ['message' => 'Note saved successfully!', 'type' => 'success']);
+        $this->dispatch('clear-editor-newNoteContent');
 
         // Log activity
         activity()
@@ -133,19 +134,20 @@ class BookNotesManager extends Component
         $this->editingContent = $note->content;
     }
 
-    public function updateNote(): void
+    public function updateNote(string $content): void
     {
-        $this->validate([
-            'editingContent' => 'required|string|max:10000'
-        ]);
+        if (empty($content)) {
+            $this->dispatch('notify', ['message' => 'Note content is required', 'type' => 'error']);
+            return;
+        }
 
         $note = Note::where('id', $this->editingNoteId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
         $note->update([
-            'content' => $this->editingContent,
-            'title' => substr(strip_tags($this->editingContent), 0, 50) . '...',
+            'content' => $content,
+            'title' => substr(strip_tags($content), 0, 50) . '...',
         ]);
 
         $this->editingNoteId = null;

@@ -61,11 +61,9 @@
                                     });
 
                                     editor.on('input change blur', () => {
-                                        // Only sync if not initializing
+                                        // Only update local markdown, don't sync with Livewire automatically
                                         if (!this.isInitializing) {
                                             this.markdown = editor.getContent();
-                                            // Sync with Livewire - using safer method
-                                            this.syncWithLivewire();
                                         }
                                     });
                                 },
@@ -79,24 +77,7 @@
                         });
                     },
 
-                    syncWithLivewire() {
-                        // Update Livewire property only if not initializing
-                        if (this.wireName && !this.isInitializing) {
-                            // Find the Livewire component
-                            const component = window.Livewire?.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id'));
-                            if (component) {
-                                component.set(this.wireName, this.markdown);
-                            } else {
-                                // Fallback: dispatch event for Livewire to catch
-                                this.$dispatch('markdown-updated', {
-                                    name: this.wireName,
-                                    value: this.markdown
-                                });
-                            }
-                        }
-                    },
-
-                    updatePreview() {
+updatePreview() {
                         this.previewHtml = this.markdown || '<p class="text-gray-400">No content to preview</p>';
 
                         // Render math after preview updates
