@@ -19,6 +19,10 @@ class BookNotesManager extends Component
     public array $expandedNotes = [];
     public ?int $editingNoteId = null;
     public string $editingContent = '';
+    public string $editingTitle = '';
+    public string $newNoteTitle = '';
+    public string $newNoteColor = 'white';
+    public string $editingColor = 'white';
 
     protected $listeners = ['tabChanged' => 'handleTabChange'];
 
@@ -98,21 +102,23 @@ class BookNotesManager extends Component
         return $query->paginate(10, pageName: 'userNotesPage');
     }
 
-    public function saveNote(string $content): void
+    public function saveNote(string $content, string $title = ''): void
     {
-
         if (empty($content)) {
             $this->dispatch('notify', ['message' => 'Note content is required', 'type' => 'error']);
             return;
         }
 
         Note::create([
-            'title' => substr(strip_tags($content), 0, 50) . '...',
+            'title' => !empty($title) ? $title : substr(strip_tags($content), 0, 50) . '...',
             'content' => $content,
             'user_id' => Auth::id(),
             'book_id' => $this->book->id,
+            'background_color' => $this->newNoteColor,
         ]);
 
+        $this->newNoteTitle = '';
+        $this->newNoteColor = 'white';
         $this->dispatch('notify', ['message' => 'Note saved successfully!', 'type' => 'success']);
         $this->dispatch('clear-editor-newNoteContent');
 
@@ -132,9 +138,11 @@ class BookNotesManager extends Component
 
         $this->editingNoteId = $note->id;
         $this->editingContent = $note->content;
+        $this->editingTitle = $note->title;
+        $this->editingColor = $note->background_color ?? 'white';
     }
 
-    public function updateNote(string $content): void
+    public function updateNote(string $content, string $title = ''): void
     {
         if (empty($content)) {
             $this->dispatch('notify', ['message' => 'Note content is required', 'type' => 'error']);
@@ -147,11 +155,14 @@ class BookNotesManager extends Component
 
         $note->update([
             'content' => $content,
-            'title' => substr(strip_tags($content), 0, 50) . '...',
+            'title' => !empty($title) ? $title : substr(strip_tags($content), 0, 50) . '...',
+            'background_color' => $this->editingColor,
         ]);
 
         $this->editingNoteId = null;
         $this->editingContent = '';
+        $this->editingTitle = '';
+        $this->editingColor = 'white';
         $this->dispatch('notify', ['message' => 'Note updated successfully!', 'type' => 'success']);
 
         // Log activity
@@ -182,6 +193,8 @@ class BookNotesManager extends Component
     {
         $this->editingNoteId = null;
         $this->editingContent = '';
+        $this->editingTitle = '';
+        $this->editingColor = 'white';
     }
 
     public function render()

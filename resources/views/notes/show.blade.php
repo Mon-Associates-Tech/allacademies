@@ -194,14 +194,14 @@
         </div>
 
         {{-- Content Area --}}
-        <div class="bg-white dark:bg-gray-800 border-x border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="border-x border-gray-200 dark:border-gray-700 shadow-sm {{ $note->getBackgroundClass() }}">
             <div class="px-6 py-8 sm:px-8">
                 <x-prose-content :content="$note->content"/>
             </div>
         </div>
 
         {{-- Attachments Section --}}
-        <div class="bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="border-x border-b border-gray-200 dark:border-gray-700 shadow-sm {{ $note->getBackgroundClass() }}">
             <div class="px-6 py-6 sm:px-8">
                 @livewire('notes.note-attachment-manager', ['note' => $note])
             </div>

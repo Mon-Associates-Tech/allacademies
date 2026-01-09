@@ -180,8 +180,8 @@ class NoteExportService
 
             $section->addTextBreak(1);
 
-            // Content - Convert HTML to Word format
-            Html::addHtml($section, $note->content, false, false);
+            // Content - Convert HTML to Word format with image handling
+            $this->addHtmlWithImages($section, $note->content);
 
             // Footer
             $footer = $section->addFooter();
@@ -215,6 +215,47 @@ class NoteExportService
                 'success' => false,
                 'error' => 'Failed to export DOCX: ' . $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Add HTML content with images to Word section
+     */
+    protected function addHtmlWithImages($section, string $html): void
+    {
+        // Extract image sources
+        $imageSources = [];
+        preg_match_all('/<img[^>]+src=["\']([^"\'>]+)["\'][^>]*>/i', $html, $matches);
+        if (!empty($matches[1])) {
+            $imageSources = $matches[1];
+        }
+        
+        // Remove img tags from HTML
+        $cleanHtml = preg_replace('/<img[^>]*>/i', '[Image]', $html);
+        
+        // Add HTML content
+        Html::addHtml($section, $cleanHtml, false, false);
+        
+        // Add images after content
+        foreach ($imageSources as $src) {
+            try {
+                $imagePath = null;
+                
+                if (filter_var($src, FILTER_VALIDATE_URL)) {
+                    $imagePath = $src;
+                } elseif (str_starts_with($src, '/storage/')) {
+                    $imagePath = storage_path('app/public/' . str_replace('/storage/', '', $src));
+                } elseif (file_exists(public_path($src))) {
+                    $imagePath = public_path($src);
+                }
+                
+                if ($imagePath && (filter_var($imagePath, FILTER_VALIDATE_URL) || file_exists($imagePath))) {
+                    $section->addImage($imagePath, ['width' => 400, 'wrappingStyle' => 'inline']);
+                    $section->addTextBreak(1);
+                }
+            } catch (\Exception $e) {
+                // Skip invalid images
+            }
         }
     }
 
