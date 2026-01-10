@@ -14,7 +14,7 @@ class EnsureUserIsParent
         $user = $request->user();
 
         if (!$user) {
-            return redirect()->route('sign-in');
+            return redirect()->route('login');
         }
 
         // Check if user has any parent records

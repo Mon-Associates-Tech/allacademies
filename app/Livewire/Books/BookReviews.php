@@ -97,7 +97,7 @@ class BookReviews extends Component
     public function toggleReviewForm()
     {
         if (!auth()->check()) {
-            return redirect()->route('sign-in');
+            return redirect()->route('login');
         }
 
         $this->showReviewForm = !$this->showReviewForm;
@@ -110,7 +110,7 @@ class BookReviews extends Component
     public function submitReview()
     {
         if (!auth()->check()) {
-            return redirect()->route('sign-in');
+            return redirect()->route('login');
         }
 
         $this->validate([
@@ -177,7 +177,7 @@ class BookReviews extends Component
     public function toggleHelpful($reviewId)
     {
         if (!auth()->check()) {
-            return redirect()->route('sign-in');
+            return redirect()->route('login');
         }
 
         $review = BookReview::find($reviewId);
@@ -215,13 +215,13 @@ class BookReviews extends Component
     {
         // Check if user has an active subscription or has borrowed the book
         return $this->book->subscriptions()
-            ->where('user_id', $user->id)
-            ->where('status', 'paid')
-            ->exists() ||
+                ->where('user_id', $user->id)
+                ->where('status', 'paid')
+                ->exists() ||
             $this->book->borrowings()
-            ->where('user_id', $user->id)
-            ->whereNotNull('borrow_date')
-            ->exists();
+                ->where('user_id', $user->id)
+                ->whereNotNull('borrow_date')
+                ->exists();
     }
 
     public function loadMoreReviews()

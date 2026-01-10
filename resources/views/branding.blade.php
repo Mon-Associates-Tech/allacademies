@@ -1072,7 +1072,7 @@
                                             <!-- Clean Action Buttons -->
                                             <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
                                                 <!-- Primary CTA -->
-                                                <a href="{{ route('sign-up') }}"
+                                                <a href="{{ route('register') }}"
                                                    class="group relative inline-flex items-center justify-center px-10 py-5 text-lg font-bold rounded-2xl bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
                                                     <svg
                                                         class="w-6 h-6 mr-3 transform group-hover:translate-x-1 transition-transform duration-300"

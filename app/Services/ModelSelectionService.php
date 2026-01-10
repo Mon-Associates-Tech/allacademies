@@ -8,6 +8,30 @@ use Illuminate\Support\Facades\Log;
 class ModelSelectionService
 {
     /**
+     * Get appropriate model for image generation
+     */
+    public function getImageModelForUser(User $user): string
+    {
+        // Image generation typically requires premium access
+        if ($this->hasPremiumAccess($user)) {
+            return 'gpt-image-1';
+        }
+
+        return 'gpt-image-1'; // Fallback to standard image model
+    }
+
+    /**
+     * Check if user has access to premium models
+     */
+    public function hasPremiumAccess(User $user): bool
+    {
+        $model = $this->getModelForUser($user);
+        $premiumModel = config('openai.openai.premium_model', 'gpt-4-turbo');
+
+        return $model === $premiumModel;
+    }
+
+    /**
      * Get the appropriate OpenAI model based on user's subscription
      */
     public function getModelForUser(User $user): string
@@ -18,7 +42,7 @@ class ModelSelectionService
         }
 
         // For subscribers, check their active subscription
-        $subscription = $user->activeTokenSubscription;
+        $subscription = $user->activeSubscriptionCycle;
 
         if (!$subscription || !$subscription->package) {
             return config('openai.openai.default_model', 'gpt-4.1-nano');
@@ -36,30 +60,6 @@ class ModelSelectionService
 
         // Paid packages get premium model
         return config('openai.openai.premium_model', 'gpt-4-turbo');
-    }
-
-    /**
-     * Check if user has access to premium models
-     */
-    public function hasPremiumAccess(User $user): bool
-    {
-        $model = $this->getModelForUser($user);
-        $premiumModel = config('openai.openai.premium_model', 'gpt-4-turbo');
-
-        return $model === $premiumModel;
-    }
-
-    /**
-     * Get appropriate model for image generation
-     */
-    public function getImageModelForUser(User $user): string
-    {
-        // Image generation typically requires premium access
-        if ($this->hasPremiumAccess($user)) {
-            return 'gpt-image-1';
-        }
-
-        return 'gpt-image-1'; // Fallback to standard image model
     }
 
     /**

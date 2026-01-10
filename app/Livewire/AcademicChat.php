@@ -71,10 +71,9 @@ class AcademicChat extends Component
     public $conversationHistory = [];
     public $canSendMessage = true;
     public $tokenWarningMessage;
-    protected $chatService;
-
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
+    protected $chatService;
 
     public function boot(AcademicChatService $chatService): void
     {
@@ -111,25 +110,11 @@ class AcademicChat extends Component
         $this->response_length = 1000;
     }
 
-    protected function loadConversationTitle(): void
-    {
-        if (!$this->conversationId) {
-            $this->conversationTitle = null;
-            return;
-        }
-
-        $firstMessage = AcademicChatMessage::where('user_id', Auth::id())
-            ->where('conversation_id', $this->conversationId)
-            ->orderBy('created_at', 'asc')
-            ->first();
-
-        $this->conversationTitle = $firstMessage?->conversation_title ?? 'Untitled Conversation';
-    }
     public function checkTokenAvailability(): void
     {
         $user = auth()->user();
 
-        $subscription = $user->activeTokenSubscription;
+        $subscription = $user->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
 
         if (!$subscription) {
             $this->canSendMessage = false;
@@ -160,24 +145,6 @@ class AcademicChat extends Component
         $this->tokenWarningMessage = null;
     }
 
-    protected function loadConversationHistory(): void
-    {
-        $conversations = AcademicChatMessage::where('user_id', Auth::id())
-            ->whereNotNull('conversation_id')
-            ->selectRaw('conversation_id, conversation_title, MAX(created_at) as created_at')
-            ->groupBy('conversation_id', 'conversation_title')
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        $this->conversationHistory = $conversations->map(function ($conversation) {
-            return [
-                'id' => $conversation->conversation_id,
-                'title' => $conversation->conversation_title ?? 'Untitled Conversation',
-                'created_at' => $conversation->created_at
-            ];
-        })->toArray();
-    }
     protected function loadChatHistory(): void
     {
         if (!$this->conversationId) {
@@ -220,30 +187,78 @@ class AcademicChat extends Component
         // Assign all at once
         $this->messages = $messages;
     }
-    protected function getConversationHistory(): array
-    {
-        $history = [];
 
-        foreach ($this->messages as $msg) {
-            $history[] = [
-                'role' => $msg['role'],
-                'content' => is_string($msg['content']) ? $msg['content'] : (string)$msg['content']
-            ];
+    protected function normalizeStoredAssistantContent(?string $content): string
+    {
+        if (empty($content)) {
+            return '';
         }
 
-        return array_slice($history, -10);
+        $decoded = json_decode($content, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $segments = [];
+
+            if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
+                foreach ($decoded[0]['content'] as $segment) {
+                    if (is_string($segment)) {
+                        $segments[] = $segment;
+                        continue;
+                    }
+
+                    if (isset($segment['text']) && is_string($segment['text'])) {
+                        $segments[] = $segment['text'];
+                    }
+                }
+            }
+
+            $fallback = trim(json_encode($decoded));
+            $joined = trim(implode("\n\n", array_filter($segments, static fn($segment) => trim($segment) !== '')));
+
+            return $joined !== '' ? $joined : $fallback;
+        }
+
+        return $content;
+    }
+
+    protected function loadConversationTitle(): void
+    {
+        if (!$this->conversationId) {
+            $this->conversationTitle = null;
+            return;
+        }
+
+        $firstMessage = AcademicChatMessage::where('user_id', Auth::id())
+            ->where('conversation_id', $this->conversationId)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        $this->conversationTitle = $firstMessage?->conversation_title ?? 'Untitled Conversation';
+    }
+
+    protected function loadConversationHistory(): void
+    {
+        $conversations = AcademicChatMessage::where('user_id', Auth::id())
+            ->whereNotNull('conversation_id')
+            ->selectRaw('conversation_id, conversation_title, MAX(created_at) as created_at')
+            ->groupBy('conversation_id', 'conversation_title')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        $this->conversationHistory = $conversations->map(function ($conversation) {
+            return [
+                'id' => $conversation->conversation_id,
+                'title' => $conversation->conversation_title ?? 'Untitled Conversation',
+                'created_at' => $conversation->created_at
+            ];
+        })->toArray();
     }
 
     #[Computed]
     public function messageInputDisabled(): bool
     {
         return !$this->isMessageInputEnabled();
-    }
-
-    #[Computed]
-    public function currentTokenWarning(): ?string
-    {
-        return $this->getTokenWarningMessage();
     }
 
     public function isMessageInputEnabled(): bool
@@ -254,7 +269,7 @@ class AcademicChat extends Component
             return false;
         }
 
-        $subscription = $user->activeTokenSubscription;
+        $subscription = $user->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
 
         if (!$subscription) {
             return false;
@@ -276,6 +291,12 @@ class AcademicChat extends Component
         return true;
     }
 
+    #[Computed]
+    public function currentTokenWarning(): ?string
+    {
+        return $this->getTokenWarningMessage();
+    }
+
     private function getTokenWarningMessage(): ?string
     {
         $user = auth()->user();
@@ -284,7 +305,7 @@ class AcademicChat extends Component
             return 'no_subscription';
         }
 
-        $subscription = $user->activeTokenSubscription;
+        $subscription = $user->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
 
         if (!$subscription) {
             return 'no_subscription';
@@ -407,39 +428,6 @@ class AcademicChat extends Component
         $this->loadConversationHistory();
     }
 
-    protected function normalizeStoredAssistantContent(?string $content): string
-    {
-        if (empty($content)) {
-            return '';
-        }
-
-        $decoded = json_decode($content, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $segments = [];
-
-            if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
-                foreach ($decoded[0]['content'] as $segment) {
-                    if (is_string($segment)) {
-                        $segments[] = $segment;
-                        continue;
-                    }
-
-                    if (isset($segment['text']) && is_string($segment['text'])) {
-                        $segments[] = $segment['text'];
-                    }
-                }
-            }
-
-            $fallback = trim(json_encode($decoded));
-            $joined = trim(implode("\n\n", array_filter($segments, static fn($segment) => trim($segment) !== '')));
-
-            return $joined !== '' ? $joined : $fallback;
-        }
-
-        return $content;
-    }
-
     protected function getParameters(): array
     {
         return array_filter([
@@ -472,6 +460,20 @@ class AcademicChat extends Component
         return 'Academic Chat - ' . now()->format('M j, Y');
     }
 
+    protected function getConversationHistory(): array
+    {
+        $history = [];
+
+        foreach ($this->messages as $msg) {
+            $history[] = [
+                'role' => $msg['role'],
+                'content' => is_string($msg['content']) ? $msg['content'] : (string)$msg['content']
+            ];
+        }
+
+        return array_slice($history, -10);
+    }
+
     public function updatedUploadedFile(): void
     {
         $this->validateOnly('uploadedFile');
@@ -490,7 +492,6 @@ class AcademicChat extends Component
         $this->conversationTitle = null;
         $this->redirect(route('academic-chat.index'));
     }
-
 
 
     public function loadConversation($conversationId): void

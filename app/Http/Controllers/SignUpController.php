@@ -13,7 +13,7 @@ class SignUpController extends Controller
 {
     public function create()
     {
-        return view('sign-up');
+        return view('register');
     }
 
     public function store(SignUpRequest $request)
@@ -43,11 +43,21 @@ class SignUpController extends Controller
 
             /** @var User $user */
             $user = User::query()->create([
-                'name' => $validated['name'],
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'other_names' => $validated['other_names'] ?? null,
+                'name' => User::generateNameFromParts(
+                    $validated['first_name'],
+                    $validated['last_name'],
+                    $validated['other_names'] ?? null
+                ),
                 'email' => $validated['email'],
                 'password' => bcrypt($validated['password']),
                 'gender' => $validated['gender'] ?? null,
                 'country_code' => $validated['country_code'] ?? null,
+                'country' => $validated['country'],
+                'region' => ($validated['region'] ?? null) ?: ($validated['region_manual'] ?? null),
+                'city' => ($validated['city'] ?? null) ?: ($validated['city_manual'] ?? null),
                 'phone' => $validated['phone'] ?? null,
                 'role' => $userRoleEnum,
                 'role_id' => $role?->id,
@@ -66,7 +76,7 @@ class SignUpController extends Controller
 
             $user->currentTeam()->associate($team)->save();
 
-            // Give free trial
+            // Give basic tier subscription cycle
             $user->createFreeTrialSubscription();
 
             return $user;
@@ -77,9 +87,9 @@ class SignUpController extends Controller
         // Store verification email in session
         $request->session()->put('verification_email', $user->email);
         if ($request->boolean('newschool')) {
-           $request->session()->put('redirect_after_verification', 'onboarding');
-           //dd($request->session()->all());
-         }
+            $request->session()->put('redirect_after_verification', 'onboarding');
+            //dd($request->session()->all());
+        }
 
         // Build success message
         $roleMessage = $request->boolean('author') ? 'author' : 'subscriber';

@@ -41,8 +41,7 @@ class PasswordController extends Controller
     {
         $status = Password::reset($request->validated(), function (User $user, $password) {
             $user->forceFill(['password' => bcrypt($password)])
-                ->setRememberToken(Str::random(60))
-            ;
+                ->setRememberToken(Str::random(60));
 
             $user->save();
 
@@ -50,7 +49,7 @@ class PasswordController extends Controller
         });
 
         return Password::PASSWORD_RESET === $status
-            ? redirect()->route('sign-in')->with('status', __($status))
+            ? redirect()->route('login')->with('status', __($status))
             : back()->withErrors(['email' => __($status)]);
     }
 

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
-use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\OpenAiTokenUsageLog;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
@@ -44,11 +43,11 @@ class User extends Authenticatable implements MustVerifyEmail
     use Trackable;
 
     protected $fillable = [
-        'school_id', 'name', 'email', 'password', 'role', 'avatar', 'role_id',
+        'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
-        'country_code', 'gender', 'cover_image',
+        'country_code', 'country', 'region', 'city', 'gender', 'cover_image',
     ];
 
     protected $hidden = [
@@ -68,6 +67,14 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $with = [
         'subscriptionCycles'
     ];
+
+    public static function generateNameFromParts(?string $firstName, ?string $lastName, ?string $otherNames = null): string
+    {
+        $parts = array_filter([$firstName, $otherNames, $lastName]);
+        return implode(' ', $parts);
+    }
+
+    // ==================== ACCESSORS ====================
 
     protected static function booted(): void
     {
@@ -91,8 +98,6 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         });
     }
-
-    // ==================== ROLE CREATION & MANAGEMENT ====================
 
     public function handleRoleChange(): void
     {
@@ -160,10 +165,41 @@ class User extends Authenticatable implements MustVerifyEmail
                     : 'STU' . time() . rand(100, 999);
                 $data['admission_date'] = now();
                 $data['status'] = 'active';
+
+                // Activate basic tier for students
+                if ($this->hasVerifiedEmail() && !$this->hasActiveSubscriptionCycle()) {
+                    $this->activateBasicTier();
+                }
                 break;
         }
 
         return $data;
+    }
+
+    public function activateBasicTier(): void
+    {
+        $basicTier = \App\Models\Chat\PricingTier::where('name', 'Basic')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$basicTier) {
+            Log::warning('Basic tier not found for user', ['user_id' => $this->id]);
+            return;
+        }
+
+        \App\Models\Chat\SubscriptionCycle::create([
+            'user_id' => $this->id,
+            'pricing_tier_id' => $basicTier->id,
+            'cycle_number' => 1,
+            'cycle_start_date' => now(),
+            'cycle_end_date' => now()->addDays(7),
+            'tokens_allocated' => $basicTier->monthly_token_limit / 2,
+            'topup_tokens_allocated' => 0,
+            'tokens_used' => 0,
+            'current_price' => 0,
+            'status' => 'active',
+            'is_topup' => false,
+        ]);
     }
 
     private function ensureRequiredFields(array &$data, string $role): void
@@ -177,7 +213,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
     }
 
-    // ==================== FREE TRIAL SUBSCRIPTION ====================
+    // ==================== SUBSCRIPTION CYCLE MANAGEMENT ====================
 
     public function createFreeTrialSubscription(bool $force = false): void
     {
@@ -185,38 +221,24 @@ class User extends Authenticatable implements MustVerifyEmail
             return;
         }
 
-        if ($this->hasEverHadTrial() || $this->tokenSubscriptions()->count() > 0) {
+        if ($this->hasActiveSubscriptionCycle()) {
             return;
         }
 
-        $freePackage = OpenAiTokenPackage::where('is_free', true)
-            ->where('is_active', true)
-            ->first();
-
-        if (!$freePackage) {
-            Log::warning('No free trial package available for user', ['user_id' => $this->id]);
-            return;
-        }
-
-        UserTokenSubscription::create([
-            'user_id' => $this->id,
-            'package_id' => $freePackage->id,
-            'tokens_purchased' => $freePackage->token_limit,
-            'tokens_used' => 0,
-            'tokens_remaining' => $freePackage->token_limit,
-            'purchased_at' => now(),
-            'activated_at' => now(),
-            'expires_at' => now()->addWeek(),
-            'status' => TokenSubscriptionStatus::ACTIVE,
-            'action_type' => 'trial',
-        ]);
+        $this->activateBasicTier();
     }
 
-    public function hasEverHadTrial(): bool
+    public function getNameAttribute($value): string
     {
-        return $this->tokenSubscriptions()
-            ->where('action_type', 'trial')
-            ->exists();
+        if ($this->first_name && $this->last_name) {
+            $name = trim($this->first_name . ' ' . $this->last_name);
+            if ($this->other_names) {
+                $name = trim($this->first_name . ' ' . $this->other_names . ' ' . $this->last_name);
+            }
+            return $name;
+        }
+
+        return $value ?? '';
     }
 
     public function tokenSubscriptions(): HasMany
@@ -542,31 +564,30 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
-        $subscription = $this->activeTokenSubscription;
+        $cycle = $this->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
 
-        if (!$subscription) {
+
+        if (!$cycle) {
             return false;
         }
 
-        if ($subscription->isExpired()) {
-            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
+        if ($cycle->isExpired()) {
+            $cycle->update(['status' => 'expired']);
             return false;
         }
 
-        return $subscription->hasTokens($requiredTokens);
+        return $cycle->hasTokens($requiredTokens);
     }
 
     public function needsTokenUpgrade(): bool
     {
-        $subscription = $this->activeTokenSubscription;
+        $cycle = $this->getCurrentActiveCycle();
 
-        if (!$subscription) {
+        if (!$cycle) {
             return true;
         }
 
-        return $subscription->isExpired() ||
-            $subscription->status === TokenSubscriptionStatus::DEPLETED ||
-            $subscription->isNearingDepletion();
+        return $cycle->isExpired() || $cycle->isNearingDepletion();
     }
 
     public function getOpenAiModel(): string
@@ -575,17 +596,17 @@ class User extends Authenticatable implements MustVerifyEmail
             return config('openai.openai.premium_model', 'gpt-4');
         }
 
-        $subscription = $this->activeTokenSubscription;
+        $cycle = $this->getCurrentActiveCycle();
 
-        if (!$subscription || !$subscription->package) {
+        if (!$cycle || !$cycle->pricingTier) {
             return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
-        if ($subscription->package->model) {
-            return $subscription->package->model;
+        if ($cycle->pricingTier->model) {
+            return $cycle->pricingTier->model;
         }
 
-        return ($subscription->package->is_free || $subscription->package->price == 0)
+        return ($cycle->current_price == 0)
             ? config('openai.openai.default_model', 'gpt-3.5-turbo')
             : config('openai.openai.premium_model', 'gpt-4');
     }

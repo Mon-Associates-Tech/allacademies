@@ -74,10 +74,10 @@ Route::post('/contact', [ContactController::class, 'submit'])->name('contact.sub
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     // Sign In/Up Routes
-    Route::get('sign-in', [SignInController::class, 'create'])->name('sign-in');
-    Route::post('sign-in', [SignInController::class, 'store']);
-    Route::get('sign-up', [SignUpController::class, 'create'])->name('sign-up');
-    Route::post('sign-up', [SignUpController::class, 'store']);
+    Route::get('login', [SignInController::class, 'create'])->name('login');
+    Route::post('login', [SignInController::class, 'store']);
+    Route::get('register', [SignUpController::class, 'create'])->name('register');
+    Route::post('register', [SignUpController::class, 'store']);
 
     // Password Reset Routes
     Route::prefix('password')->name('password.')->group(function () {
@@ -339,7 +339,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-
 // Include additional route files
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
@@ -368,7 +367,7 @@ Route::get('/payment', [PaymentController::class, 'showForm'])->name('payment.fo
 Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.initialize');
 Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBook'])->name('payment.book.initialize');
 Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
-Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback']) ->name('payment.book.callback');
+Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback'])->name('payment.book.callback');
 Route::get('/createSubAccount', [PaymentController::class, 'createSubAccount'])->name('payment.subAccount');
 
 Route::get('/feepayment/{student}', [PaymentController::class, 'showPaymentForm'])->name('feepayment.form');
@@ -384,16 +383,16 @@ Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, '
     ->name('subscriptions.toggle-test-mode')
     ->middleware('auth');
 
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
-        Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
-        Route::post('/token-subscriptions/checkout', [TokenSubscriptionController::class, 'checkout'])->name('token-subscriptions.checkout');
-        Route::post('/token-subscriptions/process-payment', [TokenSubscriptionController::class, 'processPayment'])->name('token-subscriptions.process-payment');
-        Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
-        Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
-        Route::get('/token-subscriptions/{cycle}/topup', [TokenSubscriptionController::class, 'topup'])->name('token-subscriptions.topup');
-        Route::post('/token-subscriptions/topup/process', [TokenSubscriptionController::class, 'processTopup'])->name('token-subscriptions.process-topup');
-        Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
+    Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
+    Route::post('/token-subscriptions/checkout', [TokenSubscriptionController::class, 'checkout'])->name('token-subscriptions.checkout');
+    Route::post('/token-subscriptions/process-payment', [TokenSubscriptionController::class, 'processPayment'])->name('token-subscriptions.process-payment');
+    Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
+    Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
+    Route::get('/token-subscriptions/{cycle}/topup', [TokenSubscriptionController::class, 'topup'])->name('token-subscriptions.topup');
+    Route::post('/token-subscriptions/topup/process', [TokenSubscriptionController::class, 'processTopup'])->name('token-subscriptions.process-topup');
+    Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
 
     // View a specific user's performance (for parents/teachers)
     Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
@@ -401,10 +400,10 @@ Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, '
     // Token Payment Routes
 //    Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
 //    Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
-        Route::prefix('token-payments')->name('token-payments.')->group(function () {
-            Route::get('/token/{subscription}/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
-            Route::get('/callback', [TokenPaymentController::class, 'callback'])->name('callback');
-        });
+    Route::prefix('token-payments')->name('token-payments.')->group(function () {
+        Route::get('/token/{subscription}/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
+        Route::get('/callback', [TokenPaymentController::class, 'callback'])->name('callback');
+    });
 
     Route::get('/user-books/create', fn() => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
     Route::get('/user-books/shared', fn() => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
@@ -428,7 +427,6 @@ Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, '
 });
 
 
-
 Route::prefix('schools')->group(function () {
     Route::get('/create', [SchoolController::class, 'create'])->name('schools.create');
     Route::post('/store', [SchoolController::class, 'store'])->name('schools.store');
@@ -444,7 +442,7 @@ Route::get('/school/fee-setup', [SchoolController::class, 'showFeeSetupForm'])
 Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])
     ->name('school.fee-setup.store');
 
-    Route::post('/academic/term/switch', function (\Illuminate\Http\Request $request) {
+Route::post('/academic/term/switch', function (\Illuminate\Http\Request $request) {
     $termId = $request->input('term_id');
 
     \Illuminate\Support\Facades\DB::table('academic_periods')->update(['is_current' => false]);

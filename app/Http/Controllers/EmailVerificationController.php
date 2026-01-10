@@ -18,7 +18,7 @@ class EmailVerificationController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // Get email from session (set during sign-in/sign-up) or from authenticated user
+        // Get email from session (set during login/register) or from authenticated user
         $email = $request->session()->get('verification_email') ?? optional($request->user())->email;
 
         return view('verification-notice', compact('email'));
@@ -34,7 +34,7 @@ class EmailVerificationController extends Controller
         //         ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
         // }
 
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        if (!hash_equals((string)$hash, sha1($user->getEmailForVerification()))) {
             abort(403, 'Invalid verification link.');
         }
 
@@ -43,11 +43,11 @@ class EmailVerificationController extends Controller
         }
 
         if ($user->hasVerifiedEmail()) {
-             if ($redirectFlag === 'onboarding') {
+            if ($redirectFlag === 'onboarding') {
                 return redirect('/onboarding/school-setup')
                     ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
             }
-            return redirect()->route('sign-in')->with('info', 'Your email is already verified. Please sign in.');
+            return redirect()->route('login')->with('info', 'Your email is already verified. Please sign in.');
         }
 
         if ($user->markEmailAsVerified()) {
@@ -66,13 +66,12 @@ class EmailVerificationController extends Controller
         // ✅ Check session flag for post-verification redirect
 
 
-
-        // Default redirect to sign-in
-         if ($redirectFlag === 'onboarding') {
-                return redirect('/onboarding/school-setup')
-                    ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
+        // Default redirect to login
+        if ($redirectFlag === 'onboarding') {
+            return redirect('/onboarding/school-setup')
+                ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');
         }
-        return redirect()->route('sign-in')->with('success', 'Your email has been verified successfully! You can now sign in.');
+        return redirect()->route('login')->with('success', 'Your email has been verified successfully! You can now sign in.');
     }
 
 
@@ -96,7 +95,7 @@ class EmailVerificationController extends Controller
             $email = $request->input('email') ?? $request->session()->get('verification_email');
 
             if (!$email) {
-                return redirect()->route('sign-in')->with('error', 'Please sign in to request email verification.');
+                return redirect()->route('login')->with('error', 'Please sign in to request email verification.');
             }
 
             $user = User::where('email', $email)->first();
@@ -109,7 +108,7 @@ class EmailVerificationController extends Controller
 
             if ($user->hasVerifiedEmail()) {
                 $request->session()->forget('verification_email');
-                return redirect()->route('sign-in')->with('info', 'Your email is already verified. Please sign in.');
+                return redirect()->route('login')->with('info', 'Your email is already verified. Please sign in.');
             }
         }
 

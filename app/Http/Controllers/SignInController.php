@@ -15,13 +15,13 @@ class SignInController extends Controller
 {
     public function create()
     {
-        return view('sign-in');
+        return view('login');
     }
 
     public function store(SignInRequest $request): \Illuminate\Http\RedirectResponse
     {
         // Rate limiting for login attempts
-        $key = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
+        $key = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
@@ -55,7 +55,7 @@ class SignInController extends Controller
             }
 
             // Check if user account is suspended
-            if ($user->status  === 'suspended') {
+            if ($user->status === 'suspended') {
                 // Log out the user immediately
                 auth()->logout();
 
@@ -112,13 +112,13 @@ class SignInController extends Controller
         $otpEnabled = config('app.enable_otp', false) || env('ENABLE_OTP', false);
 
         if (!$otpEnabled) {
-            return redirect()->route('sign-in')->withErrors([
+            return redirect()->route('login')->withErrors([
                 'email' => 'Two-factor authentication is not enabled.'
             ]);
         }
 
         if (!session('2fa:user:id')) {
-            return redirect()->route('sign-in');
+            return redirect()->route('login');
         }
 
         return view('2fa');
@@ -130,7 +130,7 @@ class SignInController extends Controller
         $otpEnabled = config('app.enable_otp', false) || env('ENABLE_OTP', false);
 
         if (!$otpEnabled) {
-            return redirect()->route('sign-in')->withErrors([
+            return redirect()->route('login')->withErrors([
                 'email' => 'Two-factor authentication is not enabled.'
             ]);
         }
@@ -139,7 +139,7 @@ class SignInController extends Controller
 
         // Check if user session exists
         if (!session('2fa:user:id')) {
-            return redirect()->route('sign-in')->withErrors([
+            return redirect()->route('login')->withErrors([
                 'email' => 'Session expired. Please sign in again.'
             ]);
         }
@@ -150,7 +150,7 @@ class SignInController extends Controller
         if ($attempts >= 5) {
             // Clear session and redirect to sign in
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
-            return redirect()->route('sign-in')->withErrors([
+            return redirect()->route('login')->withErrors([
                 'email' => 'Too many failed attempts. Please sign in again.'
             ]);
         }
@@ -160,7 +160,7 @@ class SignInController extends Controller
 
         if (!$user) {
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
-            return redirect()->route('sign-in')->withErrors([
+            return redirect()->route('login')->withErrors([
                 'email' => 'User not found. Please sign in again.'
             ]);
         }
@@ -181,7 +181,7 @@ class SignInController extends Controller
         }
 
         // Check if user account is suspended
-        if ($user->status  === 'suspended') {
+        if ($user->status === 'suspended') {
             // Clear 2FA session
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
 
@@ -201,7 +201,7 @@ class SignInController extends Controller
         }
 
         // Verify the code using secure comparison
-        if (hash_equals((string) $user->two_factor_code, (string) $request->code)) {
+        if (hash_equals((string)$user->two_factor_code, (string)$request->code)) {
             // Clear 2FA data
             $user->update([
                 'two_factor_code' => null,
@@ -265,7 +265,7 @@ class SignInController extends Controller
         }
 
         // Check if user account is suspended
-        if ($user->status  === 'suspended') {
+        if ($user->status === 'suspended') {
             return response()->json([
                 'success' => false,
                 'message' => 'Your account has been suspended. Please contact the administrator for more information.'

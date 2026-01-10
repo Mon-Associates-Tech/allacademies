@@ -4,8 +4,8 @@ namespace App\Livewire\Chats;
 
 use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\UserTokenSubscription;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class TokenUsageMonitor extends Component
 {
@@ -24,7 +24,7 @@ class TokenUsageMonitor extends Component
 
     public function loadSubscription(): void
     {
-        $this->subscription = Auth::user()->activeTokenSubscription;
+        $this->subscription = Auth::user()->activeSubscriptionCycle;
 
         if ($this->subscription && $this->subscription->isNearingDepletion()) {
             $this->showAlert = true;

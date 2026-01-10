@@ -98,7 +98,7 @@ class BookQuizInterface extends Component
         $user = auth()->user();
 
         // For all users, check their token subscription
-        $subscription = $user->activeTokenSubscription;
+        $subscription = $user->activeSubscriptionCycle;
 
         if (!$subscription) {
             $this->canGenerateQuiz = false;
@@ -347,7 +347,6 @@ class BookQuizInterface extends Component
         if ($quizSession) {
             $this->selectedBookId = $quizSession->book_id;
             $this->updatedSelectedBookId();
-            // You can add more logic here to restore quiz settings if needed
         }
     }
 

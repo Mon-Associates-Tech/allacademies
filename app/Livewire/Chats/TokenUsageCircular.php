@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Chats;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class TokenUsageCircular extends Component
 {
@@ -19,8 +19,8 @@ class TokenUsageCircular extends Component
 
     public function loadSubscription()
     {
-        $this->subscription = Auth::user()->activeTokenSubscription;
-        
+        $this->subscription = Auth::user()->activeSubscriptionCycle;
+
         if ($this->subscription && $this->subscription->isNearingDepletion()) {
             $this->showAlert = true;
         }

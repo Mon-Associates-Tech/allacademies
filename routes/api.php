@@ -25,4 +25,9 @@ Route::prefix('')->group(function () {
     Route::get('/academic-subjects/{subject}/topics', [\App\Http\Controllers\Api\ExaminationApiController::class, 'getTopics']);
 
     Route::post('/questions/generate', [\App\Http\Controllers\Api\ExaminationApiController::class, 'generate']);
+    
+    // Location API routes
+    Route::get('/countries', [\App\Http\Controllers\Api\LocationController::class, 'countries']);
+    Route::get('/regions', [\App\Http\Controllers\Api\LocationController::class, 'regions']);
+    Route::get('/cities', [\App\Http\Controllers\Api\LocationController::class, 'cities']);
 });
