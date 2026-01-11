@@ -26,6 +26,10 @@ class BookQuizInterface extends Component
     use WithFileUploads;
     use ChecksTokenAvailability;
 
+    protected $listeners = [
+        'update-selectedSubjectId' => 'updateSelectedSubject',
+    ];
+
 // Quiz setup properties
     public $selectedBookId = '';
     public $selectedSubjectId = '';
@@ -142,12 +146,28 @@ class BookQuizInterface extends Component
 
     }
 
-    /**
-     * Load available subjects for quiz generation
-     */
     protected function loadAvailableSubjects(): void
     {
-        $this->availableSubjects = AcademicSubject::orderBy('name')->get();
+        $this->availableSubjects = AcademicSubject::with(['academicLevel.academicGroup'])
+            ->orderBy('name')
+            ->get()
+            ->map(function ($subject) {
+                return [
+                    'id' => $subject->id,
+                    'name' => $subject->name,
+                    'display_name' => $subject->name . ' - ' . 
+                        ($subject->academicLevel->academicGroup->name ?? 'N/A') . ' (' . 
+                        ($subject->academicLevel->name ?? 'N/A') . ')',
+                    'academic_level' => $subject->academicLevel->name ?? 'N/A',
+                    'academic_group' => $subject->academicLevel->academicGroup->name ?? 'N/A',
+                ];
+            })
+            ->toArray();
+    }
+
+    public function updateSelectedSubject($value)
+    {
+        $this->selectedSubjectId = is_array($value) ? ($value[0] ?? '') : $value;
     }
 
     protected function loadPreviousQuizzes(): void
