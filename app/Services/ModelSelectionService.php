@@ -41,25 +41,20 @@ class ModelSelectionService
             return config('openai.openai.premium_model', 'gpt-4-turbo');
         }
 
-        // For subscribers, check their active subscription
-        $subscription = $user->activeSubscriptionCycle;
+        // For subscribers, check their active subscription cycle
+        $cycle = $user->getCurrentActiveCycle();
 
-        if (!$subscription || !$subscription->package) {
+        if (!$cycle || !$cycle->pricingTier) {
             return config('openai.openai.default_model', 'gpt-4.1-nano');
         }
 
-        // If package has a specific model defined, use it
-        if (!empty($subscription->package->model)) {
-            return $subscription->package->model;
+        // Determine model based on pricing tier
+        if ($cycle->pricingTier->name === 'Premium') {
+            return config('openai.openai.premium_model', 'gpt-4-turbo');
         }
 
-        // Determine model based on package type
-        if ($subscription->package->is_free || $subscription->package->price == 0) {
-            return config('openai.openai.default_model', 'gpt-4.1-nano');
-        }
-
-        // Paid packages get premium model
-        return config('openai.openai.premium_model', 'gpt-4-turbo');
+        // Basic tier gets default model
+        return config('openai.openai.default_model', 'gpt-4.1-nano');
     }
 
     /**

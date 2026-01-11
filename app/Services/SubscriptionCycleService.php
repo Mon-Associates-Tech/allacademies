@@ -37,7 +37,8 @@ class SubscriptionCycleService
                 ->get();
 
             for ($i = 1; $i <= $months; $i++) {
-                $cycleStart = $startDate->copy()->addMonths($i - 1);
+                // Use 30-day periods to match existing cycle calculation
+                $cycleStart = $startDate->copy()->addDays(($i - 1) * 30);
                 $cycleEnd = $cycleStart->copy()->addDays(30)->subSecond();
 
                 // Check if there's an overlapping existing cycle
@@ -73,8 +74,12 @@ class SubscriptionCycleService
         $oldTier = $existingCycle->pricingTier;
         $oldGroupId = $existingCycle->subscription_group_id;
 
-        // Calculate combined tokens (base + topup from both)
-        $oldBaseTokens = $existingCycle->getBaseTokensAllocated();
+        // Get the ORIGINAL base tokens from the old tier (not the current allocated amount)
+        // This prevents compounding when merging multiple times
+        $oldBaseTokens = $existingCycle->is_merged 
+            ? $oldTier->monthly_token_limit  // If already merged, use tier's base limit
+            : $existingCycle->getBaseTokensAllocated(); // Otherwise use current base
+        
         $oldTopupTokens = $existingCycle->topup_tokens_allocated;
         $newBaseTokens = $newTier->monthly_token_limit;
         
