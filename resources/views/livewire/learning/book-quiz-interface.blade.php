@@ -1445,6 +1445,19 @@
 
     <script>
         document.addEventListener('livewire:init', function () {
+            // Handle URL updates for quiz persistence
+            Livewire.on('update-url', (params) => {
+                const url = new URL(window.location);
+                
+                if (params[0].quiz) {
+                    url.searchParams.set('quiz', params[0].quiz);
+                } else {
+                    url.searchParams.delete('quiz');
+                }
+                
+                window.history.pushState({}, '', url);
+            });
+            
             Livewire.on('download-results', (data) => {
                 let content = `Quiz Results Report\n==================\n\n`;
                 content += `Book: ${data[0].book}\n`;

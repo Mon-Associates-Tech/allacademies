@@ -49,6 +49,10 @@ class ChatGPTService
         $timeout = config('openai.openai.timeout', 90);
         $maxRetries = 3;
         $retryDelay = 2;
+        
+        // Extract request_type before sending to API (it's for internal use only)
+        $requestType = $options['request_type'] ?? 'chat';
+        unset($requestData['request_type']);
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
@@ -67,7 +71,7 @@ class ChatGPTService
                         $this->tokenUsageService->logUsage(
                             $user,
                             $usage,
-                            $options['request_type'] ?? 'chat',
+                            $requestType,
                             $requestData['model'] ?? 'gpt-4'
                         );
                     }

@@ -88,12 +88,11 @@ class BookQuizInterface extends Component
         $this->loadAvailableBooks();
         $this->loadAvailableSubjects();
         $this->loadPreviousQuizzes();
-        $bookId = request()->query('bookId');
-
-
-        if ($bookId) {
-            $this->selectedBookId = $bookId;
-            $this->updatedSelectedBookId();
+        
+        // Check for quiz ID in URL
+        $quizId = request()->query('quiz');
+        if ($quizId) {
+            $this->viewResults($quizId);
         }
     }
 
@@ -238,10 +237,36 @@ class BookQuizInterface extends Component
 
                 // Extract content from uploaded file using the PDF extraction service
                 try {
-                    $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
-                        'preserve_layout' => false,
-                        'method' => 'auto'
-                    ]);
+                    // For PDFs, limit to first 10 pages
+                    if ($extension === 'pdf') {
+                        $tempPath = $this->uploadedFile->getRealPath();
+                        $pageCount = $this->pdfExtractor->getPageCount($tempPath);
+                        
+                        if ($pageCount > 10) {
+                            $this->fileContent = $this->pdfExtractor->extractPageRange(
+                                $tempPath,
+                                1,
+                                10,
+                                ['preserve_layout' => false]
+                            );
+                            
+                            Log::info('PDF limited to 10 pages', [
+                                'user_id' => Auth::id(),
+                                'file_name' => $this->uploadedFile->getClientOriginalName(),
+                                'total_pages' => $pageCount
+                            ]);
+                        } else {
+                            $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                                'preserve_layout' => false,
+                                'method' => 'auto'
+                            ]);
+                        }
+                    } else {
+                        $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                            'preserve_layout' => false,
+                            'method' => 'auto'
+                        ]);
+                    }
                 } catch (InvalidArgumentException $e) {
                     // Unsupported file type
                     $this->addError('uploadedFile', $e->getMessage());
@@ -311,8 +336,14 @@ class BookQuizInterface extends Component
             ->first();
 
         if ($quizSession) {
-            $this->selectedBookId = $quizSession->book_id;
-            $this->updatedSelectedBookId();
+            // Only set book ID if the quiz was based on a book
+            if ($quizSession->book_id) {
+                $this->selectedBookId = $quizSession->book_id;
+                $this->updatedSelectedBookId();
+            }
+            
+            // Update URL with quiz ID
+            $this->dispatch('update-url', ['quiz' => $quizSessionId]);
         }
     }
 
@@ -322,7 +353,6 @@ class BookQuizInterface extends Component
             ->where('id', $quizSessionId)
             ->with('book')
             ->first();
-
 
         if ($quizSession && $quizSession->results) {
             // Load the book if it exists
@@ -355,8 +385,10 @@ class BookQuizInterface extends Component
                 $this->quizResults['next_steps'] = [];
             }
             $this->activeTab = 'results';
+            
+            // Update URL with quiz ID
+            $this->dispatch('update-url', ['quiz' => $quizSessionId]);
         }
-
     }
 
     protected function generateDetailedFeedback(array $results, QuizSession $session): array
@@ -525,6 +557,9 @@ class BookQuizInterface extends Component
     {
         $this->activeTab = 'history';
         $this->quizResults = null;
+        
+        // Clear URL parameter
+        $this->dispatch('update-url', ['quiz' => null]);
     }
 
     public function generateQuiz(): void
@@ -557,6 +592,12 @@ class BookQuizInterface extends Component
             $this->validate([
                 'selectedBookId' => 'required|exists:books,id',
             ]);
+            
+            // Load the book
+            $this->selectedBook = Book::with(['author', 'bookCategory', 'subject'])->find($this->selectedBookId);
+        } else {
+            // Clear book reference for file uploads
+            $this->selectedBook = null;
         }
 
         $actualQuestionCount = $this->getActualQuestionCount();
@@ -590,7 +631,9 @@ class BookQuizInterface extends Component
                         Log::info('Using uploaded file as fallback after book extraction failure');
                         $content = $this->fileContent;
                     } else {
-                        throw $e;
+                        $this->addError('generation', $e->getMessage());
+                        $this->isGenerating = false;
+                        return;
                     }
                 }
             } else {
@@ -768,7 +811,11 @@ class BookQuizInterface extends Component
 
             // Extract content based on specified range
             if ($this->pageStart && $this->pageEnd) {
-                // Extract specific page range
+                $pageCount = (int)$this->pageEnd - (int)$this->pageStart + 1;
+                if ($pageCount > 10) {
+                    throw new RuntimeException("Page range exceeds 10 pages. Please select a maximum of 10 pages.");
+                }
+                
                 return $this->pdfExtractor->extractPageRange(
                     $pdfPath,
                     (int)$this->pageStart,
@@ -776,10 +823,14 @@ class BookQuizInterface extends Component
                     ['preserve_layout' => false]
                 );
             } elseif ($this->selectedChapterId) {
-                // Extract specific chapter
                 $chapter = $this->bookChapters->firstWhere('id', $this->selectedChapterId);
 
                 if ($chapter) {
+                    $chapterPageCount = ($chapter->page_end ?? 1) - ($chapter->page_start ?? 1) + 1;
+                    if ($chapterPageCount > 10) {
+                        throw new RuntimeException("Selected chapter exceeds 10 pages. Please specify a page range within the chapter (max 10 pages).");
+                    }
+                    
                     return $this->pdfExtractor->extractPageRange(
                         $pdfPath,
                         $chapter->page_start ?? 1,
@@ -789,11 +840,13 @@ class BookQuizInterface extends Component
                 }
             }
 
-            // Extract entire book content
-            return $this->pdfExtractor->extractText($pdfPath, [
-                'preserve_layout' => false,
-                'method' => 'auto'
-            ]);
+            // Default: Extract first 10 pages only
+            return $this->pdfExtractor->extractPageRange(
+                $pdfPath,
+                1,
+                10,
+                ['preserve_layout' => false]
+            );
 
         } catch (Exception $e) {
             Log::error('Book content extraction failed', [
@@ -1299,16 +1352,21 @@ class BookQuizInterface extends Component
 
     protected function updateReadingProgress(array $results): void
     {
-// Update user's reading progress based on quiz performance
+        // Only update reading progress if a book is selected
+        if (!$this->selectedBookId) {
+            return;
+        }
+
+        // Update user's reading progress based on quiz performance
         $progress = BookReadingProgress::where('user_id', Auth::id())
             ->where('book_id', $this->selectedBookId)
             ->first();
 
         if ($progress) {
-// Update comprehension score based on quiz performance
+            // Update comprehension score based on quiz performance
             $comprehensionScore = $results['percentage'];
 
-// If this is a better score, update it
+            // If this is a better score, update it
             $currentScore = $progress->comprehension_score ?? 0;
             if ($comprehensionScore > $currentScore) {
                 $progress->update([
