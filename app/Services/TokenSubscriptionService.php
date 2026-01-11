@@ -347,6 +347,7 @@ class TokenSubscriptionService
 
         return $newSubscription;
     }
+
     protected function determineActionType(?UserTokenSubscription $current, OpenAiTokenPackage $new): string
     {
         if (!$current || $current->action_type === 'trial') {

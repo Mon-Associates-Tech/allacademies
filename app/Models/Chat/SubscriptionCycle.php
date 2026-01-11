@@ -17,6 +17,7 @@ class SubscriptionCycle extends Model
         'user_id',
         'pricing_tier_id',
         'subscription_group_id',
+        'merged_with_group_id',
         'cycle_number',
         'cycle_start_date',
         'cycle_end_date',
@@ -26,6 +27,7 @@ class SubscriptionCycle extends Model
         'current_price',
         'status',
         'is_topup',
+        'is_merged',
     ];
 
     protected $casts = [
@@ -36,6 +38,7 @@ class SubscriptionCycle extends Model
         'tokens_used' => 'integer',
         'current_price' => 'decimal:2',
         'is_topup' => 'boolean',
+        'is_merged' => 'boolean',
     ];
 
     /**
@@ -158,8 +161,7 @@ class SubscriptionCycle extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' &&
-            now()->between($this->cycle_start_date, $this->cycle_end_date);
+        return $this->status === 'active' && !$this->isExpired();
     }
 
     /**
@@ -432,6 +434,26 @@ class SubscriptionCycle extends Model
     public function isTopup(): bool
     {
         return (bool)$this->is_topup;
+    }
+
+    /**
+     * Check if this cycle is merged with another subscription
+     */
+    public function isMerged(): bool
+    {
+        return (bool)$this->is_merged;
+    }
+
+    /**
+     * Get the merged subscription group if exists
+     */
+    public function getMergedCycles()
+    {
+        if (!$this->merged_with_group_id) {
+            return collect();
+        }
+
+        return static::byGroup($this->merged_with_group_id)->get();
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SubscriptionCycleService
 {
@@ -16,6 +17,121 @@ class SubscriptionCycleService
     public function __construct(IncrementalPricingService $pricingService)
     {
         $this->pricingService = $pricingService;
+    }
+
+    /**
+     * Create subscription cycles for a multi-month purchase
+     * Handles merging with existing cycles if they overlap
+     */
+    public function createSubscriptionCycles(User $user, PricingTier $pricingTier, int $months): array
+    {
+        return DB::transaction(function () use ($user, $pricingTier, $months) {
+            $groupId = Str::uuid()->toString();
+            $startDate = now()->startOfDay();
+            $cycles = [];
+
+            // Get existing future cycles
+            $existingCycles = $user->subscriptionCycles()
+                ->where('status', '!=', 'expired')
+                ->orderBy('cycle_start_date')
+                ->get();
+
+            for ($i = 1; $i <= $months; $i++) {
+                $cycleStart = $startDate->copy()->addMonths($i - 1);
+                $cycleEnd = $cycleStart->copy()->addDays(30)->subSecond();
+
+                // Check if there's an overlapping existing cycle
+                $overlappingCycle = $existingCycles->first(function ($cycle) use ($cycleStart, $cycleEnd) {
+                    return $cycle->cycle_start_date->between($cycleStart, $cycleEnd) ||
+                           $cycle->cycle_end_date->between($cycleStart, $cycleEnd) ||
+                           ($cycleStart->between($cycle->cycle_start_date, $cycle->cycle_end_date));
+                });
+
+                if ($overlappingCycle) {
+                    // Merge: combine tokens and use new tier's model
+                    $cycles[] = $this->mergeCycles($overlappingCycle, $pricingTier, $groupId, $i);
+                } else {
+                    // Create new cycle
+                    $cycles[] = $this->createNewCycle($user, $pricingTier, $groupId, $i, $cycleStart, $cycleEnd);
+                }
+            }
+
+            // Activate only the first cycle
+            if (!empty($cycles)) {
+                $cycles[0]->update(['status' => 'active']);
+            }
+
+            return $cycles;
+        });
+    }
+
+    /**
+     * Merge an existing cycle with a new subscription
+     */
+    protected function mergeCycles(SubscriptionCycle $existingCycle, PricingTier $newTier, string $newGroupId, int $newCycleNumber): SubscriptionCycle
+    {
+        $oldTier = $existingCycle->pricingTier;
+        $oldGroupId = $existingCycle->subscription_group_id;
+
+        // Calculate combined tokens (base + topup from both)
+        $oldBaseTokens = $existingCycle->getBaseTokensAllocated();
+        $oldTopupTokens = $existingCycle->topup_tokens_allocated;
+        $newBaseTokens = $newTier->monthly_token_limit;
+        
+        $combinedTokens = $oldBaseTokens + $newBaseTokens + $oldTopupTokens;
+
+        // Calculate combined price
+        $oldPrice = $oldTier->getMonthlyPriceIncrement($existingCycle->cycle_number);
+        $newPrice = $newTier->getMonthlyPriceIncrement($newCycleNumber);
+        $combinedPrice = $oldPrice + $newPrice;
+
+        // Update existing cycle with merged data
+        $existingCycle->update([
+            'pricing_tier_id' => $newTier->id, // Use new tier (most recent)
+            'tokens_allocated' => $combinedTokens,
+            'topup_tokens_allocated' => $oldTopupTokens, // Preserve old topup
+            'current_price' => $combinedPrice,
+            'merged_with_group_id' => $newGroupId,
+            'is_merged' => true,
+        ]);
+
+        Log::info('Merged subscription cycles', [
+            'existing_cycle_id' => $existingCycle->id,
+            'old_group_id' => $oldGroupId,
+            'new_group_id' => $newGroupId,
+            'old_tokens' => $oldBaseTokens,
+            'new_tokens' => $newBaseTokens,
+            'combined_tokens' => $combinedTokens,
+            'old_tier' => $oldTier->name,
+            'new_tier' => $newTier->name,
+        ]);
+
+        return $existingCycle;
+    }
+
+    /**
+     * Create a new subscription cycle
+     */
+    protected function createNewCycle(User $user, PricingTier $pricingTier, string $groupId, int $cycleNumber, $startDate, $endDate): SubscriptionCycle
+    {
+        $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
+        $cumulativePrice = $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+
+        return SubscriptionCycle::create([
+            'user_id' => $user->id,
+            'pricing_tier_id' => $pricingTier->id,
+            'subscription_group_id' => $groupId,
+            'cycle_number' => $cycleNumber,
+            'cycle_start_date' => $startDate,
+            'cycle_end_date' => $endDate,
+            'tokens_allocated' => $pricingTier->monthly_token_limit,
+            'topup_tokens_allocated' => 0,
+            'tokens_used' => 0,
+            'current_price' => $cumulativePrice,
+            'status' => 'inactive',
+            'is_topup' => false,
+            'is_merged' => false,
+        ]);
     }
 
     /**

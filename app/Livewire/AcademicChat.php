@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use App\Models\AcademicChatMessage;
 use App\Services\AcademicChatService;
-use App\Support\TokenSubscriptionStatus;
+use App\Traits\ChecksTokenAvailability;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -15,6 +15,7 @@ use Livewire\WithFileUploads;
 class AcademicChat extends Component
 {
     use WithFileUploads;
+    use ChecksTokenAvailability;
 
     // Chat parameters
     #[Rule('required|string|max:1000')]
@@ -82,7 +83,10 @@ class AcademicChat extends Component
 
     public function mount(?string $conversationId = null): void
     {
-        $this->checkTokenAvailability();
+        $result = $this->checkTokenAvailability();
+        $this->canSendMessage = $result['available'];
+        $this->tokenWarningMessage = $result['message'];
+
         $this->availableSubjects = $this->chatService->getAvailableSubjects();
 
         // Check URL query parameter first
@@ -108,41 +112,6 @@ class AcademicChat extends Component
         $this->response_format = 'detailed';
         $this->creativity_level = 1;
         $this->response_length = 1000;
-    }
-
-    public function checkTokenAvailability(): void
-    {
-        $user = auth()->user();
-
-        $subscription = $user->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
-
-        if (!$subscription) {
-            $this->canSendMessage = false;
-            $this->tokenWarningMessage = 'no_subscription';
-            return;
-        }
-
-        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
-            $this->canSendMessage = false;
-            $this->tokenWarningMessage = 'depleted';
-            return;
-        }
-
-        if ($subscription->isExpired()) {
-            $this->canSendMessage = false;
-            $this->tokenWarningMessage = 'expired';
-            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
-            return;
-        }
-
-        if (!$user->hasOpenAiTokens(200)) {
-            $this->canSendMessage = false;
-            $this->tokenWarningMessage = 'insufficient';
-            return;
-        }
-
-        $this->canSendMessage = true;
-        $this->tokenWarningMessage = null;
     }
 
     protected function loadChatHistory(): void
@@ -256,80 +225,16 @@ class AcademicChat extends Component
     }
 
     #[Computed]
-    public function messageInputDisabled(): bool
-    {
-        return !$this->isMessageInputEnabled();
-    }
-
-    public function isMessageInputEnabled(): bool
-    {
-        $user = auth()->user();
-
-        if (!$user) {
-            return false;
-        }
-
-        $subscription = $user->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
-
-        if (!$subscription) {
-            return false;
-        }
-
-        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
-            return false;
-        }
-
-        if ($subscription->isExpired()) {
-            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
-            return false;
-        }
-
-        if (!$user->hasOpenAiTokens(200)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    #[Computed]
     public function currentTokenWarning(): ?string
     {
         return $this->getTokenWarningMessage();
     }
 
-    private function getTokenWarningMessage(): ?string
-    {
-        $user = auth()->user();
-
-        if (!$user) {
-            return 'no_subscription';
-        }
-
-        $subscription = $user->subscriptionCycles()->where('status', TokenSubscriptionStatus::ACTIVE)->first();
-
-        if (!$subscription) {
-            return 'no_subscription';
-        }
-
-        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
-            return 'depleted';
-        }
-
-        if ($subscription->isExpired()) {
-            return 'expired';
-        }
-
-        if (!$user->hasOpenAiTokens(200)) {
-            return 'insufficient';
-        }
-
-        return null;
-    }
-
     public function sendMessage(): void
     {
-        if (!$this->isMessageInputEnabled()) {
+        if ($this->messageInputDisabled()) {
             $this->dispatch('tokenCheckFailed');
+            logError('sendMessage input disabled');
             return;
         }
 
@@ -338,7 +243,6 @@ class AcademicChat extends Component
         if (empty(trim($this->message))) {
             return;
         }
-
         $this->isLoading = true;
         $this->errors = [];
 
@@ -394,6 +298,7 @@ class AcademicChat extends Component
         $conversationHistory = $this->getConversationHistory();
         $response = $this->chatService->processRequest($parameters, $conversationHistory);
 
+
         if ($response['success']) {
             $aiMessage = [
                 'role' => 'assistant',
@@ -426,6 +331,12 @@ class AcademicChat extends Component
         $this->isLoading = false;
 
         $this->loadConversationHistory();
+    }
+
+    #[Computed]
+    public function messageInputDisabled(): bool
+    {
+        return !$this->canSendMessage();
     }
 
     protected function getParameters(): array

@@ -10,7 +10,7 @@ use App\Models\QuizSession;
 use App\Services\AcademicChatService;
 use App\Services\BookBasedLearningService;
 use App\Services\PdfContentExtractionService;
-use App\Support\TokenSubscriptionStatus;
+use App\Traits\ChecksTokenAvailability;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +24,7 @@ use RuntimeException;
 class BookQuizInterface extends Component
 {
     use WithFileUploads;
+    use ChecksTokenAvailability;
 
 // Quiz setup properties
     public $selectedBookId = '';
@@ -80,7 +81,10 @@ class BookQuizInterface extends Component
 
     public function mount(): void
     {
-        $this->checkTokenAvailability();
+        $result = $this->checkTokenAvailability(500);
+        $this->canGenerateQuiz = $result['available'];
+        $this->tokenWarningMessage = $result['message'];
+
         $this->loadAvailableBooks();
         $this->loadAvailableSubjects();
         $this->loadPreviousQuizzes();
@@ -91,44 +95,6 @@ class BookQuizInterface extends Component
             $this->selectedBookId = $bookId;
             $this->updatedSelectedBookId();
         }
-    }
-
-    public function checkTokenAvailability(): void
-    {
-        $user = auth()->user();
-
-        // For all users, check their token subscription
-        $subscription = $user->activeSubscriptionCycle;
-
-        if (!$subscription) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'no_subscription';
-            return;
-        }
-
-        // Use enum comparison for status
-        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'depleted';
-            return;
-        }
-
-        if ($subscription->isExpired()) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'expired';
-            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
-            return;
-        }
-
-        // Check if user has at least minimum tokens for quiz generation (e.g., 500 tokens)
-        if (!$user->hasOpenAiTokens(500)) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'insufficient';
-            return;
-        }
-
-        $this->canGenerateQuiz = true;
-        $this->tokenWarningMessage = null;
     }
 
     protected function loadAvailableBooks(): void
@@ -563,7 +529,9 @@ class BookQuizInterface extends Component
 
     public function generateQuiz(): void
     {
-        $this->checkTokenAvailability();
+        $result = $this->checkTokenAvailability(500);
+        $this->canGenerateQuiz = $result['available'];
+        $this->tokenWarningMessage = $result['message'];
 
         if (!$this->canGenerateQuiz) {
             $this->dispatch('tokenCheckFailed');

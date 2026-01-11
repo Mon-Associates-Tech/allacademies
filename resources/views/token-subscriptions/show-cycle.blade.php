@@ -77,7 +77,9 @@
                                     <h2 class="text-3xl font-bold text-white mb-1">{{ $subscriptionCycle->pricingTier->name }}
                                         Plan</h2>
                                     <p class="text-white/80">
-                                        @if($subscriptionCycle->status === 'active')
+                                        @if($subscriptionCycle->is_merged)
+                                            Combined subscription (merged cycles)
+                                        @elseif($subscriptionCycle->status === 'active')
                                             Active monthly cycle
                                         @elseif($subscriptionCycle->status === 'expired')
                                             Cycle has ended
@@ -315,6 +317,11 @@
                                         <span
                                             class="font-semibold text-gray-900 dark:text-white">{{ number_format($subscriptionCycle->getBaseTokensAllocated()) }}</span>
                                     </div>
+                                    @if($subscriptionCycle->is_merged)
+                                        <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+                                            ℹ️ This cycle combines tokens from multiple subscriptions
+                                        </div>
+                                    @endif
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600 dark:text-gray-400">Topup Messengers</span>
                                         <span
