@@ -37,7 +37,6 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TokenPaymentController;
-use App\Http\Controllers\TokenSubscriptionController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
@@ -142,7 +141,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('security', SecurityController::class)->name('security');
-    Route::get('/preferences', fn () => view('preferences'))->name('preferences');
+    Route::get('/preferences', fn() => view('preferences'))->name('preferences');
 
     // Password Change Routes
     Route::middleware('verified')->group(function () {
@@ -191,8 +190,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('audit-teams/bulk-approve', [AuditTeamController::class, 'bulkApprove'])->name('audit-teams.bulk-approve');
 
     // Export Routes
-    Route::post('export/pdf', fn () => exportToPdf())->name('export.pdf');
-    Route::post('export/word', fn () => exportToWord())->name('export.word');
+    Route::post('export/pdf', fn() => exportToPdf())->name('export.pdf');
+    Route::post('export/word', fn() => exportToWord())->name('export.word');
 
     // Role Routes
     Route::resource('roles', RoleController::class);
@@ -303,8 +302,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
 
     // Academic Content Routes
-    Route::get('/course-outlines', fn () => view('course-outlines'))->name('course-outlines');
-    Route::get('/academic-calendar', fn () => view('academic-calendar'))->name('academic-calendar');
+    Route::get('/course-outlines', fn() => view('course-outlines'))->name('course-outlines');
+    Route::get('/academic-calendar', fn() => view('academic-calendar'))->name('academic-calendar');
 
     // Media Routes
     Route::get('/mediapage', [\App\Http\Controllers\Media\MediaController::class, 'index'])->name('media.index');
@@ -338,15 +337,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/school-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('school-settings.index');
     Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)->name('school-settings.fee-structure.setup');
 
-    // Token Subscription Routes
-    Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
-    Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
-    Route::post('/token-subscriptions/checkout', [TokenSubscriptionController::class, 'checkout'])->name('token-subscriptions.checkout');
-    Route::post('/token-subscriptions/process-payment', [TokenSubscriptionController::class, 'processPayment'])->name('token-subscriptions.process-payment');
-    Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
-    Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
-    Route::get('/token-subscriptions/{cycle}/topup', [TokenSubscriptionController::class, 'topup'])->name('token-subscriptions.topup');
-    Route::post('/token-subscriptions/topup/process', [TokenSubscriptionController::class, 'processTopup'])->name('token-subscriptions.process-topup');
+    // Token Subscription Management Routes (Admin Only - Revenue Tracking)
+    Route::prefix('dashboard/token-subscriptions')->name('admin.token-subscriptions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TokenSubscriptionController::class, 'index'])->name('index');
+    });
+
+    // Token Subscription Routes (User Purchases)
+    Route::prefix('token-subscriptions')->name('token-subscriptions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\TokenPaymentController::class, 'create'])->name('create');
+        Route::post('/checkout', [\App\Http\Controllers\TokenPaymentController::class, 'checkout'])->name('checkout');
+        Route::post('/process-payment', [\App\Http\Controllers\TokenPaymentController::class, 'processPayment'])->name('process-payment');
+        Route::post('/', [\App\Http\Controllers\TokenPaymentController::class, 'store'])->name('store');
+        Route::get('/{subscription}', [\App\Http\Controllers\TokenPaymentController::class, 'show'])->name('show');
+        Route::get('/{cycle}/topup', [\App\Http\Controllers\TokenPaymentController::class, 'topup'])->name('topup');
+        Route::post('/topup/process', [\App\Http\Controllers\TokenPaymentController::class, 'processTopup'])->name('process-topup');
+    });
 
     // Token Allocation Management Routes (Admin Only)
     Route::prefix('token-allocations')->name('token-allocations.')->group(function () {
@@ -371,12 +377,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // User Books Routes
-    Route::get('/user-books/create', fn () => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
-    Route::get('/user-books/shared', fn () => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
+    Route::get('/user-books/create', fn() => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
+    Route::get('/user-books/shared', fn() => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
     Route::get('/user-books', \App\Livewire\UserBooks\UserBooksIndex::class)->middleware('token.subscription')->name('user-books.index');
     Route::get('/user-books/{userBook}', function (App\Models\UserBook $userBook) {
         if ($userBook->user_id !== auth()->id() &&
-            ! $userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
+            !$userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
             abort(403);
         }
         $userBook->load('user');
