@@ -345,13 +345,13 @@ Route::middleware(['auth'])->group(function () {
     // Token Subscription Routes (User Purchases)
     Route::prefix('token-subscriptions')->name('token-subscriptions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\TokenPaymentController::class, 'create'])->name('create');
-        Route::post('/checkout', [\App\Http\Controllers\TokenPaymentController::class, 'checkout'])->name('checkout');
-        Route::post('/process-payment', [\App\Http\Controllers\TokenPaymentController::class, 'processPayment'])->name('process-payment');
-        Route::post('/', [\App\Http\Controllers\TokenPaymentController::class, 'store'])->name('store');
-        Route::get('/{subscription}', [\App\Http\Controllers\TokenPaymentController::class, 'show'])->name('show');
-        Route::get('/{cycle}/topup', [\App\Http\Controllers\TokenPaymentController::class, 'topup'])->name('topup');
-        Route::post('/topup/process', [\App\Http\Controllers\TokenPaymentController::class, 'processTopup'])->name('process-topup');
+        Route::get('/create', [\App\Http\Controllers\TokenSubscriptionController::class, 'create'])->name('create');
+        Route::post('/checkout', [\App\Http\Controllers\TokenSubscriptionController::class, 'checkout'])->name('checkout');
+        Route::post('/process-payment', [\App\Http\Controllers\TokenSubscriptionController::class, 'processPayment'])->name('process-payment');
+        Route::post('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'store'])->name('store');
+        Route::get('/{subscription}', [\App\Http\Controllers\TokenSubscriptionController::class, 'show'])->name('show');
+        Route::get('/{cycle}/topup', [\App\Http\Controllers\TokenSubscriptionController::class, 'topup'])->name('topup');
+        Route::post('/topup/process', [\App\Http\Controllers\TokenSubscriptionController::class, 'processTopup'])->name('process-topup');
     });
 
     // Token Allocation Management Routes (Admin Only)
