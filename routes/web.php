@@ -348,6 +348,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/token-subscriptions/{cycle}/topup', [TokenSubscriptionController::class, 'topup'])->name('token-subscriptions.topup');
     Route::post('/token-subscriptions/topup/process', [TokenSubscriptionController::class, 'processTopup'])->name('token-subscriptions.process-topup');
 
+    // Token Allocation Management Routes (Admin Only)
+    Route::prefix('token-allocations')->name('token-allocations.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TokenAllocationController::class, 'index'])->name('index');
+        Route::get('/create-tier', [\App\Http\Controllers\TokenAllocationController::class, 'createTier'])->name('create-tier');
+        Route::post('/store-tier', [\App\Http\Controllers\TokenAllocationController::class, 'storeTier'])->name('store-tier');
+        Route::get('/tiers/{tier}/edit', [\App\Http\Controllers\TokenAllocationController::class, 'editTier'])->name('edit-tier');
+        Route::put('/tiers/{tier}', [\App\Http\Controllers\TokenAllocationController::class, 'updateTier'])->name('update-tier');
+        Route::get('/assign-tokens', [\App\Http\Controllers\TokenAllocationController::class, 'assignTokens'])->name('assign-tokens');
+        Route::post('/store-assignment', [\App\Http\Controllers\TokenAllocationController::class, 'storeAssignment'])->name('store-assignment');
+        Route::get('/users-json', [\App\Http\Controllers\TokenAllocationController::class, 'getUsersJson'])->name('users-json');
+    });
+
     // Quiz Performance Routes
     Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
     Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');

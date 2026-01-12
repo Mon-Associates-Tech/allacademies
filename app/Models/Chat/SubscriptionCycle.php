@@ -29,6 +29,7 @@ class SubscriptionCycle extends Model
         'is_topup',
         'is_trial',
         'is_merged',
+        'allocated_by_admin',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class SubscriptionCycle extends Model
         'is_topup' => 'boolean',
         'is_trial' => 'boolean',
         'is_merged' => 'boolean',
+        'allocated_by_admin' => 'boolean',
     ];
 
     /**
@@ -483,6 +485,22 @@ class SubscriptionCycle extends Model
             ->topups()
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Scope to get admin-allocated cycles only
+     */
+    public function scopeAllocatedByAdmin($query)
+    {
+        return $query->where('allocated_by_admin', true);
+    }
+
+    /**
+     * Check if this cycle was allocated by admin
+     */
+    public function isAllocatedByAdmin(): bool
+    {
+        return (bool) $this->allocated_by_admin;
     }
 
     /**
