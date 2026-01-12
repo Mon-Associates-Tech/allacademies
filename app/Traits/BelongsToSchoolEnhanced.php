@@ -9,21 +9,20 @@ use Illuminate\Support\Facades\Schema;
 
 trait BelongsToSchoolEnhanced
 {
-
-    public function getUserSchoolId(){
-        if($this->attributes['school_id']){
+    public function getUserSchoolId()
+    {
+        if ($this->attributes['school_id']) {
             return $this->attributes['school_id'];
-        }
-        elseif ($this->user->school_id){
+        } elseif ($this->user->school_id) {
             return $this->user->school_id;
-        }
-        else {
+        } else {
             return getSchoolId();
         }
 
     }
 
-    public function getSchoolForUser(){
+    public function getSchoolForUser()
+    {
         return School::find($this->getUserSchoolId())->first();
     }
 
@@ -37,7 +36,7 @@ trait BelongsToSchoolEnhanced
         // Auto-assign school_id when creating (only for school-restricted models)
         static::creating(function ($model) {
             // Skip auto-assignment if model shouldn't be school-restricted
-            if (!$model->shouldAutoAssignSchool()) {
+            if (! $model->shouldAutoAssignSchool()) {
                 return;
             }
 
@@ -77,19 +76,19 @@ trait BelongsToSchoolEnhanced
         }
 
         // Don't apply school scope if model doesn't have school_id column
-        if (!Schema::hasColumn((new static)->getTable(), 'school_id')) {
+        if (! Schema::hasColumn((new static)->getTable(), 'school_id')) {
             return false;
         }
 
         // Check if model explicitly disables school scoping
-        if (property_exists(static::class, 'schoolRestricted') && !static::$schoolRestricted) {
+        if (property_exists(static::class, 'schoolRestricted') && ! static::$schoolRestricted) {
             return false;
         }
 
         // Check authenticated user context
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return true; // Default to scoped if no user context
         }
 
@@ -127,19 +126,19 @@ trait BelongsToSchoolEnhanced
         }
 
         // Check if model has a property to disable auto-assignment
-        if (property_exists($this, 'autoAssignSchool') && !$this->autoAssignSchool) {
+        if (property_exists($this, 'autoAssignSchool') && ! $this->autoAssignSchool) {
             return false;
         }
 
         // Check user context
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return false; // Can't assign without user context
         }
 
         // Don't auto-assign for non-school roles
-        $nonSchoolRoles = ['subscriber'];
+        $nonSchoolRoles = ['guest'];
         if ($user->hasAnyRole($nonSchoolRoles)) {
             return false;
         }
@@ -168,11 +167,12 @@ trait BelongsToSchoolEnhanced
                         if (app()->bound('current_school')) {
                             return app('current_school')->id;
                         }
+
                         return null;
                     }
 
                     // Non-school roles don't have school context
-                    $nonSchoolRoles = ['subscriber'];
+                    $nonSchoolRoles = ['guest'];
                     if ($user->hasAnyRole($nonSchoolRoles)) {
                         return null;
                     }
@@ -208,7 +208,7 @@ trait BelongsToSchoolEnhanced
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->hasAnyRole(['superadmin', 'owner']))) {
+        if (! $user || (! $user->hasAnyRole(['superadmin', 'owner']))) {
             abort(403, 'Unauthorized to access cross-school data');
         }
 

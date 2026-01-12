@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Http\Requests\SignUpRequest;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 
@@ -25,20 +25,20 @@ class SignUpController extends Controller
             $isNewSchool = $request->boolean('newschool'); // Check if user wants to onboard a school
 
             // Determine which role to assign
-            $roleName = $isAuthor ? 'author' : 'subscriber';
-            $userRoleEnum = $isAuthor ? UserRole::AUTHOR : UserRole::SUBSCRIBER;
+            $roleName = $isAuthor ? 'author' : 'guest';
+            $userRoleEnum = $isAuthor ? UserRole::AUTHOR : UserRole::GUEST;
 
             // Find the appropriate role from the roles table
             $role = Role::where('name', $roleName)
                 ->orWhere('slug', $roleName)
                 ->first();
 
-            // Fallback to subscriber if role missing
-            if (!$role) {
-                $role = Role::where('name', 'subscriber')
-                    ->orWhere('slug', 'subscriber')
+            // Fallback to guest if role missing
+            if (! $role) {
+                $role = Role::where('name', 'guest')
+                    ->orWhere('slug', 'guest')
                     ->first();
-                $userRoleEnum = UserRole::SUBSCRIBER;
+                $userRoleEnum = UserRole::GUEST;
             }
 
             /** @var User $user */
@@ -88,15 +88,14 @@ class SignUpController extends Controller
         $request->session()->put('verification_email', $user->email);
         if ($request->boolean('newschool')) {
             $request->session()->put('redirect_after_verification', 'onboarding');
-            //dd($request->session()->all());
+            // dd($request->session()->all());
         }
 
         // Build success message
-        $roleMessage = $request->boolean('author') ? 'author' : 'subscriber';
+        $roleMessage = $request->boolean('author') ? 'author' : 'guest';
         $successMessage = "Registration successful as {$roleMessage}! Please check your email to verify your account before signing in.";
 
         // ✅ Check if the "Onboard a new school" checkbox was selected
-
 
         // Default redirect to verification notice
         return redirect()->route('verification.notice')

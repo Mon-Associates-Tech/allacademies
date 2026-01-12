@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SubscriptionPackage;
+use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
-use App\Models\BookSubscription;
-use App\Models\User;
-use App\Support\AcademicGroupTag;
-use App\Support\Pricer;
-use App\Models\Subscription;
+use App\Http\Requests\SubscriptionRequest;
 use App\Models\AcademicGroup;
+use App\Models\BookSubscription;
+use App\Models\Subscription;
+use App\Models\User;
+use App\Support\Pricer;
 use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\NumberFormatException;
 use Brick\Math\Exception\RoundingNecessaryException;
@@ -18,11 +20,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use App\Enums\SubscriptionStatus;
-use App\Enums\SubscriptionPackage;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Psr\Container\ContainerExceptionInterface;
@@ -35,6 +33,7 @@ class SubscriptionController extends Controller
      * Display a listing of the resource.
      *
      * @return Application|Factory|View|\Illuminate\View\View
+     *
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
@@ -45,10 +44,10 @@ class SubscriptionController extends Controller
         $user->ensureUserHasTeam();
 
         // Check if user has subscriber or student role
-        $isStudent =   $user->hasRole('student');
+        $isStudent = $user->hasRole('student');
 
         if ($isStudent) {
-            // Only show book subscriptions for subscribers and students
+            // Only show book subscriptions for guests and students
             $bookSubscriptions = BookSubscription::query()
                 ->where('user_id', $user->id)
                 ->with(['book', 'book.author', 'book.bookCategory', 'student'])
@@ -164,7 +163,7 @@ class SubscriptionController extends Controller
             $currentPage,
             [
                 'path' => request()->url(),
-                'pageName' => 'page'
+                'pageName' => 'page',
             ]
         );
 
@@ -176,14 +175,11 @@ class SubscriptionController extends Controller
         ]);
     }
 
-
-
     /**
      * Show the form for creating a new resource.
      *
      * @return Application|Factory|\Illuminate\View\View|View
      */
-
     public function create()
     {
         /** @var User $user */
@@ -192,11 +188,11 @@ class SubscriptionController extends Controller
 
         // Filter academic groups based on user role
         $academicGroupsQuery = AcademicGroup::with([
-            'academicLevels.academicSubjects'
+            'academicLevels.academicSubjects',
         ]);
 
-        // Restrict subscribers to only groups 9 and 10
-        if ($user->role === UserRole::SUBSCRIBER) {
+        // Restrict guests to only groups 9 and 10
+        if ($user->role === UserRole::GUEST) {
             $academicGroupsQuery->whereIn('id', [9, 10]);
         }
 
@@ -214,13 +210,13 @@ class SubscriptionController extends Controller
                                 'name' => $subject->name,
                                 'code' => $subject->code,
                             ];
-                        })->toArray()
+                        })->toArray(),
                     ];
-                })->toArray()
+                })->toArray(),
             ];
         })->toArray();
 
-        if (!$user->currentTeam){
+        if (!$user->currentTeam) {
             return redirect()->route('teams.create')->with('error', 'Please create a team before creating a subscription.');
         }
 
@@ -233,8 +229,6 @@ class SubscriptionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param SubscriptionRequest $request
-     * @return RedirectResponse
      * @throws Throwable
      * @throws MathException
      * @throws NumberFormatException
@@ -242,115 +236,107 @@ class SubscriptionController extends Controller
      * @throws UnknownCurrencyException
      */
 
+    /*  public function store(SubscriptionRequest $request): RedirectResponse
+      {
 
-  /*  public function store(SubscriptionRequest $request): RedirectResponse
+          $money = Pricer::calculate(
+              $package = SubscriptionPackage::from($request->input('package')),
+              $durationInMonths = $request->integer('duration_in_months'),
+              count($subjects = $request->validated('academic_subject_ids')),
+              $beneficiaries = max($request->integer('beneficiaries') ?: 1, 1), // Ensure minimum of 1
+              AcademicGroupTag::BASIC
+          );
+          /** @var User $user */
+    /* $user = auth()->user();
+     $user->load('currentTeam');
+     $subscription = new Subscription([
+         'package' => $package,
+         'reference' => uniqid(),
+         'amount' => (string) $money->getAmount(),
+         'beneficiaries' => $beneficiaries,
+         'duration_in_months' => $durationInMonths,
+         'expires_at' => null, // now()->addMonths($durationInMonths)->toDateTimeString(),
+     ]);
+
+     if (
+         ($user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package)
+         || (!$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package)
+     ) {
+         throw ValidationException::withMessages([
+             'package' => 'You can not subscribe to this package for the current team', // after success update[status="paid",expires_at=duration_in_months]
+         ]);
+     }
+
+     DB::transaction(static function () use ($subscription, $user, $subjects) {
+         $subscription->team()->associate($user->currentTeam);
+
+         $subscription = $user->subscriptions()->save($subscription);
+
+         $subscription->academicSubjects()->attach($subjects);
+     });
+
+     return to_route('subscriptions.index')
+         ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
+    } */
+
+    public function store(SubscriptionRequest $request): RedirectResponse
     {
+        //    dd($request->all());
 
         $money = Pricer::calculate(
             $package = SubscriptionPackage::from($request->input('package')),
             $durationInMonths = $request->integer('duration_in_months'),
             count($subjects = $request->validated('academic_subject_ids')),
-            $beneficiaries = max($request->integer('beneficiaries') ?: 1, 1), // Ensure minimum of 1
-            AcademicGroupTag::BASIC
+            $beneficiaries = max($request->integer('beneficiaries') ?: 1, 1),
+            $request->academic_group_tag
         );
+
         /** @var User $user */
-       /* $user = auth()->user();
+        $user = auth()->user();
         $user->load('currentTeam');
+
         $subscription = new Subscription([
             'package' => $package,
             'reference' => uniqid(),
-            'amount' => (string) $money->getAmount(),
+            'amount' => $money->getAmount()->toFloat(),  // (string) $money->getAmount(),
             'beneficiaries' => $beneficiaries,
             'duration_in_months' => $durationInMonths,
-            'expires_at' => null, // now()->addMonths($durationInMonths)->toDateTimeString(),
+            'status' => 'unpaid',
+            'expires_at' => null,
         ]);
 
         if (
-            ($user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package)
-            || (!$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package)
+            ($user->currentTeam->is_personal && $package === SubscriptionPackage::INSTITUTION_FULL)
+            || (!$user->currentTeam->is_personal && $package === SubscriptionPackage::INDIVIDUAL_FULL)
         ) {
             throw ValidationException::withMessages([
-                'package' => 'You can not subscribe to this package for the current team', // after success update[status="paid",expires_at=duration_in_months]
+                'package' => 'You can not subscribe to this package for the current team',
             ]);
         }
 
         DB::transaction(static function () use ($subscription, $user, $subjects) {
             $subscription->team()->associate($user->currentTeam);
-
             $subscription = $user->subscriptions()->save($subscription);
-
             $subscription->academicSubjects()->attach($subjects);
         });
 
-        return to_route('subscriptions.index')
-            ->with('success', __('status.resource.created', ['name' => $subscription->reference]));
-    } */
-
-
-public function store(SubscriptionRequest $request): RedirectResponse
-{
-//    dd($request->all());
-
-    $money = Pricer::calculate(
-        $package = SubscriptionPackage::from($request->input('package')),
-        $durationInMonths = $request->integer('duration_in_months'),
-        count($subjects = $request->validated('academic_subject_ids')),
-        $beneficiaries = max($request->integer('beneficiaries') ? : 1, 1),
-        $request->academic_group_tag
-    );
-
-
-    /** @var User $user */
-    $user = auth()->user();
-    $user->load('currentTeam');
-
-    $subscription = new Subscription([
-        'package' => $package,
-        'reference' => uniqid(),
-        'amount' => $money->getAmount()->toFloat(),  //(string) $money->getAmount(),
-        'beneficiaries' => $beneficiaries,
-        'duration_in_months' => $durationInMonths,
-        'status' => 'unpaid',
-        'expires_at' => null,
-    ]);
-
-    if (
-        ($user->currentTeam->is_personal && SubscriptionPackage::INSTITUTION_FULL === $package)
-        || (!$user->currentTeam->is_personal && SubscriptionPackage::INDIVIDUAL_FULL === $package)
-    ) {
-        throw ValidationException::withMessages([
-            'package' => 'You can not subscribe to this package for the current team',
-        ]);
+        // Instead of going back to index, redirect to payment initialize
+        return redirect()->route('payment.initialize', ['subscription' => $subscription->id]);
     }
-
-    DB::transaction(static function () use ($subscription, $user, $subjects) {
-        $subscription->team()->associate($user->currentTeam);
-        $subscription = $user->subscriptions()->save($subscription);
-        $subscription->academicSubjects()->attach($subjects);
-    });
-
-    // Instead of going back to index, redirect to payment initialize
-    return redirect()->route('payment.initialize', ['subscription' => $subscription->id]);
-}
-
-
-
-
 
     /**
      * Display the specified resource.
      *
-     * @param Subscription $subscription
      * @return Application|Factory|View|\Illuminate\View\View
      */
     public function show(Subscription $subscription)
     {
-        Gate::allowIf(static fn ($user) => $user->current_team_id === $subscription->team_id);
+        Gate::allowIf(static fn($user) => $user->current_team_id === $subscription->team_id);
 
         $subscription->load([
             'academicSubjects.academicLevel.academicGroup',
             'team',
-            'subscriber'
+            'subscriber',
         ]);
 
         return view('subscriptions.show', [
@@ -361,14 +347,12 @@ public function store(SubscriptionRequest $request): RedirectResponse
     /**
      * Remove the specified resource from storage.
      *
-     * @param Subscription $subscription
-     * @return RedirectResponse
      * @throws Throwable
      */
     public function destroy(Subscription $subscription): RedirectResponse
     {
-        Gate::allowIf(static fn ($user) => $user->current_team_id === $subscription->team_id);
-        Gate::allowIf(SubscriptionStatus::UNPAID === $subscription->status);
+        Gate::allowIf(static fn($user) => $user->current_team_id === $subscription->team_id);
+        Gate::allowIf($subscription->status === SubscriptionStatus::UNPAID);
 
         DB::transaction(static function () use ($subscription) {
             $subscription->academicSubjects()->detach();
@@ -380,23 +364,22 @@ public function store(SubscriptionRequest $request): RedirectResponse
             ->with('success', __('status.resource.deleted', ['name' => $subscription->reference]));
     }
 
-public function toggleTestMode(Request $request)
-{
+    public function toggleTestMode(Request $request)
+    {
 
-    if (!in_array(auth()->user()->email, special_access_emails())) {
-        return response()->json(['error' => 'Unauthorized'], 403);
+        if (!in_array(auth()->user()->email, special_access_emails())) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Toggle the test mode
+        $currentMode = session('TESTING_SUBSCRIPTIONS', false);
+        session(['TESTING_SUBSCRIPTIONS' => !$currentMode]);
+        session()->flash('message', !$currentMode ? 'Test mode enabled' : 'Test mode disabled');
+
+        return response()->json([
+            'success' => true,
+            'testing_mode' => !$currentMode,
+            'message' => !$currentMode ? 'Test mode enabled' : 'Test mode disabled',
+        ]);
     }
-
-    // Toggle the test mode
-    $currentMode = session('TESTING_SUBSCRIPTIONS', false);
-    session(['TESTING_SUBSCRIPTIONS' => !$currentMode]);
-    session()->flash('message', !$currentMode ? 'Test mode enabled' : 'Test mode disabled');
-
-    return response()->json([
-        'success' => true,
-        'testing_mode' => !$currentMode,
-        'message' => !$currentMode ? 'Test mode enabled' : 'Test mode disabled'
-    ]);
-}
-
 }

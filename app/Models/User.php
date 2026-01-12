@@ -605,7 +605,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getOpenAiModel(): string
     {
-        if ($this->role !== UserRole::SUBSCRIBER) {
+        if ($this->role !== UserRole::GUEST) {
             return config('openai.openai.premium_model', 'gpt-4');
         }
 
@@ -627,7 +627,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function shouldTrackTokenUsage(): bool
     {
         return in_array($this->role, [
-            UserRole::SUBSCRIBER,
+            UserRole::GUEST,
             UserRole::ADMIN,
             UserRole::STUDENT,
             UserRole::TEACHER,

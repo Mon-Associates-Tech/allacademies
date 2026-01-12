@@ -30,7 +30,7 @@ class MessageService
                 'message_id' => $message->id,
                 'recipient_count' => $recipients->count(),
                 'target_type' => $message->target_type,
-                'target_criteria' => $message->target_criteria
+                'target_criteria' => $message->target_criteria,
             ]);
 
             if ($recipients->isEmpty()) {
@@ -45,13 +45,12 @@ class MessageService
                     'user_id' => $recipient->id,
                 ]);
 
-
                 Mail::to($recipient->email)->send(new MessageNotificationMail($message, $recipient));
 
                 Log::info('Email sent to recipient', [
                     'message_id' => $message->id,
                     'recipient_id' => $recipient->id,
-                    'recipient_email' => $recipient->email
+                    'recipient_email' => $recipient->email,
                 ]);
             }
 
@@ -65,7 +64,7 @@ class MessageService
 
             Log::info('Message sent successfully', [
                 'message_id' => $message->id,
-                'recipients_sent' => $recipients->count()
+                'recipients_sent' => $recipients->count(),
             ]);
 
             return true;
@@ -75,7 +74,7 @@ class MessageService
             Log::error('Failed to send message', [
                 'message_id' => $message->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $message->update([
@@ -249,31 +248,31 @@ class MessageService
         $recipients = collect();
 
         // Combine multiple criteria types
-        if (!empty($criteria['roles'])) {
+        if (! empty($criteria['roles'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByRole(['roles' => $criteria['roles']])
             );
         }
 
-        if (!empty($criteria['academic_group_ids'])) {
+        if (! empty($criteria['academic_group_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByAcademicGroup($criteria)
             );
         }
 
-        if (!empty($criteria['academic_level_ids'])) {
+        if (! empty($criteria['academic_level_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByAcademicLevel($criteria)
             );
         }
 
-        if (!empty($criteria['subject_ids'])) {
+        if (! empty($criteria['subject_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsBySubject($criteria)
             );
         }
 
-        if (!empty($criteria['user_ids'])) {
+        if (! empty($criteria['user_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByIndividual($criteria)
             );
@@ -292,7 +291,7 @@ class MessageService
             'author' => 'Authors',
             'moderator' => 'Moderators',
             'finance' => 'Finance Staff',
-            'subscriber' => 'Subscribers',
+            'subscriber' => 'Guests',
         ];
     }
 

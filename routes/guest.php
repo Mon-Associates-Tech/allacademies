@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
 
 // Subscriber Routes
-    Route::prefix('subscriber')->name('subscriber.')->group(function () {
+    Route::prefix('guest')->name('subscriber.')->group(function () {
         Route::get('/library', Library::class)->name('library');
         Route::get('/assessments', Assessments::class)->name('assessments');
         Route::get('/quizzes', Quizzes::class)->name('quizzes');

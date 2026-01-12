@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
             'teacher',
             'moderator',
             'author',
-            'subscriber'
+            'guest'
         ];
 
         // 2. Create 10 users for each role

@@ -150,6 +150,7 @@ Add to crontab for scheduled tasks:
 - **Author**: Publish and manage books
 - **Parent**: Monitor student progress
 - **Accountant**: Financial tracking and reporting
+- **Guest**: Limited access user
 
 ## Multi-Tenancy
 

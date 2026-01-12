@@ -7,7 +7,7 @@ enum UserRole: string
     case OWNER = 'owner';
     case ADMIN = 'admin';
     case MODERATOR = 'moderator';
-    case SUBSCRIBER = 'subscriber';
+    case GUEST = 'guest';
     case TEACHER = 'teacher';
     case STUDENT = 'student';
     case LIBRARIAN = 'librarian';
@@ -23,7 +23,7 @@ enum UserRole: string
             self::OWNER,
             self::ADMIN,
             self::MODERATOR,
-            self::SUBSCRIBER,
+            self::GUEST,
             self::TEACHER,
             self::STUDENT,
             self::LIBRARIAN,

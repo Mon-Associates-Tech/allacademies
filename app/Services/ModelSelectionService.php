@@ -36,15 +36,15 @@ class ModelSelectionService
      */
     public function getModelForUser(User $user): string
     {
-        // Non-subscribers always get premium model
-        if ($user->role !== \App\Enums\UserRole::SUBSCRIBER) {
+        // Non-guests always get premium model
+        if ($user->role !== \App\Enums\UserRole::GUEST) {
             return config('openai.openai.premium_model', 'gpt-4-turbo');
         }
 
-        // For subscribers, check their active subscription cycle
+        // For guests, check their active subscription cycle
         $cycle = $user->getCurrentActiveCycle();
 
-        if (!$cycle || !$cycle->pricingTier) {
+        if (! $cycle || ! $cycle->pricingTier) {
             return config('openai.openai.default_model', 'gpt-4.1-nano');
         }
 
@@ -76,13 +76,13 @@ class ModelSelectionService
         $prompt = [
             [
                 'role' => 'system',
-                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests.'
+                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests.',
             ],
             [
                 'role' => 'user',
-                'content' => "User request: " . ($parameters['input'] ?? '') .
-                    "\n\nContext: " . json_encode(array_slice($conversationHistory, -3))
-            ]
+                'content' => 'User request: '.($parameters['input'] ?? '').
+                    "\n\nContext: ".json_encode(array_slice($conversationHistory, -3)),
+            ],
         ];
 
         try {
@@ -96,6 +96,7 @@ class ModelSelectionService
             return $type === 'image' ? 'image' : 'text';
         } catch (\Exception $e) {
             Log::error('Model detection failed', ['error' => $e->getMessage()]);
+
             return 'text';
         }
     }
