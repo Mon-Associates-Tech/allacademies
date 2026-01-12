@@ -71,7 +71,6 @@ trait HasSubscriptionCycles
     {
         return $this->subscriptionCycles()
             ->where('status', 'active')
-            ->where('cycle_end_date', '>=', now())
             ->latest('cycle_number')
             ->first();
     }

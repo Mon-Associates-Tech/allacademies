@@ -11,19 +11,19 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param \Illuminate\Console\Scheduling\Schedule $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('subscription:expired')->dailyAt('09:00');
+        $schedule->command('subscriptions:expire-cycles')->hourly();
         $schedule->command('app:update-user-online-status')->everyMinute();
         $schedule->command('sessions:cleanup --timeout=30')->everyFiveMinutes();
         $schedule->command('messages:send-scheduled')->everyMinute();
         $schedule->command('tokens:check-expired')->daily();
 
         // Generate recurring sessions daily
-        $schedule->job(new \App\Jobs\GenerateRecurringSessionsJob())
+        $schedule->job(new \App\Jobs\GenerateRecurringSessionsJob)
             ->dailyAt('00:00')
             ->name('generate-recurring-sessions')
             ->withoutOverlapping();
@@ -33,11 +33,11 @@ class Kernel extends ConsoleKernel
             ->everyFiveMinutes();
 
         // Check for ended sessions every 10 minutes
-        $schedule->job(new \App\Jobs\CheckEndedSessionsJob())
+        $schedule->job(new \App\Jobs\CheckEndedSessionsJob)
             ->everyTenMinutes();
 
         // Cleanup expired recordings daily
-        $schedule->job(new \App\Jobs\CleanupExpiredRecordingsJob())
+        $schedule->job(new \App\Jobs\CleanupExpiredRecordingsJob)
             ->daily();
 
         $schedule->command('books:process-audio-conversion')->everyFiveMinutes();
@@ -46,7 +46,7 @@ class Kernel extends ConsoleKernel
             ->everyFiveMinutes()
             ->withoutOverlapping();
 
-        $schedule->job(new ResetMonthlySubscriptionCycles())
+        $schedule->job(new ResetMonthlySubscriptionCycles)
             ->dailyAt('00:00')
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
@@ -60,7 +60,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__ . '/Commands');
+        $this->load(__DIR__.'/Commands');
 
         require base_path('routes/console.php');
     }

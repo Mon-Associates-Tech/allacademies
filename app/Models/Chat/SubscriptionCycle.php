@@ -27,6 +27,7 @@ class SubscriptionCycle extends Model
         'current_price',
         'status',
         'is_topup',
+        'is_trial',
         'is_merged',
     ];
 
@@ -38,6 +39,7 @@ class SubscriptionCycle extends Model
         'tokens_used' => 'integer',
         'current_price' => 'decimal:2',
         'is_topup' => 'boolean',
+        'is_trial' => 'boolean',
         'is_merged' => 'boolean',
     ];
 
@@ -161,7 +163,7 @@ class SubscriptionCycle extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' && !$this->isExpired();
+        return $this->status === 'active' && ! $this->isExpired();
     }
 
     /**
@@ -258,7 +260,7 @@ class SubscriptionCycle extends Model
 
         $nextCycle = $this->user->getNextUpcomingCycle();
 
-        if (!$nextCycle) {
+        if (! $nextCycle) {
             \Illuminate\Support\Facades\Log::info('No next cycle to carry over topup tokens', [
                 'cycle_id' => $this->id,
                 'topup_tokens_unused' => $unusedTopup,
@@ -270,7 +272,7 @@ class SubscriptionCycle extends Model
         $nextCycle->addTopupTokens($unusedTopup);
 
         // Clear topup tokens from current cycle after carryover
-        //$this->tokens_allocated -= $this->topup_tokens_allocated;
+        // $this->tokens_allocated -= $this->topup_tokens_allocated;
         $this->topup_tokens_allocated = 0;
         $this->save();
 
@@ -353,7 +355,7 @@ class SubscriptionCycle extends Model
      */
     public function getCyclesInGroup()
     {
-        if (!$this->subscription_group_id) {
+        if (! $this->subscription_group_id) {
             return collect();
         }
 
@@ -367,7 +369,7 @@ class SubscriptionCycle extends Model
      */
     public function getGroupTotalCost(): string
     {
-        if (!$this->subscription_group_id) {
+        if (! $this->subscription_group_id) {
             return $this->current_price;
         }
 
@@ -383,7 +385,7 @@ class SubscriptionCycle extends Model
      */
     public function getGroupCycleCount(): int
     {
-        if (!$this->subscription_group_id) {
+        if (! $this->subscription_group_id) {
             return 1;
         }
 
@@ -395,7 +397,7 @@ class SubscriptionCycle extends Model
      */
     public function getGroupDateRange(): array
     {
-        if (!$this->subscription_group_id) {
+        if (! $this->subscription_group_id) {
             return [
                 'start' => $this->cycle_start_date,
                 'end' => $this->cycle_end_date,
@@ -410,6 +412,14 @@ class SubscriptionCycle extends Model
             'start' => $cycles->first()?->cycle_start_date,
             'end' => $cycles->last()?->cycle_end_date,
         ];
+    }
+
+    /**
+     * Scope to get trial cycles only
+     */
+    public function scopeTrials($query)
+    {
+        return $query->where('is_trial', true);
     }
 
     /**
@@ -429,11 +439,19 @@ class SubscriptionCycle extends Model
     }
 
     /**
+     * Check if this is a trial cycle
+     */
+    public function isTrial(): bool
+    {
+        return (bool) $this->is_trial;
+    }
+
+    /**
      * Check if this is a topup cycle
      */
     public function isTopup(): bool
     {
-        return (bool)$this->is_topup;
+        return (bool) $this->is_topup;
     }
 
     /**
@@ -441,7 +459,7 @@ class SubscriptionCycle extends Model
      */
     public function isMerged(): bool
     {
-        return (bool)$this->is_merged;
+        return (bool) $this->is_merged;
     }
 
     /**
@@ -449,7 +467,7 @@ class SubscriptionCycle extends Model
      */
     public function getMergedCycles()
     {
-        if (!$this->merged_with_group_id) {
+        if (! $this->merged_with_group_id) {
             return collect();
         }
 
