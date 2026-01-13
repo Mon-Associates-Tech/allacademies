@@ -79,105 +79,111 @@
 
                 <div id="filters"
                      class="hidden mb-4 mt-6 w-full max-w-7xl mx-auto px-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-8">
-                   <form method="GET" action="{{ route('books.index') }}" class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-200">Category</label>
-            <div class="relative">
-                <select name="category" id="category"
-                        class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-white bg-white/10 border-2 border-white/20 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20">
-                    <option value="" class="text-gray-800 bg-white">All Categories</option>
-                    @foreach($categories as $category)
-                        <option
-                            value="{{ $category->id }}"
-                            {{ request('category') == $category->id ? 'selected' : '' }}
-                            class="text-gray-800 bg-white">
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+                    <form method="GET" action="{{ route('books.index') }}" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-200">Category</label>
+                                <div class="relative">
+                                    <select name="category" id="category"
+                                            class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-white bg-white/10 border-2 border-white/20 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20">
+                                        <option value="" class="text-gray-800 bg-white">All Categories</option>
+                                        @foreach($categories as $category)
+                                            <option
+                                                value="{{ $category->id }}"
+                                                {{ request('category') == $category->id ? 'selected' : '' }}
+                                                class="text-gray-800 bg-white">
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
 
-        <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-200">Format</label>
-            <div class="relative">
-                <select name="format" id="format"
-                        class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-white bg-white/10 border-2 border-white/20 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20">
-                    <option value="" class="text-gray-800 bg-white">All Formats</option>
-                    <option value="softcopy" {{ request('format') == 'softcopy' ? 'selected' : '' }} class="text-gray-800 bg-white">
-                        📱 Digital Only
-                    </option>
-                    <option value="hardcopy" {{ request('format') == 'hardcopy' ? 'selected' : '' }} class="text-gray-800 bg-white">
-                        📚 Physical Only
-                    </option>
-                    <option value="both" {{ request('format') == 'both' ? 'selected' : '' }} class="text-gray-800 bg-white">
-                        📄 Both Available
-                    </option>
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-200">Format</label>
+                                <div class="relative">
+                                    <select name="format" id="format"
+                                            class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-white bg-white/10 border-2 border-white/20 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20">
+                                        <option value="" class="text-gray-800 bg-white">All Formats</option>
+                                        <option value="softcopy"
+                                                {{ request('format') == 'softcopy' ? 'selected' : '' }} class="text-gray-800 bg-white">
+                                            📱 Digital Copy
+                                        </option>
+                                        <option value="hardcopy"
+                                                {{ request('format') == 'hardcopy' ? 'selected' : '' }} class="text-gray-800 bg-white">
+                                            📚 Physical Copy
+                                        </option>
+                                        <option value="both"
+                                                {{ request('format') == 'both' ? 'selected' : '' }} class="text-gray-800 bg-white">
+                                            📄 Both Copies
+                                        </option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
 
-        <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-200">Pricing</label>
-            <div class="relative">
-                <select name="price" id="price"
-                        class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-white bg-white/10 border-2 border-white/20 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20">
-                    <option value="" class="text-gray-800 bg-white">All Books</option>
-                    <option value="free" {{ request('price') == 'free' ? 'selected' : '' }} class="text-gray-800 bg-white">
-                        🆓 Free Books
-                    </option>
-                    <option value="paid" {{ request('price') == 'paid' ? 'selected' : '' }} class="text-gray-800 bg-white">
-                        💰 Paid Books
-                    </option>
-                    <option value="subscribed" {{ request('price') == 'subscribed' ? 'selected' : '' }} class="text-gray-800 bg-white">
-                        📋 Subscription
-                    </option>
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-200">Pricing</label>
+                                <div class="relative">
+                                    <select name="price" id="price"
+                                            class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-white bg-white/10 border-2 border-white/20 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20">
+                                        <option value="" class="text-gray-800 bg-white">All Books</option>
+                                        <option value="free"
+                                                {{ request('price') == 'free' ? 'selected' : '' }} class="text-gray-800 bg-white">
+                                            🆓 Free Books
+                                        </option>
+                                        <option value="paid"
+                                                {{ request('price') == 'paid' ? 'selected' : '' }} class="text-gray-800 bg-white">
+                                            💰 Paid Books
+                                        </option>
+                                        <option value="subscribed"
+                                                {{ request('price') == 'subscribed' ? 'selected' : '' }} class="text-gray-800 bg-white">
+                                            📋 Subscribed books
+                                        </option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
 
-        <div class="items-center flex flex-col md:flex-row gap-4 mt-5">
-            <button type="submit"
-                    class="w-full my-auto text-nowrap bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                </svg>
-                <span>Apply Filters</span>
-            </button>
-            <a href="{{ route('books.index') }}"
-               class="w-full text-nowrap bg-white/10 hover:bg-white/20 text-gray-200 px-6 py-3 rounded-xl font-semibold text-sm text-center transition-all duration-300 flex items-center justify-center space-x-2 border-2 border-white/20">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                <span>Reset All</span>
-            </a>
-        </div>
-    </div>
-</form>
+                            <div class="items-center flex flex-col md:flex-row gap-4 mt-5">
+                                <button type="submit"
+                                        class="w-full my-auto text-nowrap bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                                    </svg>
+                                    <span>Apply Filters</span>
+                                </button>
+                                <a href="{{ route('books.index') }}"
+                                   class="w-full text-nowrap bg-white/10 hover:bg-white/20 text-gray-200 px-6 py-3 rounded-xl font-semibold text-sm text-center transition-all duration-300 flex items-center justify-center space-x-2 border-2 border-white/20">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    <span>Reset All</span>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
 
                 </div>
             </div>
@@ -219,15 +225,18 @@
                                         {{ $category->name }}
                                     </h2>
                                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        {{ $category->books_count }} {{ Str::plural('book', $category->books_count) }} available
+                                        {{ $category->books_count }} {{ Str::plural('book', $category->books_count) }}
+                                        available
                                     </p>
                                 </div>
                             </div>
                             <a href="{{ route('books.index', ['category' => $category->id]) }}"
                                class="group flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold transition-all duration-200">
                                 <span>View all</span>
-                                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5l7 7-7 7"/>
                                 </svg>
                             </a>
                         </div>
@@ -240,13 +249,18 @@
                                 @endforeach
                             </div>
                         @else
-                            <div class="text-center py-16 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700">
-                                <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-full mx-auto flex items-center justify-center mb-4">
-                                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            <div
+                                class="text-center py-16 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+                                <div
+                                    class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-full mx-auto flex items-center justify-center mb-4">
+                                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                     </svg>
                                 </div>
-                                <p class="text-gray-500 dark:text-gray-400 font-medium">No books available in this category yet</p>
+                                <p class="text-gray-500 dark:text-gray-400 font-medium">No books available in this
+                                    category yet</p>
                             </div>
                         @endif
                     </div>
@@ -283,22 +297,27 @@
                 <div class="text-center py-24">
                     <div class="max-w-md mx-auto">
                         <div class="relative mb-10">
-                            <div class="w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-3xl mx-auto flex items-center justify-center transform rotate-6 transition-transform duration-300 hover:rotate-12">
-                                <svg class="w-16 h-16 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            <div
+                                class="w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-3xl mx-auto flex items-center justify-center transform rotate-6 transition-transform duration-300 hover:rotate-12">
+                                <svg class="w-16 h-16 text-indigo-500 dark:text-indigo-400" fill="none"
+                                     stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                 </svg>
                             </div>
                         </div>
 
                         <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">No books found</h3>
                         <p class="text-gray-600 dark:text-gray-400 mb-10 leading-relaxed text-lg">
-                            We couldn't find any books matching your criteria. Try adjusting your filters or explore our collection.
+                            We couldn't find any books matching your criteria. Try adjusting your filters or explore our
+                            collection.
                         </p>
 
                         <a href="{{ route('books.index') }}"
                            class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                             </svg>
                             <span>Browse All Books</span>
                         </a>
