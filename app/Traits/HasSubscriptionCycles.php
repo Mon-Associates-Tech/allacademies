@@ -67,7 +67,7 @@ trait HasSubscriptionCycles
     /**
      * Get the current active cycle (actual instance, not relation)
      */
-    public function getCurrentActiveCycle(): ?SubscriptionCycle
+    public function getCurrentActiveCycle()
     {
         return $this->subscriptionCycles()
             ->where('status', 'active')

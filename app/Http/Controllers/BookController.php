@@ -16,7 +16,6 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $student = $user->student;
 
         $query = Book::with(['author', 'bookCategory'])->whereStatus(PublishingStatus::PUBLISHED->value);
 
@@ -25,9 +24,9 @@ class BookController extends Controller
             $searchTerm = $request->query('search');
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
-                      $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
-                  });
+                    ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
+                        $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
+                    });
             });
         }
 
@@ -52,14 +51,12 @@ class BookController extends Controller
         if ($request->filled('price')) {
             if ($request->price === 'free') {
                 $query->whereNull('annual_subscription_fee')->orWhere('annual_subscription_fee', 0);
-            }
-            elseif($request->price === 'subscribed'){
+            } elseif ($request->price === 'subscribed') {
                 $query->whereHas('subscriptions', function ($q) use ($user) {
                     $q->where('user_id', $user->id)
                         ->where('status', 'paid');
                 });
-            }
-            else {
+            } else {
                 $query->where('annual_subscription_fee', '>', 0);
             }
         }
@@ -96,7 +93,7 @@ class BookController extends Controller
         // Get related books from the same category
         $relatedBooks = Book::with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
         ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->whereHas('categories', function($q) use ($book) { // Changed approach
+            ->whereHas('categories', function ($q) use ($book) { // Changed approach
                 $q->whereIn('category_id', $book->categories->pluck('id'));
             })
             ->where('id', '!=', $book->id)
@@ -122,25 +119,20 @@ class BookController extends Controller
                 ->where('book_id', $book->id)
                 ->where('status', 'paid')
                 ->first();
-            $isSubscribed = (bool) $subscription;
+            $isSubscribed = (bool)$subscription;
 
             $borrowing = $user->borrowedBooks()
                 ->where('book_id', $book->id)
                 ->where('status', 'borrowed')
                 ->first();
-            $isBorrowed = (bool) $borrowing;
+            $isBorrowed = (bool)$borrowing;
         }
 
-        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user?->id  === $user->id;
+        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user?->id === $user->id;
 
         return view('books.show',
             compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
         );
-    }
-
-    public function create()
-    {
-        return view('books.create');
     }
 
     public function edit(Book $book)
@@ -154,7 +146,6 @@ class BookController extends Controller
         $student = $user->student;
 
 
-
         // Check if already subscribed
         $existingSubscription = $user->bookSubscriptions()
             ->where('book_id', $book->id)
@@ -165,7 +156,7 @@ class BookController extends Controller
             return response()->json(['error' => 'Already subscribed to this book'], 400);
         }
 
-        // Free book - direct subscription 
+        // Free book - direct subscription
         if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
             $subscription = BookSubscription::create([
                 'user_id' => $user->id,
@@ -202,6 +193,11 @@ class BookController extends Controller
             'subscription' => $subscription,
             'requires_payment' => true
         ]);
+    }
+
+    public function create()
+    {
+        return view('books.create');
     }
 
     public function requestBorrow(Request $request, Book $book)
@@ -243,7 +239,7 @@ class BookController extends Controller
 
         if (!$book->has_softcopy) {
             // todo: uncomment
-           // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
+            // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
         }
 
         // Check subscription for paid books
@@ -273,12 +269,12 @@ class BookController extends Controller
     {
         $books = Book::with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
         ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->whereHas('categories', function($query) use ($category) { // Changed approach
+            ->whereHas('categories', function ($query) use ($category) { // Changed approach
                 $query->where('category_id', $category->id);
             })
-            ->when($request->limit, function($query, $limit) {
+            ->when($request->limit, function ($query, $limit) {
                 return $query->limit($limit);
-            }, function($query) {
+            }, function ($query) {
                 return $query->paginate(12);
             })
             ->latest()
@@ -293,6 +289,7 @@ class BookController extends Controller
 
         return view('books.category', compact('books', 'category'));
     }
+
     /**
      * Get featured/popular books for homepage
      */
@@ -301,7 +298,7 @@ class BookController extends Controller
         $featuredBooks = Book::with(['author', 'bookCategory'])
             ->whereStatus(PublishingStatus::PUBLISHED->value)
             ->where('is_featured', true) // Assuming you have a featured flag
-            ->orWhereHas('subscriptions', function($query) {
+            ->orWhereHas('subscriptions', function ($query) {
                 $query->where('status', 'paid');
             })
             ->latest()
