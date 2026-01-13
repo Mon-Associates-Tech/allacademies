@@ -248,31 +248,31 @@ class MessageService
         $recipients = collect();
 
         // Combine multiple criteria types
-        if (! empty($criteria['roles'])) {
+        if (!empty($criteria['roles'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByRole(['roles' => $criteria['roles']])
             );
         }
 
-        if (! empty($criteria['academic_group_ids'])) {
+        if (!empty($criteria['academic_group_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByAcademicGroup($criteria)
             );
         }
 
-        if (! empty($criteria['academic_level_ids'])) {
+        if (!empty($criteria['academic_level_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByAcademicLevel($criteria)
             );
         }
 
-        if (! empty($criteria['subject_ids'])) {
+        if (!empty($criteria['subject_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsBySubject($criteria)
             );
         }
 
-        if (! empty($criteria['user_ids'])) {
+        if (!empty($criteria['user_ids'])) {
             $recipients = $recipients->merge(
                 $this->getRecipientsByIndividual($criteria)
             );
@@ -291,7 +291,7 @@ class MessageService
             'author' => 'Authors',
             'moderator' => 'Moderators',
             'finance' => 'Finance Staff',
-            'subscriber' => 'Guests',
+            'guest' => 'Guests',
         ];
     }
 

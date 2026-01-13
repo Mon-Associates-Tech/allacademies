@@ -338,8 +338,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)->name('school-settings.fee-structure.setup');
 
     // Token Subscription Management Routes (Admin Only - Revenue Tracking)
-    Route::prefix('dashboard/token-subscriptions')->name('admin.token-subscriptions.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\TokenSubscriptionController::class, 'index'])->name('index');
+    Route::prefix('dashboard/messenger-transactions')->name('admin.messenger-transactions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\MessengerTransactionsController::class, 'index'])->name('index');
     });
 
     // Token Subscription Routes (User Purchases)

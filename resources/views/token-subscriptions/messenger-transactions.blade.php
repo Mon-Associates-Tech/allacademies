@@ -2,12 +2,12 @@
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div class="container mx-auto px-4 max-w-7xl">
             <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Token Subscriptions</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">View all user token subscriptions and revenue</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Messenger Transactions </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">View all user messenger subscriptions and revenue</p>
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div
                     class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div class="flex items-center justify-between">
@@ -66,11 +66,15 @@
                     </div>
                 </div>
 
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+
                 <div
                     class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Tokens Allocated</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Messengers Allocated</p>
                             <p class="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">{{ number_format($stats['total_tokens_allocated']) }}</p>
                         </div>
                         <div class="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
@@ -88,7 +92,7 @@
                     class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Tokens Used</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Messengers Used</p>
                             <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{{ number_format($stats['total_tokens_used']) }}</p>
                         </div>
                         <div class="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
@@ -129,7 +133,7 @@
                         Filter
                     </button>
                     @if(request()->hasAny(['search', 'status']))
-                        <a href="{{ route('admin.token-subscriptions.index') }}"
+                        <a href="{{ route('admin.messenger-transactions.index') }}"
                            class="px-6 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors">
                             Clear
                         </a>
@@ -172,11 +176,17 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
+                                        <x-avatar :name="$subscription->user->name" class="w-10 h-10 mr-4"/>
                                         <div>
                                             <div
-                                                class="text-sm font-medium text-gray-900 dark:text-white">{{ $subscription->user->name }}</div>
+                                                class="text-sm font-medium text-gray-900 dark:text-white">{{ $subscription->user->name }}
+                                            </div>
                                             <div
-                                                class="text-sm text-gray-500 dark:text-gray-400">{{ $subscription->user->email }}</div>
+                                                class="text-sm text-gray-500 dark:text-gray-400">{{ $subscription->user->email }}
+                                            </div>
+                                            <div
+                                                class="text-sm text-gray-500 dark:text-gray-400">{{ $subscription->user->role }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>

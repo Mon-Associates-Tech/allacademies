@@ -190,6 +190,11 @@ class User extends Authenticatable implements MustVerifyEmail
             return;
         }
 
+        // Check if user already has an active cycle
+        if ($this->subscriptionCycles()->where('status', 'active')->exists()) {
+            return;
+        }
+
         \App\Models\Chat\SubscriptionCycle::create([
             'user_id' => $this->id,
             'pricing_tier_id' => $basicTier->id,

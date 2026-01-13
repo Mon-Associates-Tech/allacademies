@@ -1,6 +1,6 @@
 <x-auth title="Settings">
     <x-slot name="breadcrumb">
-        <x-breadcrumb />
+        <x-breadcrumb/>
     </x-slot>
 
     <div>
@@ -13,7 +13,8 @@
                         </h3>
                         <div class="mt-2 max-w-xl text-sm text-gray-500">
                             <p>
-                                All users are subscribers by default. Do you want to change their role to a moderator or admin?
+                                All users are guests by default. Do you want to change their role to a moderator or
+                                admin?
                                 Simple change their role to give them more privilege.
                             </p>
                         </div>

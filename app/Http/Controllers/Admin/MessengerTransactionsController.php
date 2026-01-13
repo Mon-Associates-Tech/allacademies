@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chat\SubscriptionCycle;
 use Illuminate\Http\Request;
 
-class TokenSubscriptionController extends Controller
+class MessengerTransactionsController extends Controller
 {
     public function __construct()
     {
@@ -58,6 +58,6 @@ class TokenSubscriptionController extends Controller
                 ->sum('tokens_used'),
         ];
 
-        return view('token-subscriptions.index-all', compact('subscriptions', 'stats'));
+        return view('token-subscriptions.messenger-transactions', compact('subscriptions', 'stats'));
     }
 }
