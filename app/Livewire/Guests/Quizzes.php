@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
-use App\Models\Quiz;
 use App\Models\AcademicSubject as Subject;
+use App\Models\Quiz;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -28,6 +28,7 @@ class Quizzes extends Component
         $this->academicLevel = $academicLevel;
         $this->academicSubject = $academicSubject;
     }
+
     public function updatedSearch()
     {
         $this->resetPage();
@@ -49,7 +50,7 @@ class Quizzes extends Component
             })
             ->latest();
 
-        return redirect()->route('subscriber.quizzes.index');
+        return redirect()->route('guests.quizzes.index');
 
         return to_route('quizzes.index', [
             'quizzes' => $query->paginate(10),

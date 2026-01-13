@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
 use App\Models\BookSubscription;
 use App\Models\Subscription;
@@ -132,6 +132,34 @@ class Premium extends Component
         }
     }
 
+    private function calculateMoneySaved()
+    {
+        $user = Auth::user();
+        $subscriptions = BookSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->with('book')
+            ->get();
+
+        $individualCost = $subscriptions->sum(function ($subscription) {
+            return $subscription->book->annual_subscription_fee ?? 0;
+        });
+
+        $paidAmount = $this->currentPlan ? $this->currentPlan->amount : 0;
+
+        return max(0, $individualCost - $paidAmount);
+    }
+
+    private function calculateReadingTime()
+    {
+        // Simple calculation based on assessment activity
+        $user = Auth::user();
+        if (!$user->student) return 0;
+
+        return $user->student->assessments()
+                ->where('created_at', '>=', Carbon::now()->subMonth())
+                ->count() * 30; // Rough estimate: 30 minutes per assessment session
+    }
+
     public function subscribeToPlan($planIndex)
     {
         $plan = $this->availablePlans[$planIndex];
@@ -157,36 +185,8 @@ class Premium extends Component
         }
     }
 
-    private function calculateMoneySaved()
-    {
-        $user = Auth::user();
-        $subscriptions = BookSubscription::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->with('book')
-            ->get();
-
-        $individualCost = $subscriptions->sum(function ($subscription) {
-            return $subscription->book->annual_subscription_fee ?? 0;
-        });
-
-        $paidAmount = $this->currentPlan ? $this->currentPlan->amount : 0;
-
-        return max(0, $individualCost - $paidAmount);
-    }
-
-    private function calculateReadingTime()
-    {
-        // Simple calculation based on assessment activity
-        $user = Auth::user();
-        if (!$user->student) return 0;
-
-        return $user->student->assessments()
-            ->where('created_at', '>=', Carbon::now()->subMonth())
-            ->count() * 30; // Rough estimate: 30 minutes per assessment session
-    }
-
     public function render()
     {
-        return view('livewire.subscribers.premium');
+        return view('livewire.guests.premium');
     }
 }

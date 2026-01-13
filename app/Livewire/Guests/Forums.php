@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
+use App\Models\BookCategory;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
-use App\Models\BookCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -48,13 +48,6 @@ class Forums extends Component
     {
         $this->selectedCategory = $categoryId;
         $this->currentView = 'topics';
-        $this->resetPage();
-    }
-
-    public function selectTopic($topicId)
-    {
-        $this->selectedTopic = $topicId;
-        $this->currentView = 'posts';
         $this->resetPage();
     }
 
@@ -105,6 +98,13 @@ class Forums extends Component
         $this->reset(['newTopicTitle', 'newTopicContent']);
         $this->selectTopic($topic->id);
         session()->flash('success', 'Topic created successfully!');
+    }
+
+    public function selectTopic($topicId)
+    {
+        $this->selectedTopic = $topicId;
+        $this->currentView = 'posts';
+        $this->resetPage();
     }
 
     public function createPost()
@@ -178,6 +178,6 @@ class Forums extends Component
                 break;
         }
 
-        return view('livewire.subscribers.forums', $data);
+        return view('livewire.guests.forums', $data);
     }
 }

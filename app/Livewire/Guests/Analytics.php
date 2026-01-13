@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
 use App\Models\Assessment;
 use App\Models\BookSubscription;
-use App\Models\Quiz;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
-use Carbon\Carbon;
 
 class Analytics extends Component
 {
@@ -23,11 +22,6 @@ class Analytics extends Component
         $this->loadAnalytics();
     }
 
-    public function updatedTimeframe()
-    {
-        $this->loadAnalytics();
-    }
-
     public function loadAnalytics()
     {
         $user = Auth::user();
@@ -36,7 +30,7 @@ class Analytics extends Component
             return;
         }
 
-        $cacheKey = "subscriber_analytics_{$user->id}_{$this->timeframe}";
+        $cacheKey = "guests_analytics_{$user->id}_{$this->timeframe}";
 
         $this->analyticsData = Cache::remember($cacheKey, 300, function () use ($user) {
             return $this->calculateAnalytics($user);
@@ -105,7 +99,7 @@ class Analytics extends Component
 
     private function getStartDate()
     {
-        return match($this->timeframe) {
+        return match ($this->timeframe) {
             'week' => Carbon::now()->startOfWeek(),
             'month' => Carbon::now()->startOfMonth(),
             'quarter' => Carbon::now()->startOfQuarter(),
@@ -275,8 +269,13 @@ class Analytics extends Component
         return $assessments->count() * 30; // 30 minutes per assessment session
     }
 
+    public function updatedTimeframe()
+    {
+        $this->loadAnalytics();
+    }
+
     public function render()
     {
-        return view('livewire.subscribers.analytics');
+        return view('livewire.guests.analytics');
     }
 }

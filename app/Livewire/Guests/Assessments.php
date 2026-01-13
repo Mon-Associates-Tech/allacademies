@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
-use App\Models\Assessment;
 use App\Models\AcademicSubject as Subject;
+use App\Models\Assessment;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -47,6 +47,6 @@ class Assessments extends Component
 
     public function render()
     {
-        return view('livewire.subscribers.assessments');
+        return view('livewire.guests.assessments');
     }
 }

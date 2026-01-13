@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
-use App\Models\StudentGroup;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
+use App\Models\StudentGroup;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -36,13 +36,6 @@ class StudyGroups extends Component
         $this->loadFormData();
     }
 
-    public function loadFormData()
-    {
-        $this->academicGroups = AcademicGroup::all();
-        $this->academicLevels = AcademicLevel::all();
-        $this->subjects = AcademicSubject::all();
-    }
-
     public function loadGroups()
     {
         $user = Auth::user();
@@ -66,36 +59,21 @@ class StudyGroups extends Component
             ->get();
     }
 
+    public function loadFormData()
+    {
+        $this->academicGroups = AcademicGroup::all();
+        $this->academicLevels = AcademicLevel::all();
+        $this->subjects = AcademicSubject::all();
+    }
+
     public function openJoinModal()
     {
         $this->showJoinModal = true;
     }
 
-    public function closeJoinModal()
-    {
-        $this->showJoinModal = false;
-        $this->joinCode = '';
-    }
-
     public function openCreateModal()
     {
         $this->showCreateModal = true;
-    }
-
-    public function closeCreateModal()
-    {
-        $this->showCreateModal = false;
-        $this->resetCreateForm();
-    }
-
-    public function resetCreateForm()
-    {
-        $this->name = '';
-        $this->description = '';
-        $this->academicGroupId = '';
-        $this->academicLevelId = '';
-        $this->subjectId = '';
-        $this->isPrivate = false;
     }
 
     public function createGroup()
@@ -132,6 +110,22 @@ class StudyGroups extends Component
         $this->loadGroups();
     }
 
+    public function closeCreateModal()
+    {
+        $this->showCreateModal = false;
+        $this->resetCreateForm();
+    }
+
+    public function resetCreateForm()
+    {
+        $this->name = '';
+        $this->description = '';
+        $this->academicGroupId = '';
+        $this->academicLevelId = '';
+        $this->subjectId = '';
+        $this->isPrivate = false;
+    }
+
     public function joinWithCode()
     {
         $user = Auth::user();
@@ -162,6 +156,12 @@ class StudyGroups extends Component
         session()->flash('success', 'Successfully joined the study group!');
         $this->closeJoinModal();
         $this->loadGroups();
+    }
+
+    public function closeJoinModal()
+    {
+        $this->showJoinModal = false;
+        $this->joinCode = '';
     }
 
     public function joinPublicGroup($groupId)
@@ -198,6 +198,6 @@ class StudyGroups extends Component
 
     public function render()
     {
-        return view('livewire.subscribers.study-groups');
+        return view('livewire.guests.study-groups');
     }
 }

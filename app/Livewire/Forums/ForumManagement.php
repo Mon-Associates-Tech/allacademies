@@ -95,20 +95,6 @@ class ForumManagement extends Component
         $this->restoreNavigationState();
     }
 
-    public function restoreNavigationState()
-    {
-        // If we have URL parameters, restore the state
-        if ($this->selectedTopic) {
-            $topic = ForumTopic::find($this->selectedTopic);
-            if ($topic) {
-                $this->selectedCategory = $topic->forum_category_id;
-                $this->currentView = 'posts';
-            }
-        } elseif ($this->selectedCategory) {
-            $this->currentView = 'topics';
-        }
-    }
-
     public function loadInitialData()
     {
         $this->academicLevels = AcademicLevel::all();
@@ -185,7 +171,22 @@ class ForumManagement extends Component
         return $slug;
     }
 
+    public function restoreNavigationState()
+    {
+        // If we have URL parameters, restore the state
+        if ($this->selectedTopic) {
+            $topic = ForumTopic::find($this->selectedTopic);
+            if ($topic) {
+                $this->selectedCategory = $topic->forum_category_id;
+                $this->currentView = 'posts';
+            }
+        } elseif ($this->selectedCategory) {
+            $this->currentView = 'topics';
+        }
+    }
+
     // Navigation Methods
+
     public function selectCategory($categoryId)
     {
         $category = ForumCategory::find($categoryId);
@@ -204,18 +205,6 @@ class ForumManagement extends Component
             return $category->canAccess(Auth::user());
         }
         return true;
-    }
-
-    public function selectTopic($topicId)
-    {
-        $topic = ForumTopic::find($topicId);
-        if ($topic) {
-            $topic->incrementViews();
-            $this->selectedTopic = $topicId;
-            $this->selectedCategory = $topic->forum_category_id;
-            $this->currentView = 'posts';
-            $this->resetPage();
-        }
     }
 
     public function backToCategories()
@@ -247,7 +236,6 @@ class ForumManagement extends Component
         $this->currentView = 'create-post';
     }
 
-    // CRUD Operations
     public function createTopic()
     {
         // Validate the input
@@ -306,6 +294,81 @@ class ForumManagement extends Component
         }
     }
 
+    // CRUD Operations
+
+    private function handleAttachments($attachments, $attachable)
+    {
+        if (empty($attachments)) return;
+
+        foreach ($attachments as $attachment) {
+            try {
+                $path = $attachment->store('forum-attachments', 'public');
+
+                ForumAttachment::create([
+                    'attachable_type' => get_class($attachable),
+                    'attachable_id' => $attachable->id,
+                    'file_name' => $attachment->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_size' => $attachment->getSize(),
+                    'mime_type' => $attachment->getMimeType(),
+                    'user_id' => Auth::id(),
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Error handling attachment: ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function handleMentions($content, $mentionable)
+    {
+        preg_match_all('/@([a-zA-Z0-9_]+)/', $content, $matches);
+
+        if (!empty($matches[1])) {
+            $usernames = array_unique($matches[1]);
+            $users = User::whereIn('name', $usernames)->get();
+
+            foreach ($users as $user) {
+                try {
+                    ForumMention::create([
+                        'mentionable_type' => get_class($mentionable),
+                        'mentionable_id' => $mentionable->id,
+                        'mentioned_user_id' => $user->id,
+                        'mentioning_user_id' => Auth::id(),
+                        'is_read' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Error creating mention: ' . $e->getMessage());
+                }
+            }
+        }
+    }
+
+    // Reaction Methods
+
+    private function resetTopicForm()
+    {
+        $this->reset([
+            'newTopicTitle', 'newTopicContent', 'newTopicTags',
+            'newTopicAcademicLevel', 'newTopicAcademicSubject',
+            'newTopicAcademicTopic', 'newTopicStudyGroup',
+            'newTopicReferencedBook', 'newTopicAttachments'
+        ]);
+    }
+
+    public function selectTopic($topicId)
+    {
+        $topic = ForumTopic::find($topicId);
+        if ($topic) {
+            $topic->incrementViews();
+            $this->selectedTopic = $topicId;
+            $this->selectedCategory = $topic->forum_category_id;
+            $this->currentView = 'posts';
+            $this->resetPage();
+        }
+    }
+
+    // Helper Methods
+
     public function createPost()
     {
         $this->validate(['newPostContent' => 'required|string|min:5']);
@@ -350,7 +413,11 @@ class ForumManagement extends Component
         }
     }
 
-    // Reaction Methods
+    private function resetPostForm()
+    {
+        $this->reset(['newPostContent', 'newPostAttachments', 'replyToPostId']);
+    }
+
     public function toggleLike($postId)
     {
         $post = ForumPost::find($postId);
@@ -403,7 +470,7 @@ class ForumManagement extends Component
             return;
         }
 
-        $url = route('subscriber.forums') . '?currentView=posts&selectedTopic=' . $post->forum_topic_id;
+        $url = route('guests.forums') . '?currentView=posts&selectedTopic=' . $post->forum_topic_id;
 
         // For now, we'll copy to clipboard via JavaScript
         $this->dispatch('sharePost', [
@@ -413,70 +480,8 @@ class ForumManagement extends Component
         ]);
     }
 
-    // Helper Methods
-    private function handleAttachments($attachments, $attachable)
-    {
-        if (empty($attachments)) return;
-
-        foreach ($attachments as $attachment) {
-            try {
-                $path = $attachment->store('forum-attachments', 'public');
-
-                ForumAttachment::create([
-                    'attachable_type' => get_class($attachable),
-                    'attachable_id' => $attachable->id,
-                    'file_name' => $attachment->getClientOriginalName(),
-                    'file_path' => $path,
-                    'file_size' => $attachment->getSize(),
-                    'mime_type' => $attachment->getMimeType(),
-                    'user_id' => Auth::id(),
-                ]);
-            } catch (\Exception $e) {
-                \Log::error('Error handling attachment: ' . $e->getMessage());
-            }
-        }
-    }
-
-    private function handleMentions($content, $mentionable)
-    {
-        preg_match_all('/@([a-zA-Z0-9_]+)/', $content, $matches);
-
-        if (!empty($matches[1])) {
-            $usernames = array_unique($matches[1]);
-            $users = User::whereIn('name', $usernames)->get();
-
-            foreach ($users as $user) {
-                try {
-                    ForumMention::create([
-                        'mentionable_type' => get_class($mentionable),
-                        'mentionable_id' => $mentionable->id,
-                        'mentioned_user_id' => $user->id,
-                        'mentioning_user_id' => Auth::id(),
-                        'is_read' => false,
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::error('Error creating mention: ' . $e->getMessage());
-                }
-            }
-        }
-    }
-
-    private function resetTopicForm()
-    {
-        $this->reset([
-            'newTopicTitle', 'newTopicContent', 'newTopicTags',
-            'newTopicAcademicLevel', 'newTopicAcademicSubject',
-            'newTopicAcademicTopic', 'newTopicStudyGroup',
-            'newTopicReferencedBook', 'newTopicAttachments'
-        ]);
-    }
-
-    private function resetPostForm()
-    {
-        $this->reset(['newPostContent', 'newPostAttachments', 'replyToPostId']);
-    }
-
     // Search and Filter Methods
+
     public function updatedSearch()
     {
         $this->resetPage();

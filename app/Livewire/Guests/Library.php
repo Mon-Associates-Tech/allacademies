@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
 use App\Models\Book;
 use App\Models\BookCategory;
@@ -63,7 +63,7 @@ class Library extends Component
             })
             ->orderBy($this->sortBy);
 
-        return view('livewire.subscribers.library', [
+        return view('livewire.guests.library', [
             'books' => $query->paginate(12),
             'categories' => BookCategory::all(),
             'subscribedBookIds' => $subscribedBookIds,

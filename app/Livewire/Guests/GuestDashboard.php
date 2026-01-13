@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
 use App\Models\Book;
 use App\Models\BookCategory as Category;
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class SubscriberDashboard extends Component
+class GuestDashboard extends Component
 {
     use WithPagination;
 
@@ -105,7 +105,7 @@ class SubscriberDashboard extends Component
 
     public function render(): View
     {
-        return view('livewire.subscribers.dashboard', [
+        return view('livewire.guests.dashboard', [
             'recentBooks' => $this->recentBooks,
             'subscribedBooks' => $this->subscribedBooks,
             'recommendedBooks' => $this->recommendedBooks,
