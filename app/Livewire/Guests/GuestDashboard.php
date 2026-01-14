@@ -33,15 +33,26 @@ class GuestDashboard extends Component
         $user = Auth::user();
 
         // Get recent free books (last 5)
-        $this->recentBooks = Book::where('is_free', true)
-            ->orWhere('price', '<', 1)
+        $this->recentBooks = Book::where(function($query) {
+                $query->where('is_free', true)
+                    ->orWhere('price', '<=', 0)
+                    ->orWhereNull('price')
+                    ->orWhere('annual_subscription_fee', '<=', 0)
+                    ->orWhereNull('annual_subscription_fee');
+            })
             ->with(['author', 'author.user', 'bookCategory'])
             ->latest()
             ->take(6)
             ->get();
 
         // Get all free books count
-        $this->freeBooks = Book::where('is_free', true)->orWhere('price', '<', 1)->count();
+        $this->freeBooks = Book::where(function($query) {
+                $query->where('is_free', true)
+                    ->orWhere('price', '<=', 0)
+                    ->orWhereNull('price')
+                    ->orWhere('annual_subscription_fee', '<=', 0)
+                    ->orWhereNull('annual_subscription_fee');
+            })->count();
 
         // Get user's subscribed books
 
