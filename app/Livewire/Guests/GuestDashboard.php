@@ -34,13 +34,14 @@ class GuestDashboard extends Component
 
         // Get recent free books (last 5)
         $this->recentBooks = Book::where('is_free', true)
+            ->orWhere('price', '>', 0)
             ->with(['author', 'author.user', 'bookCategory'])
             ->latest()
             ->take(4)
             ->get();
 
         // Get all free books count
-        $this->freeBooks = Book::where('is_free', true)->count();
+        $this->freeBooks = Book::where('is_free', true)->orWhere('price', '>', 0)->count();
 
         // Get user's subscribed books
 

@@ -122,7 +122,7 @@
                 </svg>
             </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @forelse($recentBooks as $book)
                 @include('livewire.books.partials.book-card')
             @empty
@@ -135,24 +135,26 @@
 
     <!-- My Subscriptions -->
 
-    <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">My Subscriptions</h2>
-            <a href="{{ route('books.index') }}"
-               class="inline-flex items-center gap-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-900/50 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group">
-                <span>View all</span>
-                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
-                     stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </a>
+    @if($subscribedBooks->isNotEmpty())
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">My Subscriptions</h2>
+                <a href="{{ route('books.index') }}"
+                   class="inline-flex items-center gap-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-900/50 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group">
+                    <span>View all</span>
+                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                         stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                @foreach($subscribedBooks as $subscription)
+                    @include('livewire.books.partials.book-card', ['book' => $subscription->book])
+                @endforeach
+            </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            @foreach($subscribedBooks as $subscription)
-                @include('livewire.books.partials.book-card', ['book' => $subscription->book])
-            @endforeach
-        </div>
-    </div>
+    @endif
 
 
     <!-- Recommended Books -->
@@ -168,7 +170,7 @@
                 </svg>
             </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @forelse($recommendedBooks as $book)
                 @include('livewire.books.partials.book-card')
             @empty
