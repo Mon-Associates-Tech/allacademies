@@ -23,25 +23,25 @@ class GuestDashboard extends Component
     public $guestCapabilities = [];
     public $quickStats = [];
 
-    public function mount()
+    public function mount(): void
     {
         $this->loadDashboardData();
     }
 
-    public function loadDashboardData()
+    public function loadDashboardData(): void
     {
         $user = Auth::user();
 
         // Get recent free books (last 5)
         $this->recentBooks = Book::where('is_free', true)
-            ->orWhere('price', '>', 0)
+            ->orWhere('price', '<', 1)
             ->with(['author', 'author.user', 'bookCategory'])
             ->latest()
-            ->take(4)
+            ->take(6)
             ->get();
 
         // Get all free books count
-        $this->freeBooks = Book::where('is_free', true)->orWhere('price', '>', 0)->count();
+        $this->freeBooks = Book::where('is_free', true)->orWhere('price', '<', 1)->count();
 
         // Get user's subscribed books
 
@@ -147,7 +147,7 @@ class GuestDashboard extends Component
         ];
     }
 
-    public function subscribeToBook($bookId)
+    public function subscribeToBook($bookId): void
     {
         $user = Auth::user();
 
@@ -167,8 +167,8 @@ class GuestDashboard extends Component
             'book_id' => $bookId,
             'user_id' => $user->id,
             'status' => 'paid',
-            'subscription_date' => now(),
-            'expiry_date' => now()->addYear(),
+            'start_date' => now(),
+            'end_date' => now()->addYear(),
         ]);
 
         session()->flash('success', 'Successfully subscribed to the book!');
