@@ -17,7 +17,7 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        $query = Book::with(['author', 'bookCategory'])->whereStatus(PublishingStatus::PUBLISHED->value);
+        $query = Book::with(['author', 'categories', 'bookCategory'])->whereStatus(PublishingStatus::PUBLISHED->value);
 
         // Search filter (title or author)
         if ($request->query('search')) {
@@ -31,7 +31,11 @@ class BookController extends Controller
         }
 
         if ($request->filled('category')) {
-            $query->where('book_category_id', $request->category);
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('categories', function ($query) use ($request) {
+                    $query->where('book_category.category_id', $request->category);
+                })->orWhere('book_category_id', $request->category);
+            });
         }
 
         if ($request->filled('format')) {
@@ -64,6 +68,30 @@ class BookController extends Controller
         $books = $query->paginate(12)->appends($request->query());
         $categories = BookCategory::all();
 
+        // Get top categories with books for homepage display
+        if (!$request->hasAny(['search', 'category', 'format', 'price'])) {
+            $topCategories = BookCategory::withCount('books')
+                ->having('books_count', '>', 6)
+                ->orderBy('books_count', 'desc')
+                ->limit(6)
+                ->get()
+                ->map(function ($category) {
+                    $category->books = Book::with(['author', 'categories', 'bookCategory'])
+                        ->whereStatus(PublishingStatus::PUBLISHED->value)
+                        ->where(function ($query) use ($category) {
+                            $query->whereHas('categories', function ($q) use ($category) {
+                                $q->where('book_category.category_id', $category->id);
+                            })->orWhere('book_category_id', $category->id);
+                        })
+                        ->limit(6)
+                        ->get();
+
+                    return $category;
+                });
+        } else {
+            $topCategories = null;
+        }
+
         // Get user's subscriptions and borrowings for status checking
         $subscribedBookIds = $user->bookSubscriptions()
             ->where('status', 'paid')
@@ -73,7 +101,7 @@ class BookController extends Controller
             ->where('status', 'borrowed')
             ->pluck('book_id')->toArray() ?: [];
 
-        return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds'));
+        return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds', 'topCategories'));
     }
 
     public function show(Book $book)
@@ -87,16 +115,23 @@ class BookController extends Controller
                     ->with('user')
                     ->latest()
                     ->limit(5);
-            }
+            },
         ]);
 
         // Get related books from the same category
-        $relatedBooks = Book::with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
-        ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->whereHas('categories', function ($q) use ($book) { // Changed approach
-                $q->whereIn('category_id', $book->categories->pluck('id'));
-            })
+        $categoryIds = $book->categories->pluck('id');
+        if ($categoryIds->isEmpty() && $book->book_category_id) {
+            $categoryIds = collect([$book->book_category_id]);
+        }
+
+        $relatedBooks = Book::with(['author', 'categories', 'bookCategory'])
+            ->whereStatus(PublishingStatus::PUBLISHED->value)
             ->where('id', '!=', $book->id)
+            ->where(function ($query) use ($categoryIds) {
+                $query->whereHas('categories', function ($q) use ($categoryIds) {
+                    $q->whereIn('book_category.category_id', $categoryIds);
+                })->orWhereIn('book_category_id', $categoryIds);
+            })
             ->limit(4)
             ->get();
 
@@ -145,7 +180,6 @@ class BookController extends Controller
         $user = Auth::user();
         $student = $user->student;
 
-
         // Check if already subscribed
         $existingSubscription = $user->bookSubscriptions()
             ->where('book_id', $book->id)
@@ -166,13 +200,13 @@ class BookController extends Controller
                 'status' => SubscriptionStatus::PAID,
                 'annual_fee' => 0,
                 'reference' => 'FREE_' . uniqid(),
-                'payment_completed_at' => now()
+                'payment_completed_at' => now(),
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Successfully added to your library!',
-                'subscription' => $subscription
+                'subscription' => $subscription,
             ]);
         }
 
@@ -184,14 +218,14 @@ class BookController extends Controller
             'end_date' => now()->addYear(),
             'status' => 'pending_payment',
             'annual_fee' => $book->annual_subscription_fee,
-            'reference' => 'SUB_' . uniqid()
+            'reference' => 'SUB_' . uniqid(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Subscription created. Please complete payment.',
             'subscription' => $subscription,
-            'requires_payment' => true
+            'requires_payment' => true,
         ]);
     }
 
@@ -223,13 +257,13 @@ class BookController extends Controller
             'book_id' => $book->id,
             'request_date' => now(),
             'status' => 'pending_approval',
-            'notes' => $request->notes
+            'notes' => $request->notes,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Borrow request submitted successfully!',
-            'borrowing' => $borrowing
+            'borrowing' => $borrowing,
         ]);
     }
 
@@ -267,10 +301,12 @@ class BookController extends Controller
      */
     public function getByCategory(Request $request, BookCategory $category)
     {
-        $books = Book::with(['author', 'categories']) // Changed from 'bookCategory' to 'categories'
-        ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->whereHas('categories', function ($query) use ($category) { // Changed approach
-                $query->where('category_id', $category->id);
+        $books = Book::with(['author', 'categories', 'bookCategory'])
+            ->whereStatus(PublishingStatus::PUBLISHED->value)
+            ->where(function ($query) use ($category) {
+                $query->whereHas('categories', function ($q) use ($category) {
+                    $q->where('book_category.category_id', $category->id);
+                })->orWhere('book_category_id', $category->id);
             })
             ->when($request->limit, function ($query, $limit) {
                 return $query->limit($limit);
@@ -283,7 +319,7 @@ class BookController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'books' => $books,
-                'category' => $category
+                'category' => $category,
             ]);
         }
 
@@ -295,9 +331,9 @@ class BookController extends Controller
      */
     public function getFeatured()
     {
-        $featuredBooks = Book::with(['author', 'bookCategory'])
+        $featuredBooks = Book::with(['author', 'categories', 'bookCategory'])
             ->whereStatus(PublishingStatus::PUBLISHED->value)
-            ->where('is_featured', true) // Assuming you have a featured flag
+            ->where('is_featured', true)
             ->orWhereHas('subscriptions', function ($query) {
                 $query->where('status', 'paid');
             })
