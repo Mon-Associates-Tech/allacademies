@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
 
 class School extends Model
@@ -54,7 +53,7 @@ class School extends Model
     protected $casts = [
         'settings' => 'array',
         'subscription_ends_at' => 'datetime',
-        'established_date' => 'date'
+        'established_date' => 'date',
     ];
 
     // Relationships
@@ -89,7 +88,8 @@ class School extends Model
     {
         $prefix = strtoupper(substr($this->name, 0, 3));
         $suffix = str_pad(School::count() + 1, 4, '0', STR_PAD_LEFT);
-        return $prefix . $suffix;
+
+        return $prefix.$suffix;
     }
 
     public function scopeActive($query)
@@ -159,16 +159,14 @@ class School extends Model
         return $this->academicLevels()->where('academic_level_id', $levelId)->exists();
     }
 
-
     // Get admins using existing roles system
 
     public function getAvailableAcademicLevels()
     {
         $groupIds = $this->academicGroups()->pluck('academic_groups.id');
+
         return AcademicLevel::whereIn('academic_group_id', $groupIds)->get();
     }
-
-
 
     public function students(): HasMany
     {
@@ -233,7 +231,7 @@ class School extends Model
     public function getCurrentPeriod(): ?AcademicPeriod
     {
         return $this->academicPeriods()->where('status', 'active')->first();
-//        return $this->academicPeriods()->where('is_current', true)->first();
+        //        return $this->academicPeriods()->where('is_current', true)->first();
     }
 
     public function getPeriodsForYear(string $academicYear)
@@ -282,7 +280,7 @@ class School extends Model
             ->exists();
     }
 
-// Add this relationship to School model
+    // Add this relationship to School model
 
     public function studentGroups(): HasMany
     {
@@ -294,7 +292,7 @@ class School extends Model
         return $this->hasMany(StudentGroup::class)->where('is_active', true);
     }
 
-// Update getStats method to include student groups
+    // Update getStats method to include student groups
     public function getStats(): array
     {
         $currentPeriod = $this->getCurrentPeriod();

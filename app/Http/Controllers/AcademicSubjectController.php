@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AcademicSubjectRequest;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Http\Requests\AcademicSubjectRequest;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
-
 
 class AcademicSubjectController extends Controller
 {
@@ -19,8 +18,7 @@ class AcademicSubjectController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
-    public function index(AcademicGroup $academicGroup,  AcademicLevel $academicLevel, AcademicSubject $academicSubject)
-
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         $this->authorize('moderate');
 
@@ -52,11 +50,6 @@ class AcademicSubjectController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubjectRequest $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubjectRequest $request): RedirectResponse
     {
@@ -71,12 +64,9 @@ class AcademicSubjectController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
-    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel,  AcademicSubject $academicSubject)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
     {
         // Get paginated topics with subtopics count
         $topics = $academicSubject->academicTopics()
@@ -89,9 +79,6 @@ class AcademicSubjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
@@ -107,12 +94,6 @@ class AcademicSubjectController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubjectRequest $request
-     * @param AcademicSubject $academicSubject
-     * @return RedirectResponse
      */
     public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubjectRequest $request, AcademicSubject $academicSubject): RedirectResponse
     {
@@ -120,17 +101,12 @@ class AcademicSubjectController extends Controller
 
         $academicSubject->update($request->validated());
 
-        return to_route('academic-subjects.show', ['academic_group' => $academicGroup, 'academic_level' => $academicLevel, 'academic_subject' =>  $academicSubject])
+        return to_route('academic-subjects.show', ['academic_group' => $academicGroup, 'academic_level' => $academicLevel, 'academic_subject' => $academicSubject])
             ->with('success', __('status.resource.updated', ['name' => $academicSubject->name]));
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @return RedirectResponse
      */
     public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject): RedirectResponse
     {
@@ -138,6 +114,7 @@ class AcademicSubjectController extends Controller
 
         $academicSubject->load('academicLevel');
         $academicSubject->delete();
+
         return to_route('academic-subjects.index', ['academic_group' => $academicGroup, 'academic_level' => $academicSubject->academicLevel])
             ->with('success', __('status.resource.deleted', ['name' => $academicSubject->name]));
     }

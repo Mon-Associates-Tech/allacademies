@@ -59,7 +59,6 @@ class SchoolFee extends Model
         return $this->belongsTo(Student::class, 'student_id');
     }
 
-
     // Relationship to term (academic period)
     public function academicPeriod()
     {
@@ -90,6 +89,7 @@ class SchoolFee extends Model
             if ($this->payer_type === 'parent' && isset($this->payer->user)) {
                 return $this->payer->user->name ?? 'Unknown Payer';
             }
+
             // For student and other payers, directly access the name
             return $this->payer->name ?? 'Unknown Payer';
         }

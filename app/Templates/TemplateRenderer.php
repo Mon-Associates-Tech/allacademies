@@ -2,33 +2,28 @@
 
 namespace App\Templates;
 
-use Closure;
 use Illuminate\Support\Str;
 
 class TemplateRenderer
 {
-
-    public function render($template = 'twig'): void
-    {
-
-    }
+    public function render($template = 'twig'): void {}
 
     public static function renderTwig($instructions, $duration, $title, $metadata): string
     {
 
-            // Validate metadata array keys
-            $levelLabel = $metadata['level_label'] ?? 'N/A';
-            $subjectCode = $metadata['subject_code'] ?? 'N/A';
+        // Validate metadata array keys
+        $levelLabel = $metadata['level_label'] ?? 'N/A';
+        $subjectCode = $metadata['subject_code'] ?? 'N/A';
 
-            // Escape HTML content
-            $instructions = $instructions ?? 'INSTRUCTIONS';
+        // Escape HTML content
+        $instructions = $instructions ?? 'INSTRUCTIONS';
 
-            // Validate duration before conversion
-            $duration = $duration && is_numeric($duration)
-                ? convertMinutesToHoursMinutes($duration)
-                : 'DURATION';
+        // Validate duration before conversion
+        $duration = $duration && is_numeric($duration)
+            ? convertMinutesToHoursMinutes($duration)
+            : 'DURATION';
 
-            return sprintf(<<<'TWIG'
+        return sprintf(<<<'TWIG'
     <div>
         <div class="text-center">
             <h1 class="font-semibold uppercase">%s</h1>
@@ -41,11 +36,11 @@ class TemplateRenderer
         </div>
     </div>
     TWIG, $title, $levelLabel, $subjectCode, $duration, $instructions);
-        }
+    }
 
-        public static function renderPug($instructions, $duration, $title, $metadata): string
-        {
-            return   sprintf(<<<'PUG'
+    public static function renderPug($instructions, $duration, $title, $metadata): string
+    {
+        return sprintf(<<<'PUG'
             <div class="border border-black p-5 mb-5 space-y-5">
                 <div class="text-center">
                     <h1 class="font-semibold uppercase">%s</h1>
@@ -63,12 +58,12 @@ class TemplateRenderer
                 </div>
             </div>
             PUG, $title ?: 'TITLE', $metadata['level_name'], $metadata['subject_name'], $duration ? convertMinutesToHoursMinutes($duration) : 'DURATION', $instructions ?: 'INSTRUCTIONS');
-        }
+    }
 
-        public function renderTera($instructions, $duration, $title, $metadata,  $generate): string
-        {
+    public function renderTera($instructions, $duration, $title, $metadata, $generate): string
+    {
 
-                return  sprintf(<<<'TERA'
+        return sprintf(<<<'TERA'
             <div class="space-y-5 mb-5">
                 <div class="text-center">
                     <img src="%s" alt="logo" class="w-20 mx-auto">
@@ -88,11 +83,12 @@ class TemplateRenderer
             </div>
             TERA, $metadata['logo'], $generate('<h1 class="font-semibold uppercase"></h1>'), $title ?: 'TITLE', $metadata['subject_code'], $metadata['subject_name'], $instructions ?: 'INSTRUCTIONS', $duration ? convertMinutesToHoursMinutes($duration) : 'DURATION');
 
-        }
+    }
 
-        public function renderJinja($instructions, $duration, $title, $metadata, $generate): string{
+    public function renderJinja($instructions, $duration, $title, $metadata, $generate): string
+    {
 
-                return sprintf(<<<'JINJA'
+        return sprintf(<<<'JINJA'
             <div class="space-y-5 mb-5">
                 <div class="flex items-center space-x-5">
                     <div class="flex-none border-4 border-black p-2 max-w-xs">
@@ -118,6 +114,5 @@ class TemplateRenderer
             </div>
             JINJA, $metadata['subject_code'], $title ?: 'TITLE', $metadata['subject_name'], $duration ? convertMinutesToHoursMinutes($duration) : 'DURATION', Str::repeat('.', 500), Str::repeat('.', 500), $generate('<h1 class="font-semibold uppercase"></h1>'), $metadata['level_label'], $metadata['subject_name'], $duration ? convertMinutesToHoursMinutes($duration) : 'DURATION', $instructions ?: 'INSTRUCTIONS');
 
-        }
-
+    }
 }

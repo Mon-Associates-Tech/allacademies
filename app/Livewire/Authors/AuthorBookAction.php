@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AuthorBookAction extends AppComponent
 {
-
     public function deleteBook($bookToDelete): void
     {
         if ($bookToDelete) {
@@ -24,5 +23,4 @@ class AuthorBookAction extends AppComponent
         }
         session()->flash('success', 'Book not removed');
     }
-
 }

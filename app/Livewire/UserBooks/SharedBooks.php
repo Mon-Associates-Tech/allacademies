@@ -9,7 +9,9 @@ use Livewire\Component;
 class SharedBooks extends Component
 {
     public $activeTab = 'my-books'; // Define the property with default value
+
     public $sharedByMe;
+
     public function acceptShare(UserBookShare $share): void
     {
         if ($share->shared_to_user_id !== auth()->id()) {
@@ -50,7 +52,6 @@ class SharedBooks extends Component
             ->where('shared_to_user_id', auth()->id())
             ->where('status', 'accepted')
             ->get();
-
 
         // Get group-based shares
         $groupShares = UserBookShare::with(['userBook', 'sharedBy', 'academicGroup', 'academicLevel', 'studentGroup'])

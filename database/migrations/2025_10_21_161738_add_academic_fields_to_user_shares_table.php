@@ -62,7 +62,7 @@ return new class extends Migration
                 'student_group_id',
                 'share_type',
                 'expires_at',
-                'notes'
+                'notes',
             ]);
         });
     }

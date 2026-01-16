@@ -58,7 +58,10 @@ class Book extends Model
         'audio_conversion_progress',
         'audio_conversion_attempts',
         'audio_conversion_last_attempt',
-
+        'age_groups',
+        'academic_group_ids',
+        'academic_level_ids',
+        'academic_subject_ids',
     ];
 
     protected $casts = [
@@ -77,6 +80,10 @@ class Book extends Model
         'audio_conversion_progress' => 'array',
         'audio_conversion_attempts' => 'integer',
         'audio_conversion_last_attempt' => 'datetime',
+        'age_groups' => 'array',
+        'academic_group_ids' => 'array',
+        'academic_level_ids' => 'array',
+        'academic_subject_ids' => 'array',
     ];
 
     protected static function boot()
@@ -112,7 +119,7 @@ class Book extends Model
 
     public function getAuthorNameAttribute()
     {
-        return $this->author->name
+        return $this->author?->name
             ?? $this->author?->user?->name
             ?? 'Unknown';
     }
@@ -625,39 +632,56 @@ class Book extends Model
 
     public function getSingleAudioAttribute(): ?string
     {
-        return $this->media?->getSingleAudioAttribute();
+        if (isset($this->attributes['single_audio']) && $this->attributes['single_audio']) {
+            return $this->attributes['single_audio'];
+        }
+
+        return $this->media?->single_audio;
     }
 
     public function getSingleVideoAttribute(): ?string
     {
-        return $this->media?->getSingleVideoAttribute();
-    }
+        if (isset($this->attributes['single_video']) && $this->attributes['single_video']) {
+            return $this->attributes['single_video'];
+        }
 
-    // public function getChapterAudiosAttribute(): array
-    // {
-    //     return $this->media?->getChapterAudiosAttribute() ?? [];
-    // }
+        return $this->media?->single_video;
+    }
 
     public function getChapterAudiosAttribute(): array
     {
-        $media = $this->media()->first(); // Always fetch the media row
+        if (isset($this->attributes['chapter_audios'])) {
+            $decoded = is_string($this->attributes['chapter_audios'])
+                ? json_decode($this->attributes['chapter_audios'], true)
+                : $this->attributes['chapter_audios'];
 
-        return $media?->chapter_audios ?? [];
-    }
+            return $decoded ?? [];
+        }
 
-    public function media(): HasOne|Book
-    {
-        return $this->hasOne(BookMedia::class);
+        return $this->media?->chapter_audios ?? [];
     }
 
     public function getChapterVideosAttribute(): array
     {
-        return $this->media?->getChapterVideosAttribute() ?? [];
+        if (isset($this->attributes['chapter_videos'])) {
+            $decoded = is_string($this->attributes['chapter_videos'])
+                ? json_decode($this->attributes['chapter_videos'], true)
+                : $this->attributes['chapter_videos'];
+
+            return $decoded ?? [];
+        }
+
+        return $this->media?->chapter_videos ?? [];
     }
 
     public function tableOfContents(): HasOne|Book
     {
         return $this->hasOne(BookTableOfContent::class);
+    }
+
+    public function media(): HasOne
+    {
+        return $this->hasOne(BookMedia::class, 'book_id');
     }
 
     public function quizSessions()

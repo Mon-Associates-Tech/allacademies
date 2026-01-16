@@ -216,7 +216,7 @@ class SubscriptionController extends Controller
             ];
         })->toArray();
 
-        if (!$user->currentTeam) {
+        if (! $user->currentTeam) {
             return redirect()->route('teams.create')->with('error', 'Please create a team before creating a subscription.');
         }
 
@@ -307,7 +307,7 @@ class SubscriptionController extends Controller
 
         if (
             ($user->currentTeam->is_personal && $package === SubscriptionPackage::INSTITUTION_FULL)
-            || (!$user->currentTeam->is_personal && $package === SubscriptionPackage::INDIVIDUAL_FULL)
+            || (! $user->currentTeam->is_personal && $package === SubscriptionPackage::INDIVIDUAL_FULL)
         ) {
             throw ValidationException::withMessages([
                 'package' => 'You can not subscribe to this package for the current team',
@@ -331,7 +331,7 @@ class SubscriptionController extends Controller
      */
     public function show(Subscription $subscription)
     {
-        Gate::allowIf(static fn($user) => $user->current_team_id === $subscription->team_id);
+        Gate::allowIf(static fn ($user) => $user->current_team_id === $subscription->team_id);
 
         $subscription->load([
             'academicSubjects.academicLevel.academicGroup',
@@ -351,7 +351,7 @@ class SubscriptionController extends Controller
      */
     public function destroy(Subscription $subscription): RedirectResponse
     {
-        Gate::allowIf(static fn($user) => $user->current_team_id === $subscription->team_id);
+        Gate::allowIf(static fn ($user) => $user->current_team_id === $subscription->team_id);
         Gate::allowIf($subscription->status === SubscriptionStatus::UNPAID);
 
         DB::transaction(static function () use ($subscription) {
@@ -367,19 +367,19 @@ class SubscriptionController extends Controller
     public function toggleTestMode(Request $request)
     {
 
-        if (!in_array(auth()->user()->email, special_access_emails())) {
+        if (! in_array(auth()->user()->email, special_access_emails())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         // Toggle the test mode
         $currentMode = session('TESTING_SUBSCRIPTIONS', false);
-        session(['TESTING_SUBSCRIPTIONS' => !$currentMode]);
-        session()->flash('message', !$currentMode ? 'Test mode enabled' : 'Test mode disabled');
+        session(['TESTING_SUBSCRIPTIONS' => ! $currentMode]);
+        session()->flash('message', ! $currentMode ? 'Test mode enabled' : 'Test mode disabled');
 
         return response()->json([
             'success' => true,
-            'testing_mode' => !$currentMode,
-            'message' => !$currentMode ? 'Test mode enabled' : 'Test mode disabled',
+            'testing_mode' => ! $currentMode,
+            'message' => ! $currentMode ? 'Test mode enabled' : 'Test mode disabled',
         ]);
     }
 }

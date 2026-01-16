@@ -15,7 +15,7 @@ class Examiner
 
             return [
                 ...$section,
-                'questions' => $questions
+                'questions' => $questions,
             ];
         }, $examination->sections);
     }

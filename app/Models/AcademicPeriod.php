@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Models\Attendance\Attendance;
 use App\Traits\BelongsToSchoolEnhanced;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 class AcademicPeriod extends Model
 {
-    use HasFactory, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory;
 
     protected $fillable = [
         'school_id',
@@ -65,18 +65,18 @@ class AcademicPeriod extends Model
 
         // Auto-calculate total weeks if not provided
         static::creating(function ($period) {
-            if (!$period->total_weeks && $period->start_date && $period->end_date) {
+            if (! $period->total_weeks && $period->start_date && $period->end_date) {
                 $period->total_weeks = $period->start_date->diffInWeeks($period->end_date);
             }
 
             // Auto-generate academic year if not provided
-            if (!$period->academic_year && $period->start_date) {
+            if (! $period->academic_year && $period->start_date) {
                 $period->academic_year = $period->generateAcademicYear();
             }
         });
 
         static::updating(function ($period) {
-            if ($period->isDirty(['start_date', 'end_date']) && !$period->isDirty('total_weeks')) {
+            if ($period->isDirty(['start_date', 'end_date']) && ! $period->isDirty('total_weeks')) {
                 $period->total_weeks = $period->start_date->diffInWeeks($period->end_date);
             }
         });
@@ -160,6 +160,7 @@ class AcademicPeriod extends Model
     public function isActive(): bool
     {
         $now = Carbon::now();
+
         return $this->status === 'active' &&
             $now->between($this->start_date, $this->end_date);
     }
@@ -222,26 +223,29 @@ class AcademicPeriod extends Model
         }
 
         $typeTitle = ucfirst($this->type);
+
         return "{$typeTitle} {$this->sequence}";
     }
 
     public function canRegister(): bool
     {
-        if (!$this->registration_start || !$this->registration_end) {
+        if (! $this->registration_start || ! $this->registration_end) {
             return $this->status === 'upcoming';
         }
 
         $now = Carbon::now();
+
         return $now->between($this->registration_start, $this->registration_end);
     }
 
     public function isExamPeriod(): bool
     {
-        if (!$this->exam_start || !$this->exam_end) {
+        if (! $this->exam_start || ! $this->exam_end) {
             return false;
         }
 
         $now = Carbon::now();
+
         return $now->between($this->exam_start, $this->exam_end);
     }
 
@@ -265,6 +269,7 @@ class AcademicPeriod extends Model
     public static function createPeriodForSchool($schoolId, array $data): AcademicPeriod
     {
         $data['school_id'] = $schoolId;
+
         return static::create($data);
     }
 

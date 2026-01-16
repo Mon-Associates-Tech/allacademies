@@ -1,6 +1,5 @@
 <?php
 
-
 use App\Livewire\Forums\ForumManagement;
 use App\Livewire\Guests\Analytics;
 use App\Livewire\Guests\Assessments;
@@ -13,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
 
-// Subscriber Routes
+    // Subscriber Routes
     Route::prefix('guest')->name('guests.')->group(function () {
         Route::get('/library', Library::class)->name('library');
         Route::get('/assessments', Assessments::class)->name('assessments');
@@ -23,6 +22,6 @@ Route::middleware(['auth', 'verified'])->prefix('')->group(function () {
         Route::get('/groups', StudyGroups::class)->name('groups');
         Route::get('/premium', Premium::class)->name('premium');
         Route::get('/analytics', Analytics::class)->name('analytics');
-//        Route::get('courses', Courses::class)->name('courses');
+        //        Route::get('courses', Courses::class)->name('courses');
     });
 });

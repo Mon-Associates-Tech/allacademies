@@ -20,7 +20,7 @@ class BookProgressController extends Controller
             'current_page' => 'required|integer|min:1',
             'total_pages' => 'required|integer|min:1',
             'chapter_id' => 'nullable|integer',
-            'notes' => 'nullable|string|max:1000'
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         $user = Auth::user();
@@ -32,7 +32,7 @@ class BookProgressController extends Controller
             $progress = BookReadingProgress::updateOrCreate(
                 [
                     'book_id' => $request->book_id,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
                 ],
                 [
                     'current_page' => $request->current_page,
@@ -40,7 +40,7 @@ class BookProgressController extends Controller
                     'progress_percentage' => $progressPercentage,
                     'chapter_id' => $request->chapter_id,
                     'notes' => $request->notes,
-                    'last_read_at' => now()
+                    'last_read_at' => now(),
                 ]
             );
 
@@ -54,7 +54,7 @@ class BookProgressController extends Controller
                         'current_page' => $request->current_page,
                         'total_pages' => $request->total_pages,
                         'progress_percentage' => $progressPercentage,
-                        'chapter_id' => $request->chapter_id
+                        'chapter_id' => $request->chapter_id,
                     ])
                     ->log('Reading progress updated');
             }
@@ -63,7 +63,7 @@ class BookProgressController extends Controller
                 'success' => true,
                 'progress' => $progress,
                 'progress_percentage' => $progressPercentage,
-                'message' => 'Reading progress updated successfully'
+                'message' => 'Reading progress updated successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -71,12 +71,12 @@ class BookProgressController extends Controller
                 'user_id' => $user->id,
                 'book_id' => $request->book_id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update reading progress'
+                'message' => 'Failed to update reading progress',
             ], 500);
         }
     }
@@ -92,11 +92,11 @@ class BookProgressController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$progress) {
+        if (! $progress) {
             return response()->json([
                 'progress' => null,
                 'progress_percentage' => 0,
-                'message' => 'No reading progress found'
+                'message' => 'No reading progress found',
             ]);
         }
 
@@ -117,9 +117,9 @@ class BookProgressController extends Controller
                 'notes' => $progress->notes,
                 'last_read_at' => $progress->last_read_at?->toISOString(),
                 'created_at' => $progress->created_at?->toISOString(),
-                'updated_at' => $progress->updated_at?->toISOString()
+                'updated_at' => $progress->updated_at?->toISOString(),
             ],
-            'progress_percentage' => $progressPercentage
+            'progress_percentage' => $progressPercentage,
         ]);
     }
 
@@ -153,7 +153,7 @@ class BookProgressController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $progress
+            'data' => $progress,
         ]);
     }
 
@@ -163,7 +163,7 @@ class BookProgressController extends Controller
     public function markCompleted(Request $request)
     {
         $request->validate([
-            'book_id' => 'required|exists:books,id'
+            'book_id' => 'required|exists:books,id',
         ]);
 
         $user = Auth::user();
@@ -173,14 +173,14 @@ class BookProgressController extends Controller
             $progress = BookReadingProgress::updateOrCreate(
                 [
                     'book_id' => $request->book_id,
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
                 ],
                 [
                     'current_page' => $book->total_pages ?? 1,
                     'total_pages' => $book->total_pages ?? 1,
                     'progress_percentage' => 100,
                     'last_read_at' => now(),
-                    'completed_at' => now()
+                    'completed_at' => now(),
                 ]
             );
 
@@ -191,7 +191,7 @@ class BookProgressController extends Controller
                     ->causedBy($user)
                     ->withProperties([
                         'action' => 'book_completed',
-                        'progress_percentage' => 100
+                        'progress_percentage' => 100,
                     ])
                     ->log('Book completed');
             }
@@ -199,19 +199,19 @@ class BookProgressController extends Controller
             return response()->json([
                 'success' => true,
                 'progress' => $progress,
-                'message' => 'Book marked as completed'
+                'message' => 'Book marked as completed',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to mark book as completed', [
                 'user_id' => $user->id,
                 'book_id' => $request->book_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to mark book as completed'
+                'message' => 'Failed to mark book as completed',
             ], 500);
         }
     }
@@ -228,10 +228,10 @@ class BookProgressController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$progress) {
+            if (! $progress) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No reading progress found to delete'
+                    'message' => 'No reading progress found to delete',
                 ], 404);
             }
 
@@ -239,19 +239,19 @@ class BookProgressController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Reading progress deleted successfully'
+                'message' => 'Reading progress deleted successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to delete reading progress', [
                 'user_id' => $user->id,
                 'book_id' => $book->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete reading progress'
+                'message' => 'Failed to delete reading progress',
             ], 500);
         }
     }

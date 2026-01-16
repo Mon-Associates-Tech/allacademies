@@ -12,14 +12,18 @@ class Quizzes extends Component
 {
     use WithPagination;
 
-
     public $academicGroup;
+
     public $academicLevel;
+
     public $academicSubject;
 
     public $search = '';
+
     public $subject = '';
+
     public $difficulty = '';
+
     public $status = 'available'; // 'available', 'completed', 'all'
 
     public function mount($academicGroup = null, $academicLevel = null, $academicSubject = null)
@@ -43,7 +47,7 @@ class Quizzes extends Component
     {
         $query = Quiz::with(['academicSubject'])
             ->when($this->search, function ($q) {
-                return $q->where('title', 'like', '%' . $this->search . '%');
+                return $q->where('title', 'like', '%'.$this->search.'%');
             })
             ->when($this->subject, function ($q) {
                 return $q->where('academic_subject_id', $this->subject);

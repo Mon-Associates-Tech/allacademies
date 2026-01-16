@@ -13,21 +13,32 @@ use Livewire\Component;
 class StudyGroups extends Component
 {
     public $showJoinModal = false;
+
     public $showCreateModal = false;
+
     public $joinCode = '';
+
     public $myGroups = [];
+
     public $publicGroups = [];
 
     // Create group form fields
     public $name = '';
+
     public $description = '';
+
     public $academicGroupId = '';
+
     public $academicLevelId = '';
+
     public $subjectId = '';
+
     public $isPrivate = false;
 
     public $academicGroups = [];
+
     public $academicLevels = [];
+
     public $subjects = [];
 
     public function mount()
@@ -88,8 +99,9 @@ class StudyGroups extends Component
 
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             session()->flash('error', 'Only students can create study groups.');
+
             return;
         }
 
@@ -130,8 +142,9 @@ class StudyGroups extends Component
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             session()->flash('error', 'Only students can join study groups.');
+
             return;
         }
 
@@ -139,14 +152,16 @@ class StudyGroups extends Component
             ->where('is_approved', true)
             ->first();
 
-        if (!$group) {
+        if (! $group) {
             session()->flash('error', 'Invalid join code or group not approved yet.');
+
             return;
         }
 
         // Check if already a member
         if ($group->students()->where('students.id', $user->student->id)->exists()) {
             session()->flash('error', 'You are already a member of this group.');
+
             return;
         }
 
@@ -168,8 +183,9 @@ class StudyGroups extends Component
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             session()->flash('error', 'Only students can join study groups.');
+
             return;
         }
 
@@ -178,14 +194,16 @@ class StudyGroups extends Component
             ->where('is_private', false)
             ->first();
 
-        if (!$group) {
+        if (! $group) {
             session()->flash('error', 'Group not found or not available for joining.');
+
             return;
         }
 
         // Check if already a member
         if ($group->students()->where('students.id', $user->student->id)->exists()) {
             session()->flash('error', 'You are already a member of this group.');
+
             return;
         }
 

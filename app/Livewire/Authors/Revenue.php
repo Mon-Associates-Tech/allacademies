@@ -7,23 +7,28 @@ use App\Models\Author;
 use App\Models\BookSubscription;
 use App\Models\Payment;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 
 class Revenue extends AppComponent
 {
     public Author $author;
+
     public $dateRange = '30'; // days
+
     public $selectedPeriod = 'monthly';
+
     public $selectedBook = 'all';
+
     public $showDetails = false;
 
     public function mount(?Author $author)
     {
         $this->author = auth()->user()->author;
 
-        if (!$this->author) {
+        if (! $this->author) {
             session()->flash('error', 'Author profile not found.');
+
             return redirect()->route('dashboard');
         }
     }
@@ -61,7 +66,7 @@ class Revenue extends AppComponent
             });
 
         if ($this->selectedBook !== 'all') {
-            $baseQuery->whereHas('bookSubscription', function($query) {
+            $baseQuery->whereHas('bookSubscription', function ($query) {
                 $query->where('book_id', $this->selectedBook);
             });
         }
@@ -71,7 +76,7 @@ class Revenue extends AppComponent
 
         // Calculate revenue with 98% split
         $totalGrossRevenue = $allPayments->sum('amount');
-        $totalNetRevenue = $allPayments->sum(function($payment) {
+        $totalNetRevenue = $allPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
         $totalPlatformFees = $totalGrossRevenue - $totalNetRevenue;
@@ -90,7 +95,7 @@ class Revenue extends AppComponent
             ->get();
 
         $periodGrossRevenue = $periodPayments->sum('amount');
-        $periodNetRevenue = $periodPayments->sum(function($payment) {
+        $periodNetRevenue = $periodPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -102,7 +107,7 @@ class Revenue extends AppComponent
             ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->get();
 
-        $previousPeriodRevenue = $previousPeriodPayments->sum(function($payment) {
+        $previousPeriodRevenue = $previousPeriodPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -117,7 +122,7 @@ class Revenue extends AppComponent
             ->whereYear('created_at', Carbon::now()->year)
             ->get();
 
-        $monthlyNetRevenue = $monthlyPayments->sum(function($payment) {
+        $monthlyNetRevenue = $monthlyPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -179,7 +184,7 @@ class Revenue extends AppComponent
                 ->get();
 
             $dayGross = $dayPayments->sum('amount');
-            $dayNet = $dayPayments->sum(function($payment) {
+            $dayNet = $dayPayments->sum(function ($payment) {
                 return $payment->author_amount ?: ($payment->amount * 0.98);
             });
 
@@ -210,13 +215,13 @@ class Revenue extends AppComponent
                 // Get all payments for this book
                 $payments = Payment::query()
                     ->where('status', 'succeeded')
-                    ->whereHas('bookSubscription', function($query) use ($book) {
+                    ->whereHas('bookSubscription', function ($query) use ($book) {
                         $query->where('book_id', $book->id);
                     })
                     ->get();
 
                 $grossRevenue = $payments->sum('amount');
-                $netRevenue = $payments->sum(function($payment) {
+                $netRevenue = $payments->sum(function ($payment) {
                     return $payment->author_amount ?: ($payment->amount * 0.98);
                 });
 
@@ -243,7 +248,7 @@ class Revenue extends AppComponent
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
-            ->map(function($payment) {
+            ->map(function ($payment) {
                 return [
                     'payment' => $payment,
                     'gross_amount' => $payment->amount,
@@ -265,7 +270,7 @@ class Revenue extends AppComponent
             ->whereYear('created_at', Carbon::now()->year)
             ->get();
 
-        $currentMonthRevenue = $currentMonthPayments->sum(function($payment) {
+        $currentMonthRevenue = $currentMonthPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -279,7 +284,7 @@ class Revenue extends AppComponent
             ->whereYear('created_at', Carbon::now()->subMonth()->year)
             ->get();
 
-        $previousMonthRevenue = $previousMonthPayments->sum(function($payment) {
+        $previousMonthRevenue = $previousMonthPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -318,6 +323,6 @@ class Revenue extends AppComponent
 
     public function toggleDetails()
     {
-        $this->showDetails = !$this->showDetails;
+        $this->showDetails = ! $this->showDetails;
     }
 }

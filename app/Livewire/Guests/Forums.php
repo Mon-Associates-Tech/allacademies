@@ -15,14 +15,20 @@ class Forums extends Component
     use WithPagination;
 
     public $currentView = 'categories'; // 'categories', 'topics', 'posts', 'create-topic', 'create-post'
+
     public $selectedCategory = null;
+
     public $selectedTopic = null;
+
     public $search = '';
+
     public $sortBy = 'recent';
 
     // Create topic/post data
     public $newTopicTitle = '';
+
     public $newTopicContent = '';
+
     public $newPostContent = '';
 
     public function mount()
@@ -37,8 +43,8 @@ class Forums extends Component
         $bookCategories = BookCategory::all();
         foreach ($bookCategories as $bookCategory) {
             ForumCategory::firstOrCreate([
-                'name' => $bookCategory->name . ' Discussion',
-                'description' => 'Discussions about ' . $bookCategory->name . ' books and topics',
+                'name' => $bookCategory->name.' Discussion',
+                'description' => 'Discussions about '.$bookCategory->name.' books and topics',
                 'book_category_id' => $bookCategory->id,
             ]);
         }
@@ -145,7 +151,7 @@ class Forums extends Component
                     ->withCount('posts');
 
                 if ($this->search) {
-                    $query->where('title', 'like', '%' . $this->search . '%');
+                    $query->where('title', 'like', '%'.$this->search.'%');
                 }
 
                 switch ($this->sortBy) {

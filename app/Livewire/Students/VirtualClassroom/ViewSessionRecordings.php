@@ -12,6 +12,7 @@ class ViewSessionRecordings extends Component
     use WithPagination;
 
     public $search = '';
+
     public $subject_filter = null;
 
     public function render()

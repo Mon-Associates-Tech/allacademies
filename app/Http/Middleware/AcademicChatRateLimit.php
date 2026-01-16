@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,8 +26,8 @@ class AcademicChatRateLimit
 
             return response()->json([
                 'success' => false,
-                'error' => 'Too many requests. Please try again in ' . $seconds . ' seconds.',
-                'retry_after' => $seconds
+                'error' => 'Too many requests. Please try again in '.$seconds.' seconds.',
+                'retry_after' => $seconds,
             ], 429);
         }
 

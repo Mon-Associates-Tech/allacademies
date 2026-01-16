@@ -32,18 +32,18 @@ class StudentFeeController extends Controller
             $user = Auth::user();
             $schoolId = getSchoolId();
 
-            if (!$schoolId) {
+            if (! $schoolId) {
                 return redirect()->route('dashboard')
                     ->with('error', 'School context not found. Please contact your administrator.');
             }
 
             $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
 
-            if (!$student) {
+            if (! $student) {
                 Log::warning('Student accessing payments without student profile', [
                     'user_id' => $user->id,
                     'user_email' => $user->email,
-                    'user_school_id' => $schoolId
+                    'user_school_id' => $schoolId,
                 ]);
 
                 return redirect()->route('dashboard')
@@ -106,8 +106,8 @@ class StudentFeeController extends Controller
 
             // Get pending payments from both tables
             $pendingPayments = SchoolFee::where('student_id', $student->id)
-                    ->where('status', 'pending')
-                    ->count()
+                ->where('status', 'pending')
+                ->count()
                 + SchoolPayment::where('student_id', $student->id)
                     ->where('status', 'pending')
                     ->count();
@@ -133,7 +133,7 @@ class StudentFeeController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in StudentFeeController@index', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->route('dashboard')
@@ -149,7 +149,7 @@ class StudentFeeController extends Controller
         $user = Auth::user();
         $schoolId = getSchoolId(); // Get school_id from User
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             return redirect()->route('dashboard')
                 ->with('error', 'School context not found. Please contact your administrator.');
         }
@@ -157,11 +157,11 @@ class StudentFeeController extends Controller
         // Get student by user_id ONLY (student.school_id might be null)
         $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
 
-        if (!$student) {
+        if (! $student) {
             Log::warning('Student accessing payments without student profile', [
                 'user_id' => $user->id,
                 'user_email' => $user->email,
-                'user_school_id' => $schoolId
+                'user_school_id' => $schoolId,
             ]);
 
             return redirect()->route('dashboard')
@@ -206,7 +206,7 @@ class StudentFeeController extends Controller
         $user = Auth::user();
         $schoolId = getSchoolId(); // Get school_id from User
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             return redirect()->route('dashboard')
                 ->with('error', 'School context not found. Please contact your administrator.');
         }
@@ -214,20 +214,18 @@ class StudentFeeController extends Controller
         // Get student by user_id ONLY (student.school_id might be null)
         $student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
 
-        if (!$student) {
+        if (! $student) {
             Log::warning('Student accessing payments without student profile', [
                 'user_id' => $user->id,
                 'user_email' => $user->email,
-                'user_school_id' => $schoolId
+                'user_school_id' => $schoolId,
             ]);
 
             return redirect()->route('dashboard')
                 ->with('error', 'Student profile not found. Please contact your administrator.');
         }
 
-
         $currentTerm = AcademicPeriod::where('status', 'active')->first();
-
 
         // Get subaccount
         $subaccount = \App\Models\Subaccount::where('school_id', $schoolId)->first();
@@ -250,7 +248,7 @@ class StudentFeeController extends Controller
 
         $response = $this->paystack->initializeTransaction($paymentData);
 
-        if (empty($response['status']) || !$response['status']) {
+        if (empty($response['status']) || ! $response['status']) {
             return back()->withErrors(['error' => 'Unable to initialize payment. Please try again.']);
         }
 
@@ -290,7 +288,7 @@ class StudentFeeController extends Controller
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('students.fees.index')
                 ->with('error', 'Payment reference not found.');
         }
@@ -300,7 +298,7 @@ class StudentFeeController extends Controller
         $payment = SchoolFee::where('reference', $reference)->first();
 
         if ($payment) {
-            if (!empty($response['status']) && $response['status'] && $response['data']['status'] === 'success') {
+            if (! empty($response['status']) && $response['status'] && $response['data']['status'] === 'success') {
                 $payment->update([
                     'status' => 'succeeded',
                     'paystack_response' => json_encode($response),

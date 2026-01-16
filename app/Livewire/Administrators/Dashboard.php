@@ -20,7 +20,7 @@ class Dashboard extends Component
 
     public function mount(): void
     {
-        if(!$this->activeTab){
+        if (! $this->activeTab) {
             $this->activeTab = 'overview';
         }
     }

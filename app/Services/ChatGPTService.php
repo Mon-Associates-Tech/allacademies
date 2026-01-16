@@ -49,7 +49,7 @@ class ChatGPTService
         $timeout = config('openai.openai.timeout', 90);
         $maxRetries = 3;
         $retryDelay = 2;
-        
+
         // Extract request_type before sending to API (it's for internal use only)
         $requestType = $options['request_type'] ?? 'chat';
         unset($requestData['request_type']);

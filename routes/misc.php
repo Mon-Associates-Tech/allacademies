@@ -48,7 +48,7 @@ Route::get('v2', function () {
 // Teacher Routes
 Route::middleware(['auth', 'teacher'])->prefix('teacher')->group(function () {
     Route::get('/essays', function () {
-        $assessments = Assessment::whereHas('responses', fn($q) => $q->whereJsonContains('data->needs_grading', true))
+        $assessments = Assessment::whereHas('responses', fn ($q) => $q->whereJsonContains('data->needs_grading', true))
             ->with('student.user')
             ->get();
 

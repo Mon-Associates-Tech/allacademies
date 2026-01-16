@@ -2,33 +2,41 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\Teacher;
-use App\Models\Student;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\AcademicSubject;
-use App\Models\AcademicLevel;
-use App\Models\AcademicGroup;
+use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class StudentPerformances extends Component
 {
     use WithPagination;
 
     public $teacher;
+
     public $search = '';
+
     public $selectedSubject = '';
+
     public $selectedLevel = '';
+
     public $selectedGroup = '';
+
     public $selectedStudent = null;
+
     public $viewMode = 'overview'; // 'overview', 'detailed', 'subject-analysis'
+
     public $sortBy = 'performance_avg';
+
     public $sortDirection = 'desc';
+
     public $showStudentModal = false;
+
     public $performanceFilter = 'all'; // 'all', 'excellent', 'good', 'needs_improvement'
+
     public $timeRange = '30'; // days: '7', '30', '90', 'all'
 
     protected $queryString = [
@@ -47,7 +55,7 @@ class StudentPerformances extends Component
     {
         $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', Auth::id())->first();
 
-        if (!$this->teacher) {
+        if (! $this->teacher) {
             abort(403, 'Access denied. Teacher profile not found.');
         }
     }
@@ -118,7 +126,7 @@ class StudentPerformances extends Component
             'user',
             'academicLevel.academicGroup',
             'academicSubjects',
-            'assessments.assignment.academicSubject'
+            'assessments.assignment.academicSubject',
         ])->findOrFail($studentId);
 
         $this->showStudentModal = true;
@@ -149,18 +157,18 @@ class StudentPerformances extends Component
             DB::raw('AVG(CASE WHEN total_marks > 0 THEN (score / total_marks) * 100 ELSE 0 END) as performance_avg'),
             DB::raw('SUM(CASE WHEN status = "submitted" THEN 1 ELSE 0 END) as completed_assignments'),
             DB::raw('SUM(CASE WHEN status = "graded" THEN 1 ELSE 0 END) as graded_assignments'),
-            DB::raw('MAX(submitted_at) as last_submission')
+            DB::raw('MAX(submitted_at) as last_submission'),
         ])
-        ->whereIn('student_id', $studentIds)
-        ->whereHas('assignment', function ($query) {
-            $query->where('teacher_id', $this->teacher->id);
-        })
-        ->when($timeFilter, function ($query, $timeFilter) {
-            $query->where('submitted_at', '>=', $timeFilter);
-        })
-        ->groupBy('student_id')
-        ->get()
-        ->keyBy('student_id');
+            ->whereIn('student_id', $studentIds)
+            ->whereHas('assignment', function ($query) {
+                $query->where('teacher_id', $this->teacher->id);
+            })
+            ->when($timeFilter, function ($query, $timeFilter) {
+                $query->where('submitted_at', '>=', $timeFilter);
+            })
+            ->groupBy('student_id')
+            ->get()
+            ->keyBy('student_id');
 
         // Merge with student data
         $studentsWithPerformance = $teacherStudents->map(function ($student) use ($performanceData) {
@@ -192,7 +200,7 @@ class StudentPerformances extends Component
         $query = Student::with([
             'user',
             'academicLevel.academicGroup',
-            'academicSubjects'
+            'academicSubjects',
         ]);
 
         // Get all students accessible to this teacher
@@ -234,12 +242,25 @@ class StudentPerformances extends Component
 
     private function calculatePerformanceGrade($average)
     {
-        if ($average >= 90) return 'A+';
-        if ($average >= 80) return 'A';
-        if ($average >= 70) return 'B+';
-        if ($average >= 60) return 'B';
-        if ($average >= 50) return 'C';
-        if ($average >= 40) return 'D';
+        if ($average >= 90) {
+            return 'A+';
+        }
+        if ($average >= 80) {
+            return 'A';
+        }
+        if ($average >= 70) {
+            return 'B+';
+        }
+        if ($average >= 60) {
+            return 'B';
+        }
+        if ($average >= 50) {
+            return 'C';
+        }
+        if ($average >= 40) {
+            return 'D';
+        }
+
         return 'F';
     }
 

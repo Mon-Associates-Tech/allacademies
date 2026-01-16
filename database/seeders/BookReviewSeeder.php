@@ -20,6 +20,7 @@ class BookReviewSeeder extends Seeder
 
         if ($books->isEmpty() || $users->isEmpty()) {
             $this->command->warn('No books or users found. Please seed books and users first.');
+
             return;
         }
 
@@ -57,7 +58,9 @@ class BookReviewSeeder extends Seeder
             for ($i = 0; $i < $reviewCount; $i++) {
                 // Get a random user that hasn't reviewed this book yet
                 $availableUsers = $users->whereNotIn('id', $usedUsers);
-                if ($availableUsers->isEmpty()) break;
+                if ($availableUsers->isEmpty()) {
+                    break;
+                }
 
                 $user = $availableUsers->random();
                 $usedUsers[] = $user->id;
@@ -95,7 +98,7 @@ class BookReviewSeeder extends Seeder
 
                 $review->update([
                     'helpful_votes' => $randomUsers,
-                    'helpful_count' => count($randomUsers)
+                    'helpful_count' => count($randomUsers),
                 ]);
             }
         }
@@ -110,11 +113,11 @@ class BookReviewSeeder extends Seeder
                 $chapterPages = rand(15, 35);
                 $chapters[] = [
                     'chapter' => $i,
-                    'title' => "Chapter {$i}: " . $this->getChapterTitle(),
+                    'title' => "Chapter {$i}: ".$this->getChapterTitle(),
                     'description' => $this->getChapterDescription(),
                     'page_start' => $currentPage,
                     'page_end' => $currentPage + $chapterPages - 1,
-                    'sections' => $this->getChapterSections()
+                    'sections' => $this->getChapterSections(),
                 ];
                 $currentPage += $chapterPages;
             }
@@ -165,7 +168,7 @@ class BookReviewSeeder extends Seeder
             'Implementation Strategies',
             'Best Practices Guide',
             'Common Challenges',
-            'Solutions and Alternatives'
+            'Solutions and Alternatives',
         ];
 
         return $titles[array_rand($titles)];
@@ -183,7 +186,7 @@ class BookReviewSeeder extends Seeder
             'Practical exercises and case studies to reinforce learning and build problem-solving skills.',
             'A comprehensive review of current research and developments in the field.',
             'Step-by-step guidance on implementing theoretical concepts in practical situations.',
-            'Critical analysis of important concepts with detailed explanations and examples.'
+            'Critical analysis of important concepts with detailed explanations and examples.',
         ];
 
         return $descriptions[array_rand($descriptions)];
@@ -201,7 +204,7 @@ class BookReviewSeeder extends Seeder
             $sections[] = [
                 'section' => $i,
                 'title' => "Section {$i}",
-                'page_count' => rand(3, 8)
+                'page_count' => rand(3, 8),
             ];
         }
 

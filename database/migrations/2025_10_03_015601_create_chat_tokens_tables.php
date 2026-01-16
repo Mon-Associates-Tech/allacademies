@@ -62,7 +62,7 @@ return new class extends Migration
         // Add token subscription relation to payments table
         if (Schema::hasTable('payments')) {
             Schema::table('payments', function (Blueprint $table) {
-                if (!Schema::hasColumn('payments', 'token_subscription_id')) {
+                if (! Schema::hasColumn('payments', 'token_subscription_id')) {
                     $table->foreignId('token_subscription_id')->nullable()->constrained('user_token_subscriptions')->onDelete('SET NULL');
                 }
             });

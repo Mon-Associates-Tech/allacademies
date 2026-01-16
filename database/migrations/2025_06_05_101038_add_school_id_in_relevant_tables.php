@@ -45,7 +45,6 @@ return new class extends Migration
             $table->foreign('school_id')->references('id')->on('schools');
         });
 
-
     }
 
     /**
@@ -53,7 +52,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('students', function (Blueprint $table){
+        Schema::table('students', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
             $table->dropForeign(['academic_group_id']);
@@ -64,27 +63,27 @@ return new class extends Migration
 
         });
 
-        Schema::table('teachers', function (Blueprint $table){
+        Schema::table('teachers', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
         });
 
-        Schema::table('books', function (Blueprint $table){
+        Schema::table('books', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
         });
 
-        Schema::table('academic_levels', function (Blueprint $table){
+        Schema::table('academic_levels', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
         });
 
-        Schema::table('academic_groups', function (Blueprint $table){
+        Schema::table('academic_groups', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
         });
 
-        Schema::table('academic_subjects', function (Blueprint $table){
+        Schema::table('academic_subjects', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropColumn('school_id');
         });

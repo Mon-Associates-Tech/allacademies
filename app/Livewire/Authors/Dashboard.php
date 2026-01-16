@@ -12,40 +12,62 @@ use Livewire\WithPagination;
 
 class Dashboard extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     // Properties for book management
     public $showBookModal = false;
+
     public $showDeleteModal = false;
+
     public $editingBook = null;
+
     public $bookToDelete = null;
 
     // Book form fields
     public $title = '';
+
     public $edition = '';
+
     public $publisher = '';
+
     public $pages = 1;
+
     public $has_hardcopy = false;
+
     public $has_softcopy = false;
+
     public $additional_info = '';
+
     public $book_category_id = '';
+
     public $annual_subscription_fee = '';
+
     public $subscription_conditions = '';
+
     public $cover_image = null;
+
     public $content_url = null;
 
     // Filters and search
     public $search = '';
+
     public $categoryFilter = '';
+
     public $statusFilter = '';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
 
     // Stats
     public $totalBooks = 0;
+
     public $publishedBooks = 0;
+
     public $draftBooks = 0;
+
     public $totalSubscriptions = 0;
+
     public $totalRevenue = 0;
 
     public AuthorBookAction $authorBookAction;
@@ -160,14 +182,15 @@ class Dashboard extends Component
         $this->validate();
 
         $author = Auth::user()->author;
-        if (!$author) {
+        if (! $author) {
             session()->flash('error', 'You must be an author to create books.');
+
             return;
         }
 
         $bookData = [
             'title' => $this->title,
-//            'slug' => Str::slug($this->title),
+            //            'slug' => Str::slug($this->title),
             'author_id' => $author->id,
             'edition' => $this->edition,
             'publisher' => $this->publisher,
@@ -249,8 +272,8 @@ class Dashboard extends Component
                 ->withCount(['subscriptions', 'borrowings']);
 
             if ($this->search) {
-                $query->where('title', 'like', '%' . $this->search . '%')
-                      ->orWhere('publisher', 'like', '%' . $this->search . '%');
+                $query->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('publisher', 'like', '%'.$this->search.'%');
             }
 
             if ($this->categoryFilter) {
@@ -267,7 +290,7 @@ class Dashboard extends Component
             }
 
             $books = $query->orderBy($this->sortBy, $this->sortDirection)
-                          ->paginate(10);
+                ->paginate(10);
         }
 
         return view('livewire.authors.dashboard', [

@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
 use App\Models\ChatGroup;
 use App\Models\ChatMessage;
 use App\Models\User;
-use App\Models\AcademicLevel;
-use App\Models\AcademicGroup;
 use Illuminate\Http\UploadedFile;
 
 class ChatService
@@ -22,7 +22,7 @@ class ChatService
             'academic_level_id' => $data['academic_level_id'] ?? null,
             'academic_group_id' => $data['academic_group_id'] ?? null,
             'is_private' => $data['is_private'] ?? false,
-            'settings' => $data['settings'] ?? []
+            'settings' => $data['settings'] ?? [],
         ]);
 
         // Add creator as admin
@@ -54,11 +54,11 @@ class ChatService
         }
 
         $chatGroup = ChatGroup::create([
-            'name' => $user1->name . ' & ' . $user2->name,
+            'name' => $user1->name.' & '.$user2->name,
             'type' => 'direct',
             'school_id' => $user1->school_id,
             'created_by' => $user1->id,
-            'is_private' => true
+            'is_private' => true,
         ]);
 
         $chatGroup->addMember($user1, 'admin', true);
@@ -69,7 +69,7 @@ class ChatService
 
     public function sendMessage(ChatGroup $chatGroup, User $user, string $message, ?ChatMessage $replyTo = null): ChatMessage
     {
-        if (!$chatGroup->isUserMember($user)) {
+        if (! $chatGroup->isUserMember($user)) {
             throw new \Exception('User is not a member of this chat group');
         }
 
@@ -78,7 +78,7 @@ class ChatService
             'user_id' => $user->id,
             'message' => $message,
             'message_type' => 'text',
-            'reply_to_message_id' => $replyTo?->id
+            'reply_to_message_id' => $replyTo?->id,
         ]);
 
         // Mark as read by sender
@@ -89,11 +89,11 @@ class ChatService
 
     public function sendMessageWithAttachments(ChatGroup $chatGroup, User $user, ?string $message, array $files, ?ChatMessage $replyTo = null): ChatMessage
     {
-        if (!$chatGroup->isUserMember($user)) {
+        if (! $chatGroup->isUserMember($user)) {
             throw new \Exception('User is not a member of this chat group');
         }
 
-        $hasText = !empty(trim($message ?? ''));
+        $hasText = ! empty(trim($message ?? ''));
         $messageType = empty($files) ? 'text' : (count($files) === 1 && $this->isImage($files[0]) ? 'image' : 'file');
 
         $chatMessage = ChatMessage::create([
@@ -101,7 +101,7 @@ class ChatService
             'user_id' => $user->id,
             'message' => $hasText ? $message : null,
             'message_type' => $messageType,
-            'reply_to_message_id' => $replyTo?->id
+            'reply_to_message_id' => $replyTo?->id,
         ]);
 
         // Handle file uploads
@@ -118,14 +118,14 @@ class ChatService
     private function attachFileToMessage(ChatMessage $message, UploadedFile $file): void
     {
         $fileName = $file->getClientOriginalName();
-        $filePath = $file->store('chat-attachments/' . date('Y/m'), 'public');
+        $filePath = $file->store('chat-attachments/'.date('Y/m'), 'public');
 
         $message->attachments()->create([
             'file_name' => $fileName,
             'file_path' => $filePath,
             'file_type' => $file->getClientOriginalExtension(),
             'file_size' => $file->getSize(),
-            'mime_type' => $file->getMimeType()
+            'mime_type' => $file->getMimeType(),
         ]);
     }
 
@@ -136,7 +136,7 @@ class ChatService
 
     public function addUserToGroup(ChatGroup $chatGroup, User $userToAdd, User $addedBy, string $role = 'member'): void
     {
-        if (!$chatGroup->canUserAddMembers($addedBy)) {
+        if (! $chatGroup->canUserAddMembers($addedBy)) {
             throw new \Exception('You do not have permission to add members to this group');
         }
 
@@ -151,7 +151,7 @@ class ChatService
             'chat_group_id' => $chatGroup->id,
             'user_id' => $addedBy->id,
             'message' => "{$userToAdd->name} was added to the group by {$addedBy->name}",
-            'message_type' => 'system'
+            'message_type' => 'system',
         ]);
     }
 
@@ -159,7 +159,7 @@ class ChatService
     {
         $membership = $chatGroup->allMembers()->where('user_id', $removedBy->id)->first();
 
-        if (!$membership || !in_array($membership->pivot->role, ['admin', 'moderator']) || $removedBy->id !== $chatGroup->created_by) {
+        if (! $membership || ! in_array($membership->pivot->role, ['admin', 'moderator']) || $removedBy->id !== $chatGroup->created_by) {
             throw new \Exception('You do not have permission to remove members from this group');
         }
 
@@ -170,7 +170,7 @@ class ChatService
             'chat_group_id' => $chatGroup->id,
             'user_id' => $removedBy->id,
             'message' => "{$userToRemove->name} was removed from the group by {$removedBy->name}",
-            'message_type' => 'system'
+            'message_type' => 'system',
         ]);
     }
 
@@ -201,7 +201,7 @@ class ChatService
 
     public function getGroupMessages(ChatGroup $chatGroup, User $user, int $perPage = 50, ?int $beforeMessageId = null): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        if (!$chatGroup->isUserMember($user)) {
+        if (! $chatGroup->isUserMember($user)) {
             throw new \Exception('You do not have access to this chat group');
         }
 
@@ -217,7 +217,7 @@ class ChatService
 
         // Mark messages as read
         foreach ($messages as $message) {
-            if (!$message->isReadBy($user)) {
+            if (! $message->isReadBy($user)) {
                 $message->markAsRead($user);
             }
         }
@@ -230,14 +230,14 @@ class ChatService
 
     public function editMessage(ChatMessage $message, User $user, string $newContent): ChatMessage
     {
-        if (!$message->canBeEditedBy($user)) {
+        if (! $message->canBeEditedBy($user)) {
             throw new \Exception('You cannot edit this message');
         }
 
         $message->update([
             'message' => $newContent,
             'is_edited' => true,
-            'edited_at' => now()
+            'edited_at' => now(),
         ]);
 
         return $message;
@@ -245,7 +245,7 @@ class ChatService
 
     public function deleteMessage(ChatMessage $message, User $user): void
     {
-        if (!$message->canBeDeletedBy($user)) {
+        if (! $message->canBeDeletedBy($user)) {
             throw new \Exception('You cannot delete this message');
         }
 
@@ -279,40 +279,38 @@ class ChatService
             ->get();
     }
 
+    public function leaveGroup(ChatGroup $chatGroup, User $user): void
+    {
+        // Check if the user is the owner of the group
+        if ($chatGroup->created_by === $user->id) {
+            throw new \Exception('Group owners cannot leave their own group. You can delete the group instead.');
+        }
 
-public function leaveGroup(ChatGroup $chatGroup, User $user): void
-{
-    // Check if the user is the owner of the group
-    if ($chatGroup->created_by === $user->id) {
-        throw new \Exception('Group owners cannot leave their own group. You can delete the group instead.');
+        // Check if user is actually a member
+        if (! $chatGroup->isUserMember($user)) {
+            throw new \Exception('User is not a member of this group');
+        }
+
+        // Remove the user from the group
+        $chatGroup->removeMember($user);
+
+        // Create a system message about the user leaving
+        ChatMessage::create([
+            'chat_group_id' => $chatGroup->id,
+            'user_id' => $user->id,
+            'message' => $user->name.' left the group',
+            'message_type' => 'system',
+        ]);
     }
 
-    // Check if user is actually a member
-    if (!$chatGroup->isUserMember($user)) {
-        throw new \Exception('User is not a member of this group');
+    public function deleteGroup(ChatGroup $chatGroup, User $user): void
+    {
+        // Check if the user is the owner of the group
+        if ($chatGroup->created_by !== $user->id) {
+            throw new \Exception('Only the group owner can delete the group');
+        }
+
+        // Delete the group (this will cascade delete messages, members, etc. through database constraints)
+        $chatGroup->delete();
     }
-
-    // Remove the user from the group
-    $chatGroup->removeMember($user);
-
-    // Create a system message about the user leaving
-    ChatMessage::create([
-        'chat_group_id' => $chatGroup->id,
-        'user_id' => $user->id,
-        'message' => $user->name . ' left the group',
-        'message_type' => 'system'
-    ]);
-}
-
-public function deleteGroup(ChatGroup $chatGroup, User $user): void
-{
-    // Check if the user is the owner of the group
-    if ($chatGroup->created_by !== $user->id) {
-        throw new \Exception('Only the group owner can delete the group');
-    }
-
-    // Delete the group (this will cascade delete messages, members, etc. through database constraints)
-    $chatGroup->delete();
-}
-
 }

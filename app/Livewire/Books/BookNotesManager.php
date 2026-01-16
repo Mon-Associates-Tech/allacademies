@@ -14,14 +14,23 @@ class BookNotesManager extends Component
     use WithPagination;
 
     public Book $book;
+
     public string $activeTab = 'book-notes';
+
     public string $searchTerm = '';
+
     public array $expandedNotes = [];
+
     public ?int $editingNoteId = null;
+
     public string $editingContent = '';
+
     public string $editingTitle = '';
+
     public string $newNoteTitle = '';
+
     public string $newNoteColor = 'white';
+
     public string $editingColor = 'white';
 
     protected $listeners = ['tabChanged' => 'handleTabChange'];
@@ -54,7 +63,7 @@ class BookNotesManager extends Component
     public function toggleNote(int $noteId): void
     {
         if (in_array($noteId, $this->expandedNotes)) {
-            $this->expandedNotes = array_filter($this->expandedNotes, fn($id) => $id !== $noteId);
+            $this->expandedNotes = array_filter($this->expandedNotes, fn ($id) => $id !== $noteId);
         } else {
             $this->expandedNotes[] = $noteId;
         }
@@ -72,10 +81,10 @@ class BookNotesManager extends Component
             ->where('user_id', Auth::id())
             ->orderBy('updated_at', 'desc');
 
-        if (!empty($this->searchTerm)) {
+        if (! empty($this->searchTerm)) {
             $query->where(function ($q) {
-                $q->where('content', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('title', 'like', '%' . $this->searchTerm . '%');
+                $q->where('content', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('title', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
@@ -89,12 +98,12 @@ class BookNotesManager extends Component
             ->with('book')
             ->orderBy('updated_at', 'desc');
 
-        if (!empty($this->searchTerm)) {
+        if (! empty($this->searchTerm)) {
             $query->where(function ($q) {
-                $q->where('content', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('title', 'like', '%' . $this->searchTerm . '%')
+                $q->where('content', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('title', 'like', '%'.$this->searchTerm.'%')
                     ->orWhereHas('book', function ($bookQuery) {
-                        $bookQuery->where('title', 'like', '%' . $this->searchTerm . '%');
+                        $bookQuery->where('title', 'like', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -106,11 +115,12 @@ class BookNotesManager extends Component
     {
         if (empty($content)) {
             $this->dispatch('notify', ['message' => 'Note content is required', 'type' => 'error']);
+
             return;
         }
 
         Note::create([
-            'title' => !empty($title) ? $title : substr(strip_tags($content), 0, 50) . '...',
+            'title' => ! empty($title) ? $title : substr(strip_tags($content), 0, 50).'...',
             'content' => $content,
             'user_id' => Auth::id(),
             'book_id' => $this->book->id,
@@ -146,6 +156,7 @@ class BookNotesManager extends Component
     {
         if (empty($content)) {
             $this->dispatch('notify', ['message' => 'Note content is required', 'type' => 'error']);
+
             return;
         }
 
@@ -155,7 +166,7 @@ class BookNotesManager extends Component
 
         $note->update([
             'content' => $content,
-            'title' => !empty($title) ? $title : substr(strip_tags($content), 0, 50) . '...',
+            'title' => ! empty($title) ? $title : substr(strip_tags($content), 0, 50).'...',
             'background_color' => $this->editingColor,
         ]);
 

@@ -28,47 +28,55 @@ class BookMedia extends Model
 
     public function getSingleAudioAttribute(): ?string
     {
-        return $this->attributes['single_audio']
-            ? asset('storage/' . $this->attributes['single_audio'])
-            : null; // asset('/media/audio/great-expectations-sample.mp3');
+        if (! $this->attributes['single_audio']) {
+            return null;
+        }
+
+        $path = $this->attributes['single_audio'];
+
+        return str_starts_with($path, 'http') ? $path : asset('storage/'.$path);
     }
 
     public function getSingleVideoAttribute(): ?string
     {
-        return $this->attributes['single_video']
-            ? asset('storage/' . $this->attributes['single_video'])
-            : null; // asset('/media/video/the_ultimate_gift.mp4');
+        if (! $this->attributes['single_video']) {
+            return null;
+        }
+
+        $path = $this->attributes['single_video'];
+
+        return str_starts_with($path, 'http') ? $path : asset('storage/'.$path);
     }
 
-    // public function getChapterAudiosAttribute(): array
-    // {
-    //     $files = $this->attributes['chapter_audios'] ?? [];
-    //     if(is_array($files)){
-    //         return array_map(function($file) {
-    //             return asset('storage/' . $file);
-    //         }, $files);
-    //     }
-    //   return [];
-    // }
+    public function getChapterAudiosAttribute(): array
+    {
+        $files = $this->attributes['chapter_audios'] ?? [];
+        if (! is_array($files)) {
+            return [];
+        }
 
-public function getChapterAudiosAttribute(): array
-{
-    $files = $this->attributes['chapter_audios'] ?? [];
-    if (!is_array($files)) {
-        return [];
+        return array_map(function ($file) {
+            if (is_array($file)) {
+                return $file;
+            }
+
+            return str_starts_with($file, 'http') ? $file : asset('storage/'.$file);
+        }, $files);
     }
-
-    return array_map(fn($file) => asset('storage/' . $file), $files);
-}
 
     public function getChapterVideosAttribute(): array
     {
         $files = $this->attributes['chapter_videos'] ?? [];
-        if(is_array($files)){
-            return array_map(function($file) {
-                return asset('storage/' . $file);
-            }, $files);
+        if (! is_array($files)) {
+            return [];
         }
-       return [];
+
+        return array_map(function ($file) {
+            if (is_array($file)) {
+                return $file;
+            }
+
+            return str_starts_with($file, 'http') ? $file : asset('storage/'.$file);
+        }, $files);
     }
 }

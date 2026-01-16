@@ -2,12 +2,16 @@
 
 namespace App\Livewire\Common;
 
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
+use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
+use App\Models\User;
 use App\Services\ActivityLogHelper;
-use App\Models\{AcademicGroup, AcademicLevel, AcademicSubject, AcademicTopic, AcademicSubtopic, User};
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 
 class ActivityLogManager extends Component
 {
@@ -15,24 +19,37 @@ class ActivityLogManager extends Component
 
     // Filter properties
     public $selectedModelType = '';
+
     public $selectedUserId = '';
+
     public $selectedModelInstance = '';
+
     public $selectedModelId = '';
+
     public $startDate = '';
+
     public $endDate = '';
+
     public $searchKeyword = '';
+
     public $limitPerPage = 25;
 
     // Display properties
     public $activeTab = 'all'; // all, model, user, date, search, statistics
+
     public $showFilters = true;
+
     public $activities = [];
+
     public $statistics = [];
+
     public $users = [];
+
     public $modelInstances = [];
 
     // Loading states
     public $loading = false;
+
     public $loadingStatistics = false;
 
     // Model options
@@ -109,8 +126,9 @@ class ActivityLogManager extends Component
 
     public function loadModelInstances()
     {
-        if (!$this->selectedModelType) {
+        if (! $this->selectedModelType) {
             $this->modelInstances = [];
+
             return;
         }
 
@@ -131,7 +149,7 @@ class ActivityLogManager extends Component
                 ->map(function ($item) {
                     return [
                         'id' => $item->id,
-                        'name' => $item->name ?? "ID: {$item->id}"
+                        'name' => $item->name ?? "ID: {$item->id}",
                     ];
                 })
                 ->toArray();
@@ -168,7 +186,7 @@ class ActivityLogManager extends Component
             }
         } catch (\Exception $e) {
             $this->activities = [];
-            session()->flash('error', 'Error loading activities: ' . $e->getMessage());
+            session()->flash('error', 'Error loading activities: '.$e->getMessage());
         }
 
         $this->loading = false;
@@ -182,8 +200,9 @@ class ActivityLogManager extends Component
 
     private function loadModelActivities()
     {
-        if (!$this->selectedModelType) {
+        if (! $this->selectedModelType) {
             $this->activities = [];
+
             return;
         }
 
@@ -193,19 +212,21 @@ class ActivityLogManager extends Component
 
     private function loadUserActivities()
     {
-        if (!$this->selectedUserId) {
+        if (! $this->selectedUserId) {
             $this->activities = [];
+
             return;
         }
 
-        $activities = ActivityLogHelper::getActivitiesByUser((int)$this->selectedUserId, $this->limitPerPage);
+        $activities = ActivityLogHelper::getActivitiesByUser((int) $this->selectedUserId, $this->limitPerPage);
         $this->activities = ActivityLogHelper::formatActivities($activities);
     }
 
     private function loadDateRangeActivities()
     {
-        if (!$this->startDate || !$this->endDate) {
+        if (! $this->startDate || ! $this->endDate) {
             $this->activities = [];
+
             return;
         }
 
@@ -218,8 +239,9 @@ class ActivityLogManager extends Component
 
     private function loadSearchActivities()
     {
-        if (!$this->searchKeyword || strlen($this->searchKeyword) < 2) {
+        if (! $this->searchKeyword || strlen($this->searchKeyword) < 2) {
             $this->activities = [];
+
             return;
         }
 
@@ -229,8 +251,9 @@ class ActivityLogManager extends Component
 
     private function loadInstanceActivities()
     {
-        if (!$this->selectedModelType || !$this->selectedModelId) {
+        if (! $this->selectedModelType || ! $this->selectedModelId) {
             $this->activities = [];
+
             return;
         }
 
@@ -265,7 +288,7 @@ class ActivityLogManager extends Component
             $this->statistics = ActivityLogHelper::getActivityStatistics($startDate, $endDate);
         } catch (\Exception $e) {
             $this->statistics = [];
-            session()->flash('error', 'Error loading statistics: ' . $e->getMessage());
+            session()->flash('error', 'Error loading statistics: '.$e->getMessage());
         }
 
         $this->loadingStatistics = false;
@@ -283,7 +306,7 @@ class ActivityLogManager extends Component
     {
         $this->validate([
             'startDate' => 'required|date',
-            'endDate' => 'required|date|after_or_equal:startDate'
+            'endDate' => 'required|date|after_or_equal:startDate',
         ]);
 
         $this->activeTab = 'date';
@@ -293,8 +316,9 @@ class ActivityLogManager extends Component
 
     public function filterByModel()
     {
-        if (!$this->selectedModelType) {
+        if (! $this->selectedModelType) {
             session()->flash('error', 'Please select a model type.');
+
             return;
         }
 
@@ -305,8 +329,9 @@ class ActivityLogManager extends Component
 
     public function filterByUser()
     {
-        if (!$this->selectedUserId) {
+        if (! $this->selectedUserId) {
             session()->flash('error', 'Please select a user.');
+
             return;
         }
 
@@ -317,8 +342,9 @@ class ActivityLogManager extends Component
 
     public function filterByInstance()
     {
-        if (!$this->selectedModelType || !$this->selectedModelId) {
+        if (! $this->selectedModelType || ! $this->selectedModelId) {
             session()->flash('error', 'Please select both model type and instance.');
+
             return;
         }
 

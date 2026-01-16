@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 class SelfAssessmentTest extends TestCase
 {
-    public function testSaveResponseMultipleChoiceCorrect(): void
+    public function test_save_response_multiple_choice_correct(): void
     {
 
         $user = User::factory()->create();
@@ -42,9 +42,7 @@ class SelfAssessmentTest extends TestCase
 
         ]);
 
-
-
-        $component = new \App\Livewire\Assessment\SelfAssessment();
+        $component = new \App\Livewire\Assessment\SelfAssessment;
         $component->questions = [$question];
         $component->responses = [
             0 => [
@@ -59,7 +57,7 @@ class SelfAssessmentTest extends TestCase
         $this->assertEquals(5, $component->responses[0]['score']);
     }
 
-    public function testSaveResponseTrueFalseCorrect(): void
+    public function test_save_response_true_false_correct(): void
     {
         $user = User::factory()->create();
         $student = Student::factory()->create(['user_id' => $user->id]);
@@ -77,9 +75,7 @@ class SelfAssessmentTest extends TestCase
             'points' => 3,
         ]);
 
-
-
-        $component = new \App\Livewire\Assessment\SelfAssessment();
+        $component = new \App\Livewire\Assessment\SelfAssessment;
         $component->questions = [$question];
         $component->responses = [
             0 => [
@@ -94,7 +90,7 @@ class SelfAssessmentTest extends TestCase
         $this->assertEquals(3, $component->responses[0]['score']);
     }
 
-    public function testCompleteAssessment(): void
+    public function test_complete_assessment(): void
     {
         $user = User::factory()->create();
         $student = Student::factory()->create(['user_id' => $user->id]);
@@ -112,7 +108,7 @@ class SelfAssessmentTest extends TestCase
             ]),
         ];
 
-        $component = new \App\Livewire\Assessment\SelfAssessment();
+        $component = new \App\Livewire\Assessment\SelfAssessment;
         $component->questions = $questions;
         $component->responses = [
             0 => [

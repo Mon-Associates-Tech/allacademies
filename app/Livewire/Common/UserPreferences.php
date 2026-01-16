@@ -2,22 +2,23 @@
 
 namespace App\Livewire\Common;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class UserPreferences extends Component
 {
     public $preferences = [];
+
     public $themes = [
         'light' => 'Light',
         'dark' => 'Dark',
-        'system' => 'System Default'
+        'system' => 'System Default',
     ];
 
     public $fonts = [
         'sans' => 'Sans Serif',
         'serif' => 'Serif',
-        'mono' => 'Monospace'
+        'mono' => 'Monospace',
     ];
 
     public function mount()

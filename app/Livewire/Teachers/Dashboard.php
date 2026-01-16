@@ -7,9 +7,9 @@ use App\Models\Team;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
-use Livewire\Component;
-use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Url;
+use Livewire\Component;
 
 class Dashboard extends Component
 {
@@ -17,21 +17,30 @@ class Dashboard extends Component
     public $activeTab = 'dashboard';
 
     public $teacher;
+
     public $currentTeam;
+
     public $totalStudents = 0;
+
     public $totalAssignments = 0;
+
     public $totalSubjects = 0;
+
     public $recentAssignments = [];
+
     public $upcomingAssignments = [];
+
     public $myStudents = [];
+
     public $mySubjects = [];
+
     public $myAcademicLevels = [];
 
     protected $listeners = ['teacherTabChanged' => 'setActiveTab'];
 
     public function mount(): void
     {
-        if (!$this->activeTab) {
+        if (! $this->activeTab) {
             $this->activeTab = 'dashboard';
         }
 
@@ -44,14 +53,14 @@ class Dashboard extends Component
         $this->teacher = Teacher::where('user_id', Auth::id())->first();
 
         $this->currentTeam = Team::query()->find(auth()->user()->current_team_id);
-        if (!$this->currentTeam) {
+        if (! $this->currentTeam) {
             $this->currentTeam = Team::query()->where('owner_id', auth()->id())->first();
         }
     }
 
     private function loadDashboardMetrics(): void
     {
-        if (!$this->teacher) {
+        if (! $this->teacher) {
             return;
         }
 
@@ -76,7 +85,6 @@ class Dashboard extends Component
             ->orderBy('ends_at', 'asc')
             ->get()
             ->toArray();
-
 
         $allStudents = $this->teacher->getAllStudents();
         $this->myStudents = $allStudents->take(20)->map(function ($student) {
@@ -104,6 +112,7 @@ class Dashboard extends Component
                 $levelArray = $level->toArray();
                 // Get actual count of students this teacher has access to in this level
                 $levelArray['accessible_students_count'] = $this->teacher->getStudentsByLevel($level->id)->count();
+
                 return $levelArray;
             })
             ->toArray();

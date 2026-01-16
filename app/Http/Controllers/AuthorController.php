@@ -70,7 +70,7 @@ class AuthorController extends Controller
             'additional_info' => 'nullable|string',
         ]);
 
-        if (!$validated['has_hardcopy'] && !$validated['has_softcopy']) {
+        if (! $validated['has_hardcopy'] && ! $validated['has_softcopy']) {
             return response()->json(['message' => 'Book must have at least one format (hardcopy or softcopy)'], 422);
         }
 
@@ -107,7 +107,7 @@ class AuthorController extends Controller
         ]);
 
         if (isset($validated['has_hardcopy']) && isset($validated['has_softcopy']) &&
-            !$validated['has_hardcopy'] && !$validated['has_softcopy']) {
+            ! $validated['has_hardcopy'] && ! $validated['has_softcopy']) {
             return response()->json(['message' => 'Book must have at least one format (hardcopy or softcopy)'], 422);
         }
 
@@ -132,6 +132,7 @@ class AuthorController extends Controller
     public function getBooks(Author $author)
     {
         $books = $author->books()->with('category')->paginate();
+
         return BookResource::collection($books);
     }
 }

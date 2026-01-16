@@ -6,7 +6,6 @@ use App\Models\BookBorrow;
 use App\Models\BookBorrowing;
 use App\Models\BookCopy;
 use App\Models\Student;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,21 +14,31 @@ class BookReturns extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $dueDateFilter = 'all';
+
     public $sortBy = 'expected_return_date';
+
     public $sortDirection = 'asc';
+
     public $perPage = 15;
 
     // Return modal properties
     public $showReturnModal = false;
+
     public $selectedBorrow = null;
+
     public $returnCondition = 'good';
+
     public $returnNotes = '';
+
     public $lateFee = 0;
 
     // Quick return properties
     public $quickReturnBarcode = '';
+
     public $quickReturnMode = false;
 
     protected $queryString = [
@@ -101,8 +110,9 @@ class BookReturns extends Component
             'lateFee' => 'nullable|numeric|min:0',
         ]);
 
-        if (!$this->selectedBorrow) {
+        if (! $this->selectedBorrow) {
             session()->flash('error', 'Invalid borrow record.');
+
             return;
         }
 
@@ -140,15 +150,17 @@ class BookReturns extends Component
 
     public function quickReturn()
     {
-        if (!$this->quickReturnBarcode) {
+        if (! $this->quickReturnBarcode) {
             session()->flash('error', 'Please enter a barcode.');
+
             return;
         }
 
         $bookCopy = BookCopy::where('barcode', $this->quickReturnBarcode)->first();
 
-        if (!$bookCopy) {
+        if (! $bookCopy) {
             session()->flash('error', 'Book copy not found.');
+
             return;
         }
 
@@ -156,8 +168,9 @@ class BookReturns extends Component
             ->whereNull('returned_at')
             ->first();
 
-        if (!$activeBorrow) {
+        if (! $activeBorrow) {
             session()->flash('error', 'No active borrow record found for this book.');
+
             return;
         }
 
@@ -167,7 +180,7 @@ class BookReturns extends Component
 
     public function toggleQuickReturnMode()
     {
-        $this->quickReturnMode = !$this->quickReturnMode;
+        $this->quickReturnMode = ! $this->quickReturnMode;
         $this->quickReturnBarcode = '';
     }
 
@@ -175,14 +188,16 @@ class BookReturns extends Component
     {
         $borrow = BookBorrow::find($borrowId);
 
-        if (!$borrow || $borrow->returned_at) {
+        if (! $borrow || $borrow->returned_at) {
             session()->flash('error', 'Invalid borrow record.');
+
             return;
         }
 
         // Check if book can be renewed (not overdue by more than 7 days)
         if ($borrow->expected_return_date < now()->subDays(7)) {
             session()->flash('error', 'Book is too overdue to be renewed.');
+
             return;
         }
 
@@ -194,6 +209,7 @@ class BookReturns extends Component
 
         if ($hasOverdueBooks) {
             session()->flash('error', 'Student has overdue books. Cannot renew.');
+
             return;
         }
 
@@ -209,7 +225,7 @@ class BookReturns extends Component
 
     private function calculateLateFee()
     {
-        if (!$this->selectedBorrow) {
+        if (! $this->selectedBorrow) {
             return;
         }
 
@@ -226,23 +242,23 @@ class BookReturns extends Component
 
     public function render()
     {
-        $query =  BookBorrowing::with(['bookCopy.book', 'student'])
+        $query = BookBorrowing::with(['bookCopy.book', 'student'])
             ->whereNull('return_date');
 
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
                 $q->whereHas('bookCopy.book', function ($bookQuery) {
-                    $bookQuery->where('title', 'like', '%' . $this->search . '%')
-                             ->orWhere('author', 'like', '%' . $this->search . '%');
+                    $bookQuery->where('title', 'like', '%'.$this->search.'%')
+                        ->orWhere('author', 'like', '%'.$this->search.'%');
                 })
-                ->orWhereHas('student', function ($studentQuery) {
-                    $studentQuery->where('name', 'like', '%' . $this->search . '%')
-                               ->orWhere('email', 'like', '%' . $this->search . '%');
-                })
-                ->orWhereHas('bookCopy', function ($copyQuery) {
-                    $copyQuery->where('barcode', 'like', '%' . $this->search . '%');
-                });
+                    ->orWhereHas('student', function ($studentQuery) {
+                        $studentQuery->where('name', 'like', '%'.$this->search.'%')
+                            ->orWhere('email', 'like', '%'.$this->search.'%');
+                    })
+                    ->orWhereHas('bookCopy', function ($copyQuery) {
+                        $copyQuery->where('barcode', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 

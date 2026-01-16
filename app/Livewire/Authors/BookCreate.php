@@ -14,17 +14,29 @@ class BookCreate extends Component
     use WithFileUploads;
 
     public $title = '';
+
     public $edition = '';
+
     public $publisher = '';
+
     public $pages = '';
+
     public $has_hardcopy = false;
+
     public $has_softcopy = false;
+
     public $additional_info = '';
+
     public $book_category_id = '';
+
     public $annual_subscription_fee = '';
+
     public $subscription_conditions = '';
+
     public $cover_image = null;
+
     public $pdf_file = null;
+
     public $status = 'draft';
 
     protected $rules = [
@@ -48,8 +60,9 @@ class BookCreate extends Component
         $this->validate();
 
         $author = Auth::user()->author;
-        if (!$author) {
+        if (! $author) {
             session()->flash('error', 'You must be an author to create books.');
+
             return;
         }
 

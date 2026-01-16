@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,8 +24,8 @@ class SchoolScopedRequest extends FormRequest
         $user = auth()->user();
 
         // Auto-assign school_id for non-admin users
-        if ($user && !($user->isSuperAdmin() || $user->hasRole('owner'))) {
-            if (!$this->has('school_id') && $user->school_id) {
+        if ($user && ! ($user->isSuperAdmin() || $user->hasRole('owner'))) {
+            if (! $this->has('school_id') && $user->school_id) {
                 $this->merge(['school_id' => $user->school_id]);
             }
         }

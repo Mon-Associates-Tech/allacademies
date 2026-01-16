@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Team;
 use App\Enums\TeamStatus;
-use App\Support\Wordy;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Notification;
+use App\Models\Team;
 use App\Notifications\TeamApprovedNotification;
 use App\Notifications\TeamDeclinedNotification;
+use App\Support\Wordy;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 
 class AuditTeamController extends Controller
 {
@@ -31,10 +30,10 @@ class AuditTeamController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhereHas('owner', function ($ownerQuery) use ($search) {
-                          $ownerQuery->where('name', 'LIKE', "%{$search}%")
-                                    ->orWhere('email', 'LIKE', "%{$search}%");
-                      });
+                        ->orWhereHas('owner', function ($ownerQuery) use ($search) {
+                            $ownerQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+                        });
                 });
             })
             ->when($request->filled('sort'), function ($query) use ($request) {
@@ -48,13 +47,13 @@ class AuditTeamController extends Controller
                         break;
                     case 'owner_asc':
                         $query->join('users', 'teams.owner_id', '=', 'users.id')
-                              ->orderBy('users.name', 'asc')
-                              ->select('teams.*');
+                            ->orderBy('users.name', 'asc')
+                            ->select('teams.*');
                         break;
                     case 'owner_desc':
                         $query->join('users', 'teams.owner_id', '=', 'users.id')
-                              ->orderBy('users.name', 'desc')
-                              ->select('teams.*');
+                            ->orderBy('users.name', 'desc')
+                            ->select('teams.*');
                         break;
                     case 'members_asc':
                         $query->orderBy('members_count', 'asc');
@@ -80,11 +79,11 @@ class AuditTeamController extends Controller
         $stats = [
             'total' => Team::where('status', TeamStatus::PENDING)->count(),
             'this_week' => Team::where('status', TeamStatus::PENDING)
-                              ->where('created_at', '>=', now()->startOfWeek())
-                              ->count(),
+                ->where('created_at', '>=', now()->startOfWeek())
+                ->count(),
             'this_month' => Team::where('status', TeamStatus::PENDING)
-                               ->where('created_at', '>=', now()->startOfMonth())
-                               ->count(),
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->count(),
         ];
 
         return view('audit-teams.index', [
@@ -96,7 +95,6 @@ class AuditTeamController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Team  $auditTeam
      * @return \Illuminate\Http\Response
      */
     public function show(Team $auditTeam)
@@ -114,14 +112,13 @@ class AuditTeamController extends Controller
 
         return view('audit-teams.show', [
             'auditTeam' => $auditTeam,
-            'audits' => $audits
+            'audits' => $audits,
         ]);
     }
 
     /**
      * approve the specified resource.
      *
-     * @param  \App\Models\Team  $auditTeam
      * @return \Illuminate\Http\Response
      */
     public function approve(Team $auditTeam)
@@ -137,7 +134,7 @@ class AuditTeamController extends Controller
             'meta' => [
                 'past' => $auditTeam->meta['present'] ?? [],
                 'present' => $auditTeam->meta['future'] ?? [],
-            ]
+            ],
         ]);
 
         Notification::send($auditTeam->owner, new TeamApprovedNotification($auditTeam));
@@ -149,7 +146,6 @@ class AuditTeamController extends Controller
     /**
      * Show the form for declining the specified resource.
      *
-     * @param  \App\Models\Team  $auditTeam
      * @return \Illuminate\Http\Response
      */
     public function reason(Team $auditTeam)
@@ -164,7 +160,6 @@ class AuditTeamController extends Controller
     /**
      * decline the specified resource.
      *
-     * @param  \App\Models\Team  $auditTeam
      * @return \Illuminate\Http\Response
      */
     public function decline(Request $request, Team $auditTeam)
@@ -187,7 +182,7 @@ class AuditTeamController extends Controller
         $auditTeam->update([
             'meta' => $meta,
             'status' => TeamStatus::DECLINED,
-            'declined_reason' => $reason
+            'declined_reason' => $reason,
         ]);
 
         Notification::send($auditTeam->owner, new TeamDeclinedNotification($auditTeam));
@@ -199,7 +194,6 @@ class AuditTeamController extends Controller
     /**
      * Bulk approve multiple teams
      *
-     * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function bulkApprove(Request $request)
@@ -212,9 +206,9 @@ class AuditTeamController extends Controller
         ]);
 
         $teams = Team::whereIn('id', $validated['team_ids'])
-                    ->where('status', TeamStatus::PENDING)
-                    ->with('owner')
-                    ->get();
+            ->where('status', TeamStatus::PENDING)
+            ->with('owner')
+            ->get();
 
         $approvedCount = 0;
         foreach ($teams as $team) {
@@ -223,7 +217,7 @@ class AuditTeamController extends Controller
                 'meta' => [
                     'past' => $team->meta['present'] ?? [],
                     'present' => $team->meta['future'] ?? [],
-                ]
+                ],
             ]);
 
             Notification::send($team->owner, new TeamApprovedNotification($team));

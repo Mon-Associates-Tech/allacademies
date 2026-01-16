@@ -19,21 +19,31 @@ class QuizPerformanceDashboard extends Component
 
     // Filter properties
     public $selectedPeriod = 'all'; // all, today, week, month, quarter, year, custom
+
     public $selectedBookId = null;
+
     public $selectedDifficulty = 'all'; // all, easy, medium, hard
+
     public $selectedQuestionType = 'all'; // all, multiple_choice, true_false, essay, mixed
+
     public $minScore = null;
+
     public $maxScore = null;
+
     public $startDate = null;
+
     public $endDate = null;
 
     // UI state
     public $activeView = 'overview'; // overview, detailed, trends, comparisons
+
     public $selectedMetric = 'percentage'; // percentage, time, questions
+
     public $chartType = 'line'; // line, bar, pie
 
     // Available options
     public $availableBooks = [];
+
     public $periods = [
         'today' => 'Today',
         'week' => 'This Week',
@@ -41,14 +51,14 @@ class QuizPerformanceDashboard extends Component
         'quarter' => 'This Quarter',
         'year' => 'This Year',
         'all' => 'All Time',
-        'custom' => 'Custom Range'
+        'custom' => 'Custom Range',
     ];
 
     public $difficulties = [
         'all' => 'All Difficulties',
         'easy' => 'Easy',
         'medium' => 'Medium',
-        'hard' => 'Hard'
+        'hard' => 'Hard',
     ];
 
     public $questionTypes = [
@@ -56,7 +66,7 @@ class QuizPerformanceDashboard extends Component
         'multiple_choice' => 'Multiple Choice',
         'true_false' => 'True/False',
         'essay' => 'Essay',
-        'mixed' => 'Mixed'
+        'mixed' => 'Mixed',
     ];
 
     public function mount(?int $userId = null)
@@ -68,8 +78,6 @@ class QuizPerformanceDashboard extends Component
         $this->startDate = now()->subMonth()->format('Y-m-d');
         $this->endDate = now()->format('Y-m-d');
     }
-
-
 
     #[Computed]
     public function performanceData()
@@ -88,7 +96,7 @@ class QuizPerformanceDashboard extends Component
                     'period' => $this->selectedPeriod,
                     'book_id' => $this->selectedBookId,
                     'difficulty' => $this->selectedDifficulty,
-                ]
+                ],
             ]);
 
             if ($sessions->isEmpty()) {
@@ -97,11 +105,11 @@ class QuizPerformanceDashboard extends Component
 
             return [
                 'total_quizzes' => $sessions->count(),
-                'average_score' => round($sessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
-                'highest_score' => $sessions->max(fn($s) => $s->results['percentage'] ?? 0),
-                'lowest_score' => $sessions->min(fn($s) => $s->results['percentage'] ?? 0),
-                'total_questions_answered' => $sessions->sum(fn($s) => $s->results['total_questions'] ?? 0),
-                'total_correct_answers' => $sessions->sum(fn($s) => $s->results['correct_answers'] ?? 0),
+                'average_score' => round($sessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
+                'highest_score' => $sessions->max(fn ($s) => $s->results['percentage'] ?? 0),
+                'lowest_score' => $sessions->min(fn ($s) => $s->results['percentage'] ?? 0),
+                'total_questions_answered' => $sessions->sum(fn ($s) => $s->results['total_questions'] ?? 0),
+                'total_correct_answers' => $sessions->sum(fn ($s) => $s->results['correct_answers'] ?? 0),
                 'average_time_taken' => round($sessions->whereNotNull('time_taken')->avg('time_taken'), 2),
                 'total_time_spent' => $sessions->whereNotNull('time_taken')->sum('time_taken'),
                 'completion_rate' => $this->calculateCompletionRate(),
@@ -122,8 +130,8 @@ class QuizPerformanceDashboard extends Component
             $sessions = $query->get();
 
             // Separate book-based and file-based quizzes
-            $bookBased = $sessions->filter(fn($session) => $session->book_id !== null)->load('book');
-            $fileBased = $sessions->filter(fn($session) => $session->book_id === null);
+            $bookBased = $sessions->filter(fn ($session) => $session->book_id !== null)->load('book');
+            $fileBased = $sessions->filter(fn ($session) => $session->book_id === null);
 
             $results = collect();
 
@@ -133,7 +141,7 @@ class QuizPerformanceDashboard extends Component
                     ->map(function ($bookSessions) {
                         $book = $bookSessions->first()->book;
 
-                        if (!$book) {
+                        if (! $book) {
                             return null;
                         }
 
@@ -142,11 +150,11 @@ class QuizPerformanceDashboard extends Component
                             'book_title' => $book->title,
                             'author' => $book->author->name ?? 'Unknown',
                             'quiz_count' => $bookSessions->count(),
-                            'average_score' => round($bookSessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
-                            'best_score' => $bookSessions->max(fn($s) => $s->results['percentage'] ?? 0),
+                            'average_score' => round($bookSessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
+                            'best_score' => $bookSessions->max(fn ($s) => $s->results['percentage'] ?? 0),
                             'last_attempt' => $bookSessions->max('completed_at'),
                             'improvement' => $this->calculateBookImprovement($bookSessions),
-                            'type' => 'book'
+                            'type' => 'book',
                         ];
                     })
                     ->filter() // Remove nulls
@@ -162,11 +170,11 @@ class QuizPerformanceDashboard extends Component
                     'book_title' => 'Uploaded Content',
                     'author' => 'Various',
                     'quiz_count' => $fileBased->count(),
-                    'average_score' => round($fileBased->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
-                    'best_score' => $fileBased->max(fn($s) => $s->results['percentage'] ?? 0),
+                    'average_score' => round($fileBased->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
+                    'best_score' => $fileBased->max(fn ($s) => $s->results['percentage'] ?? 0),
                     'last_attempt' => $fileBased->max('completed_at'),
                     'improvement' => $this->calculateBookImprovement($fileBased),
-                    'type' => 'file'
+                    'type' => 'file',
                 ]);
             }
 
@@ -183,7 +191,7 @@ class QuizPerformanceDashboard extends Component
             ->get()
             ->map(function ($session) {
                 // Load book relationship if it exists
-                if ($session->book_id && !$session->relationLoaded('book')) {
+                if ($session->book_id && ! $session->relationLoaded('book')) {
                     $session->load('book.author');
                 }
 
@@ -225,11 +233,11 @@ class QuizPerformanceDashboard extends Component
                 foreach ($questionDetails as $detail) {
                     $type = $detail['question_type'] ?? 'unknown';
 
-                    if (!isset($questionTypePerformance[$type])) {
+                    if (! isset($questionTypePerformance[$type])) {
                         $questionTypePerformance[$type] = [
                             'total' => 0,
                             'correct' => 0,
-                            'type_name' => $this->questionTypes[$type] ?? ucfirst(str_replace('_', ' ', $type))
+                            'type_name' => $this->questionTypes[$type] ?? ucfirst(str_replace('_', ' ', $type)),
                         ];
                     }
 
@@ -251,7 +259,7 @@ class QuizPerformanceDashboard extends Component
                     'type' => $data['type_name'],
                     'accuracy' => round($percentage, 2),
                     'total_questions' => $data['total'],
-                    'correct_answers' => $data['correct']
+                    'correct_answers' => $data['correct'],
                 ];
 
                 if ($percentage >= 75) {
@@ -262,12 +270,12 @@ class QuizPerformanceDashboard extends Component
             }
 
             // Sort by accuracy
-            usort($strengths, fn($a, $b) => $b['accuracy'] <=> $a['accuracy']);
-            usort($weaknesses, fn($a, $b) => $a['accuracy'] <=> $b['accuracy']);
+            usort($strengths, fn ($a, $b) => $b['accuracy'] <=> $a['accuracy']);
+            usort($weaknesses, fn ($a, $b) => $a['accuracy'] <=> $b['accuracy']);
 
             return [
                 'strengths' => $strengths,
-                'weaknesses' => $weaknesses
+                'weaknesses' => $weaknesses,
             ];
         });
     }
@@ -307,8 +315,9 @@ class QuizPerformanceDashboard extends Component
                     ->whereRaw('JSON_EXTRACT(results, "$.percentage") <= ?', [$maxScore]);
             } else {
                 // Fallback: load all and filter in PHP (less efficient but works)
-                $query->get()->filter(function($session) use ($minScore, $maxScore) {
+                $query->get()->filter(function ($session) use ($minScore, $maxScore) {
                     $percentage = $session->results['percentage'] ?? 0;
+
                     return $percentage >= $minScore && $percentage <= $maxScore;
                 });
             }
@@ -328,6 +337,7 @@ class QuizPerformanceDashboard extends Component
 
         if ($bookIds->isEmpty()) {
             $this->availableBooks = collect();
+
             return;
         }
 
@@ -336,7 +346,6 @@ class QuizPerformanceDashboard extends Component
             ->orderBy('title')
             ->get();
     }
-
 
     #[Computed]
     public function targetUser()
@@ -362,11 +371,11 @@ class QuizPerformanceDashboard extends Component
 
             return [
                 'total_quizzes' => $sessions->count(),
-                'average_score' => round($sessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
-                'highest_score' => $sessions->max(fn($s) => $s->results['percentage'] ?? 0),
-                'lowest_score' => $sessions->min(fn($s) => $s->results['percentage'] ?? 0),
-                'total_questions_answered' => $sessions->sum(fn($s) => $s->results['total_questions'] ?? 0),
-                'total_correct_answers' => $sessions->sum(fn($s) => $s->results['correct_answers'] ?? 0),
+                'average_score' => round($sessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
+                'highest_score' => $sessions->max(fn ($s) => $s->results['percentage'] ?? 0),
+                'lowest_score' => $sessions->min(fn ($s) => $s->results['percentage'] ?? 0),
+                'total_questions_answered' => $sessions->sum(fn ($s) => $s->results['total_questions'] ?? 0),
+                'total_correct_answers' => $sessions->sum(fn ($s) => $s->results['correct_answers'] ?? 0),
                 'average_time_taken' => round($sessions->whereNotNull('time_taken')->avg('time_taken'), 2),
                 'total_time_spent' => $sessions->whereNotNull('time_taken')->sum('time_taken'),
                 'completion_rate' => $this->calculateCompletionRate(),
@@ -386,7 +395,7 @@ class QuizPerformanceDashboard extends Component
 
             return $query->with('book')
                 ->get()
-                ->filter(fn($session) => $session->book !== null)
+                ->filter(fn ($session) => $session->book !== null)
                 ->groupBy('book_id')
                 ->map(function ($bookSessions) {
                     $book = $bookSessions->first()->book;
@@ -396,8 +405,8 @@ class QuizPerformanceDashboard extends Component
                         'book_title' => $book->title,
                         'author' => $book->author->name ?? 'Unknown',
                         'quiz_count' => $bookSessions->count(),
-                        'average_score' => round($bookSessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
-                        'best_score' => $bookSessions->max(fn($s) => $s->results['percentage'] ?? 0),
+                        'average_score' => round($bookSessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
+                        'best_score' => $bookSessions->max(fn ($s) => $s->results['percentage'] ?? 0),
                         'last_attempt' => $bookSessions->max('completed_at'),
                         'improvement' => $this->calculateBookImprovement($bookSessions),
                     ];
@@ -421,9 +430,9 @@ class QuizPerformanceDashboard extends Component
                     return [
                         'difficulty' => ucfirst($difficulty),
                         'quiz_count' => $difficultySessions->count(),
-                        'average_score' => round($difficultySessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
+                        'average_score' => round($difficultySessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
                         'pass_rate' => round(
-                            $difficultySessions->filter(fn($s) => ($s->results['percentage'] ?? 0) >= 70)->count() /
+                            $difficultySessions->filter(fn ($s) => ($s->results['percentage'] ?? 0) >= 70)->count() /
                             max($difficultySessions->count(), 1) * 100,
                             2
                         ),
@@ -447,7 +456,7 @@ class QuizPerformanceDashboard extends Component
                     return [
                         'type' => $this->questionTypes[$type] ?? ucfirst(str_replace('_', ' ', $type)),
                         'quiz_count' => $typeSessions->count(),
-                        'average_score' => round($typeSessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
+                        'average_score' => round($typeSessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
                         'average_time' => round($typeSessions->whereNotNull('time_taken')->avg('time_taken'), 2),
                     ];
                 })
@@ -470,7 +479,7 @@ class QuizPerformanceDashboard extends Component
                 'sessions_count' => $sessions->count(),
                 'period' => $this->selectedPeriod,
                 'first_session' => $sessions->first()?->completed_at,
-                'last_session' => $sessions->last()?->completed_at
+                'last_session' => $sessions->last()?->completed_at,
             ]);
 
             if ($sessions->isEmpty()) {
@@ -480,8 +489,9 @@ class QuizPerformanceDashboard extends Component
                         'period' => $this->selectedPeriod,
                         'book_id' => $this->selectedBookId,
                         'difficulty' => $this->selectedDifficulty,
-                    ]
+                    ],
                 ]);
+
                 return [];
             }
 
@@ -495,8 +505,9 @@ class QuizPerformanceDashboard extends Component
                 Log::info('Formatting session date', [
                     'completed_at' => $session->completed_at,
                     'formatted' => $formatted,
-                    'interval' => $interval
+                    'interval' => $interval,
                 ]);
+
                 return $formatted;
             });
 
@@ -504,14 +515,14 @@ class QuizPerformanceDashboard extends Component
                 return [
                     'period' => $period,
                     'quiz_count' => $periodSessions->count(),
-                    'average_score' => round($periodSessions->avg(fn($s) => $s->results['percentage'] ?? 0), 2),
-                    'total_questions' => $periodSessions->sum(fn($s) => $s->results['total_questions'] ?? 0),
+                    'average_score' => round($periodSessions->avg(fn ($s) => $s->results['percentage'] ?? 0), 2),
+                    'total_questions' => $periodSessions->sum(fn ($s) => $s->results['total_questions'] ?? 0),
                 ];
             })->values();
 
             Log::info('Time series result', [
                 'count' => $result->count(),
-                'data' => $result->toArray()
+                'data' => $result->toArray(),
             ]);
 
             return $result->toArray();
@@ -531,11 +542,12 @@ class QuizPerformanceDashboard extends Component
 
         Log::info('Time interval determined', [
             'selected_period' => $this->selectedPeriod,
-            'interval' => $interval
+            'interval' => $interval,
         ]);
 
         return $interval;
     }
+
     #[Computed]
     public function recentQuizzes1()
     {
@@ -583,11 +595,11 @@ class QuizPerformanceDashboard extends Component
                 foreach ($questionDetails as $detail) {
                     $type = $detail['question_type'] ?? 'unknown';
 
-                    if (!isset($questionTypePerformance[$type])) {
+                    if (! isset($questionTypePerformance[$type])) {
                         $questionTypePerformance[$type] = [
                             'total' => 0,
                             'correct' => 0,
-                            'type_name' => $this->questionTypes[$type] ?? ucfirst(str_replace('_', ' ', $type))
+                            'type_name' => $this->questionTypes[$type] ?? ucfirst(str_replace('_', ' ', $type)),
                         ];
                     }
 
@@ -609,7 +621,7 @@ class QuizPerformanceDashboard extends Component
                     'type' => $data['type_name'],
                     'accuracy' => round($percentage, 2),
                     'total_questions' => $data['total'],
-                    'correct_answers' => $data['correct']
+                    'correct_answers' => $data['correct'],
                 ];
 
                 if ($percentage >= 75) {
@@ -620,12 +632,12 @@ class QuizPerformanceDashboard extends Component
             }
 
             // Sort by accuracy
-            usort($strengths, fn($a, $b) => $b['accuracy'] <=> $a['accuracy']);
-            usort($weaknesses, fn($a, $b) => $a['accuracy'] <=> $b['accuracy']);
+            usort($strengths, fn ($a, $b) => $b['accuracy'] <=> $a['accuracy']);
+            usort($weaknesses, fn ($a, $b) => $a['accuracy'] <=> $b['accuracy']);
 
             return [
                 'strengths' => $strengths,
-                'weaknesses' => $weaknesses
+                'weaknesses' => $weaknesses,
             ];
         });
     }
@@ -680,9 +692,10 @@ class QuizPerformanceDashboard extends Component
                 if ($this->startDate && $this->endDate) {
                     return [
                         Carbon::parse($this->startDate)->startOfDay(),
-                        Carbon::parse($this->endDate)->endOfDay()
+                        Carbon::parse($this->endDate)->endOfDay(),
                     ];
                 }
+
                 return null;
             case 'all':
             default:
@@ -727,14 +740,14 @@ class QuizPerformanceDashboard extends Component
         $firstHalf = $ordered->take((int) ceil($ordered->count() / 2));
         $secondHalf = $ordered->slice((int) ceil($ordered->count() / 2));
 
-        $firstAvg = $firstHalf->avg(fn($s) => $s->results['percentage'] ?? 0);
-        $secondAvg = $secondHalf->avg(fn($s) => $s->results['percentage'] ?? 0);
+        $firstAvg = $firstHalf->avg(fn ($s) => $s->results['percentage'] ?? 0);
+        $secondAvg = $secondHalf->avg(fn ($s) => $s->results['percentage'] ?? 0);
 
         $change = round($secondAvg - $firstAvg, 2);
 
         return [
             'trend' => $change > 5 ? 'improving' : ($change < -5 ? 'declining' : 'stable'),
-            'change' => $change
+            'change' => $change,
         ];
     }
 
@@ -772,10 +785,19 @@ class QuizPerformanceDashboard extends Component
 
     protected function calculateLetterGrade(float $percentage): string
     {
-        if ($percentage >= 90) return 'A';
-        if ($percentage >= 80) return 'B';
-        if ($percentage >= 70) return 'C';
-        if ($percentage >= 60) return 'D';
+        if ($percentage >= 90) {
+            return 'A';
+        }
+        if ($percentage >= 80) {
+            return 'B';
+        }
+        if ($percentage >= 70) {
+            return 'C';
+        }
+        if ($percentage >= 60) {
+            return 'D';
+        }
+
         return 'F';
     }
 

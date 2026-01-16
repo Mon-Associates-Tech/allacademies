@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class SendScheduledMessages extends Command
 {
     protected $signature = 'messages:send-scheduled';
+
     protected $description = 'Send all scheduled messages that are due';
 
     public function handle()
@@ -22,6 +23,7 @@ class SendScheduledMessages extends Command
 
         if ($scheduledMessages->isEmpty()) {
             $this->info('No scheduled messages found.');
+
             return 0;
         }
 
@@ -37,7 +39,7 @@ class SendScheduledMessages extends Command
                 Log::info("Dispatched scheduled message job: {$message->id}");
 
             } catch (\Exception $e) {
-                $this->error("Failed to dispatch message {$message->id}: " . $e->getMessage());
+                $this->error("Failed to dispatch message {$message->id}: ".$e->getMessage());
 
                 $message->update(['status' => Message::STATUS_FAILED]);
 
@@ -48,6 +50,7 @@ class SendScheduledMessages extends Command
         }
 
         $this->info('Finished processing scheduled messages.');
+
         return 0;
     }
 }

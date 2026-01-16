@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SignInRequest;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
 
 class SignInController extends Controller
 {
@@ -21,7 +21,7 @@ class SignInController extends Controller
     public function store(SignInRequest $request): \Illuminate\Http\RedirectResponse
     {
         // Rate limiting for login attempts
-        $key = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
+        $key = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
@@ -39,7 +39,7 @@ class SignInController extends Controller
             $user = auth()->user();
 
             // Check if user's email is verified
-            if (!$user->hasVerifiedEmail()) {
+            if (! $user->hasVerifiedEmail()) {
                 // Log out the user immediately
                 auth()->logout();
 
@@ -65,7 +65,7 @@ class SignInController extends Controller
                 // Redirect to suspended account page
                 return redirect()->route('login')
                     ->withErrors([
-                        'email' => 'Your account has been suspended. Please contact the administrator for more information.'
+                        'email' => 'Your account has been suspended. Please contact the administrator for more information.',
                     ]);
             }
 
@@ -95,6 +95,7 @@ class SignInController extends Controller
             } else {
                 // OTP is disabled, proceed directly to dashboard
                 $request->session()->regenerate();
+
                 return redirect()->intended('dashboard');
             }
         }
@@ -111,13 +112,13 @@ class SignInController extends Controller
         // Check if OTP is enabled
         $otpEnabled = config('app.enable_otp', false) || env('ENABLE_OTP', false);
 
-        if (!$otpEnabled) {
+        if (! $otpEnabled) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Two-factor authentication is not enabled.'
+                'email' => 'Two-factor authentication is not enabled.',
             ]);
         }
 
-        if (!session('2fa:user:id')) {
+        if (! session('2fa:user:id')) {
             return redirect()->route('login');
         }
 
@@ -129,18 +130,18 @@ class SignInController extends Controller
         // Check if OTP is enabled
         $otpEnabled = config('app.enable_otp', false) || env('ENABLE_OTP', false);
 
-        if (!$otpEnabled) {
+        if (! $otpEnabled) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Two-factor authentication is not enabled.'
+                'email' => 'Two-factor authentication is not enabled.',
             ]);
         }
 
         $request->validate(['code' => 'required|digits:6']);
 
         // Check if user session exists
-        if (!session('2fa:user:id')) {
+        if (! session('2fa:user:id')) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Session expired. Please sign in again.'
+                'email' => 'Session expired. Please sign in again.',
             ]);
         }
 
@@ -150,18 +151,20 @@ class SignInController extends Controller
         if ($attempts >= 5) {
             // Clear session and redirect to sign in
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
+
             return redirect()->route('login')->withErrors([
-                'email' => 'Too many failed attempts. Please sign in again.'
+                'email' => 'Too many failed attempts. Please sign in again.',
             ]);
         }
 
         // Load user with role relationship and refresh from database
         $user = User::with('primaryRole')->find(session('2fa:user:id'));
 
-        if (!$user) {
+        if (! $user) {
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
+
             return redirect()->route('login')->withErrors([
-                'email' => 'User not found. Please sign in again.'
+                'email' => 'User not found. Please sign in again.',
             ]);
         }
 
@@ -169,7 +172,7 @@ class SignInController extends Controller
         $user->refresh();
 
         // Double-check email verification before completing 2FA
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             // Clear 2FA session
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
 
@@ -187,12 +190,12 @@ class SignInController extends Controller
 
             return redirect()->route('login')
                 ->withErrors([
-                    'email' => 'Your account has been suspended. Please contact the administrator for more information.'
+                    'email' => 'Your account has been suspended. Please contact the administrator for more information.',
                 ]);
         }
 
         // Check if code exists and is not expired
-        if (!$user->two_factor_code || !$user->two_factor_expires_at) {
+        if (! $user->two_factor_code || ! $user->two_factor_expires_at) {
             return back()->withErrors(['code' => 'No verification code found. Please request a new one.']);
         }
 
@@ -201,7 +204,7 @@ class SignInController extends Controller
         }
 
         // Verify the code using secure comparison
-        if (hash_equals((string)$user->two_factor_code, (string)$request->code)) {
+        if (hash_equals((string) $user->two_factor_code, (string) $request->code)) {
             // Clear 2FA data
             $user->update([
                 'two_factor_code' => null,
@@ -230,17 +233,17 @@ class SignInController extends Controller
         // Check if OTP is enabled
         $otpEnabled = config('app.enable_otp', false) || env('ENABLE_OTP', false);
 
-        if (!$otpEnabled) {
+        if (! $otpEnabled) {
             return response()->json([
                 'success' => false,
-                'message' => 'Two-factor authentication is not enabled.'
+                'message' => 'Two-factor authentication is not enabled.',
             ], 400);
         }
 
-        if (!session('2fa:user:id')) {
+        if (! session('2fa:user:id')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid session'
+                'message' => 'Invalid session',
             ], 400);
         }
 
@@ -248,19 +251,20 @@ class SignInController extends Controller
         $lastResend = session('2fa:last_resend');
         if ($lastResend && Carbon::parse($lastResend)->addSeconds(60)->gt(now())) {
             $remainingSeconds = Carbon::parse($lastResend)->addSeconds(60)->diffInSeconds(now());
+
             return response()->json([
                 'success' => false,
                 'message' => "Please wait {$remainingSeconds} seconds before requesting a new code.",
-                'remaining_seconds' => $remainingSeconds
+                'remaining_seconds' => $remainingSeconds,
             ], 429);
         }
 
         $user = User::find(session('2fa:user:id'));
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found'
+                'message' => 'User not found',
             ], 404);
         }
 
@@ -268,7 +272,7 @@ class SignInController extends Controller
         if ($user->status === 'suspended') {
             return response()->json([
                 'success' => false,
-                'message' => 'Your account has been suspended. Please contact the administrator for more information.'
+                'message' => 'Your account has been suspended. Please contact the administrator for more information.',
             ], 403);
         }
 
@@ -284,18 +288,18 @@ class SignInController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'New verification code sent to your email.'
+                'message' => 'New verification code sent to your email.',
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Failed to resend 2FA code', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send verification code. Please try again.'
+                'message' => 'Failed to send verification code. Please try again.',
             ], 500);
         }
     }
@@ -318,7 +322,7 @@ class SignInController extends Controller
         ]);
 
         // Verify the update was successful
-        if (!$updated) {
+        if (! $updated) {
             \Log::error('Failed to update 2FA code in database', [
                 'user_id' => $user->id,
             ]);
@@ -335,7 +339,7 @@ class SignInController extends Controller
             \Log::error('Failed to send 2FA email', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;

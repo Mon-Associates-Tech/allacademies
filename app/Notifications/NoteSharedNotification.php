@@ -13,6 +13,7 @@ class NoteSharedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public Note $note;
+
     public bool $canEdit;
 
     public function __construct(Note $note, bool $canEdit = false)
@@ -26,7 +27,7 @@ class NoteSharedNotification extends Notification implements ShouldQueue
         $channels = ['database'];
 
         // Only add mail channel if user has a valid email
-        if (!empty($notifiable->email) && filter_var($notifiable->email, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($notifiable->email) && filter_var($notifiable->email, FILTER_VALIDATE_EMAIL)) {
             $channels[] = 'mail';
         }
 
@@ -46,7 +47,7 @@ class NoteSharedNotification extends Notification implements ShouldQueue
             'shared_by' => $this->note->user->name,
             'shared_by_id' => $this->note->user_id,
             'can_edit' => $this->canEdit,
-            'message' => $this->note->user->name . ' shared a note with you: ' . $this->note->title,
+            'message' => $this->note->user->name.' shared a note with you: '.$this->note->title,
             'action_url' => route('notes.show', $this->note),
         ];
     }

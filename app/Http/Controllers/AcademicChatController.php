@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Services\AcademicChatService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AcademicChatController extends Controller
 {
@@ -49,15 +48,15 @@ class AcademicChatController extends Controller
             'conversation_history' => 'nullable|array',
             'conversation_history.*.role' => 'required|string|in:user,assistant',
             'conversation_history.*.content' => 'required|string',
-            'model' => 'nullable|string|in:gpt-3.5-turbo,gpt-4,gpt-4-turbo-preview'
+            'model' => 'nullable|string|in:gpt-3.5-turbo,gpt-4,gpt-4-turbo-preview',
         ]);
 
         // Validate educational parameters
         $parameterErrors = $this->chatService->validateParameters($validated);
-        if (!empty($parameterErrors)) {
+        if (! empty($parameterErrors)) {
             return response()->json([
                 'success' => false,
-                'errors' => $parameterErrors
+                'errors' => $parameterErrors,
             ], 422);
         }
 
@@ -80,7 +79,7 @@ class AcademicChatController extends Controller
     public function subjects(): JsonResponse
     {
         return response()->json([
-            'subjects' => $this->chatService->getAvailableSubjects()
+            'subjects' => $this->chatService->getAvailableSubjects(),
         ]);
     }
 
@@ -93,13 +92,13 @@ class AcademicChatController extends Controller
             'age' => 'nullable|integer|min:5|max:100',
             'academic_level' => 'nullable|string',
             'subject' => 'nullable|string',
-            'learning_style' => 'nullable|string'
+            'learning_style' => 'nullable|string',
         ]);
 
         $recommendations = $this->generateRecommendations($validated);
 
         return response()->json([
-            'recommendations' => $recommendations
+            'recommendations' => $recommendations,
         ]);
     }
 
@@ -139,28 +138,28 @@ class AcademicChatController extends Controller
                     $recommendations['tips'] = [
                         'Request diagrams and visual explanations',
                         'Ask for concept maps',
-                        'Use color-coding for different concepts'
+                        'Use color-coding for different concepts',
                     ];
                     break;
                 case 'auditory':
                     $recommendations['tips'] = [
                         'Ask for step-by-step verbal explanations',
                         'Request analogies and stories',
-                        'Use discussion-based learning'
+                        'Use discussion-based learning',
                     ];
                     break;
                 case 'kinesthetic':
                     $recommendations['tips'] = [
                         'Request hands-on activities',
                         'Ask for real-world applications',
-                        'Use practical examples'
+                        'Use practical examples',
                     ];
                     break;
                 case 'reading':
                     $recommendations['tips'] = [
                         'Request detailed written explanations',
                         'Ask for additional reading materials',
-                        'Use structured information'
+                        'Use structured information',
                     ];
                     break;
             }
@@ -176,7 +175,7 @@ class AcademicChatController extends Controller
     {
         $validated = $request->validate([
             'messages' => 'required|array',
-            'format' => 'nullable|string|in:json,txt,pdf'
+            'format' => 'nullable|string|in:json,txt,pdf',
         ]);
 
         $messages = $validated['messages'];
@@ -197,8 +196,8 @@ class AcademicChatController extends Controller
 
         return response()->json([
             'content' => $content,
-            'filename' => 'chat_export_' . date('Y-m-d_H-i-s') . '.' . ($format === 'json' ? 'json' : 'txt'),
-            'mime_type' => $mimeType
+            'filename' => 'chat_export_'.date('Y-m-d_H-i-s').'.'.($format === 'json' ? 'json' : 'txt'),
+            'mime_type' => $mimeType,
         ]);
     }
 
@@ -208,14 +207,14 @@ class AcademicChatController extends Controller
     protected function exportToText(array $messages): string
     {
         $text = "Educational Chat Export\n";
-        $text .= "Generated: " . date('Y-m-d H:i:s') . "\n";
-        $text .= str_repeat("=", 50) . "\n\n";
+        $text .= 'Generated: '.date('Y-m-d H:i:s')."\n";
+        $text .= str_repeat('=', 50)."\n\n";
 
         foreach ($messages as $message) {
             $role = ucfirst($message['role']);
             $timestamp = isset($message['timestamp']) ? date('H:i:s', strtotime($message['timestamp'])) : '';
             $text .= "{$role} [{$timestamp}]:\n";
-            $text .= $message['content'] . "\n\n";
+            $text .= $message['content']."\n\n";
         }
 
         return $text;

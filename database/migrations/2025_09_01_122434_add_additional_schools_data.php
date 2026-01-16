@@ -12,25 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('schools', function (Blueprint $table) {
-            if (!Schema::hasColumn('schools', 'country')) {
+            if (! Schema::hasColumn('schools', 'country')) {
                 $table->string('country', 100)->default('Ghana')->after('address');
             }
-            if (!Schema::hasColumn('schools', 'state')) {
+            if (! Schema::hasColumn('schools', 'state')) {
                 $table->string('state', 100)->nullable()->after('country');
             }
-            if (!Schema::hasColumn('schools', 'city')) {
+            if (! Schema::hasColumn('schools', 'city')) {
                 $table->string('city', 100)->nullable()->after('state');
             }
-            if (!Schema::hasColumn('schools', 'type')) {
+            if (! Schema::hasColumn('schools', 'type')) {
                 $table->enum('type', ['primary', 'secondary', 'tertiary', 'mixed', 'other'])->default('mixed')->after('description');
             }
-            if (!Schema::hasColumn('schools', 'ownership')) {
+            if (! Schema::hasColumn('schools', 'ownership')) {
                 $table->enum('ownership', ['public', 'private', 'mission'])->default('public')->after('type');
             }
-            if (!Schema::hasColumn('schools', 'student_capacity')) {
+            if (! Schema::hasColumn('schools', 'student_capacity')) {
                 $table->integer('student_capacity')->nullable()->after('ownership');
             }
-            if (!Schema::hasColumn('schools', 'established_date')) {
+            if (! Schema::hasColumn('schools', 'established_date')) {
                 $table->date('established_date')->nullable()->after('student_capacity');
             }
         });

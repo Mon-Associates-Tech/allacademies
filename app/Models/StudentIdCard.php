@@ -14,12 +14,12 @@ class StudentIdCard extends Model
         'expiry_date',
         'photo_path',
         'barcode',
-        'status' // active, expired, lost, etc.
+        'status', // active, expired, lost, etc.
     ];
 
     protected $casts = [
         'issue_date' => 'date',
-        'expiry_date' => 'date'
+        'expiry_date' => 'date',
     ];
 
     public function student(): BelongsTo
@@ -27,4 +27,3 @@ class StudentIdCard extends Model
         return $this->belongsTo(Student::class);
     }
 }
-

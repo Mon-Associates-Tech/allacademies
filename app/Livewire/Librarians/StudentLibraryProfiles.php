@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Librarians;
 
-use App\Models\Student;
 use App\Models\BookBorrowing;
-use App\Models\User;
+use App\Models\Student;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,15 +12,22 @@ class StudentLibraryProfiles extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $sortBy = 'name';
+
     public $sortDirection = 'asc';
+
     public $perPage = 15;
 
     // Profile modal properties
     public $showProfileModal = false;
+
     public $selectedStudent = null;
+
     public $studentStats = [];
+
     public $borrowingHistory = [];
 
     protected $queryString = [
@@ -157,7 +163,7 @@ class StudentLibraryProfiles extends Component
         $firstBorrow = $borrows->min('borrow_date');
         $lastBorrow = $borrows->max('borrow_date');
 
-        if (!$firstBorrow || !$lastBorrow) {
+        if (! $firstBorrow || ! $lastBorrow) {
             return 0;
         }
 
@@ -220,7 +226,7 @@ class StudentLibraryProfiles extends Component
                 },
                 'borrowedBooks as overdue_borrows' => function ($q) {
                     $q->whereNull('return_date')
-                      ->where('due_date', '<', now());
+                        ->where('due_date', '<', now());
                 },
             ])
             ->withSum('borrowedBooks as total_late_fees', 'late_fee');
@@ -228,14 +234,14 @@ class StudentLibraryProfiles extends Component
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('bio', 'like', '%' . $this->search . '%')
+                $q->where('bio', 'like', '%'.$this->search.'%')
 //                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('student_id', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('user', function ($userQuery) {
-                      $userQuery->where('name', 'like', '%' . $this->search . '%')
-                          ->orWhere('email', 'like', '%' . $this->search . '%')
-                      ->where('email', 'like', '%' . $this->search . '%');
-                  });
+                    ->orWhere('student_id', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->where('name', 'like', '%'.$this->search.'%')
+                            ->orWhere('email', 'like', '%'.$this->search.'%')
+                            ->where('email', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 
@@ -253,7 +259,7 @@ class StudentLibraryProfiles extends Component
                     break;
                 case 'inactive':
                     $query->having('current_borrows', 0)
-                          ->having('overdue_borrows', 0);
+                        ->having('overdue_borrows', 0);
                     break;
             }
         }

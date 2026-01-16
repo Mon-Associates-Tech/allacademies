@@ -8,9 +8,7 @@ use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    public function __construct(private LocationService $locationService)
-    {
-    }
+    public function __construct(private LocationService $locationService) {}
 
     public function countries()
     {
@@ -20,9 +18,9 @@ class LocationController extends Controller
     public function regions(Request $request)
     {
         $request->validate(['country' => 'required|string']);
-        
+
         $regions = $this->locationService->getRegionsByCountry($request->country);
-        
+
         return response()->json($regions);
     }
 
@@ -30,9 +28,9 @@ class LocationController extends Controller
     {
         $request->validate([
             'country' => 'required|string',
-            'region' => 'required|string'
+            'region' => 'required|string',
         ]);
-        
+
         return response()->json(
             $this->locationService->getCitiesByRegion($request->country, $request->region)
         );

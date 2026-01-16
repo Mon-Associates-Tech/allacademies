@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class AcademicTopicFactory extends Factory
 {
     protected $model = \App\Models\AcademicTopic::class;
+
     /**
      * Define the model's default state.
      *

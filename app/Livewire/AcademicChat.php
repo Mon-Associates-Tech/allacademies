@@ -14,8 +14,8 @@ use Livewire\WithFileUploads;
 
 class AcademicChat extends Component
 {
-    use WithFileUploads;
     use ChecksTokenAvailability;
+    use WithFileUploads;
 
     // Chat parameters
     #[Rule('required|string|max:1000')]
@@ -34,6 +34,7 @@ class AcademicChat extends Component
     public $subject = '';
 
     public $topics = [];
+
     public $subtopics = [];
 
     #[Rule('nullable|string')]
@@ -57,23 +58,37 @@ class AcademicChat extends Component
     public $uploadedFile;
 
     public $fileContent = '';
+
     public $fileName = '';
 
     // Component state
     public $messages = [];
+
     public $isLoading = false;
+
     public $showParameters = false;
+
     public $showHistory = false;
+
     public $availableSubjects = [];
+
     public $availableTopics = [];
+
     public $errors = [];
+
     public $conversationId;
+
     public $conversationTitle;
+
     public $conversationHistory = [];
+
     public $canSendMessage = true;
+
     public $tokenWarningMessage;
+
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
+
     protected $chatService;
 
     public function boot(AcademicChatService $chatService): void
@@ -116,8 +131,9 @@ class AcademicChat extends Component
 
     protected function loadChatHistory(): void
     {
-        if (!$this->conversationId) {
+        if (! $this->conversationId) {
             $this->messages = [];
+
             return;
         }
 
@@ -149,7 +165,7 @@ class AcademicChat extends Component
                 'timestamp' => $msg->created_at->toISOString(),
                 'usage' => $msg->usage,
                 'images' => $msg->images ?? null,
-                'model_used' => $msg->model_used ?? null
+                'model_used' => $msg->model_used ?? null,
             ];
         }
 
@@ -172,6 +188,7 @@ class AcademicChat extends Component
                 foreach ($decoded[0]['content'] as $segment) {
                     if (is_string($segment)) {
                         $segments[] = $segment;
+
                         continue;
                     }
 
@@ -182,7 +199,7 @@ class AcademicChat extends Component
             }
 
             $fallback = trim(json_encode($decoded));
-            $joined = trim(implode("\n\n", array_filter($segments, static fn($segment) => trim($segment) !== '')));
+            $joined = trim(implode("\n\n", array_filter($segments, static fn ($segment) => trim($segment) !== '')));
 
             return $joined !== '' ? $joined : $fallback;
         }
@@ -192,8 +209,9 @@ class AcademicChat extends Component
 
     protected function loadConversationTitle(): void
     {
-        if (!$this->conversationId) {
+        if (! $this->conversationId) {
             $this->conversationTitle = null;
+
             return;
         }
 
@@ -219,7 +237,7 @@ class AcademicChat extends Component
             return [
                 'id' => $conversation->conversation_id,
                 'title' => $conversation->conversation_title ?? 'Untitled Conversation',
-                'created_at' => $conversation->created_at
+                'created_at' => $conversation->created_at,
             ];
         })->toArray();
     }
@@ -235,6 +253,7 @@ class AcademicChat extends Component
         if ($this->messageInputDisabled()) {
             $this->dispatch('tokenCheckFailed');
             logError('sendMessage input disabled');
+
             return;
         }
 
@@ -246,22 +265,23 @@ class AcademicChat extends Component
         $this->isLoading = true;
         $this->errors = [];
 
-        if (!$this->conversationId) {
-            $this->conversationId = (string)Str::uuid();
+        if (! $this->conversationId) {
+            $this->conversationId = (string) Str::uuid();
             $this->urlConversationId = $this->conversationId;
         }
 
         $parameters = $this->getParameters();
         $parameters['input'] = $this->message;
 
-        if (!empty($this->fileContent)) {
+        if (! empty($this->fileContent)) {
             $parameters['file_content'] = $this->fileContent;
         }
 
         $validationErrors = $this->chatService->validateParameters($parameters);
-        if (!empty($validationErrors)) {
+        if (! empty($validationErrors)) {
             $this->errors = $validationErrors;
             $this->isLoading = false;
+
             return;
         }
 
@@ -272,14 +292,14 @@ class AcademicChat extends Component
         }
 
         $userMessageContent = $this->message;
-        if (!empty($this->fileContent)) {
-            $userMessageContent .= "\n\nFile: " . $this->fileName . "\nFile Content:\n" . $this->fileContent;
+        if (! empty($this->fileContent)) {
+            $userMessageContent .= "\n\nFile: ".$this->fileName."\nFile Content:\n".$this->fileContent;
         }
 
         $userMessage = [
             'role' => 'user',
             'content' => $userMessageContent,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
         $this->messages[] = $userMessage;
 
@@ -292,12 +312,11 @@ class AcademicChat extends Component
             'conversation_title' => $title,
             'content' => $this->message,
             'role' => 'user',
-            'parameters' => $parameters
+            'parameters' => $parameters,
         ]);
 
         $conversationHistory = $this->getConversationHistory();
         $response = $this->chatService->processRequest($parameters, $conversationHistory);
-
 
         if ($response['success']) {
             $aiMessage = [
@@ -336,7 +355,7 @@ class AcademicChat extends Component
     #[Computed]
     public function messageInputDisabled(): bool
     {
-        return !$this->canSendMessage();
+        return ! $this->canSendMessage();
     }
 
     protected function getParameters(): array
@@ -355,20 +374,20 @@ class AcademicChat extends Component
             'creativity_level' => $this->creativity_level,
             'response_length' => $this->response_length,
         ], function ($value) {
-            return $value !== null && $value !== '' && (!is_array($value) || !empty($value));
+            return $value !== null && $value !== '' && (! is_array($value) || ! empty($value));
         });
     }
 
     protected function generateConversationTitle(): string
     {
-        if (!empty($this->messages)) {
+        if (! empty($this->messages)) {
             $firstUserMessage = collect($this->messages)->firstWhere('role', 'user');
             if ($firstUserMessage) {
                 return Str::limit($firstUserMessage['content'], 50);
             }
         }
 
-        return 'Academic Chat - ' . now()->format('M j, Y');
+        return 'Academic Chat - '.now()->format('M j, Y');
     }
 
     protected function getConversationHistory(): array
@@ -378,7 +397,7 @@ class AcademicChat extends Component
         foreach ($this->messages as $msg) {
             $history[] = [
                 'role' => $msg['role'],
-                'content' => is_string($msg['content']) ? $msg['content'] : (string)$msg['content']
+                'content' => is_string($msg['content']) ? $msg['content'] : (string) $msg['content'],
             ];
         }
 
@@ -403,7 +422,6 @@ class AcademicChat extends Component
         $this->conversationTitle = null;
         $this->redirect(route('academic-chat.index'));
     }
-
 
     public function loadConversation($conversationId): void
     {
@@ -451,12 +469,12 @@ class AcademicChat extends Component
 
     public function toggleHistory(): void
     {
-        $this->showHistory = !$this->showHistory;
+        $this->showHistory = ! $this->showHistory;
     }
 
     public function toggleParameters(): void
     {
-        $this->showParameters = !$this->showParameters;
+        $this->showParameters = ! $this->showParameters;
     }
 
     public function updatedSubject(): void
@@ -468,7 +486,7 @@ class AcademicChat extends Component
 
     public function addTopic($topic): void
     {
-        if (!in_array($topic, $this->topics, true)) {
+        if (! in_array($topic, $this->topics, true)) {
             $this->topics[] = $topic;
         }
     }
@@ -492,7 +510,7 @@ class AcademicChat extends Component
 
     public function addAccommodation($accommodation): void
     {
-        if (!in_array($accommodation, $this->accommodations, true)) {
+        if (! in_array($accommodation, $this->accommodations, true)) {
             $this->accommodations[] = $accommodation;
         }
     }
@@ -508,7 +526,7 @@ class AcademicChat extends Component
         $this->reset([
             'age', 'academic_level', 'academic_group', 'subject',
             'topics', 'subtopics', 'learning_style', 'difficulty',
-            'accommodations', 'response_format', 'creativity_level', 'response_length'
+            'accommodations', 'response_format', 'creativity_level', 'response_length',
         ]);
 
         $this->difficulty = 'medium';

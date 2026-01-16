@@ -11,8 +11,11 @@ use Livewire\Component;
 class Premium extends Component
 {
     public $currentPlan = null;
+
     public $availablePlans = [];
+
     public $premiumFeatures = [];
+
     public $premiumStats = [];
 
     public function mount()
@@ -41,8 +44,8 @@ class Premium extends Component
                     'Unlimited self-assessments',
                     'Basic progress tracking',
                     'Community forum access',
-                    'Mobile app access'
-                ]
+                    'Mobile app access',
+                ],
             ],
             [
                 'name' => 'All Academies Pro',
@@ -55,8 +58,8 @@ class Premium extends Component
                     'Advanced analytics',
                     'Priority customer support',
                     'Offline reading',
-                    'Early access to new content'
-                ]
+                    'Early access to new content',
+                ],
             ],
             [
                 'name' => 'All Academies Elite',
@@ -70,9 +73,9 @@ class Premium extends Component
                     'Custom learning paths',
                     'Live webinars and workshops',
                     'Certification programs',
-                    'Group study sessions'
-                ]
-            ]
+                    'Group study sessions',
+                ],
+            ],
         ];
 
         // Premium features comparison
@@ -80,43 +83,43 @@ class Premium extends Component
             [
                 'feature' => 'Free Books Access',
                 'free' => true,
-                'premium' => true
+                'premium' => true,
             ],
             [
                 'feature' => 'Premium Books',
                 'free' => false,
-                'premium' => true
+                'premium' => true,
             ],
             [
                 'feature' => 'Self Assessments',
                 'free' => '5 per month',
-                'premium' => 'Unlimited'
+                'premium' => 'Unlimited',
             ],
             [
                 'feature' => 'Progress Analytics',
                 'free' => 'Basic',
-                'premium' => 'Advanced'
+                'premium' => 'Advanced',
             ],
             [
                 'feature' => 'Forum Access',
                 'free' => true,
-                'premium' => true
+                'premium' => true,
             ],
             [
                 'feature' => 'Study Groups',
                 'free' => 'Public only',
-                'premium' => 'Private + Public'
+                'premium' => 'Private + Public',
             ],
             [
                 'feature' => 'Customer Support',
                 'free' => 'Email only',
-                'premium' => 'Priority support'
+                'premium' => 'Priority support',
             ],
             [
                 'feature' => 'Offline Reading',
                 'free' => false,
-                'premium' => true
-            ]
+                'premium' => true,
+            ],
         ];
 
         // Premium statistics
@@ -127,7 +130,7 @@ class Premium extends Component
                     ->count(),
                 'money_saved' => $this->calculateMoneySaved(),
                 'days_remaining' => $this->currentPlan->expires_at->diffInDays(now()),
-                'reading_time' => $this->calculateReadingTime()
+                'reading_time' => $this->calculateReadingTime(),
             ];
         }
     }
@@ -153,11 +156,13 @@ class Premium extends Component
     {
         // Simple calculation based on assessment activity
         $user = Auth::user();
-        if (!$user->student) return 0;
+        if (! $user->student) {
+            return 0;
+        }
 
         return $user->student->assessments()
-                ->where('created_at', '>=', Carbon::now()->subMonth())
-                ->count() * 30; // Rough estimate: 30 minutes per assessment session
+            ->where('created_at', '>=', Carbon::now()->subMonth())
+            ->count() * 30; // Rough estimate: 30 minutes per assessment session
     }
 
     public function subscribeToPlan($planIndex)
@@ -168,7 +173,7 @@ class Premium extends Component
         return redirect()->route('subscriptions.create', [
             'plan' => $plan['name'],
             'price' => $plan['price'],
-            'billing' => $plan['billing']
+            'billing' => $plan['billing'],
         ]);
     }
 
@@ -177,7 +182,7 @@ class Premium extends Component
         if ($this->currentPlan) {
             $this->currentPlan->update([
                 'status' => 'cancelled',
-                'cancelled_at' => now()
+                'cancelled_at' => now(),
             ]);
 
             session()->flash('success', 'Subscription cancelled successfully. You will retain access until the end of your billing period.');

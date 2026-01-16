@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Mail\NewsletterWelcomeMail;
 use App\Models\NewsletterSubscription;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\NewsletterWelcomeMail;
 
 class NewsletterService
 {
@@ -17,7 +17,7 @@ class NewsletterService
                 'is_active' => true,
                 'subscribed_at' => now(),
                 'unsubscribed_at' => null,
-                'source' => $source
+                'source' => $source,
             ]
         );
 
@@ -27,7 +27,7 @@ class NewsletterService
         } catch (\Exception $e) {
             \Log::error('Failed to send newsletter welcome email', [
                 'email' => $email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -40,6 +40,7 @@ class NewsletterService
 
         if ($subscription) {
             $subscription->unsubscribe();
+
             return true;
         }
 

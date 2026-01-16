@@ -13,7 +13,7 @@ class BookApproval extends Model
         'book_id',
         'librarian_id',
         'status',
-        'comments'
+        'comments',
     ];
 
     public function book()

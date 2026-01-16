@@ -17,14 +17,14 @@ class AcademicChatSession extends Model
         'parameters',
         'messages',
         'analytics',
-        'last_activity'
+        'last_activity',
     ];
 
     protected $casts = [
         'parameters' => 'array',
         'messages' => 'array',
         'analytics' => 'array',
-        'last_activity' => 'datetime'
+        'last_activity' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -44,12 +44,12 @@ class AcademicChatSession extends Model
     {
         $messages = $this->messages ?? [];
         $messages[] = array_merge($message, [
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ]);
 
         $this->update([
             'messages' => $messages,
-            'last_activity' => now()
+            'last_activity' => now(),
         ]);
     }
 
@@ -59,6 +59,7 @@ class AcademicChatSession extends Model
     public function getRecentMessages(int $limit = 10): array
     {
         $messages = $this->messages ?? [];
+
         return array_slice($messages, -$limit);
     }
 
@@ -79,6 +80,7 @@ class AcademicChatSession extends Model
     public function isExpired(): bool
     {
         $timeout = config('academic_chat.chat.session_timeout', 3600);
+
         return $this->last_activity->addSeconds($timeout)->isPast();
     }
 
@@ -88,8 +90,8 @@ class AcademicChatSession extends Model
     public function getStats(): array
     {
         $messages = $this->messages ?? [];
-        $userMessages = array_filter($messages, fn($msg) => $msg['role'] === 'user');
-        $aiMessages = array_filter($messages, fn($msg) => $msg['role'] === 'assistant');
+        $userMessages = array_filter($messages, fn ($msg) => $msg['role'] === 'user');
+        $aiMessages = array_filter($messages, fn ($msg) => $msg['role'] === 'assistant');
 
         return [
             'total_messages' => count($messages),

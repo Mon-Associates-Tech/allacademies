@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Teachers;
 
+use App\Models\AcademicSubject;
 use App\Models\Assignment;
 use App\Models\Book;
-use App\Models\AcademicSubject;
+use App\Services\AcademicChatService;
 use App\Services\AssignmentNotificationService;
 use App\Services\BookBasedLearningService;
-use App\Services\AcademicChatService;
 use App\Services\PdfContentExtractionService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Auth;
 use Smalot\PdfParser\Exception\MissingCatalogException;
 
 class BookBasedAssignment extends Component
@@ -21,44 +21,74 @@ class BookBasedAssignment extends Component
     use WithFileUploads;
 
     public $selectedBookId = '';
+
     public $selectedChapterId = '';
+
     public $pageStart = '';
+
     public $pageEnd = '';
+
     public $questionType = 'mixed';
+
     public $questionCount = 10;
+
     public $totalMarks = 10;
+
     public $difficulty = 'medium';
+
     public $focusTopics = '';
+
     public $includeQuotes = false;
 
     // Assignment properties
     public $title = '';
+
     public $description = '';
+
     public $durationInMinutes = 60;
+
     public $startDate;
+
     public $endDate;
+
     public $isRandomized = true;
+
     public $selectedSubjectId = '';
 
     // Target groups
     public $selectedStudentGroups = [];
+
     public $selectedAcademicLevels = [];
+
     public $selectedAcademicGroups = [];
+
     public $selectedStudents = [];
 
     // Component state
     public $availableBooks = [];
+
     public $availableSubjects = [];
+
     public $bookChapters = [];
+
     public $selectedBook = null;
+
     public $studentGroups = [];
+
     public $academicLevels = [];
+
     public $academicGroups = [];
+
     public $isGenerating = false;
+
     public $generatedQuestions = [];
+
     public $uploadedFile = null;
+
     public $fileContent = '';
+
     public $fileName = '';
+
     public $contentSourceTab = 'book';
 
     protected $rules = [
@@ -76,9 +106,10 @@ class BookBasedAssignment extends Component
     ];
 
     protected BookBasedLearningService $bookLearningService;
-    protected AcademicChatService $chatService;
-    protected PdfContentExtractionService $pdfExtractor;
 
+    protected AcademicChatService $chatService;
+
+    protected PdfContentExtractionService $pdfExtractor;
 
     public function boot(
         BookBasedLearningService $bookLearningService,
@@ -89,7 +120,6 @@ class BookBasedAssignment extends Component
         $this->chatService = $chatService;
         $this->pdfExtractor = $pdfExtractor;
     }
-
 
     public function mount()
     {
@@ -110,14 +140,15 @@ class BookBasedAssignment extends Component
             ->whereHas('subscriptions', function ($query) use ($user) {
                 $query->where('user_id', $user->id)
                     ->where('status', 'paid');
-                  //  ->where(function ($q) {
-                   //     $q->whereNull('expires_at')
-                    //        ->orWhere('expires_at', '>', now());
-                   // });
+                //  ->where(function ($q) {
+                //     $q->whereNull('expires_at')
+                //        ->orWhere('expires_at', '>', now());
+                // });
             })
             ->orderBy('title')
             ->get();
     }
+
     protected function loadAvailableSubjects()
     {
         // Load subjects the teacher is assigned to or all subjects
@@ -159,18 +190,19 @@ class BookBasedAssignment extends Component
 
     protected function loadBookChapters()
     {
-        if (!$this->selectedBook || !$this->selectedBook->table_of_contents) {
+        if (! $this->selectedBook || ! $this->selectedBook->table_of_contents) {
             $this->bookChapters = [];
+
             return;
         }
 
         $this->bookChapters = collect($this->selectedBook->formatted_table_of_contents)
             ->map(function ($chapter) {
-                return (object)[
+                return (object) [
                     'id' => $chapter['chapter_number'],
                     'chapter_number' => $chapter['chapter_number'],
                     'title' => $chapter['title'],
-                    'page_range' => $chapter['page_range']
+                    'page_range' => $chapter['page_range'],
                 ];
             });
     }
@@ -190,15 +222,16 @@ class BookBasedAssignment extends Component
                 $extension = strtolower($this->uploadedFile->getClientOriginalExtension());
 
                 // Support multiple file types
-                if (!in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
+                if (! in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
                     $this->addError('uploadedFile', 'Unsupported file type. Please upload PDF, DOC, DOCX, or TXT files.');
+
                     return;
                 }
 
                 // Extract content from uploaded file using the PDF extraction service
                 $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
                     'preserve_layout' => false,
-                    'method' => 'auto'
+                    'method' => 'auto',
                 ]);
                 $this->fileName = $this->uploadedFile->getClientOriginalName();
 
@@ -209,13 +242,14 @@ class BookBasedAssignment extends Component
                 \Log::error('File content extraction failed', [
                     'user_id' => Auth::id(),
                     'file_name' => $this->uploadedFile->getClientOriginalName(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 $this->addError('uploadedFile', 'Unable to extract content from this file. Please ensure it is a valid document file.');
             }
         }
     }
+
     public function generateQuestions()
     {
         $this->validate([
@@ -226,8 +260,9 @@ class BookBasedAssignment extends Component
         ]);
 
         // Check if either a book is selected or a file is uploaded
-        if (!$this->selectedBookId && empty($this->fileContent)) {
+        if (! $this->selectedBookId && empty($this->fileContent)) {
             $this->addError('selectedBookId', 'Please select a book or upload a file first.');
+
             return;
         }
 
@@ -246,6 +281,7 @@ class BookBasedAssignment extends Component
             if (empty($content)) {
                 $this->addError('generation', 'Failed to extract content. Please try again.');
                 $this->isGenerating = false;
+
                 return;
             }
 
@@ -283,7 +319,7 @@ class BookBasedAssignment extends Component
                 $parameters
             );
 
-            if (!empty($quizData['questions'])) {
+            if (! empty($quizData['questions'])) {
                 $this->generatedQuestions = $quizData['questions'];
                 $this->dispatch('questions-generated');
             } else {
@@ -294,7 +330,7 @@ class BookBasedAssignment extends Component
             \Log::error('Question generation failed', [
                 'user_id' => Auth::id(),
                 'book_id' => $this->selectedBookId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $this->addError('generation', 'Unable to generate questions. Please try different parameters or try again later.');
@@ -302,6 +338,7 @@ class BookBasedAssignment extends Component
             $this->isGenerating = false;
         }
     }
+
     protected function parseFocusTopics(): array
     {
         if (empty($this->focusTopics)) {
@@ -317,15 +354,16 @@ class BookBasedAssignment extends Component
 
         $teacher = Auth::user()->teacher;
 
-        if (!$teacher) {
+        if (! $teacher) {
             $this->addError('teacher', 'Teacher profile not found.');
+
             return;
         }
 
         try {
             DB::beginTransaction();
 
-            $assignment = new Assignment();
+            $assignment = new Assignment;
             $assignment->teacher_id = $teacher->id;
             $assignment->academic_subject_id = $this->selectedSubjectId;
             $assignment->title = $this->title;
@@ -341,19 +379,19 @@ class BookBasedAssignment extends Component
             $assignment->save();
 
             // Attach target groups
-            if (!empty($this->selectedStudentGroups)) {
+            if (! empty($this->selectedStudentGroups)) {
                 $assignment->studentGroups()->attach($this->selectedStudentGroups);
             }
 
-            if (!empty($this->selectedAcademicLevels)) {
+            if (! empty($this->selectedAcademicLevels)) {
                 $assignment->academicLevels()->attach($this->selectedAcademicLevels);
             }
 
-            if (!empty($this->selectedAcademicGroups)) {
+            if (! empty($this->selectedAcademicGroups)) {
                 $assignment->academicGroups()->attach($this->selectedAcademicGroups);
             }
 
-            if (!empty($this->selectedStudents)) {
+            if (! empty($this->selectedStudents)) {
                 $assignment->students()->attach($this->selectedStudents);
             }
 
@@ -373,7 +411,7 @@ class BookBasedAssignment extends Component
             \Log::error('Assignment creation failed', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->addError('creation', 'Failed to create assignment. Please try again.');
@@ -397,7 +435,7 @@ class BookBasedAssignment extends Component
                 'type' => $this->mapQuestionType($type),
                 'count' => count($formattedQuestions),
                 'difficulty' => $this->difficulty,
-                'questions' => $formattedQuestions
+                'questions' => $formattedQuestions,
             ];
         }
 
@@ -451,7 +489,7 @@ class BookBasedAssignment extends Component
             }
 
             // If we still don't have a correct answer letter, try to find it by matching text
-            if (!$correctAnswerLetter && $correctAnswerText) {
+            if (! $correctAnswerLetter && $correctAnswerText) {
                 foreach ($convertedOptions as $letter => $optionText) {
                     if (strcasecmp(trim($optionText), trim($correctAnswerText)) === 0) {
                         $correctAnswerLetter = $letter;
@@ -465,11 +503,11 @@ class BookBasedAssignment extends Component
             $normalized['answer'] = $correctAnswerLetter; // Add both for compatibility
 
             // Log warning if we couldn't find the correct answer
-            if (!$correctAnswerLetter) {
+            if (! $correctAnswerLetter) {
                 \Log::warning('Could not determine correct answer letter for question', [
                     'question_id' => $normalized['id'],
                     'correct_answer_text' => $correctAnswerText,
-                    'options' => $convertedOptions
+                    'options' => $convertedOptions,
                 ]);
             }
         }
@@ -491,7 +529,7 @@ class BookBasedAssignment extends Component
 
     protected function mapQuestionType($type): string
     {
-        return match($type) {
+        return match ($type) {
             'true_false', 'true_or_false_question' => 'true_or_false_question',
             'essay', 'essay_question' => 'essay_question',
             'multiple_choice', 'multiple_choice_question' => 'multiple_choice_question',
@@ -503,23 +541,24 @@ class BookBasedAssignment extends Component
      * Extract content from the selected book
      *
      * @return string Extracted content
+     *
      * @throws MissingCatalogException
      */
     protected function extractBookContent(): string
     {
-        if (!$this->selectedBook) {
+        if (! $this->selectedBook) {
             return '';
         }
 
         try {
             $relativePdfPath = $this->selectedBook->getAttributes()['content_url'] ?? null;
-            if (!$relativePdfPath) {
-                throw new \RuntimeException("Book PDF path not found");
+            if (! $relativePdfPath) {
+                throw new \RuntimeException('Book PDF path not found');
             }
 
             $pdfPath = Storage::disk('public')->path($relativePdfPath);
-            if (!file_exists($pdfPath)) {
-                throw new \RuntimeException("Book PDF file not found");
+            if (! file_exists($pdfPath)) {
+                throw new \RuntimeException('Book PDF file not found');
             }
 
             // Extract content based on specified range
@@ -549,20 +588,19 @@ class BookBasedAssignment extends Component
             // Extract entire book content
             return $this->pdfExtractor->extractText($pdfPath, [
                 'preserve_layout' => false,
-                'method' => 'auto'
+                'method' => 'auto',
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Book content extraction failed', [
                 'user_id' => Auth::id(),
                 'book_id' => $this->selectedBookId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;
         }
     }
-
 
     public function render()
     {

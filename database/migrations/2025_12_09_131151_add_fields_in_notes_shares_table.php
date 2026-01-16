@@ -36,7 +36,7 @@ return new class extends Migration
                 'shareable_type',
                 'shareable_id',
                 'notification_sent',
-                'notified_at'
+                'notified_at',
             ]);
         });
     }

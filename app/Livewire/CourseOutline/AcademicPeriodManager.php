@@ -11,11 +11,17 @@ class AcademicPeriodManager extends Component
     use WithPagination;
 
     public $name;
+
     public $type;
+
     public $startDate;
+
     public $endDate;
+
     public $description;
+
     public $academicYear;
+
     public $isActive = false;
 
     protected $rules = [
@@ -49,7 +55,7 @@ class AcademicPeriodManager extends Component
     public function render()
     {
         return view('livewire.teachers.course.academic-period-manager', [
-            'periods' => AcademicPeriod::orderBy('start_date', 'desc')->paginate(10)
+            'periods' => AcademicPeriod::orderBy('start_date', 'desc')->paginate(10),
         ]);
     }
 }

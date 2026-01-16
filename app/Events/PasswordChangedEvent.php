@@ -18,7 +18,7 @@ class PasswordChangedEvent
     /**
      * Create a new event instance.
      *
-     * @param mixed $user
+     * @param  mixed  $user
      */
     public function __construct($user)
     {

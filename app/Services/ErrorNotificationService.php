@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Mail;
 use App\Mail\ErrorNotification;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ErrorNotificationService
 {
     /**
      * List of email recipients for error notifications
+     *
      * @var array
      */
     protected $recipients;
@@ -25,17 +25,16 @@ class ErrorNotificationService
     /**
      * Send error notification email
      *
-     * @param string $errorMessage The error message to send
-     * @param array $additionalData Additional data to include in the email
-     * @return bool
+     * @param  string  $errorMessage  The error message to send
+     * @param  array  $additionalData  Additional data to include in the email
      */
     public function sendErrorNotification(string $errorMessage, array $additionalData = []): bool
     {
-//        \Log::debug('Memory usage in ErrorNotificationService', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
+        //        \Log::debug('Memory usage in ErrorNotificationService', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
 
         try {
             if (empty($this->recipients)) {
-//                \Log::warning('No recipients configured for error notifications');
+                //                \Log::warning('No recipients configured for error notifications');
                 return false;
             }
 
@@ -55,10 +54,10 @@ class ErrorNotificationService
                 Mail::to($recipient)->send(new ErrorNotification($emailData));
             }
 
-//            \Log::info('Error notification sent successfully', [
-//                'recipients' => $this->recipients,
-//                'error_message' => substr($errorMessage, 0, 100),
-//            ]);
+            //            \Log::info('Error notification sent successfully', [
+            //                'recipients' => $this->recipients,
+            //                'error_message' => substr($errorMessage, 0, 100),
+            //            ]);
 
             return true;
         } catch (\Exception $e) {

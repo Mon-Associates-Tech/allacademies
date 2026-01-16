@@ -12,10 +12,15 @@ use Livewire\Component;
 class ShareNoteRecipientsSelect extends Component
 {
     public string $search = '';
+
     public array $selected = [];
+
     public string $shareType = 'individual';
+
     public string $placeholder = 'Search and select recipients...';
+
     public string $name = 'selectedRecipients';
+
     public ?int $schoolId = null;
 
     public bool $dropdownOpen = false;
@@ -30,8 +35,7 @@ class ShareNoteRecipientsSelect extends Component
         ?int $schoolId = null,
         string $placeholder = 'Search and select recipients...',
         string $name = 'selectedRecipients'
-    ): void
-    {
+    ): void {
         $this->shareType = $shareType;
         $this->selected = $selected;
         $this->schoolId = $schoolId;
@@ -43,11 +47,11 @@ class ShareNoteRecipientsSelect extends Component
     public function filteredItems()
     {
         // Don't load anything if dropdown is closed and no search
-        if (!$this->dropdownOpen && empty($this->search)) {
+        if (! $this->dropdownOpen && empty($this->search)) {
             return [];
         }
 
-        return match($this->shareType) {
+        return match ($this->shareType) {
             'individual' => $this->loadIndividuals(),
             'academic_group' => $this->loadAcademicGroups(),
             'academic_level' => $this->loadAcademicLevels(),
@@ -63,7 +67,7 @@ class ShareNoteRecipientsSelect extends Component
             return [];
         }
 
-        return match($this->shareType) {
+        return match ($this->shareType) {
             'individual' => $this->loadSelectedIndividuals(),
             'academic_group' => $this->loadSelectedAcademicGroups(),
             'academic_level' => $this->loadSelectedAcademicLevels(),
@@ -81,19 +85,19 @@ class ShareNoteRecipientsSelect extends Component
             $query->where('school_id', $this->schoolId);
         }
 
-        if (!empty($this->search)) {
-            $query->where(function($q) {
-                $q->where('name', 'LIKE', '%' . $this->search . '%')
-                  ->orWhere('email', 'LIKE', '%' . $this->search . '%');
+        if (! empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('name', 'LIKE', '%'.$this->search.'%')
+                    ->orWhere('email', 'LIKE', '%'.$this->search.'%');
             });
         }
 
         return $query->orderBy('name')
             ->limit(50)
             ->get()
-            ->map(fn($user) => [
+            ->map(fn ($user) => [
                 'id' => $user->id,
-                'name' => $user->name . ' (' . $user->email . ')',
+                'name' => $user->name.' ('.$user->email.')',
             ])
             ->toArray();
     }
@@ -102,9 +106,9 @@ class ShareNoteRecipientsSelect extends Component
     {
         return User::whereIn('id', $this->selected)
             ->get()
-            ->map(fn($user) => [
+            ->map(fn ($user) => [
                 'id' => $user->id,
-                'name' => $user->name . ' (' . $user->email . ')',
+                'name' => $user->name.' ('.$user->email.')',
             ])
             ->toArray();
     }
@@ -117,14 +121,14 @@ class ShareNoteRecipientsSelect extends Component
             $query->forSchool($this->schoolId);
         }
 
-        if (!empty($this->search)) {
-            $query->where(function($q) {
-                $q->where('name', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('tag', 'LIKE', '%' . $this->search . '%');
+        if (! empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('name', 'LIKE', '%'.$this->search.'%')
+                    ->orWhere('tag', 'LIKE', '%'.$this->search.'%');
             });
         }
 
-        return $query->withCount(['students' => function($q) {
+        return $query->withCount(['students' => function ($q) {
             if ($this->schoolId !== null) {
                 $q->where('school_id', $this->schoolId);
             }
@@ -132,9 +136,9 @@ class ShareNoteRecipientsSelect extends Component
             ->orderBy('name')
             ->limit(50)
             ->get()
-            ->map(fn($group) => [
+            ->map(fn ($group) => [
                 'id' => $group->id,
-                'name' => $group->name . ' (' . $group->students_count . ' students)',
+                'name' => $group->name.' ('.$group->students_count.' students)',
             ])
             ->toArray();
     }
@@ -142,15 +146,15 @@ class ShareNoteRecipientsSelect extends Component
     private function loadSelectedAcademicGroups(): array
     {
         return AcademicGroup::whereIn('id', $this->selected)
-            ->withCount(['students' => function($q) {
+            ->withCount(['students' => function ($q) {
                 if ($this->schoolId !== null) {
                     $q->where('school_id', $this->schoolId);
                 }
             }])
             ->get()
-            ->map(fn($group) => [
+            ->map(fn ($group) => [
                 'id' => $group->id,
-                'name' => $group->name . ' (' . $group->students_count . ' students)',
+                'name' => $group->name.' ('.$group->students_count.' students)',
             ])
             ->toArray();
     }
@@ -164,14 +168,14 @@ class ShareNoteRecipientsSelect extends Component
             $query->forSchool($this->schoolId);
         }
 
-        if (!empty($this->search)) {
-            $query->where(function($q) {
-                $q->where('name', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('label', 'LIKE', '%' . $this->search . '%');
+        if (! empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('name', 'LIKE', '%'.$this->search.'%')
+                    ->orWhere('label', 'LIKE', '%'.$this->search.'%');
             });
         }
 
-        return $query->withCount(['students' => function($q) {
+        return $query->withCount(['students' => function ($q) {
             if ($this->schoolId !== null) {
                 $q->where('school_id', $this->schoolId);
             }
@@ -179,9 +183,9 @@ class ShareNoteRecipientsSelect extends Component
             ->orderBy('name')
             ->limit(50)
             ->get()
-            ->map(fn($level) => [
+            ->map(fn ($level) => [
                 'id' => $level->id,
-                'name' => $level->name . ' (' . $level->students_count . ' students)',
+                'name' => $level->name.' ('.$level->students_count.' students)',
             ])
             ->toArray();
     }
@@ -189,15 +193,15 @@ class ShareNoteRecipientsSelect extends Component
     private function loadSelectedAcademicLevels(): array
     {
         return AcademicLevel::whereIn('id', $this->selected)
-            ->withCount(['students' => function($q) {
+            ->withCount(['students' => function ($q) {
                 if ($this->schoolId !== null) {
                     $q->where('school_id', $this->schoolId);
                 }
             }])
             ->get()
-            ->map(fn($level) => [
+            ->map(fn ($level) => [
                 'id' => $level->id,
-                'name' => $level->name . ' (' . $level->students_count . ' students)',
+                'name' => $level->name.' ('.$level->students_count.' students)',
             ])
             ->toArray();
     }
@@ -212,10 +216,10 @@ class ShareNoteRecipientsSelect extends Component
             $query->where('school_id', $this->schoolId);
         }
 
-        if (!empty($this->search)) {
-            $query->where(function($q) {
-                $q->where('name', 'LIKE', '%' . $this->search . '%')
-                  ->orWhere('description', 'LIKE', '%' . $this->search . '%');
+        if (! empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('name', 'LIKE', '%'.$this->search.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->search.'%');
             });
         }
 
@@ -223,7 +227,7 @@ class ShareNoteRecipientsSelect extends Component
             ->orderBy('name')
             ->limit(50)
             ->get()
-            ->map(fn($group) => [
+            ->map(fn ($group) => [
                 'id' => $group->id,
                 'name' => $group->getDisplayName(),
             ])
@@ -235,7 +239,7 @@ class ShareNoteRecipientsSelect extends Component
         return StudentGroup::whereIn('id', $this->selected)
             ->with(['academicGroup', 'academicLevel', 'academicSubject', 'teacher.user'])
             ->get()
-            ->map(fn($group) => [
+            ->map(fn ($group) => [
                 'id' => $group->id,
                 'name' => $group->getDisplayName(),
             ])
@@ -244,7 +248,7 @@ class ShareNoteRecipientsSelect extends Component
 
     public function toggleDropdown(): void
     {
-        $this->dropdownOpen = !$this->dropdownOpen;
+        $this->dropdownOpen = ! $this->dropdownOpen;
     }
 
     public function closeDropdown(): void
@@ -256,7 +260,7 @@ class ShareNoteRecipientsSelect extends Component
     public function selectItem($value): void
     {
         if (in_array($value, $this->selected)) {
-            $this->selected = array_values(array_filter($this->selected, fn($v) => $v !== $value));
+            $this->selected = array_values(array_filter($this->selected, fn ($v) => $v !== $value));
         } else {
             $this->selected[] = $value;
         }
@@ -270,7 +274,7 @@ class ShareNoteRecipientsSelect extends Component
 
     public function removeItem($value): void
     {
-        $this->selected = array_values(array_filter($this->selected, fn($v) => $v !== $value));
+        $this->selected = array_values(array_filter($this->selected, fn ($v) => $v !== $value));
 
         $this->dispatch('selection-changed', [
             'name' => $this->name,
@@ -291,7 +295,7 @@ class ShareNoteRecipientsSelect extends Component
 
     public function updatedSearch(): void
     {
-        if (!$this->dropdownOpen) {
+        if (! $this->dropdownOpen) {
             $this->dropdownOpen = true;
         }
     }

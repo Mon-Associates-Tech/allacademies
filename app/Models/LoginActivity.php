@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class LoginActivity extends Model
 {
     protected $table = 'login_activities';
+
     protected $fillable = [
         'user_id',
         'action',
@@ -21,7 +22,7 @@ class LoginActivity extends Model
         'login_at',
         'logout_at',
         'duration_minutes',
-        'logout_type'
+        'logout_type',
     ];
 
     /**
@@ -36,7 +37,8 @@ class LoginActivity extends Model
         );
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }

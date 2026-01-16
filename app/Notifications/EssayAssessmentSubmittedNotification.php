@@ -1,4 +1,5 @@
 <?php
+
 // Location: app/Notifications/EssayAssessmentSubmitted.php
 
 namespace App\Notifications;
@@ -29,12 +30,12 @@ class EssayAssessmentSubmittedNotification extends Notification implements Shoul
     {
         return (new MailMessage)
             ->subject('Essay Assessment Submitted - Action Required')
-            ->greeting('Hello ' . $notifiable->user->name)
+            ->greeting('Hello '.$notifiable->user->name)
             ->line('A student has submitted an essay assessment that requires your review.')
-            ->line('Student: ' . $this->assessment->student->user->name)
-            ->line('Assessment: ' . $this->assessment->title)
-            ->line('Subject: ' . $this->assessment->subject->name)
-            ->action('Grade Assessment', url('/teacher/assessments/' . $this->assessment->id . '/grade'))
+            ->line('Student: '.$this->assessment->student->user->name)
+            ->line('Assessment: '.$this->assessment->title)
+            ->line('Subject: '.$this->assessment->subject->name)
+            ->action('Grade Assessment', url('/teacher/assessments/'.$this->assessment->id.'/grade'))
             ->line('Please review and grade the assessment at your earliest convenience.');
     }
 

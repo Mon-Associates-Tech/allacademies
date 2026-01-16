@@ -11,7 +11,9 @@ use Livewire\Component;
 class Progress extends Component
 {
     public $timeframe = 'month'; // 'week', 'month', 'year'
+
     public $progressData = [];
+
     public $stats = [];
 
     public function mount()
@@ -23,7 +25,7 @@ class Progress extends Component
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             return;
         }
 

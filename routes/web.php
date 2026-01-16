@@ -141,7 +141,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('security', SecurityController::class)->name('security');
-    Route::get('/preferences', fn() => view('preferences'))->name('preferences');
+    Route::get('/preferences', fn () => view('preferences'))->name('preferences');
 
     // Password Change Routes
     Route::middleware('verified')->group(function () {
@@ -190,8 +190,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('audit-teams/bulk-approve', [AuditTeamController::class, 'bulkApprove'])->name('audit-teams.bulk-approve');
 
     // Export Routes
-    Route::post('export/pdf', fn() => exportToPdf())->name('export.pdf');
-    Route::post('export/word', fn() => exportToWord())->name('export.word');
+    Route::post('export/pdf', fn () => exportToPdf())->name('export.pdf');
+    Route::post('export/word', fn () => exportToWord())->name('export.word');
 
     // Role Routes
     Route::resource('roles', RoleController::class);
@@ -302,8 +302,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
 
     // Academic Content Routes
-    Route::get('/course-outlines', fn() => view('course-outlines'))->name('course-outlines');
-    Route::get('/academic-calendar', fn() => view('academic-calendar'))->name('academic-calendar');
+    Route::get('/course-outlines', fn () => view('course-outlines'))->name('course-outlines');
+    Route::get('/academic-calendar', fn () => view('academic-calendar'))->name('academic-calendar');
 
     // Media Routes
     Route::get('/mediapage', [\App\Http\Controllers\Media\MediaController::class, 'index'])->name('media.index');
@@ -377,12 +377,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // User Books Routes
-    Route::get('/user-books/create', fn() => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
-    Route::get('/user-books/shared', fn() => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
+    Route::get('/user-books/create', fn () => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
+    Route::get('/user-books/shared', fn () => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
     Route::get('/user-books', \App\Livewire\UserBooks\UserBooksIndex::class)->middleware('token.subscription')->name('user-books.index');
     Route::get('/user-books/{userBook}', function (App\Models\UserBook $userBook) {
         if ($userBook->user_id !== auth()->id() &&
-            !$userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
+            ! $userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
             abort(403);
         }
         $userBook->load('user');

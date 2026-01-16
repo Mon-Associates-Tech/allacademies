@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Teachers\Attendance;
 
-use App\Models\AcademicLevel;
-use App\Models\AcademicSubject;
 use App\Models\Attendance\Attendance;
 use App\Models\Teacher;
 use Livewire\Component;
@@ -14,23 +12,38 @@ class AttendanceList extends Component
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
+
     public $sortBy = 'date';
+
     public $sortDirection = 'desc';
+
     public $studentPerPage = 10;
+
     public $expandedAttendance = null;
+
     public $dateFrom;
+
     public $dateTo;
+
     public $selectedLevel;
+
     public $selectedSubject;
+
     public $selectedSession = '';
+
     public $attendanceRate;
+
     public $academicLevels;
+
     public ?Teacher $teacher;
 
     // Available Options
     public $subjects;
+
     public $sessions = ['morning', 'afternoon', 'full_day'];
+
     public $attendanceRates = [
         ['value' => '', 'label' => 'All Rates'],
         ['value' => '100', 'label' => '100% Attendance'],
@@ -39,7 +52,9 @@ class AttendanceList extends Component
         ['value' => '25', 'label' => '≥ 25% Attendance'],
         ['value' => '0', 'label' => '< 25% Attendance'],
     ];
+
     protected $paginationTheme = 'tailwind';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'dateFrom' => ['except' => ''],
@@ -86,7 +101,7 @@ class AttendanceList extends Component
     {
         $this->teacher = auth()->user()->teacher;
 
-        if(!$this->teacher){
+        if (! $this->teacher) {
             $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', auth()->user()->id)->first();
         }
         // Set default date range to current month
@@ -135,18 +150,18 @@ class AttendanceList extends Component
                 'attendanceRecords' => function ($query) {
                     $query->withCount(['student']);
                 },
-                'attendanceRecords.student.user'
+                'attendanceRecords.student.user',
             ]);
 
         // Apply filters
         if ($this->search) {
             $query->where(function ($q) {
                 $q->whereHas('academicLevel', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%');
                 })->orWhereHas('academicSubject', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%');
                 })->orWhereHas('attendanceRecords.student.user', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%');
                 });
             });
         }
@@ -172,7 +187,7 @@ class AttendanceList extends Component
         }
 
         if ($this->attendanceRate) {
-            $rate = (int)$this->attendanceRate;
+            $rate = (int) $this->attendanceRate;
             $query->whereHas('attendanceRecords', function ($q) use ($rate) {
                 $q->havingRaw('COUNT(CASE WHEN status = "present" THEN 1 END) * 100 / COUNT(*) >= ?', [$rate]);
             });
@@ -190,7 +205,7 @@ class AttendanceList extends Component
                     ->with('student.user')
                     ->when($this->search, function ($query) {
                         $query->whereHas('student.user', function ($q) {
-                            $q->where('name', 'like', '%' . $this->search . '%');
+                            $q->where('name', 'like', '%'.$this->search.'%');
                         });
                     })
                     ->paginate($this->studentPerPage, ['*'], 'students');

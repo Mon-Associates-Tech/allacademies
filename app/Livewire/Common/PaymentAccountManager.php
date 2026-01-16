@@ -5,23 +5,28 @@ namespace App\Livewire\Common;
 use App\Constants\GhanaBanks;
 use App\Models\Subaccount;
 use App\Services\SubaccountPaymentService;
-use Livewire\Component;
 use Exception;
+use Livewire\Component;
 
 class PaymentAccountManager extends Component
 {
     // Public properties for binding
     public $model; // The model that has a subaccount (School or Author)
+
     public $modelType; // 'school' or 'author'
 
     // Modal state
     public $showAccountModal = false;
+
     public $editingAccountId = null;
 
     // Form fields
     public $accountBank = '';
+
     public $accountBankCode = '';
+
     public $accountNumber = '';
+
     public $accountName = '';
 
     // Subaccounts list
@@ -42,8 +47,8 @@ class PaymentAccountManager extends Component
     public function mount($model, $modelType = 'school')
     {
         // Validate that the model has a subaccounts relationship
-        if (!method_exists($model, 'subaccounts')) {
-            throw new \Exception("Model " . get_class($model) . " does not have a subaccounts relationship");
+        if (! method_exists($model, 'subaccounts')) {
+            throw new \Exception('Model '.get_class($model).' does not have a subaccounts relationship');
         }
 
         $this->model = $model;
@@ -96,8 +101,9 @@ class PaymentAccountManager extends Component
                 // Update existing subaccount
                 $subaccount = Subaccount::find($this->editingAccountId);
 
-                if (!$subaccount || $subaccount->subaccountable_id !== $this->model->id) {
+                if (! $subaccount || $subaccount->subaccountable_id !== $this->model->id) {
                     session()->flash('error', 'Subaccount not found or does not belong to this model.');
+
                     return;
                 }
 
@@ -131,7 +137,7 @@ class PaymentAccountManager extends Component
                     $bankData,
                     $contactData,
                     $percentageCharge,
-                    !$this->model->hasPrimarySubaccount(), // Set as primary only if no primary exists
+                    ! $this->model->hasPrimarySubaccount(), // Set as primary only if no primary exists
                     $this->accountName
                 );
                 session()->flash('success', 'Account information added successfully!');
@@ -142,7 +148,7 @@ class PaymentAccountManager extends Component
             $this->loadSubaccounts();
             $this->dispatch('accountUpdated');
         } catch (Exception $e) {
-            $errorMessage = 'Failed to save account: ' . $e->getMessage();
+            $errorMessage = 'Failed to save account: '.$e->getMessage();
             session()->flash('error', $errorMessage);
         }
     }
@@ -182,6 +188,7 @@ class PaymentAccountManager extends Component
 
         return '';
     }
+
     public function loadAccountInformation(): void
     {
         $subaccount = $this->model->primarySubaccount();
@@ -232,8 +239,9 @@ class PaymentAccountManager extends Component
 
             $subaccount = Subaccount::find($accountId);
 
-            if (!$subaccount || $subaccount->subaccountable_id !== $this->model->id) {
+            if (! $subaccount || $subaccount->subaccountable_id !== $this->model->id) {
                 session()->flash('error', 'Subaccount not found.');
+
                 return;
             }
 
@@ -244,7 +252,7 @@ class PaymentAccountManager extends Component
             $this->loadSubaccounts();
             $this->dispatch('accountDeleted');
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to delete account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete account: '.$e->getMessage());
         }
     }
 
@@ -256,8 +264,9 @@ class PaymentAccountManager extends Component
         try {
             $subaccount = Subaccount::find($subaccountId);
 
-            if (!$subaccount || $subaccount->subaccountable_id !== $this->model->id) {
+            if (! $subaccount || $subaccount->subaccountable_id !== $this->model->id) {
                 session()->flash('error', 'Subaccount not found.');
+
                 return;
             }
 
@@ -266,7 +275,7 @@ class PaymentAccountManager extends Component
             $this->loadSubaccounts();
             $this->dispatch('accountUpdated');
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to update primary account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update primary account: '.$e->getMessage());
         }
     }
 

@@ -23,10 +23,10 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'forum_posts_count',
-                'forum_topics_count', 
+                'forum_topics_count',
                 'forum_reputation',
                 'last_forum_activity',
-                'forum_preferences'
+                'forum_preferences',
             ]);
         });
     }

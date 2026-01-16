@@ -12,14 +12,16 @@ class SchoolSwitcherPage extends Component
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
+
     public $currentSchool = null;
 
     protected $queryString = ['search', 'page'];
 
     public function mount(): void
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
+        if (! auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
             abort(403);
         }
 
@@ -37,14 +39,15 @@ class SchoolSwitcherPage extends Component
 
     public function switchToSchool($schoolId): void
     {
-        if (!auth()->user()->canAccessCrossSchool()) {
+        if (! auth()->user()->canAccessCrossSchool()) {
             abort(403);
         }
 
         $school = School::find($schoolId);
 
-        if (!$school) {
+        if (! $school) {
             session()->flash('error', 'School not found.');
+
             return;
         }
 
@@ -66,7 +69,7 @@ class SchoolSwitcherPage extends Component
 
     public function showAllSchools(): void
     {
-        if (!auth()->user()->canAccessCrossSchool()) {
+        if (! auth()->user()->canAccessCrossSchool()) {
             abort(403);
         }
 
@@ -99,8 +102,8 @@ class SchoolSwitcherPage extends Component
         return School::active()
             ->withValidSubscription()
             ->when($this->search, function ($query, $search) {
-                $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('code', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('code', 'like', '%'.$search.'%');
             })
             ->orderBy('name')
             ->paginate($this->perPage);
@@ -109,7 +112,7 @@ class SchoolSwitcherPage extends Component
     public function render()
     {
         return view('livewire.administrators.school-switcher-page', [
-            'schools' => $this->schools
+            'schools' => $this->schools,
         ]);
     }
 }

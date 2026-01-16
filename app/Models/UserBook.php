@@ -70,7 +70,7 @@ class UserBook extends Model
     public function getCoverImageUrlAttribute(): string
     {
         if ($this->attributes['cover_image']) {
-            return asset('storage/' . $this->attributes['cover_image']);
+            return asset('storage/'.$this->attributes['cover_image']);
         }
 
         $sampleCovers = [
@@ -86,8 +86,8 @@ class UserBook extends Model
     {
 
         if ($this->attributes['content_url']) {
-            //return $this->attributes['content_url'];
-            return asset('/storage/' . $this->attributes['content_url']);
+            // return $this->attributes['content_url'];
+            return asset('/storage/'.$this->attributes['content_url']);
         }
 
         return null;
@@ -96,8 +96,9 @@ class UserBook extends Model
     public function getSampleUrlAttribute(): ?string
     {
         if ($this->attributes['sample_url']) {
-           return  $this->attributes['sample_url'];
-            return asset('storage/' . $this->sample_url);
+            return $this->attributes['sample_url'];
+
+            return asset('storage/'.$this->sample_url);
         }
 
         return null;
@@ -107,7 +108,7 @@ class UserBook extends Model
     {
         $toc = $this->table_of_contents;
 
-        if (!$toc) {
+        if (! $toc) {
             return [];
         }
 
@@ -122,7 +123,7 @@ class UserBook extends Model
                 'page_count' => isset($chapter['page_start'], $chapter['page_end'])
                     ? $chapter['page_end'] - $chapter['page_start'] + 1
                     : 0,
-                'sections' => $chapter['sections'] ?? []
+                'sections' => $chapter['sections'] ?? [],
             ];
         })->toArray();
     }
@@ -167,4 +168,3 @@ class UserBook extends Model
         return $users->unique('id');
     }
 }
-

@@ -3,10 +3,8 @@
 namespace App\Services;
 
 use App\Models\Attendance\Attendance;
-
 use App\Models\Attendance\AttendanceRecord;
 use App\Models\Teacher;
-use App\Models\Student;
 use Carbon\Carbon;
 
 class AttendanceService
@@ -16,7 +14,7 @@ class AttendanceService
         $teacher = Teacher::findOrFail($teacherId);
 
         // Verify teacher can take attendance for this level
-        if (!$teacher->canTakeAttendanceForLevel($academicLevelId)) {
+        if (! $teacher->canTakeAttendanceForLevel($academicLevelId)) {
             throw new \Exception('Teacher is not assigned to this academic level');
         }
 
@@ -27,7 +25,7 @@ class AttendanceService
             'academic_subject_id' => $data['academic_subject_id'] ?? null,
             'date' => $data['date'] ?? Carbon::today(),
             'session' => $data['session'] ?? 'morning',
-            'remarks' => $data['remarks'] ?? null
+            'remarks' => $data['remarks'] ?? null,
         ]);
 
     }
@@ -37,11 +35,11 @@ class AttendanceService
         return AttendanceRecord::updateOrCreate(
             [
                 'attendance_id' => $attendanceId,
-                'student_id' => $studentId
+                'student_id' => $studentId,
             ],
             [
                 'status' => $status,
-                'remarks' => $remarks
+                'remarks' => $remarks,
             ]
         );
 
@@ -55,4 +53,3 @@ class AttendanceService
             ->get();
     }
 }
-

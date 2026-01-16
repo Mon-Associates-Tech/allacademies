@@ -15,17 +15,24 @@ use Livewire\Component;
 class ReportsManagement extends Component
 {
     public $reportType = 'borrowing';
+
     public $dateRange = 'month';
+
     public $startDate;
+
     public $endDate;
+
     public $studentGroupId;
+
     public $teacherId;
 
     // UI State
     public $isLoading = false;
+
     public $exportFormat = 'pdf';
 
     public $studentGroups;
+
     public $teachers;
 
     public $chartData = [
@@ -33,7 +40,7 @@ class ReportsManagement extends Component
         'returnStatus' => [
             'overdue' => 0,
             'onTime' => 0,
-            'late' => 0
+            'late' => 0,
         ],
         'dailyBorrowings' => [],
         'categoryBorrowings' => [],
@@ -41,7 +48,7 @@ class ReportsManagement extends Component
         // Subscription report data
         'subscriptionStatus' => [
             'active' => 0,
-            'expired' => 0
+            'expired' => 0,
         ],
         'dailySubscriptions' => [],
         'categorySubscriptions' => [],
@@ -53,20 +60,20 @@ class ReportsManagement extends Component
             '21-40' => 0,
             '41-60' => 0,
             '61-80' => 0,
-            '81-100' => 0
+            '81-100' => 0,
         ],
 
         // Attendance report data
         'attendanceRate' => [
             'present' => 0,
-            'absent' => 0
+            'absent' => 0,
         ],
         'attendanceByDay' => [],
 
         // Teacher report data
         'teacherStats' => [
             'total' => 0,
-            'withActiveClasses' => 0
+            'withActiveClasses' => 0,
         ],
         'studentsPerTeacher' => [],
         'subjectDistribution' => [],
@@ -79,26 +86,26 @@ class ReportsManagement extends Component
                 'average_per_teacher' => 0,
                 'average_per_student' => 0,
                 'teachers_with_students' => 0,
-                'students_with_teachers' => 0
+                'students_with_teachers' => 0,
             ],
             'teachers_distribution' => [],
-            'students_distribution' => []
+            'students_distribution' => [],
         ],
 
         // Student report data
         'studentStats' => [
             'total' => 0,
-            'active' => 0
+            'active' => 0,
         ],
         'studentsByGroup' => [],
 
         // Librarian report data
         'librarianStats' => [
             'total' => 0,
-            'active' => 0
+            'active' => 0,
         ],
         'approvalsByLibrarian' => [],
-        'librarianActivity' => []
+        'librarianActivity' => [],
     ];
 
     protected $rules = [
@@ -155,11 +162,11 @@ class ReportsManagement extends Component
                     'average_per_teacher' => 0,
                     'average_per_student' => 0,
                     'teachers_with_students' => 0,
-                    'students_with_teachers' => 0
+                    'students_with_teachers' => 0,
                 ],
                 'teachers_distribution' => [],
-                'students_distribution' => []
-            ]
+                'students_distribution' => [],
+            ],
         ];
     }
 
@@ -223,7 +230,7 @@ class ReportsManagement extends Component
                     break;
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Error generating report: ' . $e->getMessage());
+            session()->flash('error', 'Error generating report: '.$e->getMessage());
         } finally {
             $this->isLoading = false;
         }
@@ -253,8 +260,8 @@ class ReportsManagement extends Component
             ->get();
 
         $this->chartData['dailyBorrowings'] = [
-            'labels' => $dailyData->pluck('date')->map(fn($date) => Carbon::parse($date)->format('M d'))->toArray(),
-            'data' => $dailyData->pluck('count')->toArray()
+            'labels' => $dailyData->pluck('date')->map(fn ($date) => Carbon::parse($date)->format('M d'))->toArray(),
+            'data' => $dailyData->pluck('count')->toArray(),
         ];
 
         // Return status
@@ -265,7 +272,7 @@ class ReportsManagement extends Component
         $this->chartData['returnStatus'] = [
             'overdue' => $overdue,
             'onTime' => $onTime,
-            'late' => $late
+            'late' => $late,
         ];
 
         // Category borrowings
@@ -273,11 +280,11 @@ class ReportsManagement extends Component
             ->with('book.bookCategory')
             ->get()
             ->groupBy('book.book_category.name')
-            ->map(fn($items) => $items->count());
+            ->map(fn ($items) => $items->count());
 
         $this->chartData['categoryBorrowings'] = [
             'labels' => $categoryData->keys()->toArray(),
-            'data' => $categoryData->values()->toArray()
+            'data' => $categoryData->values()->toArray(),
         ];
     }
 
@@ -297,7 +304,7 @@ class ReportsManagement extends Component
 
         $this->chartData['subscriptionStatus'] = [
             'active' => $active,
-            'expired' => $expired
+            'expired' => $expired,
         ];
 
         // Daily subscriptions
@@ -311,8 +318,8 @@ class ReportsManagement extends Component
             ->get();
 
         $this->chartData['dailySubscriptions'] = [
-            'labels' => $dailyData->pluck('date')->map(fn($date) => Carbon::parse($date)->format('M d'))->toArray(),
-            'data' => $dailyData->pluck('count')->toArray()
+            'labels' => $dailyData->pluck('date')->map(fn ($date) => Carbon::parse($date)->format('M d'))->toArray(),
+            'data' => $dailyData->pluck('count')->toArray(),
         ];
     }
 
@@ -324,12 +331,12 @@ class ReportsManagement extends Component
             '21-40' => rand(10, 25),
             '41-60' => rand(20, 40),
             '61-80' => rand(30, 50),
-            '81-100' => rand(25, 45)
+            '81-100' => rand(25, 45),
         ];
 
         $this->chartData['groupScores'] = [
             'labels' => $this->studentGroups->pluck('name')->toArray(),
-            'data' => $this->studentGroups->map(fn($group) => rand(60, 95))->toArray()
+            'data' => $this->studentGroups->map(fn ($group) => rand(60, 95))->toArray(),
         ];
     }
 
@@ -341,7 +348,7 @@ class ReportsManagement extends Component
 
         $this->chartData['attendanceRate'] = [
             'present' => $present,
-            'absent' => $absent
+            'absent' => $absent,
         ];
 
         // Generate daily attendance data
@@ -354,7 +361,7 @@ class ReportsManagement extends Component
 
         $this->chartData['attendanceByDay'] = [
             'labels' => $dates->take(10)->toArray(),
-            'data' => $dates->take(10)->map(fn() => rand(75, 98))->toArray()
+            'data' => $dates->take(10)->map(fn () => rand(75, 98))->toArray(),
         ];
     }
 
@@ -365,19 +372,19 @@ class ReportsManagement extends Component
 
         $this->chartData['teacherStats'] = [
             'total' => $totalTeachers,
-            'withActiveClasses' => $teachersWithClasses
+            'withActiveClasses' => $teachersWithClasses,
         ];
 
         // Subject distribution
         $subjectData = Teacher::with('subjects')
             ->get()
-            ->flatMap(fn($teacher) => $teacher->subjects)
+            ->flatMap(fn ($teacher) => $teacher->subjects)
             ->groupBy('name')
-            ->map(fn($subjects) => $subjects->count());
+            ->map(fn ($subjects) => $subjects->count());
 
         $this->chartData['subjectDistribution'] = [
             'labels' => $subjectData->keys()->toArray(),
-            'data' => $subjectData->values()->toArray()
+            'data' => $subjectData->values()->toArray(),
         ];
 
         // Students per teacher
@@ -386,13 +393,13 @@ class ReportsManagement extends Component
             ->map(function ($teacher) {
                 return [
                     'name' => $teacher->user->name,
-                    'students' => $teacher->studentGroups->sum(fn($group) => $group->students->count())
+                    'students' => $teacher->studentGroups->sum(fn ($group) => $group->students->count()),
                 ];
             });
 
         $this->chartData['studentsPerTeacher'] = [
             'labels' => $studentData->pluck('name')->toArray(),
-            'data' => $studentData->pluck('students')->toArray()
+            'data' => $studentData->pluck('students')->toArray(),
         ];
     }
 
@@ -403,7 +410,7 @@ class ReportsManagement extends Component
 
         $this->chartData['studentStats'] = [
             'total' => $totalStudents,
-            'active' => $activeStudents
+            'active' => $activeStudents,
         ];
 
         // Students by group
@@ -411,24 +418,24 @@ class ReportsManagement extends Component
 
         $this->chartData['studentsByGroup'] = [
             'labels' => $groupData->pluck('name')->toArray(),
-            'data' => $groupData->pluck('students_count')->toArray()
+            'data' => $groupData->pluck('students_count')->toArray(),
         ];
     }
 
     private function generateLibrarianReport()
     {
         $totalLibrarians = Librarian::count();
-        $activeLibrarians = Librarian::whereHas('user', fn($q) => $q->where('status', 'active'))->count();
+        $activeLibrarians = Librarian::whereHas('user', fn ($q) => $q->where('status', 'active'))->count();
 
         $this->chartData['librarianStats'] = [
             'total' => $totalLibrarians,
-            'active' => $activeLibrarians
+            'active' => $activeLibrarians,
         ];
 
         // Mock approval data
         $this->chartData['approvalsByLibrarian'] = [
             'labels' => Librarian::with('user')->get()->pluck('user.name')->toArray(),
-            'data' => Librarian::get()->map(fn() => rand(10, 50))->toArray()
+            'data' => Librarian::get()->map(fn () => rand(10, 50))->toArray(),
         ];
     }
 

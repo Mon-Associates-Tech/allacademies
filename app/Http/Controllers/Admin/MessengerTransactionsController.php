@@ -11,7 +11,7 @@ class MessengerTransactionsController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->isSuperAdmin() && !auth()->user()->isOwner()) {
+            if (! auth()->user()->isSuperAdmin() && ! auth()->user()->isOwner()) {
                 abort(403, 'Unauthorized access');
             }
 

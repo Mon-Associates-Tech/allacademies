@@ -10,8 +10,11 @@ use Livewire\Component;
 class StartVirtualSession extends Component
 {
     public VirtualSession $session;
+
     public $isCreating = false;
+
     public $error = null;
+
     public $joinUrl = null;
 
     public function mount(VirtualSession $session)
@@ -57,7 +60,7 @@ class StartVirtualSession extends Component
                 $this->error = $result['message'] ?? 'Failed to create meeting';
             }
         } catch (\Exception $e) {
-            $this->error = 'Error: ' . $e->getMessage();
+            $this->error = 'Error: '.$e->getMessage();
         } finally {
             $this->isCreating = false;
         }
@@ -65,7 +68,7 @@ class StartVirtualSession extends Component
 
     public function joinMeeting()
     {
-        if (!$this->joinUrl) {
+        if (! $this->joinUrl) {
             $bbbService = app(BigBlueButtonService::class);
             $this->joinUrl = $bbbService->getModeratorJoinUrl($this->session);
         }
@@ -75,7 +78,7 @@ class StartVirtualSession extends Component
 
     public function endMeeting()
     {
-        if (!confirm('Are you sure you want to end this meeting? All participants will be removed.')) {
+        if (! confirm('Are you sure you want to end this meeting? All participants will be removed.')) {
             return;
         }
 
@@ -89,12 +92,13 @@ class StartVirtualSession extends Component
                 ]);
 
                 session()->flash('success', 'Meeting ended successfully.');
+
                 return redirect()->route('teachers.classroom');
             } else {
                 $this->error = 'Failed to end meeting';
             }
         } catch (\Exception $e) {
-            $this->error = 'Error: ' . $e->getMessage();
+            $this->error = 'Error: '.$e->getMessage();
         }
     }
 
@@ -115,7 +119,7 @@ class StartVirtualSession extends Component
                 }
             }
         } catch (\Exception $e) {
-            $this->error = 'Error checking meeting status: ' . $e->getMessage();
+            $this->error = 'Error checking meeting status: '.$e->getMessage();
         }
     }
 

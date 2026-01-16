@@ -18,9 +18,13 @@ class ParentFeesManager extends AppComponent
     use WithPagination;
 
     public $selectedStudentId = null;
+
     public $showPaymentModal = false;
+
     public $paymentType = 'school_fee'; // school_fee or school_payment
+
     public $amount = '';
+
     public $selectedTerm = null;
 
     protected $rules = [
@@ -73,7 +77,7 @@ class ParentFeesManager extends AppComponent
             ->where('user_id', Auth::id())
             ->first();
 
-        if (!$parent) {
+        if (! $parent) {
             return collect();
         }
 
@@ -86,7 +90,9 @@ class ParentFeesManager extends AppComponent
     #[Computed]
     public function selectedStudent()
     {
-        if (!$this->selectedStudentId) return null;
+        if (! $this->selectedStudentId) {
+            return null;
+        }
 
         return Student::withoutGlobalScopes()
             ->with(['user', 'academicLevel', 'academicGroup'])
@@ -120,7 +126,7 @@ class ParentFeesManager extends AppComponent
 
     private function getStudentFeeData($student, $currentTerm = null)
     {
-        if (!$currentTerm) {
+        if (! $currentTerm) {
             $currentTerm = $this->currentTerm;
         }
 
@@ -159,13 +165,16 @@ class ParentFeesManager extends AppComponent
     #[Computed]
     public function paymentHistory()
     {
-        if (!$this->selectedStudentId) return collect();
+        if (! $this->selectedStudentId) {
+            return collect();
+        }
 
         $schoolFees = SchoolFee::where('student_id', $this->selectedStudentId)
             ->with(['payer', 'academicPeriod'])
             ->get()
             ->map(function ($fee) {
                 $fee->payment_category = 'School Fee';
+
                 return $fee;
             });
 
@@ -174,6 +183,7 @@ class ParentFeesManager extends AppComponent
             ->get()
             ->map(function ($payment) {
                 $payment->payment_category = 'School Payment';
+
                 return $payment;
             });
 

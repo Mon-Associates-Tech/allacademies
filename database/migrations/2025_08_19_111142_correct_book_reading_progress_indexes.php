@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -13,7 +14,7 @@ return new class extends Migration {
         // Get all indexes on the table
         $indexes = DB::select("SHOW INDEX FROM book_reading_progress WHERE Key_name = 'book_reading_progress_book_id_unique'");
 
-        if (!empty($indexes)) {
+        if (! empty($indexes)) {
             // If the problematic unique index exists, we need to drop it
             Schema::table('book_reading_progress', function (Blueprint $table) {
                 try {

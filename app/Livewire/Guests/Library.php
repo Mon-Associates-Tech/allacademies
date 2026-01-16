@@ -14,8 +14,11 @@ class Library extends Component
     use WithPagination;
 
     public $search = '';
+
     public $category = '';
+
     public $status = 'all'; // 'all', 'subscribed', 'free'
+
     public $sortBy = 'title';
 
     public function updatedSearch()
@@ -47,9 +50,9 @@ class Library extends Component
 
         $query = Book::with(['author.user', 'bookCategory'])
             ->when($this->search, function ($q) {
-                return $q->where('title', 'like', '%' . $this->search . '%')
+                return $q->where('title', 'like', '%'.$this->search.'%')
                     ->orWhereHas('author.user', function ($subQ) {
-                        $subQ->where('name', 'like', '%' . $this->search . '%');
+                        $subQ->where('name', 'like', '%'.$this->search.'%');
                     });
             })
             ->when($this->category, function ($q) {

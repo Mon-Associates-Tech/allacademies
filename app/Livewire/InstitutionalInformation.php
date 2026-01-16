@@ -8,10 +8,15 @@ use Livewire\Component;
 class InstitutionalInformation extends Component
 {
     public $type;
+
     public $institution;
+
     public $college;
+
     public $school;
+
     public $faculty;
+
     public $department;
 
     public function mount(Team $team)

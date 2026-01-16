@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\StudentParent;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\StudentParent;
 
 class EnsureUserIsParent
 {
@@ -13,7 +13,7 @@ class EnsureUserIsParent
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -26,7 +26,7 @@ class EnsureUserIsParent
         // Allow access if:
         // 1. User is a parent, OR
         // 2. Someone is impersonating (admin is logged in as another user)
-        if (!$hasParentRole && !$isImpersonating) {
+        if (! $hasParentRole && ! $isImpersonating) {
             abort(403, 'Access denied. You must be a parent to access this area.');
         }
 

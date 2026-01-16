@@ -4,12 +4,13 @@ namespace App\Models\Chat;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OpenAiTokenPackage extends Model
 {
     use HasFactory;
+
     protected $table = 'openai_token_packages';
 
     protected $fillable = [
@@ -20,7 +21,7 @@ class OpenAiTokenPackage extends Model
         'description',
         'is_active',
         'is_free',
-        'pricing_tier_id'
+        'pricing_tier_id',
     ];
 
     protected $casts = [

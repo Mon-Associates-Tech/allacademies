@@ -11,15 +11,25 @@ use Log;
 class ChatGroupCreate extends Component
 {
     public $name = '';
+
     public $description = '';
+
     public $type = 'custom';
+
     public $academic_level_id = null;
+
     public $academic_group_id = null;
+
     public $is_private = false;
+
     public $selectedUsers = [];
+
     public $userSearch = '';
+
     public $searchResults = [];
+
     public $academicLevels = [];
+
     public $academicGroups = [];
 
     public function mount()
@@ -56,7 +66,7 @@ class ChatGroupCreate extends Component
 
     public function addUser($userId)
     {
-        if (!in_array($userId, $this->selectedUsers)) {
+        if (! in_array($userId, $this->selectedUsers)) {
             $this->selectedUsers[] = $userId;
         }
         $this->userSearch = '';
@@ -65,7 +75,7 @@ class ChatGroupCreate extends Component
 
     public function removeUser($userId)
     {
-        $this->selectedUsers = array_filter($this->selectedUsers, fn($id) => $id != $userId);
+        $this->selectedUsers = array_filter($this->selectedUsers, fn ($id) => $id != $userId);
         $this->selectedUsers = array_values($this->selectedUsers);
     }
 
@@ -85,8 +95,8 @@ class ChatGroupCreate extends Component
                 'is_private' => $this->is_private,
             ], auth()->user());
 
-// Add selected users to custom groups
-            if ($this->type === 'custom' && !empty($this->selectedUsers)) {
+            // Add selected users to custom groups
+            if ($this->type === 'custom' && ! empty($this->selectedUsers)) {
                 foreach ($this->selectedUsers as $userId) {
                     $user = User::find($userId);
                     if ($user && $user->school_id === auth()->user()->school_id) {
@@ -95,18 +105,17 @@ class ChatGroupCreate extends Component
                 }
             }
 
-// Reset form
+            // Reset form
             $this->reset([
                 'name', 'description', 'selectedUsers', 'userSearch', 'searchResults',
-                'academic_level_id', 'academic_group_id'
+                'academic_level_id', 'academic_group_id',
             ]);
             $this->type = 'custom';
             $this->is_private = false;
 
-// Dispatch success event
+            // Dispatch success event
             $this->dispatch('close-modal', name: 'create-chat-group');
             $this->dispatch('chatGroupCreated', $chatGroup->id);
-
 
         } catch (Exception $e) {
             Log::error('Chat group creation failed', [
@@ -114,10 +123,10 @@ class ChatGroupCreate extends Component
                 'error' => $e->getMessage(),
                 'data' => [
                     'name' => $this->name,
-                    'type' => $this->type
-                ]
+                    'type' => $this->type,
+                ],
             ]);
-            $this->addError('general', 'Error creating group: ' . $e->getMessage());
+            $this->addError('general', 'Error creating group: '.$e->getMessage());
         }
     }
 

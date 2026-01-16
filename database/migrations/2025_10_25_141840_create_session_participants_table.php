@@ -15,9 +15,9 @@ return new class extends Migration
 
             // Participant Information
             $table->string('role')->default('attendee');
-//            $table->enum('role', ['moderator', 'attendee', 'guest'])->default('attendee');
+            //            $table->enum('role', ['moderator', 'attendee', 'guest'])->default('attendee');
             $table->string('status')->default('invited');
-//            $table->enum('status', ['invited', 'joined', 'left', 'declined'])->default('invited');
+            //            $table->enum('status', ['invited', 'joined', 'left', 'declined'])->default('invited');
 
             // Join Information
             $table->string('full_name')->nullable();

@@ -26,13 +26,13 @@ class SessionRecordingAvailableNotification extends Notification implements Shou
         $session = $this->recording->virtualSession;
 
         return (new MailMessage)
-            ->subject('Recording Available: ' . $session->title)
-            ->greeting('Hello ' . $notifiable->name . '!')
+            ->subject('Recording Available: '.$session->title)
+            ->greeting('Hello '.$notifiable->name.'!')
             ->line('The recording for your virtual classroom session is now available.')
-            ->line('**Session:** ' . $session->title)
-            ->line('**Teacher:** ' . $session->teacher->user->name)
-            ->line('**Recorded:** ' . $this->recording->recorded_at->format('F j, Y'))
-            ->line('**Duration:** ' . $this->recording->getFormattedDuration())
+            ->line('**Session:** '.$session->title)
+            ->line('**Teacher:** '.$session->teacher->user->name)
+            ->line('**Recorded:** '.$this->recording->recorded_at->format('F j, Y'))
+            ->line('**Duration:** '.$this->recording->getFormattedDuration())
             ->action('Watch Recording', route('students.classroom.recordings'))
             ->line('You can watch the recording at any time.');
     }

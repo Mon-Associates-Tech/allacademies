@@ -35,7 +35,7 @@ class ProcessPendingAudioBooksCommand extends Command
     public function handle()
     {
         $isManual = $this->option('manual');
-        $limit = (int)$this->option('limit');
+        $limit = (int) $this->option('limit');
         $bookId = $this->option('book');
 
         $this->info('🎬 Starting audio conversion process for pending books...');
@@ -63,6 +63,7 @@ class ProcessPendingAudioBooksCommand extends Command
 
         if ($pendingBooks->isEmpty()) {
             $this->info('✅ No books pending audio conversion.');
+
             return 0;
         }
 
@@ -73,14 +74,14 @@ class ProcessPendingAudioBooksCommand extends Command
 
         foreach ($pendingBooks as $book) {
             $this->newLine();
-            $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             $this->info("📖 Processing: {$book->title} (ID: {$book->id})");
-            $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
             try {
                 if ($isManual) {
                     // Execute conversion immediately
-                    $this->line("⏳ Converting book to audio (this may take several minutes)...");
+                    $this->line('⏳ Converting book to audio (this may take several minutes)...');
 
                     // Create and execute the job directly
                     $job = new ConvertBookToAudioJob($book);
@@ -100,7 +101,7 @@ class ProcessPendingAudioBooksCommand extends Command
 
                 Log::error("Failed to process audio conversion for book ID: {$book->id}", [
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
 
                 $failCount++;
@@ -109,14 +110,14 @@ class ProcessPendingAudioBooksCommand extends Command
 
         // Summary
         $this->newLine();
-        $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        $this->info("📊 SUMMARY");
-        $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->info('📊 SUMMARY');
+        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->info("✅ Successful: {$successCount}");
         if ($failCount > 0) {
             $this->error("❌ Failed: {$failCount}");
         }
-        $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         if ($isManual) {
             $this->info('🎉 Manual conversion process completed!');

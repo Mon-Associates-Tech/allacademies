@@ -17,10 +17,15 @@ class TeacherNotifications extends Component
     use WithPagination;
 
     public $teacher;
+
     public $notifications = [];
+
     public $filter = 'all'; // all, generic, assignments, submissions
+
     public $selectedNotification = null;
+
     public $showModal = false;
+
     public $perPage = 15;
 
     public function mount()
@@ -33,8 +38,9 @@ class TeacherNotifications extends Component
     {
         $user = auth()->user();
 
-        if (!$user || !$this->teacher) {
+        if (! $user || ! $this->teacher) {
             $this->notifications = [];
+
             return;
         }
 
@@ -75,7 +81,7 @@ class TeacherNotifications extends Component
             foreach ($teacherAssignments as $assignment) {
                 foreach ($assignment->notifications as $notification) {
                     $assignmentNotifications[] = [
-                        'id' => 'assignment_' . $notification->id,
+                        'id' => 'assignment_'.$notification->id,
                         'type' => 'assignment',
                         'category' => 'Assignment Notification',
                         'title' => "Assignment Assigned: {$assignment->title}",
@@ -112,7 +118,7 @@ class TeacherNotifications extends Component
 
             foreach ($recentSubmissions as $submission) {
                 $submissionNotifications[] = [
-                    'id' => 'submission_' . $submission->id,
+                    'id' => 'submission_'.$submission->id,
                     'type' => 'submission',
                     'category' => 'Assignment Submission',
                     'title' => "New Submission: {$submission->assignment->title}",
@@ -179,7 +185,7 @@ class TeacherNotifications extends Component
             }
         }
 
-        if (!$notification) {
+        if (! $notification) {
             return;
         }
 
@@ -232,6 +238,7 @@ class TeacherNotifications extends Component
                 $count++;
             }
         }
+
         return $count;
     }
 
@@ -243,6 +250,7 @@ class TeacherNotifications extends Component
                 $count++;
             }
         }
+
         return $count;
     }
 
@@ -269,7 +277,7 @@ class TeacherNotifications extends Component
         $data = $notification->data;
 
         return match ($notification->type) {
-            NewAssignmentNotification::class => $data['message'] ?? "Assignment has been created.",
+            NewAssignmentNotification::class => $data['message'] ?? 'Assignment has been created.',
             default => $data['message'] ?? 'You have a new notification.',
         };
     }

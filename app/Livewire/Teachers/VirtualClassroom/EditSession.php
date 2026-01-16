@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Teachers\VirtualClassroom;
 
-use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\Classroom\VirtualSession;
@@ -15,25 +14,36 @@ class EditSession extends Component
 
     // Session Details
     public $title = '';
+
     public $description = '';
+
     public $type = 'live';
 
     // Scheduling
     public $scheduled_date = '';
+
     public $scheduled_time = '';
+
     public $duration = 60;
 
     // Academic Context
     public $academic_level_id = null;
+
     public $academic_group_id = null;
+
     public $academic_subject_id = null;
 
     // Settings
     public $allow_guest_login = false;
+
     public $auto_record = false;
+
     public $mute_on_start = false;
+
     public $webcams_only_for_moderator = false;
+
     public $max_participants = 100;
+
     public $guest_policy = 'ASK_MODERATOR';
 
     protected $rules = [
@@ -57,6 +67,7 @@ class EditSession extends Component
         // Can't edit live or ended sessions
         if (in_array($session->status, ['live', 'ended'])) {
             session()->flash('error', 'Cannot edit a live or ended session.');
+
             return redirect()->route('teachers.classroom.show', $session);
         }
 
@@ -96,7 +107,7 @@ class EditSession extends Component
         $this->validate();
 
         try {
-            $scheduledStart = $this->scheduled_date . ' ' . $this->scheduled_time;
+            $scheduledStart = $this->scheduled_date.' '.$this->scheduled_time;
             $scheduledEnd = date('Y-m-d H:i:s', strtotime($scheduledStart) + ($this->duration * 60));
 
             $this->session->update([
@@ -118,10 +129,11 @@ class EditSession extends Component
             ]);
 
             session()->flash('success', 'Session updated successfully!');
+
             return redirect()->route('teachers.classroom.show', $this->session);
 
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Failed to update session: ' . $e->getMessage());
+            $this->dispatch('error', 'Failed to update session: '.$e->getMessage());
         }
     }
 

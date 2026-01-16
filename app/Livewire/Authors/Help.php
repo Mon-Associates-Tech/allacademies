@@ -4,35 +4,50 @@ namespace App\Livewire\Authors;
 
 use App\Livewire\AppComponent;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Mail;
 
 class Help extends AppComponent
 {
     public $activeTab = 'knowledge-base';
+
     public $searchTerm = '';
+
     public $selectedCategory = 'all';
+
     public $selectedArticle = null;
+
     public $showContactModal = false;
+
     public $showFeedbackModal = false;
+
     public $showTutorialModal = false;
+
     public $selectedTutorial = null;
 
     // Contact Form
     public $contactName = '';
+
     public $contactEmail = '';
+
     public $contactSubject = '';
+
     public $contactMessage = '';
+
     public $contactPriority = 'medium';
+
     public $contactCategory = 'general';
 
     // Feedback Form
     public $feedbackType = 'bug';
+
     public $feedbackTitle = '';
+
     public $feedbackDescription = '';
+
     public $feedbackRating = 5;
 
     // Search and Filter
     public $searchResults = [];
+
     public $isSearching = false;
 
     public function mount()
@@ -83,7 +98,7 @@ class Help extends AppComponent
                 'helpful_count' => 234,
                 'created_at' => now()->subDays(5),
                 'updated_at' => now()->subDays(2),
-                'tags' => ['dashboard', 'basics', 'navigation']
+                'tags' => ['dashboard', 'basics', 'navigation'],
             ],
             [
                 'id' => 2,
@@ -95,7 +110,7 @@ class Help extends AppComponent
                 'helpful_count' => 567,
                 'created_at' => now()->subDays(10),
                 'updated_at' => now()->subDays(1),
-                'tags' => ['publishing', 'books', 'workflow']
+                'tags' => ['publishing', 'books', 'workflow'],
             ],
             [
                 'id' => 3,
@@ -107,7 +122,7 @@ class Help extends AppComponent
                 'helpful_count' => 189,
                 'created_at' => now()->subDays(7),
                 'updated_at' => now()->subDays(3),
-                'tags' => ['analytics', 'sales', 'reporting']
+                'tags' => ['analytics', 'sales', 'reporting'],
             ],
             [
                 'id' => 4,
@@ -119,8 +134,8 @@ class Help extends AppComponent
                 'helpful_count' => 312,
                 'created_at' => now()->subDays(12),
                 'updated_at' => now()->subDays(4),
-                'tags' => ['profile', 'setup', 'optimization']
-            ]
+                'tags' => ['profile', 'setup', 'optimization'],
+            ],
         ]);
     }
 
@@ -132,36 +147,36 @@ class Help extends AppComponent
                 'question' => 'How do I publish my book?',
                 'answer' => 'To publish your book, navigate to the "My Books" section, click "Add New Book", fill in the required information, upload your manuscript, and submit for review.',
                 'category' => 'Publishing',
-                'helpful_count' => 45
+                'helpful_count' => 45,
             ],
             [
                 'id' => 2,
                 'question' => 'What file formats are supported?',
                 'answer' => 'We support PDF, EPUB, MOBI, and DOC/DOCX formats for manuscripts. For covers, we accept JPG, PNG, and PDF files.',
                 'category' => 'Technical',
-                'helpful_count' => 38
+                'helpful_count' => 38,
             ],
             [
                 'id' => 3,
                 'question' => 'How do I track my book sales?',
                 'answer' => 'You can track your sales through the Analytics section in your dashboard. It provides real-time data on sales, revenue, and reader engagement.',
                 'category' => 'Analytics',
-                'helpful_count' => 52
+                'helpful_count' => 52,
             ],
             [
                 'id' => 4,
                 'question' => 'Can I update my book after publishing?',
                 'answer' => 'Yes, you can update your book content, cover, or details at any time. Updates will be reflected within 24 hours.',
                 'category' => 'Publishing',
-                'helpful_count' => 67
+                'helpful_count' => 67,
             ],
             [
                 'id' => 5,
                 'question' => 'How do I set up my author profile?',
                 'answer' => 'Go to Profile Settings, add your biography, photo, social media links, and other relevant information to create an engaging author profile.',
                 'category' => 'Profile',
-                'helpful_count' => 29
-            ]
+                'helpful_count' => 29,
+            ],
         ]);
     }
 
@@ -177,7 +192,7 @@ class Help extends AppComponent
                 'thumbnail' => '/images/tutorial-dashboard.jpg',
                 'video_url' => 'https://example.com/tutorial1',
                 'steps' => 8,
-                'category' => 'Getting Started'
+                'category' => 'Getting Started',
             ],
             [
                 'id' => 2,
@@ -188,7 +203,7 @@ class Help extends AppComponent
                 'thumbnail' => '/images/tutorial-publishing.jpg',
                 'video_url' => 'https://example.com/tutorial2',
                 'steps' => 12,
-                'category' => 'Publishing'
+                'category' => 'Publishing',
             ],
             [
                 'id' => 3,
@@ -199,7 +214,7 @@ class Help extends AppComponent
                 'thumbnail' => '/images/tutorial-marketing.jpg',
                 'video_url' => 'https://example.com/tutorial3',
                 'steps' => 10,
-                'category' => 'Marketing'
+                'category' => 'Marketing',
             ],
             [
                 'id' => 4,
@@ -210,8 +225,8 @@ class Help extends AppComponent
                 'thumbnail' => '/images/tutorial-analytics.jpg',
                 'video_url' => 'https://example.com/tutorial4',
                 'steps' => 9,
-                'category' => 'Analytics'
-            ]
+                'category' => 'Analytics',
+            ],
         ]);
     }
 
@@ -223,29 +238,29 @@ class Help extends AppComponent
                 'title' => 'Quick Start Guide',
                 'description' => 'Get started with your author account',
                 'action' => 'View Guide',
-                'link' => '#'
+                'link' => '#',
             ],
             [
                 'icon' => 'upload',
                 'title' => 'Upload Your Book',
                 'description' => 'Step-by-step book upload process',
                 'action' => 'Start Upload',
-                'link' => '#'
+                'link' => '#',
             ],
             [
                 'icon' => 'chart-bar',
                 'title' => 'View Analytics',
                 'description' => 'Track your book performance',
                 'action' => 'View Analytics',
-                'link' => '#'
+                'link' => '#',
             ],
             [
                 'icon' => 'user-circle',
                 'title' => 'Setup Profile',
                 'description' => 'Complete your author profile',
                 'action' => 'Edit Profile',
-                'link' => '#'
-            ]
+                'link' => '#',
+            ],
         ]);
     }
 
@@ -256,20 +271,20 @@ class Help extends AppComponent
                 'title' => 'New Analytics Dashboard Released',
                 'description' => 'Enhanced reporting with real-time sales data and reader insights.',
                 'date' => now()->subDays(2),
-                'type' => 'feature'
+                'type' => 'feature',
             ],
             [
                 'title' => 'Mobile App Now Available',
                 'description' => 'Download our mobile app for iOS and Android to manage your books on the go.',
                 'date' => now()->subDays(5),
-                'type' => 'announcement'
+                'type' => 'announcement',
             ],
             [
                 'title' => 'Improved File Upload Speed',
                 'description' => 'Book uploads are now 50% faster with our new infrastructure.',
                 'date' => now()->subDays(8),
-                'type' => 'improvement'
-            ]
+                'type' => 'improvement',
+            ],
         ]);
     }
 
@@ -284,7 +299,7 @@ class Help extends AppComponent
             'marketing' => 'Marketing',
             'technical' => 'Technical',
             'billing' => 'Billing',
-            'account' => 'Account'
+            'account' => 'Account',
         ]);
     }
 
@@ -294,18 +309,18 @@ class Help extends AppComponent
             [
                 'title' => 'Publishing Your First Book',
                 'views' => 2340,
-                'helpful_count' => 567
+                'helpful_count' => 567,
             ],
             [
                 'title' => 'Setting Up Author Profile',
                 'views' => 1890,
-                'helpful_count' => 312
+                'helpful_count' => 312,
             ],
             [
                 'title' => 'Managing Book Sales',
                 'views' => 1650,
-                'helpful_count' => 189
-            ]
+                'helpful_count' => 189,
+            ],
         ]);
     }
 
@@ -318,9 +333,9 @@ class Help extends AppComponent
                 'api' => 'operational',
                 'file_uploads' => 'operational',
                 'payments' => 'operational',
-                'analytics' => 'operational'
+                'analytics' => 'operational',
             ],
-            'last_updated' => now()->subMinutes(5)
+            'last_updated' => now()->subMinutes(5),
         ];
     }
 
@@ -414,6 +429,7 @@ class Help extends AppComponent
     {
         if (empty($this->searchTerm)) {
             $this->searchResults = [];
+
             return;
         }
 
@@ -428,14 +444,14 @@ class Help extends AppComponent
                 'type' => 'article',
                 'title' => 'Getting Started with Author Dashboard',
                 'excerpt' => 'Learn how to navigate and use your author dashboard effectively.',
-                'url' => '#'
+                'url' => '#',
             ],
             [
                 'type' => 'faq',
                 'title' => 'How do I publish my book?',
                 'excerpt' => 'To publish your book, navigate to the "My Books" section...',
-                'url' => '#'
-            ]
+                'url' => '#',
+            ],
         ]);
 
         $this->isSearching = false;

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Support\Examiner;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ExaminationResource extends JsonResource
@@ -17,7 +16,7 @@ class ExaminationResource extends JsonResource
     {
         return [
             'examination' => $this->resource,
-            'sections' => ''
+            'sections' => '',
         ];
     }
 }

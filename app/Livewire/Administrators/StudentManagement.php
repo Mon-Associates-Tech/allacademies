@@ -21,50 +21,88 @@ class StudentManagement extends Component
     use WithPagination;
 
     public $name;
+
     public $email;
+
     public $password;
+
     public $studentGroupId;
+
     public $academicGroupId;
+
     public $academicLevelId;
+
     public $primaryTeacherId;
+
     public $selectedTeachers = [];
+
     public $additionalSubjects = []; // Subjects to add beyond academic level
+
     public $removedSubjects = []; // Subjects to remove from academic level
+
     public $searchTerm = '';
+
     public $isEditing = false;
+
     public $editingStudentId;
+
     public $showIndividualSubjects = false;
+
     public $showForm = false;
+
     public $formMode = 'create';
+
     public $showFormModal = false;
+
     // Teacher management
     public $showTeacherModal = false;
+
     public $teacherName;
+
     public $teacherEmail;
+
     public $teacherPassword;
+
     public $isEditingTeacher = false;
+
     public $editingTeacherId;
+
     public $showManageTeachers = false;
+
     public $teachersToAssignToGroup = [];
+
     public $teachersToAssignToLevel = [];
+
     public $selectedTeachersForGroup = [];
+
     public $selectedTeachersForLevel = [];
 
     // Filter properties
     public $filterAcademicGroup = '';
+
     public $filterAcademicLevel = '';
+
     public $filterStudentGroup = '';
+
     public $filterTeacher = '';
+
     public $filterSubject = '';
 
     // Collections
     public $studentGroups;
+
     public $academicGroups;
+
     public $academicLevels = [];
+
     public $levelSubjects = [];
+
     public $availableAdditionalSubjects = [];
+
     public $availableTeachers = [];
+
     public $allTeachers = [];
+
     public $viewMode = 'card'; // 'card' or 'list'
 
     protected $rules = [
@@ -144,7 +182,6 @@ class StudentManagement extends Component
         $this->resetPage();
     }
 
-
     public function resetForm()
     {
 
@@ -206,7 +243,9 @@ class StudentManagement extends Component
 
     public function loadTeachersForGroupManagement()
     {
-        if (!$this->academicGroupId) return;
+        if (! $this->academicGroupId) {
+            return;
+        }
 
         $group = AcademicGroup::with('teachers')->find($this->academicGroupId);
         $assignedTeacherIds = $group->teachers->pluck('id')->toArray();
@@ -244,7 +283,9 @@ class StudentManagement extends Component
 
     public function loadTeachersForLevelManagement()
     {
-        if (!$this->academicLevelId) return;
+        if (! $this->academicLevelId) {
+            return;
+        }
 
         $level = AcademicLevel::with('teachers')->find($this->academicLevelId);
         $assignedTeacherIds = $level->teachers->pluck('id')->toArray();
@@ -266,6 +307,7 @@ class StudentManagement extends Component
     {
         if (empty($this->selectedTeachersForGroup)) {
             session()->flash('error', 'No teachers selected for group assignment.');
+
             return;
         }
 
@@ -292,6 +334,7 @@ class StudentManagement extends Component
     {
         if (empty($this->selectedTeachersForLevel)) {
             session()->flash('error', 'No teachers selected for level assignment.');
+
             return;
         }
 
@@ -452,7 +495,7 @@ class StudentManagement extends Component
             ]);
 
             // Assign teachers to student
-            if (!empty($this->selectedTeachers)) {
+            if (! empty($this->selectedTeachers)) {
                 $teacherData = [];
                 foreach ($this->selectedTeachers as $teacherId) {
                     $teacherData[$teacherId] = [
@@ -482,7 +525,7 @@ class StudentManagement extends Component
         $now = now();
 
         // Add additional subjects (subjects not in their academic level)
-        if (!empty($this->additionalSubjects)) {
+        if (! empty($this->additionalSubjects)) {
             $additionalData = [];
             foreach ($this->additionalSubjects as $subjectId) {
                 $additionalData[$subjectId] = [
@@ -498,7 +541,7 @@ class StudentManagement extends Component
         }
 
         // Remove subjects from academic level access
-        if (!empty($this->removedSubjects)) {
+        if (! empty($this->removedSubjects)) {
             $removedData = [];
             foreach ($this->removedSubjects as $subjectId) {
                 $removedData[$subjectId] = [
@@ -529,14 +572,14 @@ class StudentManagement extends Component
 
     public function updatedPrimaryTeacherId()
     {
-        if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
+        if ($this->primaryTeacherId && ! in_array($this->primaryTeacherId, $this->selectedTeachers)) {
             $this->selectedTeachers[] = $this->primaryTeacherId;
         }
     }
 
     public function updatedSelectedTeachers()
     {
-        if ($this->primaryTeacherId && !in_array($this->primaryTeacherId, $this->selectedTeachers)) {
+        if ($this->primaryTeacherId && ! in_array($this->primaryTeacherId, $this->selectedTeachers)) {
             $this->primaryTeacherId = '';
         }
     }
@@ -553,7 +596,7 @@ class StudentManagement extends Component
             'user',
             'individualSubjects',
             'teachers',
-            'academicLevel.academicSubjects'
+            'academicLevel.academicSubjects',
         ])->findOrFail($studentId);
 
         $this->name = $student->user->name;
@@ -604,7 +647,7 @@ class StudentManagement extends Component
 
         $this->validate([
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:users,email,' . $student->user_id,
+            'email' => 'required|email|unique:users,email,'.$student->user_id,
             'academicGroupId' => 'required|exists:academic_groups,id',
             'academicLevelId' => 'required|exists:academic_levels,id',
             'primaryTeacherId' => 'nullable|exists:teachers,id',
@@ -637,7 +680,7 @@ class StudentManagement extends Component
             ]);
 
             // Update teacher assignments
-            if (!empty($this->selectedTeachers)) {
+            if (! empty($this->selectedTeachers)) {
                 $teacherData = [];
                 foreach ($this->selectedTeachers as $teacherId) {
                     $teacherData[$teacherId] = [
@@ -681,8 +724,8 @@ class StudentManagement extends Component
         // Search filter
         if ($this->searchTerm) {
             $query->whereHas('user', function ($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
@@ -729,7 +772,7 @@ class StudentManagement extends Component
             'academicGroup',
             'academicLevel.academicSubjects',
             'teachers.user',
-            'individualSubjects'
+            'individualSubjects',
         ])->paginate(10);
 
         // Get teachers assigned to current academic group and level for display
@@ -761,7 +804,7 @@ class StudentManagement extends Component
             $this->filterAcademicLevel,
             $this->filterStudentGroup,
             $this->filterTeacher,
-            $this->filterSubject
+            $this->filterSubject,
         ])->filter()->count();
 
         return view('livewire.administrators.student-management', [

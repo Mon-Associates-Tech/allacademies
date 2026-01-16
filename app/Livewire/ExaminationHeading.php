@@ -9,11 +9,15 @@ use Livewire\Component;
 class ExaminationHeading extends Component
 {
     public $down;
+
     public $up;
 
     public $template;
+
     public $title;
+
     public $duration;
+
     public $instructions;
 
     public $metadata;
@@ -35,32 +39,30 @@ class ExaminationHeading extends Component
     public function mount($metadata)
     {
         $this->metadata = $metadata;
-        $this->template = old('heading.template',  'twig');
+        $this->template = old('heading.template', 'twig');
         $this->title = old('heading.title', '');
         $this->duration = old('heading.duration', '');
-
-
 
         $this->compile();
     }
 
     private function compile()
     {
-        if ('twig' === $this->template) {
-            $this->down =   TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
+        if ($this->template === 'twig') {
+            $this->down = TemplateRenderer::renderTwig($this->instructions, $this->duration, $this->title, $this->metadata);
         }
 
-        if ('pug' === $this->template) {
+        if ($this->template === 'pug') {
             $this->down = TemplateRenderer::renderPug($this->instructions, $this->duration, $this->title, $this->metadata);
 
         }
 
-        if ('tera' === $this->template) {
+        if ($this->template === 'tera') {
             $this->down = TemplateRenderer::renderTera($this->instructions, $this->duration, $this->title, $this->metadata, $this->generate($this->template));
 
         }
 
-        if ('jinja' === $this->template) {
+        if ($this->template === 'jinja') {
             $this->down = TemplateRenderer::renderJinja($this->instructions, $this->duration, $this->title, $this->metadata, $this->generate($this->template));
         }
     }
@@ -70,20 +72,20 @@ class ExaminationHeading extends Component
         $template = Str::of($template);
         $details = [$this->metadata['institution']];
 
-        if ('college' === $this->metadata['type']) {
+        if ($this->metadata['type'] === 'college') {
             $details[] = $this->metadata['college'];
             $details[] = $this->metadata['school'];
         }
 
-        if ('faculty' === $this->metadata['type']) {
+        if ($this->metadata['type'] === 'faculty') {
             $details[] = $this->metadata['faculty'];
         }
 
-        if ('institution' !== $this->metadata['type']) {
+        if ($this->metadata['type'] !== 'institution') {
             $details[] = $this->metadata['department'];
         }
 
-        $details = array_map(fn($detail) => $template->replace('><', ">{$detail}<"), $details);
+        $details = array_map(fn ($detail) => $template->replace('><', ">{$detail}<"), $details);
 
         return implode(PHP_EOL, $details);
     }

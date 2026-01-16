@@ -2,46 +2,72 @@
 
 namespace App\Livewire\Administrators;
 
+use App\Models\Librarian;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Librarian;
-use App\Models\User;
-use App\Models\Role;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 
 class LibrarianManagement extends Component
 {
     use WithPagination;
 
     public $name;
+
     public $email;
+
     public $password;
+
     public $passwordConfirmation;
+
     public $position;
+
     public $department;
+
     public $phone;
+
     public $address;
+
     public $dateOfBirth;
+
     public $employeeId;
+
     public $hireDate;
+
     public $qualifications;
+
     public $specializations;
+
     public $isActive = true;
+
     public $searchTerm = '';
+
     public $isEditing = false;
+
     public $editingLibrarianId;
+
     public $showDeleteModal = false;
+
     public $deletingLibrarianId;
+
     public $sortField = 'name';
+
     public $sortDirection = 'asc';
+
     public $statusFilter = 'all';
+
     public $departmentFilter = '';
+
     public $positionFilter = '';
+
     public $showBulkActions = false;
+
     public $selectedLibrarians = [];
+
     public $selectAll = false;
+
     public $showFormModal = false;
 
     protected $queryString = ['searchTerm', 'sortField', 'sortDirection', 'statusFilter', 'departmentFilter', 'positionFilter'];
@@ -65,8 +91,8 @@ class LibrarianManagement extends Component
 
         if ($this->isEditing) {
             $librarian = Librarian::with('user')->findOrFail($this->editingLibrarianId);
-            $rules['email'] = 'required|email|unique:users,email,' . $librarian->user_id;
-            $rules['employeeId'] = 'nullable|string|max:50|unique:librarians,employee_id,' . $this->editingLibrarianId;
+            $rules['email'] = 'required|email|unique:users,email,'.$librarian->user_id;
+            $rules['employeeId'] = 'nullable|string|max:50|unique:librarians,employee_id,'.$this->editingLibrarianId;
             $rules['password'] = 'nullable|min:8|confirmed';
             $rules['passwordConfirmation'] = 'nullable|same:password';
         } else {
@@ -93,10 +119,10 @@ class LibrarianManagement extends Component
 
     public function openFormModal(): void
     {
-//        $this->openModal('form-modal', [
-//            'title' => 'Create Newd Librarian',
-//            'size' => 'xl'
-//        ]);
+        //        $this->openModal('form-modal', [
+        //            'title' => 'Create Newd Librarian',
+        //            'size' => 'xl'
+        //        ]);
     }
 
     public function create()
@@ -141,11 +167,11 @@ class LibrarianManagement extends Component
         $this->closeModal();
     }
 
-//    public function openModal()
-//    {
-//        $this->showFormModal = true;
-//        $this->resetForm();
-//    }
+    //    public function openModal()
+    //    {
+    //        $this->showFormModal = true;
+    //        $this->resetForm();
+    //    }
 
     public function closeModal()
     {
@@ -233,6 +259,7 @@ class LibrarianManagement extends Component
         if ($librarian->bookApprovals()->count() > 0) {
             session()->flash('error', 'Cannot delete librarian who has book approvals. Please reassign the approvals first.');
             $this->showDeleteModal = false;
+
             return;
         }
 
@@ -250,7 +277,7 @@ class LibrarianManagement extends Component
     public function toggleStatus($librarianId)
     {
         $librarian = Librarian::with('user')->findOrFail($librarianId);
-        $librarian->user->update(['is_active' => !$librarian->user->is_active]);
+        $librarian->user->update(['is_active' => ! $librarian->user->is_active]);
 
         $status = $librarian->user->is_active ? 'activated' : 'deactivated';
         session()->flash('message', "Librarian {$status} successfully!");
@@ -268,7 +295,9 @@ class LibrarianManagement extends Component
 
     public function bulkActivate()
     {
-        if (empty($this->selectedLibrarians)) return;
+        if (empty($this->selectedLibrarians)) {
+            return;
+        }
 
         $librarians = Librarian::with('user')->whereIn('id', $this->selectedLibrarians)->get();
         foreach ($librarians as $librarian) {
@@ -282,7 +311,9 @@ class LibrarianManagement extends Component
 
     public function bulkDeactivate()
     {
-        if (empty($this->selectedLibrarians)) return;
+        if (empty($this->selectedLibrarians)) {
+            return;
+        }
 
         $librarians = Librarian::with('user')->whereIn('id', $this->selectedLibrarians)->get();
         foreach ($librarians as $librarian) {
@@ -344,7 +375,7 @@ class LibrarianManagement extends Component
     private function getLibrarians()
     {
         return Librarian::query()
-            ->whereHas('user', function($query) {
+            ->whereHas('user', function ($query) {
                 if ($this->searchTerm) {
                     $query->where('name', 'like', '%'.$this->searchTerm.'%')
                         ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
@@ -355,29 +386,29 @@ class LibrarianManagement extends Component
                     $query->where('is_active', false);
                 }
             })
-            ->when($this->searchTerm, function($query) {
+            ->when($this->searchTerm, function ($query) {
                 $query->orWhere('position', 'like', '%'.$this->searchTerm.'%')
                     ->orWhere('department', 'like', '%'.$this->searchTerm.'%');
-//                    ->orWhere('employee_id', 'like', '%'.$this->searchTerm.'%');
+                //                    ->orWhere('employee_id', 'like', '%'.$this->searchTerm.'%');
             })
-            ->when($this->departmentFilter, function($query) {
+            ->when($this->departmentFilter, function ($query) {
                 $query->where('department', $this->departmentFilter);
             })
-            ->when($this->positionFilter, function($query) {
+            ->when($this->positionFilter, function ($query) {
                 $query->where('position', $this->positionFilter);
             })
             ->with(['user', 'bookApprovals'])
-            ->when($this->sortField === 'name', function($query) {
+            ->when($this->sortField === 'name', function ($query) {
                 $query->join('users', 'librarians.user_id', '=', 'users.id')
                     ->orderBy('users.name', $this->sortDirection)
                     ->select('librarians.*');
             })
-            ->when($this->sortField === 'email', function($query) {
+            ->when($this->sortField === 'email', function ($query) {
                 $query->join('users', 'librarians.user_id', '=', 'users.id')
                     ->orderBy('users.email', $this->sortDirection)
                     ->select('librarians.*');
             })
-            ->when(in_array($this->sortField, ['position', 'department', 'hire_date']), function($query) {
+            ->when(in_array($this->sortField, ['position', 'department', 'hire_date']), function ($query) {
                 $query->orderBy($this->sortField, $this->sortDirection);
             });
     }
@@ -400,8 +431,8 @@ class LibrarianManagement extends Component
 
         $stats = [
             'total' => Librarian::count(),
-            'active' => Librarian::whereHas('user', fn($q) => $q->where('is_active', true))->count(),
-            'inactive' => Librarian::whereHas('user', fn($q) => $q->where('is_active', false))->count(),
+            'active' => Librarian::whereHas('user', fn ($q) => $q->where('is_active', true))->count(),
+            'inactive' => Librarian::whereHas('user', fn ($q) => $q->where('is_active', false))->count(),
             'this_month' => Librarian::whereMonth('created_at', now()->month)->count(),
         ];
 

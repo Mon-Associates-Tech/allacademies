@@ -10,17 +10,20 @@ use Illuminate\Contracts\View\View;
 class Subscriptions extends AppComponent
 {
     public Author $author;
+
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $perPage = 10;
 
     public function mount(?Author $author)
     {
-        //if (!$author) {
-            $this->author = auth()->user()->author;
-        //} else {
-          //  $this->author = $author;
-       // }
+        // if (!$author) {
+        $this->author = auth()->user()->author;
+        // } else {
+        //  $this->author = $author;
+        // }
     }
 
     public function render(): View
@@ -31,7 +34,7 @@ class Subscriptions extends AppComponent
             'subscriptions' => $subscriptions,
             'totalSubscribers' => $this->getTotalSubscribers(),
             'activeSubscriptions' => $this->getActiveSubscriptions(),
-            'hasSubscriptions' => $subscriptions->total() > 0
+            'hasSubscriptions' => $subscriptions->total() > 0,
         ]);
     }
 
@@ -44,8 +47,8 @@ class Subscriptions extends AppComponent
 
         if ($this->search) {
             $query->whereHas('user', function ($userQuery) {
-                $userQuery->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%');
+                $userQuery->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('email', 'like', '%'.$this->search.'%');
             });
         }
 

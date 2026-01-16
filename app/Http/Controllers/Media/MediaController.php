@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Media;
 
 use App\Http\Controllers\Controller;
 use App\Models\Media\MediaFile;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
@@ -16,7 +15,7 @@ class MediaController extends Controller
 
     public function download(MediaFile $mediaFile)
     {
-        if (!Storage::disk($mediaFile->disk)->exists($mediaFile->file_path)) {
+        if (! Storage::disk($mediaFile->disk)->exists($mediaFile->file_path)) {
             abort(404, 'File not found');
         }
 

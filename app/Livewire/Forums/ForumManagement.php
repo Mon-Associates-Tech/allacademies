@@ -24,47 +24,71 @@ use Livewire\WithPagination;
 
 class ForumManagement extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     // Navigation
     public $currentView = 'categories';
+
     public $selectedCategory = null;
+
     public $selectedTopic = null;
+
     public $selectedPost = null;
 
     // Filters and Search
     public $search = '';
+
     public $sortBy = 'recent';
+
     public $filterBy = 'all';
+
     public $academicLevelFilter = null;
+
     public $academicSubjectFilter = null;
 
     // Create/Edit Forms
     public $newTopicTitle = '';
+
     public $newTopicContent = '';
+
     public $newTopicTags = '';
+
     public $newTopicAcademicLevel = null;
+
     public $newTopicAcademicSubject = null;
+
     public $newTopicAcademicTopic = null;
+
     public $newTopicStudyGroup = null;
+
     public $newTopicReferencedBook = null;
+
     public $newTopicAttachments = [];
 
     public $newPostContent = '';
+
     public $newPostAttachments = [];
+
     public $replyToPostId = null;
 
     // Moderation
     public $showModerationPanel = false;
+
     public $moderationAction = '';
+
     public $moderationReason = '';
 
     // Data Collections
     public $academicLevels = [];
+
     public $academicSubjects = [];
+
     public $academicTopics = [];
+
     public $studyGroups = [];
+
     public $books = [];
+
     public $users = [];
 
     protected $queryString = [
@@ -83,7 +107,7 @@ class ForumManagement extends Component
         'newTopicContent' => 'required|string|min:10',
         'newPostContent' => 'required|string|min:5',
         'newTopicAttachments.*' => 'file|max:10240',
-        'newPostAttachments.*' => 'file|max:10240'
+        'newPostAttachments.*' => 'file|max:10240',
     ];
 
     public function mount()
@@ -114,12 +138,12 @@ class ForumManagement extends Component
                 'academic_level_id' => $level->id,
                 'academic_subject_id' => null,
             ], [
-                'name' => $level->name . ' Discussion',
-                'slug' => $this->generateUniqueSlug($level->name . ' Discussion'),
-                'description' => 'General discussions for ' . $level->name . ' level students',
+                'name' => $level->name.' Discussion',
+                'slug' => $this->generateUniqueSlug($level->name.' Discussion'),
+                'description' => 'General discussions for '.$level->name.' level students',
                 'color' => 'violet',
                 'is_active' => true,
-                'sort_order' => $level->id + 100
+                'sort_order' => $level->id + 100,
             ]);
 
             // Create subject-specific categories
@@ -129,12 +153,12 @@ class ForumManagement extends Component
                     'academic_level_id' => $level->id,
                     'academic_subject_id' => $subject->id,
                 ], [
-                    'name' => $subject->name . ' - ' . $level->name,
-                    'slug' => $this->generateUniqueSlug($subject->name . ' ' . $level->name),
-                    'description' => 'Subject-specific discussions for ' . $subject->name . ' at ' . $level->name . ' level',
+                    'name' => $subject->name.' - '.$level->name,
+                    'slug' => $this->generateUniqueSlug($subject->name.' '.$level->name),
+                    'description' => 'Subject-specific discussions for '.$subject->name.' at '.$level->name.' level',
                     'color' => 'blue',
                     'is_active' => true,
-                    'sort_order' => ($level->id * 100) + $subject->id
+                    'sort_order' => ($level->id * 100) + $subject->id,
                 ]);
             }
         }
@@ -154,7 +178,7 @@ class ForumManagement extends Component
             ], array_merge($categoryData, [
                 'slug' => $this->generateUniqueSlug($categoryData['name']),
                 'is_active' => true,
-                'sort_order' => 1000 + $index
+                'sort_order' => 1000 + $index,
             ]));
         }
     }
@@ -162,7 +186,7 @@ class ForumManagement extends Component
     private function generateUniqueSlug($name, $attempt = 0)
     {
         $baseSlug = Str::slug($name);
-        $slug = $attempt > 0 ? $baseSlug . '-' . $attempt : $baseSlug;
+        $slug = $attempt > 0 ? $baseSlug.'-'.$attempt : $baseSlug;
 
         if (ForumCategory::where('slug', $slug)->exists()) {
             return $this->generateUniqueSlug($name, $attempt + 1);
@@ -204,6 +228,7 @@ class ForumManagement extends Component
         if (method_exists($category, 'canAccess')) {
             return $category->canAccess(Auth::user());
         }
+
         return true;
     }
 
@@ -275,7 +300,7 @@ class ForumManagement extends Component
             ]);
 
             // Handle attachments if any
-            if (!empty($this->newTopicAttachments)) {
+            if (! empty($this->newTopicAttachments)) {
                 $this->handleAttachments($this->newTopicAttachments, $post);
             }
 
@@ -289,7 +314,7 @@ class ForumManagement extends Component
             session()->flash('success', 'Topic created successfully!');
 
         } catch (\Exception $e) {
-            \Log::error('Error creating topic: ' . $e->getMessage());
+            \Log::error('Error creating topic: '.$e->getMessage());
             session()->flash('error', 'Failed to create topic. Please try again.');
         }
     }
@@ -298,7 +323,9 @@ class ForumManagement extends Component
 
     private function handleAttachments($attachments, $attachable)
     {
-        if (empty($attachments)) return;
+        if (empty($attachments)) {
+            return;
+        }
 
         foreach ($attachments as $attachment) {
             try {
@@ -314,7 +341,7 @@ class ForumManagement extends Component
                     'user_id' => Auth::id(),
                 ]);
             } catch (\Exception $e) {
-                \Log::error('Error handling attachment: ' . $e->getMessage());
+                \Log::error('Error handling attachment: '.$e->getMessage());
             }
         }
     }
@@ -323,7 +350,7 @@ class ForumManagement extends Component
     {
         preg_match_all('/@([a-zA-Z0-9_]+)/', $content, $matches);
 
-        if (!empty($matches[1])) {
+        if (! empty($matches[1])) {
             $usernames = array_unique($matches[1]);
             $users = User::whereIn('name', $usernames)->get();
 
@@ -337,7 +364,7 @@ class ForumManagement extends Component
                         'is_read' => false,
                     ]);
                 } catch (\Exception $e) {
-                    \Log::error('Error creating mention: ' . $e->getMessage());
+                    \Log::error('Error creating mention: '.$e->getMessage());
                 }
             }
         }
@@ -351,7 +378,7 @@ class ForumManagement extends Component
             'newTopicTitle', 'newTopicContent', 'newTopicTags',
             'newTopicAcademicLevel', 'newTopicAcademicSubject',
             'newTopicAcademicTopic', 'newTopicStudyGroup',
-            'newTopicReferencedBook', 'newTopicAttachments'
+            'newTopicReferencedBook', 'newTopicAttachments',
         ]);
     }
 
@@ -385,7 +412,7 @@ class ForumManagement extends Component
             ]);
 
             // Handle attachments
-            if (!empty($this->newPostAttachments)) {
+            if (! empty($this->newPostAttachments)) {
                 $this->handleAttachments($this->newPostAttachments, $post);
             }
 
@@ -408,7 +435,7 @@ class ForumManagement extends Component
             $this->dispatch('postCreated');
 
         } catch (\Exception $e) {
-            \Log::error('Error creating post: ' . $e->getMessage());
+            \Log::error('Error creating post: '.$e->getMessage());
             session()->flash('error', 'Failed to create post. Please try again.');
         }
     }
@@ -421,7 +448,7 @@ class ForumManagement extends Component
     public function toggleLike($postId)
     {
         $post = ForumPost::find($postId);
-        if (!$post) {
+        if (! $post) {
             return;
         }
 
@@ -431,7 +458,7 @@ class ForumManagement extends Component
             'reactable_type' => ForumPost::class,
             'reactable_id' => $postId,
             'user_id' => $user->id,
-            'type' => 'like'
+            'type' => 'like',
         ])->first();
 
         if ($existingReaction) {
@@ -443,14 +470,14 @@ class ForumManagement extends Component
                 'reactable_type' => ForumPost::class,
                 'reactable_id' => $postId,
                 'user_id' => $user->id,
-                'type' => 'dislike'
+                'type' => 'dislike',
             ])->delete();
 
             ForumReaction::create([
                 'reactable_type' => ForumPost::class,
                 'reactable_id' => $postId,
                 'user_id' => $user->id,
-                'type' => 'like'
+                'type' => 'like',
             ]);
 
             $post->increment('likes_count');
@@ -466,17 +493,17 @@ class ForumManagement extends Component
     public function sharePost($postId)
     {
         $post = ForumPost::with('topic')->find($postId);
-        if (!$post) {
+        if (! $post) {
             return;
         }
 
-        $url = route('guests.forums') . '?currentView=posts&selectedTopic=' . $post->forum_topic_id;
+        $url = route('guests.forums').'?currentView=posts&selectedTopic='.$post->forum_topic_id;
 
         // For now, we'll copy to clipboard via JavaScript
         $this->dispatch('sharePost', [
             'url' => $url,
             'title' => $post->topic->title,
-            'postId' => $postId
+            'postId' => $postId,
         ]);
     }
 
@@ -542,7 +569,7 @@ class ForumManagement extends Component
             ->withCount('posts');
 
         if ($this->search) {
-            $query->where('title', 'like', '%' . $this->search . '%');
+            $query->where('title', 'like', '%'.$this->search.'%');
         }
 
         if ($this->academicLevelFilter) {

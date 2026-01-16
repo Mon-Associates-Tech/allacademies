@@ -54,7 +54,7 @@ return new class extends Migration
                 'school_id',
                 'academic_group_id',
                 'academic_level_id',
-                'academic_subject_id'
+                'academic_subject_id',
             ]);
 
             // Revert teacher_id to not nullable (if it was before)

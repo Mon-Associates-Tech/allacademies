@@ -434,3 +434,4 @@ Relation::enforceMorphMap([
 - Never commit sensitive credentials to version control
 - Document required environment variables
 - Provide sensible defaults in config files
+- Currencies should be in ghana cedis

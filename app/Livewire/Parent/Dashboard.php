@@ -3,27 +3,30 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
-use App\Models\Attendance\AttendanceRecord;
-use App\Models\Student;
-use App\Models\Assignment;
-use App\Models\AssignmentSubmission;
-use App\Models\BookSubscription;
-use App\Models\StudentParent;
-use App\Models\SchoolFee;
-use App\Models\SchoolPayment;
 use App\Models\AcademicFeeStructure;
 use App\Models\AcademicPeriod;
+use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
+use App\Models\Attendance\AttendanceRecord;
 use App\Models\BookBorrowing;
+use App\Models\BookSubscription;
+use App\Models\SchoolFee;
+use App\Models\SchoolPayment;
+use App\Models\Student;
+use App\Models\StudentParent;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 
 class Dashboard extends AppComponent
 {
     public $selectedWardId = null;
+
     public $searchTerm = '';
+
     public $sortBy = 'name';
+
     public $sortDirection = 'asc';
+
     public $without_scope = true;
 
     public function mount($without_scope = true)
@@ -46,21 +49,21 @@ class Dashboard extends AppComponent
         $students = StudentParent::withoutGlobalScopes()
             ->where('user_id', Auth::id())
             ->with([
-                'students' => function($query) {
+                'students' => function ($query) {
                     $query->withoutGlobalScopes();
                 },
                 'students.user',
                 'students.academicLevel.academicGroup',
-                'students.studentGroup'
+                'students.studentGroup',
             ])
             ->get()
-            ->flatMap(function($parent) {
+            ->flatMap(function ($parent) {
                 return $parent->students;
             })
             ->unique('id');
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -74,10 +77,12 @@ class Dashboard extends AppComponent
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         $student = Student::query();
-        if($this->without_scope){
+        if ($this->without_scope) {
             $student = $student->withoutGlobalScopes();
         }
 
@@ -92,7 +97,9 @@ class Dashboard extends AppComponent
     #[Computed]
     public function academicOverview()
     {
-        if (!$this->selectedWard) return $this->getEmptyAcademicOverview();
+        if (! $this->selectedWard) {
+            return $this->getEmptyAcademicOverview();
+        }
 
         // Get assignment submissions
         $submissions = AssignmentSubmission::where('student_id', $this->selectedWardId)
@@ -102,14 +109,14 @@ class Dashboard extends AppComponent
         // Get pending assignments
         $pendingAssignments = Assignment::where('status', 'published')
             ->where('ends_at', '>=', now())
-            ->where(function($query) {
-                $query->whereHas('students', function($q) {
+            ->where(function ($query) {
+                $query->whereHas('students', function ($q) {
                     $q->where('students.id', $this->selectedWardId);
                 })
-                    ->orWhereHas('academicLevels', function($q) {
+                    ->orWhereHas('academicLevels', function ($q) {
                         $q->where('academic_levels.id', $this->selectedWard->academic_level_id);
                     })
-                    ->orWhereHas('academicGroups', function($q) {
+                    ->orWhereHas('academicGroups', function ($q) {
                         if ($this->selectedWard->academicLevel && $this->selectedWard->academicLevel->academic_group_id) {
                             $q->where('academic_groups.id', $this->selectedWard->academicLevel->academic_group_id);
                         }
@@ -119,8 +126,8 @@ class Dashboard extends AppComponent
             ->count();
 
         // Calculate scores
-        $submissionsWithScores = $submissions->filter(fn($s) => $s->total_marks > 0);
-        $scores = $submissionsWithScores->map(fn($s) => ($s->score / $s->total_marks) * 100);
+        $submissionsWithScores = $submissions->filter(fn ($s) => $s->total_marks > 0);
+        $scores = $submissionsWithScores->map(fn ($s) => ($s->score / $s->total_marks) * 100);
 
         return [
             'total_submissions' => $submissions->count(),
@@ -134,7 +141,9 @@ class Dashboard extends AppComponent
     #[Computed]
     public function attendanceOverview()
     {
-        if (!$this->selectedWard) return $this->getEmptyAttendanceOverview();
+        if (! $this->selectedWard) {
+            return $this->getEmptyAttendanceOverview();
+        }
 
         $currentMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
@@ -161,10 +170,13 @@ class Dashboard extends AppComponent
             'status' => $attendanceRate >= 90 ? 'excellent' : ($attendanceRate >= 75 ? 'good' : 'needs_attention'),
         ];
     }
+
     #[Computed]
     public function feeOverview()
     {
-        if (!$this->selectedWard) return $this->getEmptyFeeOverview();
+        if (! $this->selectedWard) {
+            return $this->getEmptyFeeOverview();
+        }
 
         $schoolId = getSchoolId();
         $currentTerm = AcademicPeriod::where('school_id', $schoolId)
@@ -208,7 +220,9 @@ class Dashboard extends AppComponent
     #[Computed]
     public function libraryActivity()
     {
-        if (!$this->selectedWard) return $this->getEmptyLibraryActivity();
+        if (! $this->selectedWard) {
+            return $this->getEmptyLibraryActivity();
+        }
 
         $user = $this->selectedWard->user;
 
@@ -224,7 +238,7 @@ class Dashboard extends AppComponent
             ->get();
 
         // Overdue books
-        $overdueBooks = $currentBorrowings->filter(function($borrowing) {
+        $overdueBooks = $currentBorrowings->filter(function ($borrowing) {
             return $borrowing->due_date && $borrowing->due_date < now();
         });
 
@@ -246,7 +260,9 @@ class Dashboard extends AppComponent
     #[Computed]
     public function recentActivity()
     {
-        if (!$this->selectedWard) return collect();
+        if (! $this->selectedWard) {
+            return collect();
+        }
 
         $activities = collect();
 
@@ -257,16 +273,16 @@ class Dashboard extends AppComponent
             ->latest('submitted_at')
             ->take(3)
             ->get()
-            ->map(function($submission) {
+            ->map(function ($submission) {
                 return [
                     'type' => 'assignment',
                     'icon' => 'document',
                     'color' => 'blue',
-                    'title' => 'Submitted ' . $submission->assignment->title,
+                    'title' => 'Submitted '.$submission->assignment->title,
                     'description' => $submission->assignment->academicSubject->name ?? 'Assignment',
                     'date' => $submission->submitted_at,
                     'meta' => $submission->status === 'graded' && $submission->total_marks > 0
-                        ? number_format(($submission->score / $submission->total_marks) * 100, 1) . '%'
+                        ? number_format(($submission->score / $submission->total_marks) * 100, 1).'%'
                         : ucfirst($submission->status),
                 ];
             });
@@ -278,7 +294,7 @@ class Dashboard extends AppComponent
             ->orderBy('attendances.date', 'desc')
             ->take(3)
             ->get()
-            ->map(function($record) {
+            ->map(function ($record) {
                 return [
                     'type' => 'attendance',
                     'icon' => 'check',
@@ -296,12 +312,12 @@ class Dashboard extends AppComponent
             ->latest('borrow_date')
             ->take(2)
             ->get()
-            ->map(function($borrowing) {
+            ->map(function ($borrowing) {
                 return [
                     'type' => 'library',
                     'icon' => 'book',
                     'color' => 'purple',
-                    'title' => 'Borrowed: ' . ($borrowing->book->title ?? 'Book'),
+                    'title' => 'Borrowed: '.($borrowing->book->title ?? 'Book'),
                     'description' => 'Library activity',
                     'date' => $borrowing->borrow_date,
                     'meta' => $borrowing->return_date ? 'Returned' : 'Active',
@@ -320,7 +336,9 @@ class Dashboard extends AppComponent
     #[Computed]
     public function upcomingEvents()
     {
-        if (!$this->selectedWard) return collect();
+        if (! $this->selectedWard) {
+            return collect();
+        }
 
         $events = collect();
 
@@ -328,14 +346,14 @@ class Dashboard extends AppComponent
         $upcomingAssignments = Assignment::with('academicSubject')
             ->where('status', 'published')
             ->whereBetween('ends_at', [now(), now()->addDays(7)])
-            ->where(function($query) {
-                $query->whereHas('students', function($q) {
+            ->where(function ($query) {
+                $query->whereHas('students', function ($q) {
                     $q->where('students.id', $this->selectedWardId);
                 })
-                    ->orWhereHas('academicLevels', function($q) {
+                    ->orWhereHas('academicLevels', function ($q) {
                         $q->where('academic_levels.id', $this->selectedWard->academic_level_id);
                     })
-                    ->orWhereHas('academicGroups', function($q) {
+                    ->orWhereHas('academicGroups', function ($q) {
                         if ($this->selectedWard->academicLevel && $this->selectedWard->academicLevel->academic_group_id) {
                             $q->where('academic_groups.id', $this->selectedWard->academicLevel->academic_group_id);
                         }
@@ -344,7 +362,7 @@ class Dashboard extends AppComponent
             ->orderBy('ends_at')
             ->take(5)
             ->get()
-            ->map(function($assignment) {
+            ->map(function ($assignment) {
                 return [
                     'type' => 'assignment',
                     'title' => $assignment->title,
@@ -362,10 +380,10 @@ class Dashboard extends AppComponent
             ->where('due_date', '<', now())
             ->with('book')
             ->get()
-            ->map(function($borrowing) {
+            ->map(function ($borrowing) {
                 return [
                     'type' => 'library',
-                    'title' => 'Return: ' . ($borrowing->book->title ?? 'Book'),
+                    'title' => 'Return: '.($borrowing->book->title ?? 'Book'),
                     'description' => 'Overdue book',
                     'date' => $borrowing->due_date,
                     'urgency' => 'high',
@@ -385,7 +403,9 @@ class Dashboard extends AppComponent
     #[Computed]
     public function insights()
     {
-        if (!$this->selectedWard) return collect();
+        if (! $this->selectedWard) {
+            return collect();
+        }
 
         $insights = collect();
 
@@ -395,7 +415,7 @@ class Dashboard extends AppComponent
             $insights->push([
                 'type' => 'success',
                 'title' => 'Excellent Academic Performance',
-                'message' => 'Your ward is performing excellently with an average of ' . number_format($academic['average_score'], 1) . '%',
+                'message' => 'Your ward is performing excellently with an average of '.number_format($academic['average_score'], 1).'%',
                 'icon' => 'trophy',
             ]);
         } elseif ($academic['average_score'] < 60 && $academic['total_submissions'] > 0) {
@@ -413,7 +433,7 @@ class Dashboard extends AppComponent
             $insights->push([
                 'type' => 'warning',
                 'title' => 'Attendance Concern',
-                'message' => 'Attendance is at ' . $attendance['attendance_rate'] . '%. Regular attendance is important for success.',
+                'message' => 'Attendance is at '.$attendance['attendance_rate'].'%. Regular attendance is important for success.',
                 'icon' => 'calendar',
             ]);
         }
@@ -424,7 +444,7 @@ class Dashboard extends AppComponent
             $insights->push([
                 'type' => 'info',
                 'title' => 'Fee Balance',
-                'message' => 'Outstanding balance of GHS ' . number_format($fees['balance'], 2),
+                'message' => 'Outstanding balance of GHS '.number_format($fees['balance'], 2),
                 'icon' => 'credit-card',
             ]);
         }
@@ -435,7 +455,7 @@ class Dashboard extends AppComponent
             $insights->push([
                 'type' => 'warning',
                 'title' => 'Overdue Books',
-                'message' => $library['overdue_books'] . ' book(s) overdue. Please return them soon.',
+                'message' => $library['overdue_books'].' book(s) overdue. Please return them soon.',
                 'icon' => 'book',
             ]);
         }

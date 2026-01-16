@@ -21,21 +21,23 @@ return new class extends Migration
                     ->where('id', $subscription->package_id)
                     ->first();
 
-                if (!$package) {
+                if (! $package) {
                     Log::warning('Package not found for subscription', ['subscription_id' => $subscription->id]);
+
                     continue;
                 }
 
                 // Determine pricing tier (Basic or Premium)
                 $tierName = ($package->name === 'Premium' || $package->price > 10) ? 'Premium' : 'Basic';
-                
+
                 $pricingTier = DB::table('pricing_tiers')
                     ->where('name', $tierName)
                     ->where('is_active', true)
                     ->first();
 
-                if (!$pricingTier) {
+                if (! $pricingTier) {
                     Log::warning('Pricing tier not found', ['tier_name' => $tierName]);
+
                     continue;
                 }
 
@@ -47,6 +49,7 @@ return new class extends Migration
 
                 if ($existingCycle) {
                     Log::info('User already has active cycle, skipping', ['user_id' => $subscription->user_id]);
+
                     continue;
                 }
 

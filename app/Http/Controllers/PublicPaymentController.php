@@ -94,7 +94,7 @@ class PublicPaymentController extends Controller
         // Scenario 2: Lookup by Identifiers (IDs or Emails)
         elseif ($request->filled('identifiers')) {
             $identifiers = array_filter($request->input('identifiers'), function ($value) {
-                return !is_null($value) && trim($value) !== '';
+                return ! is_null($value) && trim($value) !== '';
             });
 
             if (empty($identifiers)) {
@@ -113,7 +113,7 @@ class PublicPaymentController extends Controller
                     ->first();
 
                 // Try email if ID fails
-                if (!$student) {
+                if (! $student) {
                     $user = \App\Models\User::where('email', $identifier)->first();
                     if ($user) {
                         $student = Student::withoutGlobalScopes()
@@ -124,7 +124,7 @@ class PublicPaymentController extends Controller
                 }
 
                 if ($student) {
-                    if (!$students->contains('id', $student->id)) {
+                    if (! $students->contains('id', $student->id)) {
                         $students->push($student);
                     }
                 } else {
@@ -138,8 +138,8 @@ class PublicPaymentController extends Controller
                     ->withErrors(['lookup' => 'No students found with the provided information.']);
             }
 
-            if (!empty($notFound)) {
-                session()->flash('warning', 'Could not find students with identifiers: ' . implode(', ', $notFound));
+            if (! empty($notFound)) {
+                session()->flash('warning', 'Could not find students with identifiers: '.implode(', ', $notFound));
             }
         } else {
             return back()
@@ -152,7 +152,7 @@ class PublicPaymentController extends Controller
         $studentsData = $isBulkMode ? collect() : $students->map(function ($student) {
             return [
                 'student' => $student,
-                'options' => $this->getPaymentOptionsForStudent($student)
+                'options' => $this->getPaymentOptionsForStudent($student),
             ];
         });
 
@@ -167,7 +167,7 @@ class PublicPaymentController extends Controller
             'isBulkMode' => $isBulkMode,
             'financialAid' => $financialAid,
             'beneficiaryCount' => $beneficiaryCount,
-            'beneficiaries' => $beneficiaries
+            'beneficiaries' => $beneficiaries,
         ]);
     }
 
@@ -195,13 +195,13 @@ class PublicPaymentController extends Controller
         ]);
 
         // Logic check: if bulk_amount is present, financial_aid_id must be present
-        if ($request->filled('bulk_amount') && !$request->filled('financial_aid_id')) {
+        if ($request->filled('bulk_amount') && ! $request->filled('financial_aid_id')) {
             return back()->withErrors(['error' => 'Financial Aid context missing for bulk payment.']);
         }
 
         $totalAmount = 0;
         $paymentRecords = [];
-        $batchReference = 'BATCH-' . now()->format('YmdHis') . '-' . strtoupper(\Str::random(6));
+        $batchReference = 'BATCH-'.now()->format('YmdHis').'-'.strtoupper(\Str::random(6));
         $financialAidId = $request->input('financial_aid_id');
 
         DB::beginTransaction();
@@ -227,14 +227,14 @@ class PublicPaymentController extends Controller
 
                 $count = $beneficiaries->count();
                 if ($count === 0) {
-                    throw new \Exception("No beneficiaries found to distribute funds to.");
+                    throw new \Exception('No beneficiaries found to distribute funds to.');
                 }
 
                 // Calculate split (floor to 2 decimals)
                 $amountPerStudent = floor(($amount / $count) * 100) / 100;
 
                 if ($amountPerStudent < 0.01) {
-                    throw new \Exception("Amount per student is too small to process.");
+                    throw new \Exception('Amount per student is too small to process.');
                 }
 
                 // Common insert data
@@ -246,7 +246,7 @@ class PublicPaymentController extends Controller
 
                 // Get current term context for the school
                 $currentTermId = AcademicPeriod::where('school_id', $financialAid->school_id)
-                    ->where(function($q) {
+                    ->where(function ($q) {
                         $q->where('is_current', 1)->orWhere('status', 'active');
                     })
                     ->value('id');
@@ -273,7 +273,7 @@ class PublicPaymentController extends Controller
                             'payer_name' => $payerName,
                             'payer_email' => $payerEmail,
                             'distribution' => 'bulk_equal_share',
-                            'financial_aid_code' => $financialAid->code
+                            'financial_aid_code' => $financialAid->code,
                         ]),
                         'created_at' => $now,
                         'updated_at' => $now,
@@ -293,14 +293,16 @@ class PublicPaymentController extends Controller
                         ->with(['school', 'user'])
                         ->find($item['student_id']);
 
-                    if (!$student) continue;
+                    if (! $student) {
+                        continue;
+                    }
 
                     $amount = $item['amount'];
                     $paymentType = $item['payment_type'];
 
                     // Current Term context
                     $currentTerm = AcademicPeriod::where('school_id', $student->getUserSchoolId())
-                        ->where(function($q) {
+                        ->where(function ($q) {
                             $q->where('is_current', 1)->orWhere('status', 'active');
                         })
                         ->first();
@@ -324,7 +326,7 @@ class PublicPaymentController extends Controller
                             'term_id' => $currentTerm->id ?? null,
                             'currency' => 'GHS',
                             'status' => 'pending',
-                            'reference' => 'FEE-' . now()->format('YmdHis') . '-' . strtoupper(\Str::random(6)),
+                            'reference' => 'FEE-'.now()->format('YmdHis').'-'.strtoupper(\Str::random(6)),
                             'paystack_response' => json_encode([
                                 'batch_reference' => $batchReference,
                                 'payer_name' => $validated['payer_name'] ?? 'Guest',
@@ -360,7 +362,7 @@ class PublicPaymentController extends Controller
                                 'batch_reference' => $batchReference,
                                 'student_name' => $student->user->name ?? '',
                                 'financial_aid_id' => $financialAidId,
-                            ]
+                            ],
                         ]);
 
                         $paymentRecords[] = ['model' => $payment, 'type' => 'payment'];
@@ -374,7 +376,8 @@ class PublicPaymentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Payment Initialization Error', ['error' => $e->getMessage()]);
-            return back()->withErrors(['payment' => 'Failed to initialize payment records. ' . $e->getMessage()]);
+
+            return back()->withErrors(['payment' => 'Failed to initialize payment records. '.$e->getMessage()]);
         }
 
         // --- Initialize Paystack ---
@@ -412,7 +415,7 @@ class PublicPaymentController extends Controller
         try {
             $response = $this->paystack->initializeTransaction($paymentData);
 
-            if (empty($response['status']) || !$response['status']) {
+            if (empty($response['status']) || ! $response['status']) {
                 return back()->withErrors(['payment' => 'Unable to initialize payment gateway.']);
             }
 
@@ -426,7 +429,7 @@ class PublicPaymentController extends Controller
                     ->update([
                         'authorization_url' => $authUrl,
                         // Append gateway reference to JSON field
-                        'paystack_response' => DB::raw("JSON_SET(paystack_response, '$.gateway_reference', '{$gatewayRef}')")
+                        'paystack_response' => DB::raw("JSON_SET(paystack_response, '$.gateway_reference', '{$gatewayRef}')"),
                     ]);
             } else {
                 // Individual Update
@@ -442,7 +445,7 @@ class PublicPaymentController extends Controller
                             'paystack_response' => json_encode(array_merge(
                                 json_decode($record['model']->paystack_response, true) ?? [],
                                 ['gateway_reference' => $gatewayRef]
-                            ))
+                            )),
                         ]);
                     }
                 }
@@ -452,6 +455,7 @@ class PublicPaymentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Paystack Init Failed', ['error' => $e->getMessage()]);
+
             return back()->withErrors(['payment' => 'Gateway initialization failed.']);
         }
     }
@@ -543,7 +547,7 @@ class PublicPaymentController extends Controller
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('payments.public.lookup')
                 ->withErrors(['payment' => 'Missing payment reference.']);
         }
@@ -551,7 +555,7 @@ class PublicPaymentController extends Controller
         try {
             $response = $this->paystack->verifyTransaction($reference);
 
-            if (empty($response['status']) || !$response['status']) {
+            if (empty($response['status']) || ! $response['status']) {
                 return redirect()->route('payments.public.lookup')
                     ->withErrors(['payment' => 'Payment verification failed at gateway.']);
             }
@@ -564,7 +568,7 @@ class PublicPaymentController extends Controller
             }
 
             // Find SchoolFee records with this batch reference in paystack_response
-            $schoolFees = SchoolFee::where('paystack_response', 'like', '%"batch_reference":"' . $reference . '"%')->get();
+            $schoolFees = SchoolFee::where('paystack_response', 'like', '%"batch_reference":"'.$reference.'"%')->get();
 
             if ($schoolPayments->isEmpty() && $schoolFees->isEmpty()) {
                 return redirect()->route('payments.public.lookup')
@@ -613,6 +617,7 @@ class PublicPaymentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Callback error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+
             return redirect()->route('payments.public.lookup')
                 ->withErrors(['payment' => 'Error processing payment verification.']);
         }

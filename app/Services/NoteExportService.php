@@ -4,11 +4,10 @@ namespace App\Services;
 
 use App\Models\Note;
 use Barryvdh\DomPDF\Facade\Pdf;
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\Shared\Html;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Shared\Html;
 
 class NoteExportService
 {
@@ -17,7 +16,7 @@ class NoteExportService
      */
     public function export(Note $note, string $format = 'pdf'): array
     {
-        return match(strtolower($format)) {
+        return match (strtolower($format)) {
             'pdf' => $this->exportToPdf($note),
             'txt', 'text' => $this->exportToText($note),
             'docx', 'word' => $this->exportToDocx($note),
@@ -31,8 +30,8 @@ class NoteExportService
     public function exportToPdf(Note $note): array
     {
         try {
-            $filename = $this->sanitizeFilename($note->title) . '.pdf';
-            
+            $filename = $this->sanitizeFilename($note->title).'.pdf';
+
             $pdf = Pdf::loadView('exports.note-pdf', [
                 'note' => $note,
                 'exportDate' => now()->format('F d, Y'),
@@ -60,7 +59,7 @@ class NoteExportService
 
             return [
                 'success' => false,
-                'error' => 'Failed to export PDF: ' . $e->getMessage(),
+                'error' => 'Failed to export PDF: '.$e->getMessage(),
             ];
         }
     }
@@ -71,8 +70,8 @@ class NoteExportService
     public function exportToText(Note $note): array
     {
         try {
-            $filename = $this->sanitizeFilename($note->title) . '.txt';
-            
+            $filename = $this->sanitizeFilename($note->title).'.txt';
+
             $text = $this->generateTextContent($note);
 
             return [
@@ -89,7 +88,7 @@ class NoteExportService
 
             return [
                 'success' => false,
-                'error' => 'Failed to export text: ' . $e->getMessage(),
+                'error' => 'Failed to export text: '.$e->getMessage(),
             ];
         }
     }
@@ -100,19 +99,19 @@ class NoteExportService
     public function exportToDocx(Note $note): array
     {
         try {
-            if (!class_exists(PhpWord::class)) {
+            if (! class_exists(PhpWord::class)) {
                 throw new \RuntimeException('PhpWord library not available. Please install phpoffice/phpword');
             }
 
-            $filename = $this->sanitizeFilename($note->title) . '.docx';
-            
-            $phpWord = new PhpWord();
-            
+            $filename = $this->sanitizeFilename($note->title).'.docx';
+
+            $phpWord = new PhpWord;
+
             // Set document properties
             $properties = $phpWord->getDocInfo();
             $properties->setCreator($note->user->name);
             $properties->setTitle($note->title);
-            $properties->setDescription('Note exported from ' . config('app.name'));
+            $properties->setDescription('Note exported from '.config('app.name'));
             $properties->setCreated(time());
 
             // Add section
@@ -139,24 +138,24 @@ class NoteExportService
 
             // Metadata
             $metadataStyle = ['size' => 9, 'color' => '6B7280'];
-            
+
             if ($note->user) {
                 $section->addText(
-                    'Author: ' . $note->user->name,
+                    'Author: '.$note->user->name,
                     $metadataStyle,
                     ['spaceAfter' => 120]
                 );
             }
 
             $section->addText(
-                'Created: ' . $note->created_at->format('F d, Y'),
+                'Created: '.$note->created_at->format('F d, Y'),
                 $metadataStyle,
                 ['spaceAfter' => 120]
             );
 
             if ($note->academicSubject) {
                 $section->addText(
-                    'Subject: ' . $note->academicSubject->name,
+                    'Subject: '.$note->academicSubject->name,
                     $metadataStyle,
                     ['spaceAfter' => 120]
                 );
@@ -164,7 +163,7 @@ class NoteExportService
 
             if ($note->book) {
                 $section->addText(
-                    'Book: ' . $note->book->title,
+                    'Book: '.$note->book->title,
                     $metadataStyle,
                     ['spaceAfter' => 240]
                 );
@@ -213,7 +212,7 @@ class NoteExportService
 
             return [
                 'success' => false,
-                'error' => 'Failed to export DOCX: ' . $e->getMessage(),
+                'error' => 'Failed to export DOCX: '.$e->getMessage(),
             ];
         }
     }
@@ -226,29 +225,29 @@ class NoteExportService
         // Extract image sources
         $imageSources = [];
         preg_match_all('/<img[^>]+src=["\']([^"\'>]+)["\'][^>]*>/i', $html, $matches);
-        if (!empty($matches[1])) {
+        if (! empty($matches[1])) {
             $imageSources = $matches[1];
         }
-        
+
         // Remove img tags from HTML
         $cleanHtml = preg_replace('/<img[^>]*>/i', '[Image]', $html);
-        
+
         // Add HTML content
         Html::addHtml($section, $cleanHtml, false, false);
-        
+
         // Add images after content
         foreach ($imageSources as $src) {
             try {
                 $imagePath = null;
-                
+
                 if (filter_var($src, FILTER_VALIDATE_URL)) {
                     $imagePath = $src;
                 } elseif (str_starts_with($src, '/storage/')) {
-                    $imagePath = storage_path('app/public/' . str_replace('/storage/', '', $src));
+                    $imagePath = storage_path('app/public/'.str_replace('/storage/', '', $src));
                 } elseif (file_exists(public_path($src))) {
                     $imagePath = public_path($src);
                 }
-                
+
                 if ($imagePath && (filter_var($imagePath, FILTER_VALIDATE_URL) || file_exists($imagePath))) {
                     $section->addImage($imagePath, ['width' => 400, 'wrappingStyle' => 'inline']);
                     $section->addTextBreak(1);
@@ -264,44 +263,44 @@ class NoteExportService
      */
     protected function generateTextContent(Note $note): string
     {
-        $text = str_repeat('=', 70) . "\n";
-        $text .= strtoupper($note->title) . "\n";
-        $text .= str_repeat('=', 70) . "\n\n";
+        $text = str_repeat('=', 70)."\n";
+        $text .= strtoupper($note->title)."\n";
+        $text .= str_repeat('=', 70)."\n\n";
 
         // Metadata
         if ($note->user) {
-            $text .= "Author: " . $note->user->name . "\n";
+            $text .= 'Author: '.$note->user->name."\n";
         }
 
-        $text .= "Created: " . $note->created_at->format('F d, Y \a\t g:i A') . "\n";
+        $text .= 'Created: '.$note->created_at->format('F d, Y \a\t g:i A')."\n";
 
         if ($note->created_at != $note->updated_at) {
-            $text .= "Last Updated: " . $note->updated_at->format('F d, Y \a\t g:i A') . "\n";
+            $text .= 'Last Updated: '.$note->updated_at->format('F d, Y \a\t g:i A')."\n";
         }
 
         if ($note->academicSubject) {
-            $text .= "Subject: " . $note->academicSubject->name . "\n";
+            $text .= 'Subject: '.$note->academicSubject->name."\n";
         }
 
         if ($note->book) {
-            $text .= "Book: " . $note->book->title . "\n";
+            $text .= 'Book: '.$note->book->title."\n";
         }
 
-        $text .= "Visibility: " . ($note->is_public ? 'Public' : 'Private') . "\n";
+        $text .= 'Visibility: '.($note->is_public ? 'Public' : 'Private')."\n";
 
-        $text .= "\n" . str_repeat('-', 70) . "\n\n";
+        $text .= "\n".str_repeat('-', 70)."\n\n";
 
         // Content - strip HTML tags
         $content = strip_tags($note->content);
         $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $content = preg_replace('/\n\s*\n\s*\n/', "\n\n", $content); // Remove excessive line breaks
-        $text .= trim($content) . "\n\n";
+        $text .= trim($content)."\n\n";
 
         // Footer
-        $text .= str_repeat('-', 70) . "\n";
-        $text .= "Exported from " . config('app.name') . "\n";
-        $text .= "Export Date: " . now()->format('F d, Y \a\t g:i A') . "\n";
-        $text .= str_repeat('=', 70) . "\n";
+        $text .= str_repeat('-', 70)."\n";
+        $text .= 'Exported from '.config('app.name')."\n";
+        $text .= 'Export Date: '.now()->format('F d, Y \a\t g:i A')."\n";
+        $text .= str_repeat('=', 70)."\n";
 
         return $text;
     }
@@ -315,8 +314,8 @@ class NoteExportService
         $filename = preg_replace('/[^a-zA-Z0-9\s\-_]/', '', $filename);
         $filename = preg_replace('/\s+/', '_', $filename);
         $filename = Str::limit($filename, 100, '');
-        
-        return $filename ?: 'note_' . time();
+
+        return $filename ?: 'note_'.time();
     }
 
     /**

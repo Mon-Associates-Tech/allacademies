@@ -32,7 +32,7 @@ trait HasRoles
     public function getRoleName(): ?string
     {
         // First try to get the first role from many-to-many relationship
-        if (!$this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
             $this->load('roles');
         }
 
@@ -42,7 +42,7 @@ trait HasRoles
 
         // Fall back to single role relationship if role_id is set
         if ($this->role_id) {
-            if (!$this->relationLoaded('primaryRole')) {
+            if (! $this->relationLoaded('primaryRole')) {
                 $this->load('primaryRole');
             }
 
@@ -55,50 +55,47 @@ trait HasRoles
         return $this->attributes['role'] ?? null;
     }
 
-
     /**
      * Get all role names for this user
      */
     public function getRoleNames(): array
     {
         $roleNames = [];
-    
+
         // Load all roles relationships without filtering
-        if (!$this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
             $this->load('roles');
         }
-    
+
         // Get all role names from the relationship
         $roleNames = $this->roles()
             ->get()
             ->pluck('name')
             ->toArray();
 
-
-    
         // Add primary role if it exists
         if ($this->role_id) {
-            if (!$this->relationLoaded('primaryRole')) {
+            if (! $this->relationLoaded('primaryRole')) {
                 $this->load('primaryRole');
             }
-    
-            if ($this->primaryRole && !in_array($this->primaryRole->name, $roleNames)) {
+
+            if ($this->primaryRole && ! in_array($this->primaryRole->name, $roleNames)) {
                 $roleNames[] = $this->primaryRole->name;
             }
         }
-    
-    if (isset($this->attributes['role'])) {
-        $stringRole = $this->attributes['role'] instanceof UserRole
-            ? $this->attributes['role']->value
-            : $this->attributes['role'];
 
-        if ($stringRole && !in_array($stringRole, $roleNames)) {
-            $roleNames[] = $stringRole;
+        if (isset($this->attributes['role'])) {
+            $stringRole = $this->attributes['role'] instanceof UserRole
+                ? $this->attributes['role']->value
+                : $this->attributes['role'];
+
+            if ($stringRole && ! in_array($stringRole, $roleNames)) {
+                $roleNames[] = $stringRole;
+            }
         }
-    }
 
-    return array_values(array_filter($roleNames));
-}
+        return array_values(array_filter($roleNames));
+    }
 
     /**
      * Check if user has a specific role (checks all possible role sources)
@@ -114,7 +111,8 @@ trait HasRoles
     public function hasAnyRole(array $roleNames): bool
     {
         $userRoles = $this->getRoleNames();
-        return !empty(array_intersect($roleNames, $userRoles));
+
+        return ! empty(array_intersect($roleNames, $userRoles));
     }
 
     /**
@@ -123,6 +121,7 @@ trait HasRoles
     public function hasAllRoles(array $roleNames): bool
     {
         $userRoles = $this->getRoleNames();
+
         return empty(array_diff($roleNames, $userRoles));
     }
 
@@ -133,11 +132,11 @@ trait HasRoles
     {
         $role = Role::where('name', $roleName)->first();
 
-        if (!$role) {
+        if (! $role) {
             return false;
         }
 
-        if (!$this->roles()->where('role_id', $role->id)->exists()) {
+        if (! $this->roles()->where('role_id', $role->id)->exists()) {
             $this->roles()->attach($role->id);
         }
 
@@ -151,11 +150,12 @@ trait HasRoles
     {
         $role = Role::where('name', $roleName)->first();
 
-        if (!$role) {
+        if (! $role) {
             return false;
         }
 
         $this->roles()->detach($role->id);
+
         return true;
     }
 
@@ -166,7 +166,7 @@ trait HasRoles
     {
         $roleIds = Role::whereIn('name', $roleNames)->pluck('id')->toArray();
         $this->roles()->sync($roleIds);
+
         return true;
     }
-
 }

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Notifications\DatabaseNotification;
 use App\Models\AssignmentNotification;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -80,7 +79,7 @@ class NotificationController extends Controller
 
             if ($notification) {
                 // Mark as read if not already
-                if (!$notification->read_at) {
+                if (! $notification->read_at) {
                     $notification->markAsRead();
                 }
 
@@ -104,7 +103,7 @@ class NotificationController extends Controller
 
                 if ($notification) {
                     // Mark as read if not already
-                    if (!$notification->read_at) {
+                    if (! $notification->read_at) {
                         $notification->update(['read_at' => now()]);
                     }
 
@@ -132,7 +131,7 @@ class NotificationController extends Controller
             }
         }
 
-        if (!$notification) {
+        if (! $notification) {
             abort(404);
         }
 
@@ -204,7 +203,7 @@ class NotificationController extends Controller
 
         switch ($notification->type) {
             case 'App\Notifications\NewAssignmentNotification':
-                return $data['message'] ?? "New assignment has been created.";
+                return $data['message'] ?? 'New assignment has been created.';
             default:
                 return $data['message'] ?? 'You have a new notification.';
         }
@@ -215,6 +214,7 @@ class NotificationController extends Controller
         if ($notification->assignment) {
             return "New {$notification->assignment->type}: {$notification->assignment->title}";
         }
+
         return 'Assignment Notification';
     }
 }

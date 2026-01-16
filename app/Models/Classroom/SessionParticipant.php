@@ -11,7 +11,7 @@ class SessionParticipant extends Model
 {
     use HasFactory;
 
-    protected $table  = 'virtual_session_participants';
+    protected $table = 'virtual_session_participants';
 
     protected $fillable = [
         'virtual_session_id',
@@ -65,7 +65,7 @@ class SessionParticipant extends Model
         return $this->has_joined;
     }
 
-    public function markAsJoined(string $bbbUserId = null): void
+    public function markAsJoined(?string $bbbUserId = null): void
     {
         $joinHistory = $this->join_history ?? [];
         $joinHistory[] = [

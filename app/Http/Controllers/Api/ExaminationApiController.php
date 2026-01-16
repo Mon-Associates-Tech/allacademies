@@ -8,8 +8,8 @@ use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
 use App\Services\QuestionGenerator;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ExaminationApiController extends Controller
 {
@@ -19,6 +19,7 @@ class ExaminationApiController extends Controller
     public function getGroups(): JsonResponse
     {
         $groups = AcademicGroup::active()->select('id', 'name')->get();
+
         return response()->json(['data' => $groups]);
     }
 
@@ -28,6 +29,7 @@ class ExaminationApiController extends Controller
     public function getLevels(AcademicGroup $group): JsonResponse
     {
         $levels = $group->academicLevels()->select('id', 'name', 'label')->get();
+
         return response()->json(['data' => $levels]);
     }
 
@@ -37,6 +39,7 @@ class ExaminationApiController extends Controller
     public function getSubjects(AcademicLevel $level): JsonResponse
     {
         $subjects = $level->academicSubjects()->select('id', 'name', 'code')->get();
+
         return response()->json(['data' => $subjects]);
     }
 
@@ -50,7 +53,7 @@ class ExaminationApiController extends Controller
             ->withCount([
                 'essayQuestions',
                 'multipleChoiceQuestions',
-                'trueOrFalseQuestions'
+                'trueOrFalseQuestions',
             ])
             ->with([
                 'subtopics' => function ($query) {
@@ -60,7 +63,7 @@ class ExaminationApiController extends Controller
                             'multipleChoiceQuestions',
                             'trueOrFalseQuestions',
                         ]);
-                }
+                },
             ])
             ->get();
 
@@ -86,10 +89,10 @@ class ExaminationApiController extends Controller
             );
 
             // 2. Hydrate the sections with full question objects
-            $questionGenerator = new QuestionGenerator();
+            $questionGenerator = new QuestionGenerator;
 
             $generatedData['sections'] = collect($generatedData['sections'])->map(function ($section) use ($questionGenerator) {
-                if (!empty($section['questions'])) {
+                if (! empty($section['questions'])) {
                     // The generator returns IDs in the 'questions' key.
                     // We need to determine the type string expected by fetchCompleteQuestions
                     // e.g., convert 'multiple_choice_questions' to 'multiple_choice'
@@ -101,25 +104,26 @@ class ExaminationApiController extends Controller
                     // Format them (handling complex objects like 'Mark' or JSON strings)
                     $section['questions'] = $questionGenerator->formatExistingQuestions($fullQuestions);
                 }
+
                 return $section;
             })->toArray();
 
             return response()->json([
                 'success' => true,
-                'data' => $generatedData
+                'data' => $generatedData,
             ]);
 
         } catch (\App\Exceptions\NotEnoughQuestionsException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Not enough questions available.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to generate questions.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

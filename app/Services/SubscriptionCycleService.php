@@ -58,7 +58,7 @@ class SubscriptionCycleService
             }
 
             // Activate only the first cycle
-            if (!empty($cycles)) {
+            if (! empty($cycles)) {
                 $cycles[0]->update(['status' => 'active']);
             }
 
@@ -76,13 +76,13 @@ class SubscriptionCycleService
 
         // Get the ORIGINAL base tokens from the old tier (not the current allocated amount)
         // This prevents compounding when merging multiple times
-        $oldBaseTokens = $existingCycle->is_merged 
+        $oldBaseTokens = $existingCycle->is_merged
             ? $oldTier->monthly_token_limit  // If already merged, use tier's base limit
             : $existingCycle->getBaseTokensAllocated(); // Otherwise use current base
-        
+
         $oldTopupTokens = $existingCycle->topup_tokens_allocated;
         $newBaseTokens = $newTier->monthly_token_limit;
-        
+
         $combinedTokens = $oldBaseTokens + $newBaseTokens + $oldTopupTokens;
 
         // Calculate combined price

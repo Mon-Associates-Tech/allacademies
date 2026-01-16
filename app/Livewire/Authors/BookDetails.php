@@ -14,11 +14,17 @@ class BookDetails extends Component
     use AuthorizesRequests;
 
     public Book $book;
+
     public $showPdfReader = false;
+
     public $currentPage = 1;
+
     public $canRead = true;
+
     public $userSubscription = null;
+
     public $subscriptionData = [];
+
     public $isLoading = false;
 
     public function mount(Book $book)
@@ -28,8 +34,8 @@ class BookDetails extends Component
         $this->book = $book->load([
             'author',
             'bookCategory',
-            'subscriptions' => fn($query) => $query->latest()->take(5),
-            'borrowings' => fn($query) => $query->latest()->take(5)
+            'subscriptions' => fn ($query) => $query->latest()->take(5),
+            'borrowings' => fn ($query) => $query->latest()->take(5),
         ]);
         $this->checkUserSubscription();
 
@@ -44,7 +50,7 @@ class BookDetails extends Component
                 ->first();
 
             // User can read if they have an active subscription or if the book is free and they're subscribed
-            $this->canRead =  true; // = $this->userSubscription && $this->userSubscription->status === 'active';
+            $this->canRead = true; // = $this->userSubscription && $this->userSubscription->status === 'active';
         }
     }
 
@@ -52,23 +58,26 @@ class BookDetails extends Component
     {
         $this->isLoading = true;
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             session()->flash('error', 'Please log in to subscribe to this book.');
             $this->isLoading = false;
+
             return redirect()->route('login');
         }
 
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
             $this->isLoading = false;
+
             return;
         }
 
-        if (!$this->book->has_softcopy) {
+        if (! $this->book->has_softcopy) {
             session()->flash('error', 'This book is not available for subscription.');
             $this->isLoading = false;
+
             return;
         }
 
@@ -84,11 +93,12 @@ class BookDetails extends Component
                 session()->flash('error', 'You have a pending subscription for this book. Please complete payment.');
             }
             $this->isLoading = false;
+
             return;
         }
 
         // Create subscription
-        $reference = 'BS' . time() . $student->id . $this->book->id;
+        $reference = 'BS'.time().$student->id.$this->book->id;
 
         $subscription = BookSubscription::create([
             'student_id' => $student->id,
@@ -112,7 +122,7 @@ class BookDetails extends Component
                 'book_title' => $this->book->title,
                 'amount' => $subscription->annual_fee,
                 'reference' => $reference,
-                'subscription_id' => $subscription->id
+                'subscription_id' => $subscription->id,
             ];
             $this->dispatch('showSubscriptionModal', $this->subscriptionData);
             session()->flash('success', 'Subscription initiated! Please proceed with payment to activate your access.');
@@ -129,14 +139,13 @@ class BookDetails extends Component
                 'subscription_duration' => '1 year',
                 'annual_fee' => $subscription->annual_fee,
                 'reference' => $reference,
-                'status' => $subscription->status
+                'status' => $subscription->status,
             ])
             ->log('Student initiated book subscription');
 
         $this->checkUserSubscription();
         $this->isLoading = false;
     }
-
 
     public function openPdfReader()
     {
@@ -145,14 +154,14 @@ class BookDetails extends Component
 
             Log::info('Opening PDF reader', [
                 'content_url' => $this->book->content_url,
-                'current_page' => $this->currentPage
+                'current_page' => $this->currentPage,
             ]);
 
             // Dispatch event to trigger PDF reader with consistent structure
             $this->dispatch('pdf-reader-open', [
                 'pdfUrl' => $this->book->content_url,
                 'title' => $this->book->title,
-                'currentPage' => $this->currentPage
+                'currentPage' => $this->currentPage,
             ]);
 
         } else {

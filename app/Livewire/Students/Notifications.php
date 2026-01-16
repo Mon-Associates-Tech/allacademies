@@ -2,19 +2,21 @@
 
 namespace App\Livewire\Students;
 
-use App\Models\AssignmentSubmission;
-use Livewire\Component;
 use App\Models\AssignmentNotification;
-use Illuminate\Notifications\DatabaseNotification;
+use App\Models\AssignmentSubmission;
 use App\Notifications\NewAssignmentNotification;
+use Illuminate\Notifications\DatabaseNotification;
+use Livewire\Component;
 
 class Notifications extends Component
 {
     public $recentNotifications = [];
-    public $upcomingAssignments = [];
-    public $pendingAssignments = [];
-    public $completedAssignmentsCount = 0;
 
+    public $upcomingAssignments = [];
+
+    public $pendingAssignments = [];
+
+    public $completedAssignmentsCount = 0;
 
     public function mount()
     {
@@ -27,7 +29,7 @@ class Notifications extends Component
         $user = auth()->user();
         $notifications = collect();
 
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return;
         }
 
@@ -79,7 +81,7 @@ class Notifications extends Component
     {
         $user = auth()->user();
 
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return;
         }
 
@@ -133,12 +135,14 @@ class Notifications extends Component
             })
             ->toArray();
     }
+
     public function loadCompletedAssignmentsCount()
     {
         $user = auth()->user();
 
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             $this->completedAssignmentsCount = 0;
+
             return;
         }
 
@@ -199,7 +203,7 @@ class Notifications extends Component
 
         switch ($notification->type) {
             case NewAssignmentNotification::class:
-                return $data['message'] ?? "New assignment has been created.";
+                return $data['message'] ?? 'New assignment has been created.';
             default:
                 return $data['message'] ?? 'You have a new notification.';
         }

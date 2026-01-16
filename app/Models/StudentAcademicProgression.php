@@ -13,12 +13,12 @@ class StudentAcademicProgression extends Model
         'start_date',
         'end_date',
         'status', // current, completed, promoted, etc.
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date' => 'date'
+        'end_date' => 'date',
     ];
 
     public function student(): BelongsTo
@@ -31,4 +31,3 @@ class StudentAcademicProgression extends Model
         return $this->belongsTo(AcademicLevel::class);
     }
 }
-

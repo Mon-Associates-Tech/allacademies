@@ -19,11 +19,11 @@ class Note extends Model
         'book_id',
         'academic_subject_id',
         'is_public',
-        'background_color'
+        'background_color',
     ];
 
     protected $casts = [
-        'is_public' => 'boolean'
+        'is_public' => 'boolean',
     ];
 
     public static function getBackgroundColors(): array
@@ -42,6 +42,7 @@ class Note extends Model
     public function getBackgroundClass(): string
     {
         $colors = self::getBackgroundColors();
+
         return $colors[$this->background_color]['class'] ?? $colors['white']['class'];
     }
 
@@ -81,7 +82,7 @@ class Note extends Model
 
         // Check group-based shares
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -123,7 +124,7 @@ class Note extends Model
         }
 
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -153,6 +154,7 @@ class Note extends Model
             })
             ->exists();
     }
+
     public function canUserView($userId): bool
     {
         return $this->user_id === $userId ||
@@ -186,5 +188,4 @@ class Note extends Model
     {
         return $this->hasMany(NoteAttachment::class);
     }
-
 }

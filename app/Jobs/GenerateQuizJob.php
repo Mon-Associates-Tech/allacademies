@@ -9,7 +9,6 @@ use App\Models\Team;
 use App\Models\User;
 use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -33,11 +32,10 @@ class GenerateQuizJob implements ShouldQueue
         private User $creator,
         private string $title,
         private int $durationInMinutes,
-        private ?Carbon  $startsAt,
-        private ?Carbon  $endsAt,
+        private ?Carbon $startsAt,
+        private ?Carbon $endsAt,
         private array $sections
-    )
-    {
+    ) {
         //
     }
 
@@ -57,7 +55,7 @@ class GenerateQuizJob implements ShouldQueue
                 &$sections,
                 &$multiple_choice_questions,
                 &$true_or_false_questions
-                ) {
+            ) {
                 // TODO: validate that topics are under the right subject;
                 $questions = DB::table($section['type'])
                     ->select('id')
@@ -70,7 +68,7 @@ class GenerateQuizJob implements ShouldQueue
                     ->all();
 
                 if (count($questions) < $section['count']) {
-                    throw new NotEnoughQuestionsException();
+                    throw new NotEnoughQuestionsException;
                 }
 
                 $sections[] = [

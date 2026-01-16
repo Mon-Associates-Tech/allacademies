@@ -2,12 +2,6 @@
 
 namespace App\Traits;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
-
-
 trait HasMediaAttachments
 {
     public function mediaAttachments()
@@ -39,7 +33,7 @@ trait HasMediaAttachments
             'media_file_id' => $mediaFileId,
             'collection' => $collection,
             'metadata' => $metadata,
-            'sort_order' => $this->mediaAttachments()->where('collection', $collection)->count()
+            'sort_order' => $this->mediaAttachments()->where('collection', $collection)->count(),
         ]);
     }
 

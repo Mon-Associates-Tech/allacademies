@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 class GenerateSampleCsv extends Command
 {
     protected $signature = 'samples:generate {type=students : Type of sample to generate (students, teachers, books)}';
+
     protected $description = 'Generate sample CSV files for import testing';
 
     public function handle()
@@ -26,6 +27,7 @@ class GenerateSampleCsv extends Command
                 break;
             default:
                 $this->error("Unknown sample type: {$type}");
+
                 return 1;
         }
 
@@ -48,7 +50,7 @@ class GenerateSampleCsv extends Command
                 'date_of_birth' => '2008-05-15',
                 'phone' => '+1234567890',
                 'address' => '123 Main St, City, State',
-                'password' => 'student123'
+                'password' => 'student123',
             ],
             [
                 'name' => 'Jane Smith',
@@ -63,7 +65,7 @@ class GenerateSampleCsv extends Command
                 'date_of_birth' => '2007-09-22',
                 'phone' => '+1234567891',
                 'address' => '456 Oak Ave, City, State',
-                'password' => 'student456'
+                'password' => 'student456',
             ],
             [
                 'name' => 'Michael Johnson',
@@ -78,7 +80,7 @@ class GenerateSampleCsv extends Command
                 'date_of_birth' => '2009-08-10',
                 'phone' => '+1234567892',
                 'address' => '789 Pine Rd, City, State',
-                'password' => 'student789'
+                'password' => 'student789',
             ],
             [
                 'name' => 'Sarah Wilson',
@@ -93,7 +95,7 @@ class GenerateSampleCsv extends Command
                 'date_of_birth' => '2006-12-03',
                 'phone' => '+1234567893',
                 'address' => '321 Elm St, City, State',
-                'password' => 'student321'
+                'password' => 'student321',
             ],
             [
                 'name' => 'David Brown',
@@ -108,19 +110,19 @@ class GenerateSampleCsv extends Command
                 'date_of_birth' => '2008-03-28',
                 'phone' => '+1234567894',
                 'address' => '654 Maple Ave, City, State',
-                'password' => 'student654'
-            ]
+                'password' => 'student654',
+            ],
         ];
 
-        $filename = 'sample_students_import_' . date('Y-m-d_H-i-s') . '.csv';
-        $path = 'samples/' . $filename;
+        $filename = 'sample_students_import_'.date('Y-m-d_H-i-s').'.csv';
+        $path = 'samples/'.$filename;
 
         $csvContent = $this->arrayToCsv($sampleData);
         Storage::disk('public')->put($path, $csvContent);
 
         $this->info("Sample students CSV generated: {$filename}");
-        $this->info("Location: " . Storage::disk('public')->path($path));
-        $this->info("Download URL: " . Storage::disk('public')->url($path));
+        $this->info('Location: '.Storage::disk('public')->path($path));
+        $this->info('Download URL: '.Storage::disk('public')->url($path));
     }
 
     private function generateTeachersSample()
@@ -136,7 +138,7 @@ class GenerateSampleCsv extends Command
                 'employee_id' => 'TCH001',
                 'phone' => '+1234567800',
                 'specialization' => 'Algebra, Calculus',
-                'password' => 'teacher123'
+                'password' => 'teacher123',
             ],
             [
                 'name' => 'Prof. Bob Smith',
@@ -148,18 +150,18 @@ class GenerateSampleCsv extends Command
                 'employee_id' => 'TCH002',
                 'phone' => '+1234567801',
                 'specialization' => 'Physics, Chemistry',
-                'password' => 'teacher456'
-            ]
+                'password' => 'teacher456',
+            ],
         ];
 
-        $filename = 'sample_teachers_import_' . date('Y-m-d_H-i-s') . '.csv';
-        $path = 'samples/' . $filename;
+        $filename = 'sample_teachers_import_'.date('Y-m-d_H-i-s').'.csv';
+        $path = 'samples/'.$filename;
 
         $csvContent = $this->arrayToCsv($sampleData);
         Storage::disk('public')->put($path, $csvContent);
 
         $this->info("Sample teachers CSV generated: {$filename}");
-        $this->info("Location: " . Storage::disk('public')->path($path));
+        $this->info('Location: '.Storage::disk('public')->path($path));
     }
 
     private function generateBooksSample()
@@ -174,7 +176,7 @@ class GenerateSampleCsv extends Command
                 'published_year' => '2023',
                 'publisher' => 'Academic Press',
                 'language' => 'English',
-                'availability' => 'Available'
+                'availability' => 'Available',
             ],
             [
                 'title' => 'Advanced Mathematics',
@@ -185,18 +187,18 @@ class GenerateSampleCsv extends Command
                 'published_year' => '2022',
                 'publisher' => 'Education Books',
                 'language' => 'English',
-                'availability' => 'Available'
-            ]
+                'availability' => 'Available',
+            ],
         ];
 
-        $filename = 'sample_books_import_' . date('Y-m-d_H-i-s') . '.csv';
-        $path = 'samples/' . $filename;
+        $filename = 'sample_books_import_'.date('Y-m-d_H-i-s').'.csv';
+        $path = 'samples/'.$filename;
 
         $csvContent = $this->arrayToCsv($sampleData);
         Storage::disk('public')->put($path, $csvContent);
 
         $this->info("Sample books CSV generated: {$filename}");
-        $this->info("Location: " . Storage::disk('public')->path($path));
+        $this->info('Location: '.Storage::disk('public')->path($path));
     }
 
     private function arrayToCsv(array $data): string

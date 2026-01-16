@@ -15,12 +15,19 @@ class GuestDashboard extends Component
     use WithPagination;
 
     public $recentBooks = [];
+
     public $freeBooks = [];
+
     public $subscribedBooks = [];
+
     public $recommendedBooks = [];
+
     public $categories = [];
+
     public $subscriptionStats = [];
+
     public $guestCapabilities = [];
+
     public $quickStats = [];
 
     public function mount(): void
@@ -33,26 +40,26 @@ class GuestDashboard extends Component
         $user = Auth::user();
 
         // Get recent free books (last 5)
-        $this->recentBooks = Book::where(function($query) {
-                $query->where('is_free', true)
-                    ->orWhere('price', '<=', 0)
-                    ->orWhereNull('price')
-                    ->orWhere('annual_subscription_fee', '<=', 0)
-                    ->orWhereNull('annual_subscription_fee');
-            })
+        $this->recentBooks = Book::where(function ($query) {
+            $query->where('is_free', true)
+                ->orWhere('price', '<=', 0)
+                ->orWhereNull('price')
+                ->orWhere('annual_subscription_fee', '<=', 0)
+                ->orWhereNull('annual_subscription_fee');
+        })
             ->with(['author', 'author.user', 'bookCategory'])
             ->latest()
             ->take(6)
             ->get();
 
         // Get all free books count
-        $this->freeBooks = Book::where(function($query) {
-                $query->where('is_free', true)
-                    ->orWhere('price', '<=', 0)
-                    ->orWhereNull('price')
-                    ->orWhere('annual_subscription_fee', '<=', 0)
-                    ->orWhereNull('annual_subscription_fee');
-            })->count();
+        $this->freeBooks = Book::where(function ($query) {
+            $query->where('is_free', true)
+                ->orWhere('price', '<=', 0)
+                ->orWhereNull('price')
+                ->orWhere('annual_subscription_fee', '<=', 0)
+                ->orWhereNull('annual_subscription_fee');
+        })->count();
 
         // Get user's subscribed books
 
@@ -61,7 +68,6 @@ class GuestDashboard extends Component
             ->with(['book', 'book.author', 'book.author.user', 'book.bookCategory'])
             ->take(3)
             ->get();
-
 
         // Get recommended books (popular paid books)
         $this->recommendedBooks = Book::where('is_free', false)
@@ -80,7 +86,7 @@ class GuestDashboard extends Component
                 ->count(),
             'free_books_available' => $this->freeBooks,
             'total_books' => Book::count(),
-            'total_categories' => Category::count()
+            'total_categories' => Category::count(),
         ];
 
         // Guest capabilities
@@ -90,43 +96,43 @@ class GuestDashboard extends Component
                 'description' => 'Access our collection of free educational books',
                 'icon' => 'book',
                 'route' => 'books.index',
-                'color' => 'blue'
+                'color' => 'blue',
             ],
             [
                 'title' => 'Premium Books',
                 'description' => 'Subscribe to premium books for deeper learning',
                 'icon' => 'star',
                 'route' => 'books.index',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ],
             [
                 'title' => 'Self Assessments',
                 'description' => 'Test your knowledge with interactive quizzes',
                 'icon' => 'clipboard',
                 'route' => 'learning.quiz',
-                'color' => 'green'
+                'color' => 'green',
             ],
             [
                 'title' => 'AI Research Assistant',
                 'description' => 'Get help with your studies using AI',
                 'icon' => 'chat',
                 'route' => 'academic-chat.index',
-                'color' => 'purple'
+                'color' => 'purple',
             ],
             [
                 'title' => 'Discussion Forums',
                 'description' => 'Engage with other learners in our community',
                 'icon' => 'users',
                 'route' => 'guests.forums',
-                'color' => 'indigo'
+                'color' => 'indigo',
             ],
             [
                 'title' => 'Track Progress',
                 'description' => 'Monitor your learning journey and achievements',
                 'icon' => 'chart',
                 'route' => 'quiz.performance',
-                'color' => 'red'
-            ]
+                'color' => 'red',
+            ],
         ];
 
         // Quick stats
@@ -135,26 +141,26 @@ class GuestDashboard extends Component
                 'label' => 'Free Books',
                 'value' => $this->freeBooks,
                 'icon' => 'book-open',
-                'color' => 'blue'
+                'color' => 'blue',
             ],
             [
                 'label' => 'My Subscriptions',
                 'value' => $this->subscriptionStats['total_subscriptions'],
                 'icon' => 'bookmark',
-                'color' => 'green'
+                'color' => 'green',
             ],
             [
                 'label' => 'Messenger Tokens',
                 'value' => $user->hasActiveSubscriptionCycle() ? $user->getCurrentActiveCycle()->tokens_remaining : 0,
                 'icon' => 'zap',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ],
             [
                 'label' => 'Categories',
                 'value' => $this->subscriptionStats['total_categories'],
                 'icon' => 'grid',
-                'color' => 'purple'
-            ]
+                'color' => 'purple',
+            ],
         ];
     }
 
@@ -170,6 +176,7 @@ class GuestDashboard extends Component
 
         if ($existingSubscription) {
             $this->addError('subscription', 'You are already subscribed to this book.');
+
             return;
         }
 
@@ -193,7 +200,7 @@ class GuestDashboard extends Component
             'subscribedBooks' => $this->subscribedBooks,
             'recommendedBooks' => $this->recommendedBooks,
             'categories' => $this->categories,
-            'subscriptionStats' => $this->subscriptionStats
+            'subscriptionStats' => $this->subscriptionStats,
         ]);
     }
 }

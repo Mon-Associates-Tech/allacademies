@@ -20,8 +20,8 @@ return new class extends Migration
 
             // Add indexes for better performance
             $table->index(['student_id']);
-            $table->index(['user_id' ]);
-            $table->index(['relationship' ]);
+            $table->index(['user_id']);
+            $table->index(['relationship']);
         });
     }
 

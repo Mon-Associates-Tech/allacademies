@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SchoolPaymentStructure extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -180,7 +180,9 @@ class SchoolPaymentStructure extends Model
     public function getCollectionRate(): float
     {
         $totalStudents = $this->getApplicableStudents()->count();
-        if ($totalStudents === 0) return 0;
+        if ($totalStudents === 0) {
+            return 0;
+        }
 
         $paidStudents = $this->payments()
             ->succeeded()

@@ -7,7 +7,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Updates existing token packages to link them to pricing tiers
      */
     public function up(): void

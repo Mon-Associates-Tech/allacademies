@@ -8,15 +8,15 @@ trait ChecksTokenAvailability
 {
     /**
      * Check if user has available tokens
-     * 
-     * @param int $requiredTokens Minimum tokens required
+     *
+     * @param  int  $requiredTokens  Minimum tokens required
      * @return array ['available' => bool, 'message' => string|null, 'cycle' => SubscriptionCycle|null]
      */
     public function checkTokenAvailability(int $requiredTokens = 200): array
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'available' => false,
                 'message' => 'no_user',
@@ -28,7 +28,7 @@ trait ChecksTokenAvailability
             ->where('status', 'active')
             ->first();
 
-        if (!$cycle) {
+        if (! $cycle) {
             return [
                 'available' => false,
                 'message' => 'no_subscription',
@@ -38,6 +38,7 @@ trait ChecksTokenAvailability
 
         if ($cycle->isExpired()) {
             $cycle->update(['status' => 'expired']);
+
             return [
                 'available' => false,
                 'message' => 'expired',

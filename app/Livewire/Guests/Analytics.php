@@ -12,9 +12,13 @@ use Livewire\Component;
 class Analytics extends Component
 {
     public $timeframe = 'month'; // 'week', 'month', 'quarter', 'year'
+
     public $analyticsData = [];
+
     public $performanceMetrics = [];
+
     public $learningInsights = [];
+
     public $goals = [];
 
     public function mount()
@@ -26,7 +30,7 @@ class Analytics extends Component
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             return;
         }
 
@@ -75,18 +79,18 @@ class Analytics extends Component
             'weekly_assessment_goal' => [
                 'target' => 3,
                 'current' => $this->getWeeklyAssessmentCount(),
-                'progress' => min(100, ($this->getWeeklyAssessmentCount() / 3) * 100)
+                'progress' => min(100, ($this->getWeeklyAssessmentCount() / 3) * 100),
             ],
             'reading_goal' => [
                 'target' => 5,
                 'current' => $subscriptions->count(),
-                'progress' => min(100, ($subscriptions->count() / 5) * 100)
+                'progress' => min(100, ($subscriptions->count() / 5) * 100),
             ],
             'score_improvement_goal' => [
                 'target' => 85,
                 'current' => $this->performanceMetrics['average_score'],
-                'progress' => min(100, ($this->performanceMetrics['average_score'] / 85) * 100)
-            ]
+                'progress' => min(100, ($this->performanceMetrics['average_score'] / 85) * 100),
+            ],
         ];
 
         return [
@@ -110,7 +114,9 @@ class Analytics extends Component
 
     private function calculateImprovementRate($assessments)
     {
-        if ($assessments->count() < 2) return 0;
+        if ($assessments->count() < 2) {
+            return 0;
+        }
 
         $recent = $assessments->sortBy('created_at')->take(-5)->avg('score');
         $older = $assessments->sortBy('created_at')->take(5)->avg('score');
@@ -125,6 +131,7 @@ class Analytics extends Component
         });
 
         $totalDays = $this->getStartDate()->diffInDays(now()) + 1;
+
         return round(($days->count() / $totalDays) * 100, 1);
     }
 
@@ -142,7 +149,7 @@ class Analytics extends Component
                 return [
                     'subject' => $group->first()->subject->title ?? 'General',
                     'average_score' => round($group->avg('score'), 1),
-                    'attempts' => $group->count()
+                    'attempts' => $group->count(),
                 ];
             })
             ->sortByDesc('average_score')
@@ -158,7 +165,7 @@ class Analytics extends Component
                 return [
                     'subject' => $group->first()->subject->title ?? 'General',
                     'average_score' => round($group->avg('score'), 1),
-                    'attempts' => $group->count()
+                    'attempts' => $group->count(),
                 ];
             })
             ->sortBy('average_score')
@@ -175,9 +182,9 @@ class Analytics extends Component
         $peakHour = $hourlyDistribution->keys()->first();
 
         return [
-            'peak_study_hour' => $peakHour ? $peakHour . ':00' : 'N/A',
+            'peak_study_hour' => $peakHour ? $peakHour.':00' : 'N/A',
             'most_active_day' => $this->getMostActiveDay($assessments),
-            'average_session_length' => 25 // minutes (estimated)
+            'average_session_length' => 25, // minutes (estimated)
         ];
     }
 
@@ -212,6 +219,7 @@ class Analytics extends Component
     private function getWeeklyAssessmentCount()
     {
         $user = Auth::user();
+
         return Assessment::where('student_id', $user->student->id ?? 0)
             ->where('created_at', '>=', Carbon::now()->startOfWeek())
             ->count();
@@ -225,7 +233,7 @@ class Analytics extends Component
             return [
                 'date' => $group->first()->created_at->format('M d'),
                 'average_score' => round($group->avg('score'), 1),
-                'count' => $group->count()
+                'count' => $group->count(),
             ];
         })->values();
     }
@@ -243,7 +251,7 @@ class Analytics extends Component
             $heatmap[] = [
                 'date' => $date->format('Y-m-d'),
                 'count' => $dayAssessments->count(),
-                'intensity' => min(4, $dayAssessments->count()) // 0-4 scale for heatmap colors
+                'intensity' => min(4, $dayAssessments->count()), // 0-4 scale for heatmap colors
             ];
         }
 
@@ -257,7 +265,7 @@ class Analytics extends Component
                 return [
                     'subject' => $group->first()->subject->title ?? 'General',
                     'count' => $group->count(),
-                    'average_score' => round($group->avg('score'), 1)
+                    'average_score' => round($group->avg('score'), 1),
                 ];
             })
             ->values();

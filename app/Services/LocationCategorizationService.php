@@ -22,15 +22,15 @@ class LocationCategorizationService
     /**
      * Group users by region within a country
      */
-    public function groupByRegion(string $country = null): Collection
+    public function groupByRegion(?string $country = null): Collection
     {
         $query = User::selectRaw('country, region, COUNT(*) as user_count')
             ->whereNotNull('region');
-            
+
         if ($country) {
             $query->where('country', $country);
         }
-        
+
         return $query->groupBy('country', 'region')
             ->orderBy('country')
             ->orderByDesc('user_count')
@@ -40,19 +40,19 @@ class LocationCategorizationService
     /**
      * Group users by city within a region
      */
-    public function groupByCity(string $country = null, string $region = null): Collection
+    public function groupByCity(?string $country = null, ?string $region = null): Collection
     {
         $query = User::selectRaw('country, region, city, COUNT(*) as user_count')
             ->whereNotNull('city');
-            
+
         if ($country) {
             $query->where('country', $country);
         }
-        
+
         if ($region) {
             $query->where('region', $region);
         }
-        
+
         return $query->groupBy('country', 'region', 'city')
             ->orderBy('country')
             ->orderBy('region')
@@ -84,11 +84,11 @@ class LocationCategorizationService
                             'cities' => $regionUsers->map(function ($cityData) {
                                 return [
                                     'city' => $cityData->city,
-                                    'user_count' => $cityData->user_count
+                                    'user_count' => $cityData->user_count,
                                 ];
-                            })->values()
+                            })->values(),
                         ];
-                    })->values()
+                    })->values(),
                 ];
             })->values()->toArray();
     }

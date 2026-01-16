@@ -11,7 +11,7 @@ class CheckTokenSubscription
     /**
      * Handle an incoming request.
      *
-     * @param \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -23,7 +23,6 @@ class CheckTokenSubscription
                 $user->load('subscriptionCycles');
                 $hasActiveSubscription = $user->subscriptionCycles()->whereStatus('active')->exists();
                 $activeCycle = $user->subscriptionCycles()->whereStatus('active')->first();
-                
 
                 // Share with views (for regular Blade templates)
                 view()->share('has_token_subscription', $hasActiveSubscription);

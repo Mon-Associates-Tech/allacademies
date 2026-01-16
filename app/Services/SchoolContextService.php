@@ -19,7 +19,7 @@ class SchoolContextService
         }
 
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -30,15 +30,18 @@ class SchoolContextService
                 $school = School::find($schoolId);
                 if ($school) {
                     app()->instance('current_school', $school);
+
                     return $school;
                 }
             }
+
             return null; // Cross-school users might not have a current school
         }
 
         // For regular users, return their school
         if ($user->school_id) {
             app()->instance('current_school', $user->school);
+
             return $user->school;
         }
 
@@ -64,24 +67,23 @@ class SchoolContextService
     /**
      * Check if user is in "all schools" view
      */
-public static function isAllSchoolsView(): bool
-{
-    $user = Auth::user();
+    public static function isAllSchoolsView(): bool
+    {
+        $user = Auth::user();
 
-    if (!$user || !$user->canAccessCrossSchool()) {
-        return false;
+        if (! $user || ! $user->canAccessCrossSchool()) {
+            return false;
+        }
+
+        // Super admins and owners can see all schools by default
+        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+            // Unless they've specifically selected a school
+            return ! session()->has('current_school_id') || session('current_school_id') === null;
+        }
+
+        // For other cross-school users, check session
+        return ! session()->has('current_school_id') || session('current_school_id') === null;
     }
-
-    // Super admins and owners can see all schools by default
-    if ($user->isSuperAdmin() || $user->hasRole('owner')) {
-        // Unless they've specifically selected a school
-        return !session()->has('current_school_id') || session('current_school_id') === null;
-    }
-
-    // For other cross-school users, check session
-    return !session()->has('current_school_id') || session('current_school_id') === null;
-}
-
 
     /**
      * Get schools accessible by current user
@@ -90,7 +92,7 @@ public static function isAllSchoolsView(): bool
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return new Collection([]);
         }
 
@@ -134,7 +136,7 @@ public static function isAllSchoolsView(): bool
     {
         $user = Auth::user();
 
-        if (!$user || !$user->canAccessCrossSchool()) {
+        if (! $user || ! $user->canAccessCrossSchool()) {
             return [
                 'success' => false,
                 'message' => 'Unauthorized to switch schools',
@@ -144,7 +146,7 @@ public static function isAllSchoolsView(): bool
         if ($schoolId) {
             $school = School::find($schoolId);
 
-            if (!$school) {
+            if (! $school) {
                 return [
                     'success' => false,
                     'message' => 'School not found',
@@ -177,7 +179,7 @@ public static function isAllSchoolsView(): bool
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -212,7 +214,7 @@ public static function isAllSchoolsView(): bool
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('0=1'); // No results for unauthenticated users
         }
 

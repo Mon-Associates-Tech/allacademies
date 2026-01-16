@@ -28,17 +28,17 @@ class ForumCategory extends Model
         'academic_subject_id',
         'book_category_id',
         'required_role',
-        'moderator_ids'
+        'moderator_ids',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_private' => 'boolean',
-        'moderator_ids' => 'array'
+        'moderator_ids' => 'array',
     ];
 
     protected $with = [
-        'latestPost'
+        'latestPost',
     ];
 
     public function parent()
@@ -94,15 +94,15 @@ class ForumCategory extends Model
 
     public function canAccess(User $user): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
-        if ($this->is_private && !$this->isModerator($user)) {
+        if ($this->is_private && ! $this->isModerator($user)) {
             return false;
         }
 
-        if ($this->required_role && !$user->hasRole($this->required_role)) {
+        if ($this->required_role && ! $user->hasRole($this->required_role)) {
             return false;
         }
 

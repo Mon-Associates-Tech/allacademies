@@ -14,44 +14,69 @@ class QuizTakingPage extends Component
 {
     // Question selection and generation
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $difficulty = 'all';
+
     public $timeLimitMinutes = null;
+
     public $balancedDistribution = false;
 
     // Subject selection data
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
+
     public $questionCounts = [];
+
     public $questionDistribution = [];
 
     // Assessment state
     public $step = 'selection'; // selection, taking, results
+
     public $assessment = null;
+
     public $questions = [];
+
     public $responses = [];
+
     public $currentQuestionIndex = 0;
+
     public $timeRemaining = null;
+
     public $startTime = null;
+
     public $isTimerActive = false;
+
     public $isSubmitted = false;
+
     public $results = null;
 
     // UI state
     public $showResults = false;
+
     public $showReview = false;
+
     public $darkMode = false;
+
     public $previousAssessments = [];
+
     // Services
     protected RandomQuestionSelectionService $questionService;
+
     protected SubjectSelectionService $subjectService;
 
     protected $rules = [
@@ -137,8 +162,9 @@ class QuizTakingPage extends Component
 
     protected function updateQuestionData()
     {
-        if (!$this->selectedSubject) {
+        if (! $this->selectedSubject) {
             $this->resetQuestionData();
+
             return;
         }
 
@@ -175,7 +201,7 @@ class QuizTakingPage extends Component
     {
         $this->validate([
             'selectedSubject' => 'required',
-            'questionCount' => 'required|integer|min:1|max:50'
+            'questionCount' => 'required|integer|min:1|max:50',
         ]);
 
         try {
@@ -189,12 +215,13 @@ class QuizTakingPage extends Component
 
             if ($generatedQuestions->isEmpty()) {
                 session()->flash('error', 'No questions available for the selected criteria. Please adjust your selection.');
+
                 return;
             }
 
             // Format questions for display
             $this->questions = $this->questionService->formatQuestionsForAssessment($generatedQuestions)->toArray();
-            Log::info("Generated {" . count($this->questions) . "} questions");
+            Log::info('Generated {'.count($this->questions).'} questions');
 
             // Create assessment record
             $this->createAssessment();
@@ -211,13 +238,13 @@ class QuizTakingPage extends Component
             $this->startTime = now();
             $this->step = 'taking';
 
-            session()->flash('success', 'Assessment started with ' . count($this->questions) . ' questions!');
+            session()->flash('success', 'Assessment started with '.count($this->questions).' questions!');
 
         } catch (\Exception $e) {
             Log::error('Failed to start assessment', [
                 'error' => $e->getMessage(),
                 'config' => $config ?? null,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             session()->flash('error', 'Failed to start assessment. Please try again.');
@@ -228,7 +255,7 @@ class QuizTakingPage extends Component
     {
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             throw new \Exception('Student profile not found.');
         }
 
@@ -304,12 +331,13 @@ class QuizTakingPage extends Component
     public function isQuestionAnswered($index)
     {
         $response = $this->responses[$index] ?? null;
+
         return $response !== null && $response !== '';
     }
 
     public function getAnsweredCount()
     {
-        return count(array_filter($this->responses, function($response) {
+        return count(array_filter($this->responses, function ($response) {
             return $response !== null && $response !== '';
         }));
     }
@@ -318,6 +346,7 @@ class QuizTakingPage extends Component
     {
         $total = count($this->questions);
         $answered = $this->getAnsweredCount();
+
         return $total > 0 ? round(($answered / $total) * 100) : 0;
     }
 
@@ -337,12 +366,11 @@ class QuizTakingPage extends Component
             // Grade the responses
             $results = $this->gradeResponses();
 
-
             // Update assessment response with results
             $assessmentResponse->update([
                 'grading_data' => $results,
-                'is_graded' => !$results['needs_manual_grading'],
-                'graded_at' => !$results['needs_manual_grading'] ? now() : null,
+                'is_graded' => ! $results['needs_manual_grading'],
+                'graded_at' => ! $results['needs_manual_grading'] ? now() : null,
             ]);
 
             // Update assessment status
@@ -368,7 +396,7 @@ class QuizTakingPage extends Component
             Log::error('Failed to submit assessment', [
                 'error' => $e->getMessage(),
                 'assessment_id' => $this->assessment->id ?? null,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             session()->flash('error', 'Failed to submit assessment. Please try again.');
@@ -417,16 +445,16 @@ class QuizTakingPage extends Component
             'multiple_choice_question' => [
                 'selected_option' => $response,
                 'options' => $question['options'] ?? [],
-                'answer' => $question['answer'] ?? null
+                'answer' => $question['answer'] ?? null,
             ],
             'true_or_false_question' => [
                 'selected_answer' => filter_var($response, FILTER_VALIDATE_BOOLEAN),
-                'answer_boolean' => $response === ('True' || 'true')
+                'answer_boolean' => $response === ('True' || 'true'),
             ],
             'essay_question' => [
                 'essay_text' => $response,
                 'word_count' => str_word_count($response ?? ''),
-                'character_count' => strlen($response ?? '')
+                'character_count' => strlen($response ?? ''),
             ],
             default => $response,
         };
@@ -446,7 +474,7 @@ class QuizTakingPage extends Component
             $questionMaxScore = $question['points'] ?? 1;
             $maxScore += $questionMaxScore;
 
-            if (!empty($response)) {
+            if (! empty($response)) {
                 $gradeResult = $this->gradeQuestionResponse($question, $response);
 
                 if ($gradeResult['needs_manual_grading'] ?? false) {
@@ -465,7 +493,7 @@ class QuizTakingPage extends Component
                     'score_earned' => 0,
                     'feedback' => 'Question not answered',
                     'question_id' => $question['id'],
-                    'question_type' => $question['type']
+                    'question_type' => $question['type'],
                 ];
             }
         }
@@ -481,7 +509,7 @@ class QuizTakingPage extends Component
                 round(($this->getAnsweredCount() / count($this->questions)) * 100, 2) : 0,
             'graded_responses' => $gradedResponses,
             'needs_manual_grading' => $needsManualGrading,
-            'graded_at' => now()->toDateTimeString()
+            'graded_at' => now()->toDateTimeString(),
         ];
     }
 
@@ -497,14 +525,14 @@ class QuizTakingPage extends Component
                 'score_earned' => 0,
                 'feedback' => 'Unknown question type',
                 'question_id' => $question['id'],
-                'question_type' => $question['type']
+                'question_type' => $question['type'],
             ],
         };
     }
 
     private function gradeMultipleChoice($question, $response)
     {
-       Log::warning('Grading multiple choice question', [$question, $response]);
+        Log::warning('Grading multiple choice question', [$question, $response]);
 
         $correctAnswer = $question['answer'];
         $isCorrect = strtoupper($response) === strtoupper($correctAnswer);
@@ -516,7 +544,7 @@ class QuizTakingPage extends Component
             'question_id' => $question['id'],
             'question_type' => $question['type'],
             'selected_option' => $response,
-            'correct_answer' => $correctAnswer
+            'correct_answer' => $correctAnswer,
         ];
     }
 
@@ -529,11 +557,11 @@ class QuizTakingPage extends Component
         return [
             'is_correct' => $isCorrect,
             'score_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
-            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was ' . ($correctAnswer ? 'True' : 'False'),
+            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was '.($correctAnswer ? 'True' : 'False'),
             'question_id' => $question['id'],
             'question_type' => $question['type'],
             'selected_answer' => $response,
-            'correct_answer' => $correctAnswer
+            'correct_answer' => $correctAnswer,
         ];
     }
 
@@ -548,7 +576,7 @@ class QuizTakingPage extends Component
             'question_type' => $question['type'],
             'essay_text' => $response,
             'word_count' => str_word_count($response ?? ''),
-            'character_count' => strlen($response ?? '')
+            'character_count' => strlen($response ?? ''),
         ];
     }
 
@@ -567,7 +595,7 @@ class QuizTakingPage extends Component
     // Results Management
     public function toggleReview()
     {
-        $this->showReview = !$this->showReview;
+        $this->showReview = ! $this->showReview;
     }
 
     public function restartAssessment()
@@ -583,7 +611,7 @@ class QuizTakingPage extends Component
             'isTimerActive',
             'isSubmitted',
             'results',
-            'showReview'
+            'showReview',
         ]);
 
         $this->step = 'selection';
@@ -598,7 +626,7 @@ class QuizTakingPage extends Component
 
     public function getGrade($percentage)
     {
-      return Grade::fromPercentage($percentage);
+        return Grade::fromPercentage($percentage);
     }
 
     // Debug method for testing

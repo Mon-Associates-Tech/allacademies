@@ -23,33 +23,46 @@ class SelfAssessmentBackup extends Component
 
     // Setup phase
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $questionTypes = ['multiple_choice_question' => true, 'true_or_false_question' => true, 'essay_question' => false];
+
     public $questionCount = 10;
+
     public $difficulty = 'all'; // all, easy, medium, hard
 
     // Assessment phase
     public $currentQuestionIndex = 0;
+
     public $questions = [];
+
     public $responses = [];
+
     public $assessment = null;
+
     public $timeRemaining = null;
+
     public $timeLimitSeconds = 0;
 
     // Results phase
     public $result = null;
-    public $subjects = [];
-    public $topics = [];
-    public $subtopics = [];
 
+    public $subjects = [];
+
+    public $topics = [];
+
+    public $subtopics = [];
 
     public function mount()
     {
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $this->subjects = collect();
+
             return;
         }
 
@@ -72,7 +85,7 @@ class SelfAssessmentBackup extends Component
 
         // Merge individual subjects, removing duplicates
         foreach ($individualSubjects as $subject) {
-            if (!$this->subjects->contains('id', $subject->id)) {
+            if (! $this->subjects->contains('id', $subject->id)) {
                 $this->subjects->push($subject);
             }
         }
@@ -86,8 +99,8 @@ class SelfAssessmentBackup extends Component
             return $removedSubjects->contains($subject->id);
         });
 
-        if(count($this->subjects) === 0) {
-           $this->subjects = Subject::get();
+        if (count($this->subjects) === 0) {
+            $this->subjects = Subject::get();
         }
 
         // Log student accessing self-assessment
@@ -95,7 +108,7 @@ class SelfAssessmentBackup extends Component
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'accessed_self_assessment',
-                'page' => 'self-assessment'
+                'page' => 'self-assessment',
             ])
             ->log('Student accessed self-assessment page');
     }
@@ -115,7 +128,7 @@ class SelfAssessmentBackup extends Component
             : collect();
 
         // Reset dependent fields
-        Log::info('Selected topic: ' . $this->selectedSubject);
+        Log::info('Selected topic: '.$this->selectedSubject);
         $this->selectedTopic = null;
         $this->selectedSubtopic = null;
         $this->subtopics = collect();
@@ -128,7 +141,7 @@ class SelfAssessmentBackup extends Component
                 ->withProperties([
                     'action' => 'selected_subject_for_assessment',
                     'subject_id' => $this->selectedSubject,
-                    'subject_name' => $subject->name ?? 'Unknown'
+                    'subject_name' => $subject->name ?? 'Unknown',
                 ])
                 ->log('Student selected subject for self-assessment');
         }
@@ -151,7 +164,7 @@ class SelfAssessmentBackup extends Component
                 ->withProperties([
                     'action' => 'selected_topic_for_assessment',
                     'topic_id' => $this->selectedTopic,
-                    'topic_name' => $topic->name ?? 'Unknown'
+                    'topic_name' => $topic->name ?? 'Unknown',
                 ])
                 ->log('Student selected topic for self-assessment');
         }
@@ -165,7 +178,7 @@ class SelfAssessmentBackup extends Component
             'subtopic' => $this->selectedSubtopic,
             'question_count' => $this->questionCount,
             'difficulty' => $this->difficulty,
-            'question_types' => $this->questionTypes
+            'question_types' => $this->questionTypes,
         ]);
         $this->reset(['questions', 'responses', 'assessment']);
 
@@ -178,10 +191,11 @@ class SelfAssessmentBackup extends Component
         Log::info('Debug: After validation');
 
         // Ensure at least one question type is selected
-        if (!$this->questionTypes['multiple_choice_question'] &&
-            !$this->questionTypes['true_or_false_question'] &&
-            !$this->questionTypes['essay_question']) {
+        if (! $this->questionTypes['multiple_choice_question'] &&
+            ! $this->questionTypes['true_or_false_question'] &&
+            ! $this->questionTypes['essay_question']) {
             session()->flash('error', 'Please select at least one question type');
+
             return;
         }
 
@@ -197,9 +211,9 @@ class SelfAssessmentBackup extends Component
                 $query->where('difficulty_level', $this->difficulty);
             }
             $this->applyContentFilters($query);
-            Log::info('Debug: Multiple choice questions found: ' . $query->get()->count());
+            Log::info('Debug: Multiple choice questions found: '.$query->get()->count());
 
-            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'multiple_choice_question', 'model' => $q]));
+            $allQuestions = $allQuestions->merge($query->get()->map(fn ($q) => ['type' => 'multiple_choice_question', 'model' => $q]));
         }
 
         // True/False Questions
@@ -209,9 +223,9 @@ class SelfAssessmentBackup extends Component
                 $query->where('difficulty_level', $this->difficulty);
             }
             $this->applyContentFilters($query);
-            Log::info('Debug: True/False questions found: ' . $query->get()->count());
+            Log::info('Debug: True/False questions found: '.$query->get()->count());
 
-            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'true_or_false_question', 'model' => $q]));
+            $allQuestions = $allQuestions->merge($query->get()->map(fn ($q) => ['type' => 'true_or_false_question', 'model' => $q]));
         }
 
         // Essay Questions
@@ -221,15 +235,16 @@ class SelfAssessmentBackup extends Component
                 $query->where('difficulty_level', $this->difficulty);
             }
             $this->applyContentFilters($query);
-            Log::info('Debug: Essay questions found: ' . $query->get()->count());
-            $allQuestions = $allQuestions->merge($query->get()->map(fn($q) => ['type' => 'essay_question', 'model' => $q]));
+            Log::info('Debug: Essay questions found: '.$query->get()->count());
+            $allQuestions = $allQuestions->merge($query->get()->map(fn ($q) => ['type' => 'essay_question', 'model' => $q]));
         }
-        Log::info('Debug: Total questions found: ' . $allQuestions->count());
+        Log::info('Debug: Total questions found: '.$allQuestions->count());
 
         // Check if any questions were found
         if ($allQuestions->isEmpty()) {
             Log::info('No questions found matching the criteria');
             session()->flash('error', 'No questions found matching your criteria');
+
             return;
         }
         Log::info('Debug: Questions collected, proceeding to shuffle and limit');
@@ -259,7 +274,7 @@ class SelfAssessmentBackup extends Component
                 'model' => $questionModel,
                 'question_record' => $question, // Store the Question record for later use
                 'points' => $question->points,
-                'difficulty_level' => $question->difficulty_level
+                'difficulty_level' => $question->difficulty_level,
             ];
         }
 
@@ -270,7 +285,7 @@ class SelfAssessmentBackup extends Component
             $this->responses[$index] = [
                 'question_id' => $questionData['id'],
                 'response' => $questionData['type'] === 'essay_question' ? '' : null,
-                'is_answered' => false
+                'is_answered' => false,
             ];
         }
 
@@ -284,7 +299,7 @@ class SelfAssessmentBackup extends Component
             }
         }
 
-        Log::info('Debug: Time limit set to ' . $this->timeLimitSeconds . ' seconds');
+        Log::info('Debug: Time limit set to '.$this->timeLimitSeconds.' seconds');
 
         // Create assessment record
         $this->assessment = Assessment::create([
@@ -297,7 +312,7 @@ class SelfAssessmentBackup extends Component
             'status' => 'in_progress',
         ]);
 
-        Log::info('Debug: Assessment created with ID ' . $this->assessment->id);
+        Log::info('Debug: Assessment created with ID '.$this->assessment->id);
 
         // Set timer
         $this->timeRemaining = $this->timeLimitSeconds;
@@ -313,12 +328,12 @@ class SelfAssessmentBackup extends Component
                 'question_types' => array_keys(array_filter($this->questionTypes)),
                 'subject_id' => $this->selectedSubject,
                 'topic_id' => $this->selectedTopic,
-                'subtopic_id' => $this->selectedSubtopic
+                'subtopic_id' => $this->selectedSubtopic,
             ])
             ->log('Student started self-assessment');
 
         $this->step = 'assessment';
-        Log::info('Step after: ' . $this->step);
+        Log::info('Step after: '.$this->step);
     }
 
     private function applyContentFilters($query): void
@@ -362,22 +377,24 @@ class SelfAssessmentBackup extends Component
 
     public function saveResponse($index, $response)
     {
-        Log::info("saveResponse called", [
+        Log::info('saveResponse called', [
             'index' => $index,
             'response' => $response,
-            'current_response_data' => $this->responses[$index] ?? 'NOT_SET'
+            'current_response_data' => $this->responses[$index] ?? 'NOT_SET',
         ]);
 
-        if (!isset($this->responses[$index])) {
-            Log::error("Response index not found", ['index' => $index]);
+        if (! isset($this->responses[$index])) {
+            Log::error('Response index not found', ['index' => $index]);
+
             return;
         }
 
         $questionData = $this->questions[$index];
         $questionType = $questionData['type'];
 
-        if (!$questionType) {
-            session()->flash('error', "Unknown question type.");
+        if (! $questionType) {
+            session()->flash('error', 'Unknown question type.');
+
             return;
         }
 
@@ -391,39 +408,39 @@ class SelfAssessmentBackup extends Component
             $this->responses[$index]['is_correct'] = $isCorrect;
             $this->responses[$index]['score'] = $isCorrect ? $questionData['points'] : 0;
 
-            Log::info("Multiple choice response processed", [
+            Log::info('Multiple choice response processed', [
                 'user_answer' => $response,
                 'correct_answer' => $questionModel->answer,
                 'is_correct' => $isCorrect,
-                'score' => $this->responses[$index]['score']
+                'score' => $this->responses[$index]['score'],
             ]);
         } elseif ($questionType === 'true_or_false_question') {
             $questionModel = $questionData['model'];
             // Convert response to boolean for comparison
             $responseBoolean = $response === 'true' || $response === '1' || $response === 1 || $response === true;
-            $isCorrect = $responseBoolean === (bool)$questionModel->answer;
+            $isCorrect = $responseBoolean === (bool) $questionModel->answer;
             $this->responses[$index]['is_correct'] = $isCorrect;
             $this->responses[$index]['score'] = $isCorrect ? $questionData['points'] : 0;
 
-            Log::info("True/false response processed", [
+            Log::info('True/false response processed', [
                 'user_answer' => $response,
                 'correct_answer' => $questionModel->answer,
                 'is_correct' => $isCorrect,
-                'score' => $this->responses[$index]['score']
+                'score' => $this->responses[$index]['score'],
             ]);
         } else {
             // Essay questions don't get auto-graded
             $this->responses[$index]['is_correct'] = null;
             $this->responses[$index]['score'] = 0; // Will be manually graded later
 
-            Log::info("Essay response processed", [
-                'user_answer' => $response
+            Log::info('Essay response processed', [
+                'user_answer' => $response,
             ]);
         }
 
-        Log::info("Response after processing", [
+        Log::info('Response after processing', [
             'index' => $index,
-            'response_data' => $this->responses[$index]
+            'response_data' => $this->responses[$index],
         ]);
     }
 
@@ -433,7 +450,7 @@ class SelfAssessmentBackup extends Component
         Log::info('Starting completeAssessment', [
             'responses_count' => count($this->responses),
             'questions_count' => count($this->questions),
-            'responses' => $this->responses
+            'responses' => $this->responses,
         ]);
 
         // Calculate results
@@ -456,7 +473,7 @@ class SelfAssessmentBackup extends Component
                 'student_id' => auth()->user()->student->id,
                 'completed_at' => now()->toISOString(),
                 'time_taken_seconds' => $this->timeLimitSeconds - ($this->timeRemaining ?? 0),
-            ]
+            ],
         ];
 
         foreach ($this->responses as $index => $response) {
@@ -468,19 +485,19 @@ class SelfAssessmentBackup extends Component
             Log::info("Processing response {$index}", [
                 'response' => $response,
                 'question_type' => $questionType,
-                'is_answered' => $response['is_answered'] ?? false
+                'is_answered' => $response['is_answered'] ?? false,
             ]);
 
             // Check if question was answered - handle both 'response' and 'answer' fields
             $isAnswered = $response['is_answered'] ?? false;
             $userAnswer = $response['response'] ?? $response['answer'] ?? null;
-            $hasResponse = !empty($userAnswer) || $userAnswer === '0' || $userAnswer === 0;
+            $hasResponse = ! empty($userAnswer) || $userAnswer === '0' || $userAnswer === 0;
 
             if ($isAnswered || $hasResponse) {
                 $totalAnswered++;
 
                 // If we have an answer but no score calculated, calculate it now
-                if ($hasResponse && !isset($response['score']) && $userAnswer) {
+                if ($hasResponse && ! isset($response['score']) && $userAnswer) {
                     $this->calculateScore($index, $userAnswer, $questionData, $questionType);
                     $response = $this->responses[$index]; // Get updated response
                 }
@@ -534,11 +551,11 @@ class SelfAssessmentBackup extends Component
             'total_score' => $totalScore,
             'max_score' => $maxScore,
             'by_type' => $byType,
-            'all_responses_data' => $allResponsesData
+            'all_responses_data' => $allResponsesData,
         ]);
 
         // Save all assessment responses in a single record
-        if (!empty($allResponsesData['questions'])) {
+        if (! empty($allResponsesData['questions'])) {
             try {
                 $assessmentResponse = AssessmentResponse::create([
                     'assessment_id' => $this->assessment->id,
@@ -548,7 +565,7 @@ class SelfAssessmentBackup extends Component
             } catch (\Exception $e) {
                 Log::error('Failed to create AssessmentResponse', [
                     'error' => $e->getMessage(),
-                    'data' => $allResponsesData
+                    'data' => $allResponsesData,
                 ]);
             }
         } else {
@@ -585,7 +602,7 @@ class SelfAssessmentBackup extends Component
                 'max_score' => $maxScore,
                 'percentage_score' => $this->result['percentage_score'],
                 'questions_answered' => $totalAnswered,
-                'total_questions' => count($this->questions)
+                'total_questions' => count($this->questions),
             ])
             ->log('Student completed self-assessment');
 
@@ -604,7 +621,7 @@ class SelfAssessmentBackup extends Component
         } elseif ($questionType === 'true_or_false_question') {
             $questionModel = $questionData['model'];
             $responseBoolean = $userAnswer === 'true' || $userAnswer === '1' || $userAnswer === 1 || $userAnswer === true;
-            $isCorrect = $responseBoolean === (bool)$questionModel->answer;
+            $isCorrect = $responseBoolean === (bool) $questionModel->answer;
             $this->responses[$index]['is_correct'] = $isCorrect;
             $this->responses[$index]['score'] = $isCorrect ? $questionData['points'] : 0;
             $this->responses[$index]['response'] = $userAnswer;
@@ -617,6 +634,7 @@ class SelfAssessmentBackup extends Component
             $this->responses[$index]['is_answered'] = true;
         }
     }
+
     public function previousQuestion(): void
     {
         if ($this->currentQuestionIndex > 0) {
@@ -632,14 +650,14 @@ class SelfAssessmentBackup extends Component
             ->withProperties([
                 'action' => 'retake_assessment_requested',
                 'previous_assessment_id' => $this->assessment?->id,
-                'previous_score' => $this->result['percentage'] ?? null
+                'previous_score' => $this->result['percentage'] ?? null,
             ])
             ->log('Student requested to retake assessment');
 
         // Reset all assessment-related data
         $this->reset([
             'step', 'questions', 'responses', 'currentQuestionIndex',
-            'assessment', 'result', 'timeRemaining'
+            'assessment', 'result', 'timeRemaining',
         ]);
 
         // Set step back to setup to allow configuration changes
@@ -648,6 +666,7 @@ class SelfAssessmentBackup extends Component
         // Flash a message to inform the user
         session()->flash('info', 'Assessment reset. You can now configure and start a new assessment.');
     }
+
     public function jumpToQuestion($index): void
     {
         if ($index >= 0 && $index < count($this->questions)) {
@@ -659,7 +678,7 @@ class SelfAssessmentBackup extends Component
     {
         $this->reset([
             'step', 'questions', 'responses', 'currentQuestionIndex',
-            'assessment', 'result', 'timeRemaining'
+            'assessment', 'result', 'timeRemaining',
         ]);
         $this->step = 'setup';
     }
@@ -702,12 +721,12 @@ class SelfAssessmentBackup extends Component
 
         if ($questionType === 'multiple_choice_question') {
             foreach (['a', 'b', 'c', 'd', 'e'] as $letter) {
-                $optionKey = 'option_' . $letter;
+                $optionKey = 'option_'.$letter;
                 if ($model->{$optionKey}?->down) {
                     $options[] = [
                         'label' => strtoupper($letter),
                         'value' => $model->{$optionKey}->down,
-                        'is_correct' => strtoupper($letter) === $correctAnswer
+                        'is_correct' => strtoupper($letter) === $correctAnswer,
                     ];
                 }
             }
@@ -724,7 +743,7 @@ class SelfAssessmentBackup extends Component
             'score' => $score,
             'max_score' => $maxScore,
             'is_correct' => $isCorrect,
-            'needs_grading' => $questionType === 'essay_question'
+            'needs_grading' => $questionType === 'essay_question',
         ];
     }
 
@@ -739,13 +758,12 @@ class SelfAssessmentBackup extends Component
 
         $className = $classMap[$type] ?? null;
 
-        if (!$className) {
+        if (! $className) {
             return null;
         }
 
         // Filter questions by questionable_type class name
-        $questions = $this->questions->filter(fn($q) => $this->getQuestionType($q) === $className);
-
+        $questions = $this->questions->filter(fn ($q) => $this->getQuestionType($q) === $className);
 
         if ($questions->isEmpty()) {
             return null;
@@ -758,7 +776,9 @@ class SelfAssessmentBackup extends Component
             $response = $this->responses[$index];
             $maxScore += $question->points;
 
-            if ($type === 'essay_question') continue;
+            if ($type === 'essay_question') {
+                continue;
+            }
 
             if ($response['is_correct']) {
                 $totalScore += $question->points;
@@ -768,7 +788,7 @@ class SelfAssessmentBackup extends Component
         return [
             'score' => $totalScore,
             'max_score' => $maxScore,
-            'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0
+            'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 1) : 0,
         ];
     }
 
@@ -780,12 +800,14 @@ class SelfAssessmentBackup extends Component
     public function allQuestionsAnswered(): bool
     {
         foreach ($this->responses as $response) {
-            if (!$response['is_answered']) {
+            if (! $response['is_answered']) {
                 return false;
             }
         }
+
         return true;
     }
+
     public function nextQuestion(): void
     {
         if ($this->currentQuestionIndex < count($this->questions) - 1) {

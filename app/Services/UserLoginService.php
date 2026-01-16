@@ -6,7 +6,6 @@ use App\Models\UserLogin;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Jenssegers\Agent\Agent;
-use Carbon\Carbon;
 
 class UserLoginService
 {
@@ -14,7 +13,7 @@ class UserLoginService
 
     public function __construct()
     {
-        $this->agent = new Agent();
+        $this->agent = new Agent;
     }
 
     public function handleLogin($user): UserLogin
@@ -29,7 +28,7 @@ class UserLoginService
         ]);
 
         // Set cache for 5 minutes
-        Cache::put('user-online-' . $user->id, true, now()->addMinutes(5));
+        Cache::put('user-online-'.$user->id, true, now()->addMinutes(5));
 
         // Create new login session
         return UserLogin::create([
@@ -65,7 +64,7 @@ class UserLoginService
                 'action' => 'logged_out',
                 'logout_at' => $logoutTime,
                 'duration_minutes' => $duration,
-                'logout_type' => $logoutType
+                'logout_type' => $logoutType,
             ]);
 
             // Debug logging
@@ -75,24 +74,26 @@ class UserLoginService
                 'login_at' => $activeSession->login_at,
                 'logout_at' => $logoutTime,
                 'duration_minutes' => $duration,
-                'logout_type' => $logoutType
+                'logout_type' => $logoutType,
             ]);
         }
 
         // Update user online status
         $user->update([
             'is_online' => false,
-            'last_seen_at' => now()
+            'last_seen_at' => now(),
         ]);
 
         // Remove from cache
-        Cache::forget('user-online-' . $user->id);
+        Cache::forget('user-online-'.$user->id);
     }
 
     public function handleSessionTimeout($userId): void
     {
         $user = \App\Models\User::find($userId);
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         // Find and close all active sessions for this user
         $activeSessions = UserLogin::where('user_id', $userId)
@@ -107,7 +108,7 @@ class UserLoginService
                 'action' => 'logged_out',
                 'logout_at' => $logoutTime,
                 'duration_minutes' => max(0, $duration), // Ensure non-negative
-                'logout_type' => 'session_timeout'
+                'logout_type' => 'session_timeout',
             ]);
 
             // Debug logging
@@ -116,17 +117,17 @@ class UserLoginService
                 'session_id' => $session->id,
                 'login_at' => $session->login_at,
                 'logout_at' => $logoutTime,
-                'duration_minutes' => $duration
+                'duration_minutes' => $duration,
             ]);
         }
 
         // Update user status
         $user->update([
             'is_online' => false,
-            'last_seen_at' => now()
+            'last_seen_at' => now(),
         ]);
 
-        Cache::forget('user-online-' . $userId);
+        Cache::forget('user-online-'.$userId);
 
         // Invalidate actual sessions
         $this->invalidateAllUserSessions($userId);
@@ -135,7 +136,7 @@ class UserLoginService
     public function forceLogoutSpecificSession($sessionId): bool
     {
         $session = UserLogin::find($sessionId);
-        if (!$session || $session->logout_at) {
+        if (! $session || $session->logout_at) {
             return false;
         }
 
@@ -147,7 +148,7 @@ class UserLoginService
             'action' => 'logged_out',
             'logout_at' => $logoutTime,
             'duration_minutes' => max(0, $duration),
-            'logout_type' => 'forced'
+            'logout_type' => 'forced',
         ]);
 
         // Update user status if this was their last active session
@@ -158,11 +159,11 @@ class UserLoginService
         if ($remainingActiveSessions === 0) {
             $session->user->update([
                 'is_online' => false,
-                'last_seen_at' => now()
+                'last_seen_at' => now(),
             ]);
         }
 
-        Cache::forget('user-online-' . $session->user_id);
+        Cache::forget('user-online-'.$session->user_id);
 
         // Invalidate the actual browser session
         $this->invalidateSpecificSession($session->session_id, $session->user_id);
@@ -183,7 +184,7 @@ class UserLoginService
                     break;
 
                 case 'file':
-                    $sessionPath = storage_path('framework/sessions/sess_' . $sessionId);
+                    $sessionPath = storage_path('framework/sessions/sess_'.$sessionId);
                     if (file_exists($sessionPath)) {
                         unlink($sessionPath);
                     }
@@ -191,7 +192,7 @@ class UserLoginService
 
                 case 'redis':
                     $redis = app('redis');
-                    $key = config('session.cookie') . ':' . $sessionId;
+                    $key = config('session.cookie').':'.$sessionId;
                     $redis->del($key);
                     break;
             }
@@ -200,7 +201,7 @@ class UserLoginService
             \Log::error('Failed to invalidate specific session', [
                 'session_id' => $sessionId,
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -221,15 +222,15 @@ class UserLoginService
                     // For file sessions, we need to find sessions by content
                     $sessionPath = storage_path('framework/sessions');
                     if (is_dir($sessionPath)) {
-                        $files = glob($sessionPath . '/sess_*');
+                        $files = glob($sessionPath.'/sess_*');
                         foreach ($files as $file) {
                             $content = file_get_contents($file);
-                            if (strpos($content, 'login_web_' . sha1('web') . '";i:' . $userId . ';') !== false) {
+                            if (strpos($content, 'login_web_'.sha1('web').'";i:'.$userId.';') !== false) {
                                 unlink($file);
                             }
                         }
                     }
-                break;
+                    break;
 
                 case 'redis':
                     // This is more complex for Redis, would need to scan all keys
@@ -244,7 +245,7 @@ class UserLoginService
         } catch (\Exception $e) {
             \Log::error('Failed to invalidate all user sessions', [
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -255,7 +256,7 @@ class UserLoginService
         $user->update(['last_seen_at' => now()]);
 
         // Extend cache
-        Cache::put('user-online-' . $user->id, true, now()->addMinutes(5));
+        Cache::put('user-online-'.$user->id, true, now()->addMinutes(5));
     }
 
     private function closeExistingSessions($user): void
@@ -276,7 +277,7 @@ class UserLoginService
                 'action' => 'logged_out',
                 'logout_at' => $logoutTime,
                 'duration_minutes' => $duration,
-                'logout_type' => 'browser_close'
+                'logout_type' => 'browser_close',
             ]);
         }
     }
@@ -292,75 +293,74 @@ class UserLoginService
         return null;
     }
 
+    public function getActiveUserCount(): int
+    {
+        // Only count users with valid active sessions
+        $sessionDriver = config('session.driver');
 
-public function getActiveUserCount(): int
-{
-    // Only count users with valid active sessions
-    $sessionDriver = config('session.driver');
+        switch ($sessionDriver) {
+            case 'database':
+                // Count users who have both UserLogin active sessions AND Laravel sessions
+                return UserLogin::activeSessions()
+                    ->whereExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('sessions')
+                            ->whereColumn('sessions.id', 'user_logins.session_id');
+                    })
+                    ->distinct('user_id')
+                    ->count('user_id');
 
-    switch ($sessionDriver) {
-        case 'database':
-            // Count users who have both UserLogin active sessions AND Laravel sessions
-            return UserLogin::activeSessions()
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('sessions')
-                        ->whereColumn('sessions.id', 'user_logins.session_id');
-                })
-                ->distinct('user_id')
-                ->count('user_id');
+            case 'file':
+                // For file sessions, we need to check if session files exist
+                $activeSessions = UserLogin::activeSessions()->get();
+                $validUserIds = [];
+                $sessionPath = storage_path('framework/sessions');
 
-        case 'file':
-            // For file sessions, we need to check if session files exist
-            $activeSessions = UserLogin::activeSessions()->get();
-            $validUserIds = [];
-            $sessionPath = storage_path('framework/sessions');
-
-            foreach ($activeSessions as $session) {
-                $sessionFile = $sessionPath . '/sess_' . $session->session_id;
-                if (file_exists($sessionFile)) {
-                    $validUserIds[] = $session->user_id;
+                foreach ($activeSessions as $session) {
+                    $sessionFile = $sessionPath.'/sess_'.$session->session_id;
+                    if (file_exists($sessionFile)) {
+                        $validUserIds[] = $session->user_id;
+                    }
                 }
-            }
 
-            return count(array_unique($validUserIds));
+                return count(array_unique($validUserIds));
 
-        default:
-            // Fallback to simple count
-            return UserLogin::activeSessions()
-                ->distinct('user_id')
-                ->count('user_id');
-    }
-}
-
-public function getRealTimeActiveUserCount(): int
-{
-    // Since we're not using Redis, we'll count users who have been active recently
-    // based on their last_seen_at timestamp and cache entries
-
-    $activeUserIds = [];
-
-    // Method 1: Check users who have been seen in the last 5 minutes
-    $recentlyActiveUsers = \App\Models\User::where('is_online', true)
-        ->where('last_seen_at', '>=', now()->subMinutes(5))
-        ->pluck('id')
-        ->toArray();
-
-    // Method 2: Also check cache entries (for users who might have just logged in)
-    // We'll try to check if cache keys exist for each potentially active user
-    foreach ($recentlyActiveUsers as $userId) {
-        if (Cache::has('user-online-' . $userId)) {
-            $activeUserIds[] = $userId;
+            default:
+                // Fallback to simple count
+                return UserLogin::activeSessions()
+                    ->distinct('user_id')
+                    ->count('user_id');
         }
     }
 
-    // If no cache hits, fall back to database-only check
-    if (empty($activeUserIds)) {
-        return count($recentlyActiveUsers);
-    }
+    public function getRealTimeActiveUserCount(): int
+    {
+        // Since we're not using Redis, we'll count users who have been active recently
+        // based on their last_seen_at timestamp and cache entries
 
-    return count(array_unique($activeUserIds));
-}
+        $activeUserIds = [];
+
+        // Method 1: Check users who have been seen in the last 5 minutes
+        $recentlyActiveUsers = \App\Models\User::where('is_online', true)
+            ->where('last_seen_at', '>=', now()->subMinutes(5))
+            ->pluck('id')
+            ->toArray();
+
+        // Method 2: Also check cache entries (for users who might have just logged in)
+        // We'll try to check if cache keys exist for each potentially active user
+        foreach ($recentlyActiveUsers as $userId) {
+            if (Cache::has('user-online-'.$userId)) {
+                $activeUserIds[] = $userId;
+            }
+        }
+
+        // If no cache hits, fall back to database-only check
+        if (empty($activeUserIds)) {
+            return count($recentlyActiveUsers);
+        }
+
+        return count(array_unique($activeUserIds));
+    }
 
     public function getUserSessionStats($userId): array
     {
@@ -376,7 +376,7 @@ public function getRealTimeActiveUserCount(): int
             'total_sessions' => $totalSessions,
             'total_duration_minutes' => $totalDuration,
             'average_duration_minutes' => $averageDuration,
-            'active_sessions' => UserLogin::where('user_id', $userId)->activeSessions()->count()
+            'active_sessions' => UserLogin::where('user_id', $userId)->activeSessions()->count(),
         ];
     }
 }

@@ -10,8 +10,11 @@ use Livewire\Component;
 class Assessments extends Component
 {
     public $currentView = 'dashboard'; // 'dashboard', 'take-assessment', 'results'
+
     public $selectedSubject = null;
+
     public $assessmentHistory = null;
+
     public $subjects = [];
 
     public function mount()

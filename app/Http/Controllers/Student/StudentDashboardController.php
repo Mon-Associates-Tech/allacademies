@@ -5,14 +5,11 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicChatSession;
 use App\Models\Book;
-use App\Models\BookQuestion;
-use App\Models\EducationalChatSession;
 use App\Models\QuizSession;
 use App\Models\ReadingProgress;
 use App\Models\User;
 use App\Services\AcademicChatService;
 use App\Services\BookBasedLearningService;
-use App\Services\EducationalChatService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,13 +21,13 @@ use Illuminate\Support\Facades\Log;
 class StudentDashboardController extends Controller
 {
     protected $chatService;
+
     protected $bookLearningService;
 
     public function __construct(
-        AcademicChatService      $chatService,
+        AcademicChatService $chatService,
         BookBasedLearningService $bookLearningService
-    )
-    {
+    ) {
         $this->chatService = $chatService;
         $this->bookLearningService = $bookLearningService;
         $this->middleware('auth');
@@ -75,7 +72,7 @@ class StudentDashboardController extends Controller
             'recommendedBooks' => $recommendedBooks,
             'recentQuizzes' => $recentQuizzes,
             'insights' => $insights,
-            'availableSubjects' => $this->chatService->getAvailableSubjects()
+            'availableSubjects' => $this->chatService->getAvailableSubjects(),
         ]);
     }
 
@@ -91,7 +88,7 @@ class StudentDashboardController extends Controller
             'basic_info' => [
                 'age' => $user->age,
                 'academic_level' => $user->academic_level ?? 'high_school',
-                'learning_style' => $user->learning_style ?? 'visual'
+                'learning_style' => $user->learning_style ?? 'visual',
             ],
             'reading_stats' => $readingProgress,
             'quiz_performance' => [
@@ -100,7 +97,7 @@ class StudentDashboardController extends Controller
                 'best_score' => $recentQuizzes->max('score') ?? 0,
                 'total_quizzes' => QuizSession::where('user_id', $user->id)
                     ->where('status', 'completed')
-                    ->count()
+                    ->count(),
             ],
             'achievements' => ReadingAchievement::where('user_id', $user->id)
                 ->latest('earned_at')
@@ -110,14 +107,14 @@ class StudentDashboardController extends Controller
                     return [
                         'name' => $achievement->achievement_name,
                         'description' => $achievement->description,
-                        'earned_at' => $achievement->earned_at->diffForHumans()
+                        'earned_at' => $achievement->earned_at->diffForHumans(),
                     ];
                 }),
             'goals' => [
                 'current_streak' => $readingProgress['reading_streak'],
                 'books_this_month' => $this->getBooksReadThisMonth($user),
-                'pages_this_week' => $this->getPagesReadThisWeek($user)
-            ]
+                'pages_this_week' => $this->getPagesReadThisWeek($user),
+            ],
         ];
     }
 
@@ -144,7 +141,7 @@ class StudentDashboardController extends Controller
                     return ($progress->current_page / max($progress->total_pages, 1)) * 100;
                 }) : 0,
             'reading_streak' => $this->calculateReadingStreak($user),
-            'favorite_categories' => $this->getFavoriteCategories($allProgress)
+            'favorite_categories' => $this->getFavoriteCategories($allProgress),
         ];
     }
 
@@ -172,8 +169,8 @@ class StudentDashboardController extends Controller
         $currentDate = now()->format('Y-m-d');
 
         // Check if user read today or yesterday
-        if (!$recentActivity->contains($currentDate) &&
-            !$recentActivity->contains(now()->subDay()->format('Y-m-d'))) {
+        if (! $recentActivity->contains($currentDate) &&
+            ! $recentActivity->contains(now()->subDay()->format('Y-m-d'))) {
             return 0;
         }
 
@@ -205,6 +202,7 @@ class StudentDashboardController extends Controller
         }
 
         arsort($categories);
+
         return array_slice($categories, 0, 3, true);
     }
 
@@ -221,6 +219,7 @@ class StudentDashboardController extends Controller
             ->get()
             ->map(function ($session) {
                 $results = $session->results ?? [];
+
                 return [
                     'id' => $session->id,
                     'book_title' => $session->book->title,
@@ -229,7 +228,7 @@ class StudentDashboardController extends Controller
                     'grade' => $this->calculateLetterGrade($results['percentage'] ?? 0),
                     'question_count' => $results['total_questions'] ?? 0,
                     'date' => $session->completed_at,
-                    'time_taken' => $session->time_taken
+                    'time_taken' => $session->time_taken,
                 ];
             });
     }
@@ -286,7 +285,7 @@ class StudentDashboardController extends Controller
             ->whereNotIn('id', $completedBookIds);
 
         // Prioritize books in favorite categories
-        if (!empty($favoriteCategories)) {
+        if (! empty($favoriteCategories)) {
             $query->whereHas('bookCategory', function ($q) use ($favoriteCategories) {
                 $q->whereIn('name', array_keys($favoriteCategories));
             });
@@ -306,7 +305,7 @@ class StudentDashboardController extends Controller
             'subject' => 'nullable|string',
             'academic_level' => 'nullable|string',
             'author' => 'nullable|string',
-            'search' => 'nullable|string|max:100'
+            'search' => 'nullable|string|max:100',
         ]);
 
         $query = Book::query()
@@ -322,14 +321,14 @@ class StudentDashboardController extends Controller
         }
 
         if ($validated['author'] ?? null) {
-            $query->where('author', 'LIKE', '%' . $validated['author'] . '%');
+            $query->where('author', 'LIKE', '%'.$validated['author'].'%');
         }
 
         if ($validated['search'] ?? null) {
             $query->where(function ($q) use ($validated) {
-                $q->where('title', 'LIKE', '%' . $validated['search'] . '%')
-                    ->orWhere('author', 'LIKE', '%' . $validated['search'] . '%')
-                    ->orWhere('description', 'LIKE', '%' . $validated['search'] . '%');
+                $q->where('title', 'LIKE', '%'.$validated['search'].'%')
+                    ->orWhere('author', 'LIKE', '%'.$validated['search'].'%')
+                    ->orWhere('description', 'LIKE', '%'.$validated['search'].'%');
             });
         }
 
@@ -342,8 +341,8 @@ class StudentDashboardController extends Controller
             'pagination' => [
                 'current_page' => $books->currentPage(),
                 'total_pages' => $books->lastPage(),
-                'total_items' => $books->total()
-            ]
+                'total_items' => $books->total(),
+            ],
         ]);
     }
 
@@ -355,7 +354,7 @@ class StudentDashboardController extends Controller
         $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
             'chapter_id' => 'nullable|exists:book_chapters,id',
-            'page_number' => 'nullable|integer|min:1'
+            'page_number' => 'nullable|integer|min:1',
         ]);
 
         $user = auth()->user();
@@ -364,13 +363,13 @@ class StudentDashboardController extends Controller
         // Create or update reading progress
         $progress = ReadingProgress::updateOrCreate([
             'user_id' => $user->id,
-            'book_id' => $book->id
+            'book_id' => $book->id,
         ], [
             'current_chapter_id' => $validated['chapter_id'] ?? $book->chapters->first()?->id,
             'current_page' => $validated['page_number'] ?? 1,
             'status' => 'reading',
             'started_at' => now(),
-            'last_read_at' => now()
+            'last_read_at' => now(),
         ]);
 
         return response()->json([
@@ -384,8 +383,8 @@ class StudentDashboardController extends Controller
                 'total_chapters' => $book->chapters->count(),
                 'total_pages' => $book->total_pages,
                 'current_chapter' => $progress->currentChapter?->title,
-                'current_page' => $progress->current_page
-            ]
+                'current_page' => $progress->current_page,
+            ],
         ]);
     }
 
@@ -403,7 +402,7 @@ class StudentDashboardController extends Controller
             'question_count' => 'required|integer|min:1|max:20',
             'difficulty' => 'nullable|string|in:easy,medium,hard',
             'focus_topics' => 'nullable|array',
-            'include_quotes' => 'nullable|boolean'
+            'include_quotes' => 'nullable|boolean',
         ]);
 
         $user = auth()->user();
@@ -429,7 +428,7 @@ class StudentDashboardController extends Controller
                 'questions' => $quizData['questions'],
                 'context' => $readingContext,
                 'status' => 'active',
-                'started_at' => now()
+                'started_at' => now(),
             ]);
 
             return response()->json([
@@ -442,24 +441,24 @@ class StudentDashboardController extends Controller
                     'question_type' => $validated['question_type'],
                     'total_questions' => count($quizData['questions']),
                     'estimated_duration' => $this->estimateQuizDuration($quizData['questions']),
-                    'difficulty' => $validated['difficulty'] ?? 'medium'
+                    'difficulty' => $validated['difficulty'] ?? 'medium',
                 ],
                 'questions' => $this->formatQuestionsForFrontend($quizData['questions'], $validated['question_type']),
                 'instructions' => $this->getQuizInstructions($validated['question_type'], $book),
-                'reading_tips' => $this->getReadingTips($user->learning_style ?? 'visual', $book->bookCategory->name ?? 'General')
+                'reading_tips' => $this->getReadingTips($user->learning_style ?? 'visual', $book->bookCategory->name ?? 'General'),
             ]);
 
         } catch (Exception $e) {
             Log::error('Quiz generation failed', [
                 'user_id' => $user->id,
                 'book_id' => $book->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'error' => 'Unable to generate quiz. Please try again or select a different range.',
-                'fallback_options' => $this->getFallbackQuizOptions($book)
+                'fallback_options' => $this->getFallbackQuizOptions($book),
             ], 500);
         }
     }
@@ -477,15 +476,15 @@ class StudentDashboardController extends Controller
                 'publication_year' => $book->publication_year,
                 'summary' => $book->summary,
                 'themes' => $book->themes ?? [],
-                'reading_level' => $book->reading_level
+                'reading_level' => $book->reading_level,
             ],
             'scope' => [],
             'user_context' => [
                 'academic_level' => $user->academic_level,
                 'age' => $user->age,
                 'learning_style' => $user->learning_style,
-                'reading_preferences' => $user->reading_preferences ?? []
-            ]
+                'reading_preferences' => $user->reading_preferences ?? [],
+            ],
         ];
 
         // Add chapter context if specified
@@ -498,7 +497,7 @@ class StudentDashboardController extends Controller
                     'summary' => $chapter->summary,
                     'key_concepts' => $chapter->key_concepts ?? [],
                     'page_start' => $chapter->page_start,
-                    'page_end' => $chapter->page_end
+                    'page_end' => $chapter->page_end,
                 ];
             }
         }
@@ -508,7 +507,7 @@ class StudentDashboardController extends Controller
             $context['scope']['pages'] = [
                 'start' => $parameters['page_start'],
                 'end' => $parameters['page_end'],
-                'range' => $parameters['page_end'] - $parameters['page_start'] + 1
+                'range' => $parameters['page_end'] - $parameters['page_start'] + 1,
             ];
         }
 
@@ -535,13 +534,13 @@ class StudentDashboardController extends Controller
             'response_format' => 'structured',
             'difficulty' => $parameters['difficulty'] ?? 'medium',
             'creativity_level' => 0.6, // Balanced creativity for questions
-            'response_length' => 2000
+            'response_length' => 2000,
         ];
 
         $result = $this->chatService->chat($chatParameters);
 
-        if (!$result['success']) {
-            throw new Exception('Failed to generate quiz questions: ' . $result['error']);
+        if (! $result['success']) {
+            throw new Exception('Failed to generate quiz questions: '.$result['error']);
         }
 
         // Parse the AI response into structured questions
@@ -576,7 +575,7 @@ class StudentDashboardController extends Controller
         }
 
         if ($book['themes']) {
-            $prompt .= "Key Themes: " . implode(', ', $book['themes']) . "\n";
+            $prompt .= 'Key Themes: '.implode(', ', $book['themes'])."\n";
         }
 
         $prompt .= "\nQuestion Guidelines:\n";
@@ -628,7 +627,7 @@ class StudentDashboardController extends Controller
         }
 
         if ($parameters['focus_topics'] ?? null) {
-            $prompt .= "\nFocus on these specific topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+            $prompt .= "\nFocus on these specific topics: ".implode(', ', $parameters['focus_topics'])."\n";
         }
 
         if ($parameters['include_quotes'] ?? false) {
@@ -652,7 +651,7 @@ class StudentDashboardController extends Controller
             if ($jsonData && isset($jsonData['questions'])) {
                 return [
                     'questions' => $jsonData['questions'],
-                    'metadata' => $jsonData['metadata'] ?? []
+                    'metadata' => $jsonData['metadata'] ?? [],
                 ];
             }
         }
@@ -673,7 +672,9 @@ class StudentDashboardController extends Controller
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             // Detect question start
             if (preg_match('/^(\d+[\.\)]|\*\*Question \d+|\d+:)/', $line)) {
@@ -688,13 +689,13 @@ class StudentDashboardController extends Controller
                     'options' => [],
                     'correct_answer' => null,
                     'explanation' => null,
-                    'difficulty' => 'medium'
+                    'difficulty' => 'medium',
                 ];
             } // Detect multiple choice options
             elseif ($currentQuestion && preg_match('/^[A-D][\.\)]/', $line)) {
                 $currentQuestion['options'][] = [
                     'id' => substr($line, 0, 1),
-                    'text' => trim(substr($line, 2))
+                    'text' => trim(substr($line, 2)),
                 ];
             } // Detect answers
             elseif ($currentQuestion && (stripos($line, 'answer:') === 0 || stripos($line, 'correct:') === 0)) {
@@ -718,8 +719,8 @@ class StudentDashboardController extends Controller
             'metadata' => [
                 'generated_count' => count($questions),
                 'requested_count' => $questionCount,
-                'question_type' => $questionType
-            ]
+                'question_type' => $questionType,
+            ],
         ];
     }
 
@@ -736,7 +737,7 @@ class StudentDashboardController extends Controller
                         ['id' => 'A', 'text' => 'Option A'],
                         ['id' => 'B', 'text' => 'Option B'],
                         ['id' => 'C', 'text' => 'Option C'],
-                        ['id' => 'D', 'text' => 'Option D']
+                        ['id' => 'D', 'text' => 'Option D'],
                     ];
                     $question['correct_answer'] = 'A';
                 }
@@ -745,9 +746,9 @@ class StudentDashboardController extends Controller
             case 'true_false':
                 $question['options'] = [
                     ['id' => 'true', 'text' => 'True'],
-                    ['id' => 'false', 'text' => 'False']
+                    ['id' => 'false', 'text' => 'False'],
                 ];
-                if (!in_array(strtolower($question['correct_answer'] ?? ''), ['true', 'false'])) {
+                if (! in_array(strtolower($question['correct_answer'] ?? ''), ['true', 'false'])) {
                     $question['correct_answer'] = 'true';
                 }
                 break;
@@ -771,14 +772,14 @@ class StudentDashboardController extends Controller
                 'Try selecting a specific chapter instead of the entire book',
                 'Use a smaller page range (20-50 pages works best)',
                 'Choose "Easy" or "Medium" difficulty',
-                'Reduce the number of questions to 5-10'
+                'Reduce the number of questions to 5-10',
             ],
             'alternative_books' => Book::where('book_category_id', $book->book_category_id)
                 ->where('id', '!=', $book->id)
                 ->published()
                 ->limit(3)
                 ->pluck('title', 'id')
-                ->toArray()
+                ->toArray(),
         ];
     }
 
@@ -794,7 +795,7 @@ class StudentDashboardController extends Controller
             'section_id' => 'nullable|exists:book_sections,id',
             'page_number' => 'nullable|integer|min:1',
             'quote' => 'nullable|string|max:500',
-            'question_type' => 'nullable|in:comprehension,analysis,interpretation,character,theme,plot,setting'
+            'question_type' => 'nullable|in:comprehension,analysis,interpretation,character,theme,plot,setting',
         ]);
 
         $user = auth()->user();
@@ -815,7 +816,7 @@ class StudentDashboardController extends Controller
             'response_format' => 'detailed',
             'accommodations' => $user->learning_accommodations ?? [],
             'creativity_level' => 0.7, // Balanced for literary analysis
-            'response_length' => 1200
+            'response_length' => 1200,
         ];
 
         $result = $this->chatService->chat($chatParameters);
@@ -832,17 +833,17 @@ class StudentDashboardController extends Controller
                     'author' => $book->author,
                     'chapter' => $questionContext['chapter_title'] ?? null,
                     'section' => $questionContext['section_title'] ?? null,
-                    'page' => $validated['page_number'] ?? null
+                    'page' => $validated['page_number'] ?? null,
                 ],
                 'follow_up_suggestions' => $this->generateBookFollowUpQuestions($book, $validated, $result),
                 'related_concepts' => $this->getRelatedLiteraryConcepts($book, $validated),
-                'reading_comprehension_tips' => $this->getComprehensionTips($user->learning_style, $book->genre)
+                'reading_comprehension_tips' => $this->getComprehensionTips($user->learning_style, $book->genre),
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'error' => 'Unable to process your question about the book. Please try rephrasing or contact support.'
+            'error' => 'Unable to process your question about the book. Please try rephrasing or contact support.',
         ], 500);
     }
 
@@ -854,7 +855,7 @@ class StudentDashboardController extends Controller
         $validated = $request->validate([
             'quiz_session_id' => 'required|exists:quiz_sessions,id',
             'answers' => 'required|array',
-            'time_taken' => 'nullable|integer|min:1' // in seconds
+            'time_taken' => 'nullable|integer|min:1', // in seconds
         ]);
 
         $user = auth()->user();
@@ -873,7 +874,7 @@ class StudentDashboardController extends Controller
                 'results' => $gradingResult,
                 'time_taken' => $validated['time_taken'] ?? null,
                 'completed_at' => now(),
-                'status' => 'completed'
+                'status' => 'completed',
             ]);
 
             // Update reading progress based on quiz performance
@@ -891,25 +892,25 @@ class StudentDashboardController extends Controller
                     'correct_answers' => $gradingResult['correct_answers'],
                     'grade' => $this->calculateLetterGrade($gradingResult['percentage']),
                     'time_taken' => $validated['time_taken'] ?? null,
-                    'performance_level' => $this->getPerformanceLevel($gradingResult['percentage'])
+                    'performance_level' => $this->getPerformanceLevel($gradingResult['percentage']),
                 ],
                 'detailed_feedback' => $feedback,
                 'question_breakdown' => $gradingResult['question_details'],
                 'improvement_suggestions' => $this->getImprovementSuggestions($gradingResult, $quizSession),
                 'next_steps' => $this->getNextReadingSteps($user, $quizSession->book, $gradingResult),
-                'badges_earned' => $this->checkBadgesEarned($user, $gradingResult, $quizSession)
+                'badges_earned' => $this->checkBadgesEarned($user, $gradingResult, $quizSession),
             ]);
 
         } catch (Exception $e) {
             Log::error('Quiz grading failed', [
                 'quiz_session_id' => $quizSession->id,
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Unable to grade quiz. Please try again.'
+                'error' => 'Unable to grade quiz. Please try again.',
             ], 500);
         }
     }
@@ -923,7 +924,7 @@ class StudentDashboardController extends Controller
             'book_id' => 'required|exists:books,id',
             'analysis_type' => 'required|in:themes,characters,plot,setting,style,symbolism,historical_context',
             'chapter_id' => 'nullable|exists:book_chapters,id',
-            'depth' => 'nullable|in:overview,detailed,comprehensive'
+            'depth' => 'nullable|in:overview,detailed,comprehensive',
         ]);
 
         $user = auth()->user();
@@ -945,7 +946,7 @@ class StudentDashboardController extends Controller
             'response_format' => 'detailed',
             'difficulty' => $this->getAnalysisDifficulty($user->academic_level),
             'creativity_level' => 0.8, // Higher creativity for analysis
-            'response_length' => 1500
+            'response_length' => 1500,
         ];
 
         $result = $this->chatService->chat($chatParameters);
@@ -958,17 +959,17 @@ class StudentDashboardController extends Controller
                     'book' => $book->title,
                     'author' => $book->author,
                     'content' => $result['content'],
-                    'depth_level' => $validated['depth'] ?? 'detailed'
+                    'depth_level' => $validated['depth'] ?? 'detailed',
                 ],
                 'discussion_questions' => $this->generateDiscussionQuestions($book, $validated['analysis_type']),
                 'related_readings' => $this->getRelatedReadings($book, $validated['analysis_type']),
-                'study_activities' => $this->getSuggestedStudyActivities($book, $validated['analysis_type'], $user->learning_style)
+                'study_activities' => $this->getSuggestedStudyActivities($book, $validated['analysis_type'], $user->learning_style),
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'error' => 'Unable to generate analysis. Please try again.'
+            'error' => 'Unable to generate analysis. Please try again.',
         ], 500);
     }
 
@@ -993,8 +994,8 @@ class StudentDashboardController extends Controller
                 'reading_history' => count($readingHistory),
                 'preferred_genres' => $preferences['genres'] ?? [],
                 'academic_level' => $user->academic_level,
-                'recent_performance' => $this->getRecentReadingPerformance($user)
-            ]
+                'recent_performance' => $this->getRecentReadingPerformance($user),
+            ],
         ]);
     }
 
@@ -1012,15 +1013,15 @@ class StudentDashboardController extends Controller
                 'summary' => $book->additional_info ?? '',
                 'average_rating' => $book->average_rating,
                 'has_audio' => $book->has_audio,
-                'has_video' => $book->has_video
+                'has_video' => $book->has_video,
             ],
             'scope' => [],
             'user_context' => [
                 'academic_level' => $user->academic_level ?? 'high_school',
                 'age' => $user->age,
                 'learning_style' => $user->learning_style ?? 'visual',
-                'reading_preferences' => $user->reading_preferences ?? []
-            ]
+                'reading_preferences' => $user->reading_preferences ?? [],
+            ],
         ];
 
         // Add chapter context if specified using existing table_of_contents
@@ -1035,7 +1036,7 @@ class StudentDashboardController extends Controller
                     'title' => $chapter['title'],
                     'description' => $chapter['description'] ?? '',
                     'page_range' => $chapter['page_range'] ?? '',
-                    'page_count' => $chapter['page_count'] ?? 0
+                    'page_count' => $chapter['page_count'] ?? 0,
                 ];
             }
         }
@@ -1045,7 +1046,7 @@ class StudentDashboardController extends Controller
             $context['scope']['pages'] = [
                 'start' => $parameters['page_start'],
                 'end' => $parameters['page_end'],
-                'range' => $parameters['page_end'] - $parameters['page_start'] + 1
+                'range' => $parameters['page_end'] - $parameters['page_start'] + 1,
             ];
         }
 
@@ -1096,13 +1097,13 @@ class StudentDashboardController extends Controller
             'response_format' => 'structured',
             'difficulty' => $parameters['difficulty'] ?? 'medium',
             'creativity_level' => 0.6,
-            'response_length' => 2000
+            'response_length' => 2000,
         ];
 
         $result = $this->chatService->chat($chatParameters);
 
-        if (!$result['success']) {
-            throw new Exception('Failed to generate quiz questions: ' . $result['error']);
+        if (! $result['success']) {
+            throw new Exception('Failed to generate quiz questions: '.$result['error']);
         }
 
         // Parse the AI response into structured questions
@@ -1190,7 +1191,7 @@ class StudentDashboardController extends Controller
         }
 
         if ($parameters['focus_topics'] ?? null) {
-            $prompt .= "\nFocus on these specific topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+            $prompt .= "\nFocus on these specific topics: ".implode(', ', $parameters['focus_topics'])."\n";
         }
 
         if ($parameters['include_quotes'] ?? false) {
@@ -1214,7 +1215,7 @@ class StudentDashboardController extends Controller
             if ($jsonData && isset($jsonData['questions'])) {
                 return [
                     'questions' => $this->validateQuestions($jsonData['questions']),
-                    'metadata' => $jsonData['metadata'] ?? []
+                    'metadata' => $jsonData['metadata'] ?? [],
                 ];
             }
         }
@@ -1237,7 +1238,7 @@ class StudentDashboardController extends Controller
                 'correct_answer' => $question['correct_answer'] ?? '',
                 'explanation' => $question['explanation'] ?? '',
                 'difficulty' => $question['difficulty'] ?? 'medium',
-                'points' => $this->getQuestionPoints($question['type'] ?? 'multiple_choice')
+                'points' => $this->getQuestionPoints($question['type'] ?? 'multiple_choice'),
             ];
         }, $questions, array_keys($questions));
     }
@@ -1255,7 +1256,9 @@ class StudentDashboardController extends Controller
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             // Detect question start
             if (preg_match('/^(\d+[\.\)]|\*\*Question \d+)/', $line)) {
@@ -1272,7 +1275,7 @@ class StudentDashboardController extends Controller
                     'correct_answer' => '',
                     'explanation' => '',
                     'difficulty' => 'medium',
-                    'points' => $this->getQuestionPoints($questionType)
+                    'points' => $this->getQuestionPoints($questionType),
                 ];
             }
         }
@@ -1285,8 +1288,8 @@ class StudentDashboardController extends Controller
             'questions' => array_slice($questions, 0, $questionCount),
             'metadata' => [
                 'generated_count' => count($questions),
-                'parsing_method' => 'text_fallback'
-            ]
+                'parsing_method' => 'text_fallback',
+            ],
         ];
     }
 
@@ -1302,7 +1305,7 @@ class StudentDashboardController extends Controller
                         ['id' => 'A', 'text' => 'Option A'],
                         ['id' => 'B', 'text' => 'Option B'],
                         ['id' => 'C', 'text' => 'Option C'],
-                        ['id' => 'D', 'text' => 'Option D']
+                        ['id' => 'D', 'text' => 'Option D'],
                     ];
                     $question['correct_answer'] = 'A';
                 }
@@ -1311,7 +1314,7 @@ class StudentDashboardController extends Controller
             case 'true_false':
                 $question['options'] = [
                     ['id' => 'true', 'text' => 'True'],
-                    ['id' => 'false', 'text' => 'False']
+                    ['id' => 'false', 'text' => 'False'],
                 ];
                 $question['correct_answer'] = 'true';
                 break;

@@ -2,19 +2,17 @@
 
 namespace App\Livewire\SchoolSettings;
 
-use App\Models\AcademicFeeStructure; // Keeping for backward compatibility if needed, but primary is SchoolPaymentStructure
-use App\Models\SchoolPaymentStructure;
+// Keeping for backward compatibility if needed, but primary is SchoolPaymentStructure
 use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
-use App\Models\AcademicGroup;
 use App\Models\School;
+use App\Models\SchoolPaymentStructure;
 use App\Models\Subaccount;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Log;
 
 class FeeStructureSetup extends Component
 {
@@ -22,43 +20,73 @@ class FeeStructureSetup extends Component
 
     // Form Fields
     public $name;
+
     public $academic_year_id = '';
+
     public $academic_group_id = '';
+
     public $academic_level_id = '';
+
     public $academic_period_id = ''; // Replaces current_term_id
+
     public $payment_type = '';
+
     public $custom_payment_type = ''; // For custom payment types
+
     public $use_custom_payment_type = false; // Toggle between predefined and custom
+
     public $subaccount_id = ''; // Account to receive payment
+
     public $amount = '';
+
     public $due_date = '';
+
     public $payment_period = '';
+
     public $is_mandatory = true;
+
     public $allow_partial_payment = false;
+
     public $minimum_partial_amount = '';
+
     public $description = '';
 
     // On-the-fly creation fields
     public $new_year_start_date;
+
     public $new_year_end_date;
+
     public $new_period_name;
+
     public $new_period_type = 'term';
+
     public $new_period_sequence = 1;
+
     public $new_period_start_date;
+
     public $new_period_end_date;
 
     // Collections
     public $academicYears = [];
+
     public $academicGroups = [];
+
     public $academicLevels = [];
+
     public $academicPeriods = [];
+
     public $paymentTypes = [];
+
     public $paymentPeriods = [];
+
     public $schoolSubaccounts = []; // Available subaccounts for the school
 
     public $showFormModal = false;
+
     public $formMode = 'create';
+
     public $editingFeeId = null;
+
     public $viewingFee = null;
 
     protected $listeners = ['academicYearCreated' => 'refreshAcademicYears'];
@@ -83,12 +111,12 @@ class FeeStructureSetup extends Component
             'description' => 'nullable|string',
         ];
 
-        if (!$this->academic_year_id && $this->new_year_start_date) {
+        if (! $this->academic_year_id && $this->new_year_start_date) {
             $rules['new_year_start_date'] = 'required|date';
             $rules['new_year_end_date'] = 'required|date|after:new_year_start_date';
         }
 
-        if (!$this->academic_period_id && $this->new_period_start_date) {
+        if (! $this->academic_period_id && $this->new_period_start_date) {
             $rules['new_period_name'] = 'required|string|max:255';
             $rules['new_period_type'] = 'required|string';
             $rules['new_period_sequence'] = 'required|integer|min:1';
@@ -115,11 +143,11 @@ class FeeStructureSetup extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             $this->schoolSubaccounts = collect();
+
             return;
         }
-
 
         $this->schoolSubaccounts = Subaccount::whereIn('subaccountable_type', [School::class, 'school'])
             ->where('subaccountable_id', $schoolId)
@@ -130,7 +158,7 @@ class FeeStructureSetup extends Component
             ->map(function ($account) {
                 return [
                     'id' => $account->id,
-                    'label' => ($account->is_primary ? '[Primary] ' : '') . ($account->name ?? $account->business_name),
+                    'label' => ($account->is_primary ? '[Primary] ' : '').($account->name ?? $account->business_name),
                     'name' => $account->name,
                     'business_name' => $account->business_name,
                     'bank' => $account->settlement_bank,
@@ -144,8 +172,9 @@ class FeeStructureSetup extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             $this->academicYears = collect();
+
             return;
         }
 
@@ -158,18 +187,24 @@ class FeeStructureSetup extends Component
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
         if ($user->canAccessCrossSchool()) {
             $sessionSchoolId = session('current_school_id');
-            if ($sessionSchoolId) return $sessionSchoolId;
-            if (app()->bound('current_school_id')) return app('current_school_id');
+            if ($sessionSchoolId) {
+                return $sessionSchoolId;
+            }
+            if (app()->bound('current_school_id')) {
+                return app('current_school_id');
+            }
             if (app()->bound('current_school')) {
                 $school = app('current_school');
+
                 return $school ? $school->id : null;
             }
+
             return null;
         }
 
@@ -180,8 +215,9 @@ class FeeStructureSetup extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             $this->academicGroups = collect();
+
             return;
         }
 
@@ -215,8 +251,9 @@ class FeeStructureSetup extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId || !$this->academic_group_id) {
+        if (! $schoolId || ! $this->academic_group_id) {
             $this->academicLevels = [];
+
             return;
         }
 
@@ -230,8 +267,9 @@ class FeeStructureSetup extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             $this->academicPeriods = [];
+
             return;
         }
 
@@ -277,7 +315,7 @@ class FeeStructureSetup extends Component
             'description',
             'editingFeeId',
             'new_year_start_date', 'new_year_end_date',
-            'new_period_name', 'new_period_type', 'new_period_sequence', 'new_period_start_date', 'new_period_end_date'
+            'new_period_name', 'new_period_type', 'new_period_sequence', 'new_period_start_date', 'new_period_end_date',
         ]);
         $this->is_mandatory = true;
         $this->allow_partial_payment = false;
@@ -295,14 +333,13 @@ class FeeStructureSetup extends Component
                 'academicGroup',
                 'academicLevel',
                 'academicPeriod',
-                'academicYear'
+                'academicYear',
             ])
             ->findOrFail($id);
 
         // Only serialize what is needed for view if using x-data, but since we use blade conditional, direct object is fine
         $this->js("window.Modal.open('fee-structure-details')");
     }
-
 
     public function closeViewModal()
     {
@@ -360,14 +397,15 @@ class FeeStructureSetup extends Component
 
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             session()->flash('error', 'No school context found. Please select a school.');
+
             return;
         }
 
         try {
             // Handle on-the-fly creations
-            if (!$this->academic_year_id && $this->new_year_start_date) {
+            if (! $this->academic_year_id && $this->new_year_start_date) {
                 $year = new AcademicYear([
                     'school_id' => $schoolId,
                     'start_date' => $this->new_year_start_date,
@@ -380,7 +418,7 @@ class FeeStructureSetup extends Component
                 $this->academic_year_id = $year->id;
             }
 
-            if (!$this->academic_period_id && $this->new_period_start_date) {
+            if (! $this->academic_period_id && $this->new_period_start_date) {
                 $period = new AcademicPeriod([
                     'school_id' => $schoolId,
                     'academic_year_id' => $this->academic_year_id ?: null,
@@ -394,7 +432,9 @@ class FeeStructureSetup extends Component
                 ]);
                 if ($period->academic_year_id) {
                     $year = AcademicYear::find($period->academic_year_id);
-                    if ($year) $period->academic_year = $year->getDisplayName();
+                    if ($year) {
+                        $period->academic_year = $year->getDisplayName();
+                    }
                 }
                 $period->save();
                 $this->academic_period_id = $period->id;
@@ -435,8 +475,8 @@ class FeeStructureSetup extends Component
 
             $this->closeModal();
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to save payment structure: ' . $e->getMessage());
-            \Illuminate\Support\Facades\Log::error('Payment structure save error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to save payment structure: '.$e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Payment structure save error: '.$e->getMessage());
         }
     }
 
@@ -482,7 +522,7 @@ class FeeStructureSetup extends Component
 
         return view('livewire.school-settings.fee-structure-setup', [
             'schoolFees' => $schoolFees,
-            'otherFees' => $otherFees
+            'otherFees' => $otherFees,
         ]);
     }
 }
