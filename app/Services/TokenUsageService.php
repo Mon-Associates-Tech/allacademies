@@ -22,12 +22,12 @@ class TokenUsageService
         $subscriptionCycle = $user->getCurrentActiveCycle();
 
         // Retry once if no cycle found (handles stale data/connection issues)
-        if (!$subscriptionCycle) {
+        if (! $subscriptionCycle) {
             $user->load('subscriptionCycles');
             $subscriptionCycle = $user->getCurrentActiveCycle();
         }
 
-        if (!$subscriptionCycle) {
+        if (! $subscriptionCycle) {
             Log::warning('Token usage logging skipped: No active subscription cycle found for user.', [
                 'user_id' => $user->id,
                 'request_type' => $requestType,
@@ -44,7 +44,7 @@ class TokenUsageService
 
         try {
             // Primary: Check if user has sufficient tokens
-            if (!$subscriptionCycle->hasTokens($totalTokens)) {
+            if (! $subscriptionCycle->hasTokens($totalTokens)) {
                 Log::warning('Insufficient tokens in active subscription cycle.', [
                     'user_id' => $user->id,
                     'required_tokens' => $totalTokens,
@@ -60,7 +60,7 @@ class TokenUsageService
             // Deduct tokens from subscription cycle
             $deductionSuccess = $subscriptionCycle->deductTokens($totalTokens);
 
-            if (!$deductionSuccess) {
+            if (! $deductionSuccess) {
                 Log::error('Failed to deduct tokens from subscription cycle.', [
                     'user_id' => $user->id,
                     'subscription_cycle_id' => $subscriptionCycle->id,
@@ -115,7 +115,7 @@ class TokenUsageService
     {
         $cycle = $user->getCurrentActiveCycle();
 
-        if (!$cycle) {
+        if (! $cycle) {
             Log::warning('No active subscription cycle found for token deduction', [
                 'user_id' => $user->id,
                 'tokens_requested' => $tokens,

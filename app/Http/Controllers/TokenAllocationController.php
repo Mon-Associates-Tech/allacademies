@@ -13,7 +13,7 @@ class TokenAllocationController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (! auth()->user()->isSuperAdmin() && ! auth()->user()->isOwner()) {
+            if (!auth()->user()->isSuperAdmin() && !auth()->user()->isOwner()) {
                 abort(403, 'Unauthorized access');
             }
 
@@ -43,6 +43,7 @@ class TokenAllocationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'model' => 'required|string|max:255',
+            'base_price' => 'required|numeric|min:0',
             'initial_price' => 'required|numeric|min:0',
             'subsequent_price' => 'required|numeric|min:0',
             'monthly_token_limit' => 'required|integer|min:1',
@@ -67,6 +68,7 @@ class TokenAllocationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'model' => 'required|string|max:255',
+            'base_price' => 'required|numeric|min:0',
             'initial_price' => 'required|numeric|min:0',
             'subsequent_price' => 'required|numeric|min:0',
             'monthly_token_limit' => 'required|integer|min:1',
@@ -136,7 +138,7 @@ class TokenAllocationController extends Controller
         });
 
         return redirect()->route('token-allocations.index')
-            ->with('success', 'Tokens assigned to '.count($validated['user_ids']).' user(s) successfully');
+            ->with('success', 'Tokens assigned to ' . count($validated['user_ids']) . ' user(s) successfully');
     }
 
     public function getUsersJson(Request $request)
@@ -156,7 +158,7 @@ class TokenAllocationController extends Controller
             ->map(function ($user) {
                 return [
                     'id' => $user->id,
-                    'text' => $user->name.' ('.$user->email.')',
+                    'text' => $user->name . ' (' . $user->email . ')',
                 ];
             });
 

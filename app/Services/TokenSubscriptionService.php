@@ -35,7 +35,7 @@ class TokenSubscriptionService
             // FIX: Compare enum with enum, not string
             if ($isTopUp && $currentSubscription &&
                 $currentSubscription->status === TokenSubscriptionStatus::ACTIVE &&
-                !$currentSubscription->isExpired() &&
+                ! $currentSubscription->isExpired() &&
                 $currentSubscription->tokens_remaining > 0 &&
                 $currentSubscription->action_type !== 'trial') {
 
@@ -73,12 +73,11 @@ class TokenSubscriptionService
      * Replace an existing subscription with a new one
      */
     protected function replaceSubscription(
-        User                   $user,
+        User $user,
         ?UserTokenSubscription $currentSubscription,
-        OpenAiTokenPackage     $newPackage,
-        bool                   $preserveTokens = true
-    ): UserTokenSubscription
-    {
+        OpenAiTokenPackage $newPackage,
+        bool $preserveTokens = true
+    ): UserTokenSubscription {
         // Free packages should NEVER go through this method
         // They should be created directly via User::createFreeTrialSubscription()
         if ($newPackage->isFree()) {
@@ -92,7 +91,7 @@ class TokenSubscriptionService
         // FIX: Compare enum with enum
         if ($preserveTokens && $currentSubscription &&
             $currentSubscription->status === TokenSubscriptionStatus::ACTIVE &&
-            !$currentSubscription->isExpired() &&
+            ! $currentSubscription->isExpired() &&
             $currentSubscription->tokens_remaining > 0) {
 
             $carryOverTokens = $currentSubscription->tokens_remaining;
@@ -142,15 +141,19 @@ class TokenSubscriptionService
 
     protected function determineActionType(?UserTokenSubscription $current, OpenAiTokenPackage $new): string
     {
-        if (!$current || $current->action_type === 'trial') {
+        if (! $current || $current->action_type === 'trial') {
             return 'purchase';
         }
 
         $currentPrice = $current->package ? $current->package->price : $current->pricingTier?->initial_price ?? 0;
         $newPrice = $new->price;
 
-        if ($newPrice > $currentPrice) return 'upgrade';
-        if ($newPrice < $currentPrice) return 'downgrade';
+        if ($newPrice > $currentPrice) {
+            return 'upgrade';
+        }
+        if ($newPrice < $currentPrice) {
+            return 'downgrade';
+        }
 
         return 'purchase';
     }
@@ -288,7 +291,7 @@ class TokenSubscriptionService
         $user = $topupSubscription->user;
         $topupInfo = session('topup_info');
 
-        if (!$topupInfo) {
+        if (! $topupInfo) {
             Log::error('Topup session info missing', [
                 'subscription_id' => $topupSubscription->id,
             ]);
@@ -304,7 +307,7 @@ class TokenSubscriptionService
             ->where('id', $cycleId)
             ->first();
 
-        if (!$cycle) {
+        if (! $cycle) {
             Log::error('Topup cycle not found', [
                 'cycle_id' => $cycleId,
                 'user_id' => $user->id,
@@ -316,7 +319,7 @@ class TokenSubscriptionService
         // Get the pricing tier to calculate tokens from amount
         $pricingTier = $cycle->pricingTier;
 
-        if (!$pricingTier) {
+        if (! $pricingTier) {
             Log::error('Pricing tier not found for topup', [
                 'cycle_id' => $cycleId,
                 'pricing_tier_id' => $pricingTierId,
@@ -328,7 +331,7 @@ class TokenSubscriptionService
         // Calculate tokens based on the pricing tier's rate
         // Example: 7000 tokens for $10 = 700 tokens per $1
         // So $23 topup = 23 * 700 = 16,100 tokens
-        $topupTokens = $pricingTier->calculateTokensFromAmount((float)$amount);
+        $topupTokens = $pricingTier->calculateTokensFromAmount((float) $amount);
 
         if ($topupTokens <= 0) {
             Log::warning('Topup calculated to zero tokens', [
@@ -357,7 +360,7 @@ class TokenSubscriptionService
             'topup_tokens' => $topupTokens,
             'user_id' => $user->id,
             'pricing_tier_id' => $pricingTier->id,
-            'tokens_per_currency' => $pricingTier->monthly_token_limit / (float)$pricingTier->initial_price,
+            'tokens_per_currency' => $pricingTier->monthly_token_limit / (float) $pricingTier->initial_price,
         ]);
 
         // Clear topup session
@@ -407,7 +410,7 @@ class TokenSubscriptionService
             'total_spent' => round($totalSpent ?? 0, 2),
             'total_tokens_purchased' => $totalTokensPurchased,
             'total_tokens_used' => $totalTokensUsed,
-            'has_active' => (bool)$currentCycle,
+            'has_active' => (bool) $currentCycle,
             'needs_upgrade' => $user->needsTokenUpgrade(),
         ];
     }

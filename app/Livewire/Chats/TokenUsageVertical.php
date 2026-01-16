@@ -8,6 +8,7 @@ use Livewire\Component;
 class TokenUsageVertical extends Component
 {
     public $subscription;
+
     public $showAlert = false;
 
     protected $listeners = ['tokenUsageUpdated' => 'loadSubscription'];

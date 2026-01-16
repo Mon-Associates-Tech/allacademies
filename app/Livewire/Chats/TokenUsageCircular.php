@@ -8,6 +8,7 @@ use Livewire\Component;
 class TokenUsageCircular extends Component
 {
     public $subscription;
+
     public $showAlert = false;
 
     protected $listeners = ['tokenUsageUpdated' => 'loadSubscription'];
@@ -33,16 +34,25 @@ class TokenUsageCircular extends Component
 
     public function getProgressColor()
     {
-        if (!$this->subscription) {
+        if (! $this->subscription) {
             return '#9CA3AF';
         }
 
         $percentage = $this->subscription->usage_percentage;
 
-        if ($percentage <= 25) return '#10b981';
-        if ($percentage <= 50) return '#84cc16';
-        if ($percentage <= 75) return '#eab308';
-        if ($percentage <= 90) return '#f97316';
+        if ($percentage <= 25) {
+            return '#10b981';
+        }
+        if ($percentage <= 50) {
+            return '#84cc16';
+        }
+        if ($percentage <= 75) {
+            return '#eab308';
+        }
+        if ($percentage <= 90) {
+            return '#f97316';
+        }
+
         return '#ef4444';
     }
 

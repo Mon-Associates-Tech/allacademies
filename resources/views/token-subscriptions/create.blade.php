@@ -190,7 +190,7 @@
                                             $isBasic = $tier->name === 'Basic';
                                         @endphp
                                         <button
-                                            @click="selectedTier = {{ $tier->id }}"
+                                            @click="selectedTier = {{ $tier->id }}; $nextTick(() => document.getElementById('duration-section').scrollIntoView({ behavior: 'smooth', block: 'start' }))"
                                             type="button"
                                             class="text-left h-full group/form transition-all duration-300 border-2 {{ $isPremium ? 'border-purple-200 dark:border-purple-700' : 'border-blue-200 dark:border-blue-700' }} rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden transform hover:scale-105 hover:-translate-y-1 animate-fadeInUp {{ $isPremium ? 'ring-2 ring-purple-400 ring-offset-2 dark:ring-offset-gray-900' : '' }}"
                                             style="animation-delay: {{ $loop->index === 0 ? '0.2s' : '0.3s' }};" :class="{
@@ -248,13 +248,28 @@
 
                                                 {{-- Pricing Structure --}}
                                                 <div class="mb-6 space-y-3">
-                                                    {{-- Initial Period --}}
+                                                    {{-- Base Price (Month 1) --}}
                                                     <div
                                                         class="p-4 bg-gradient-to-br {{ $isPremium ? 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' : 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' }} rounded-xl border {{ $isPremium ? 'border-purple-200 dark:border-purple-700' : 'border-blue-200 dark:border-blue-700' }}">
                                                         <div class="flex justify-between items-start mb-2">
                                                             <div>
                                                                 <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                                                                    First 6 Months</p>
+                                                                    Month 1</p>
+                                                                <p class="text-2xl font-bold {{ $isPremium ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }} mt-1">
+                                                                    GH₵ {{ number_format($tier->base_price, 2) }}</p>
+                                                            </div>
+                                                            <span
+                                                                class="inline-block px-2 py-1 bg-{{ $isPremium ? 'purple' : 'blue' }}-200 dark:bg-{{ $isPremium ? 'purple' : 'blue' }}-800 rounded text-xs font-semibold text-{{ $isPremium ? 'purple' : 'blue' }}-700 dark:text-{{ $isPremium ? 'purple' : 'blue' }}-200">Base</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Initial Period (Months 2-6) --}}
+                                                    <div
+                                                        class="p-4 bg-gradient-to-br {{ $isPremium ? 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20' : 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20' }} rounded-xl border {{ $isPremium ? 'border-purple-200 dark:border-purple-700' : 'border-blue-200 dark:border-blue-700' }}">
+                                                        <div class="flex justify-between items-start mb-2">
+                                                            <div>
+                                                                <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                                                                    Months 2-6</p>
                                                                 <p class="text-2xl font-bold {{ $isPremium ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }} mt-1">
                                                                     GH₵ {{ number_format($tier->initial_price, 2) }}
                                                                     /month</p>
@@ -264,13 +279,13 @@
                                                         </div>
                                                     </div>
 
-                                                    {{-- Subsequent Period --}}
+                                                    {{-- Subsequent Period (Month 7+) --}}
                                                     <div
                                                         class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-700">
                                                         <div class="flex justify-between items-start mb-2">
                                                             <div>
                                                                 <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                                                                    After 6 Months</p>
+                                                                    Month 7+</p>
                                                                 <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
                                                                     GH₵ {{ number_format($tier->subsequent_price, 2) }}
                                                                     /month</p>
@@ -346,7 +361,7 @@
                             </div>
 
                             {{-- Step 2: Duration Selection --}}
-                            <div x-show="selectedTier" x-transition class="mb-12 max-w-4xl mx-auto">
+                            <div x-show="selectedTier" x-transition class="mb-12 max-w-4xl mx-auto" id="duration-section">
                                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Step 2: Select
                                     Duration (Months)</h2>
                                 <div
@@ -371,6 +386,9 @@
                                     </div>
 
                                     {{-- Price Calculation --}}
+                                    @php
+                                        $tierData = $pricingTiers->keyBy('id');
+                                    @endphp
                                     <template x-if="selectedTier">
                                         <div
                                             class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
@@ -384,16 +402,35 @@
                                                     <span class="font-semibold text-gray-900 dark:text-white"
                                                           x-text="`${selectedMonths} month(s)`"></span>
                                                 </div>
-                                                <div
-                                                    class="flex justify-between items-center pb-3 border-b border-blue-200 dark:border-blue-700">
-                                                    <span class="text-gray-600 dark:text-gray-400">Monthly Rate</span>
-                                                    <span class="font-semibold text-gray-900 dark:text-white"
-                                                          x-text="selectedTier === 1 ? 'GH₵ {{ number_format($pricingTiers->first()->initial_price, 2) }}' : 'GH₵ {{ number_format($pricingTiers->last()->initial_price, 2) }}'"></span>
-                                                </div>
                                                 <div class="flex justify-between items-center pt-3">
                                                     <span class="text-lg font-bold text-gray-900 dark:text-white">Total Cost</span>
                                                     <span class="text-2xl font-bold text-blue-600 dark:text-blue-400"
-                                                          x-text="`GH₵ ${(selectedMonths * (selectedTier === 1 ? {{ $pricingTiers->first()->initial_price }} : {{ $pricingTiers->last()->initial_price }})).toFixed(2)}`"></span>
+                                                          x-text="(() => {
+                                                              const tierPricing = {
+                                                                  @foreach($pricingTiers as $tier)
+                                                                  {{ $tier->id }}: {
+                                                                      base: {{ $tier->base_price }},
+                                                                      initial: {{ $tier->initial_price }},
+                                                                      subsequent: {{ $tier->subsequent_price }},
+                                                                      initialPeriod: {{ $tier->initial_period_months }}
+                                                                  },
+                                                                  @endforeach
+                                                              };
+                                                              const tier = tierPricing[selectedTier];
+                                                              if (!tier) return 'GH₵ 0.00';
+                                                              
+                                                              let total = 0;
+                                                              for (let i = 1; i <= selectedMonths; i++) {
+                                                                  if (i === 1) {
+                                                                      total += tier.base;
+                                                                  } else if (i <= tier.initialPeriod) {
+                                                                      total += tier.initial;
+                                                                  } else {
+                                                                      total += tier.subsequent;
+                                                                  }
+                                                              }
+                                                              return `GH₵ ${total.toFixed(2)}`;
+                                                          })()"></span>
                                                 </div>
                                             </div>
                                         </div>

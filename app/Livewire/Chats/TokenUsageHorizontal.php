@@ -8,7 +8,9 @@ use Livewire\Component;
 class TokenUsageHorizontal extends Component
 {
     public $subscription;
+
     public $showAlert = false;
+
     public $showText = true; // New prop
 
     protected $listeners = ['tokenUsageUpdated' => 'loadSubscription'];
