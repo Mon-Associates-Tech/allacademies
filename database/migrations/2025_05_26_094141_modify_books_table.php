@@ -12,16 +12,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->string('status')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('is_free')->default(false);
-            $table->decimal('price')->nullable();
-            $table->string('cover_image')->nullable();
-            $table->string('content_url')->nullable();
-            $table->date('publication_date')->nullable();
-            $table->string('language')->nullable();
+            if (!Schema::hasColumn('books', 'status')) {
+                $table->string('status')->nullable();
+            }
+            if (!Schema::hasColumn('books', 'description')) {
+                $table->text('description')->nullable();
+            }
+            if (!Schema::hasColumn('books', 'is_free')) {
+                $table->boolean('is_free')->default(false);
+            }
+            if (!Schema::hasColumn('books', 'price')) {
+                $table->decimal('price')->nullable();
+            }
+            if (!Schema::hasColumn('books', 'cover_image')) {
+                $table->string('cover_image')->nullable();
+            }
+            if (!Schema::hasColumn('books', 'content_url')) {
+                $table->string('content_url')->nullable();
+            }
+            if (!Schema::hasColumn('books', 'publication_date')) {
+                $table->date('publication_date')->nullable();
+            }
+            if (!Schema::hasColumn('books', 'language')) {
+                $table->string('language')->nullable();
+            }
         });
-
     }
 
     /**

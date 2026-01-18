@@ -12,39 +12,54 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->unsignedBigInteger('school_id')->nullable();
-            $table->foreign('school_id')->references('id')->on('schools');
-            $table->unsignedBigInteger('academic_group_id')->nullable();
-            $table->foreign('academic_group_id')->references('id')->on('academic_groups');
-            $table->unsignedBigInteger('academic_level_id')->nullable();
-            $table->foreign('academic_level_id')->references('id')->on('academic_levels');
+            if (!Schema::hasColumn('students', 'school_id')) {
+                $table->unsignedBigInteger('school_id')->nullable();
+                $table->foreign('school_id')->references('id')->on('schools');
+            }
+            if (!Schema::hasColumn('students', 'academic_group_id')) {
+                $table->unsignedBigInteger('academic_group_id')->nullable();
+                $table->foreign('academic_group_id')->references('id')->on('academic_groups');
+            }
+            if (!Schema::hasColumn('students', 'academic_level_id')) {
+                $table->unsignedBigInteger('academic_level_id')->nullable();
+                $table->foreign('academic_level_id')->references('id')->on('academic_levels');
+            }
         });
 
         Schema::table('teachers', function (Blueprint $table) {
-            $table->unsignedBigInteger('school_id')->nullable();
-            $table->foreign('school_id')->references('id')->on('schools');
+            if (!Schema::hasColumn('teachers', 'school_id')) {
+                $table->unsignedBigInteger('school_id')->nullable();
+                $table->foreign('school_id')->references('id')->on('schools');
+            }
         });
 
         Schema::table('books', function (Blueprint $table) {
-            $table->unsignedBigInteger('school_id')->nullable();
-            $table->foreign('school_id')->references('id')->on('schools');
+            if (!Schema::hasColumn('books', 'school_id')) {
+                $table->unsignedBigInteger('school_id')->nullable();
+                $table->foreign('school_id')->references('id')->on('schools');
+            }
         });
 
         Schema::table('academic_levels', function (Blueprint $table) {
-            $table->unsignedBigInteger('school_id')->nullable();
-            $table->foreign('school_id')->references('id')->on('schools');
+            if (!Schema::hasColumn('academic_levels', 'school_id')) {
+                $table->unsignedBigInteger('school_id')->nullable();
+                $table->foreign('school_id')->references('id')->on('schools');
+            }
         });
 
         Schema::table('academic_groups', function (Blueprint $table) {
-            $table->unsignedBigInteger('school_id')->nullable();
-            $table->foreign('school_id')->references('id')->on('schools');
+            if (!Schema::hasColumn('academic_groups', 'school_id')) {
+                $table->unsignedBigInteger('school_id')->nullable();
+                $table->foreign('school_id')->references('id')->on('schools');
+            }
         });
 
         Schema::table('academic_subjects', function (Blueprint $table) {
-            $table->unsignedBigInteger('school_id')->nullable();
-            $table->foreign('school_id')->references('id')->on('schools');
+            if (!Schema::hasColumn('academic_subjects', 'school_id')) {
+                $table->unsignedBigInteger('school_id')->nullable();
+                $table->foreign('school_id')->references('id')->on('schools');
+            }
         });
-
     }
 
     /**

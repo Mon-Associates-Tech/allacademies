@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('teacher_student', function (Blueprint $table) {
-            $table->boolean('is_primary')->default(false);
-            $table->string('notes')->nullable();
+            if (!Schema::hasColumn('teacher_student', 'is_primary')) {
+                $table->boolean('is_primary')->default(false);
+            }
+            if (!Schema::hasColumn('teacher_student', 'notes')) {
+                $table->string('notes')->nullable();
+            }
         });
     }
 

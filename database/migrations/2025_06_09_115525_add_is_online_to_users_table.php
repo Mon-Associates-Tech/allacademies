@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', static function (Blueprint $table) {
-            $table->boolean('is_online')->default(false);
-            $table->timestamp('last_seen_at')->nullable();
+            if (!Schema::hasColumn('users', 'is_online')) {
+                $table->boolean('is_online')->default(false);
+            }
+            if (!Schema::hasColumn('users', 'last_seen_at')) {
+                $table->timestamp('last_seen_at')->nullable();
+            }
         });
     }
 
