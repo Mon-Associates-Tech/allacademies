@@ -51,32 +51,68 @@ class BookMedia extends Model
     public function getChapterAudiosAttribute(): array
     {
         $files = $this->attributes['chapter_audios'] ?? [];
+
+        if (is_string($files)) {
+            $files = json_decode($files, true) ?? [];
+        }
+
         if (! is_array($files)) {
             return [];
         }
 
-        return array_map(function ($file) {
-            if (is_array($file)) {
-                return $file;
+        return array_map(function ($item) {
+            // New format: {chapter: 1, file: 'path/to/file.mp3', title: 'Chapter Title'}
+            if (is_array($item) && isset($item['file'])) {
+                $item['url'] = str_starts_with($item['file'], 'http')
+                    ? $item['file']
+                    : asset('storage/'.$item['file']);
+
+                return $item;
             }
 
-            return str_starts_with($file, 'http') ? $file : asset('storage/'.$file);
+            // Legacy format: just file path
+            if (is_string($item)) {
+                return [
+                    'file' => $item,
+                    'url' => str_starts_with($item, 'http') ? $item : asset('storage/'.$item),
+                ];
+            }
+
+            return $item;
         }, $files);
     }
 
     public function getChapterVideosAttribute(): array
     {
         $files = $this->attributes['chapter_videos'] ?? [];
+
+        if (is_string($files)) {
+            $files = json_decode($files, true) ?? [];
+        }
+
         if (! is_array($files)) {
             return [];
         }
 
-        return array_map(function ($file) {
-            if (is_array($file)) {
-                return $file;
+        return array_map(function ($item) {
+            // New format: {chapter: 1, file: 'path/to/file.mp4', title: 'Chapter Title'}
+            if (is_array($item) && isset($item['file'])) {
+                $item['url'] = str_starts_with($item['file'], 'http')
+                    ? $item['file']
+                    : asset('storage/'.$item['file']);
+
+                return $item;
             }
 
-            return str_starts_with($file, 'http') ? $file : asset('storage/'.$file);
+            // Legacy format: just file path
+            if (is_string($item)) {
+                return [
+                    'file' => $item,
+                    'url' => str_starts_with($item, 'http') ? $item : asset('storage/'.$item),
+                ];
+            }
+
+            return $item;
         }, $files);
     }
 }

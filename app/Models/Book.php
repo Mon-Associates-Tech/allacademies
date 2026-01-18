@@ -655,10 +655,10 @@ class Book extends Model
                 ? json_decode($this->attributes['chapter_audios'], true)
                 : $this->attributes['chapter_audios'];
 
-            return $decoded ?? [];
+            return $this->formatChapterMedia($decoded ?? []);
         }
 
-        return $this->media?->chapter_audios ?? [];
+        return $this->formatChapterMedia($this->media?->chapter_audios ?? []);
     }
 
     public function getChapterVideosAttribute(): array
@@ -668,10 +668,30 @@ class Book extends Model
                 ? json_decode($this->attributes['chapter_videos'], true)
                 : $this->attributes['chapter_videos'];
 
-            return $decoded ?? [];
+            return $this->formatChapterMedia($decoded ?? []);
         }
 
-        return $this->media?->chapter_videos ?? [];
+        return $this->formatChapterMedia($this->media?->chapter_videos ?? []);
+    }
+
+    /**
+     * Format chapter media to ensure consistent structure
+     */
+    private function formatChapterMedia(array $items): array
+    {
+        return array_map(function ($item) {
+            // New format: {chapter: 1, file: 'path', title: 'Title'}
+            if (is_array($item) && isset($item['file'])) {
+                return $item;
+            }
+
+            // Legacy format: just file path string
+            if (is_string($item)) {
+                return ['file' => $item];
+            }
+
+            return $item;
+        }, $items);
     }
 
     public function tableOfContents(): HasOne|Book

@@ -4,16 +4,17 @@
             class="bg-white dark:bg-gray-900 rounded-lg shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700"
             x-data="videoPlayerData(@entangle('currentTime'), @entangle('duration'), @entangle('isPlaying'))"
             x-init="initPlayer('{{ $playerId }}', @js($this->getCurrentSource()))"
+            @tab-switched.window="if ($event.detail.playerId !== '{{ $playerId }}') pausePlayer()"
         >
             <!-- Video/Audio Player Container -->
-            <div class="relative bg-black group">
-                @if(isset($mediaData['type']) &&  $mediaData['type'] === 'video')
+            <div class="relative bg-black">
+                @if(isset($mediaData['type']) && $mediaData['type'] === 'video')
                     <video
                         id="{{ $playerId }}"
-                        class="video-js vjs-theme-custom w-full h-96 object-cover"
+                        class="video-js vjs-theme-custom w-full aspect-video"
                         controls
                         preload="metadata"
-                        data-setup="{}"
+                        data-setup='{}'
                         poster="{{ $this->getThumbnailUrl() }}"
                     >
                         @if($this->getCurrentSource())
@@ -38,12 +39,23 @@
                         </p>
                     </video>
                 @else
+                    <div class="flex items-center justify-center aspect-video bg-gradient-to-br from-slate-800 to-slate-900">
+                        <div class="text-center px-8">
+                            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-slate-600">
+                                <svg class="w-10 h-10 text-slate-300" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-white text-xl font-semibold mb-2">{{ $this->getTitle() }}</h3>
+                            <p class="text-slate-400">Audio Content</p>
+                        </div>
+                    </div>
                     <audio
                         id="{{ $playerId }}"
-                        class="video-js vjs-theme-custom w-full"
+                        class="video-js vjs-theme-custom w-full hidden"
                         controls
                         preload="metadata"
-                        data-setup="{}"
+                        data-setup='{}'
                     >
                         @if($this->getCurrentSource())
                             <source src="{{ $this->getCurrentSource()['url'] }}" type="{{ $this->getCurrentSource()['type'] }}">
@@ -58,27 +70,7 @@
                                 {{ $showCaptions ? 'default' : '' }}
                             >
                         @endif
-
-                        <p class="vjs-no-js text-white p-4">
-                            To listen to this audio please enable JavaScript, and consider upgrading to a web browser that
-                            <a href="https://videojs.com/html5-video-support/" target="_blank" class="text-blue-400 underline">
-                                supports HTML5 audio
-                            </a>.
-                        </p>
                     </audio>
-
-                    <!-- Audio Visual Display -->
-                    <div class="flex items-center justify-center h-64 bg-gradient-to-br from-slate-800 to-slate-900">
-                        <div class="text-center px-8">
-                            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-slate-600">
-                                <svg class="w-10 h-10 text-slate-300" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
-                                </svg>
-                            </div>
-                            <h3 class="text-white text-xl font-semibold mb-2">{{ $this->getTitle() }}</h3>
-                            <p class="text-slate-400">Audio Content</p>
-                        </div>
-                    </div>
                 @endif
 
                 <!-- Loading Overlay -->
@@ -357,16 +349,18 @@
                 return {
                     player: null,
                     playerReady: false,
+                    playerId: '',
                     currentTime,
                     duration,
                     isPlaying,
 
                     initPlayer(playerId, source) {
+                        this.playerId = playerId;
                         if (!source || !source.url) return;
 
                         this.player = videojs(playerId, {
                             responsive: true,
-                            fluid: false,
+                            fluid: true,
                             playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
                             controls: true,
                             preload: 'metadata'
@@ -382,26 +376,27 @@
                         this.player.on('timeupdate', () => {
                             this.currentTime = this.player.currentTime();
                             this.duration = this.player.duration() || 0;
-                            $wire.call('updateTime', this.currentTime, this.duration);
+                            this.$wire.call('updateTime', this.currentTime, this.duration);
                         });
 
                         this.player.on('play', () => {
                             this.isPlaying = true;
-                            $wire.call('setPlaying');
+                            this.$wire.call('setPlaying');
+                            window.dispatchEvent(new CustomEvent('tab-switched', { detail: { playerId: this.playerId } }));
                         });
 
                         this.player.on('pause', () => {
                             this.isPlaying = false;
-                            $wire.call('setPaused');
+                            this.$wire.call('setPaused');
                         });
 
                         this.player.on('ended', () => {
                             this.isPlaying = false;
-                            $wire.call('handleEnded');
+                            this.$wire.call('handleEnded');
                         });
 
                         this.player.on('volumechange', () => {
-                            $wire.call('updateVolume', this.player.volume());
+                            this.$wire.call('updateVolume', this.player.volume());
                         });
 
                         this.player.on('error', (error) => {
@@ -416,6 +411,12 @@
                             this.player.pause();
                         } else {
                             this.player.play().catch(e => console.warn('Play failed:', e));
+                        }
+                    },
+
+                    pausePlayer() {
+                        if (this.player && this.isPlaying) {
+                            this.player.pause();
                         }
                     },
 
@@ -456,14 +457,14 @@
 
             document.addEventListener('livewire:init', () => {
                 Livewire.on('setPlaybackRate', (event) => {
-                    const player = videojs(document.querySelector('.video-js')?.id);
+                    const player = videojs(event.playerId);
                     if (player) {
                         player.playbackRate(event.rate);
                     }
                 });
 
                 Livewire.on('toggleCaptions', (event) => {
-                    const player = videojs(document.querySelector('.video-js')?.id);
+                    const player = videojs(event.playerId);
                     if (player) {
                         const tracks = player.textTracks();
                         if (tracks.length > 0) {
@@ -473,7 +474,7 @@
                 });
 
                 Livewire.on('seekTo', (event) => {
-                    const player = videojs(document.querySelector('.video-js')?.id);
+                    const player = videojs(event.playerId);
                     if (player) {
                         player.currentTime(event.time);
                         if (event.autoplay !== false) {
@@ -483,13 +484,20 @@
                 });
 
                 Livewire.on('loadNewSource', (event) => {
-                    const player = videojs(document.querySelector('.video-js')?.id);
+                    const player = videojs(event.playerId);
                     if (player && event.source) {
-                        player.src(event.source);
+                        player.src({ src: event.source.url, type: event.source.type });
                         player.load();
                         if (event.autoplay !== false) {
                             player.play().catch(e => console.warn('Source load play failed:', e));
                         }
+                    }
+                });
+
+                Livewire.on('pausePlayer', (event) => {
+                    const player = videojs(event.playerId);
+                    if (player && !player.paused()) {
+                        player.pause();
                     }
                 });
             });

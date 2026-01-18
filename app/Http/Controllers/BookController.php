@@ -23,9 +23,9 @@ class BookController extends Controller
         if ($request->query('search')) {
             $searchTerm = $request->query('search');
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', '%' . $searchTerm . '%')
+                $q->where('title', 'like', '%'.$searchTerm.'%')
                     ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
-                        $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
+                        $authorQuery->where('name', 'like', '%'.$searchTerm.'%');
                     });
             });
         }
@@ -69,7 +69,7 @@ class BookController extends Controller
         $categories = BookCategory::all();
 
         // Get top categories with books for homepage display
-        if (!$request->hasAny(['search', 'category', 'format', 'price'])) {
+        if (! $request->hasAny(['search', 'category', 'format', 'price'])) {
             $topCategories = BookCategory::withCount('books')
                 ->having('books_count', '>', 6)
                 ->orderBy('books_count', 'desc')
@@ -154,16 +154,16 @@ class BookController extends Controller
                 ->where('book_id', $book->id)
                 ->where('status', 'paid')
                 ->first();
-            $isSubscribed = (bool)$subscription;
+            $isSubscribed = (bool) $subscription;
 
             $borrowing = $user->borrowedBooks()
                 ->where('book_id', $book->id)
                 ->where('status', 'borrowed')
                 ->first();
-            $isBorrowed = (bool)$borrowing;
+            $isBorrowed = (bool) $borrowing;
         }
 
-        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user?->id === $user->id;
+        $canRead = $isSubscribed || ! $book->has_softcopy || $book->author->user?->id === $user->id;
 
         return view('books.show',
             compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
@@ -191,7 +191,7 @@ class BookController extends Controller
         }
 
         // Free book - direct subscription
-        if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
+        if (! $book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
             $subscription = BookSubscription::create([
                 'user_id' => $user->id,
                 'book_id' => $book->id,
@@ -199,7 +199,7 @@ class BookController extends Controller
                 'end_date' => now()->addYear(),
                 'status' => SubscriptionStatus::PAID,
                 'annual_fee' => 0,
-                'reference' => 'FREE_' . uniqid(),
+                'reference' => 'FREE_'.uniqid(),
                 'payment_completed_at' => now(),
             ]);
 
@@ -218,7 +218,7 @@ class BookController extends Controller
             'end_date' => now()->addYear(),
             'status' => 'pending_payment',
             'annual_fee' => $book->annual_subscription_fee,
-            'reference' => 'SUB_' . uniqid(),
+            'reference' => 'SUB_'.uniqid(),
         ]);
 
         return response()->json([
@@ -238,7 +238,7 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        if (!$book->has_hardcopy) {
+        if (! $book->has_hardcopy) {
             return response()->json(['error' => 'This book is not available in hardcopy format'], 400);
         }
 
@@ -271,7 +271,7 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             // todo: uncomment
             // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
         }
@@ -283,7 +283,7 @@ class BookController extends Controller
                 ->where('status', 'paid')
                 ->first();
 
-            if (!$subscription && $book->author->user->id !== $user->id) {
+            if (! $subscription && $book->author->user->id !== $user->id) {
                 return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
             }
         }
