@@ -11,6 +11,7 @@
         notes: '',
         imageLoaded: false,
         isLoading: false,
+        sidebarCollapsed: false,
         toggleTab(tab) {
             this.currentTab = tab;
             window.history.pushState({}, '', `#${tab}`);
@@ -22,10 +23,16 @@
             this.isBookmarked = localStorage.getItem('bookmarked_{{ $book->id }}') === 'true';
             // Load saved notes
             this.notes = localStorage.getItem('notes_{{ $book->id }}') || '';
+            // Load sidebar state
+            this.sidebarCollapsed = localStorage.getItem('sidebar_collapsed_{{ $book->id }}') === 'true';
         },
         toggleBookmark() {
             this.isBookmarked = !this.isBookmarked;
             localStorage.setItem('bookmarked_{{ $book->id }}', this.isBookmarked);
+        },
+        toggleSidebar() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            localStorage.setItem('sidebar_collapsed_{{ $book->id }}', this.sidebarCollapsed);
         },
         saveNotes() {
             localStorage.setItem('notes_{{ $book->id }}', this.notes);
@@ -138,10 +145,27 @@
 
         <!-- Content -->
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="grid grid-cols-1 gap-8 items-start"
+                 :class="sidebarCollapsed ? 'lg:grid-cols-1' : 'lg:grid-cols-12'">
                 <!-- Book Cover -->
-                <div class="lg:col-span-4 xl:col-span-3">
+                <div x-show="!sidebarCollapsed"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 -translate-x-full"
+                     x-transition:enter-end="opacity-100 translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 translate-x-0"
+                     x-transition:leave-end="opacity-0 -translate-x-full"
+                     class="lg:col-span-4 xl:col-span-3">
                     <div class="sticky top-24">
+                        <!-- Toggle Button -->
+                        <button @click="toggleSidebar()"
+                                class="absolute -right-3 top-4 z-10 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
                         <div
                             class="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 group">
 
@@ -333,7 +357,19 @@
                 </div>
 
                 <!-- Book Information -->
-                <div class="lg:col-span-8 xl:col-span-9">
+                <div :class="sidebarCollapsed ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-9'">
+                    <!-- Expand Button (when collapsed) -->
+                    <button x-show="sidebarCollapsed"
+                            @click="toggleSidebar()"
+                            class="mb-4 flex items-center px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 5l7 7-7 7"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Show Book Details</span>
+                    </button>
+
                     <div class="space-y-6">
                         <!-- Title and Author -->
                         <div>
@@ -639,10 +675,10 @@
                                             </div>
                                         </div>
 
-                                        @livewire('media.video-player', [
+                                        @livewire('media.audio-player', [
                                             'resource' => $book,
                                             'type' => 'audio'
-                                        ])
+                                        ], key('audio-player'))
                                     </div>
 
                                     <!-- Video Player Tab Content -->
@@ -685,7 +721,7 @@
                                         @livewire('media.video-player', [
                                             'resource' => $book,
                                             'type' => 'video'
-                                        ])
+                                        ], key('video-player'))
                                     </div>
                                 </div>
                             </div>

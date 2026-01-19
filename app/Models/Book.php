@@ -368,65 +368,7 @@ class Book extends Model
         return $this->belongsTo(AcademicSubject::class, 'subject_id');
     }
 
-    /**
-     * Get the table of contents with default structure if empty
-     */
-    public function getTableOfContentsAttributeDeprecated()
-    {
-        $toc = $this->attributes['table_of_contents'] ? json_decode($this->attributes['table_of_contents'], true) : null;
 
-        if (! $toc) {
-            // Return default table of contents structure
-            return $this->generateDefaultTableOfContents();
-        }
-
-        return $toc;
-    }
-
-    /**
-     * Generate a default table of contents based on book pages
-     */
-    private function generateDefaultTableOfContents(): array
-    {
-        $chaptersCount = max(1, min(15, intval($this->pages / 20))); // Rough estimate
-        $chapters = [];
-
-        for ($i = 1; $i <= $chaptersCount; $i++) {
-            $chapters[] = [
-                'chapter' => $i,
-                'title' => "Chapter {$i}",
-                'description' => "Content for chapter {$i}",
-                'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
-                'page_end' => $i * intval($this->pages / $chaptersCount),
-                'sections' => [],
-            ];
-        }
-
-        return $chapters;
-    }
-
-    /**
-     * Get formatted table of contents for display
-     */
-    public function getFormattedTableOfContentsAttributeDeprecated(): array
-    {
-        $toc = $this->table_of_contents;
-
-        return collect($toc)->map(function ($chapter) {
-            return [
-                'chapter_number' => $chapter['chapter'] ?? 1,
-                'title' => $chapter['title'] ?? 'Untitled Chapter',
-                'description' => $chapter['description'] ?? '',
-                'page_range' => isset($chapter['page_start'], $chapter['page_end'])
-                    ? "Pages {$chapter['page_start']}-{$chapter['page_end']}"
-                    : '',
-                'page_count' => isset($chapter['page_start'], $chapter['page_end'])
-                    ? $chapter['page_end'] - $chapter['page_start'] + 1
-                    : 0,
-                'sections' => $chapter['sections'] ?? [],
-            ];
-        })->toArray();
-    }
 
     public function getAverageRatingAttribute()
     {
@@ -578,41 +520,22 @@ class Book extends Model
             ->get();
     }
 
-    // public function getTableOfContentsAttribute()
-    // {
-    //     // First try to get from relationship
-    //     if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-    //         return $this->tableOfContents->content;
-    //     }
-
-    //     // If no relation exists, generate default
-    //     return $this->generateDefaultTableOfContents();
-    // }
-
     public function getTableOfContentsAttribute($value)
     {
-        // Use DB value if it exists
         if (! empty($value)) {
             return is_string($value) ? json_decode($value, true) : $value;
         }
 
-        // Then fallback to relationship
         if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
             return $this->tableOfContents->content;
         }
 
-        // Otherwise, generate a default
         return $this->generateDefaultTableOfContents();
     }
 
     public function getFormattedTableOfContentsAttribute(): array
     {
-        // First try to get from relationship
-        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-            $toc = $this->tableOfContents->content;
-        } else {
-            $toc = $this->generateDefaultTableOfContents();
-        }
+        $toc = $this->table_of_contents;
 
         return collect($toc)->map(function ($chapter) {
             return [
@@ -628,6 +551,25 @@ class Book extends Model
                 'sections' => $chapter['sections'] ?? [],
             ];
         })->toArray();
+    }
+
+    private function generateDefaultTableOfContents(): array
+    {
+        $chaptersCount = max(1, min(15, intval($this->pages / 20)));
+        $chapters = [];
+
+        for ($i = 1; $i <= $chaptersCount; $i++) {
+            $chapters[] = [
+                'chapter' => $i,
+                'title' => "Chapter {$i}",
+                'description' => "Content for chapter {$i}",
+                'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
+                'page_end' => $i * intval($this->pages / $chaptersCount),
+                'sections' => [],
+            ];
+        }
+
+        return $chapters;
     }
 
     public function getSingleAudioAttribute(): ?string

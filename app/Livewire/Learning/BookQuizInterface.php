@@ -117,6 +117,13 @@ class BookQuizInterface extends Component
         $this->loadAvailableSubjects();
         $this->loadPreviousQuizzes();
 
+        // Check for book ID in URL
+        $bookId = request()->query('bookId');
+        if ($bookId) {
+            $this->selectedBookId = $bookId;
+            $this->updatedSelectedBookId();
+        }
+
         // Check for quiz ID in URL
         $quizId = request()->query('quiz');
         if ($quizId) {

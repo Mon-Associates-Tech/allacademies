@@ -5,38 +5,21 @@ namespace App\Livewire\Media;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 
-class VideoPlayer extends Component
+class AudioPlayer extends Component
 {
     public $playerId;
-
     public $currentTime = 0;
-
     public $duration = 0;
-
     public $isPlaying = false;
-
     public $playbackRate = 1;
-
     public $volume = 1;
-
-    public $showCaptions = false;
-
     public $currentChapter = 0;
-
-    // Progress tracking
     public $progressMarkers = [];
-
     public $completionPercentage = 0;
-
-    // Media data resolved from resource or direct URL
     public $mediaData = [];
-
-    public $resourceType = null; // 'resource', 'url', 'file'
-
+    public $resourceType = null;
     public $resource = null;
-
     public $chapterDurations = [];
-
     public $completedChapters = [];
 
     protected $listeners = [
@@ -49,13 +32,13 @@ class VideoPlayer extends Component
 
     public function mount($resource = null, $url = null): void
     {
-        $this->playerId = 'video-player-'.uniqid();
+        $this->playerId = 'audio-player-'.uniqid();
         $this->resolveMediaSource($resource, $url);
     }
 
     public function render()
     {
-        return view('livewire.media.video-player');
+        return view('livewire.media.audio-player');
     }
 
     private function resolveMediaSource($resource, $url)
@@ -79,21 +62,20 @@ class VideoPlayer extends Component
             'description' => $resource->description ?? '',
             'chapters' => [],
             'current_source' => null,
-            'thumbnail_url' => null,
         ];
 
         $toc = $resource->table_of_contents ?? [];
-        $singleVideo = $resource->single_video;
-        $chapterVideos = $resource->chapter_videos;
+        $singleAudio = $resource->single_audio;
+        $chapterAudios = $resource->chapter_audios;
 
-        if ($singleVideo) {
+        if ($singleAudio) {
             $mediaData['current_source'] = [
-                'url' => $singleVideo,
-                'type' => $this->getMimeType($singleVideo),
+                'url' => $singleAudio,
+                'type' => $this->getMimeType($singleAudio),
                 'chapter' => null,
             ];
-        } elseif (!empty($chapterVideos)) {
-            $mediaData['chapters'] = $this->buildChaptersFromArray($chapterVideos, $toc);
+        } elseif (!empty($chapterAudios)) {
+            $mediaData['chapters'] = $this->buildChaptersFromArray($chapterAudios, $toc);
             $mediaData['current_source'] = $mediaData['chapters'][0] ?? null;
         }
 
@@ -111,7 +93,6 @@ class VideoPlayer extends Component
                 'type' => $this->getMimeType($url),
                 'chapter' => null,
             ],
-            'thumbnail_url' => null,
         ];
     }
 
@@ -130,14 +111,12 @@ class VideoPlayer extends Component
                     'description' => $item['description'] ?? $tocChapter['description'] ?? '',
                     'url' => $item['url'] ?? (str_starts_with($item['file'], 'http') ? $item['file'] : asset('storage/'.$item['file'])),
                     'type' => $this->getMimeType($item['file']),
-                    'captions_url' => $item['captions'] ?? null,
-                    'thumbnail_url' => $item['thumbnail'] ?? null,
                     'duration' => $item['duration'] ?? 0,
                 ];
                 continue;
             }
 
-            $url = is_array($item) ? ($item['url'] ?? $item['single_video'] ?? null) : $item;
+            $url = is_array($item) ? ($item['url'] ?? $item['single_audio'] ?? null) : $item;
             if (!$url) continue;
 
             $tocChapter = $toc[$index] ?? [];
@@ -149,8 +128,6 @@ class VideoPlayer extends Component
                 'description' => is_array($item) ? ($item['description'] ?? $tocChapter['description'] ?? '') : ($tocChapter['description'] ?? ''),
                 'url' => $url,
                 'type' => $this->getMimeType($url),
-                'captions_url' => is_array($item) ? ($item['captions'] ?? null) : null,
-                'thumbnail_url' => is_array($item) ? ($item['thumbnail'] ?? null) : null,
                 'duration' => is_array($item) ? ($item['duration'] ?? 0) : 0,
             ];
         }
@@ -162,16 +139,15 @@ class VideoPlayer extends Component
     {
         $extension = strtolower(pathinfo($url, PATHINFO_EXTENSION));
         $mimeTypes = [
-            'mp4' => 'video/mp4',
-            'webm' => 'video/webm',
-            'ogg' => 'video/ogg',
-            'avi' => 'video/avi',
-            'mov' => 'video/quicktime',
+            'mp3' => 'audio/mpeg',
+            'wav' => 'audio/wav',
+            'ogg' => 'audio/ogg',
+            'm4a' => 'audio/mp4',
+            'aac' => 'audio/aac',
         ];
-        return $mimeTypes[$extension] ?? 'video/mp4';
+        return $mimeTypes[$extension] ?? 'audio/mpeg';
     }
 
-    // Player Control Methods
     public function updateTime($currentTime, $duration = null)
     {
         $this->currentTime = $currentTime;
@@ -179,14 +155,14 @@ class VideoPlayer extends Component
             $this->duration = $duration;
             $this->chapterDurations[$this->currentChapter] = $duration;
         }
-
+        
         // Mark as completed if 95% watched
         if ($this->duration > 0 && ($currentTime / $this->duration) >= 0.95) {
             if (!in_array($this->currentChapter, $this->completedChapters)) {
                 $this->completedChapters[] = $this->currentChapter;
             }
         }
-
+        
         $this->calculateProgress();
         $this->trackProgress();
     }
@@ -194,26 +170,22 @@ class VideoPlayer extends Component
     public function setPlaying()
     {
         $this->isPlaying = true;
-        $this->logEvent('play');
     }
 
     public function setPaused()
     {
         $this->isPlaying = false;
-        $this->logEvent('pause');
     }
 
     public function handleEnded()
     {
         $this->isPlaying = false;
-        $this->logEvent('complete');
-
+        
         // Mark current chapter as completed
         if (!in_array($this->currentChapter, $this->completedChapters)) {
             $this->completedChapters[] = $this->currentChapter;
         }
-
-        // Auto-advance to next chapter if available
+        
         if ($this->hasNextChapter()) {
             $this->playNextChapter();
         }
@@ -230,13 +202,6 @@ class VideoPlayer extends Component
         $this->dispatch('setPlaybackRate', rate: $rate, playerId: $this->playerId);
     }
 
-    public function toggleCaptions()
-    {
-        $this->showCaptions = ! $this->showCaptions;
-        $this->dispatch('toggleCaptions', show: $this->showCaptions, playerId: $this->playerId);
-    }
-
-    // Chapter/Playlist Navigation
     public function jumpToChapter($chapterIndex)
     {
         if (isset($this->mediaData['chapters'][$chapterIndex])) {
@@ -267,28 +232,16 @@ class VideoPlayer extends Component
         }
     }
 
-    public function hasNextChapter()
+    public function hasNextChapter(): bool
     {
-        return ! empty($this->mediaData['chapters']) &&
-            $this->currentChapter < count($this->mediaData['chapters']) - 1;
+        return !empty($this->mediaData['chapters']) && $this->currentChapter < count($this->mediaData['chapters']) - 1;
     }
 
-    public function hasPreviousChapter()
+    public function hasPreviousChapter(): bool
     {
-        return ! empty($this->mediaData['chapters']) && $this->currentChapter > 0;
+        return !empty($this->mediaData['chapters']) && $this->currentChapter > 0;
     }
 
-    public function seekTo($time)
-    {
-        $this->dispatch('seekTo', time: $time, playerId: $this->playerId);
-    }
-
-    public function pausePlayer()
-    {
-        $this->dispatch('pausePlayer', playerId: $this->playerId);
-    }
-
-    // Helper Methods
     private function calculateProgress()
     {
         if ($this->duration > 0) {
@@ -299,41 +252,19 @@ class VideoPlayer extends Component
     private function trackProgress()
     {
         $milestones = [25, 50, 75, 100];
-
         foreach ($milestones as $milestone) {
-            if ($this->completionPercentage >= $milestone &&
-                ! in_array($milestone, $this->progressMarkers)) {
+            if ($this->completionPercentage >= $milestone && !in_array($milestone, $this->progressMarkers)) {
                 $this->progressMarkers[] = $milestone;
-                $this->logEvent('progress', ['milestone' => $milestone]);
             }
         }
     }
 
-    private function logEvent($event, $data = [])
+    public function getPlaybackRateOptions(): array
     {
-        if ($this->resourceType === 'resource' && $this->resource) {
-            // Log events for resource-based media
-            // MediaAnalytics::log($event, $this->resource, auth()->user(), array_merge($data, [
-            //     'current_time' => $this->currentTime,
-            //     'chapter' => $this->currentChapter,
-            //     'media_type' => 'video',
-            // ]));
-        }
+        return [0.5 => '0.5x', 0.75 => '0.75x', 1 => 'Normal', 1.25 => '1.25x', 1.5 => '1.5x', 2 => '2x'];
     }
 
-    public function getPlaybackRateOptions()
-    {
-        return [
-            0.5 => '0.5x',
-            0.75 => '0.75x',
-            1 => 'Normal',
-            1.25 => '1.25x',
-            1.5 => '1.5x',
-            2 => '2x',
-        ];
-    }
-
-    public function formatTime($seconds)
+    public function formatTime($seconds): string
     {
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
@@ -342,11 +273,9 @@ class VideoPlayer extends Component
         if ($hours > 0) {
             return sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
         }
-
         return sprintf('%d:%02d', $minutes, $seconds);
     }
 
-    // Computed properties for view
     public function getCurrentSource()
     {
         return $this->mediaData['current_source'] ?? null;
@@ -354,7 +283,7 @@ class VideoPlayer extends Component
 
     public function getTitle(): string
     {
-        return $this->mediaData['title'] ?? 'Untitled Video';
+        return $this->mediaData['title'] ?? 'Untitled Audio';
     }
 
     public function getDescription(): string
@@ -365,16 +294,6 @@ class VideoPlayer extends Component
     public function getChapters(): array
     {
         return $this->mediaData['chapters'] ?? [];
-    }
-
-    public function getCaptionsUrl(): string
-    {
-        return $this->mediaData['current_source']['captions_url'] ?? '';
-    }
-
-    public function getThumbnailUrl(): ?string
-    {
-        return $this->mediaData['current_source']['thumbnail_url'] ?? $this->mediaData['thumbnail_url'] ?? null;
     }
 
     public function isChapterBased(): bool
