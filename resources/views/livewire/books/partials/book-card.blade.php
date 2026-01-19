@@ -10,7 +10,7 @@
 @endphp
 
 <div
-    class="group relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 h-full">
+    class="group relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 ring-1 ring-gray-100 dark:ring-gray-700/50 hover:ring-indigo-200 dark:hover:ring-indigo-500/50 h-full">
 
     <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
         <div
@@ -145,7 +145,7 @@
                     </a>
                 @else
                     <a href="{{ route('books.show', $book) }}"
-                       class="block w-full bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 py-3 px-4 rounded-xl font-semibold text-sm text-center transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2">
+                       class="block w-full bg-gray-700 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-semibold text-sm text-center transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

@@ -4,16 +4,21 @@
         class="min-h-screen bg-gradient-to-br">
 
         <header id="main-header"
-                class="min-h-[40vh] page-header-green flex items-center md:h-[40vh] lg:rounded-t-xl relative overflow-hidden transition-all duration-300">
+                class="min-h-[40vh] flex items-center md:h-[40vh] lg:rounded-t-xl relative transition-all duration-300">
 
-            <div
-                class="absolute inset-0 bg-gradient-to-b "></div>
+            <!-- Background Image with Blur -->
+            <div class="absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1920&q=80" 
+                     alt="Library Background" 
+                     class="w-full h-full object-cover">
+                <div class="absolute inset-0 backdrop-blur-sm bg-white/40 dark:bg-gray-900/40"></div>
+            </div>
 
             <div class="relative z-10 flex flex-col items-center w-full justify-center h-full px-3 md:px-6 text-center">
-                <h1 class="text-xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight mb-6">
-                    <span class="hidden md:block">All Academies</span>
+                <h1 class="text-xl md:text-5xl font-black leading-tight mb-6">
+                    <span class="hidden md:block text-white drop-shadow-lg">All Academies</span>
                     <span
-                        class="block text-transparent bg-clip-text pb-2 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+                        class="block pb-2 drop-shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
                 Library and Bookshop
             </span>
                 </h1>
@@ -44,7 +49,7 @@
                         </form>
                     </div>
                     <button id="toggle-filters"
-                            class="w-full md:w-auto text-nowrap md:ml-4 px-5 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm">
+                            class="w-full md:w-auto text-nowrap md:ml-4 px-5 py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
@@ -55,32 +60,19 @@
 
                 <div id="filters"
                      class="hidden mb-4 mt-6 w-full max-w-7xl mx-auto px-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 shadow-lg">
-                    <form method="GET" action="{{ route('books.index') }}" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <form method="GET" action="{{ route('books.index') }}" class="space-y-6" id="filter-form">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             <div class="space-y-2">
-                                <label
-                                    class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Category</label>
-                                <div class="relative">
-                                    <select name="category" id="category"
-                                            class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
-                                        <option value="" class="text-gray-800 bg-white">All Categories</option>
-                                        @foreach($categories as $category)
-                                            <option
-                                                value="{{ $category->id }}"
-                                                {{ request('category') == $category->id ? 'selected' : '' }}
-                                                class="text-gray-800 bg-white">
-                                                {{ $category->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </div>
-                                </div>
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Categories</label>
+                                @livewire('common.searchable-multi-select', [
+                                    'items' => $categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
+                                    'selected' => request('categories', []),
+                                    'placeholder' => 'Select categories...',
+                                    'name' => 'categories',
+                                    'valueKey' => 'id',
+                                    'labelKey' => 'name',
+                                    'size' => 'sm'
+                                ])
                             </div>
 
                             <div class="space-y-2">
@@ -88,7 +80,7 @@
                                     class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Format</label>
                                 <div class="relative">
                                     <select name="format" id="format"
-                                            class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                                            class="w-full px-4 py-2 text-sm rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
                                         <option value="" class="text-gray-800 bg-white">All Formats</option>
                                         <option value="softcopy"
                                                 {{ request('format') == 'softcopy' ? 'selected' : '' }} class="text-gray-800 bg-white">
@@ -118,7 +110,7 @@
                                     class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Pricing</label>
                                 <div class="relative">
                                     <select name="price" id="price"
-                                            class="w-full px-4 py-3 text-sm rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                                            class="w-full px-4 py-2 text-sm rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
                                         <option value="" class="text-gray-800 bg-white">All Books</option>
                                         <option value="free"
                                                 {{ request('price') == 'free' ? 'selected' : '' }} class="text-gray-800 bg-white">
@@ -143,23 +135,83 @@
                                 </div>
                             </div>
 
-                            <div class="items-center flex flex-col md:flex-row gap-4 mt-5">
-                                <button type="submit"
-                                        class="w-full my-auto text-nowrap bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                                    </svg>
-                                    <span>Apply Filters</span>
-                                </button>
-                                <a href="{{ route('books.index') }}"
-                                   class="w-full text-nowrap bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-semibold text-sm text-center transition-all duration-300 flex items-center justify-center space-x-2 border-2 border-gray-200 dark:border-gray-700">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    <span>Reset All</span>
-                                </a>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Age Groups</label>
+                                @livewire('common.searchable-multi-select', [
+                                    'items' => collect($ageGroups)->map(fn($age) => ['id' => $age, 'name' => $age . ' years'])->toArray(),
+                                    'selected' => request('age_groups', []),
+                                    'placeholder' => 'Select age groups...',
+                                    'name' => 'age_groups',
+                                    'valueKey' => 'id',
+                                    'labelKey' => 'name',
+                                    'size' => 'sm'
+                                ])
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Academic Groups</label>
+                                @livewire('common.searchable-multi-select', [
+                                    'items' => $academicGroups->map(fn($g) => ['id' => $g->id, 'name' => $g->name])->toArray(),
+                                    'selected' => request('academic_groups', []),
+                                    'placeholder' => 'Select groups...',
+                                    'name' => 'academic_groups',
+                                    'valueKey' => 'id',
+                                    'labelKey' => 'name',
+                                    'size' => 'sm'
+                                ])
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Academic Levels</label>
+                                @livewire('common.searchable-multi-select', [
+                                    'items' => $academicLevels->map(fn($l) => [
+                                        'id' => $l->id, 
+                                        'name' => $l->name . ' (' . ($l->academicGroup->name ?? 'No Group') . ')'
+                                    ])->toArray(),
+                                    'selected' => request('academic_levels', []),
+                                    'placeholder' => 'Select levels...',
+                                    'name' => 'academic_levels',
+                                    'valueKey' => 'id',
+                                    'labelKey' => 'name',
+                                    'size' => 'sm'
+                                ])
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Subjects</label>
+                                @livewire('common.searchable-multi-select', [
+                                    'items' => $academicSubjects->map(fn($s) => [
+                                        'id' => $s->id, 
+                                        'name' => $s->name . ' - ' . ($s->academicLevel->name ?? 'N/A') . ' (' . ($s->academicLevel->academicGroup->name ?? 'N/A') . ')'
+                                    ])->toArray(),
+                                    'selected' => request('academic_subjects', []),
+                                    'placeholder' => 'Select subjects...',
+                                    'name' => 'academic_subjects',
+                                    'valueKey' => 'id',
+                                    'labelKey' => 'name',
+                                    'size' => 'sm'
+                                ])
+                            </div>
+
+                            <div class="sm:col-span-2 lg:col-span-3 xl:col-span-1 flex items-end">
+                                <div class="w-full flex flex-col sm:flex-row gap-3">
+                                    <button type="submit"
+                                            class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                                        </svg>
+                                        <span>Apply</span>
+                                    </button>
+                                    <a href="{{ route('books.index') }}"
+                                       class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-xl font-semibold text-sm text-center transition-all duration-300 flex items-center justify-center space-x-2 border-2 border-gray-200 dark:border-gray-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                        <span>Reset</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -191,7 +243,7 @@
 
 
         <div class="max-w-7xl mx-auto py-12 px-4">
-            @if(isset($topCategories) && !request()->hasAny(['search', 'category', 'format', 'price']))
+            @if(isset($topCategories) && !request()->hasAny(['search', 'categories', 'format', 'price', 'age_groups', 'academic_groups', 'academic_levels', 'academic_subjects']))
                 {{-- Category Sections - Only show when no filters are applied --}}
                 @foreach($topCategories as $category)
                     <div class="mb-20">
@@ -301,9 +353,50 @@
                         </div>
 
                         <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">No books found</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-10 leading-relaxed text-lg">
-                            We couldn't find any books matching your criteria. Try adjusting your filters or explore our
-                            collection.
+                        
+                        @php
+                            $activeFilters = [];
+                            if(request('search')) $activeFilters[] = 'Search: "' . request('search') . '"';
+                            if(request('categories')) {
+                                $catNames = $categories->whereIn('id', request('categories'))->pluck('name')->join(', ');
+                                if($catNames) $activeFilters[] = 'Categories: ' . $catNames;
+                            }
+                            if(request('format')) $activeFilters[] = 'Format: ' . ucfirst(request('format'));
+                            if(request('price')) $activeFilters[] = 'Price: ' . ucfirst(request('price'));
+                            if(request('age_groups')) $activeFilters[] = 'Age Groups: ' . collect(request('age_groups'))->join(', ');
+                            if(request('academic_groups')) {
+                                $groupNames = $academicGroups->whereIn('id', request('academic_groups'))->pluck('name')->join(', ');
+                                if($groupNames) $activeFilters[] = 'Academic Groups: ' . $groupNames;
+                            }
+                            if(request('academic_levels')) {
+                                $levelNames = $academicLevels->whereIn('id', request('academic_levels'))->pluck('name')->join(', ');
+                                if($levelNames) $activeFilters[] = 'Academic Levels: ' . $levelNames;
+                            }
+                            if(request('academic_subjects')) {
+                                $subjectNames = $academicSubjects->whereIn('id', request('academic_subjects'))->pluck('name')->join(', ');
+                                if($subjectNames) $activeFilters[] = 'Subjects: ' . $subjectNames;
+                            }
+                        @endphp
+                        
+                        <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed text-lg">
+                            We couldn't find any books matching your criteria.
+                        </p>
+                        
+                        @if(count($activeFilters) > 0)
+                            <div class="mb-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Active Filters:</p>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($activeFilters as $filter)
+                                        <span class="inline-flex items-center px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full">
+                                            {{ $filter }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        
+                        <p class="text-gray-500 dark:text-gray-400 mb-10 text-base">
+                            Try adjusting your filters or explore our collection.
                         </p>
 
                         <a href="{{ route('books.index') }}"
@@ -318,176 +411,5 @@
                 </div>
             @endif
         </div>
-
-        <div
-            class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-800 shadow-2xl transform translate-x-full transition-transform duration-300 z-40"
-            id="quickFilters">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Filters</h3>
-                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="p-6 space-y-6">
-                <div>
-                    <h4 class="font-medium text-gray-900 dark:text-white mb-3">Popular Genres</h4>
-                    <div class="space-y-2">
-                        <label class="flex items-center">
-                            <input type="checkbox"
-                                   class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Fiction</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox"
-                                   class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Romance</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox"
-                                   class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Science Fiction</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="fixed inset-0 bg-black/50 hidden z-30" id="quickFiltersOverlay"></div>
     </div>
-
-    @push('scripts')
-        <script>
-            // Enhanced auto-submit with debouncing
-            document.addEventListener('DOMContentLoaded', function () {
-                const form = document.querySelector('form');
-                const selects = form.querySelectorAll('select');
-                const searchInput = document.getElementById('search');
-
-                // Auto-submit on select change
-                selects.forEach(select => {
-                    select.addEventListener('change', function () {
-                        clearTimeout(window.filterTimeout);
-                        window.filterTimeout = setTimeout(() => {
-                            form.submit();
-                        }, 300);
-                    });
-                });
-
-                // Search input debouncing
-                if (searchInput) {
-                    let searchTimeout;
-                    searchInput.addEventListener('input', function () {
-                        clearTimeout(searchTimeout);
-                        searchTimeout = setTimeout(() => {
-                            // Optional: Auto-submit search after typing stops
-                            // form.submit();
-                        }, 1000);
-                    });
-                }
-
-                // Keyboard shortcut for search (Cmd/Ctrl + K)
-                document.addEventListener('keydown', function (e) {
-                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                        e.preventDefault();
-                        searchInput.focus();
-                    }
-                });
-
-                // Quick suggestion clicks
-                document.querySelectorAll('.quick-suggestion').forEach(suggestion => {
-                    suggestion.addEventListener('click', function () {
-                        const searchTerm = this.textContent;
-                        searchInput.value = searchTerm;
-                        form.submit();
-                    });
-                });
-
-                // Floating action button functionality
-                const fab = document.querySelector('.fixed.bottom-8.right-8 button');
-                if (fab) {
-                    fab.addEventListener('click', function () {
-                        window.scrollTo({top: 0, behavior: 'smooth'});
-                    });
-                }
-
-                // Show/hide FAB based on scroll
-                let lastScrollTop = 0;
-                window.addEventListener('scroll', function () {
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    const fabElement = document.querySelector('.fixed.bottom-8.right-8');
-
-                    if (scrollTop > 500) {
-                        fabElement.classList.remove('translate-y-20', 'opacity-0');
-                        fabElement.classList.add('translate-y-0', 'opacity-100');
-                    } else {
-                        fabElement.classList.add('translate-y-20', 'opacity-0');
-                        fabElement.classList.remove('translate-y-0', 'opacity-100');
-                    }
-
-                    lastScrollTop = scrollTop;
-                });
-
-                // Loading states for better UX
-                form.addEventListener('submit', function () {
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = `
-                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-                                <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Searching...
-                        `;
-                    }
-                });
-            });
-
-            // Enhanced animations and interactions
-            function initializeAnimations() {
-                // Animate stats on scroll
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const statElements = entry.target.querySelectorAll('[data-stat]');
-                            statElements.forEach(stat => {
-                                const finalValue = stat.textContent;
-                                stat.textContent = '0';
-                                const increment = finalValue / 30;
-                                let current = 0;
-                                const timer = setInterval(() => {
-                                    current += increment;
-                                    if (current >= finalValue) {
-                                        stat.textContent = finalValue;
-                                        clearInterval(timer);
-                                    } else {
-                                        stat.textContent = Math.floor(current).toLocaleString();
-                                    }
-                                }, 50);
-                            });
-                        }
-                    });
-                }, {threshold: 0.5});
-
-                // Add smooth hover effects to book cards
-                document.querySelectorAll('.group').forEach(card => {
-                    card.addEventListener('mouseenter', function () {
-                        this.style.transform = 'translateY(-8px) scale(1.02)';
-                    });
-
-                    card.addEventListener('mouseleave', function () {
-                        this.style.transform = 'translateY(0) scale(1)';
-                    });
-                });
-            }
-
-            // Initialize animations when DOM is loaded
-            document.addEventListener('DOMContentLoaded', initializeAnimations);
-        </script>
-    @endpush
 </x-layouts.app>

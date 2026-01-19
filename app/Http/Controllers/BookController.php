@@ -23,18 +23,19 @@ class BookController extends Controller
         if ($request->query('search')) {
             $searchTerm = $request->query('search');
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', '%'.$searchTerm.'%')
+                $q->where('title', 'like', '%' . $searchTerm . '%')
                     ->orWhereHas('author', function ($authorQuery) use ($searchTerm) {
-                        $authorQuery->where('name', 'like', '%'.$searchTerm.'%');
+                        $authorQuery->where('name', 'like', '%' . $searchTerm . '%');
                     });
             });
         }
 
-        if ($request->filled('category')) {
-            $query->where(function ($q) use ($request) {
-                $q->whereHas('categories', function ($query) use ($request) {
-                    $query->where('book_category.category_id', $request->category);
-                })->orWhere('book_category_id', $request->category);
+        if ($request->filled('categories')) {
+            $categories = is_array($request->categories) ? $request->categories : [$request->categories];
+            $query->where(function ($q) use ($categories) {
+                $q->whereHas('categories', function ($query) use ($categories) {
+                    $query->whereIn('book_category.category_id', $categories);
+                })->orWhereIn('book_category_id', $categories);
             });
         }
 
@@ -65,11 +66,51 @@ class BookController extends Controller
             }
         }
 
+        if ($request->filled('age_groups')) {
+            $ageGroups = is_array($request->age_groups) ? $request->age_groups : [$request->age_groups];
+            $query->where(function ($q) use ($ageGroups) {
+                foreach ($ageGroups as $ageGroup) {
+                    $q->orWhereJsonContains('age_groups', $ageGroup);
+                }
+            });
+        }
+
+        if ($request->filled('academic_groups')) {
+            $groups = is_array($request->academic_groups) ? $request->academic_groups : [$request->academic_groups];
+            $query->where(function ($q) use ($groups) {
+                foreach ($groups as $groupId) {
+                    $q->orWhereJsonContains('academic_group_ids', (int)$groupId);
+                }
+            });
+        }
+
+        if ($request->filled('academic_levels')) {
+            $levels = is_array($request->academic_levels) ? $request->academic_levels : [$request->academic_levels];
+            $query->where(function ($q) use ($levels) {
+                foreach ($levels as $levelId) {
+                    $q->orWhereJsonContains('academic_level_ids', (int)$levelId);
+                }
+            });
+        }
+
+        if ($request->filled('academic_subjects')) {
+            $subjects = is_array($request->academic_subjects) ? $request->academic_subjects : [$request->academic_subjects];
+            $query->where(function ($q) use ($subjects) {
+                foreach ($subjects as $subjectId) {
+                    $q->orWhereJsonContains('academic_subject_ids', (int)$subjectId);
+                }
+            });
+        }
+
         $books = $query->paginate(12)->appends($request->query());
         $categories = BookCategory::all();
+        $academicGroups = \App\Models\AcademicGroup::all();
+        $academicLevels = \App\Models\AcademicLevel::with('academicGroup')->get();
+        $academicSubjects = \App\Models\AcademicSubject::with(['academicLevel.academicGroup'])->get();
+        $ageGroups = ['1-5', '6-9', '10-12', '13-15', '16-18', '18+'];
 
         // Get top categories with books for homepage display
-        if (! $request->hasAny(['search', 'category', 'format', 'price'])) {
+        if (!$request->hasAny(['search', 'categories', 'format', 'price', 'age_groups', 'academic_groups', 'academic_levels', 'academic_subjects'])) {
             $topCategories = BookCategory::withCount('books')
                 ->having('books_count', '>', 6)
                 ->orderBy('books_count', 'desc')
@@ -101,7 +142,7 @@ class BookController extends Controller
             ->where('status', 'borrowed')
             ->pluck('book_id')->toArray() ?: [];
 
-        return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds', 'topCategories'));
+        return view('books.index', compact('books', 'categories', 'subscribedBookIds', 'borrowedBookIds', 'topCategories', 'academicGroups', 'academicLevels', 'academicSubjects', 'ageGroups'));
     }
 
     public function show(Book $book)
@@ -154,18 +195,27 @@ class BookController extends Controller
                 ->where('book_id', $book->id)
                 ->where('status', 'paid')
                 ->first();
-            $isSubscribed = (bool) $subscription;
+            $isSubscribed = (bool)$subscription;
 
             $borrowing = $user->borrowedBooks()
                 ->where('book_id', $book->id)
                 ->where('status', 'borrowed')
                 ->first();
-            $isBorrowed = (bool) $borrowing;
+            $isBorrowed = (bool)$borrowing;
         }
 
-        $canRead = $isSubscribed || ! $book->has_softcopy || $book->author->user?->id === $user->id;
+        $canRead = $isSubscribed || !$book->has_softcopy || $book->author->user?->id === $user->id;
 
-        return view('books.show',
+        return view('books.shfeat: enhance book filtering with multi-select options and academic attributes
+
+- Implement multi-select filtering for categories using searchable-multiselect component
+- Add support for filtering by age groups, academic groups, academic levels, and academic subjects
+- Update BookController to handle array-based filter parameters with OR logic
+- Enhance UI with improved styling and background image for header
+- Add active filter indicators when no results are found
+- Improve accessibility and dark mode support in searchable multiselect component
+- Remove unused quick filters sidebar and related JavaScript
+ow',
             compact('book', 'isSubscribed', 'isBorrowed', 'subscription', 'borrowing', 'canRead', 'recentReviews')
         );
     }
@@ -191,7 +241,7 @@ class BookController extends Controller
         }
 
         // Free book - direct subscription
-        if (! $book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
+        if (!$book->annual_subscription_fee || $book->annual_subscription_fee == 0) {
             $subscription = BookSubscription::create([
                 'user_id' => $user->id,
                 'book_id' => $book->id,
@@ -199,7 +249,7 @@ class BookController extends Controller
                 'end_date' => now()->addYear(),
                 'status' => SubscriptionStatus::PAID,
                 'annual_fee' => 0,
-                'reference' => 'FREE_'.uniqid(),
+                'reference' => 'FREE_' . uniqid(),
                 'payment_completed_at' => now(),
             ]);
 
@@ -218,7 +268,7 @@ class BookController extends Controller
             'end_date' => now()->addYear(),
             'status' => 'pending_payment',
             'annual_fee' => $book->annual_subscription_fee,
-            'reference' => 'SUB_'.uniqid(),
+            'reference' => 'SUB_' . uniqid(),
         ]);
 
         return response()->json([
@@ -238,7 +288,7 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        if (! $book->has_hardcopy) {
+        if (!$book->has_hardcopy) {
             return response()->json(['error' => 'This book is not available in hardcopy format'], 400);
         }
 
@@ -271,7 +321,7 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        if (! $book->has_softcopy) {
+        if (!$book->has_softcopy) {
             // todo: uncomment
             // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
         }
@@ -283,7 +333,7 @@ class BookController extends Controller
                 ->where('status', 'paid')
                 ->first();
 
-            if (! $subscription && $book->author->user->id !== $user->id) {
+            if (!$subscription && $book->author->user->id !== $user->id) {
                 return redirect()->route('books.show', $book)->with('error', 'Subscription required to read this book');
             }
         }
