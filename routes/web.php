@@ -364,6 +364,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/assign-tokens', [\App\Http\Controllers\TokenAllocationController::class, 'assignTokens'])->name('assign-tokens');
         Route::post('/store-assignment', [\App\Http\Controllers\TokenAllocationController::class, 'storeAssignment'])->name('store-assignment');
         Route::get('/users-json', [\App\Http\Controllers\TokenAllocationController::class, 'getUsersJson'])->name('users-json');
+        Route::patch('/cycles/{cycle}/deactivate', [\App\Http\Controllers\TokenAllocationController::class, 'deactivateCycle'])->name('deactivate-cycle');
+        Route::delete('/cycles/{cycle}/revoke', [\App\Http\Controllers\TokenAllocationController::class, 'revokeTokens'])->name('revoke-tokens');
+        Route::get('/users/{user}/tokens', [\App\Http\Controllers\TokenAllocationController::class, 'viewUserTokens'])->name('view-user-tokens');
     });
 
     // Quiz Performance Routes

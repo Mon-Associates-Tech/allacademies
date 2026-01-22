@@ -21,16 +21,19 @@ class TokenAllocationController extends Controller
         });
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $filter = $request->get('filter', 'admin');
+        
         $pricingTiers = PricingTier::orderBy('name')->get();
         $recentAllocations = SubscriptionCycle::with(['user', 'pricingTier'])
-            ->allocatedByAdmin()
+            ->when($filter === 'admin', fn($q) => $q->allocatedByAdmin())
+            ->when($filter === 'user', fn($q) => $q->where('allocated_by_admin', false))
             ->latest()
             ->take(20)
             ->get();
 
-        return view('token-allocations.index', compact('pricingTiers', 'recentAllocations'));
+        return view('token-allocations.index', compact('pricingTiers', 'recentAllocations', 'filter'));
     }
 
     public function createTier()
@@ -139,6 +142,43 @@ class TokenAllocationController extends Controller
 
         return redirect()->route('token-allocations.index')
             ->with('success', 'Tokens assigned to ' . count($validated['user_ids']) . ' user(s) successfully');
+    }
+
+    public function deactivateCycle(Request $request, $cycleId)
+    {
+        $cycle = SubscriptionCycle::findOrFail($cycleId);
+        
+        $cycle->update(['status' => 'inactive']);
+
+        return redirect()->back()
+            ->with('success', 'Cycle deactivated successfully');
+    }
+
+    public function revokeTokens(Request $request, $cycleId)
+    {
+        $cycle = SubscriptionCycle::findOrFail($cycleId);
+        
+        $cycle->update([
+            'status' => 'cancelled',
+            'tokens_allocated' => 0,
+            'tokens_used' => 0,
+            'topup_tokens_allocated' => 0,
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Tokens revoked successfully');
+    }
+
+    public function viewUserTokens($userId)
+    {
+        $user = User::with(['subscriptionCycles' => function ($query) {
+            $query->latest();
+        }])->findOrFail($userId);
+
+        $cycles = $user->subscriptionCycles;
+        $activeCycle = $user->getCurrentActiveCycle();
+
+        return view('token-allocations.user-tokens', compact('user', 'cycles', 'activeCycle'));
     }
 
     public function getUsersJson(Request $request)

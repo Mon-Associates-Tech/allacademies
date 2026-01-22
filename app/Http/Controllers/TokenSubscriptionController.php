@@ -156,14 +156,17 @@ class TokenSubscriptionController extends Controller
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
 
-        // Create subscription cycles with merging logic
-        $cycles = $this->cycleService->createSubscriptionCycles($user, $pricingTier, $months);
+        // Create subscription cycles as PENDING (no tokens assigned yet)
+        $cycles = $this->cycleService->createSubscriptionCycles($user, $pricingTier, $months, true);
 
         // Calculate total price
         $totalPrice = 0;
         foreach ($cycles as $cycle) {
             $totalPrice = $cycle->current_price; // Last cycle has cumulative price
         }
+
+        // Store group ID for activation after payment
+        $groupId = $cycles[0]->subscription_group_id;
 
         // Create pending subscription for payment tracking
         $tokensPurchased = $pricingTier->monthly_token_limit * $months;
@@ -180,6 +183,9 @@ class TokenSubscriptionController extends Controller
             'tokens_used' => 0,
             'tokens_remaining' => $tokensPurchased,
         ]);
+
+        // Store group ID in session for payment callback
+        session(['pending_subscription_group_id' => $groupId]);
 
         // Redirect to payment
         return redirect()->route('token-payments.initialize', $pendingSubscription->id)

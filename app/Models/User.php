@@ -195,6 +195,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return;
         }
 
+        // Create trial cycle with tokens allocated immediately (no payment required)
         \App\Models\Chat\SubscriptionCycle::create([
             'user_id' => $this->id,
             'pricing_tier_id' => $basicTier->id,

@@ -30,25 +30,43 @@ class AcademicChatServiceTest extends TestCase
     {
         $testCases = [
             // Missing message
-            ['age' => 15] => 'Message is required',
+            [
+                'params' => ['age' => 15],
+                'expectedError' => 'Message is required',
+            ],
 
             // Invalid age
-            ['message' => 'test', 'age' => 3] => 'Age must be between 5 and 100',
-            ['message' => 'test', 'age' => 150] => 'Age must be between 5 and 100',
+            [
+                'params' => ['message' => 'test', 'age' => 3],
+                'expectedError' => 'Age must be between 5 and 100',
+            ],
+            [
+                'params' => ['message' => 'test', 'age' => 150],
+                'expectedError' => 'Age must be between 5 and 100',
+            ],
 
             // Invalid academic level
-            ['message' => 'test', 'academic_level' => 'invalid'] => 'Invalid academic level',
+            [
+                'params' => ['message' => 'test', 'academic_level' => 'invalid'],
+                'expectedError' => 'Invalid academic level',
+            ],
 
             // Invalid learning style
-            ['message' => 'test', 'learning_style' => 'invalid'] => 'Invalid learning style',
+            [
+                'params' => ['message' => 'test', 'learning_style' => 'invalid'],
+                'expectedError' => 'Invalid learning style',
+            ],
 
             // Invalid creativity level
-            ['message' => 'test', 'creativity_level' => 2] => 'Creativity level must be between 0 and 1',
+            [
+                'params' => ['message' => 'test', 'creativity_level' => 2],
+                'expectedError' => 'Creativity level must be between 0 and 1',
+            ],
         ];
 
-        foreach ($testCases as $params => $expectedError) {
-            $errors = $this->chatService->validateParameters($params);
-            $this->assertContains($expectedError, $errors, 'Failed for parameters: '.json_encode($params));
+        foreach ($testCases as $testCase) {
+            $errors = $this->chatService->validateParameters($testCase['params']);
+            $this->assertContains($testCase['expectedError'], $errors, 'Failed for parameters: '.json_encode($testCase['params']));
         }
     }
 

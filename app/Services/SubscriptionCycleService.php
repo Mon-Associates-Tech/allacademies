@@ -23,9 +23,9 @@ class SubscriptionCycleService
      * Create subscription cycles for a multi-month purchase
      * Handles merging with existing cycles if they overlap
      */
-    public function createSubscriptionCycles(User $user, PricingTier $pricingTier, int $months): array
+    public function createSubscriptionCycles(User $user, PricingTier $pricingTier, int $months, bool $isPending = false): array
     {
-        return DB::transaction(function () use ($user, $pricingTier, $months) {
+        return DB::transaction(function () use ($user, $pricingTier, $months, $isPending) {
             $groupId = Str::uuid()->toString();
             $startDate = now()->startOfDay();
             $cycles = [];
@@ -53,13 +53,8 @@ class SubscriptionCycleService
                     $cycles[] = $this->mergeCycles($overlappingCycle, $pricingTier, $groupId, $i);
                 } else {
                     // Create new cycle
-                    $cycles[] = $this->createNewCycle($user, $pricingTier, $groupId, $i, $cycleStart, $cycleEnd);
+                    $cycles[] = $this->createNewCycle($user, $pricingTier, $groupId, $i, $cycleStart, $cycleEnd, $isPending);
                 }
-            }
-
-            // Activate only the first cycle
-            if (! empty($cycles)) {
-                $cycles[0]->update(['status' => 'active']);
             }
 
             return $cycles;
@@ -117,10 +112,21 @@ class SubscriptionCycleService
     /**
      * Create a new subscription cycle
      */
-    protected function createNewCycle(User $user, PricingTier $pricingTier, string $groupId, int $cycleNumber, $startDate, $endDate): SubscriptionCycle
+    protected function createNewCycle(User $user, PricingTier $pricingTier, string $groupId, int $cycleNumber, $startDate, $endDate, bool $isPending = false): SubscriptionCycle
     {
         $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
         $cumulativePrice = $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+
+        // If pending payment, always create as inactive with 0 tokens
+        $status = 'inactive';
+        $tokensAllocated = 0;
+        
+        if (!$isPending) {
+            // Only check if should be active when not pending payment
+            $isCurrentCycle = now()->between($startDate, $endDate);
+            $status = $isCurrentCycle ? 'active' : 'inactive';
+            $tokensAllocated = $pricingTier->monthly_token_limit;
+        }
 
         return SubscriptionCycle::create([
             'user_id' => $user->id,
@@ -129,11 +135,11 @@ class SubscriptionCycleService
             'cycle_number' => $cycleNumber,
             'cycle_start_date' => $startDate,
             'cycle_end_date' => $endDate,
-            'tokens_allocated' => $pricingTier->monthly_token_limit,
+            'tokens_allocated' => $tokensAllocated,
             'topup_tokens_allocated' => 0,
             'tokens_used' => 0,
             'current_price' => $cumulativePrice,
-            'status' => 'inactive',
+            'status' => $status,
             'is_topup' => false,
             'is_merged' => false,
         ]);
@@ -412,6 +418,35 @@ class SubscriptionCycleService
         }
 
         return $success;
+    }
+
+    /**
+     * Activate pending cycles after payment confirmation
+     */
+    public function activatePendingCycles(string $groupId, PricingTier $pricingTier): int
+    {
+        $cycles = SubscriptionCycle::where('subscription_group_id', $groupId)
+            ->where('status', 'inactive')
+            ->where('tokens_allocated', 0)
+            ->get();
+
+        $activatedCount = 0;
+        foreach ($cycles as $cycle) {
+            $cycle->tokens_allocated = $pricingTier->monthly_token_limit;
+            $isCurrentCycle = now()->between($cycle->cycle_start_date, $cycle->cycle_end_date);
+            $cycle->status = $isCurrentCycle ? 'active' : 'inactive';
+            $cycle->save();
+            $activatedCount++;
+        }
+
+        if ($activatedCount > 0) {
+            Log::info('Pending cycles activated after payment', [
+                'group_id' => $groupId,
+                'count' => $activatedCount,
+            ]);
+        }
+
+        return $activatedCount;
     }
 
     /**

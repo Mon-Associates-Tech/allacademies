@@ -15,7 +15,7 @@ enum UserRole: string
     case PARENT = 'parent';
     case ACCOUNTANT = 'accountant';
 
-    case SUPER_ADMIN = 'super_admin';
+    case SUPER_ADMIN = 'superadmin';
 
     public static function getAll(): array
     {

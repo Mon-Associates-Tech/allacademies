@@ -30,15 +30,15 @@ return new class extends Migration
             ]);
         }
 
-        $indexes = DB::select("SHOW INDEX FROM books WHERE Column_name = 'category_id'");
-        foreach ($indexes as $index) {
-            DB::statement("ALTER TABLE books DROP INDEX {$index->Key_name}");
-        }
-
         Schema::table('books', function (Blueprint $table) {
-            $table->dropForeign(['book_category_id']);
-            $table->dropColumn('book_category_id');
-
+            if (Schema::hasColumn('books', 'book_category_id')) {
+                try {
+                    $table->dropForeign(['book_category_id']);
+                } catch (Exception $e) {
+                    // Foreign key might not exist
+                }
+                $table->dropColumn('book_category_id');
+            }
         });
     }
 

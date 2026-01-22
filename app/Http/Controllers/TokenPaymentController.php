@@ -231,7 +231,15 @@ class TokenPaymentController extends Controller
                     'token_subscription_id' => $subscription->id,
                 ]);
 
-                // 2. Activate subscription (handles both top-ups and regular subscriptions)
+                // 2. Activate subscription cycles if group ID exists
+                $groupId = session('pending_subscription_group_id');
+                if ($groupId && $subscription->pricingTier) {
+                    app(\App\Services\SubscriptionCycleService::class)
+                        ->activatePendingCycles($groupId, $subscription->pricingTier);
+                    session()->forget('pending_subscription_group_id');
+                }
+
+                // 3. Activate subscription (handles both top-ups and regular subscriptions)
                 $this->subscriptionService->activateSubscription($subscription);
             });
 
