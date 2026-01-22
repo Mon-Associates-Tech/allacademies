@@ -389,13 +389,28 @@ class TokenSubscriptionService
         $currentCycle = $user->getCurrentActiveCycle();
         $allCycles = $user->subscriptionCycles;
 
-        // Calculate total spent by grouping cycles by subscription_group_id
-        // For each group, only count the last cycle's current_price (which is cumulative for that group)
-        $totalSpent = $user->subscriptionCycles()
+        // Calculate total spent:
+        // 1. Sum MAX(current_price) per subscription_group_id (subscription payments)
+        // 2. Add topup payments from Payment records linked to topup cycles
+        $subscriptionSpent = $user->subscriptionCycles()
             ->selectRaw('subscription_group_id, MAX(current_price) as group_total')
             ->groupBy('subscription_group_id')
             ->get()
             ->sum('group_total');
+
+        $topupSpent = \App\Models\Payment::whereIn('reference', function ($query) use ($user) {
+            $query->select('reference')
+                ->from('payments')
+                ->whereExists(function ($subQuery) use ($user) {
+                    $subQuery->select(\DB::raw(1))
+                        ->from('subscription_cycles')
+                        ->where('user_id', $user->id)
+                        ->where('is_topup', true)
+                        ->whereRaw('payments.created_at BETWEEN subscription_cycles.created_at AND subscription_cycles.updated_at');
+                });
+        })->sum('amount');
+
+        $totalSpent = $subscriptionSpent + $topupSpent;
 
         $totalTokensPurchased = $user->subscriptionCycles()
             ->sum('tokens_allocated');

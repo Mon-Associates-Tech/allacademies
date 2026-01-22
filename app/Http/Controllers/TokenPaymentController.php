@@ -157,6 +157,7 @@ class TokenPaymentController extends Controller
                         $tokensToAdd = $pricingTier->calculateTokensFromAmount($paidAmount);
                         $cycle->topup_tokens_allocated += $tokensToAdd;
                         $cycle->tokens_allocated += $tokensToAdd;
+                        $cycle->is_topup = true;
                         $cycle->save();
 
                         \Log::info('Topup tokens added to cycle', [
