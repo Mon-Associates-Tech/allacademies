@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\LessonNoteResource;
+use App\Http\Resources\TopicCollection;
+use App\Http\Resources\TopicResource;
 use App\Models\AcademicTopic as Topic;
 use Illuminate\Http\Request;
-use App\Http\Resources\TopicResource;
-use App\Http\Resources\TopicCollection;
-use App\Http\Resources\LessonNoteResource;
 
 class TopicController extends Controller
 {
@@ -72,6 +72,7 @@ class TopicController extends Controller
     public function getLessonNotes(Topic $topic)
     {
         $notes = $topic->lessonNotes()->with('teacher', 'lesson', 'subject')->paginate();
+
         return LessonNoteResource::collection($notes);
     }
 }

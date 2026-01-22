@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Services\StudentImportService;
 use Illuminate\Console\Command;
 use Illuminate\Http\UploadedFile;
-use Symfony\Component\HttpFoundation\File\File;
 
 class ImportStudents extends Command
 {
@@ -28,9 +27,10 @@ class ImportStudents extends Command
     public function handle(): int
     {
         $filePath = $this->argument('file');
-        
-        if (!file_exists($filePath)) {
+
+        if (! file_exists($filePath)) {
             $this->error("File not found: {$filePath}");
+
             return 1;
         }
 
@@ -39,9 +39,10 @@ class ImportStudents extends Command
         // Validate CSV structure first
         $this->info('Validating CSV structure...');
         $validation = $this->importService->validateCsvStructure($file);
-        
-        if (!$validation['valid']) {
-            $this->error('CSV validation failed: ' . $validation['message']);
+
+        if (! $validation['valid']) {
+            $this->error('CSV validation failed: '.$validation['message']);
+
             return 1;
         }
 
@@ -50,12 +51,13 @@ class ImportStudents extends Command
 
         if ($this->option('validate-only')) {
             $this->info('Validation complete. Use without --validate-only to import.');
+
             return 0;
         }
 
         // Perform import
         $this->info('Starting import process...');
-        
+
         $options = [
             'default_school_id' => $this->option('school-id'),
             'default_password' => $this->option('password'),
@@ -82,7 +84,8 @@ class ImportStudents extends Command
                 }
             }
         } else {
-            $this->error('Import failed: ' . $result['message']);
+            $this->error('Import failed: '.$result['message']);
+
             return 1;
         }
 

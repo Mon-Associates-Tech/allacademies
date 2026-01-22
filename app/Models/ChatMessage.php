@@ -12,14 +12,14 @@ class ChatMessage extends Model
     protected $fillable = [
         'chat_group_id', 'user_id', 'message', 'message_type',
         'reply_to_message_id', 'is_edited', 'edited_at',
-        'is_deleted', 'deleted_at'
+        'is_deleted', 'deleted_at',
     ];
 
     protected $casts = [
         'is_edited' => 'boolean',
         'is_deleted' => 'boolean',
         'edited_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     protected $with = ['user', 'attachments'];
@@ -61,7 +61,7 @@ class ChatMessage extends Model
     // Helper methods
     public function markAsRead(User $user): void
     {
-        if (!$this->readBy()->where('user_id', $user->id)->exists()) {
+        if (! $this->readBy()->where('user_id', $user->id)->exists()) {
             $this->readBy()->attach($user->id, ['read_at' => now()]);
         }
     }
@@ -101,7 +101,7 @@ class ChatMessage extends Model
         $this->update([
             'is_deleted' => true,
             'deleted_at' => now(),
-            'message' => null
+            'message' => null,
         ]);
     }
 }

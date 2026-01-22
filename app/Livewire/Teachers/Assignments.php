@@ -4,22 +4,28 @@ namespace App\Livewire\Teachers;
 
 use App\Models\Assignment;
 use App\Models\Teacher;
-use App\Models\AcademicSubject;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 
 class Assignments extends Component
 {
     use WithPagination;
 
     public $teacher;
+
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $subjectFilter = 'all';
+
     public $typeFilter = 'all';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 12;
 
     protected $queryString = [
@@ -84,6 +90,7 @@ class Assignments extends Component
         // Check if the assignment belongs to the current teacher
         if ($assignment->teacher_id !== $this->teacher->id) {
             $this->dispatch('error', 'You are not authorized to delete this assignment.');
+
             return;
         }
 
@@ -97,11 +104,12 @@ class Assignments extends Component
 
         if ($assignment->teacher_id !== $this->teacher->id) {
             $this->dispatch('error', 'You are not authorized to duplicate this assignment.');
+
             return;
         }
 
         $duplicated = $assignment->replicate();
-        $duplicated->title = $assignment->title . ' (Copy)';
+        $duplicated->title = $assignment->title.' (Copy)';
         $duplicated->status = 'draft';
         $duplicated->created_at = now();
         $duplicated->save();
@@ -118,8 +126,8 @@ class Assignments extends Component
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('description', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%');
             });
         }
 

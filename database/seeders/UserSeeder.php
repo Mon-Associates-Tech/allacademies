@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
         // 1. Get the first school or create a default one if none exists
         $school = School::first();
 
-        if (!$school) {
+        if (! $school) {
             $this->command->info('No school found. Creating default school...');
 
             $school = School::create([
@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
                 'settings' => [
                     'currency' => 'GHS',
                     'timezone' => 'Africa/Accra',
-                ]
+                ],
             ]);
         }
 
@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
             'teacher',
             'moderator',
             'author',
-            'subscriber'
+            'guest',
         ];
 
         // 2. Create 10 users for each role

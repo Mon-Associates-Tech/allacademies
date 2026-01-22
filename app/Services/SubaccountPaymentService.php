@@ -18,13 +18,6 @@ class SubaccountPaymentService
     /**
      * Create a new subaccount for a model
      *
-     * @param Model $model
-     * @param array $bankData
-     * @param array $contactData
-     * @param int $percentageCharge
-     * @param bool $setPrimary
-     * @param string $name
-     * @return Subaccount
      * @throws Exception
      */
     public function createSubAccount(
@@ -56,7 +49,7 @@ class SubaccountPaymentService
 
         $response = $this->paystack->createSubAccount($subaccountData);
 
-        if (!isset($response['status']) || !$response['status']) {
+        if (! isset($response['status']) || ! $response['status']) {
             throw new Exception($response['message'] ?? 'Failed to create subaccount on Paystack.');
         }
 
@@ -99,7 +92,7 @@ class SubaccountPaymentService
 
         $response = $this->paystack->updateSubAccount($subaccount->subaccount_code, $updateData);
 
-        if (!isset($response['status']) || !$response['status']) {
+        if (! isset($response['status']) || ! $response['status']) {
             throw new Exception($response['message'] ?? 'Failed to update subaccount on Paystack.');
         }
 
@@ -182,7 +175,7 @@ class SubaccountPaymentService
         ?Subaccount $subaccount = null,
         string $chargeBearer = 'account'
     ): array {
-        if (!$subaccount || !$subaccount->subaccount_code) {
+        if (! $subaccount || ! $subaccount->subaccount_code) {
             return $paymentData;
         }
 
@@ -224,9 +217,9 @@ class SubaccountPaymentService
      */
     public function isSubAccountValid(Subaccount $subaccount): bool
     {
-        return !empty($subaccount->subaccount_code)
-            && !empty($subaccount->bank_code)
-            && !empty($subaccount->account_number)
+        return ! empty($subaccount->subaccount_code)
+            && ! empty($subaccount->bank_code)
+            && ! empty($subaccount->account_number)
             && $subaccount->status === 'active';
     }
 
@@ -237,7 +230,7 @@ class SubaccountPaymentService
     {
         $subaccount = $model->primarySubaccount();
 
-        if (!$subaccount) {
+        if (! $subaccount) {
             return false;
         }
 

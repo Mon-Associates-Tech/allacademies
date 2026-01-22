@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use App\Models\Team;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +18,7 @@ class TeamDeclinedNotification extends Notification
      */
     public function __construct(
         private Team $team
-    ) { }
+    ) {}
 
     /**
      * Get the notification's delivery channels.
@@ -44,7 +43,7 @@ class TeamDeclinedNotification extends Notification
             ->subject('Institutional Information Declined')
             ->line("Your changes to {$this->team->name}'s institutional information has been declined.")
             ->line("The reason was: {$this->team->declined_reason}.")
-            ->line("Kindly make the necessary changes.");
+            ->line('Kindly make the necessary changes.');
     }
 
     /**

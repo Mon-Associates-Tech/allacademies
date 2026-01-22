@@ -12,14 +12,20 @@ use Livewire\Component;
 class LibraryReports extends Component
 {
     public $reportType = 'overview';
+
     public $dateRange = '30';
+
     public $startDate = null;
+
     public $endDate = null;
+
     public $selectedBook = null;
+
     public $selectedStudent = null;
 
     // Report data
     public $reportData = [];
+
     public $chartData = [];
 
     public function mount()
@@ -244,21 +250,21 @@ class LibraryReports extends Component
         $studentActivity = Student::with(['bookBorrows' => function ($query) use ($startDate, $endDate) {
             $query->whereBetween('borrowed_at', [$startDate, $endDate]);
         }])
-        ->get()
-        ->map(function ($student) {
-            return [
-                'student' => $student,
-                'borrow_count' => $student->bookBorrows->count(),
-                'books_returned' => $student->bookBorrows->whereNotNull('returned_at')->count(),
-                'overdue_books' => $student->bookBorrows->whereNull('returned_at')
-                    ->where('expected_return_date', '<', now())->count(),
-                'late_fees' => $student->bookBorrows->sum('late_fee'),
-            ];
-        })
-        ->sortByDesc('borrow_count')
-        ->take(50)
-        ->values()
-        ->toArray();
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'student' => $student,
+                    'borrow_count' => $student->bookBorrows->count(),
+                    'books_returned' => $student->bookBorrows->whereNotNull('returned_at')->count(),
+                    'overdue_books' => $student->bookBorrows->whereNull('returned_at')
+                        ->where('expected_return_date', '<', now())->count(),
+                    'late_fees' => $student->bookBorrows->sum('late_fee'),
+                ];
+            })
+            ->sortByDesc('borrow_count')
+            ->take(50)
+            ->values()
+            ->toArray();
 
         $this->reportData = [
             'student_activity' => $studentActivity,

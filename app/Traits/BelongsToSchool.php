@@ -2,9 +2,9 @@
 
 namespace App\Traits;
 
+use App\Models\School;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\School;
 
 trait BelongsToSchool
 {
@@ -17,19 +17,19 @@ trait BelongsToSchool
     {
         // Auto-scope queries to current school context
         static::addGlobalScope('school', function (Builder $builder) {
-          //  $currentSchool = app('current_school');
+            //  $currentSchool = app('current_school');
 
             // Skip scoping for superadmin or when no school context
-         //   if (!$currentSchool || (auth()->check() && auth()->user()->hasRole('superadmin'))) {
-         //       return;
-         //   }
+            //   if (!$currentSchool || (auth()->check() && auth()->user()->hasRole('superadmin'))) {
+            //       return;
+            //   }
 
-          //  $builder->where($builder->getModel()->getTable() . '.school_id', $currentSchool->id);
+            //  $builder->where($builder->getModel()->getTable() . '.school_id', $currentSchool->id);
         });
 
         // Auto-assign school_id when creating
         static::creating(function ($model) {
-            if (!$model->school_id && app()->bound('current_school')) {
+            if (! $model->school_id && app()->bound('current_school')) {
                 $model->school_id = app('current_school')->id;
             }
         });
@@ -46,13 +46,13 @@ trait BelongsToSchool
         return $query->withoutGlobalScope('school')->where('school_id', $schoolId);
     }
 
-
     /**
      * Scope records to current user's school
      */
     public function scopeForCurrentUserSchool(Builder $query): Builder
     {
         $schoolId = auth()->user()?->school_id;
+
         return $schoolId ? $query->where('school_id', $schoolId) : $query->whereRaw('1 = 0');
     }
 
@@ -63,7 +63,7 @@ trait BelongsToSchool
     {
         // Automatically set school_id when creating records
         static::creating(function ($model) {
-            if (!$model->school_id && auth()->user()?->school_id) {
+            if (! $model->school_id && auth()->user()?->school_id) {
                 $model->school_id = auth()->user()->school_id;
             }
         });

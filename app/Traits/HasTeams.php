@@ -23,7 +23,7 @@ trait HasTeams
                 // Log the error but don't break the application
                 \Log::warning('Failed to ensure user has team', [
                     'user_id' => $this->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -60,7 +60,7 @@ trait HasTeams
         // Only get joined teams where the team owner allows switching
         $joinedTeams = $this->joinedTeams()
             ->where('is_active', true)
-            ->whereHas('owner', function($query) {
+            ->whereHas('owner', function ($query) {
                 // Add any conditions here for team owner permissions
                 // For now, we'll allow all active teams
             })
@@ -116,7 +116,7 @@ trait HasTeams
      */
     public function canSwitchToTeam(Team $team): bool
     {
-        if (!$this->canAccessTeam($team)) {
+        if (! $this->canAccessTeam($team)) {
             return false;
         }
 
@@ -135,11 +135,12 @@ trait HasTeams
      */
     public function setCurrentTeam(Team $team): bool
     {
-        if (!$this->canSwitchToTeam($team)) {
+        if (! $this->canSwitchToTeam($team)) {
             return false;
         }
 
         $this->current_team_id = $team->id;
+
         return $this->save();
     }
 
@@ -150,7 +151,7 @@ trait HasTeams
     {
         return DB::transaction(function () {
             return Team::create([
-                'name' => $this->name . "'s Personal Team",
+                'name' => $this->name."'s Personal Team",
                 'owner_id' => $this->id,
                 'is_personal' => true,
                 'is_active' => true,

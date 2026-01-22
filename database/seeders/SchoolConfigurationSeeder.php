@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\School;
-use App\Models\AcademicYear;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
 use App\Models\GradeScale;
+use App\Models\School;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -50,13 +50,13 @@ class SchoolConfigurationSeeder extends Seeder
                     School::count(),
                     AcademicYear::count(),
                     AcademicPeriod::count(),
-                    GradeScale::count()
+                    GradeScale::count(),
                 ]]
             );
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->command->error('❌ Seeding failed: ' . $e->getMessage());
+            $this->command->error('❌ Seeding failed: '.$e->getMessage());
             throw $e;
         }
     }
@@ -87,7 +87,7 @@ class SchoolConfigurationSeeder extends Seeder
                     'school_motto' => 'Excellence in Education',
                     'school_colors' => [
                         'primary' => '#1E3A8A',
-                        'secondary' => '#10B981'
+                        'secondary' => '#10B981',
                     ],
                     'report_header' => 'Springfield Academy - Where Future Leaders Learn',
                     'report_footer' => 'Committed to Excellence | Accredited by National Education Board',
@@ -114,7 +114,7 @@ class SchoolConfigurationSeeder extends Seeder
                     'school_motto' => 'Global Citizens, Local Leaders',
                     'school_colors' => [
                         'primary' => '#7C3AED',
-                        'secondary' => '#F59E0B'
+                        'secondary' => '#F59E0B',
                     ],
                     'report_header' => 'Riverside International School - Shaping Tomorrow\'s Leaders',
                     'report_footer' => 'IB World School | Recognized Worldwide',
@@ -141,7 +141,7 @@ class SchoolConfigurationSeeder extends Seeder
                     'school_motto' => 'Skills for Tomorrow',
                     'school_colors' => [
                         'primary' => '#059669',
-                        'secondary' => '#DC2626'
+                        'secondary' => '#DC2626',
                     ],
                     'report_header' => 'Greenwood Technical Institute - Building Professional Excellence',
                     'report_footer' => 'Industry Certified Programs | Career Ready',
@@ -168,7 +168,7 @@ class SchoolConfigurationSeeder extends Seeder
                     'school_motto' => 'Growing Together, Learning Forever',
                     'school_colors' => [
                         'primary' => '#EC4899',
-                        'secondary' => '#8B5CF6'
+                        'secondary' => '#8B5CF6',
                     ],
                     'report_header' => 'Maple Grove Primary School - Where Learning Begins',
                     'report_footer' => 'A Foundation for Lifelong Learning',
@@ -195,7 +195,7 @@ class SchoolConfigurationSeeder extends Seeder
                     'school_motto' => 'Reaching New Heights in Education',
                     'school_colors' => [
                         'primary' => '#0EA5E9',
-                        'secondary' => '#F97316'
+                        'secondary' => '#F97316',
                     ],
                     'report_header' => 'Summit University - Excellence in Higher Education',
                     'report_footer' => 'Research | Innovation | Leadership',
@@ -222,7 +222,7 @@ class SchoolConfigurationSeeder extends Seeder
                     'school_motto' => 'Learning Beyond Boundaries',
                     'school_colors' => [
                         'primary' => '#6366F1',
-                        'secondary' => '#14B8A6'
+                        'secondary' => '#14B8A6',
                     ],
                     'report_header' => 'Heritage Community School - Innovative Learning',
                     'report_footer' => 'Community-Centered Education',
@@ -254,21 +254,21 @@ class SchoolConfigurationSeeder extends Seeder
 
         $yearsData = [
             [
-                'name' => ($currentYear - 1) . '-' . $currentYear,
+                'name' => ($currentYear - 1).'-'.$currentYear,
                 'start_date' => Carbon::create($currentYear - 1, 9, 1),
                 'end_date' => Carbon::create($currentYear, 6, 30),
                 'status' => 'completed',
                 'is_current' => false,
             ],
             [
-                'name' => $currentYear . '-' . ($currentYear + 1),
+                'name' => $currentYear.'-'.($currentYear + 1),
                 'start_date' => Carbon::create($currentYear, 9, 1),
                 'end_date' => Carbon::create($currentYear + 1, 6, 30),
                 'status' => 'active',
                 'is_current' => true,
             ],
             [
-                'name' => ($currentYear + 1) . '-' . ($currentYear + 2),
+                'name' => ($currentYear + 1).'-'.($currentYear + 2),
                 'start_date' => Carbon::create($currentYear + 1, 9, 1),
                 'end_date' => Carbon::create($currentYear + 2, 6, 30),
                 'status' => 'upcoming',
@@ -281,7 +281,7 @@ class SchoolConfigurationSeeder extends Seeder
             $academicYear = AcademicYear::firstOrCreate(
                 [
                     'school_id' => $school->id,
-                    'name' => $data['name']
+                    'name' => $data['name'],
                 ],
                 $data
             );
@@ -313,7 +313,7 @@ class SchoolConfigurationSeeder extends Seeder
             $periodData = [
                 'school_id' => $school->id,
                 'academic_year_id' => $academicYear->id,
-                'name' => $periodConfig['name'] . ' ' . $academicYear->name,
+                'name' => $periodConfig['name'].' '.$academicYear->name,
                 'type' => $periodConfig['type'],
                 'sequence' => $index + 1,
                 'start_date' => $periodStart,
@@ -330,7 +330,7 @@ class SchoolConfigurationSeeder extends Seeder
                 [
                     'school_id' => $school->id,
                     'academic_year_id' => $academicYear->id,
-                    'sequence' => $index + 1
+                    'sequence' => $index + 1,
                 ],
                 $periodData
             );
@@ -494,13 +494,13 @@ class SchoolConfigurationSeeder extends Seeder
             GradeScale::firstOrCreate(
                 [
                     'school_id' => $school->id,
-                    'letter_grade' => $gradeData['letter_grade']
+                    'letter_grade' => $gradeData['letter_grade'],
                 ],
                 $gradeData
             );
         }
 
-        $this->command->info("    ✓ Created " . count($gradeScales) . " grade scales");
+        $this->command->info('    ✓ Created '.count($gradeScales).' grade scales');
     }
 
     /**

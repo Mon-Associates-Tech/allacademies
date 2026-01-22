@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('subaccounts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained()->onDelete('cascade'); 
+            $table->foreignId('school_id')->constrained()->onDelete('cascade');
             $table->string('subaccount_code')->unique(); // Paystack SUB_xxxxxx
             $table->string('business_name');
             $table->string('settlement_bank');

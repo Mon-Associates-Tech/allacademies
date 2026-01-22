@@ -7,11 +7,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Inserts the default pricing tiers:
      * - Basic: $10/month for first 6 months, then $5/month
      * - Premium: $15/month for first 6 months, then $10/month
-     * 
+     *
      * Note: You should define the monthly_token_limit based on your requirements
      */
     public function up(): void

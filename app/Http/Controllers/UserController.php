@@ -13,9 +13,8 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -118,7 +117,6 @@ class UserController extends Controller
     /**
      * Store a newly created user in storage.
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
@@ -129,7 +127,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,teacher,student,librarian,moderator,author,parent,subscriber'
+            'role' => 'required|in:admin,teacher,student,librarian,moderator,author,parent,guest',
         ]);
 
         // Create the user
@@ -154,16 +152,12 @@ class UserController extends Controller
 
     /**
      * Create role-specific account when user is created
-     *
-     * @param User $user
-     * @param string $role
-     * @return void
      */
     private function createRoleSpecificAccount(User $user, string $role): void
     {
         switch ($role) {
             case 'student':
-                if (!$user->student) {
+                if (! $user->student) {
                     Student::create([
                         'user_id' => $user->id,
                         'student_group_id' => null,
@@ -173,7 +167,7 @@ class UserController extends Controller
 
             case 'teacher':
                 logInfo("Creating teacher account for user {$user->name}");
-                if (!$user->teacher) {
+                if (! $user->teacher) {
                     Teacher::create([
                         'user_id' => $user->id,
                     ]);
@@ -186,7 +180,6 @@ class UserController extends Controller
     /**
      * Display the specified resource(user).
      *
-     * @param User $user
      * @return Factory|View|Application|\Illuminate\View\View|object
      */
     public function show(User $user)
@@ -198,7 +191,7 @@ class UserController extends Controller
             'subscriptions',
             'ownedTeams',
             'joinedTeams',
-            'worksheets'
+            'worksheets',
         ])->load([
             'primaryRole',
             'currentTeam',
@@ -211,7 +204,7 @@ class UserController extends Controller
             },
             'joinedTeams' => function ($query) {
                 $query->latest()->limit(3);
-            }
+            },
         ]);
 
         return view('users.show', [
@@ -222,7 +215,6 @@ class UserController extends Controller
     /**
      * Change the role of a user.
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function changeRole(Request $request)
@@ -232,7 +224,7 @@ class UserController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'email' => 'required|email|exists:users,email',
-            'role' => 'required|in:subscriber,student,teacher,librarian,author,parent,moderator,admin'
+            'role' => 'required|in:guest,student,teacher,librarian,author,parent,moderator,admin',
         ]);
 
         $user = User::findOrFail($request->user_id);
@@ -240,14 +232,14 @@ class UserController extends Controller
         // Additional validation: make sure the email matches the user
         if ($user->email !== $request->email) {
             throw ValidationException::withMessages([
-                'email' => 'The provided email does not match the selected user.'
+                'email' => 'The provided email does not match the selected user.',
             ]);
         }
 
         // Prevent changing owner role
-        if (UserRole::OWNER === $user->role) {
+        if ($user->role === UserRole::OWNER) {
             throw ValidationException::withMessages([
-                'role' => "You cannot change this user's role."
+                'role' => "You cannot change this user's role.",
             ]);
         }
 
@@ -259,7 +251,7 @@ class UserController extends Controller
         $user->handleRoleChange($user);
 
         // Create student record if role is changed to student
-        if ($request->role === 'student' && !$user->student) {
+        if ($request->role === 'student' && ! $user->student) {
             \App\Models\Student::create([
                 'user_id' => $user->id,
                 'student_group_id' => null, // You might want to assign to a default group
@@ -268,7 +260,7 @@ class UserController extends Controller
 
         // Optionally, remove student record if role is changed away from student
         if ($oldRole === 'student' && $request->role !== 'student' && $user->student) {
-          //  $user->student->delete();
+            //  $user->student->delete();
         }
 
         return redirect()->route('users.index')->with('success',

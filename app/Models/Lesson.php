@@ -14,7 +14,7 @@ class Lesson extends Model
         'academic_subject_id',
         'title',
         'description',
-        'student_group_id'
+        'student_group_id',
     ];
 
     public function teacher()
@@ -25,6 +25,7 @@ class Lesson extends Model
     public function subject()
     {
         dd('i am called');
+
         return $this->belongsTo(AcademicSubject::class, 'subject_id', 'id');
     }
 

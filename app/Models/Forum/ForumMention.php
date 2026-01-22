@@ -15,11 +15,11 @@ class ForumMention extends Model
         'mentionable_id',
         'mentioned_user_id',
         'mentioning_user_id',
-        'is_read'
+        'is_read',
     ];
 
     protected $casts = [
-        'is_read' => 'boolean'
+        'is_read' => 'boolean',
     ];
 
     public function mentionable()

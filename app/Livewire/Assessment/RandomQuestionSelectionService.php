@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Assessment;
 
+use App\Models\AcademicSubject;
+use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
+use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
-use App\Models\EssayQuestion;
-use App\Models\AcademicSubject;
-use App\Models\AcademicTopic;
-use App\Models\AcademicSubtopic;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -27,8 +27,9 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
     {
         Log::info('generateQuestions called with config:', $config);
 
-        if (!$this->validateConfiguration($config)) {
+        if (! $this->validateConfiguration($config)) {
             Log::warning('Configuration validation failed');
+
             return collect();
         }
 
@@ -41,13 +42,14 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
 
         Log::info('Subject validation result:', ['valid' => $subjectValidation]);
 
-        if (!$subjectValidation) {
+        if (! $subjectValidation) {
             Log::warning('Subject selection validation failed');
+
             return collect();
         }
 
         $questions = collect();
-        $enabledTypes = array_filter($config['question_types'] ?? [], function($enabled) {
+        $enabledTypes = array_filter($config['question_types'] ?? [], function ($enabled) {
             return $enabled === true;
         });
 
@@ -55,6 +57,7 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
 
         if (empty($enabledTypes)) {
             Log::warning('No enabled question types');
+
             return collect();
         }
 
@@ -77,6 +80,7 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
         }
 
         Log::info("Total questions generated: {$questions->count()}");
+
         return $questions->shuffle();
     }
 
@@ -87,8 +91,9 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
     {
         Log::info('getAvailableQuestionCounts called with config:', $config);
 
-        if (!$this->validateConfiguration($config)) {
+        if (! $this->validateConfiguration($config)) {
             Log::warning('Configuration validation failed in getAvailableQuestionCounts');
+
             return [];
         }
 
@@ -108,6 +113,7 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
 
         $counts['total'] = array_sum($counts);
         Log::info('Total question counts:', $counts);
+
         return $counts;
     }
 
@@ -121,11 +127,13 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
         // Check required fields
         if (empty($config['subject_id'])) {
             Log::warning('Missing subject_id');
+
             return false;
         }
 
         if (empty($config['question_count']) || $config['question_count'] < 1) {
             Log::warning('Invalid question_count');
+
             return false;
         }
 
@@ -139,75 +147,80 @@ class RandomQuestionSelectionService implements QuestionSelectionInterface
             }
         }
 
-        if (!$hasEnabledType) {
+        if (! $hasEnabledType) {
             Log::warning('No question types enabled');
+
             return false;
         }
 
         Log::info('Configuration validation passed');
+
         return true;
     }
 
-/**
- * Get questions for a specific question type
- */
-public function getQuestionsByType(string $type, array $config, int $count): Collection
-{
-    Log::info("getQuestionsByType called for type: {$type}, count: {$count}");
+    /**
+     * Get questions for a specific question type
+     */
+    public function getQuestionsByType(string $type, array $config, int $count): Collection
+    {
+        Log::info("getQuestionsByType called for type: {$type}, count: {$count}");
 
-    if ($count <= 0) {
-        Log::warning("Invalid count: {$count}");
-        return collect();
+        if ($count <= 0) {
+            Log::warning("Invalid count: {$count}");
+
+            return collect();
+        }
+
+        $class = $this->getQuestionClass($type);
+        if (! $class) {
+            Log::warning("Unknown question class for type: {$type}");
+
+            return collect();
+        }
+
+        $query = $this->buildBaseQuery($class, $config);
+
+        // Apply difficulty filter if specified
+        if (! empty($config['difficulty']) && $config['difficulty'] !== 'all') {
+            $query->where('difficulty_level', $config['difficulty']);
+            Log::info("Applied difficulty filter: {$config['difficulty']}");
+        }
+
+        // Get available questions
+        $availableQuestions = $query->get();
+        Log::info("Available questions count: {$availableQuestions->count()}");
+
+        if ($availableQuestions->isEmpty()) {
+            Log::warning("No questions available for type: {$type}");
+
+            return collect();
+        }
+
+        // Randomly select the required number of questions
+        $selectedQuestions = $availableQuestions->count() <= $count
+            ? $availableQuestions
+            : $availableQuestions->random($count);
+
+        Log::info("Selected {$selectedQuestions->count()} questions for type: {$type}");
+
+        // Format questions for assessment
+        return $selectedQuestions->map(function ($question) use ($type) {
+            // Get the question data from the model
+            $questionData = $question->getQuestion();
+
+            return [
+                'id' => $question->id,
+                'type' => $type,
+                'model' => $question,
+                'formatted' => $questionData, // This ensures we get the proper question structure
+                'difficulty' => $question->difficulty_level ?? 'medium',
+                'points' => $question->score ?? 1,
+                'subject_id' => $this->getSubjectIdFromQuestion($question),
+                'topic_id' => $this->getTopicIdFromQuestion($question),
+                'subtopic_id' => $question->academic_subtopic_id ?? null,
+            ];
+        });
     }
-
-    $class = $this->getQuestionClass($type);
-    if (!$class) {
-        Log::warning("Unknown question class for type: {$type}");
-        return collect();
-    }
-
-    $query = $this->buildBaseQuery($class, $config);
-
-    // Apply difficulty filter if specified
-    if (!empty($config['difficulty']) && $config['difficulty'] !== 'all') {
-        $query->where('difficulty_level', $config['difficulty']);
-        Log::info("Applied difficulty filter: {$config['difficulty']}");
-    }
-
-    // Get available questions
-    $availableQuestions = $query->get();
-    Log::info("Available questions count: {$availableQuestions->count()}");
-
-    if ($availableQuestions->isEmpty()) {
-        Log::warning("No questions available for type: {$type}");
-        return collect();
-    }
-
-    // Randomly select the required number of questions
-    $selectedQuestions = $availableQuestions->count() <= $count
-        ? $availableQuestions
-        : $availableQuestions->random($count);
-
-    Log::info("Selected {$selectedQuestions->count()} questions for type: {$type}");
-
-    // Format questions for assessment
-    return $selectedQuestions->map(function ($question) use ($type) {
-        // Get the question data from the model
-        $questionData = $question->getQuestion();
-
-        return [
-            'id' => $question->id,
-            'type' => $type,
-            'model' => $question,
-            'formatted' => $questionData, // This ensures we get the proper question structure
-            'difficulty' => $question->difficulty_level ?? 'medium',
-            'points' => $question->score ?? 1,
-            'subject_id' => $this->getSubjectIdFromQuestion($question),
-            'topic_id' => $this->getTopicIdFromQuestion($question),
-            'subtopic_id' => $question->academic_subtopic_id ?? null,
-        ];
-    });
-}
 
     /**
      * Mix questions from different types according to configuration
@@ -266,20 +279,20 @@ public function getQuestionsByType(string $type, array $config, int $count): Col
     protected function buildBaseQuery(string $class, array $config)
     {
         Log::info("buildBaseQuery called for class: {$class}");
-        Log::info("Config for buildBaseQuery:", $config);
+        Log::info('Config for buildBaseQuery:', $config);
 
         $query = $class::query();
 
         // Apply subject, topic, and subtopic filters
-        if (!empty($config['subtopic_id'])) {
+        if (! empty($config['subtopic_id'])) {
             // Filter by specific subtopic (keep this as it's direct)
             Log::info("Filtering by subtopic_id: {$config['subtopic_id']}");
             $query->where('academic_subtopic_id', $config['subtopic_id']);
-        } elseif (!empty($config['topic_id'])) {
+        } elseif (! empty($config['topic_id'])) {
             // Filter by topic - only use direct topic relationship
             Log::info("Filtering by topic_id: {$config['topic_id']}");
             $query->where('academic_topic_id', $config['topic_id']);
-        } elseif (!empty($config['subject_id'])) {
+        } elseif (! empty($config['subject_id'])) {
             // Filter by subject - only use direct topic relationship to subject
             Log::info("Filtering by subject_id: {$config['subject_id']}");
             $query->whereHas('academicTopic', function ($t) use ($config) {
@@ -287,8 +300,8 @@ public function getQuestionsByType(string $type, array $config, int $count): Col
             });
         }
 
-        Log::info("Final query SQL: " . $query->toSql());
-        Log::info("Final query bindings: " . json_encode($query->getBindings()));
+        Log::info('Final query SQL: '.$query->toSql());
+        Log::info('Final query bindings: '.json_encode($query->getBindings()));
 
         return $query;
     }
@@ -336,7 +349,7 @@ public function getQuestionsByType(string $type, array $config, int $count): Col
      */
     public function getQuestionDistribution(array $config): array
     {
-        if (!$this->validateConfiguration($config)) {
+        if (! $this->validateConfiguration($config)) {
             return [];
         }
 
@@ -367,12 +380,12 @@ public function getQuestionsByType(string $type, array $config, int $count): Col
      */
     public function generateBalancedQuestions(array $config): Collection
     {
-        if (!$this->validateConfiguration($config)) {
+        if (! $this->validateConfiguration($config)) {
             return collect();
         }
 
         $questions = collect();
-        $enabledTypes = array_filter($config['question_types'] ?? [], function($enabled) {
+        $enabledTypes = array_filter($config['question_types'] ?? [], function ($enabled) {
             return $enabled === true;
         });
 
@@ -409,7 +422,7 @@ public function getQuestionsByType(string $type, array $config, int $count): Col
         }
 
         $class = $this->getQuestionClass($type);
-        if (!$class) {
+        if (! $class) {
             return collect();
         }
 

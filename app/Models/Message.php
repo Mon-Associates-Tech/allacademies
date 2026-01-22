@@ -20,16 +20,27 @@ class Message extends Model
     use HasFactory, SoftDeletes, Trackable;
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_SENDING = 'sending';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_FAILED = 'failed';
+
     const TARGET_ROLE = 'role';
+
     const TARGET_ACADEMIC_GROUP = 'academic_group';
+
     const TARGET_ACADEMIC_LEVEL = 'academic_level';
+
     const TARGET_SUBJECT = 'subject';
+
     const TARGET_INDIVIDUAL = 'individual';
+
     const TARGET_CUSTOM = 'custom';
+
     protected $fillable = [
         'sender_id',
         'subject',
@@ -39,13 +50,14 @@ class Message extends Model
         'is_urgent',
         'scheduled_at',
         'sent_at',
-        'status'
+        'status',
     ];
+
     protected $casts = [
         'target_criteria' => 'array',
         'is_urgent' => 'boolean',
         'scheduled_at' => 'datetime',
-        'sent_at' => 'datetime'
+        'sent_at' => 'datetime',
     ];
 
     public function sender(): BelongsTo
@@ -138,5 +150,4 @@ class Message extends Model
             ['read_at' => now()]
         );
     }
-
 }

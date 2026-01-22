@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class SchoolPayment extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -46,7 +46,7 @@ class SchoolPayment extends Model
         'verified_by',
         'verified_at',
         'payment_structure_id',
-        'subaccount_id'
+        'subaccount_id',
     ];
 
     protected $casts = [
@@ -81,7 +81,7 @@ class SchoolPayment extends Model
             }
 
             // Auto-populate academic context from student if not provided
-            if ($payment->student_id && !$payment->academic_group_id) {
+            if ($payment->student_id && ! $payment->academic_group_id) {
                 $student = Student::find($payment->student_id);
                 if ($student) {
                     $payment->academic_group_id = $student->academic_group_id;
@@ -220,6 +220,7 @@ class SchoolPayment extends Model
         $prefix = 'PAY';
         $timestamp = now()->format('YmdHis');
         $random = strtoupper(Str::random(6));
+
         return "{$prefix}-{$timestamp}-{$random}";
     }
 
@@ -277,6 +278,7 @@ class SchoolPayment extends Model
             if ($this->payer_type === 'parent' && isset($this->payer->user)) {
                 return $this->payer->user->name ?? 'Unknown Payer';
             }
+
             // For student and other payers, directly access the name
             return $this->payer->name ?? 'Unknown Payer';
         }
@@ -314,7 +316,7 @@ class SchoolPayment extends Model
             'annual' => 'Annual',
             'monthly' => 'Monthly',
             'one_time' => 'One Time',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
     }
 

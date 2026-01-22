@@ -4,38 +4,53 @@ namespace App\Livewire\SchoolSettings;
 
 use App\Models\School;
 use App\Models\SchoolSetting;
-use App\Services\SchoolContextService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
 
 class Index extends Component
 {
     use WithFileUploads;
 
     public $currentSchool;
+
     public $settings = [];
+
     public $showSettingModal = false;
+
     public $showValueModal = false;
+
     public $showDeleteModal = false;
 
     // Setting form properties
     public $settingId = null;
+
     public $key = '';
+
     public $type = 'text';
+
     public $label = '';
+
     public $description = '';
+
     public $group = 'general';
+
     public $options = [];
+
     public $required = false;
+
     public $sortOrder = 0;
+
     public $isEditing = false;
 
     // Value form properties
     public $currentSetting = null;
+
     public $value = '';
+
     public $fileValue = null;
+
     public $currentOptions = [];
 
     // Delete confirmation
@@ -49,7 +64,7 @@ class Index extends Component
         'group' => 'required|string|max:255',
         'options' => 'nullable|array',
         'required' => 'boolean',
-        'sortOrder' => 'integer'
+        'sortOrder' => 'integer',
     ];
 
     public function mount()
@@ -69,7 +84,7 @@ class Index extends Component
             $this->currentSchool = $user->school;
         }
 
-        if (!$this->currentSchool) {
+        if (! $this->currentSchool) {
             session()->flash('error', 'No school context found. Please select a school.');
         }
     }
@@ -129,15 +144,16 @@ class Index extends Component
     {
         $this->validate();
 
-        if (!$this->currentSchool) {
+        if (! $this->currentSchool) {
             session()->flash('error', 'No school selected.');
+
             return;
         }
 
         // Additional validation for unique key per school
         $keyRule = $this->isEditing
-            ? 'unique:school_settings,key,' . $this->settingId . ',id,school_id,' . $this->currentSchool->id
-            : 'unique:school_settings,key,NULL,id,school_id,' . $this->currentSchool->id;
+            ? 'unique:school_settings,key,'.$this->settingId.',id,school_id,'.$this->currentSchool->id
+            : 'unique:school_settings,key,NULL,id,school_id,'.$this->currentSchool->id;
 
         $this->validate(['key' => $keyRule]);
 
@@ -178,7 +194,7 @@ class Index extends Component
                 Storage::delete($setting->raw_value);
             }
 
-            $path = $this->fileValue->store('settings/' . $this->currentSchool->id, 'public');
+            $path = $this->fileValue->store('settings/'.$this->currentSchool->id, 'public');
             $value = $path;
         }
 

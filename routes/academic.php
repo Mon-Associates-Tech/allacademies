@@ -44,7 +44,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
                 Route::resource('examinations', ExaminationController::class)
                     ->except(['edit', 'update', 'destroy']);
                 Route::get('examination/{examination}/answers', [ExaminationController::class, 'answers'])->name('examinations.answers');
-//                Route::get('/quizzes/start', [QuizController::class, 'start'])->name('quizzes.start');
+                //                Route::get('/quizzes/start', [QuizController::class, 'start'])->name('quizzes.start');
                 Route::match(['GET', 'POST'], '/quizzes/{quiz}/take', [QuizController::class, 'take'])->name('quizzes.take');
                 Route::get('/quizzes/{quiz}/stop', [QuizController::class, 'stop'])->name('quizzes.stop');
                 Route::resource('quizzes', QuizController::class)
@@ -54,7 +54,6 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
             });
         });
     });
-
 
     Route::get('/academic-structure', AcademicHierarchy::class)->name('academic.structure');
 

@@ -2,8 +2,6 @@
 
 namespace App\Templates;
 
-use App\Models\School;
-use App\Models\Student;
 use Illuminate\Support\Facades\View;
 
 class StudentDocumentTemplate

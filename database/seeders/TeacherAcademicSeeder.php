@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Teacher;
-use App\Models\AcademicLevel;
 use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\Teacher;
 use Illuminate\Database\Seeder;
 
 class TeacherAcademicSeeder extends Seeder

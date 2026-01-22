@@ -12,7 +12,7 @@ return new class extends Migration
             $table->string('gender')->nullable()->after('email');
             $table->string('country_code')->nullable()->after('gender');
 
-            if (!Schema::hasColumn('users', 'phone')) {
+            if (! Schema::hasColumn('users', 'phone')) {
                 $table->string('phone')->nullable()->after('country_code');
             }
         });

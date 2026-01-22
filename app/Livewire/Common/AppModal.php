@@ -7,24 +7,37 @@ use Livewire\Component;
 class AppModal extends Component
 {
     public $show = false;
+
     public $title = '';
+
     public $size = 'default';
+
     public $closable = true;
+
     public $persistent = false;
+
     public $maxWidth = '';
+
     public $backdrop = 'blur';
+
     public $position = 'bottom';
+
     public $animation = 'slide';
-    public $body  = '';
+
+    public $body = '';
+
     public $footer = '';
+
     public $actions = '';
+
     public $loading = false;
+
     public $name = '';
 
     protected $listeners = [
         'openModal' => 'open',
         'closeModal' => 'close',
-        'toggleModal' => 'toggle'
+        'toggleModal' => 'toggle',
     ];
 
     public function mount(
@@ -50,7 +63,7 @@ class AppModal extends Component
 
     public function open($data = [])
     {
-        if ( (isset($data['name']) && $data['name'] !== $this->name)) {
+        if ((isset($data['name']) && $data['name'] !== $this->name)) {
             return;
         }
         if (isset($data['title'])) {
@@ -68,8 +81,8 @@ class AppModal extends Component
     public function close()
     {
 
-            $this->show = false;
-            $this->dispatch('modal-closed');
+        $this->show = false;
+        $this->dispatch('modal-closed');
 
     }
 
@@ -80,7 +93,7 @@ class AppModal extends Component
 
     public function closeOnBackdrop()
     {
-        if ($this->closable && !$this->persistent) {
+        if ($this->closable && ! $this->persistent) {
             $this->close();
         }
     }

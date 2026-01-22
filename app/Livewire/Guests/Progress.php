@@ -1,26 +1,22 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
 use App\Models\Assessment;
 use App\Models\BookSubscription;
-use App\Models\Quiz;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Carbon\Carbon;
 
 class Progress extends Component
 {
     public $timeframe = 'month'; // 'week', 'month', 'year'
+
     public $progressData = [];
+
     public $stats = [];
 
     public function mount()
-    {
-        $this->loadProgressData();
-    }
-
-    public function updatedTimeframe()
     {
         $this->loadProgressData();
     }
@@ -29,11 +25,11 @@ class Progress extends Component
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             return;
         }
 
-        $startDate = match($this->timeframe) {
+        $startDate = match ($this->timeframe) {
             'week' => Carbon::now()->startOfWeek(),
             'month' => Carbon::now()->startOfMonth(),
             'year' => Carbon::now()->startOfYear(),
@@ -97,8 +93,13 @@ class Progress extends Component
         })->values();
     }
 
+    public function updatedTimeframe()
+    {
+        $this->loadProgressData();
+    }
+
     public function render()
     {
-        return view('livewire.subscribers.progress');
+        return view('livewire.guests.progress');
     }
 }

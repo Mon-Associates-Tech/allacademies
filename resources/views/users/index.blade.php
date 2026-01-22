@@ -1,4 +1,4 @@
-<x-layouts.app title="Users">
+<x-layouts.app page-name="Users">
     <!-- Add search and filter controls -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex-1 max-w-md">
@@ -21,7 +21,8 @@
                            placeholder="Search users by name or email..."
                            class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
@@ -65,7 +66,7 @@
                 <option value="moderator" {{ request('role') === 'moderator' ? 'selected' : '' }}>Moderator</option>
                 <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner</option>
                 <option value="author" {{ request('role') === 'author' ? 'selected' : '' }}>Author</option>
-                <option value="subscriber" {{ request('role') === 'subscriber' ? 'selected' : '' }}>Subscriber</option>
+                <option value="guest" {{ request('role') === 'guest' ? 'selected' : '' }}>Guest</option>
                 <option value="parent" {{ request('role') === 'parent' ? 'selected' : '' }}>Parent</option>
             </select>
 
@@ -145,17 +146,29 @@
     @endif
 
     @if ($users->count())
-        <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 dark:ring-gray-700/50 rounded-lg overflow-hidden">
+        <div
+            class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 dark:ring-gray-700/50 rounded-lg overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Activity</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"><span class="sr-only">Actions</span></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            User
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Role
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Activity
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Joined
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <span class="sr-only">Actions</span></th>
                     </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -164,7 +177,8 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-3">
                                     <div class="relative">
-                                        <x-avatar avatar="{{$user->avatar}}" class="h-10 w-10" name="{{ $user->name }}"/>
+                                        <x-avatar avatar="{{$user->avatar}}" class="h-10 w-10"
+                                                  name="{{ $user->name }}"/>
                                         @if($user->is_online)
                                             <div
                                                 class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-400 border-2 border-white dark:border-gray-800"></div>
@@ -191,7 +205,7 @@
                                         'librarian' => 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200',
                                         'author' => 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200',
                                         'parent' => 'bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-200',
-                                        'subscriber' => 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200',
+                                        'guest' => 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200',
                                         'moderator' => 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200',
                                         'owner' => 'bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-200',
                                     ];
@@ -243,18 +257,21 @@
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm text-gray-500 dark:text-gray-400">{{ $user->created_at->format('M j, Y') }}</span>
+                                <span
+                                    class="text-sm text-gray-500 dark:text-gray-400">{{ $user->created_at->format('M j, Y') }}</span>
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-2">
-                                    <a href="{{ route('users.show', ['user' => $user]) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                                    <a href="{{ route('users.show', ['user' => $user]) }}"
+                                       class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
                                         View
                                     </a>
 
                                     <x-dropdown>
                                         <!-- Trigger -->
-                                        <button class="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+                                        <button
+                                            class="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                                             <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path
                                                     d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
@@ -268,7 +285,8 @@
                                                     <x-dropdown.item
                                                         onclick="window.Modal.open('change-role-form', { userName:  '{{$user->name}}', email: '{{$user->email}}', role: '{{$user->role}}', id: '{{$user->id}}' })">
                                                         <x-slot name="icon">
-                                                            <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none"
+                                                            <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500"
+                                                                 fill="none"
                                                                  stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                       stroke-width="2"
@@ -282,7 +300,8 @@
 
                                             <x-dropdown.item :href="route('users.show', ['user' => $user])">
                                                 <x-slot name="icon">
-                                                    <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none"
+                                                    <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500"
+                                                         fill="none"
                                                          stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                               stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -298,12 +317,14 @@
                                                 <x-dropdown.item
                                                     :href="route('impersonate', $user->id)">
                                                     <x-slot:icon>
-                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                             viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
                                                                   d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                                                         </svg>
                                                     </x-slot:icon>
-                                                    <span class="hidden sm:inline">Impersonate</span>
+                                                    <span class="hidden sm:inline">Troubleshoot</span>
                                                 </x-dropdown.item>
                                             @endif
 
@@ -337,7 +358,8 @@
     @else
         <!-- Empty state -->
         <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor"
+                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
             </svg>
@@ -361,7 +383,8 @@
             <input type="hidden" name="user_id" x-model="modalData.id">
 
             <div>
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900">
+                <div
+                    class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900">
                     <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
                          viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -399,12 +422,13 @@
                 </div>
 
                 <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Role</label>
+                    <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New
+                        Role</label>
                     <select name="role"
                             id="role"
                             x-model="modalData.role"
                             class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="subscriber">Subscriber</option>
+                        <option value="guest">Guest</option>
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>
                         <option value="librarian">Librarian</option>
@@ -466,7 +490,8 @@
 
             <!-- Password Field -->
             <div class="mb-4">
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                <label for="password"
+                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
                 <input type="password"
                        id="password"
                        name="password"
@@ -490,7 +515,7 @@
                     <option value="moderator">Moderator</option>
                     <option value="author">Author</option>
                     <option value="parent">Parent</option>
-                    <option value="subscriber">Subscriber</option>
+                    <option value="guest">Guest</option>
                 </select>
             </div>
         </form>

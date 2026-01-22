@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\Assessment;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\Assessment;
 use App\Models\QuizSession;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -16,23 +16,32 @@ class Overview extends Component
 
     // Assignment Stats
     public $totalAssignments = 0;
+
     public $completedAssignments = 0;
+
     public $ongoingAssignments = 0;
+
     public $overdueAssignments = 0;
+
     public $upcomingAssignments = 0;
 
     // Self-Assessment (Book-based) Stats
     public $totalSelfAssessments = 0;
+
     public $recentSelfAssessments = [];
+
     public $averageSelfAssessmentScore = 0;
 
     // Performance Stats
     public $averageAssignmentScore = 0;
+
     public $assignmentsThisWeek = 0;
+
     public $assignmentsThisMonth = 0;
 
     // Recent Data
     public $recentAssignments = [];
+
     public $upcomingDueAssignments = [];
 
     // Subject Performance
@@ -40,6 +49,7 @@ class Overview extends Component
 
     // Charts data
     public $performanceChartData = [];
+
     public $subjectChartData = [];
 
     // Chart props for Livewire components
@@ -115,7 +125,7 @@ class Overview extends Component
                 $submission = $submissions->where('assignment_id', $assignment->id)->first();
 
                 return $assignment->ends_at < now() &&
-                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+                    (! $submission || ! in_array($submission->status, ['completed', 'submitted', 'graded']));
             })
             ->count();
 
@@ -126,7 +136,7 @@ class Overview extends Component
 
                 return $assignment->ends_at >= now() &&
                     $assignment->ends_at <= now()->addDays(7) &&
-                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded']));
+                    (! $submission || ! in_array($submission->status, ['completed', 'submitted', 'graded']));
             })
             ->count();
 
@@ -139,6 +149,7 @@ class Overview extends Component
                     if ($submission->total_marks > 0) {
                         return ($submission->score / $submission->total_marks) * 100;
                     }
+
                     return 0;
                 }),
                 1
@@ -168,7 +179,7 @@ class Overview extends Component
             ->where(function ($query) use ($student) {
                 // Check academic groups
                 $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
-                if (!empty($academicGroupIds)) {
+                if (! empty($academicGroupIds)) {
                     $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
                         $q->whereIn('academic_groups.id', $academicGroupIds);
                     });
@@ -183,7 +194,7 @@ class Overview extends Component
 
                 // Check student groups
                 $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
-                if (!empty($studentGroupIds)) {
+                if (! empty($studentGroupIds)) {
                     $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
                         $q->whereIn('student_groups.id', $studentGroupIds);
                     });
@@ -197,6 +208,7 @@ class Overview extends Component
             ->with(['academicSubject', 'teacher.user'])
             ->get();
     }
+
     protected function loadSelfAssessmentStats()
     {
         $student = $this->student;
@@ -261,6 +273,7 @@ class Overview extends Component
                 if ($submission->total_marks > 0) {
                     return ($submission->score / $submission->total_marks) * 100;
                 }
+
                 return 0;
             });
 
@@ -347,7 +360,7 @@ class Overview extends Component
         $submissions->groupBy('assignment.academic_subject_id')->each(function ($subjectSubmissions, $subjectId) use (&$subjectStats) {
             $subject = $subjectSubmissions->first()->assignment->academicSubject;
 
-            if (!$subject) {
+            if (! $subject) {
                 return;
             }
 

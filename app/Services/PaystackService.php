@@ -7,19 +7,19 @@ use GuzzleHttp\Client;
 class PaystackService
 {
     protected $client;
+
     protected $secretKey;
+
     private $initialized = false;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function createSubAccount(array $data): array
     {
         $this->initialize();
 
         $response = $this->client->post('/subaccount', [
-            'json' => $data
+            'json' => $data,
         ]);
 
         return json_decode($response->getBody(), true);
@@ -46,10 +46,10 @@ class PaystackService
         $this->client = new Client([
             'base_uri' => 'https://api.paystack.co',
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->secretKey,
+                'Authorization' => 'Bearer '.$this->secretKey,
                 'Content-Type' => 'application/json',
             ],
-            'verify' => false
+            'verify' => false,
         ]);
 
         $this->initialized = true;
@@ -63,7 +63,7 @@ class PaystackService
         // Check if testing mode is enabled via session
         $testMode = session('TESTING_SUBSCRIPTIONS', false);
 
-        if (!$testMode) {
+        if (! $testMode) {
             return false;
         }
 
@@ -76,12 +76,11 @@ class PaystackService
         $this->initialize();
 
         $response = $this->client->put("/subaccount/{$subaccountCode}", [
-            'json' => $data
+            'json' => $data,
         ]);
 
         return json_decode($response->getBody(), true);
     }
-
 
     // 🔹 Initialize Transaction
     public function initializeTransaction(array $data): array
@@ -89,7 +88,7 @@ class PaystackService
         $this->initialize(); // Initialize only when needed
 
         $response = $this->client->post('/transaction/initialize', [
-            'json' => $data
+            'json' => $data,
         ]);
 
         return json_decode($response->getBody(), true);

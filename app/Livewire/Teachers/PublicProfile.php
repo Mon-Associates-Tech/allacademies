@@ -8,10 +8,15 @@ use Livewire\Component;
 class PublicProfile extends Component
 {
     public User $user;
+
     public $teacher;
+
     public $totalStudents = 0;
+
     public $totalAssignments = 0;
+
     public $totalSubjects = 0;
+
     public $recentAssignments;
 
     public function mount(User $user)
@@ -19,7 +24,7 @@ class PublicProfile extends Component
         $this->user = $user;
         $this->teacher = $user->teacher;
 
-        if (!$this->teacher) {
+        if (! $this->teacher) {
             abort(404, 'Teacher profile not found.');
         }
 

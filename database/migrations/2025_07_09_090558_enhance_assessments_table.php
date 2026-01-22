@@ -38,7 +38,7 @@ return new class extends Migration
             $table->dropColumn([
                 'assignment_id', 'type', 'question_types', 'time_limit_minutes',
                 'has_essay_questions', 'essay_grading_status', 'graded_by',
-                'graded_at', 'teacher_feedback'
+                'graded_at', 'teacher_feedback',
             ]);
         });
     }

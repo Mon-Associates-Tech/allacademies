@@ -25,7 +25,7 @@ class Subaccount extends Model
         'paystack_response',
         'bank_code',
         'is_primary',
-        'status'
+        'status',
     ];
 
     protected $casts = [
@@ -45,6 +45,7 @@ class Subaccount extends Model
 
     /**
      * Legacy relationship for backward compatibility
+     *
      * @deprecated Use subaccountable() instead
      */
     public function school(): BelongsTo
@@ -94,6 +95,7 @@ class Subaccount extends Model
                 ?? $this->subaccountable->user?->email
                 ?? null;
         }
+
         return null;
     }
 

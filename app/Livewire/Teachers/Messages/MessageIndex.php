@@ -11,9 +11,13 @@ class MessageIndex extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 15;
 
     protected $queryString = [
@@ -50,6 +54,7 @@ class MessageIndex extends Component
         // Check if user has permission to delete
         if ($message->sender_id !== auth()->id()) {
             session()->flash('error', 'You do not have permission to delete this message.');
+
             return;
         }
 
@@ -63,8 +68,8 @@ class MessageIndex extends Component
             ->where('sender_id', auth()->id())
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('subject', 'like', '%' . $this->search . '%')
-                        ->orWhere('body', 'like', '%' . $this->search . '%');
+                    $q->where('subject', 'like', '%'.$this->search.'%')
+                        ->orWhere('body', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->statusFilter !== 'all', function ($query) {
@@ -84,7 +89,7 @@ class MessageIndex extends Component
                 'scheduled' => Message::where('sender_id', auth()->id())->where('status', Message::STATUS_SCHEDULED)->count(),
                 'sent' => Message::where('sender_id', auth()->id())->where('status', Message::STATUS_SENT)->count(),
                 'failed' => Message::where('sender_id', auth()->id())->where('status', Message::STATUS_FAILED)->count(),
-            ]
+            ],
         ]);
     }
 }

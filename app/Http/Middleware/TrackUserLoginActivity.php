@@ -19,7 +19,7 @@ class TrackUserLoginActivity
             ]);
 
             // Store in cache for 5 minutes
-            Cache::put('user-online-' . $user->id, true, now()->addMinutes(5));
+            Cache::put('user-online-'.$user->id, true, now()->addMinutes(5));
         }
 
         return $next($request);

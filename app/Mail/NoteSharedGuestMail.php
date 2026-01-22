@@ -15,7 +15,9 @@ class NoteSharedGuestMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public Note $note;
+
     public string $guestEmail;
+
     public bool $canEdit;
 
     public function __construct(Note $note, string $guestEmail, bool $canEdit = false)
@@ -33,7 +35,7 @@ class NoteSharedGuestMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Note Shared: ' . $this->note->title,
+            subject: 'Note Shared: '.$this->note->title,
         );
     }
 

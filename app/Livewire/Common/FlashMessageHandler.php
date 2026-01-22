@@ -7,11 +7,14 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Livewire\Attributes\On;
 use Livewire\Component;
+
 #[On('message')]
 class FlashMessageHandler extends Component
 {
     public $flashMessages = [];
+
     public $autoHide = true;
+
     public $hideDelay = 5000; // 5 seconds
 
     protected $listeners = [
@@ -43,7 +46,7 @@ class FlashMessageHandler extends Component
 
     public function addFlashMessage($message = '', $type = 'info', $autoHide = null): void
     {
-        if (!$message || !is_string($message)) {
+        if (! $message || ! is_string($message)) {
             return;
         }
 
@@ -85,7 +88,7 @@ class FlashMessageHandler extends Component
 
     public function dismissMessage($id): void
     {
-        $this->flashMessages = array_filter($this->flashMessages, fn($message) => $message['id'] !== $id);
+        $this->flashMessages = array_filter($this->flashMessages, fn ($message) => $message['id'] !== $id);
     }
 
     public function clearAllMessages(): void

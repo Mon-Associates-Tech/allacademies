@@ -25,7 +25,7 @@ class CheckEndedSessionsJob implements ShouldQueue
         foreach ($liveSessions as $session) {
             try {
                 // Check if meeting is actually still running
-                if (!$bbbService->isMeetingRunning($session->meeting_id)) {
+                if (! $bbbService->isMeetingRunning($session->meeting_id)) {
                     $session->update([
                         'status' => 'ended',
                         'actual_end' => now(),

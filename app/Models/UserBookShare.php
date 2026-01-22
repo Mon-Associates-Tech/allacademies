@@ -52,7 +52,7 @@ class UserBookShare extends Model
      */
     public function getAffectedUsers()
     {
-        return match($this->share_type) {
+        return match ($this->share_type) {
             'individual' => collect([$this->sharedTo]),
             'academic_group' => $this->attributes['academic_group_id']
                 ? AcademicGroup::find($this->attributes['academic_group_id'])?->students()->with('user')->get()->pluck('user') ?? collect([])
@@ -72,7 +72,7 @@ class UserBookShare extends Model
      */
     public function getAffectedUsersCount(): int
     {
-        return match($this->share_type) {
+        return match ($this->share_type) {
             'individual' => 1,
             'academic_group' => $this->academicGroup?->students()->count() ?? 0,
             'academic_level' => $this->academicLevel?->students()->count() ?? 0,
@@ -94,7 +94,7 @@ class UserBookShare extends Model
             return false;
         }
 
-        return match($this->share_type) {
+        return match ($this->share_type) {
             'individual' => $this->shared_to_user_id === $user->id,
             'academic_group' => $user->student?->academic_group_id === $this->academic_group_id,
             'academic_level' => $user->student?->academic_level_id === $this->academic_level_id,
@@ -108,7 +108,7 @@ class UserBookShare extends Model
      */
     public function getShareTargetName(): string
     {
-        return match($this->share_type) {
+        return match ($this->share_type) {
             'individual' => $this->sharedTo?->name ?? $this->shared_to_email,
             'academic_group' => $this->academicGroup?->name ?? 'Unknown Group',
             'academic_level' => $this->academicLevel?->name ?? 'Unknown Level',
@@ -165,7 +165,6 @@ class UserBookShare extends Model
         });
     }
 
-
     public function userBook(): BelongsTo
     {
         return $this->belongsTo(UserBook::class);
@@ -210,11 +209,8 @@ class UserBookShare extends Model
         }
     }
 
-   public function sharedWith()
-   {
-       return $this->belongsTo(User::class, 'shared_with_id');
-   }
-
-
+    public function sharedWith()
+    {
+        return $this->belongsTo(User::class, 'shared_with_id');
+    }
 }
-

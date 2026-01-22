@@ -49,7 +49,6 @@ class NoteShare extends Model
         return $this->morphTo();
     }
 
-
     /**
      * Get the recipient email whether it's a user or guest
      */
@@ -71,6 +70,6 @@ class NoteShare extends Model
      */
     public function isGuest(): bool
     {
-        return !$this->shared_with_user_id && !empty($this->guest_email);
+        return ! $this->shared_with_user_id && ! empty($this->guest_email);
     }
 }

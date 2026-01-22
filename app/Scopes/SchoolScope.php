@@ -18,7 +18,7 @@ class SchoolScope implements Scope
         }
 
         // Only apply scoping if the model's table has a school_id column
-        if (!Schema::hasColumn($model->getTable(), 'school_id')) {
+        if (! Schema::hasColumn($model->getTable(), 'school_id')) {
             return;
         }
 
@@ -33,7 +33,8 @@ class SchoolScope implements Scope
 
             // If it's a valid school ID, apply scoping
             if ($schoolId > 0) {
-                $builder->where($model->getTable() . '.school_id', $schoolId);
+                $builder->where($model->getTable().'.school_id', $schoolId);
+
                 return;
             }
         }
@@ -49,7 +50,7 @@ class SchoolScope implements Scope
 
             // Apply school scoping for regular users
             if ($user->school_id) {
-                $builder->where($model->getTable() . '.school_id', $user->school_id);
+                $builder->where($model->getTable().'.school_id', $user->school_id);
             }
         }
     }

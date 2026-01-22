@@ -20,7 +20,7 @@ class AcademicChatServiceTest extends TestCase
         $this->assertArrayHasKey('science', $subjects);
         $this->assertArrayHasKey('language_arts', $subjects);
 
-// Check that mathematics has expected topics
+        // Check that mathematics has expected topics
         $this->assertContains('algebra', $subjects['mathematics']);
         $this->assertContains('geometry', $subjects['mathematics']);
     }
@@ -29,26 +29,44 @@ class AcademicChatServiceTest extends TestCase
     public function parameter_validation_catches_all_error_types()
     {
         $testCases = [
-// Missing message
-            ['age' => 15] => 'Message is required',
+            // Missing message
+            [
+                'params' => ['age' => 15],
+                'expectedError' => 'Message is required',
+            ],
 
-// Invalid age
-            ['message' => 'test', 'age' => 3] => 'Age must be between 5 and 100',
-            ['message' => 'test', 'age' => 150] => 'Age must be between 5 and 100',
+            // Invalid age
+            [
+                'params' => ['message' => 'test', 'age' => 3],
+                'expectedError' => 'Age must be between 5 and 100',
+            ],
+            [
+                'params' => ['message' => 'test', 'age' => 150],
+                'expectedError' => 'Age must be between 5 and 100',
+            ],
 
-// Invalid academic level
-            ['message' => 'test', 'academic_level' => 'invalid'] => 'Invalid academic level',
+            // Invalid academic level
+            [
+                'params' => ['message' => 'test', 'academic_level' => 'invalid'],
+                'expectedError' => 'Invalid academic level',
+            ],
 
-// Invalid learning style
-            ['message' => 'test', 'learning_style' => 'invalid'] => 'Invalid learning style',
+            // Invalid learning style
+            [
+                'params' => ['message' => 'test', 'learning_style' => 'invalid'],
+                'expectedError' => 'Invalid learning style',
+            ],
 
-// Invalid creativity level
-            ['message' => 'test', 'creativity_level' => 2] => 'Creativity level must be between 0 and 1',
+            // Invalid creativity level
+            [
+                'params' => ['message' => 'test', 'creativity_level' => 2],
+                'expectedError' => 'Creativity level must be between 0 and 1',
+            ],
         ];
 
-        foreach ($testCases as $params => $expectedError) {
-            $errors = $this->chatService->validateParameters($params);
-            $this->assertContains($expectedError, $errors, "Failed for parameters: " . json_encode($params));
+        foreach ($testCases as $testCase) {
+            $errors = $this->chatService->validateParameters($testCase['params']);
+            $this->assertContains($testCase['expectedError'], $errors, 'Failed for parameters: '.json_encode($testCase['params']));
         }
     }
 
@@ -59,15 +77,15 @@ class AcademicChatServiceTest extends TestCase
         $method = $reflection->getMethod('buildAcademicSystemMessage');
         $method->setAccessible(true);
 
-// Test elementary age
+        // Test elementary age
         $elementaryMessage = $method->invoke($this->chatService, ['age' => 8]);
         $this->assertStringContainsString('simple, friendly language', $elementaryMessage);
 
-// Test high school age
+        // Test high school age
         $highSchoolMessage = $method->invoke($this->chatService, ['age' => 16]);
         $this->assertStringContainsString('comprehensive language', $highSchoolMessage);
 
-// Test college age
+        // Test college age
         $collegeMessage = $method->invoke($this->chatService, ['age' => 20]);
         $this->assertStringContainsString('academic language', $collegeMessage);
     }
@@ -92,7 +110,6 @@ class AcademicChatServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->chatService = new AcademicChatService();
+        $this->chatService = new AcademicChatService;
     }
 }
-

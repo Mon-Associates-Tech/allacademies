@@ -18,12 +18,33 @@ class Note extends Model
         'user_id',
         'book_id',
         'academic_subject_id',
-        'is_public'
+        'is_public',
+        'background_color',
     ];
 
     protected $casts = [
-        'is_public' => 'boolean'
+        'is_public' => 'boolean',
     ];
+
+    public static function getBackgroundColors(): array
+    {
+        return [
+            'white' => ['name' => 'White', 'class' => 'bg-white dark:bg-gray-800'],
+            'blue' => ['name' => 'Blue', 'class' => 'bg-blue-50 dark:bg-blue-900/20'],
+            'green' => ['name' => 'Green', 'class' => 'bg-green-50 dark:bg-green-900/20'],
+            'yellow' => ['name' => 'Yellow', 'class' => 'bg-yellow-50 dark:bg-yellow-900/20'],
+            'purple' => ['name' => 'Purple', 'class' => 'bg-purple-50 dark:bg-purple-900/20'],
+            'pink' => ['name' => 'Pink', 'class' => 'bg-pink-50 dark:bg-pink-900/20'],
+            'indigo' => ['name' => 'Indigo', 'class' => 'bg-indigo-50 dark:bg-indigo-900/20'],
+        ];
+    }
+
+    public function getBackgroundClass(): string
+    {
+        $colors = self::getBackgroundColors();
+
+        return $colors[$this->background_color]['class'] ?? $colors['white']['class'];
+    }
 
     public function user(): BelongsTo
     {
@@ -61,7 +82,7 @@ class Note extends Model
 
         // Check group-based shares
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -103,7 +124,7 @@ class Note extends Model
         }
 
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -133,6 +154,7 @@ class Note extends Model
             })
             ->exists();
     }
+
     public function canUserView($userId): bool
     {
         return $this->user_id === $userId ||
@@ -166,5 +188,4 @@ class Note extends Model
     {
         return $this->hasMany(NoteAttachment::class);
     }
-
 }

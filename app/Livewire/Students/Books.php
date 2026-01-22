@@ -16,15 +16,23 @@ class Books extends AppComponent
     use WithPagination;
 
     public $bookTab = 'available';
+
     public $search = '';
+
     public $selectedPrice = '';
+
     public $selectedCategory = '';
+
     public $selectedFormat = '';
+
     public $categories = [];
 
     public $showPdfReader = false;
+
     public $currentBookId = null;
+
     public $currentPage = 1;
+
     public $totalPages = 0;
 
     protected $queryString = [
@@ -38,6 +46,7 @@ class Books extends AppComponent
     public $isLoading = false;
 
     public $showSubscriptionModal = false;
+
     public $subscriptionData = [];
 
     protected function getListeners()
@@ -58,7 +67,7 @@ class Books extends AppComponent
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'accessed_books_page',
-                'page' => 'books'
+                'page' => 'books',
             ])
             ->log('Student accessed books page');
     }
@@ -94,7 +103,7 @@ class Books extends AppComponent
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'changed_books_tab',
-                'tab' => $tab
+                'tab' => $tab,
             ])
             ->log('Student changed books tab');
     }
@@ -102,7 +111,9 @@ class Books extends AppComponent
     public function hasBookAccess($bookId)
     {
         $student = Auth::user()->student;
-        if (!$student) return false;
+        if (! $student) {
+            return false;
+        }
 
         // Check individual subscription
         $hasIndividualSubscription = BookSubscription::where('user_id', auth()->user()->id)
@@ -138,17 +149,21 @@ class Books extends AppComponent
     public function getBookStatus($bookId)
     {
         $student = Auth::user()->student;
-        if (!$student) return null;
+        if (! $student) {
+            return null;
+        }
 
         $book = Book::find($bookId);
-        if (!$book) return null;
+        if (! $book) {
+            return null;
+        }
 
         // Check if book is free
         if ($book->annual_subscription_fee == 0 || is_null($book->annual_subscription_fee)) {
             return [
                 'type' => 'free',
                 'label' => 'Added',
-                'class' => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                'class' => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
             ];
         }
 
@@ -162,7 +177,7 @@ class Books extends AppComponent
             return [
                 'type' => 'subscribed',
                 'label' => 'Subscribed',
-                'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
+                'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
             ];
         }
 
@@ -176,7 +191,7 @@ class Books extends AppComponent
             return [
                 'type' => 'pending',
                 'label' => 'Pending Payment',
-                'class' => 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-100'
+                'class' => 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-100',
             ];
         }
 
@@ -191,7 +206,7 @@ class Books extends AppComponent
                 return [
                     'type' => 'group_subscribed',
                     'label' => 'Group Access',
-                    'class' => 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
+                    'class' => 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100',
                 ];
             }
         }
@@ -202,6 +217,7 @@ class Books extends AppComponent
     public function isBookFree($bookId)
     {
         $book = Book::find($bookId);
+
         return $book && ($book->annual_subscription_fee == 0 || is_null($book->annual_subscription_fee));
     }
 
@@ -209,7 +225,9 @@ class Books extends AppComponent
     public function isBookSubscribed($bookId)
     {
         $student = Auth::user()->student;
-        if (!$student) return false;
+        if (! $student) {
+            return false;
+        }
 
         // Check individual subscription
         $hasIndividualSubscription = BookSubscription::where('user_id', auth()->user()->id)
@@ -239,7 +257,9 @@ class Books extends AppComponent
     public function isBookBorrowed($bookId)
     {
         $student = Auth::user()->student;
-        if (!$student) return false;
+        if (! $student) {
+            return false;
+        }
 
         return BookBorrowing::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
@@ -250,7 +270,9 @@ class Books extends AppComponent
     public function getBookBorrowing($bookId)
     {
         $student = Auth::user()->student;
-        if (!$student) return null;
+        if (! $student) {
+            return null;
+        }
 
         return BookBorrowing::where('user_id', auth()->user()->id)
             ->where('book_id', $bookId)
@@ -287,8 +309,9 @@ class Books extends AppComponent
 
         $hasAccess = $hasIndividualAccess || $hasGroupAccess || $isFree;
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             session()->flash('error', 'You need to subscribe to this book first.');
+
             return;
         }
 
@@ -304,7 +327,7 @@ class Books extends AppComponent
         \Log::info('Opening PDF reader', [
             'bookId' => $bookId,
             'pdfUrl' => $book->content_url,
-            'currentPage' => $this->currentPage
+            'currentPage' => $this->currentPage,
         ]);
 
         // Log book opening
@@ -317,7 +340,7 @@ class Books extends AppComponent
                 'book_title' => $book->title,
                 'starting_page' => $this->currentPage,
                 'has_previous_progress' => $progress ? true : false,
-                'access_type' => $hasIndividualAccess ? 'individual' : ($hasGroupAccess ? 'group' : 'free')
+                'access_type' => $hasIndividualAccess ? 'individual' : ($hasGroupAccess ? 'group' : 'free'),
             ])
             ->log('Student opened book reader');
 
@@ -325,7 +348,7 @@ class Books extends AppComponent
         $this->dispatch('pdf-reader-open', [
             'pdfUrl' => $this->book->content_url,
             'title' => $this->book->title,
-            'currentPage' => $this->currentPage
+            'currentPage' => $this->currentPage,
         ]);
 
     }
@@ -345,19 +368,19 @@ class Books extends AppComponent
 
     public function saveReadingProgress($page, $totalPages)
     {
-        if (!$this->currentBookId) {
+        if (! $this->currentBookId) {
             return;
         }
 
         $progress = BookReadingProgress::updateOrCreate(
             [
                 'book_id' => $this->currentBookId,
-                'user_id' => auth()->user()->id
+                'user_id' => auth()->user()->id,
             ],
             [
                 'current_page' => $page,
                 'total_pages' => $totalPages,
-                'last_read_at' => now()
+                'last_read_at' => now(),
             ]
         );
 
@@ -372,7 +395,7 @@ class Books extends AppComponent
                 'book_title' => $book->title ?? 'Unknown',
                 'current_page' => $page,
                 'total_pages' => $totalPages,
-                'progress_percentage' => $totalPages > 0 ? round(($page / $totalPages) * 100, 2) : 0
+                'progress_percentage' => $totalPages > 0 ? round(($page / $totalPages) * 100, 2) : 0,
             ])
             ->log('User updated reading progress');
 
@@ -384,17 +407,19 @@ class Books extends AppComponent
         $this->startLoading();
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
             $this->endLoading();
+
             return;
         }
 
         $book = Book::findOrFail($bookId);
 
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             session()->flash('error', 'This book is not available for subscription.');
             $this->endLoading();
+
             return;
         }
 
@@ -410,11 +435,12 @@ class Books extends AppComponent
                 session()->flash('error', 'You have a pending subscription for this book. Please complete payment.');
             }
             $this->endLoading();
+
             return;
         }
 
         // Create subscription with pending payment status
-        $reference = 'BS' . time() . $student->id . $bookId;
+        $reference = 'BS'.time().$student->id.$bookId;
 
         $subscription = BookSubscription::create([
             'user_id' => auth()->user()->id,
@@ -431,7 +457,7 @@ class Books extends AppComponent
             'book_title' => $book->title,
             'amount' => $subscription->annual_fee,
             'reference' => $reference,
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ];
 
         // Log book subscription
@@ -445,7 +471,7 @@ class Books extends AppComponent
                 'subscription_duration' => '1 year',
                 'annual_fee' => $subscription->annual_fee,
                 'reference' => $reference,
-                'status' => 'pending_payment'
+                'status' => 'pending_payment',
             ])
             ->log('User initiated book subscription');
 
@@ -462,7 +488,7 @@ class Books extends AppComponent
             'book_title' => $subscription->book->title,
             'amount' => $subscription->annual_fee,
             'reference' => $subscription->reference,
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ];
 
         $this->dispatch('showSubscriptionModal', $this->subscriptionData);
@@ -480,9 +506,10 @@ class Books extends AppComponent
         $this->startLoading();
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
             $this->endLoading();
+
             return;
         }
 
@@ -491,9 +518,10 @@ class Books extends AppComponent
             ->where('status', 'active')
             ->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             session()->flash('error', 'No active subscription found.');
             $this->endLoading();
+
             return;
         }
 
@@ -508,7 +536,7 @@ class Books extends AppComponent
                 'action' => 'unsubscribed_from_book',
                 'book_id' => $bookId,
                 'book_title' => $book->title ?? 'Unknown',
-                'cancelled_at' => now()->toDateTimeString()
+                'cancelled_at' => now()->toDateTimeString(),
             ])
             ->log('Student unsubscribed from book');
 
@@ -521,17 +549,19 @@ class Books extends AppComponent
         $this->startLoading();
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
             $this->endLoading();
+
             return;
         }
 
         $book = Book::findOrFail($bookId);
 
-        if (!$book->has_hardcopy) {
+        if (! $book->has_hardcopy) {
             session()->flash('error', 'This book is not available for borrowing.');
             $this->endLoading();
+
             return;
         }
 
@@ -543,6 +573,7 @@ class Books extends AppComponent
         if ($existingBorrowing) {
             session()->flash('error', 'You have already borrowed this book.');
             $this->endLoading();
+
             return;
         }
 
@@ -551,7 +582,7 @@ class Books extends AppComponent
             'book_id' => $bookId,
             'borrow_date' => now(),
             'due_date' => now()->addDays(14),
-            'status' => 'borrowed'
+            'status' => 'borrowed',
         ]);
 
         // Log book borrowing
@@ -564,7 +595,7 @@ class Books extends AppComponent
                 'book_title' => $book->title,
                 'borrow_date' => now()->toDateTimeString(),
                 'due_date' => now()->addDays(14)->toDateString(),
-                'borrowing_duration' => '14 days'
+                'borrowing_duration' => '14 days',
             ])
             ->log('Student borrowed book');
 
@@ -577,9 +608,10 @@ class Books extends AppComponent
         $this->startLoading();
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
             $this->endLoading();
+
             return;
         }
 
@@ -588,16 +620,17 @@ class Books extends AppComponent
             ->where('status', 'borrowed')
             ->first();
 
-        if (!$borrowing) {
+        if (! $borrowing) {
             session()->flash('error', 'No active borrowing found.');
             $this->endLoading();
+
             return;
         }
 
         $book = Book::find($bookId);
         $borrowing->update([
             'status' => 'returned',
-            'returned_at' => now()
+            'returned_at' => now(),
         ]);
 
         // Log book return
@@ -609,7 +642,7 @@ class Books extends AppComponent
                 'book_id' => $bookId,
                 'book_title' => $book->title ?? 'Unknown',
                 'returned_at' => now()->toDateTimeString(),
-                'was_overdue' => $borrowing->due_date < now()
+                'was_overdue' => $borrowing->due_date < now(),
             ])
             ->log('Student returned book');
 
@@ -623,12 +656,12 @@ class Books extends AppComponent
             ->with(['author', 'bookCategory'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('title', 'like', '%' . $this->search . '%')
+                    $q->where('title', 'like', '%'.$this->search.'%')
                         ->orWhereHas('author', function ($authorQuery) {
-                            $authorQuery->where('name', 'like', '%' . $this->search . '%');
+                            $authorQuery->where('name', 'like', '%'.$this->search.'%');
                         })
                         ->orWhereHas('bookCategory', function ($categoryQuery) {
-                            $categoryQuery->where('name', 'like', '%' . $this->search . '%');
+                            $categoryQuery->where('name', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -649,20 +682,22 @@ class Books extends AppComponent
     public function getSubscribedBooksProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         return Book::query()
             ->with(['author', 'bookCategory'])
-            ->whereHas('subscriptions', function ($query) use ($student) {
+            ->whereHas('subscriptions', function ($query) {
                 $query->where('user_id', auth()->user()->id)
                     ->where('status', 'active')
                     ->orWhere('status', 'pending_payment');
             })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('title', 'like', '%' . $this->search . '%')
+                    $q->where('title', 'like', '%'.$this->search.'%')
                         ->orWhereHas('author', function ($authorQuery) {
-                            $authorQuery->where('name', 'like', '%' . $this->search . '%');
+                            $authorQuery->where('name', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -672,19 +707,21 @@ class Books extends AppComponent
     public function getBorrowedBooksProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         return Book::query()
             ->with(['author', 'bookCategory'])
-            ->whereHas('borrowings', function ($query) use ($student) {
+            ->whereHas('borrowings', function ($query) {
                 $query->where('user_id', auth()->user()->id)
                     ->where('status', 'borrowed');
             })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('title', 'like', '%' . $this->search . '%')
+                    $q->where('title', 'like', '%'.$this->search.'%')
                         ->orWhereHas('author', function ($authorQuery) {
-                            $authorQuery->where('name', 'like', '%' . $this->search . '%');
+                            $authorQuery->where('name', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -694,16 +731,18 @@ class Books extends AppComponent
     public function getReadingProgressProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         return BookReadingProgress::where('user_id', auth()->user()->id)
             ->with(['book', 'book.author'])
             ->latest('last_read_at')
             ->when($this->search, function ($query) {
                 $query->whereHas('book', function ($bookQuery) {
-                    $bookQuery->where('title', 'like', '%' . $this->search . '%')
+                    $bookQuery->where('title', 'like', '%'.$this->search.'%')
                         ->orWhereHas('author', function ($authorQuery) {
-                            $authorQuery->where('name', 'like', '%' . $this->search . '%');
+                            $authorQuery->where('name', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -715,7 +754,7 @@ class Books extends AppComponent
         return [
             '' => 'All Formats',
             'hardcopy' => 'Hardcopy Only',
-            'softcopy' => 'Softcopy Only'
+            'softcopy' => 'Softcopy Only',
         ];
     }
 

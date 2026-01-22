@@ -15,35 +15,52 @@ use Livewire\WithPagination;
 
 class AuthorManagement extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     // Form properties
     public $name;
+
     public $email;
+
     public $password;
+
     public $password_confirmation;
+
     public $biography;
+
     public $specialization;
+
     public $profileImage;
+
     public $website;
+
     public $socialMedia = [];
+
     public $isActive = true;
 
     // Management properties
     public $searchTerm = '';
+
     public $isEditing = false;
+
     public $editingAuthorId;
+
     public $showForm = false;
+
     public $showDeleteModal = false;
+
     public $authorToDelete;
 
     // Filtering and sorting
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $filterStatus = '';
 
     // Bulk operations
     public $selectedAuthors = [];
+
     public $selectAll = false;
 
     protected $rules = [
@@ -81,7 +98,7 @@ class AuthorManagement extends Component
         $this->socialMedia = [
             'twitter' => '',
             'linkedin' => '',
-            'facebook' => ''
+            'facebook' => '',
         ];
     }
 
@@ -97,11 +114,21 @@ class AuthorManagement extends Component
         $password = $this->password;
         $strength = 0;
 
-        if (strlen($password) >= 8) $strength++;
-        if (preg_match('/[a-z]/', $password)) $strength++;
-        if (preg_match('/[A-Z]/', $password)) $strength++;
-        if (preg_match('/[0-9]/', $password)) $strength++;
-        if (preg_match('/[^a-zA-Z0-9]/', $password)) $strength++;
+        if (strlen($password) >= 8) {
+            $strength++;
+        }
+        if (preg_match('/[a-z]/', $password)) {
+            $strength++;
+        }
+        if (preg_match('/[A-Z]/', $password)) {
+            $strength++;
+        }
+        if (preg_match('/[0-9]/', $password)) {
+            $strength++;
+        }
+        if (preg_match('/[^a-zA-Z0-9]/', $password)) {
+            $strength++;
+        }
 
         return $strength;
     }
@@ -110,7 +137,7 @@ class AuthorManagement extends Component
     {
         $strength = $this->getPasswordStrength();
 
-        return match($strength) {
+        return match ($strength) {
             0, 1 => 'Very Weak',
             2 => 'Weak',
             3 => 'Fair',
@@ -151,9 +178,13 @@ class AuthorManagement extends Component
     {
         return [
             'total_authors' => Author::count(),
-            'active_authors' =>  Author::with('user')->whereHas('user', function ($query) {$query->where('is_active', true);})->count(),
-            'inactive_authors' =>  Author::with('user')->whereHas('user', function ($query) {$query->where('is_active', false);})->count(),
-//            'inactive_authors' =>  Author::where('is_active', false)->count(),
+            'active_authors' => Author::with('user')->whereHas('user', function ($query) {
+                $query->where('is_active', true);
+            })->count(),
+            'inactive_authors' => Author::with('user')->whereHas('user', function ($query) {
+                $query->where('is_active', false);
+            })->count(),
+            //            'inactive_authors' =>  Author::where('is_active', false)->count(),
             'total_books' => Book::whereHas('author')->count(),
             'authors_with_books' => Author::has('books')->count(),
             'authors_without_books' => Author::doesntHave('books')->count(),
@@ -201,7 +232,7 @@ class AuthorManagement extends Component
             Author::create([
                 'user_id' => $user->id,
                 'biography' => $this->biography,
-//                'specialization' => $this->specialization,
+                //                'specialization' => $this->specialization,
                 'website' => $this->website,
                 'profile_image' => $profileImagePath,
                 'social_media' => json_encode($this->socialMedia),
@@ -235,7 +266,7 @@ class AuthorManagement extends Component
         $this->socialMedia = json_decode($author->social_media, true) ?: [
             'twitter' => '',
             'linkedin' => '',
-            'facebook' => ''
+            'facebook' => '',
         ];
         $this->isActive = $author->is_active;
 
@@ -279,7 +310,7 @@ class AuthorManagement extends Component
             // Update author profile
             $author->update([
                 'biography' => $this->biography,
-//                'specialization' => $this->specialization,
+                //                'specialization' => $this->specialization,
                 'website' => $this->website,
                 'profile_image' => $profileImagePath,
                 'social_media' => json_encode($this->socialMedia),
@@ -310,7 +341,7 @@ class AuthorManagement extends Component
             }
 
             // Delete author and user
-//            $this->authorToDelete->user->delete();
+            //            $this->authorToDelete->user->delete();
             $this->authorToDelete->delete();
 
             $this->showDeleteModal = false;
@@ -349,13 +380,13 @@ class AuthorManagement extends Component
         $this->reset([
             'name', 'email', 'password', 'password_confirmation',
             'biography', 'specialization', 'website', 'profileImage',
-            'isEditing', 'editingAuthorId'
+            'isEditing', 'editingAuthorId',
         ]);
 
         $this->socialMedia = [
             'twitter' => '',
             'linkedin' => '',
-            'facebook' => ''
+            'facebook' => '',
         ];
         $this->isActive = true;
 
@@ -381,10 +412,10 @@ class AuthorManagement extends Component
         return Author::with('user')
             ->when($this->searchTerm, function ($query) {
                 $query->whereHas('user', function ($q) {
-                    $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                      ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+                    $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                        ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
                 });
-            //    ->orWhere('specialization', 'like', '%' . $this->searchTerm . '%');
+                //    ->orWhere('specialization', 'like', '%' . $this->searchTerm . '%');
             })
             ->when($this->filterStatus !== '', function ($query) {
                 $query->where('is_active', $this->filterStatus);

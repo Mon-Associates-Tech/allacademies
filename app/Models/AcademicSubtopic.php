@@ -10,14 +10,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AcademicSubtopic extends Model
 {
-    use HasFactory;
     use AcademicGroupLogs;
+    use HasFactory;
 
-    public function academicTopic(): BelongsTo {
+    public function academicTopic(): BelongsTo
+    {
         return $this->belongsTo(AcademicTopic::class);
     }
 
-    public function topic(): BelongsTo {
+    public function topic(): BelongsTo
+    {
         return $this->belongsTo(AcademicTopic::class, 'academic_topic_id');
     }
 
@@ -28,7 +30,8 @@ class AcademicSubtopic extends Model
         'description',
     ];
 
-    public function essayQuestions(): HasMany {
+    public function essayQuestions(): HasMany
+    {
         return $this->hasMany(EssayQuestion::class);
     }
 
@@ -47,7 +50,5 @@ class AcademicSubtopic extends Model
         return $this->morphMany(Question::class, 'questionable');
     }
 
-    public function subject(){
-
-    }
+    public function subject() {}
 }

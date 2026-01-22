@@ -3,13 +3,15 @@
 namespace App\Livewire\SchoolSettings;
 
 use App\Models\School;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class LetterheadSettings extends Component
 {
     public $school;
+
     public $selectedTemplate;
+
     public $previewTemplate;
 
     public $availableTemplates = [
@@ -81,13 +83,14 @@ class LetterheadSettings extends Component
 
     public function saveTemplate()
     {
-        if (!$this->school) {
+        if (! $this->school) {
             session()->flash('error', 'School not found.');
+
             return;
         }
 
         $this->school->update([
-            'letterhead_template' => $this->selectedTemplate
+            'letterhead_template' => $this->selectedTemplate,
         ]);
 
         session()->flash('success', 'Letterhead template updated successfully!');

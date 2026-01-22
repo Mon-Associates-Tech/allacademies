@@ -35,7 +35,7 @@ class StudentLogin extends Component
             ->paginate(15);
 
         return view('livewire.teachers.students-login', [
-            'activities' => $activities
+            'activities' => $activities,
         ]);
     }
 }

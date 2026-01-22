@@ -15,6 +15,7 @@ class PricingTier extends Model
     protected $fillable = [
         'name',
         'model',
+        'base_price',
         'initial_price',
         'subsequent_price',
         'monthly_token_limit',
@@ -24,6 +25,7 @@ class PricingTier extends Model
     ];
 
     protected $casts = [
+        'base_price' => 'decimal:2',
         'initial_price' => 'decimal:2',
         'subsequent_price' => 'decimal:2',
         'monthly_token_limit' => 'integer',
@@ -37,30 +39,6 @@ class PricingTier extends Model
     public function subscriptionCycles(): HasMany
     {
         return $this->hasMany(SubscriptionCycle::class, 'pricing_tier_id');
-    }
-
-    /**
-     * Determine if user is in the initial pricing period
-     */
-    public function isInInitialPeriod(\DateTime $subscriptionStartDate): bool
-    {
-        $monthsElapsed = now()->diffInMonths($subscriptionStartDate);
-
-        return $monthsElapsed < $this->initial_period_months;
-    }
-
-    /**
-     * Get the monthly price increment based on the cycle number
-     * Months 1-6 use initial_price, Month 7+ uses subsequent_price
-     *
-     * @param  int  $cycleNumber  The cycle number (1-based)
-     * @return float The monthly price increment
-     */
-    public function getMonthlyPriceIncrement(int $cycleNumber): float
-    {
-        return $cycleNumber <= $this->initial_period_months
-            ? (float) $this->initial_price
-            : (float) $this->subsequent_price;
     }
 
     /**
@@ -87,6 +65,24 @@ class PricingTier extends Model
     }
 
     /**
+     * Get the monthly price increment based on the cycle number
+     * Cycle 1 uses base_price, Cycles 2-6 use initial_price, Cycle 7+ uses subsequent_price
+     *
+     * @param  int  $cycleNumber  The cycle number (1-based)
+     * @return float The monthly price increment
+     */
+    public function getMonthlyPriceIncrement(int $cycleNumber): float
+    {
+        if ($cycleNumber === 1) {
+            return (float) $this->base_price;
+        }
+
+        return $cycleNumber <= $this->initial_period_months
+            ? (float) $this->initial_price
+            : (float) $this->subsequent_price;
+    }
+
+    /**
      * Get the price for a specific cycle (price delta, not cumulative)
      *
      * @param  int  $cycleNumber  The cycle number (1-based)
@@ -108,6 +104,16 @@ class PricingTier extends Model
     }
 
     /**
+     * Determine if user is in the initial pricing period
+     */
+    public function isInInitialPeriod(\DateTime $subscriptionStartDate): bool
+    {
+        $monthsElapsed = now()->diffInMonths($subscriptionStartDate);
+
+        return $monthsElapsed < $this->initial_period_months;
+    }
+
+    /**
      * Check if this is the basic tier
      */
     public function isBasic(): bool
@@ -124,20 +130,22 @@ class PricingTier extends Model
     }
 
     /**
-     * Calculate tokens from an amount based on the initial pricing rate
-     * Uses: tokens_per_currency = monthly_token_limit / initial_price
-     * 
-     * Example: If tier allocates 7000 tokens for $10 initial price:
+     * Calculate tokens from an amount based on the base pricing rate
+     * Uses: tokens_per_currency = monthly_token_limit / base_price
+     *
+     * Example: If tier allocates 7000 tokens for $10 base price:
      * tokens_per_currency = 7000 / 10 = 700 tokens per $1
      * For a $23 topup: 23 * 700 = 16,100 tokens
      */
     public function calculateTokensFromAmount(float $amount): int
     {
-        if ($this->initial_price <= 0) {
+        $basePrice = $this->base_price > 0 ? $this->base_price : $this->initial_price;
+
+        if ($basePrice <= 0) {
             return 0;
         }
 
-        $tokensPerCurrency = $this->monthly_token_limit / (float) $this->initial_price;
+        $tokensPerCurrency = $this->monthly_token_limit / (float) $basePrice;
 
         return intval($amount * $tokensPerCurrency);
     }

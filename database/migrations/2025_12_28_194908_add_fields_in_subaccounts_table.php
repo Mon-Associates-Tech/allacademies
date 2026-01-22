@@ -15,13 +15,13 @@ return new class extends Migration
             $table->boolean('is_primary')->default(false)->after('name');
             // Status to manage active/inactive subaccounts
             $table->string('status')->default('active')->after('is_primary');
-            
+
             // Add unique constraint for primary accounts per model
             $table->unique(
                 ['subaccountable_type', 'subaccountable_id', 'is_primary'],
                 'unique_primary_subaccount_per_model'
             )->where('is_primary', true);
-            
+
             // Index for faster queries
             $table->index(['subaccountable_type', 'subaccountable_id']);
         });

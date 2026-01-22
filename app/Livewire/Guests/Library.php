@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
 use App\Models\Book;
 use App\Models\BookCategory;
@@ -14,8 +14,11 @@ class Library extends Component
     use WithPagination;
 
     public $search = '';
+
     public $category = '';
+
     public $status = 'all'; // 'all', 'subscribed', 'free'
+
     public $sortBy = 'title';
 
     public function updatedSearch()
@@ -47,9 +50,9 @@ class Library extends Component
 
         $query = Book::with(['author.user', 'bookCategory'])
             ->when($this->search, function ($q) {
-                return $q->where('title', 'like', '%' . $this->search . '%')
+                return $q->where('title', 'like', '%'.$this->search.'%')
                     ->orWhereHas('author.user', function ($subQ) {
-                        $subQ->where('name', 'like', '%' . $this->search . '%');
+                        $subQ->where('name', 'like', '%'.$this->search.'%');
                     });
             })
             ->when($this->category, function ($q) {
@@ -63,7 +66,7 @@ class Library extends Component
             })
             ->orderBy($this->sortBy);
 
-        return view('livewire.subscribers.library', [
+        return view('livewire.guests.library', [
             'books' => $query->paginate(12),
             'categories' => BookCategory::all(),
             'subscribedBookIds' => $subscribedBookIds,

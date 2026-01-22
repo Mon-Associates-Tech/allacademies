@@ -4,10 +4,7 @@ namespace App\Services;
 
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
-use App\Models\Question;
-use App\Models\Student;
 use App\Models\Teacher;
-use App\Notifications\EssayAssessmentSubmitted;
 use App\Notifications\EssayAssessmentSubmittedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -99,7 +96,7 @@ class AssessmentService
                 break;
 
             case 'true_or_false_question':
-                $isCorrect = (bool)$questionData['student_answer'] === (bool)$questionData['correct_answer'];
+                $isCorrect = (bool) $questionData['student_answer'] === (bool) $questionData['correct_answer'];
                 break;
         }
 
@@ -114,7 +111,7 @@ class AssessmentService
         return $questionData;
     }
 
-    public function gradeEssayQuestion(AssessmentResponse $assessmentResponse, int $questionIndex, float $points, string $feedback = null, Teacher $teacher = null): void
+    public function gradeEssayQuestion(AssessmentResponse $assessmentResponse, int $questionIndex, float $points, ?string $feedback = null, ?Teacher $teacher = null): void
     {
         $assessmentResponse->gradeEssayQuestion($questionIndex, $points, $feedback, $teacher?->id);
 
@@ -158,7 +155,7 @@ class AssessmentService
         $maxScore = 0;
 
         foreach ($responses as $response) {
-            if (!empty($response['student_answer'])) {
+            if (! empty($response['student_answer'])) {
                 $answeredQuestions++;
             }
 

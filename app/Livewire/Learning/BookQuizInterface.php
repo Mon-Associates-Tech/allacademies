@@ -10,7 +10,7 @@ use App\Models\QuizSession;
 use App\Services\AcademicChatService;
 use App\Services\BookBasedLearningService;
 use App\Services\PdfContentExtractionService;
-use App\Support\TokenSubscriptionStatus;
+use App\Traits\ChecksTokenAvailability;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -23,13 +23,22 @@ use RuntimeException;
 
 class BookQuizInterface extends Component
 {
+    use ChecksTokenAvailability;
     use WithFileUploads;
 
-// Quiz setup properties
+    protected $listeners = [
+        'update-selectedSubjectId' => 'updateSelectedSubject',
+    ];
+
+    // Quiz setup properties
     public $selectedBookId = '';
+
     public $selectedSubjectId = '';
+
     public $selectedChapterId = '';
+
     public $pageStart = '';
+
     public $pageEnd = '';
 
     #[Rule('required|in:multiple_choice,true_false,essay,mixed')]
@@ -37,42 +46,62 @@ class BookQuizInterface extends Component
 
     #[Rule('required|integer|min:5|max:20')]
     public $questionCount = 10;
+
     public $customQuestionCount = 10;
 
     #[Rule('required|in:easy,medium,hard')]
     public $difficulty = 'medium';
 
     public $focusTopics = '';
+
     public $includeQuotes = false;
 
-// Component state
+    // Component state
     public $availableBooks = [];
+
     public $bookChapters = [];
+
     public $selectedBook = null;
+
     public $quizData = null;
+
     public $quizResults = null;
+
     public $activeTab = 'new';
+
     public $isGenerating = false;
+
     public $previousQuizzes = [];
+
     public $showDetailedResults = false;
+
     public $showDetailedResultsModal = false;
+
     public $uploadedFile = null;
+
     public $fileContent = '';
+
     public $fileName = '';
+
     public $canGenerateQuiz = true;
+
     public $tokenWarningMessage = null;
+
     public $contentSourceTab = 'book';
+
     public $availableSubjects = [];
+
     protected $chatService;
+
     protected $bookLearningService;
+
     protected $pdfExtractor;
 
     public function boot(
-        AcademicChatService         $chatService,
-        BookBasedLearningService    $bookLearningService,
+        AcademicChatService $chatService,
+        BookBasedLearningService $bookLearningService,
         PdfContentExtractionService $pdfExtractor
-    )
-    {
+    ) {
         $this->chatService = $chatService;
         $this->bookLearningService = $bookLearningService;
         $this->pdfExtractor = $pdfExtractor;
@@ -80,55 +109,26 @@ class BookQuizInterface extends Component
 
     public function mount(): void
     {
-        $this->checkTokenAvailability();
+        $result = $this->checkTokenAvailability(500);
+        $this->canGenerateQuiz = $result['available'];
+        $this->tokenWarningMessage = $result['message'];
+
         $this->loadAvailableBooks();
         $this->loadAvailableSubjects();
         $this->loadPreviousQuizzes();
+
+        // Check for book ID in URL
         $bookId = request()->query('bookId');
-
-
         if ($bookId) {
             $this->selectedBookId = $bookId;
             $this->updatedSelectedBookId();
         }
-    }
 
-    public function checkTokenAvailability(): void
-    {
-        $user = auth()->user();
-
-        // For all users, check their token subscription
-        $subscription = $user->activeTokenSubscription;
-
-        if (!$subscription) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'no_subscription';
-            return;
+        // Check for quiz ID in URL
+        $quizId = request()->query('quiz');
+        if ($quizId) {
+            $this->viewResults($quizId);
         }
-
-        // Use enum comparison for status
-        if ($subscription->status === TokenSubscriptionStatus::DEPLETED || $subscription->tokens_remaining <= 0) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'depleted';
-            return;
-        }
-
-        if ($subscription->isExpired()) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'expired';
-            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
-            return;
-        }
-
-        // Check if user has at least minimum tokens for quiz generation (e.g., 500 tokens)
-        if (!$user->hasOpenAiTokens(500)) {
-            $this->canGenerateQuiz = false;
-            $this->tokenWarningMessage = 'insufficient';
-            return;
-        }
-
-        $this->canGenerateQuiz = true;
-        $this->tokenWarningMessage = null;
     }
 
     protected function loadAvailableBooks(): void
@@ -141,6 +141,7 @@ class BookQuizInterface extends Component
                 ->with(['author', 'bookCategory'])
                 ->orderBy('title')
                 ->get();
+
             return;
         }
 
@@ -177,12 +178,28 @@ class BookQuizInterface extends Component
 
     }
 
-    /**
-     * Load available subjects for quiz generation
-     */
     protected function loadAvailableSubjects(): void
     {
-        $this->availableSubjects = AcademicSubject::orderBy('name')->get();
+        $this->availableSubjects = AcademicSubject::with(['academicLevel.academicGroup'])
+            ->orderBy('name')
+            ->get()
+            ->map(function ($subject) {
+                return [
+                    'id' => $subject->id,
+                    'name' => $subject->name,
+                    'display_name' => $subject->name.' - '.
+                        ($subject->academicLevel->academicGroup->name ?? 'N/A').' ('.
+                        ($subject->academicLevel->name ?? 'N/A').')',
+                    'academic_level' => $subject->academicLevel->name ?? 'N/A',
+                    'academic_group' => $subject->academicLevel->academicGroup->name ?? 'N/A',
+                ];
+            })
+            ->toArray();
+    }
+
+    public function updateSelectedSubject($value)
+    {
+        $this->selectedSubjectId = is_array($value) ? ($value[0] ?? '') : $value;
     }
 
     protected function loadPreviousQuizzes(): void
@@ -214,18 +231,19 @@ class BookQuizInterface extends Component
 
     protected function loadBookChapters(): void
     {
-        if (!$this->selectedBook || !$this->selectedBook->table_of_contents) {
+        if (! $this->selectedBook || ! $this->selectedBook->table_of_contents) {
             $this->bookChapters = [];
+
             return;
         }
 
         $this->bookChapters = collect($this->selectedBook->formatted_table_of_contents)
             ->map(function ($chapter) {
-                return (object)[
+                return (object) [
                     'id' => $chapter['chapter_number'],
                     'chapter_number' => $chapter['chapter_number'],
                     'title' => $chapter['title'],
-                    'page_range' => $chapter['page_range']
+                    'page_range' => $chapter['page_range'],
                 ];
             });
     }
@@ -249,45 +267,76 @@ class BookQuizInterface extends Component
                     'file_name' => $this->uploadedFile->getClientOriginalName(),
                     'extension' => $extension,
                     'size' => $this->uploadedFile->getSize(),
-                    'mime_type' => $this->uploadedFile->getMimeType()
+                    'mime_type' => $this->uploadedFile->getMimeType(),
                 ]);
 
                 // Support multiple file types
-                if (!in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
+                if (! in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
                     $this->addError('uploadedFile', 'Unsupported file type. Please upload PDF, DOC, DOCX, or TXT files.');
+
                     return;
                 }
 
                 // Check file size (max 10MB)
                 if ($this->uploadedFile->getSize() > 10 * 1024 * 1024) {
                     $this->addError('uploadedFile', 'File is too large. Maximum file size is 10MB.');
+
                     return;
                 }
 
                 // Check if file is empty
                 if ($this->uploadedFile->getSize() === 0) {
                     $this->addError('uploadedFile', 'The uploaded file is empty.');
+
                     return;
                 }
 
                 // Extract content from uploaded file using the PDF extraction service
                 try {
-                    $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
-                        'preserve_layout' => false,
-                        'method' => 'auto'
-                    ]);
+                    // For PDFs, limit to first 10 pages
+                    if ($extension === 'pdf') {
+                        $tempPath = $this->uploadedFile->getRealPath();
+                        $pageCount = $this->pdfExtractor->getPageCount($tempPath);
+
+                        if ($pageCount > 10) {
+                            $this->fileContent = $this->pdfExtractor->extractPageRange(
+                                $tempPath,
+                                1,
+                                10,
+                                ['preserve_layout' => false]
+                            );
+
+                            Log::info('PDF limited to 10 pages', [
+                                'user_id' => Auth::id(),
+                                'file_name' => $this->uploadedFile->getClientOriginalName(),
+                                'total_pages' => $pageCount,
+                            ]);
+                        } else {
+                            $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                                'preserve_layout' => false,
+                                'method' => 'auto',
+                            ]);
+                        }
+                    } else {
+                        $this->fileContent = $this->pdfExtractor->extractFromUploadedFile($this->uploadedFile, [
+                            'preserve_layout' => false,
+                            'method' => 'auto',
+                        ]);
+                    }
                 } catch (InvalidArgumentException $e) {
                     // Unsupported file type
                     $this->addError('uploadedFile', $e->getMessage());
+
                     return;
                 } catch (RuntimeException $e) {
                     // Extraction failed
-                    $this->addError('uploadedFile', 'Unable to extract content: ' . $e->getMessage());
+                    $this->addError('uploadedFile', 'Unable to extract content: '.$e->getMessage());
                     Log::error('Content extraction runtime error', [
                         'user_id' => Auth::id(),
                         'file_name' => $this->uploadedFile->getClientOriginalName(),
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
+
                     return;
                 }
 
@@ -297,8 +346,9 @@ class BookQuizInterface extends Component
                     $this->addError('uploadedFile', 'No content could be extracted from the uploaded file. The file may be empty or corrupted.');
                     Log::warning('Empty content extracted', [
                         'user_id' => Auth::id(),
-                        'file_name' => $this->fileName
+                        'file_name' => $this->fileName,
                     ]);
+
                     return;
                 }
 
@@ -306,7 +356,7 @@ class BookQuizInterface extends Component
                     'user_id' => Auth::id(),
                     'file_name' => $this->fileName,
                     'content_length' => strlen($this->fileContent),
-                    'preview' => substr($this->fileContent, 0, 200)
+                    'preview' => substr($this->fileContent, 0, 200),
                 ]);
 
             } catch (Exception $e) {
@@ -314,7 +364,7 @@ class BookQuizInterface extends Component
                     'user_id' => Auth::id(),
                     'file_name' => $this->uploadedFile->getClientOriginalName() ?? 'unknown',
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
 
                 $this->addError('uploadedFile', 'An unexpected error occurred while processing the file. Please try again or use a different file.');
@@ -324,7 +374,7 @@ class BookQuizInterface extends Component
 
     public function showResults(): void
     {
-        if (!$this->quizResults) {
+        if (! $this->quizResults) {
             return;
         }
 
@@ -345,9 +395,14 @@ class BookQuizInterface extends Component
             ->first();
 
         if ($quizSession) {
-            $this->selectedBookId = $quizSession->book_id;
-            $this->updatedSelectedBookId();
-            // You can add more logic here to restore quiz settings if needed
+            // Only set book ID if the quiz was based on a book
+            if ($quizSession->book_id) {
+                $this->selectedBookId = $quizSession->book_id;
+                $this->updatedSelectedBookId();
+            }
+
+            // Update URL with quiz ID
+            $this->dispatch('update-url', ['quiz' => $quizSessionId]);
         }
     }
 
@@ -358,7 +413,6 @@ class BookQuizInterface extends Component
             ->with('book')
             ->first();
 
-
         if ($quizSession && $quizSession->results) {
             // Load the book if it exists
             $book = $quizSession->book;
@@ -368,7 +422,7 @@ class BookQuizInterface extends Component
                 'detailed_feedback' => $this->generateDetailedFeedback($quizSession->results, $quizSession),
                 'question_breakdown' => $quizSession->results['question_details'] ?? [],
                 'improvement_suggestions' => $this->getImprovementSuggestions($quizSession->results),
-                'badges_earned' => []
+                'badges_earned' => [],
             ];
 
             // Try to get next steps if method exists and book is available
@@ -382,7 +436,7 @@ class BookQuizInterface extends Component
                 } catch (Exception $e) {
                     Log::warning('Next learning steps failed', [
                         'user_id' => Auth::id(),
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                     $this->quizResults['next_steps'] = [];
                 }
@@ -390,8 +444,10 @@ class BookQuizInterface extends Component
                 $this->quizResults['next_steps'] = [];
             }
             $this->activeTab = 'results';
-        }
 
+            // Update URL with quiz ID
+            $this->dispatch('update-url', ['quiz' => $quizSessionId]);
+        }
     }
 
     protected function generateDetailedFeedback(array $results, QuizSession $session): array
@@ -403,14 +459,14 @@ class BookQuizInterface extends Component
             'overall_performance' => $this->getOverallPerformanceFeedback($percentage),
             'strengths' => [],
             'areas_for_improvement' => [],
-            'study_suggestions' => []
+            'study_suggestions' => [],
         ];
 
-// Analyze performance by question type
+        // Analyze performance by question type
         $typePerformance = [];
         foreach ($results['question_details'] as $detail) {
             $type = $detail['question_type'];
-            if (!isset($typePerformance[$type])) {
+            if (! isset($typePerformance[$type])) {
                 $typePerformance[$type] = ['correct' => 0, 'total' => 0];
             }
             $typePerformance[$type]['total']++;
@@ -419,7 +475,7 @@ class BookQuizInterface extends Component
             }
         }
 
-// Generate strengths and improvement areas
+        // Generate strengths and improvement areas
         foreach ($typePerformance as $type => $stats) {
             $accuracy = $stats['total'] > 0 ? ($stats['correct'] / $stats['total']) * 100 : 0;
 
@@ -430,7 +486,7 @@ class BookQuizInterface extends Component
             }
         }
 
-// Add study suggestions
+        // Add study suggestions
         $feedback['study_suggestions'] = $this->getStudySuggestions($results, $book);
 
         return $feedback;
@@ -439,11 +495,11 @@ class BookQuizInterface extends Component
     protected function getOverallPerformanceFeedback(float $percentage): string
     {
         if ($percentage >= 90) {
-            return "Excellent work! You have a strong understanding of the material and show great reading comprehension skills.";
+            return 'Excellent work! You have a strong understanding of the material and show great reading comprehension skills.';
         } elseif ($percentage >= 80) {
-            return "Great job! You demonstrate good comprehension with room for some improvement in specific areas.";
+            return 'Great job! You demonstrate good comprehension with room for some improvement in specific areas.';
         } elseif ($percentage >= 70) {
-            return "Good effort! You understand the basics but could benefit from deeper analysis of the text.";
+            return 'Good effort! You understand the basics but could benefit from deeper analysis of the text.';
         } elseif ($percentage >= 60) {
             return "You're making progress. Consider reviewing the material and focusing on the main themes and characters.";
         } else {
@@ -456,11 +512,12 @@ class BookQuizInterface extends Component
         $typeNames = [
             'multiple_choice' => 'factual comprehension',
             'true_false' => 'detail recognition',
-            'essay' => 'analytical thinking'
+            'essay' => 'analytical thinking',
         ];
 
         $typeName = $typeNames[$type] ?? $type;
-        return "You excel at {$typeName} (" . round($accuracy) . "% accuracy).";
+
+        return "You excel at {$typeName} (".round($accuracy).'% accuracy).';
     }
 
     protected function getImprovementMessage(string $type, float $accuracy): string
@@ -468,11 +525,12 @@ class BookQuizInterface extends Component
         $suggestions = [
             'multiple_choice' => 'Focus on carefully reading each question and all answer choices before selecting.',
             'true_false' => 'Pay attention to specific details and avoid absolute statements.',
-            'essay' => 'Work on developing your ideas with specific examples from the text.'
+            'essay' => 'Work on developing your ideas with specific examples from the text.',
         ];
 
         $suggestion = $suggestions[$type] ?? "Practice more {$type} questions.";
-        return $suggestion . " (Current accuracy: " . round($accuracy) . "%)";
+
+        return $suggestion.' (Current accuracy: '.round($accuracy).'%)';
     }
 
     protected function getStudySuggestions(array $results, $book): array
@@ -484,15 +542,15 @@ class BookQuizInterface extends Component
         $author = $book ? ($book->author_name ?? 'the author') : 'the author';
 
         if ($percentage < 70) {
-            $suggestions[] = "Re-read key chapters focusing on main themes and character development";
-            $suggestions[] = "Create a character map to track relationships and motivations";
-            $suggestions[] = "Keep a reading journal with chapter summaries";
+            $suggestions[] = 'Re-read key chapters focusing on main themes and character development';
+            $suggestions[] = 'Create a character map to track relationships and motivations';
+            $suggestions[] = 'Keep a reading journal with chapter summaries';
         } elseif ($percentage < 85) {
-            $suggestions[] = "Practice identifying literary devices and their purposes";
-            $suggestions[] = "Discuss the book with classmates or join online book discussions";
+            $suggestions[] = 'Practice identifying literary devices and their purposes';
+            $suggestions[] = 'Discuss the book with classmates or join online book discussions';
             $suggestions[] = "Research the historical context of the book's setting";
         } else {
-            $suggestions[] = "Explore critical essays about this work for deeper insights";
+            $suggestions[] = 'Explore critical essays about this work for deeper insights';
             if ($author !== 'the author') {
                 $suggestions[] = "Read other books by {$author} for comparison";
             }
@@ -502,16 +560,16 @@ class BookQuizInterface extends Component
         // Add book-specific suggestions only if we have a book object
         if ($book) {
             if ($book->has_audio) {
-                $suggestions[] = "Listen to the audio version to improve comprehension";
+                $suggestions[] = 'Listen to the audio version to improve comprehension';
             }
 
             if ($book->bookCategory && str_contains(strtolower($book->bookCategory->name), 'classic')) {
-                $suggestions[] = "Research the time period when this classic was written";
+                $suggestions[] = 'Research the time period when this classic was written';
             }
         } else {
             // General suggestions for file uploads
-            $suggestions[] = "Take notes while reading to track important information";
-            $suggestions[] = "Look up unfamiliar words or concepts";
+            $suggestions[] = 'Take notes while reading to track important information';
+            $suggestions[] = 'Look up unfamiliar words or concepts';
         }
 
         return $suggestions;
@@ -522,7 +580,7 @@ class BookQuizInterface extends Component
         $suggestions = [];
         $percentage = $results['percentage'];
 
-// Question-specific analysis
+        // Question-specific analysis
         $missedQuestions = collect($results['question_details'])
             ->where('is_correct', false);
 
@@ -543,14 +601,14 @@ class BookQuizInterface extends Component
             }
         }
 
-// General suggestions based on performance
+        // General suggestions based on performance
         if ($percentage < 60) {
-            $suggestions[] = "Consider slowing down your reading pace to improve comprehension";
-            $suggestions[] = "Take notes while reading to track important information";
+            $suggestions[] = 'Consider slowing down your reading pace to improve comprehension';
+            $suggestions[] = 'Take notes while reading to track important information';
         }
 
         if (empty($suggestions)) {
-            $suggestions[] = "Great work! Continue practicing with different types of questions to maintain your skills";
+            $suggestions[] = 'Great work! Continue practicing with different types of questions to maintain your skills';
         }
 
         return $suggestions;
@@ -560,14 +618,20 @@ class BookQuizInterface extends Component
     {
         $this->activeTab = 'history';
         $this->quizResults = null;
+
+        // Clear URL parameter
+        $this->dispatch('update-url', ['quiz' => null]);
     }
 
     public function generateQuiz(): void
     {
-        $this->checkTokenAvailability();
+        $result = $this->checkTokenAvailability(500);
+        $this->canGenerateQuiz = $result['available'];
+        $this->tokenWarningMessage = $result['message'];
 
-        if (!$this->canGenerateQuiz) {
+        if (! $this->canGenerateQuiz) {
             $this->dispatch('tokenCheckFailed');
+
             return;
         }
 
@@ -580,8 +644,9 @@ class BookQuizInterface extends Component
         ]);
 
         // Check if either a book is selected or a file is uploaded
-        if (!$this->selectedBookId && empty($this->fileContent)) {
+        if (! $this->selectedBookId && empty($this->fileContent)) {
             $this->addError('selectedBookId', 'Please select a book or upload a file first.');
+
             return;
         }
 
@@ -590,6 +655,12 @@ class BookQuizInterface extends Component
             $this->validate([
                 'selectedBookId' => 'required|exists:books,id',
             ]);
+
+            // Load the book
+            $this->selectedBook = Book::with(['author', 'bookCategory', 'subject'])->find($this->selectedBookId);
+        } else {
+            // Clear book reference for file uploads
+            $this->selectedBook = null;
         }
 
         $actualQuestionCount = $this->getActualQuestionCount();
@@ -598,6 +669,7 @@ class BookQuizInterface extends Component
         if ($actualQuestionCount < 1 || $actualQuestionCount > 50) {
             $this->addError('questionCount', 'Number of questions must be between 1 and 50.');
             $this->isGenerating = false;
+
             return;
         }
 
@@ -615,15 +687,18 @@ class BookQuizInterface extends Component
                     Log::error('Book content extraction failed', [
                         'user_id' => Auth::id(),
                         'book_id' => $this->selectedBookId,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
 
                     // If extraction fails but we have uploaded content, use it as fallback
-                    if (!empty($this->fileContent)) {
+                    if (! empty($this->fileContent)) {
                         Log::info('Using uploaded file as fallback after book extraction failure');
                         $content = $this->fileContent;
                     } else {
-                        throw $e;
+                        $this->addError('generation', $e->getMessage());
+                        $this->isGenerating = false;
+
+                        return;
                     }
                 }
             } else {
@@ -633,13 +708,14 @@ class BookQuizInterface extends Component
                 Log::info('Using uploaded file content for quiz generation', [
                     'user_id' => Auth::id(),
                     'file_name' => $this->fileName,
-                    'content_length' => strlen($content)
+                    'content_length' => strlen($content),
                 ]);
             }
 
             if (empty($content)) {
                 $this->addError('generation', 'Failed to extract content. Please try again.');
                 $this->isGenerating = false;
+
                 return;
             }
 
@@ -687,10 +763,10 @@ class BookQuizInterface extends Component
 
             Log::info('Generating quiz with parameters', [
                 'user_id' => Auth::id(),
-                'has_book' => !is_null($bookForGeneration),
+                'has_book' => ! is_null($bookForGeneration),
                 'book_id' => $parameters['book_id'],
                 'is_file_based' => $parameters['is_file_based'],
-                'content_length' => strlen($content)
+                'content_length' => strlen($content),
             ]);
 
             // Generate adaptive quiz using the book learning service
@@ -701,7 +777,7 @@ class BookQuizInterface extends Component
             );
 
             // Handle errors...
-            if (!$quizData || (isset($quizData['success']) && $quizData['success'] === false)) {
+            if (! $quizData || (isset($quizData['success']) && $quizData['success'] === false)) {
                 $errorMessage = $quizData['error'] ?? 'Failed to generate quiz questions.';
                 $errorCode = $quizData['error_code'] ?? null;
 
@@ -712,7 +788,7 @@ class BookQuizInterface extends Component
                 } elseif ($errorCode === 'INSUFFICIENT_CONTENT') {
                     $this->addError('generation', $errorMessage);
 
-                    if (!empty($quizData['suggestions'])) {
+                    if (! empty($quizData['suggestions'])) {
                         foreach ($quizData['suggestions'] as $suggestion) {
                             $this->addError('suggestions', $suggestion);
                         }
@@ -726,24 +802,25 @@ class BookQuizInterface extends Component
                     'book_id' => $this->selectedBookId,
                     'subject_id' => $this->selectedSubjectId,
                     'error_code' => $errorCode,
-                    'has_file_fallback' => !empty($this->fileContent)
+                    'has_file_fallback' => ! empty($this->fileContent),
                 ]);
 
                 $this->isGenerating = false;
+
                 return;
             }
 
-            if (!empty($quizData['questions'])) {
+            if (! empty($quizData['questions'])) {
                 // Create quiz session
                 $this->createQuizSession($quizData, $parameters);
                 $this->quizData = $quizData;
                 Log::debug('Quiz data set', [
-                    'has_quiz_data' => !empty($this->quizData),
+                    'has_quiz_data' => ! empty($this->quizData),
                     'question_count' => count($this->quizData['questions'] ?? []),
-                    'quiz_data_keys' => array_keys($this->quizData ?? [])
+                    'quiz_data_keys' => array_keys($this->quizData ?? []),
                 ]);
                 $this->dispatch('quiz-generated', [
-                    'questionCount' => count($quizData['questions'])
+                    'questionCount' => count($quizData['questions']),
                 ]);
                 $this->dispatch('$refresh');
             } else {
@@ -756,7 +833,7 @@ class BookQuizInterface extends Component
                 'book_id' => $this->selectedBookId,
                 'subject_id' => $this->selectedSubjectId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->addError('generation', 'Unable to generate quiz. Please try different parameters or try again later.');
@@ -769,50 +846,60 @@ class BookQuizInterface extends Component
     {
         if ($this->questionCount === 'custom') {
             // Validate custom value is within range
-            return (int)$this->customQuestionCount;
-            return max(1, min(50, (int)$this->customQuestionCount));
+            return (int) $this->customQuestionCount;
+
+            return max(1, min(50, (int) $this->customQuestionCount));
         }
 
-        return (int)$this->questionCount;
+        return (int) $this->questionCount;
     }
 
     /**
      * Extract content from the selected book
      *
      * @return string Extracted content
+     *
      * @throws Exception
      */
     protected function extractBookContent(): string
     {
-        if (!$this->selectedBook) {
+        if (! $this->selectedBook) {
             return '';
         }
 
         try {
             $relativePdfPath = $this->selectedBook->getAttributes()['content_url'] ?? null;
-            if (!$relativePdfPath) {
-                throw new RuntimeException("Book PDF path not found");
+            if (! $relativePdfPath) {
+                throw new RuntimeException('Book PDF path not found');
             }
 
             $pdfPath = Storage::disk('public')->path($relativePdfPath);
-            if (!file_exists($pdfPath)) {
-                throw new RuntimeException("Book PDF file not found");
+            if (! file_exists($pdfPath)) {
+                throw new RuntimeException('Book PDF file not found');
             }
 
             // Extract content based on specified range
             if ($this->pageStart && $this->pageEnd) {
-                // Extract specific page range
+                $pageCount = (int) $this->pageEnd - (int) $this->pageStart + 1;
+                if ($pageCount > 10) {
+                    throw new RuntimeException('Page range exceeds 10 pages. Please select a maximum of 10 pages.');
+                }
+
                 return $this->pdfExtractor->extractPageRange(
                     $pdfPath,
-                    (int)$this->pageStart,
-                    (int)$this->pageEnd,
+                    (int) $this->pageStart,
+                    (int) $this->pageEnd,
                     ['preserve_layout' => false]
                 );
             } elseif ($this->selectedChapterId) {
-                // Extract specific chapter
                 $chapter = $this->bookChapters->firstWhere('id', $this->selectedChapterId);
 
                 if ($chapter) {
+                    $chapterPageCount = ($chapter->page_end ?? 1) - ($chapter->page_start ?? 1) + 1;
+                    if ($chapterPageCount > 10) {
+                        throw new RuntimeException('Selected chapter exceeds 10 pages. Please specify a page range within the chapter (max 10 pages).');
+                    }
+
                     return $this->pdfExtractor->extractPageRange(
                         $pdfPath,
                         $chapter->page_start ?? 1,
@@ -822,17 +909,19 @@ class BookQuizInterface extends Component
                 }
             }
 
-            // Extract entire book content
-            return $this->pdfExtractor->extractText($pdfPath, [
-                'preserve_layout' => false,
-                'method' => 'auto'
-            ]);
+            // Default: Extract first 10 pages only
+            return $this->pdfExtractor->extractPageRange(
+                $pdfPath,
+                1,
+                10,
+                ['preserve_layout' => false]
+            );
 
         } catch (Exception $e) {
             Log::error('Book content extraction failed', [
                 'user_id' => Auth::id(),
                 'book_id' => $this->selectedBookId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;
@@ -875,7 +964,7 @@ class BookQuizInterface extends Component
             'questions' => $cleanedQuestions,
             'context' => $this->buildQuizContext($parameters),
             'status' => 'active',
-            'started_at' => $sessionStartTime
+            'started_at' => $sessionStartTime,
         ];
 
         $session = QuizSession::create($quizSessionData);
@@ -916,7 +1005,7 @@ class BookQuizInterface extends Component
                 'book_category' => $this->selectedBook->bookCategory->name ?? 'General',
                 'genre' => $this->selectedBook->genre,
                 'difficulty_score' => $this->selectedBook->difficulty_score,
-                'themes' => $this->selectedBook->themes ?? []
+                'themes' => $this->selectedBook->themes ?? [],
             ];
         } else {
             // For file uploads, use file name as the title
@@ -926,7 +1015,7 @@ class BookQuizInterface extends Component
                 'book_category' => 'Uploaded Content',
                 'genre' => 'General',
                 'difficulty_score' => 5,
-                'themes' => []
+                'themes' => [],
             ];
         }
 
@@ -939,7 +1028,7 @@ class BookQuizInterface extends Component
             $context['page_range'] = "Pages {$parameters['page_start']}-{$parameters['page_end']}";
         }
 
-        if (!empty($parameters['focus_topics'])) {
+        if (! empty($parameters['focus_topics'])) {
             $context['focus_topics'] = $parameters['focus_topics'];
         }
 
@@ -952,15 +1041,16 @@ class BookQuizInterface extends Component
             'user_id' => Auth::id(),
             'answers_count' => count($answers ?? []),
             'answers' => $answers,
-            'time_taken' => $timeTaken
+            'time_taken' => $timeTaken,
         ]);
 
-        if (!$this->quizData || empty($answers)) {
+        if (! $this->quizData || empty($answers)) {
             \Log::warning('Quiz submission failed - no quiz data or answers', [
-                'quiz_data_exists' => !empty($this->quizData),
-                'answers_exists' => !empty($answers)
+                'quiz_data_exists' => ! empty($this->quizData),
+                'answers_exists' => ! empty($answers),
             ]);
             $this->addError('submission', 'No quiz data or answers found.');
+
             return;
         }
 
@@ -970,17 +1060,18 @@ class BookQuizInterface extends Component
                 ->where('started_at', $this->quizData['session_started_at'] ?? now())
                 ->first();
 
-// Fallback to the original method if the specific query fails:
-            if (!$quizSession) {
+            // Fallback to the original method if the specific query fails:
+            if (! $quizSession) {
                 $quizSession = QuizSession::where('user_id', Auth::id())
                     ->where('status', 'active')
                     ->latest()
                     ->first();
             }
 
-            if (!$quizSession) {
+            if (! $quizSession) {
                 \Log::warning('Quiz session not found', ['user_id' => Auth::id()]);
                 $this->addError('submission', 'Quiz session not found.');
+
                 return;
             }
 
@@ -992,7 +1083,7 @@ class BookQuizInterface extends Component
             \Log::info('Quiz graded successfully', [
                 'total_questions' => $gradingResult['total_questions'] ?? 0,
                 'correct_answers' => $gradingResult['correct_answers'] ?? 0,
-                'percentage' => $gradingResult['percentage'] ?? 0
+                'percentage' => $gradingResult['percentage'] ?? 0,
             ]);
 
             // Update quiz session
@@ -1001,7 +1092,7 @@ class BookQuizInterface extends Component
                 'results' => $gradingResult,
                 'time_taken' => $timeTaken,
                 'completed_at' => now(),
-                'status' => 'completed'
+                'status' => 'completed',
             ]);
 
             \Log::info('Quiz session updated', ['quiz_session_id' => $quizSession->id]);
@@ -1022,7 +1113,7 @@ class BookQuizInterface extends Component
             } catch (Exception $e) {
                 \Log::warning('Achievement checking failed', [
                     'user_id' => Auth::id(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
 
@@ -1035,7 +1126,7 @@ class BookQuizInterface extends Component
                 'detailed_feedback' => $feedback,
                 'question_breakdown' => $gradingResult['question_details'] ?? [],
                 'improvement_suggestions' => $this->getImprovementSuggestions($gradingResult),
-                'badges_earned' => $achievements
+                'badges_earned' => $achievements,
             ];
 
             // Only try to get next steps if method exists
@@ -1049,7 +1140,7 @@ class BookQuizInterface extends Component
                 } catch (Exception $e) {
                     \Log::warning('Next learning steps failed', [
                         'user_id' => Auth::id(),
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                     $this->quizResults['next_steps'] = [];
                 }
@@ -1063,10 +1154,10 @@ class BookQuizInterface extends Component
             \Log::error('Quiz submission failed', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            $this->addError('submission', 'Failed to submit quiz. Please try again. Error: ' . $e->getMessage());
+            $this->addError('submission', 'Failed to submit quiz. Please try again. Error: '.$e->getMessage());
         }
     }
 
@@ -1091,7 +1182,7 @@ class BookQuizInterface extends Component
                 case 'true_false':
                     // Safely get correct answer
                     $correctAnswer = $question['correct_answer'] ?? '';
-                    $isCorrect = strtolower((string)$userAnswer) === strtolower((string)$correctAnswer);
+                    $isCorrect = strtolower((string) $userAnswer) === strtolower((string) $correctAnswer);
                     $feedback = $question['explanation'] ?? '';
                     $pointsEarned = $isCorrect ? ($question['points'] ?? 1) : 0;
                     break;
@@ -1118,7 +1209,7 @@ class BookQuizInterface extends Component
                         'score' => $score,
                         'points_earned' => $pointsEarned,
                         'max_points' => $maxPoints,
-                        'is_correct' => $isCorrect
+                        'is_correct' => $isCorrect,
                     ]);
                     break;
 
@@ -1144,7 +1235,7 @@ class BookQuizInterface extends Component
                 'points_possible' => $question['points'] ?? 1,
                 'feedback' => $feedback,
                 'question_type' => $questionType,
-                'essay_score' => $questionType === 'essay' || $questionType === 'essay_question' ? ($score ?? 0) : null
+                'essay_score' => $questionType === 'essay' || $questionType === 'essay_question' ? ($score ?? 0) : null,
             ];
         }
 
@@ -1160,7 +1251,7 @@ class BookQuizInterface extends Component
             'percentage' => round($percentage, 2),
             'question_details' => $questionDetails,
             'points_earned' => round($totalPointsEarned, 2),
-            'points_possible' => $totalPointsPossible
+            'points_possible' => $totalPointsPossible,
         ];
     }
 
@@ -1171,7 +1262,7 @@ class BookQuizInterface extends Component
                 'score' => 0,
                 'feedback' => empty($answer)
                     ? 'No answer provided.'
-                    : 'Your answer is too short. Please provide a more detailed response (minimum 10 characters).'
+                    : 'Your answer is too short. Please provide a more detailed response (minimum 10 characters).',
             ];
         }
 
@@ -1185,9 +1276,9 @@ class BookQuizInterface extends Component
 
         // Use AI to grade essay with enhanced prompt
         $gradingPrompt = "Grade this essay answer for the book '{$bookTitle}':\n\n";
-        $gradingPrompt .= "Question: " . ($question['question'] ?? 'No question text provided') . "\n\n";
+        $gradingPrompt .= 'Question: '.($question['question'] ?? 'No question text provided')."\n\n";
         $gradingPrompt .= "Student Answer: {$answer}\n\n";
-        $gradingPrompt .= "Expected Answer: " . ($question['correct_answer'] ?? 'No expected answer provided') . "\n\n";
+        $gradingPrompt .= 'Expected Answer: '.($question['correct_answer'] ?? 'No expected answer provided')."\n\n";
         $gradingPrompt .= "GRADING CRITERIA:\n";
         $gradingPrompt .= "1. Content Understanding (40%): Does the answer demonstrate understanding of the text?\n";
         $gradingPrompt .= "2. Analysis Depth (30%): Does the answer provide thoughtful analysis?\n";
@@ -1210,7 +1301,7 @@ class BookQuizInterface extends Component
         $gradingPrompt .= "    \"writing_clarity\": \"Feedback\"\n";
         $gradingPrompt .= "  },\n";
         $gradingPrompt .= "  \"suggestions\": [\"Improvement suggestions\"]\n";
-        $gradingPrompt .= "}";
+        $gradingPrompt .= '}';
 
         $chatParameters = [
             'message' => $gradingPrompt,
@@ -1219,7 +1310,7 @@ class BookQuizInterface extends Component
             'topics' => ['essay_grading', 'reading_comprehension'],
             'response_format' => 'json',
             'creativity_level' => 0.3,
-//            'response_length' => 800
+            //            'response_length' => 800
         ];
 
         $result = $this->chatService->chat($chatParameters);
@@ -1231,7 +1322,7 @@ class BookQuizInterface extends Component
             Log::info('Essay grading AI result', [
                 'raw_content' => substr($result['content'], 0, 500),
                 'parsed_score' => $parsedResult['score'],
-                'parsed_feedback' => substr($parsedResult['feedback'], 0, 200)
+                'parsed_feedback' => substr($parsedResult['feedback'], 0, 200),
             ]);
 
             return $parsedResult;
@@ -1243,7 +1334,7 @@ class BookQuizInterface extends Component
 
         return [
             'score' => $similarityScore,
-            'feedback' => 'Your answer shows ' . ($similarityScore >= 70 ? 'good' : ($similarityScore >= 40 ? 'moderate' : 'limited')) . ' similarity to the expected answer. Score: ' . $similarityScore . '%'
+            'feedback' => 'Your answer shows '.($similarityScore >= 70 ? 'good' : ($similarityScore >= 40 ? 'moderate' : 'limited')).' similarity to the expected answer. Score: '.$similarityScore.'%',
         ];
     }
 
@@ -1262,13 +1353,13 @@ class BookQuizInterface extends Component
                 if (is_array($parsed)) {
                     return [
                         'score' => min(100, max(0, $parsed['score'] ?? 75)),
-                        'feedback' => $parsed['feedback'] ?? 'No specific feedback provided.'
+                        'feedback' => $parsed['feedback'] ?? 'No specific feedback provided.',
                     ];
                 }
             } catch (Exception $e) {
                 Log::warning('Failed to parse essay grading JSON', [
                     'content' => $content,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -1276,7 +1367,7 @@ class BookQuizInterface extends Component
         // Extract score using regex as fallback
         $score = 75; // Default
         if (preg_match('/(?:score|grade):\s*(\d+)/i', $content, $matches)) {
-            $score = (int)$matches[1];
+            $score = (int) $matches[1];
         }
 
         // Extract feedback
@@ -1287,7 +1378,7 @@ class BookQuizInterface extends Component
 
         return [
             'score' => min(100, max(0, $score)),
-            'feedback' => $feedback
+            'feedback' => $feedback,
         ];
     }
 
@@ -1327,26 +1418,31 @@ class BookQuizInterface extends Component
         // Combine both metrics
         $similarity = ($jaccard * 0.7) + ($containment * 0.3);
 
-        return (int)($similarity * 100);
+        return (int) ($similarity * 100);
     }
 
     protected function updateReadingProgress(array $results): void
     {
-// Update user's reading progress based on quiz performance
+        // Only update reading progress if a book is selected
+        if (! $this->selectedBookId) {
+            return;
+        }
+
+        // Update user's reading progress based on quiz performance
         $progress = BookReadingProgress::where('user_id', Auth::id())
             ->where('book_id', $this->selectedBookId)
             ->first();
 
         if ($progress) {
-// Update comprehension score based on quiz performance
+            // Update comprehension score based on quiz performance
             $comprehensionScore = $results['percentage'];
 
-// If this is a better score, update it
+            // If this is a better score, update it
             $currentScore = $progress->comprehension_score ?? 0;
             if ($comprehensionScore > $currentScore) {
                 $progress->update([
                     'comprehension_score' => $comprehensionScore,
-                    'last_read_at' => now()
+                    'last_read_at' => now(),
                 ]);
             }
         }
@@ -1363,17 +1459,17 @@ class BookQuizInterface extends Component
 
     public function exportResults()
     {
-        if (!$this->quizResults) {
+        if (! $this->quizResults) {
             return;
         }
         $this->showDetailedResultsModal = true;
-// Implement export functionality
+        // Implement export functionality
         $exportData = [
             'book' => $this->selectedBook->title,
             'author' => $this->selectedBook->author_name,
             'quiz_date' => now()->format('Y-m-d'),
             'results' => $this->quizResults['results'],
-            'performance' => $this->quizResults['detailed_feedback']
+            'performance' => $this->quizResults['detailed_feedback'],
         ];
 
         $this->dispatch('download-results', $exportData);

@@ -6,18 +6,18 @@ use App\Support\Mark;
 use App\Traits\HasQuestionAndAnswer;
 use App\Traits\QuestionOwnership;
 use App\Traits\Trackable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EssayQuestion extends Model
 {
     use HasFactory;
-    use SoftDeletes;
-    use Trackable;
     use HasQuestionAndAnswer;
     use QuestionOwnership;
+    use SoftDeletes;
+    use Trackable;
 
     /**
      * @var array<int, string>
@@ -29,7 +29,7 @@ class EssayQuestion extends Model
         'difficulty_level',
         'academic_subtopic_id',
         'added_by',
-        'modified_by'
+        'modified_by',
     ];
 
     /**
@@ -49,6 +49,7 @@ class EssayQuestion extends Model
     {
         return $this->belongsTo(AcademicTopic::class, 'academic_topic_id');
     }
+
     public function subtopic(): BelongsTo
     {
         return $this->belongsTo(AcademicSubtopic::class, 'academic_subtopic_id');
@@ -58,6 +59,7 @@ class EssayQuestion extends Model
     {
         return $this->morphOne(Question::class, 'questionable');
     }
+
     public function getQuestion(): array
     {
         return $this->processQuestionModel($this);

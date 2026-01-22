@@ -71,7 +71,7 @@ class SessionInvitation extends Model
         return $query->where('status', 'pending')
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             });
     }
 
@@ -79,7 +79,7 @@ class SessionInvitation extends Model
     public function isPending(): bool
     {
         return $this->status === 'pending' &&
-               (!$this->expires_at || $this->expires_at->isFuture());
+               (! $this->expires_at || $this->expires_at->isFuture());
     }
 
     public function isExpired(): bool

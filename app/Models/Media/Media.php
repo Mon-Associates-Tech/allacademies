@@ -33,7 +33,7 @@ class Media extends Model
         'metadata' => 'array',
     ];
 
-// Scopes for different types
+    // Scopes for different types
     public function scopeVideos($query)
     {
         return $query->where('type', 'video');
@@ -54,27 +54,28 @@ class Media extends Model
         return $query->whereJsonContains('tags', $tag);
     }
 
-// Helper methods
+    // Helper methods
     public function hasVideo()
     {
-        return !empty($this->single_video) || !empty($this->chapter_videos);
+        return ! empty($this->single_video) || ! empty($this->chapter_videos);
     }
 
     public function hasAudio()
     {
-        return !empty($this->single_audio) || !empty($this->chapter_audios);
+        return ! empty($this->single_audio) || ! empty($this->chapter_audios);
     }
 
     public function getChaptersCount($type = 'video')
     {
         $field = "chapter_{$type}s";
+
         return $this->hasChapters($type) ? count($this->$field) : 0;
     }
 
     public function hasChapters($type = 'video')
     {
         $field = "chapter_{$type}s";
-        return !empty($this->$field);
+
+        return ! empty($this->$field);
     }
 }
-

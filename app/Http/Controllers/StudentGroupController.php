@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\StudentGroup;
-use App\Models\Student;
-use Illuminate\Http\Request;
-use App\Http\Resources\StudentGroupResource;
 use App\Http\Resources\StudentGroupCollection;
+use App\Http\Resources\StudentGroupResource;
 use App\Http\Resources\StudentResource;
+use App\Models\Student;
+use App\Models\StudentGroup;
+use Illuminate\Http\Request;
 
 class StudentGroupController extends Controller
 {
@@ -100,6 +100,7 @@ class StudentGroupController extends Controller
     public function getStudents(StudentGroup $studentGroup)
     {
         $students = $studentGroup->students()->with('user')->paginate();
+
         return StudentResource::collection($students);
     }
 }

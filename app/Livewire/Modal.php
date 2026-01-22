@@ -7,13 +7,21 @@ use Livewire\Component;
 class Modal extends Component
 {
     public $isOpen = false;
+
     public $title = '';
+
     public $content = '';
+
     public $size = 'md';
+
     public $theme = 'auto';
+
     public $closeOnBackdrop = false;
+
     public $closeOnEsc = true;
+
     public $showCloseButton = true;
+
     public $persistent = false;
 
     protected $listeners = [
@@ -44,7 +52,7 @@ class Modal extends Component
 
     public function open($data = [])
     {
-        if (!empty($data)) {
+        if (! empty($data)) {
             $this->fill($data);
         }
 
@@ -77,14 +85,14 @@ class Modal extends Component
 
     public function handleBackdropClick()
     {
-        if ($this->closeOnBackdrop && !$this->persistent) {
+        if ($this->closeOnBackdrop && ! $this->persistent) {
             $this->close();
         }
     }
 
     public function handleEscapeKey()
     {
-        if ($this->closeOnEsc && !$this->persistent) {
+        if ($this->closeOnEsc && ! $this->persistent) {
             $this->close();
         }
     }

@@ -3,17 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
-use App\Models\Chat\UserTokenSubscription;
+use App\Models\Chat\PricingTier;
 use App\Models\Payment;
 use App\Services\PaystackService;
 use App\Services\TokenSubscriptionService;
-use App\Support\TokenSubscriptionStatus;
 use Exception;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TokenPaymentController extends Controller
@@ -31,90 +28,42 @@ class TokenPaymentController extends Controller
     /**
      * Initialize token subscription payment with Paystack
      */
-    public function initialize($subscriptionId)
+    public function initialize()
     {
-        $subscription = UserTokenSubscription::findOrFail($subscriptionId);
         $user = Auth::user();
+        $pendingPayment = session('pending_payment');
 
-        // Authorize: Only the subscription owner can initialize payment
-        if ($subscription->user_id !== $user->id) {
-            throw new AuthorizationException('Unauthorized access to this subscription.');
-        }
-
-        // Validate subscription status - must be pending
-        if ($subscription->status !== TokenSubscriptionStatus::PENDING) {
-            \Log::warning('Invalid subscription status for payment', [
-                'subscription_id' => $subscription->id,
-                'status' => $subscription->status,
-                'user_id' => $user->id,
-            ]);
-
+        if (! $pendingPayment) {
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('error', 'This subscription cannot be paid for in its current state.');
+                ->with('error', 'No pending payment found.');
         }
 
-        // Check if it's a free package - this should NOT reach here for free packages
-        if ($subscription->package && $subscription->package->isFree()) {
-            \Log::warning('Free package reached payment initialization', [
-                'subscription_id' => $subscription->id,
-                'user_id' => $user->id,
-            ]);
-
-            return redirect()
-                ->route('token-subscriptions.index')
-                ->with('error', 'Free trials do not require payment. Please contact support if you see this message.');
-        }
-
-        // Check if reference already exists in a completed payment
-        if ($subscription->reference) {
-            $existingPayment = Payment::where('reference', $subscription->reference)
-                ->where('status', PaymentStatus::SUCCEEDED)
-                ->first();
-
-            if ($existingPayment) {
-                \Log::warning('Duplicate payment attempt', [
-                    'subscription_id' => $subscription->id,
-                    'reference' => $subscription->reference,
-                    'user_id' => $user->id,
-                ]);
-
-                return redirect()
-                    ->route('token-subscriptions.index')
-                    ->with('error', 'This subscription has already been paid for.');
-            }
-        }
-
-        // Generate a fresh unique reference for Paystack
-        $paystackReference = 'TOKEN-'.$subscription->id.'-'.time().'-'.strtoupper(Str::random(6));
-
-        // Calculate the correct amount to charge
-        $amount = $this->calculateSubscriptionAmount($subscription);
+        $amount = (float) $pendingPayment['amount'];
+        $groupId = $pendingPayment['group_id'] ?? null;
+        $cycleId = $pendingPayment['cycle_id'] ?? null;
+        $paymentType = $pendingPayment['type'] ?? 'subscription';
+        $pricingTier = PricingTier::find($pendingPayment['pricing_tier_id']);
 
         if ($amount <= 0) {
-            \Log::error('Invalid subscription amount', [
-                'subscription_id' => $subscription->id,
-                'amount' => $amount,
-                'user_id' => $user->id,
-            ]);
-
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('error', 'Unable to determine subscription price. Please contact support.');
+                ->with('error', 'Invalid payment amount.');
         }
 
-        $packageName = $subscription->package
-            ? $subscription->package->name
-            : ($subscription->pricingTier?->name ?? 'Token Subscription');
+        // Generate unique reference
+        $paystackReference = 'TOKEN-'.time().'-'.strtoupper(Str::random(8));
 
         $data = [
             'email' => $user->email,
-            'amount' => (int) ($amount * 100), // convert to kobo
+            'amount' => (int) ($amount * 100),
             'reference' => $paystackReference,
             'metadata' => [
-                'subscription_id' => $subscription->id,
-                'type' => 'token_subscription',
-                'package_name' => $packageName,
+                'user_id' => $user->id,
+                'group_id' => $groupId,
+                'cycle_id' => $cycleId,
+                'type' => $paymentType,
+                'pricing_tier_id' => $pendingPayment['pricing_tier_id'],
                 'name' => $user->name,
                 'phone' => $user->phone ?? '0000000000',
             ],
@@ -124,27 +73,26 @@ class TokenPaymentController extends Controller
         try {
             $response = $this->paystack->initializeTransaction($data);
 
-            // Store the Paystack reference for verification later
-            $subscription->update(['reference' => $paystackReference]);
+            // Store reference in session
+            session(['payment_reference' => $paystackReference]);
 
             \Log::info('Payment initialized successfully', [
-                'subscription_id' => $subscription->id,
                 'reference' => $paystackReference,
                 'amount' => $amount,
+                'group_id' => $groupId,
                 'user_id' => $user->id,
             ]);
 
             return redirect($response['data']['authorization_url']);
         } catch (Exception $e) {
             \Log::error('Paystack initialization failed', [
-                'subscription_id' => $subscription->id,
                 'error' => $e->getMessage(),
                 'user_id' => $user->id,
             ]);
 
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('error', 'Failed to initialize payment. Please try again or contact support.');
+                ->with('error', 'Failed to initialize payment. Please try again.');
         }
     }
 
@@ -156,8 +104,6 @@ class TokenPaymentController extends Controller
         $reference = $request->query('reference');
 
         if (! $reference) {
-            \Log::warning('Payment callback without reference');
-
             return redirect()
                 ->route('token-subscriptions.index')
                 ->with('error', 'Invalid payment callback.');
@@ -167,109 +113,76 @@ class TokenPaymentController extends Controller
             $response = $this->paystack->verifyTransaction($reference);
 
             if (! $response['status'] || $response['data']['status'] !== 'success') {
-                \Log::warning('Payment verification failed', [
-                    'reference' => $reference,
-                    'response_status' => $response['data']['status'] ?? 'unknown',
-                ]);
-
                 return redirect()
                     ->route('token-subscriptions.index')
-                    ->with('error', 'Payment verification failed. Please try again.');
+                    ->with('error', 'Payment verification failed.');
             }
 
             $paymentDetails = $response['data'];
-            $subscriptionId = $paymentDetails['metadata']['subscription_id'] ?? null;
-
-            if (! $subscriptionId) {
-                \Log::error('Payment callback missing subscription ID', [
-                    'reference' => $reference,
-                ]);
-
-                return redirect()
-                    ->route('token-subscriptions.index')
-                    ->with('error', 'Invalid payment metadata. Please contact support.');
-            }
-
-            $subscription = UserTokenSubscription::findOrFail($subscriptionId);
+            $groupId = $paymentDetails['metadata']['group_id'] ?? null;
+            $cycleId = $paymentDetails['metadata']['cycle_id'] ?? null;
+            $pricingTierId = $paymentDetails['metadata']['pricing_tier_id'] ?? null;
+            $paymentType = $paymentDetails['metadata']['type'] ?? 'subscription';
             $user = Auth::user();
 
-            // Authorize: Only the subscription owner can process payment
-            if ($subscription->user_id !== $user->id) {
-                \Log::warning('Unauthorized payment callback attempt', [
-                    'subscription_id' => $subscription->id,
-                    'user_id' => $user->id,
-                    'reference' => $reference,
-                ]);
-
+            if (! $pricingTierId) {
                 return redirect()
                     ->route('token-subscriptions.index')
-                    ->with('error', 'Unauthorized access to this subscription.');
+                    ->with('error', 'Invalid payment metadata.');
             }
 
-            // Verify the amount paid matches expected
-            $expectedAmount = $this->calculateSubscriptionAmount($subscription);
-            $paidAmount = $paymentDetails['amount'] / 100; // Convert from kobo
+            $pricingTier = PricingTier::find($pricingTierId);
+            $paidAmount = $paymentDetails['amount'] / 100;
 
-            if (abs($paidAmount - $expectedAmount) > 0.01) { // Allow 1 pesewa difference
-                \Log::warning('Payment amount mismatch', [
-                    'subscription_id' => $subscription->id,
-                    'expected' => $expectedAmount,
-                    'paid' => $paidAmount,
-                    'reference' => $reference,
-                ]);
-
-                // Still process but log the discrepancy
-            }
-
-            DB::transaction(function () use ($subscription, $paymentDetails, $expectedAmount) {
+            DB::transaction(function () use ($paymentDetails, $paidAmount, $user, $groupId, $cycleId, $pricingTier, $paymentType) {
                 // 1. Record payment
                 Payment::create([
                     'reference' => $paymentDetails['reference'],
-                    'amount' => $expectedAmount,
+                    'amount' => $paidAmount,
                     'currency' => $paymentDetails['currency'] ?? 'GHS',
                     'status' => PaymentStatus::SUCCEEDED,
-                    'token_subscription_id' => $subscription->id,
                 ]);
 
-                // 2. Activate subscription (handles both top-ups and regular subscriptions)
-                $this->subscriptionService->activateSubscription($subscription);
+                // 2. Deactivate expired cycles
+                $user->subscriptionCycles()
+                    ->where('status', 'active')
+                    ->where('cycle_end_date', '<=', now())
+                    ->update(['status' => 'expired']);
+
+                // 3. Handle based on payment type
+                if ($paymentType === 'topup' && $cycleId) {
+                    // Topup: add tokens to existing cycle
+                    $cycle = \App\Models\Chat\SubscriptionCycle::find($cycleId);
+                    if ($cycle && $pricingTier) {
+                        $tokensToAdd = $pricingTier->calculateTokensFromAmount($paidAmount);
+                        $cycle->topup_tokens_allocated += $tokensToAdd;
+                        $cycle->tokens_allocated += $tokensToAdd;
+                        $cycle->is_topup = true;
+                        $cycle->save();
+
+                        \Log::info('Topup tokens added to cycle', [
+                            'cycle_id' => $cycle->id,
+                            'tokens_added' => $tokensToAdd,
+                            'amount' => $paidAmount,
+                        ]);
+                    }
+                } elseif ($groupId) {
+                    // Subscription: activate cycles
+                    $activatedCount = app(\App\Services\SubscriptionCycleService::class)
+                        ->activatePendingCycles($groupId, $pricingTier);
+
+                    \Log::info('Cycles activated after payment', [
+                        'group_id' => $groupId,
+                        'activated_count' => $activatedCount,
+                    ]);
+                }
             });
 
-            \Log::info('Payment processed successfully', [
-                'subscription_id' => $subscription->id,
-                'reference' => $reference,
-                'amount' => $expectedAmount,
-            ]);
-
-            // Check if it was a top-up (linked to another active subscription)
-            if ($subscription->replaced_by_id) {
-                $mainSubscription = UserTokenSubscription::find($subscription->replaced_by_id);
-
-                if ($mainSubscription && $mainSubscription->status === TokenSubscriptionStatus::ACTIVE) {
-                    // Refresh to get the latest data from database
-                    $mainSubscription->refresh();
-
-                    return redirect()
-                        ->route('token-subscriptions.show', $mainSubscription)
-                        ->with('success', 'Tokens added successfully! New balance: '.number_format($mainSubscription->tokens_remaining).' tokens');
-                }
-            }
-
-            // For regular subscriptions (not top-ups), refresh the subscription
-            $subscription->refresh();
-
-            return redirect()
-                ->route('token-subscriptions.show', $subscription)
-                ->with('success', 'Token subscription activated successfully! Your tokens are now available.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error('Subscription not found in callback', [
-                'reference' => $reference,
-                'error' => $e->getMessage(),
-            ]);
+            session()->forget(['pending_payment', 'payment_reference']);
 
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('error', 'Subscription not found. Please contact support.');
+                ->with('success', 'Payment successful! Your subscription is now active.');
         } catch (Exception $e) {
             \Log::error('Payment callback processing failed', [
                 'reference' => $reference,
@@ -278,37 +191,7 @@ class TokenPaymentController extends Controller
 
             return redirect()
                 ->route('token-subscriptions.index')
-                ->with('error', 'An error occurred processing your payment. Please contact support.');
+                ->with('error', 'An error occurred processing your payment.');
         }
-    }
-
-    /**
-     * Calculate the amount to charge for a subscription
-     */
-    private function calculateSubscriptionAmount(UserTokenSubscription $subscription): float
-    {
-        // If amount is explicitly set (for multi-month purchases), use it
-        if ($subscription->amount) {
-            return (float) $subscription->amount;
-        }
-
-        // Pricing from package
-        if ($subscription->package) {
-            return (float) $subscription->package->price;
-        }
-
-        // Pricing from pricing tier
-        if ($subscription->pricingTier) {
-            return (float) $subscription->pricingTier->initial_price;
-        }
-
-        // Fallback - should not happen
-        \Log::warning('Could not determine subscription price', [
-            'subscription_id' => $subscription->id,
-            'package_id' => $subscription->package_id,
-            'pricing_tier_id' => $subscription->pricing_tier_id,
-        ]);
-
-        return 0;
     }
 }

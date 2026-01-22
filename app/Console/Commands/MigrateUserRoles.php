@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\Role;
 use App\Models\User;
-use App\Enums\UserRole;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -52,17 +52,17 @@ class MigrateUserRoles extends Command
             $roleMapping[$case->value] = $case->value;
         }
 
-        $this->info('Found ' . count($roleMapping) . ' roles in UserRole enum: ' . implode(', ', array_keys($roleMapping)));
+        $this->info('Found '.count($roleMapping).' roles in UserRole enum: '.implode(', ', array_keys($roleMapping)));
 
         // Create or get existing roles
         $roles = [];
         foreach ($roleMapping as $name => $value) {
-            if (!$dryRun) {
+            if (! $dryRun) {
                 $role = Role::firstOrCreate(
                     ['name' => $name],
                     [
                         'name' => $name,
-                        'description' => ucfirst($name) . ' role',
+                        'description' => ucfirst($name).' role',
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]
@@ -85,16 +85,16 @@ class MigrateUserRoles extends Command
         // Get users that need migration
         $whereCondition = $toManyToMany ?
             // For many-to-many, find users with string roles that don't have any roles in pivot table
-            function($query) {
+            function ($query) {
                 $query->whereNotNull('role')
-                      ->where('role', '!=', '')
-                      ->whereDoesntHave('roles');
+                    ->where('role', '!=', '')
+                    ->whereDoesntHave('roles');
             } :
             // For single role, find users with string roles that don't have role_id set
-            function($query) {
+            function ($query) {
                 $query->whereNotNull('role')
-                      ->where('role', '!=', '')
-                      ->whereNull('role_id');
+                    ->where('role', '!=', '')
+                    ->whereNull('role_id');
             };
 
         $users = User::where($whereCondition)->get();
@@ -108,10 +108,11 @@ class MigrateUserRoles extends Command
         foreach ($users as $user) {
             $oldRole = $user->role;
 
-            if (!isset($roles[$oldRole])) {
+            if (! isset($roles[$oldRole])) {
                 $this->error("Unknown role '{$oldRole}' for user {$user->id} ({$user->email})");
-                $this->line("Available roles: " . implode(', ', array_keys($roles)));
+                $this->line('Available roles: '.implode(', ', array_keys($roles)));
                 $errors++;
+
                 continue;
             }
 
@@ -121,7 +122,7 @@ class MigrateUserRoles extends Command
                 if ($role === 'would_create') {
                     $this->line("User {$user->id} ({$user->email}): '{$oldRole}' -> would create role and assign");
                 } else {
-                    $target = $toManyToMany ? "many-to-many relationship" : "role_id {$role->id}";
+                    $target = $toManyToMany ? 'many-to-many relationship' : "role_id {$role->id}";
                     $this->line("User {$user->id} ({$user->email}): '{$oldRole}' -> {$target}");
                 }
                 $migrated++;
@@ -130,7 +131,7 @@ class MigrateUserRoles extends Command
                     DB::transaction(function () use ($user, $role, $toManyToMany) {
                         if ($toManyToMany) {
                             // Add to many-to-many relationship
-                            if (!$user->roles()->where('role_id', $role->id)->exists()) {
+                            if (! $user->roles()->where('role_id', $role->id)->exists()) {
                                 $user->roles()->attach($role->id);
                             }
                         } else {
@@ -139,11 +140,11 @@ class MigrateUserRoles extends Command
                         }
                     });
 
-                    $target = $toManyToMany ? "many-to-many" : "role_id {$role->id}";
+                    $target = $toManyToMany ? 'many-to-many' : "role_id {$role->id}";
                     $this->line("✓ Migrated user {$user->id} ({$user->email}): '{$oldRole}' -> {$target}");
                     $migrated++;
                 } catch (\Exception $e) {
-                    $this->error("Failed to migrate user {$user->id}: " . $e->getMessage());
+                    $this->error("Failed to migrate user {$user->id}: ".$e->getMessage());
                     $errors++;
                 }
             }

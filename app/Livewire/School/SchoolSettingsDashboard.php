@@ -5,25 +5,26 @@ namespace App\Livewire\School;
 use App\Constants\GhanaBanks;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Models\School;
-use App\Models\SchoolSetting;
 use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
+use App\Models\School;
+use App\Models\SchoolSetting;
 use App\Services\ImportExportService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
-use Carbon\Carbon;
 
 class SchoolSettingsDashboard extends Component
 {
     use WithFileUploads;
 
     public ?School $school;
+
     public $activeTab = 'overview';
+
     public $darkMode = false;
 
     // School basic settings
@@ -77,7 +78,9 @@ class SchoolSettingsDashboard extends Component
 
     // Academic Year Management
     public $academicYears = [];
+
     public $showAcademicYearModal = false;
+
     public $editingYearId = null;
 
     #[Validate('required|string|max:255')]
@@ -97,8 +100,11 @@ class SchoolSettingsDashboard extends Component
 
     // Academic Period Management
     public $periods = [];
+
     public $currentPeriod = null;
+
     public $showPeriodModal = false;
+
     public $editingPeriod = null;
 
     #[Validate('required|exists:academic_years,id')]
@@ -139,6 +145,7 @@ class SchoolSettingsDashboard extends Component
 
     // Settings management
     public $settings = [];
+
     public $settingGroups = [];
 
     // Stats
@@ -146,35 +153,51 @@ class SchoolSettingsDashboard extends Component
 
     // Account Information Management
     public $showAccountModal = false;
+
     public $editingAccountId = null;
+
     public $accountBank = '';
+
     public $accountBankCode = '';
+
     public $accountNumber = '';
+
     public $accountName = '';
+
     public $accountType = 'bank'; // bank, mobile_money
+
     public $isPrimaryAccount = false;
 
     // Import functionality
     public $showImportModal = false;
+
     public $showTemplateModal = false;
+
     public $importType = 'students';
+
     public $importFile;
+
     public $defaultPassword = 'Welcome@2024';
 
-// Import options
+    // Import options
     public $createMissingLevels = true;
+
     public $createMissingGroups = true;
+
     public $sendWelcomeEmail = false;
 
     // Academic Structure Management
     public $showGroupLevelModal = false;
+
     public $allAcademicGroups = [];
+
     public $selectedGroups = [];
+
     public $selectedLevels = [];
+
     public $activeStructure = [];
 
-
-// Supported import types
+    // Supported import types
     public $importTypes = [
         'students' => 'Students',
         'teachers' => 'Teachers',
@@ -210,14 +233,14 @@ class SchoolSettingsDashboard extends Component
             $this->school = $user->school;
         }
 
-        if (!$this->school) {
+        if (! $this->school) {
             session()->flash('error', 'Please select a school to manage its settings.');
+
             return redirect(route('dashboard'));
         }
 
         // Restore active tab from session or default to 'overview'
         $this->activeTab = session('school_settings_active_tab', 'overview');
-
 
         $this->loadSchoolData();
         $this->loadAcademicYears();
@@ -230,6 +253,7 @@ class SchoolSettingsDashboard extends Component
         // Check for saved theme preference
         $this->darkMode = session('dark_mode', false);
     }
+
     public function loadSchoolData()
     {
         $this->schoolName = $this->school->name;
@@ -305,7 +329,7 @@ class SchoolSettingsDashboard extends Component
                             'value' => $setting->value,
                             'options' => $setting->options ?? [],
                             'description' => $setting->description,
-                        ]
+                        ],
                     ];
                 });
             })
@@ -374,7 +398,7 @@ class SchoolSettingsDashboard extends Component
 
                 $updateData = [
                     'business_name' => $this->accountName ?: $this->school->name,
-                     'bank_code' => $this->accountBankCode,
+                    'bank_code' => $this->accountBankCode,
                     'account_number' => $this->accountNumber,
                 ];
 
@@ -413,7 +437,7 @@ class SchoolSettingsDashboard extends Component
                         'subaccount_code' => $response['data']['subaccount_code'],
                         'business_name' => $this->accountName ?: $this->school->name,
                         'settlement_bank' => $this->accountBank,
-                         'bank_code' => $this->accountBankCode,
+                        'bank_code' => $this->accountBankCode,
                         'account_number' => $this->accountNumber,
                         'percentage_charge' => $response['data']['percentage_charge'] ?? 0,
                         'description' => $response['data']['description'] ?? null,
@@ -430,7 +454,7 @@ class SchoolSettingsDashboard extends Component
             $this->resetAccountForm();
             $this->loadAccountInformation();
         } catch (\Exception $e) {
-            $errorMessage = 'Failed to save account: ' . $e->getMessage();
+            $errorMessage = 'Failed to save account: '.$e->getMessage();
             session()->flash('error', $errorMessage);
         }
     }
@@ -449,7 +473,7 @@ class SchoolSettingsDashboard extends Component
                 $this->loadAccountInformation();
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to delete account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete account: '.$e->getMessage());
         }
     }
 
@@ -468,9 +492,10 @@ class SchoolSettingsDashboard extends Component
     {
         return GhanaBanks::getNameFromCode($code);
     }
+
     public function toggleDarkMode()
     {
-        $this->darkMode = !$this->darkMode;
+        $this->darkMode = ! $this->darkMode;
         session(['dark_mode' => $this->darkMode]);
     }
 
@@ -547,13 +572,13 @@ class SchoolSettingsDashboard extends Component
         $this->selectedGroups = $this->school->academicGroups()
             ->wherePivot('is_active', true)
             ->pluck('academic_groups.id')
-            ->map(fn($id) => (string)$id)
+            ->map(fn ($id) => (string) $id)
             ->toArray();
 
         $this->selectedLevels = $this->school->academicLevels()
             ->wherePivot('is_active', true)
             ->pluck('academic_levels.id')
-            ->map(fn($id) => (string)$id)
+            ->map(fn ($id) => (string) $id)
             ->toArray();
 
         $this->showGroupLevelModal = true;
@@ -564,11 +589,11 @@ class SchoolSettingsDashboard extends Component
         try {
             // Prepare sync data with is_active = true
             $groupSyncData = collect($this->selectedGroups)
-                ->mapWithKeys(fn($id) => [$id => ['is_active' => true]])
+                ->mapWithKeys(fn ($id) => [$id => ['is_active' => true]])
                 ->toArray();
 
             $levelSyncData = collect($this->selectedLevels)
-                ->mapWithKeys(fn($id) => [$id => ['is_active' => true]])
+                ->mapWithKeys(fn ($id) => [$id => ['is_active' => true]])
                 ->toArray();
 
             $this->school->academicGroups()->sync($groupSyncData);
@@ -578,7 +603,7 @@ class SchoolSettingsDashboard extends Component
             $this->showGroupLevelModal = false;
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update academic structure: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update academic structure: '.$e->getMessage());
         }
     }
 
@@ -586,26 +611,26 @@ class SchoolSettingsDashboard extends Component
     {
         // When a group is deselected, remove its corresponding levels
         foreach ($this->allAcademicGroups as $group) {
-            if (!in_array((string)$group->id, $this->selectedGroups)) {
-                $levelIds = $group->academicLevels->pluck('id')->map(fn($id) => (string)$id)->toArray();
+            if (! in_array((string) $group->id, $this->selectedGroups)) {
+                $levelIds = $group->academicLevels->pluck('id')->map(fn ($id) => (string) $id)->toArray();
                 $this->selectedLevels = array_values(array_diff($this->selectedLevels, $levelIds));
             }
         }
     }
+
     public function toggleGroupSelection($groupId)
     {
-        $groupId = (string)$groupId;
+        $groupId = (string) $groupId;
 
         // If group is deselected, deselect all its levels
-        if (!in_array($groupId, $this->selectedGroups)) {
+        if (! in_array($groupId, $this->selectedGroups)) {
             $group = AcademicGroup::with('academicLevels')->find($groupId);
             if ($group) {
-                $levelIds = $group->academicLevels->pluck('id')->map(fn($id) => (string)$id)->toArray();
+                $levelIds = $group->academicLevels->pluck('id')->map(fn ($id) => (string) $id)->toArray();
                 $this->selectedLevels = array_values(array_diff($this->selectedLevels, $levelIds));
             }
         }
     }
-
 
     public function editAcademicYear($yearId)
     {
@@ -665,6 +690,7 @@ class SchoolSettingsDashboard extends Component
 
         if ($periodsCount > 0) {
             session()->flash('error', "Cannot delete academic year. It has {$periodsCount} academic period(s) associated with it.");
+
             return;
         }
 
@@ -855,13 +881,12 @@ class SchoolSettingsDashboard extends Component
                     'id' => $group->id,
                     'name' => $group->name,
                     'levels' => $levelsByGroup->has($group->id)
-                        ? $levelsByGroup->get($group->id)->map(fn($l) => ['id' => $l->id, 'name' => $l->name])->toArray()
-                        : []
+                        ? $levelsByGroup->get($group->id)->map(fn ($l) => ['id' => $l->id, 'name' => $l->name])->toArray()
+                        : [],
                 ];
             })
             ->toArray();
     }
-
 
     public function render()
     {
@@ -870,7 +895,7 @@ class SchoolSettingsDashboard extends Component
             ['key' => 'overview', 'label' => 'Overview'],
             ['key' => 'basic-info', 'label' => 'Basic Information'],
             ['key' => 'academic-periods', 'label' => 'Academic Periods'],
-//            ['key' => 'system-settings', 'label' => 'System Settings'],
+            //            ['key' => 'system-settings', 'label' => 'System Settings'],
             ['key' => 'account-information', 'label' => 'Account Information'],
             ['key' => 'fee-structure', 'label' => 'Fees & Payments'],
             ['key' => 'letterheads', 'label' => 'Letterheads'],
@@ -888,8 +913,9 @@ class SchoolSettingsDashboard extends Component
     {
         $words = explode(' ', $this->school->name);
         if (count($words) >= 2) {
-            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+            return strtoupper(substr($words[0], 0, 1).substr($words[1], 0, 1));
         }
+
         return strtoupper(substr($this->school->name, 0, 2));
     }
 
@@ -923,11 +949,11 @@ class SchoolSettingsDashboard extends Component
     public function performImport()
     {
 
-     //   $this->validate([
-      //      'importFile' => 'required|file|mimes:csv,xlsx,xls|max:10240',
-     //       'importType' => 'required|in:students,teachers,librarians,administrators,parents',
-      //      'defaultPassword' => 'required|string|min:6'
-      //  ]);
+        //   $this->validate([
+        //      'importFile' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+        //       'importType' => 'required|in:students,teachers,librarians,administrators,parents',
+        //      'defaultPassword' => 'required|string|min:6'
+        //  ]);
 
         try {
             // Prepare import options
@@ -938,7 +964,6 @@ class SchoolSettingsDashboard extends Component
                 'create_missing_groups' => $this->createMissingGroups,
                 'send_welcome_email' => $this->sendWelcomeEmail,
             ];
-
 
             // Perform import using existing service
             $result = $this->importService->performImport(
@@ -953,13 +978,13 @@ class SchoolSettingsDashboard extends Component
                 $this->closeImportModal();
                 $this->loadStats();
             } else {
-                session()->flash('error', 'Import failed: ' . $result['message']);
-                logError('error '. json_encode($result));
+                session()->flash('error', 'Import failed: '.$result['message']);
+                logError('error '.json_encode($result));
             }
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Import failed: ' . $e->getMessage());
-            logError('error: '. $e->getMessage());
+            session()->flash('error', 'Import failed: '.$e->getMessage());
+            logError('error: '.$e->getMessage());
         }
     }
 }

@@ -17,6 +17,7 @@ class SubscriptionCycle extends Model
         'user_id',
         'pricing_tier_id',
         'subscription_group_id',
+        'merged_with_group_id',
         'cycle_number',
         'cycle_start_date',
         'cycle_end_date',
@@ -26,6 +27,9 @@ class SubscriptionCycle extends Model
         'current_price',
         'status',
         'is_topup',
+        'is_trial',
+        'is_merged',
+        'allocated_by_admin',
     ];
 
     protected $casts = [
@@ -36,6 +40,9 @@ class SubscriptionCycle extends Model
         'tokens_used' => 'integer',
         'current_price' => 'decimal:2',
         'is_topup' => 'boolean',
+        'is_trial' => 'boolean',
+        'is_merged' => 'boolean',
+        'allocated_by_admin' => 'boolean',
     ];
 
     /**
@@ -60,14 +67,6 @@ class SubscriptionCycle extends Model
     }
 
     /**
-     * Get the remaining tokens for this cycle
-     */
-    public function getTokensRemainingAttribute(): int
-    {
-        return $this->tokens_allocated - $this->tokens_used;
-    }
-
-    /**
      * Get the usage percentage
      */
     public function getUsagePercentageAttribute(): float
@@ -77,47 +76,6 @@ class SubscriptionCycle extends Model
         }
 
         return round(($this->tokens_used / $this->tokens_allocated) * 100, 2);
-    }
-
-    /**
-     * Check if cycle is active
-     */
-    public function isActive(): bool
-    {
-        return $this->status === 'active' &&
-            now()->between($this->cycle_start_date, $this->cycle_end_date);
-    }
-
-    /**
-     * Check if cycle has expired
-     */
-    public function isExpired(): bool
-    {
-        return now()->greaterThan($this->cycle_end_date);
-    }
-
-    /**
-     * Get base tokens allocated (without topups)
-     */
-    public function getBaseTokensAllocated(): int
-    {
-        return $this->tokens_allocated - $this->topup_tokens_allocated;
-    }
-
-    /**
-     * Get remaining base tokens (without topups)
-     */
-    public function getBaseTokensRemaining(): int
-    {
-        return $this->getBaseTokensAllocated() - $this->tokens_used;
-    }
-
-    /**
-     * Get remaining topup tokens
-     */
-    public function getTopupTokensRemaining(): int
-    {
-        return $this->topup_tokens_allocated - max(0, $this->tokens_used - $this->getBaseTokensAllocated());
     }
 
     /**
@@ -163,11 +121,51 @@ class SubscriptionCycle extends Model
     }
 
     /**
+     * Get the remaining tokens for this cycle
+     */
+    public function getTokensRemainingAttribute(): int
+    {
+        return $this->tokens_allocated - $this->tokens_used;
+    }
+
+    /**
+     * Get remaining base tokens (without topups)
+     */
+    public function getBaseTokensRemaining(): int
+    {
+        return $this->getBaseTokensAllocated() - $this->tokens_used;
+    }
+
+    /**
+     * Get base tokens allocated (without topups)
+     */
+    public function getBaseTokensAllocated(): int
+    {
+        return $this->tokens_allocated - $this->topup_tokens_allocated;
+    }
+
+    /**
+     * Get remaining topup tokens
+     */
+    public function getTopupTokensRemaining(): int
+    {
+        return $this->topup_tokens_allocated - max(0, $this->tokens_used - $this->getBaseTokensAllocated());
+    }
+
+    /**
      * Check if cycle has enough tokens
      */
     public function hasTokens(int $requiredTokens = 1): bool
     {
         return $this->isActive() && $this->getTokensRemainingAttribute() >= $requiredTokens;
+    }
+
+    /**
+     * Check if cycle is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active' && ! $this->isExpired();
     }
 
     /**
@@ -179,11 +177,19 @@ class SubscriptionCycle extends Model
     }
 
     /**
-     * Get remaining days in this cycle
+     * Check if cycle is expired or ending
      */
-    public function getRemainingDays(): int
+    public function isExpiredOrEnding(): bool
     {
-        return max(0, now()->diffInDays($this->cycle_end_date, false));
+        return $this->isExpired() || $this->isEndingSoon();
+    }
+
+    /**
+     * Check if cycle has expired
+     */
+    public function isExpired(): bool
+    {
+        return now()->greaterThan($this->cycle_end_date);
     }
 
     /**
@@ -195,95 +201,11 @@ class SubscriptionCycle extends Model
     }
 
     /**
-     * Check if cycle is expired or ending
+     * Get remaining days in this cycle
      */
-    public function isExpiredOrEnding(): bool
+    public function getRemainingDays(): int
     {
-        return $this->isExpired() || $this->isEndingSoon();
-    }
-
-    /**
-     * Add topup tokens to this cycle
-     * Topups are added as separate tokens that can be carried over
-     */
-    public function addTopupTokens(int $tokens): bool
-    {
-        if ($tokens <= 0) {
-            return false;
-        }
-
-        // Add to topup allocation and increase total allocation
-        $this->topup_tokens_allocated += $tokens;
-        $this->tokens_allocated += $tokens;
-
-        $result = $this->save();
-
-        if ($result) {
-            \Illuminate\Support\Facades\Log::info('Topup tokens added to cycle', [
-                'cycle_id' => $this->id,
-                'tokens_added' => $tokens,
-                'topup_tokens_allocated' => $this->topup_tokens_allocated,
-                'total_tokens_allocated' => $this->tokens_allocated,
-            ]);
-        }
-
-        return $result;
-    }
-
-    /**
-     * Calculate unused topup tokens only (not base allocation)
-     * Base allocation is NEVER carried over, only unused topups
-     */
-    public function calculateUnusedTopupTokens(): int
-    {
-        $baseUsed = min($this->tokens_used, $this->getBaseTokensAllocated());
-        $topupUsed = $this->tokens_used - $baseUsed;
-        $unusedTopup = max(0, $this->topup_tokens_allocated - $topupUsed);
-
-        return $unusedTopup;
-    }
-
-    /**
-     * Carryover unused topup tokens to next cycle
-     * This is called when current cycle expires and there are unused topup tokens
-     * Base allocation is NOT carried over - only topup tokens
-     *
-     * @return int Tokens carried over
-     */
-    public function carryoverUnusedTopupTokens(): int
-    {
-        $unusedTopup = $this->calculateUnusedTopupTokens();
-
-        if ($unusedTopup <= 0) {
-            \Illuminate\Support\Facades\Log::info('No topup tokens to carry over', [
-                'cycle_id' => $this->id,
-                'topup_allocated' => $this->topup_tokens_allocated,
-                'tokens_used' => $this->tokens_used,
-            ]);
-
-            return 0;
-        }
-
-        $nextCycle = $this->user->getNextUpcomingCycle();
-
-        if (! $nextCycle) {
-            \Illuminate\Support\Facades\Log::info('No next cycle to carry over topup tokens', [
-                'cycle_id' => $this->id,
-                'topup_tokens_unused' => $unusedTopup,
-            ]);
-
-            return 0;
-        }
-
-        $nextCycle->addTopupTokens($unusedTopup);
-
-        \Illuminate\Support\Facades\Log::info('Topup tokens carried over to next cycle', [
-            'current_cycle_id' => $this->id,
-            'next_cycle_id' => $nextCycle->id,
-            'topup_tokens_carried' => $unusedTopup,
-        ]);
-
-        return $unusedTopup;
+        return max(0, now()->diffInDays($this->cycle_end_date, false));
     }
 
     /**
@@ -314,6 +236,96 @@ class SubscriptionCycle extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Carryover unused topup tokens to next cycle
+     * This is called when current cycle expires and there are unused topup tokens
+     * Base allocation is NOT carried over - only topup tokens
+     * After carryover, topup tokens are cleared from current cycle
+     *
+     * @return int Tokens carried over
+     */
+    public function carryoverUnusedTopupTokens(): int
+    {
+        $unusedTopup = $this->calculateUnusedTopupTokens();
+
+        if ($unusedTopup <= 0) {
+            \Illuminate\Support\Facades\Log::info('No topup tokens to carry over', [
+                'cycle_id' => $this->id,
+                'topup_allocated' => $this->topup_tokens_allocated,
+                'tokens_used' => $this->tokens_used,
+            ]);
+
+            return 0;
+        }
+
+        $nextCycle = $this->user->getNextUpcomingCycle();
+
+        if (! $nextCycle) {
+            \Illuminate\Support\Facades\Log::info('No next cycle to carry over topup tokens', [
+                'cycle_id' => $this->id,
+                'topup_tokens_unused' => $unusedTopup,
+            ]);
+
+            return 0;
+        }
+
+        $nextCycle->addTopupTokens($unusedTopup);
+
+        // Clear topup tokens from current cycle after carryover
+        // $this->tokens_allocated -= $this->topup_tokens_allocated;
+        $this->topup_tokens_allocated = 0;
+        $this->save();
+
+        \Illuminate\Support\Facades\Log::info('Topup tokens carried over to next cycle', [
+            'current_cycle_id' => $this->id,
+            'next_cycle_id' => $nextCycle->id,
+            'topup_tokens_carried' => $unusedTopup,
+        ]);
+
+        return $unusedTopup;
+    }
+
+    /**
+     * Calculate unused topup tokens only (not base allocation)
+     * Base allocation is NEVER carried over, only unused topups
+     */
+    public function calculateUnusedTopupTokens(): int
+    {
+        $baseUsed = min($this->tokens_used, $this->getBaseTokensAllocated());
+        $topupUsed = $this->tokens_used - $baseUsed;
+        $unusedTopup = max(0, $this->topup_tokens_allocated - $topupUsed);
+
+        return $unusedTopup;
+    }
+
+    /**
+     * Add topup tokens to this cycle
+     * Topups are added as separate tokens that can be carried over
+     */
+    public function addTopupTokens(int $tokens): bool
+    {
+        if ($tokens <= 0) {
+            return false;
+        }
+
+        // Add to topup allocation and increase total allocation
+        $this->topup_tokens_allocated += $tokens;
+        $this->tokens_allocated += $tokens;
+
+        $result = $this->save();
+
+        if ($result) {
+            \Illuminate\Support\Facades\Log::info('Topup tokens added to cycle', [
+                'cycle_id' => $this->id,
+                'tokens_added' => $tokens,
+                'topup_tokens_allocated' => $this->topup_tokens_allocated,
+                'total_tokens_allocated' => $this->tokens_allocated,
+            ]);
+        }
+
+        return $result;
     }
 
     public function scopeActive($query)
@@ -405,6 +417,14 @@ class SubscriptionCycle extends Model
     }
 
     /**
+     * Scope to get trial cycles only
+     */
+    public function scopeTrials($query)
+    {
+        return $query->where('is_trial', true);
+    }
+
+    /**
      * Scope to get topup cycles only
      */
     public function scopeTopups($query)
@@ -421,11 +441,39 @@ class SubscriptionCycle extends Model
     }
 
     /**
+     * Check if this is a trial cycle
+     */
+    public function isTrial(): bool
+    {
+        return (bool) $this->is_trial;
+    }
+
+    /**
      * Check if this is a topup cycle
      */
     public function isTopup(): bool
     {
         return (bool) $this->is_topup;
+    }
+
+    /**
+     * Check if this cycle is merged with another subscription
+     */
+    public function isMerged(): bool
+    {
+        return (bool) $this->is_merged;
+    }
+
+    /**
+     * Get the merged subscription group if exists
+     */
+    public function getMergedCycles()
+    {
+        if (! $this->merged_with_group_id) {
+            return collect();
+        }
+
+        return static::byGroup($this->merged_with_group_id)->get();
     }
 
     /**
@@ -437,6 +485,22 @@ class SubscriptionCycle extends Model
             ->topups()
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Scope to get admin-allocated cycles only
+     */
+    public function scopeAllocatedByAdmin($query)
+    {
+        return $query->where('allocated_by_admin', true);
+    }
+
+    /**
+     * Check if this cycle was allocated by admin
+     */
+    public function isAllocatedByAdmin(): bool
+    {
+        return (bool) $this->allocated_by_admin;
     }
 
     /**

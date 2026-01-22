@@ -2,21 +2,22 @@
 
 namespace Tests\Feature;
 
-use App\Services\AcademicChatService;
-use App\Models\User;
-use App\Models\AcademicChatSession;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Config;
-use Tests\TestCase;
-use Livewire\Livewire;
 use App\Livewire\AcademicChat;
+use App\Models\AcademicChatSession;
+use App\Models\User;
+use App\Services\AcademicChatService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
+use Tests\TestCase;
 
 class AcademicChatTest extends TestCase
 {
     use RefreshDatabase;
 
     protected AcademicChatService $chatService;
+
     protected $user;
 
     protected function setUp(): void
@@ -24,7 +25,7 @@ class AcademicChatTest extends TestCase
         parent::setUp();
 
         Config::set('services.openai.key', 'test-key');
-        $this->chatService = new AcademicChatService();
+        $this->chatService = new AcademicChatService;
         $this->user = User::factory()->create();
     }
 
@@ -36,7 +37,7 @@ class AcademicChatTest extends TestCase
             'age' => 15,
             'academic_level' => 'high_school',
             'subject' => 'mathematics',
-            'learning_style' => 'visual'
+            'learning_style' => 'visual',
         ];
 
         $errors = $this->chatService->validateParameters($validParameters);
@@ -46,7 +47,7 @@ class AcademicChatTest extends TestCase
             'message' => '', // Empty message
             'age' => 200, // Invalid age
             'academic_level' => 'invalid_level',
-            'learning_style' => 'invalid_style'
+            'learning_style' => 'invalid_style',
         ];
 
         $errors = $this->chatService->validateParameters($invalidParameters);
@@ -61,7 +62,7 @@ class AcademicChatTest extends TestCase
             'academic_level' => 'elementary',
             'subject' => 'mathematics',
             'learning_style' => 'visual',
-            'accommodations' => ['simplified_language']
+            'accommodations' => ['simplified_language'],
         ];
 
         $reflection = new \ReflectionClass($this->chatService);
@@ -84,21 +85,21 @@ class AcademicChatTest extends TestCase
                 'choices' => [
                     [
                         'message' => [
-                            'content' => 'This is a test response about mathematics.'
-                        ]
-                    ]
+                            'content' => 'This is a test response about mathematics.',
+                        ],
+                    ],
                 ],
                 'usage' => [
-                    'total_tokens' => 100
+                    'total_tokens' => 100,
                 ],
-                'model' => 'gpt-4'
-            ], 200)
+                'model' => 'gpt-4',
+            ], 200),
         ]);
 
         $parameters = [
             'message' => 'Explain addition',
             'age' => 8,
-            'subject' => 'mathematics'
+            'subject' => 'mathematics',
         ];
 
         $result = $this->chatService->chat($parameters);
@@ -115,14 +116,14 @@ class AcademicChatTest extends TestCase
             'api.openai.com/*' => Http::response([
                 'error' => [
                     'message' => 'API Error',
-                    'type' => 'invalid_request_error'
-                ]
-            ], 400)
+                    'type' => 'invalid_request_error',
+                ],
+            ], 400),
         ]);
 
         $parameters = [
             'message' => 'Test message',
-            'age' => 15
+            'age' => 15,
         ];
 
         $result = $this->chatService->chat($parameters);
@@ -139,13 +140,13 @@ class AcademicChatTest extends TestCase
                 'choices' => [
                     [
                         'message' => [
-                            'content' => 'Great question about mathematics!'
-                        ]
-                    ]
+                            'content' => 'Great question about mathematics!',
+                        ],
+                    ],
                 ],
                 'usage' => ['total_tokens' => 50],
-                'model' => 'gpt-4'
-            ], 200)
+                'model' => 'gpt-4',
+            ], 200),
         ]);
 
         Livewire::test(AcademicChat::class)
@@ -176,7 +177,7 @@ class AcademicChatTest extends TestCase
     {
         Livewire::test(AcademicChat::class)
             ->set('messages', [
-                ['role' => 'user', 'content' => 'Test message']
+                ['role' => 'user', 'content' => 'Test message'],
             ])
             ->call('clearChat')
             ->assertSet('messages', []);
@@ -195,7 +196,7 @@ class AcademicChatTest extends TestCase
     {
         $response = $this->postJson('/api/v1/educational-chat/chat', [
             'message' => '', // Invalid
-            'age' => 200 // Invalid
+            'age' => 200, // Invalid
         ]);
 
         $response->assertStatus(422)
@@ -210,26 +211,26 @@ class AcademicChatTest extends TestCase
                 'choices' => [
                     [
                         'message' => [
-                            'content' => 'Academic response about science.'
-                        ]
-                    ]
+                            'content' => 'Academic response about science.',
+                        ],
+                    ],
                 ],
                 'usage' => ['total_tokens' => 75],
-                'model' => 'gpt-4'
-            ], 200)
+                'model' => 'gpt-4',
+            ], 200),
         ]);
 
         $response = $this->postJson('/api/v1/educational-chat/chat', [
             'message' => 'Explain photosynthesis',
             'age' => 12,
             'subject' => 'science',
-            'academic_level' => 'middle_school'
+            'academic_level' => 'middle_school',
         ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'content' => 'Academic response about science.'
+                'content' => 'Academic response about science.',
             ]);
     }
 
@@ -243,8 +244,8 @@ class AcademicChatTest extends TestCase
                 'subjects' => [
                     'mathematics' => [],
                     'science' => [],
-                    'language_arts' => []
-                ]
+                    'language_arts' => [],
+                ],
             ]);
     }
 
@@ -254,12 +255,12 @@ class AcademicChatTest extends TestCase
         $response = $this->postJson('/api/v1/educational-chat/recommendations', [
             'age' => 14,
             'academic_level' => 'middle_school',
-            'learning_style' => 'visual'
+            'learning_style' => 'visual',
         ]);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'recommendations' => []
+                'recommendations' => [],
             ]);
     }
 
@@ -271,7 +272,7 @@ class AcademicChatTest extends TestCase
         for ($i = 0; $i < 55; $i++) {
             $response = $this->postJson('/api/v1/educational-chat/chat', [
                 'message' => "Test message {$i}",
-                'age' => 15
+                'age' => 15,
             ]);
 
             if ($i < 50) {
@@ -291,12 +292,12 @@ class AcademicChatTest extends TestCase
             'user_id' => $this->user->id,
             'parameters' => ['age' => 15, 'subject' => 'math'],
             'messages' => [],
-            'last_activity' => now()
+            'last_activity' => now(),
         ]);
 
         $session->addMessage([
             'role' => 'user',
-            'content' => 'Test message'
+            'content' => 'Test message',
         ]);
 
         $this->assertCount(1, $session->fresh()->messages);

@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Note;
-use App\Models\NoteShare;
-use App\Models\User;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use App\Models\Note;
+use App\Models\NoteShare;
 use App\Models\StudentGroup;
+use App\Models\User;
 use App\Notifications\NoteSharedNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,14 +15,20 @@ use Illuminate\Support\Facades\DB;
 class NoteShareService
 {
     public const SHARE_INDIVIDUAL = 'individual';
+
     public const SHARE_ACADEMIC_GROUP = 'academic_group';
+
     public const SHARE_ACADEMIC_LEVEL = 'academic_level';
+
     public const SHARE_STUDENT_GROUP = 'student_group';
+
     public const SHARE_SCHOOL_WIDE = 'school_wide';
+
     public const SHARE_EMAIL = 'email';
 
     /**
      * Share a note with recipients based on share type
+     *
      * @throws \Throwable
      */
     public function shareNote(Note $note, string $shareType, array $recipientIds, bool $canEdit = false): array
@@ -213,7 +219,7 @@ class NoteShareService
 
         // Log recipients without valid emails
         $invalidEmailUsers = $recipients->filter(function ($user) {
-            return empty($user->email) || !filter_var($user->email, FILTER_VALIDATE_EMAIL);
+            return empty($user->email) || ! filter_var($user->email, FILTER_VALIDATE_EMAIL);
         });
 
         if ($invalidEmailUsers->isNotEmpty()) {
@@ -225,6 +231,7 @@ class NoteShareService
 
         return $recipients;
     }
+
     /**
      * Create an individual share
      */
@@ -258,18 +265,20 @@ class NoteShareService
             try {
                 // Validate email
                 if (empty($user->email)) {
-                    \Log::warning("User has no email address", [
+                    \Log::warning('User has no email address', [
                         'user_id' => $user->id,
                         'user_name' => $user->name,
                     ]);
+
                     continue;
                 }
 
-                if (!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
-                    \Log::warning("User has invalid email address", [
+                if (! filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                    \Log::warning('User has invalid email address', [
                         'user_id' => $user->id,
                         'user_email' => $user->email,
                     ]);
+
                     continue;
                 }
 
@@ -297,7 +306,7 @@ class NoteShareService
                     ]);
 
             } catch (\Exception $e) {
-                \Log::error("Failed to notify user about note share", [
+                \Log::error('Failed to notify user about note share', [
                     'user_id' => $user->id,
                     'user_name' => $user->name,
                     'user_email' => $user->email ?? 'null',
@@ -336,14 +345,15 @@ class NoteShareService
     {
         if ($shareType === self::SHARE_INDIVIDUAL) {
             return NoteShare::where('note_id', $note->id)
-                    ->where('shared_with_user_id', $identifier)
-                    ->delete() > 0;
+                ->where('shared_with_user_id', $identifier)
+                ->delete() > 0;
         }
 
         $modelClass = $this->getModelClass($shareType);
+
         return NoteShare::where('note_id', $note->id)
-                ->where('shareable_type', $modelClass)
-                ->where('shareable_id', $identifier)
-                ->delete() > 0;
+            ->where('shareable_type', $modelClass)
+            ->where('shareable_id', $identifier)
+            ->delete() > 0;
     }
 }

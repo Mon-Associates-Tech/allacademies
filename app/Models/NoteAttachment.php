@@ -42,7 +42,7 @@ class NoteAttachment extends Model
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function getFileExtensionAttribute(): string
@@ -52,7 +52,7 @@ class NoteAttachment extends Model
 
     public function getFileIconAttribute(): string
     {
-        return match($this->file_extension) {
+        return match ($this->file_extension) {
             'pdf' => '📄',
             'doc', 'docx' => '📝',
             'xls', 'xlsx' => '📊',
@@ -65,7 +65,7 @@ class NoteAttachment extends Model
 
     public function getFileColorAttribute(): string
     {
-        return match($this->file_extension) {
+        return match ($this->file_extension) {
             'pdf' => 'red',
             'doc', 'docx' => 'blue',
             'xls', 'xlsx' => 'green',
@@ -81,6 +81,7 @@ class NoteAttachment extends Model
         if (Storage::disk('public')->exists($this->path)) {
             return Storage::disk('public')->delete($this->path);
         }
+
         return false;
     }
 }

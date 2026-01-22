@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Teachers\VirtualClassroom;
 
-use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\Classroom\SessionParticipant;
@@ -18,38 +17,56 @@ class CreateVirtualSession extends Component
 {
     // Session Details
     public $title = '';
+
     public $description = '';
+
     public $type = 'live';
 
     // Scheduling
     public $scheduled_date = '';
+
     public $scheduled_time = '';
+
     public $duration = 60;
 
     // Recurring fields
     public $is_recurring = false;
+
     public $recurrence_pattern = 'weekly'; // daily, weekly, monthly
+
     public $recurrence_interval = 1;
+
     public $recurrence_days = []; // For weekly: [1,2,3,4,5] = Mon-Fri
+
     public $recurrence_end_type = 'never'; // never, on_date, after_occurrences
+
     public $recurrence_end_date = '';
+
     public $recurrence_occurrences = 10;
 
     // Academic Context
     public $academic_level_id = null;
+
     public $academic_group_id = null;
+
     public $academic_subject_id = null;
 
     // Settings
     public $allow_guest_login = false;
+
     public $auto_record = false;
+
     public $mute_on_start = false;
+
     public $webcams_only_for_moderator = false;
+
     public $max_participants = 100;
+
     public $guest_policy = 'ASK_MODERATOR';
 
     // Participants
     public $selectedStudents = [];
+
     public $inviteAllStudents = true;
 
     // UI State
@@ -123,7 +140,7 @@ class CreateVirtualSession extends Component
 
     public function updatedIsRecurring($value)
     {
-        if (!$value) {
+        if (! $value) {
             $this->recurrence_pattern = 'weekly';
             $this->recurrence_interval = 1;
             $this->recurrence_days = [];
@@ -168,7 +185,7 @@ class CreateVirtualSession extends Component
 
     public function createSession()
     {
-//        $this->validate();
+        //        $this->validate();
 
         DB::beginTransaction();
 
@@ -188,19 +205,20 @@ class CreateVirtualSession extends Component
                 : 'Virtual session created successfully!';
 
             session()->flash('success', $message);
+
             return redirect()->route('teachers.classroom.index');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            logError('failed to create session: ' . $e->getMessage());
-            $this->dispatch('error', 'Failed to create session: ' . $e->getMessage());
+            logError('failed to create session: '.$e->getMessage());
+            $this->dispatch('error', 'Failed to create session: '.$e->getMessage());
         }
     }
 
     protected function createSingleSession($teacher, $scheduledStart = null, $parentSessionId = null)
     {
-        if (!$scheduledStart) {
-            $scheduledStart = $this->scheduled_date . ' ' . $this->scheduled_time;
+        if (! $scheduledStart) {
+            $scheduledStart = $this->scheduled_date.' '.$this->scheduled_time;
         }
 
         $scheduledEnd = Carbon::parse($scheduledStart)->addMinutes($this->duration);
@@ -224,7 +242,7 @@ class CreateVirtualSession extends Component
             'webcams_only_for_moderator' => $this->webcams_only_for_moderator,
             'max_participants' => $this->max_participants,
             'guest_policy' => $this->guest_policy,
-            'meeting_id' => 'session-' . time() . '-' . rand(1000, 9999),
+            'meeting_id' => 'session-'.time().'-'.rand(1000, 9999),
             'attendee_password' => bin2hex(random_bytes(6)),
             'moderator_password' => bin2hex(random_bytes(6)),
             'parent_session_id' => $parentSessionId,
@@ -239,7 +257,7 @@ class CreateVirtualSession extends Component
 
     protected function createRecurringSessions($teacher)
     {
-        $scheduledStart = Carbon::parse($this->scheduled_date . ' ' . $this->scheduled_time);
+        $scheduledStart = Carbon::parse($this->scheduled_date.' '.$this->scheduled_time);
 
         // Determine end date
         $endDate = $this->getRecurrenceEndDate($scheduledStart);
@@ -264,7 +282,7 @@ class CreateVirtualSession extends Component
             'webcams_only_for_moderator' => $this->webcams_only_for_moderator,
             'max_participants' => $this->max_participants,
             'guest_policy' => $this->guest_policy,
-            'meeting_id' => 'session-' . time() . '-' . rand(1000, 9999),
+            'meeting_id' => 'session-'.time().'-'.rand(1000, 9999),
             'attendee_password' => bin2hex(random_bytes(6)),
             'moderator_password' => bin2hex(random_bytes(6)),
             'is_recurring' => true,
@@ -284,7 +302,7 @@ class CreateVirtualSession extends Component
 
     protected function getRecurrenceEndDate(Carbon $startDate): ?Carbon
     {
-        return match($this->recurrence_end_type) {
+        return match ($this->recurrence_end_type) {
             'on_date' => Carbon::parse($this->recurrence_end_date)->endOfDay(),
             'after_occurrences' => $this->calculateEndDateFromOccurrences($startDate),
             default => null, // never ends
@@ -353,7 +371,7 @@ class CreateVirtualSession extends Component
                 }
 
                 // If we've cycled through the week, add interval weeks
-                if (!$found || ($this->recurrence_interval > 1 && $next->dayOfWeekIso <= $currentDayOfWeek)) {
+                if (! $found || ($this->recurrence_interval > 1 && $next->dayOfWeekIso <= $currentDayOfWeek)) {
                     $next->addWeeks($this->recurrence_interval - 1);
                 }
                 break;
@@ -392,7 +410,7 @@ class CreateVirtualSession extends Component
     {
         $schoolId = Auth::user()->school_id;
 
-        if (!$this->inviteAllStudents && !empty($this->selectedStudents)) {
+        if (! $this->inviteAllStudents && ! empty($this->selectedStudents)) {
             return Student::whereIn('id', $this->selectedStudents)
                 ->where('school_id', $schoolId)
                 ->with('user')
@@ -412,7 +430,7 @@ class CreateVirtualSession extends Component
             $query->where('academic_group_id', $this->academic_group_id);
         }
 
-        if (!$this->academic_level_id && !$this->academic_group_id) {
+        if (! $this->academic_level_id && ! $this->academic_group_id) {
             $teacher = Auth::user()->teacher;
             $query->whereHas('teachers', function ($q) use ($teacher) {
                 $q->where('teachers.id', $teacher->id);
@@ -466,7 +484,7 @@ class CreateVirtualSession extends Component
         }
 
         $students = [];
-        if (!$this->inviteAllStudents) {
+        if (! $this->inviteAllStudents) {
             $students = $this->getAvailableStudents();
         }
 

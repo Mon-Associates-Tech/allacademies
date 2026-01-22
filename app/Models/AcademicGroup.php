@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\AcademicGroupLogs;
-use App\Traits\BelongsToSchool;
 use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,11 +13,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicGroup extends Model
 {
+    use AcademicGroupLogs;
     use HasFactory;
     use SoftDeletes;
     use Trackable;
-    use AcademicGroupLogs;
-//    use BelongsToSchoolEnhanced;
+    //    use BelongsToSchoolEnhanced;
 
     /**
      * @var array<int, string>
@@ -59,6 +58,7 @@ class AcademicGroup extends Model
             ->withPivot('is_active', 'custom_settings')
             ->withTimestamps();
     }
+
     // Students in this group (across all schools)
     public function students(): HasMany
     {
@@ -74,7 +74,7 @@ class AcademicGroup extends Model
     // Scope to get groups for a specific school
     public function scopeForSchool($query, $schoolId)
     {
-        return $query->whereHas('schools', function($q) use ($schoolId) {
+        return $query->whereHas('schools', function ($q) use ($schoolId) {
             $q->where('school_id', $schoolId);
         });
     }
@@ -83,17 +83,18 @@ class AcademicGroup extends Model
     {
         $user = auth()->user();
 
-        if (!$user || $user->canAccessCrossSchool()) {
+        if (! $user || $user->canAccessCrossSchool()) {
             $schoolId = app()->has('current_school') ? app('current_school')->id : null;
             if ($schoolId) {
-                return $query->whereHas('schools', function($q) use ($schoolId) {
+                return $query->whereHas('schools', function ($q) use ($schoolId) {
                     $q->where('school_id', $schoolId)->where('is_active', true);
                 });
             }
+
             return $query;
         }
 
-        return $query->whereHas('schools', function($q) use ($user) {
+        return $query->whereHas('schools', function ($q) use ($user) {
             $q->where('school_id', $user->school_id)->where('is_active', true);
         });
     }

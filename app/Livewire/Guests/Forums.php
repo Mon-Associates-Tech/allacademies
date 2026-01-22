@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
+use App\Models\BookCategory;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
-use App\Models\BookCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -15,14 +15,20 @@ class Forums extends Component
     use WithPagination;
 
     public $currentView = 'categories'; // 'categories', 'topics', 'posts', 'create-topic', 'create-post'
+
     public $selectedCategory = null;
+
     public $selectedTopic = null;
+
     public $search = '';
+
     public $sortBy = 'recent';
 
     // Create topic/post data
     public $newTopicTitle = '';
+
     public $newTopicContent = '';
+
     public $newPostContent = '';
 
     public function mount()
@@ -37,8 +43,8 @@ class Forums extends Component
         $bookCategories = BookCategory::all();
         foreach ($bookCategories as $bookCategory) {
             ForumCategory::firstOrCreate([
-                'name' => $bookCategory->name . ' Discussion',
-                'description' => 'Discussions about ' . $bookCategory->name . ' books and topics',
+                'name' => $bookCategory->name.' Discussion',
+                'description' => 'Discussions about '.$bookCategory->name.' books and topics',
                 'book_category_id' => $bookCategory->id,
             ]);
         }
@@ -48,13 +54,6 @@ class Forums extends Component
     {
         $this->selectedCategory = $categoryId;
         $this->currentView = 'topics';
-        $this->resetPage();
-    }
-
-    public function selectTopic($topicId)
-    {
-        $this->selectedTopic = $topicId;
-        $this->currentView = 'posts';
         $this->resetPage();
     }
 
@@ -107,6 +106,13 @@ class Forums extends Component
         session()->flash('success', 'Topic created successfully!');
     }
 
+    public function selectTopic($topicId)
+    {
+        $this->selectedTopic = $topicId;
+        $this->currentView = 'posts';
+        $this->resetPage();
+    }
+
     public function createPost()
     {
         $this->validate([
@@ -145,7 +151,7 @@ class Forums extends Component
                     ->withCount('posts');
 
                 if ($this->search) {
-                    $query->where('title', 'like', '%' . $this->search . '%');
+                    $query->where('title', 'like', '%'.$this->search.'%');
                 }
 
                 switch ($this->sortBy) {
@@ -178,6 +184,6 @@ class Forums extends Component
                 break;
         }
 
-        return view('livewire.subscribers.forums', $data);
+        return view('livewire.guests.forums', $data);
     }
 }

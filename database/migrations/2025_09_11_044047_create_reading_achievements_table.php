@@ -12,27 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reading_achievements', function (Blueprint $table) {
-            if (!Schema::hasColumn('reading_achievements', 'type')) {
+            if (! Schema::hasColumn('reading_achievements', 'type')) {
                 $table->string('type');
             }
-            if (!Schema::hasColumn('reading_achievements', 'name')) {
+            if (! Schema::hasColumn('reading_achievements', 'name')) {
                 $table->string('name');
             }
-            if (!Schema::hasColumn('reading_achievements', 'description')) {
+            if (! Schema::hasColumn('reading_achievements', 'description')) {
                 $table->text('description');
             }
-            if (!Schema::hasColumn('reading_achievements', 'criteria')) {
+            if (! Schema::hasColumn('reading_achievements', 'criteria')) {
                 $table->json('criteria')->nullable();
             }
-            if (!Schema::hasColumn('reading_achievements', 'awarded_at')) {
+            if (! Schema::hasColumn('reading_achievements', 'awarded_at')) {
                 $table->timestamp('awarded_at')->nullable();
             }
-            if (!Schema::hasColumn('reading_achievements', 'user_id')) {
+            if (! Schema::hasColumn('reading_achievements', 'user_id')) {
                 $table->unsignedBigInteger('user_id');
             }
 
             // Add timestamps if they don't exist
-            if (!Schema::hasColumn('reading_achievements', 'created_at') && !Schema::hasColumn('reading_achievements', 'updated_at')) {
+            if (! Schema::hasColumn('reading_achievements', 'created_at') && ! Schema::hasColumn('reading_achievements', 'updated_at')) {
                 $table->timestamps();
             }
 

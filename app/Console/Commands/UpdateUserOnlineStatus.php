@@ -14,6 +14,7 @@ class UpdateUserOnlineStatus extends Command
      * @var string
      */
     protected $signature = 'users:update-online-status';
+
     protected $description = 'Update user online status based on last seen activity';
 
     /**
@@ -28,7 +29,7 @@ class UpdateUserOnlineStatus extends Command
     public function handle()
     {
         User::where('is_online', true)->each(function ($user) {
-            if (!Cache::has('user-online-' . $user->id)) {
+            if (! Cache::has('user-online-'.$user->id)) {
                 $user->update(['is_online' => false]);
             }
         });

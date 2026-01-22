@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\School;
 use App\Models\AcademicPeriod;
+use App\Models\School;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class AcademicPeriodSeeder extends Seeder
 {
@@ -42,7 +42,7 @@ class AcademicPeriodSeeder extends Seeder
     private function createTermSystem(School $school): void
     {
         $currentYear = Carbon::now()->year;
-        $academicYear = $currentYear . '/' . ($currentYear + 1);
+        $academicYear = $currentYear.'/'.($currentYear + 1);
 
         // Three term system (common in Ghana primary/secondary)
         $terms = [
@@ -54,7 +54,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear, 9, 15), // Mid September
                 'end_date' => Carbon::create($currentYear, 12, 15), // Mid December
                 'status' => 'active',
-//                'is_current' => true,
+                //                'is_current' => true,
                 'registration_start' => Carbon::create($currentYear, 8, 1),
                 'registration_end' => Carbon::create($currentYear, 9, 10),
                 'exam_start' => Carbon::create($currentYear, 12, 5),
@@ -68,7 +68,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 1, 10), // January
                 'end_date' => Carbon::create($currentYear + 1, 4, 5), // Early April
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
                 'registration_start' => Carbon::create($currentYear, 12, 20),
                 'registration_end' => Carbon::create($currentYear + 1, 1, 5),
                 'exam_start' => Carbon::create($currentYear + 1, 3, 25),
@@ -82,7 +82,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 4, 25), // Late April
                 'end_date' => Carbon::create($currentYear + 1, 7, 20), // Mid July
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
                 'registration_start' => Carbon::create($currentYear + 1, 4, 10),
                 'registration_end' => Carbon::create($currentYear + 1, 4, 20),
                 'exam_start' => Carbon::create($currentYear + 1, 7, 1),
@@ -102,7 +102,7 @@ class AcademicPeriodSeeder extends Seeder
     private function createSemesterSystem(School $school): void
     {
         $currentYear = Carbon::now()->year;
-        $academicYear = $currentYear . '/' . ($currentYear + 1);
+        $academicYear = $currentYear.'/'.($currentYear + 1);
 
         // Two semester system (common in tertiary institutions)
         $semesters = [
@@ -114,7 +114,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear, 9, 1), // September
                 'end_date' => Carbon::create($currentYear + 1, 1, 15), // January
                 'status' => 'active',
-//                'is_current' => true,
+                //                'is_current' => true,
                 'registration_start' => Carbon::create($currentYear, 7, 1),
                 'registration_end' => Carbon::create($currentYear, 8, 25),
                 'exam_start' => Carbon::create($currentYear, 12, 15),
@@ -128,7 +128,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 2, 1), // February
                 'end_date' => Carbon::create($currentYear + 1, 6, 30), // June
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
                 'registration_start' => Carbon::create($currentYear + 1, 1, 20),
                 'registration_end' => Carbon::create($currentYear + 1, 1, 28),
                 'exam_start' => Carbon::create($currentYear + 1, 6, 1),
@@ -146,7 +146,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 7, 5),
                 'end_date' => Carbon::create($currentYear + 1, 8, 25),
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
                 'registration_start' => Carbon::create($currentYear + 1, 6, 15),
                 'registration_end' => Carbon::create($currentYear + 1, 7, 1),
                 'exam_start' => Carbon::create($currentYear + 1, 8, 15),
@@ -167,7 +167,7 @@ class AcademicPeriodSeeder extends Seeder
     {
         // Alternative system for some international schools
         $currentYear = Carbon::now()->year;
-        $academicYear = $currentYear . '/' . ($currentYear + 1);
+        $academicYear = $currentYear.'/'.($currentYear + 1);
 
         $quarters = [
             [
@@ -178,7 +178,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear, 9, 1),
                 'end_date' => Carbon::create($currentYear, 11, 30),
                 'status' => 'active',
-//                'is_current' => true,
+                //                'is_current' => true,
             ],
             [
                 'name' => 'Winter Quarter',
@@ -188,7 +188,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 1, 5),
                 'end_date' => Carbon::create($currentYear + 1, 3, 15),
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
             ],
             [
                 'name' => 'Spring Quarter',
@@ -198,7 +198,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 3, 25),
                 'end_date' => Carbon::create($currentYear + 1, 6, 15),
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
             ],
             [
                 'name' => 'Summer Quarter',
@@ -208,7 +208,7 @@ class AcademicPeriodSeeder extends Seeder
                 'start_date' => Carbon::create($currentYear + 1, 6, 25),
                 'end_date' => Carbon::create($currentYear + 1, 8, 30),
                 'status' => 'upcoming',
-//                'is_current' => false,
+                //                'is_current' => false,
             ],
         ];
 

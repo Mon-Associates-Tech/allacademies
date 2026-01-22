@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Chat\PricingTier;
 use App\Models\Chat\SubscriptionCycle;
-use App\Models\Chat\UserTokenSubscription;
 use App\Models\User;
 use App\Services\SubscriptionCycleService;
 use App\Services\TokenSubscriptionService;
@@ -29,7 +28,7 @@ class TokenSubscriptionController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $activeSubscription = $user->activeTokenSubscription;
+        $activeSubscription = $user->activeSubscriptionCycle;
         $subscriptionHistory = $user->subscriptionHistory;
         $pendingSubscription = $user->tokenSubscriptions()
             ->where('status', TokenSubscriptionStatus::PENDING->value)
@@ -49,37 +48,6 @@ class TokenSubscriptionController extends Controller
             'pendingSubscription',
             'currentCycle',
             'stats'
-        ));
-    }
-
-    public function create(Request $request)
-    {
-        /** @var User $user */
-        $user = Auth::user();
-        $currentSubscription = $user->activeTokenSubscription;
-
-        // Check for pending payment
-        $pendingSubscription = $user->tokenSubscriptions()
-            ->where('status', TokenSubscriptionStatus::PENDING->value)
-            ->first();
-
-        if ($pendingSubscription) {
-            return redirect()
-                ->route('token-payments.initialize', $pendingSubscription->id)
-                ->with('info', 'You have a pending payment. Complete it to activate your new subscription.');
-        }
-
-        $pricingTierId = $request->get('pricing_tier');
-        $pricingTier = $pricingTierId ? PricingTier::findOrFail($pricingTierId) : null;
-
-        $pricingTiers = PricingTier::active()
-            ->orderBy('initial_price')
-            ->get();
-
-        return view('token-subscriptions.create', compact(
-            'pricingTiers',
-            'pricingTier',
-            'currentSubscription'
         ));
     }
 
@@ -131,19 +99,16 @@ class TokenSubscriptionController extends Controller
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
 
-        // Calculate pricing based on the months being purchased (not cycle_number from DB)
-        // Months 1-6 use initial_price, 7+ use subsequent_price
+        // Calculate pricing using PricingTier's getMonthlyPriceIncrement method
+        // Cycle 1: base_price, Cycles 2-6: initial_price, Cycle 7+: subsequent_price
         $totalPrice = 0;
         $priceBreakdown = [];
 
-        for ($monthPos = 1; $monthPos <= $months; $monthPos++) {
-            $monthlyPrice = $monthPos <= $pricingTier->initial_period_months
-                ? (float) $pricingTier->initial_price
-                : (float) $pricingTier->subsequent_price;
-
+        for ($cycleNumber = 1; $cycleNumber <= $months; $cycleNumber++) {
+            $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
             $totalPrice += $monthlyPrice;
 
-            $priceBreakdown[$monthPos] = [
+            $priceBreakdown[$cycleNumber] = [
                 'monthly_increment' => $monthlyPrice,
                 'cumulative' => $totalPrice,
             ];
@@ -183,79 +148,36 @@ class TokenSubscriptionController extends Controller
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
 
-        // Generate a group ID to link all cycles from this purchase
-        $subscriptionGroupId = \Illuminate\Support\Str::uuid()->toString();
+        // Create subscription cycles as PENDING (no tokens assigned yet)
+        $cycles = $this->cycleService->createSubscriptionCycles($user, $pricingTier, $months, true);
 
-        // Get the next cycle number for this user
-        $lastCycle = $user->subscriptionCycles()
-            ->orderBy('cycle_number', 'desc')
-            ->first();
-        $nextCycleNumber = ($lastCycle ? $lastCycle->cycle_number : 0) + 1;
+        // Get total price from last cycle (cumulative)
+        $lastCycle = $cycles[count($cycles) - 1];
+        $totalPrice = (float) $lastCycle->current_price;
+        $groupId = $cycles[0]->subscription_group_id;
 
-        // Create subscription cycles for each month using anniversary dates
-        // Pricing is based on position within this purchase (1-10), not cycle_number from DB
-        $cycleStartDate = $lastCycle ? $lastCycle->cycle_end_date : now();
-        $totalPrice = 0;
+        \Log::info('Processing payment for multi-month subscription', [
+            'user_id' => $user->id,
+            'pricing_tier_id' => $pricingTier->id,
+            'pricing_tier_name' => $pricingTier->name,
+            'months' => $months,
+            'cycles_created' => count($cycles),
+            'group_id' => $groupId,
+            'total_price' => $totalPrice,
+        ]);
 
-        for ($i = 0; $i < $months; $i++) {
-            $currentCycleNumber = $nextCycleNumber + $i;
-            $monthPos = $i + 1; // Position within this purchase (1-10)
-
-            // Calculate price for this month position (1-6 = initial, 7+ = subsequent)
-            $monthlyPrice = $monthPos <= $pricingTier->initial_period_months
-                ? (float) $pricingTier->initial_price
-                : (float) $pricingTier->subsequent_price;
-
-            $totalPrice += $monthlyPrice;
-
-            // Calculate the start date for this cycle (30 days from previous cycle end)
-            $cycleStart = $cycleStartDate->copy()->addDays($i * 30);
-
-            $this->cycleService->createCycle(
-                $user,
-                $pricingTier,
-                $cycleStart,
-                $currentCycleNumber,
-                $totalPrice,
-                $subscriptionGroupId
-            );
-        }
-
-        // Find or create the pending subscription
-        $pendingSubscription = $user->tokenSubscriptions()
-            ->where('status', TokenSubscriptionStatus::PENDING->value)
-            ->where('pricing_tier_id', $pricingTier->id)
-            ->first();
-
-        if (! $pendingSubscription) {
-            $tokensPurchased = $pricingTier->monthly_token_limit * $months;
-            $pendingSubscription = UserTokenSubscription::create([
-                'user_id' => $user->id,
+        // Store payment info in session
+        session([
+            'pending_payment' => [
+                'group_id' => $groupId,
                 'pricing_tier_id' => $pricingTier->id,
                 'amount' => $totalPrice,
-                'status' => TokenSubscriptionStatus::PENDING->value,
-                'reference' => 'TOKEN-'.$user->id.'-'.time(),
-                'package_id' => null,
-                'purchased_at' => now(),
-                'expires_at' => now()->addMonths($months),
-                'tokens_purchased' => $tokensPurchased,
-                'tokens_used' => 0,
-                'tokens_remaining' => $tokensPurchased,
-            ]);
-        } else {
-            // Update existing pending subscription
-            $tokensPurchased = $pricingTier->monthly_token_limit * $months;
-            $pendingSubscription->update([
-                'amount' => $totalPrice,
-                'reference' => 'TOKEN-'.$user->id.'-'.time(),
-                'expires_at' => now()->addMonths($months),
-                'tokens_purchased' => $tokensPurchased,
-                'tokens_remaining' => $tokensPurchased,
-            ]);
-        }
+                'type' => 'subscription',
+            ],
+        ]);
 
-        // Redirect to payment
-        return redirect()->route('token-payments.initialize', $pendingSubscription->id)
+        // Redirect to payment with group ID
+        return redirect()->route('token-payments.initialize', ['group_id' => $groupId])
             ->with('success', 'Ready for payment. Please complete your transaction.');
     }
 
@@ -269,24 +191,11 @@ class TokenSubscriptionController extends Controller
             ->forUser($user->id)
             ->find($subscription);
 
-        if ($subscriptionCycle) {
-            return view('token-subscriptions.show-cycle', [
-                'subscriptionCycle' => $subscriptionCycle,
-                'usageLogs' => $subscriptionCycle->usageLogs()->latest()->paginate(15),
-            ]);
-        }
+        return view('token-subscriptions.show-cycle', [
+            'subscriptionCycle' => $subscriptionCycle,
+            'usageLogs' => $subscriptionCycle->usageLogs()->latest()->paginate(15),
+        ]);
 
-        // Fallback: Try to get as UserTokenSubscription (legacy system)
-        $userSubscription = UserTokenSubscription::with('usageLogs', 'pricingTier')
-            ->find($subscription);
-        if ($userSubscription && $userSubscription->user_id === $user->id) {
-            return view('token-subscriptions.show-legacy', [
-                'subscription' => $userSubscription,
-                'usageLogs' => $userSubscription->usageLogs()->latest()->paginate(15),
-            ]);
-        }
-
-        abort(404, 'Subscription not found.');
     }
 
     /**
@@ -341,34 +250,38 @@ class TokenSubscriptionController extends Controller
 
         $amount = (float) $request->input('amount');
 
-        // Create pending topup subscription for payment processing
-        $topupSubscription = UserTokenSubscription::create([
-            'user_id' => $user->id,
-            'pricing_tier_id' => $cycle->pricing_tier_id,
-            'amount' => $amount,
-            'status' => TokenSubscriptionStatus::PENDING->value,
-            'reference' => 'TOPUP-'.$user->id.'-'.time().'-'.strtoupper(\Illuminate\Support\Str::random(6)),
-            'package_id' => null,
-            'purchased_at' => now(),
-            'expires_at' => now()->addMonths(1),
-            'tokens_purchased' => 0,
-            'tokens_used' => 0,
-            'tokens_remaining' => 0,
-            'action_type' => 'topup',
-        ]);
-
         // Store topup info in session for payment processing
         session([
-            'topup_info' => [
-                'subscription_id' => $topupSubscription->id,
+            'pending_payment' => [
                 'cycle_id' => $cycle->id,
-                'amount' => $amount,
                 'pricing_tier_id' => $cycle->pricing_tier_id,
+                'amount' => $amount,
+                'type' => 'topup',
             ],
         ]);
 
         // Redirect to payment
-        return redirect()->route('token-payments.initialize', $topupSubscription->id)
+        return redirect()->route('token-payments.initialize')
             ->with('success', 'Ready for topup payment. Please complete your transaction.');
+    }
+
+    public function create(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $currentSubscription = $user->activeSubscriptionCycle;
+
+        $pricingTierId = $request->get('pricing_tier');
+        $pricingTier = $pricingTierId ? PricingTier::findOrFail($pricingTierId) : null;
+
+        $pricingTiers = PricingTier::active()
+            ->orderBy('initial_price')
+            ->get();
+
+        return view('token-subscriptions.create', compact(
+            'pricingTiers',
+            'pricingTier',
+            'currentSubscription'
+        ));
     }
 }

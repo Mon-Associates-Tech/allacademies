@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Livewire\Subscribers;
+namespace App\Livewire\Guests;
 
-use App\Models\StudentGroup;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
+use App\Models\StudentGroup;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -13,34 +13,38 @@ use Livewire\Component;
 class StudyGroups extends Component
 {
     public $showJoinModal = false;
+
     public $showCreateModal = false;
+
     public $joinCode = '';
+
     public $myGroups = [];
+
     public $publicGroups = [];
 
     // Create group form fields
     public $name = '';
+
     public $description = '';
+
     public $academicGroupId = '';
+
     public $academicLevelId = '';
+
     public $subjectId = '';
+
     public $isPrivate = false;
 
     public $academicGroups = [];
+
     public $academicLevels = [];
+
     public $subjects = [];
 
     public function mount()
     {
         $this->loadGroups();
         $this->loadFormData();
-    }
-
-    public function loadFormData()
-    {
-        $this->academicGroups = AcademicGroup::all();
-        $this->academicLevels = AcademicLevel::all();
-        $this->subjects = AcademicSubject::all();
     }
 
     public function loadGroups()
@@ -66,36 +70,21 @@ class StudyGroups extends Component
             ->get();
     }
 
+    public function loadFormData()
+    {
+        $this->academicGroups = AcademicGroup::all();
+        $this->academicLevels = AcademicLevel::all();
+        $this->subjects = AcademicSubject::all();
+    }
+
     public function openJoinModal()
     {
         $this->showJoinModal = true;
     }
 
-    public function closeJoinModal()
-    {
-        $this->showJoinModal = false;
-        $this->joinCode = '';
-    }
-
     public function openCreateModal()
     {
         $this->showCreateModal = true;
-    }
-
-    public function closeCreateModal()
-    {
-        $this->showCreateModal = false;
-        $this->resetCreateForm();
-    }
-
-    public function resetCreateForm()
-    {
-        $this->name = '';
-        $this->description = '';
-        $this->academicGroupId = '';
-        $this->academicLevelId = '';
-        $this->subjectId = '';
-        $this->isPrivate = false;
     }
 
     public function createGroup()
@@ -110,8 +99,9 @@ class StudyGroups extends Component
 
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             session()->flash('error', 'Only students can create study groups.');
+
             return;
         }
 
@@ -132,12 +122,29 @@ class StudyGroups extends Component
         $this->loadGroups();
     }
 
+    public function closeCreateModal()
+    {
+        $this->showCreateModal = false;
+        $this->resetCreateForm();
+    }
+
+    public function resetCreateForm()
+    {
+        $this->name = '';
+        $this->description = '';
+        $this->academicGroupId = '';
+        $this->academicLevelId = '';
+        $this->subjectId = '';
+        $this->isPrivate = false;
+    }
+
     public function joinWithCode()
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             session()->flash('error', 'Only students can join study groups.');
+
             return;
         }
 
@@ -145,14 +152,16 @@ class StudyGroups extends Component
             ->where('is_approved', true)
             ->first();
 
-        if (!$group) {
+        if (! $group) {
             session()->flash('error', 'Invalid join code or group not approved yet.');
+
             return;
         }
 
         // Check if already a member
         if ($group->students()->where('students.id', $user->student->id)->exists()) {
             session()->flash('error', 'You are already a member of this group.');
+
             return;
         }
 
@@ -164,12 +173,19 @@ class StudyGroups extends Component
         $this->loadGroups();
     }
 
+    public function closeJoinModal()
+    {
+        $this->showJoinModal = false;
+        $this->joinCode = '';
+    }
+
     public function joinPublicGroup($groupId)
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             session()->flash('error', 'Only students can join study groups.');
+
             return;
         }
 
@@ -178,14 +194,16 @@ class StudyGroups extends Component
             ->where('is_private', false)
             ->first();
 
-        if (!$group) {
+        if (! $group) {
             session()->flash('error', 'Group not found or not available for joining.');
+
             return;
         }
 
         // Check if already a member
         if ($group->students()->where('students.id', $user->student->id)->exists()) {
             session()->flash('error', 'You are already a member of this group.');
+
             return;
         }
 
@@ -198,6 +216,6 @@ class StudyGroups extends Component
 
     public function render()
     {
-        return view('livewire.subscribers.study-groups');
+        return view('livewire.guests.study-groups');
     }
 }

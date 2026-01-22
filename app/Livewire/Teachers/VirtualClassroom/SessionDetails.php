@@ -9,6 +9,7 @@ use Livewire\Component;
 class SessionDetails extends Component
 {
     public VirtualSession $session;
+
     public $activeTab = 'overview'; // overview, participants, recordings, settings
 
     public function mount(VirtualSession $session)
@@ -23,7 +24,7 @@ class SessionDetails extends Component
             'academicGroup',
             'academicSubject',
             'participants.user',
-            'recordings'
+            'recordings',
         ]);
     }
 
@@ -43,13 +44,15 @@ class SessionDetails extends Component
         $this->session->delete();
 
         session()->flash('success', 'Session deleted successfully.');
+
         return redirect()->route('teachers.classroom');
     }
 
     public function stopRecurrence()
     {
-        if (!$this->session->isParentSession()) {
+        if (! $this->session->isParentSession()) {
             $this->dispatch('error', 'This is not a recurring session.');
+
             return;
         }
 
@@ -61,8 +64,9 @@ class SessionDetails extends Component
 
     public function deleteRecurringSeries()
     {
-        if (!$this->session->isParentSession() && !$this->session->isChildSession()) {
+        if (! $this->session->isParentSession() && ! $this->session->isChildSession()) {
             $this->dispatch('error', 'This is not a recurring session.');
+
             return;
         }
 
@@ -80,6 +84,7 @@ class SessionDetails extends Component
         $parent->delete();
 
         session()->flash('success', 'Recurring session series deleted successfully.');
+
         return redirect()->route('teachers.classroom.index');
     }
 

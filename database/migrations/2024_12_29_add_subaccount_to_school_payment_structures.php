@@ -11,7 +11,7 @@ return new class extends Migration
         if (Schema::hasTable('school_payment_structures')) {
             Schema::table('school_payment_structures', function (Blueprint $table) {
                 // Add subaccount_id column to link payment to a specific subaccount
-                if (!Schema::hasColumn('school_payment_structures', 'subaccount_id')) {
+                if (! Schema::hasColumn('school_payment_structures', 'subaccount_id')) {
                     $table->foreignId('subaccount_id')
                         ->nullable()
                         ->after('payment_type')

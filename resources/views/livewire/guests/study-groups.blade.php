@@ -1,4 +1,3 @@
-{{-- resources/views/livewire/subscribers/study-groups.blade.php --}}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Study Groups</h1>
@@ -73,7 +72,8 @@
                         </div>
 
                         <div class="flex space-x-2">
-                            <button class="flex-1 bg-violet-600 text-white py-2 px-4 rounded-lg hover:bg-violet-700 text-sm">
+                            <button
+                                class="flex-1 bg-violet-600 text-white py-2 px-4 rounded-lg hover:bg-violet-700 text-sm">
                                 View Group
                             </button>
                             @if($group->join_code)
@@ -152,7 +152,8 @@
                 </svg>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Public Groups Available</h3>
                 <p class="text-gray-600 dark:text-gray-400">
-                    There are currently no public study groups available to join. Try joining with a group code or create your own group.
+                    There are currently no public study groups available to join. Try joining with a group code or
+                    create your own group.
                 </p>
             </div>
         @endif
@@ -225,7 +226,8 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Create Study Group</h3>
                     <button wire:click="closeCreateModal" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -301,14 +303,18 @@
                         </label>
                     </div>
 
-                    <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-md p-3">
+                    <div
+                        class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-md p-3">
                         <div class="flex">
                             <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                <path fill-rule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clip-rule="evenodd"></path>
                             </svg>
                             <div class="ml-3">
                                 <p class="text-sm text-yellow-700 dark:text-yellow-200">
-                                    Your study group will need to be approved by an administrator before it becomes live and visible to other students.
+                                    Your study group will need to be approved by an administrator before it becomes live
+                                    and visible to other students.
                                 </p>
                             </div>
                         </div>
@@ -337,7 +343,8 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Join Study Group</h3>
                     <button wire:click="closeJoinModal" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -367,12 +374,12 @@
 </div>
 
 <script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        // You could add a toast notification here
-        alert('Group code copied to clipboard!');
-    });
-}
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+            // You could add a toast notification here
+            alert('Group code copied to clipboard!');
+        });
+    }
 </script>
 
 @if (session()->has('success'))

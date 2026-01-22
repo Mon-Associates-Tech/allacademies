@@ -3,8 +3,8 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
@@ -14,8 +14,11 @@ class ParentNotificationsHandler extends AppComponent
     use WithPagination;
 
     public $filter = 'all';
+
     public $selectedNotifications = [];
+
     public $showMarkAllModal = false;
+
     public $search = '';
 
     public function getListeners()
@@ -73,6 +76,7 @@ class ParentNotificationsHandler extends AppComponent
     {
         if (empty($this->selectedNotifications)) {
             session()->flash('warning', 'No notifications selected');
+
             return;
         }
 
@@ -91,7 +95,7 @@ class ParentNotificationsHandler extends AppComponent
     {
         if (in_array($notificationId, $this->selectedNotifications)) {
             $this->selectedNotifications = array_values(
-                array_filter($this->selectedNotifications, fn($id) => $id !== $notificationId)
+                array_filter($this->selectedNotifications, fn ($id) => $id !== $notificationId)
             );
         } else {
             $this->selectedNotifications[] = $notificationId;
@@ -120,7 +124,7 @@ class ParentNotificationsHandler extends AppComponent
 
             // Remove from selected if exists
             $this->selectedNotifications = array_values(
-                array_filter($this->selectedNotifications, fn($id) => $id !== $notificationId)
+                array_filter($this->selectedNotifications, fn ($id) => $id !== $notificationId)
             );
 
             $this->dispatch('notification-deleted', notificationId: $notificationId);
@@ -133,6 +137,7 @@ class ParentNotificationsHandler extends AppComponent
     {
         if (empty($this->selectedNotifications)) {
             session()->flash('warning', 'No notifications selected');
+
             return;
         }
 
@@ -159,7 +164,7 @@ class ParentNotificationsHandler extends AppComponent
 
         // Apply search filter
         if ($this->search) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('data->title', 'like', "%{$this->search}%")
                     ->orWhere('data->message', 'like', "%{$this->search}%");
             });
@@ -211,12 +216,12 @@ class ParentNotificationsHandler extends AppComponent
             'attendance' => DatabaseNotification::where('notifiable_id', $userId)
                 ->where('type', 'LIKE', '%Attendance%')->count(),
             'fees' => DatabaseNotification::where('notifiable_id', $userId)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('type', 'LIKE', '%Fee%')
                         ->orWhere('type', 'LIKE', '%Payment%');
                 })->count(),
             'grades' => DatabaseNotification::where('notifiable_id', $userId)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('type', 'LIKE', '%Grade%')
                         ->orWhere('type', 'LIKE', '%Assessment%');
                 })->count(),
@@ -235,12 +240,24 @@ class ParentNotificationsHandler extends AppComponent
     {
         $type = $notification->type;
 
-        if (str_contains($type, 'Assignment')) return 'assignment';
-        if (str_contains($type, 'Attendance')) return 'attendance';
-        if (str_contains($type, 'Fee') || str_contains($type, 'Payment')) return 'payment';
-        if (str_contains($type, 'Grade') || str_contains($type, 'Assessment')) return 'grade';
-        if (str_contains($type, 'System')) return 'system';
-        if (str_contains($type, 'Alert')) return 'alert';
+        if (str_contains($type, 'Assignment')) {
+            return 'assignment';
+        }
+        if (str_contains($type, 'Attendance')) {
+            return 'attendance';
+        }
+        if (str_contains($type, 'Fee') || str_contains($type, 'Payment')) {
+            return 'payment';
+        }
+        if (str_contains($type, 'Grade') || str_contains($type, 'Assessment')) {
+            return 'grade';
+        }
+        if (str_contains($type, 'System')) {
+            return 'system';
+        }
+        if (str_contains($type, 'Alert')) {
+            return 'alert';
+        }
 
         return 'default';
     }
@@ -249,12 +266,24 @@ class ParentNotificationsHandler extends AppComponent
     {
         $type = $notification->type;
 
-        if (str_contains($type, 'Assignment')) return 'blue';
-        if (str_contains($type, 'Attendance')) return 'green';
-        if (str_contains($type, 'Fee') || str_contains($type, 'Payment')) return 'purple';
-        if (str_contains($type, 'Grade') || str_contains($type, 'Assessment')) return 'indigo';
-        if (str_contains($type, 'Alert')) return 'red';
-        if (str_contains($type, 'System')) return 'gray';
+        if (str_contains($type, 'Assignment')) {
+            return 'blue';
+        }
+        if (str_contains($type, 'Attendance')) {
+            return 'green';
+        }
+        if (str_contains($type, 'Fee') || str_contains($type, 'Payment')) {
+            return 'purple';
+        }
+        if (str_contains($type, 'Grade') || str_contains($type, 'Assessment')) {
+            return 'indigo';
+        }
+        if (str_contains($type, 'Alert')) {
+            return 'red';
+        }
+        if (str_contains($type, 'System')) {
+            return 'gray';
+        }
 
         return 'gray';
     }

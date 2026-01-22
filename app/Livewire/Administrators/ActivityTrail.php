@@ -4,27 +4,39 @@ namespace App\Livewire\Administrators;
 
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Activitylog\Models\Activity;
-use Illuminate\Database\Eloquent\Builder;
 
 class ActivityTrail extends Component
 {
     use WithPagination;
 
     public $selectedUser = '';
+
     public $selectedQuestionType = '';
+
     public $selectedAction = '';
+
     public $selectedModule = '';
+
     public $dateFrom = '';
+
     public $dateTo = '';
+
     public $search = '';
+
     public $perPage = 25;
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $showOnlyQuestions = true; // Default to question activities only
+
     public $selectedActivityId = null;
+
     public $showActivityModal = false;
 
     public $questionTypes = [
@@ -130,7 +142,7 @@ class ActivityTrail extends Component
 
     public function toggleQuestionFocus()
     {
-        $this->showOnlyQuestions = !$this->showOnlyQuestions;
+        $this->showOnlyQuestions = ! $this->showOnlyQuestions;
         $this->resetFilters();
     }
 
@@ -150,7 +162,7 @@ class ActivityTrail extends Component
                                 ->orWhereIn('subject_type', [
                                     'App\Models\EssayQuestion',
                                     'App\Models\MultipleChoiceQuestion',
-                                    'App\Models\TrueOrFalseQuestion'
+                                    'App\Models\TrueOrFalseQuestion',
                                 ]);
                         });
                 });
@@ -158,7 +170,7 @@ class ActivityTrail extends Component
             ->when($this->selectedQuestionType && $this->showOnlyQuestions, function (Builder $query) {
                 $query->whereJsonContains('properties->question_type', $this->selectedQuestionType);
             })
-            ->when($this->selectedModule && !$this->showOnlyQuestions, function (Builder $query) {
+            ->when($this->selectedModule && ! $this->showOnlyQuestions, function (Builder $query) {
                 $query->where(function (Builder $subQuery) {
                     $subQuery->where('log_name', $this->selectedModule)
                         ->orWhereJsonContains('properties->module', $this->selectedModule);
@@ -175,11 +187,11 @@ class ActivityTrail extends Component
             })
             ->when($this->search, function (Builder $query) {
                 $query->where(function (Builder $subQuery) {
-                    $subQuery->where('description', 'like', '%' . $this->search . '%')
-                        ->orWhere('log_name', 'like', '%' . $this->search . '%')
+                    $subQuery->where('description', 'like', '%'.$this->search.'%')
+                        ->orWhere('log_name', 'like', '%'.$this->search.'%')
                         ->orWhereHas('causer', function (Builder $userQuery) {
-                            $userQuery->where('name', 'like', '%' . $this->search . '%')
-                                ->orWhere('email', 'like', '%' . $this->search . '%');
+                            $userQuery->where('name', 'like', '%'.$this->search.'%')
+                                ->orWhere('email', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -213,7 +225,7 @@ class ActivityTrail extends Component
                             ->orWhereIn('subject_type', [
                                 'App\Models\EssayQuestion',
                                 'App\Models\MultipleChoiceQuestion',
-                                'App\Models\TrueOrFalseQuestion'
+                                'App\Models\TrueOrFalseQuestion',
                             ]);
                     });
             });
@@ -292,7 +304,7 @@ class ActivityTrail extends Component
      */
     public function getSelectedActivityProperty()
     {
-        if (!$this->selectedActivityId) {
+        if (! $this->selectedActivityId) {
             return null;
         }
 
@@ -306,7 +318,7 @@ class ActivityTrail extends Component
     public function getFormattedPropertiesProperty(): array
     {
         $activity = $this->selectedActivity;
-        if (!$activity) {
+        if (! $activity) {
             return [];
         }
 
@@ -314,7 +326,7 @@ class ActivityTrail extends Component
         $properties = $activity->properties ?? [];
 
         if (isset($properties['question_type'])) {
-            $formatted['Question Type'] = match($properties['question_type']) {
+            $formatted['Question Type'] = match ($properties['question_type']) {
                 'essay' => 'Essay Question',
                 'multiple_choice' => 'Multiple Choice Question',
                 'true_or_false' => 'True or False Question',

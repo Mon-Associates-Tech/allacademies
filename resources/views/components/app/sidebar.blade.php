@@ -43,7 +43,7 @@
                 <div x-show="$store.sidebar.expanded" class="sidebar-text">
                     <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>
                     <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">{{ auth()->user()->email }}</h2>
-                    
+
                     @php
                         // Use the centralized helper function
                         $currentSchool = getCurrentSchoolContext();
@@ -52,7 +52,8 @@
 
                     @if($currentSchool)
                         <div class="mt-1 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3"/>
                                 </svg>
@@ -61,8 +62,10 @@
                         </div>
                     @elseif($viewingAllSchools && (auth()->user()->hasRole('owner') || auth()->user()->isSuperAdmin()))
                         <div class="mt-1 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                                <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                                <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor"
+                                     viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3"/>
                                 </svg>
                                 All Schools
@@ -70,7 +73,8 @@
                         </div>
                     @elseif(auth()->user()->school)
                         <div class="mt-1 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3"/>
                                 </svg>
@@ -113,7 +117,7 @@
                         @include('livewire.navigations.author-navigation', [
                             'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                         ])
-                    @elseif($userRole === UserRole::SUBSCRIBER || $roleValue === 'subscriber')
+                    @elseif($userRole === UserRole::GUEST || $roleValue === 'guest')
                         @include('livewire.navigations.subscriber-navigation', [
                             'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                         ])

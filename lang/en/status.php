@@ -21,7 +21,7 @@ return [
         'remove_code' => 'Successfully removed joining code for :name',
     ],
     'payment' => [
-        'created' => 'Payment of :currency :amount made successfully for :reference'
+        'created' => 'Payment of :currency :amount made successfully for :reference',
     ],
     'member' => [
         'added' => ':member added to :team successfully',
@@ -35,9 +35,9 @@ return [
         'role' => ':name is now :role',
     ],
     'exam' => [
-        'generating' => ':title  is generating... Will be available soon'
+        'generating' => ':title  is generating... Will be available soon',
     ],
     'quiz' => [
-        'generating' => 'Quiz is generating... Will be available soon'
+        'generating' => 'Quiz is generating... Will be available soon',
     ],
 ];

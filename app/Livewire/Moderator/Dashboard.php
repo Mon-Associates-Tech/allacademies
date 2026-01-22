@@ -7,7 +7,6 @@ use Livewire\Component;
 
 class Dashboard extends Component
 {
-
     public function render(): View
     {
         return view('livewire.moderator.dashboard');

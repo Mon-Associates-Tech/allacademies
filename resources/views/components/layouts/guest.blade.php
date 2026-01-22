@@ -22,7 +22,9 @@
 
     <!-- Scripts & Styles -->
     <style>
-        [x-cloak] { display: none !important; }
+        [x-cloak] {
+            display: none !important;
+        }
 
         /* Header animation styles */
         .header-blur {
@@ -121,7 +123,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
             transition: left 0.5s ease;
         }
 
@@ -223,7 +225,8 @@
         }"
     >
         <!-- Top notification bar (optional) -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-2 text-sm font-medium hidden lg:block">
+        <div
+            class="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-2 text-sm font-medium hidden lg:block">
             🎉 New: Advanced AI Assessment Tools Now Available!
             <a href="{{ route('branding.features') }}" class="underline hover:no-underline ml-1">Learn More →</a>
         </div>
@@ -234,15 +237,19 @@
                 <div class="flex items-center">
                     <a href="{{ route('home') }}" class="flex items-center space-x-3 logo-container group">
                         <div class="relative">
-                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                <img src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo" class="w-8 h-8">
+                            <div
+                                class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                                <img src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo"
+                                     class="w-8 h-8">
                             </div>
-                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <div
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
                                 <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                             </div>
                         </div>
                         <div class="hidden sm:block">
-                            <span class="text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                            <span
+                                class="text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
                                 {{ config('app.name') }}
                             </span>
                             <div class="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-wider">
@@ -259,30 +266,46 @@
                         Home
                     </a>
                     <div class="relative group">
-                        <button class="nav-item text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex items-center">
+                        <button
+                            class="nav-item text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex items-center">
                             Solutions
-                            <svg class="w-4 h-4 ml-1 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            <svg class="w-4 h-4 ml-1 transition-transform duration-200 group-hover:rotate-180"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
                         <!-- Dropdown -->
-                        <div class="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                        <div
+                            class="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                             <div class="p-6">
-                                <a href="{{ route('branding.features') }}" class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <a href="{{ route('branding.features') }}"
+                                   class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">Modules & Features</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Comprehensive platform overview</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Comprehensive platform
+                                        overview
+                                    </div>
                                 </a>
-                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <a href="#"
+                                   class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">For Schools</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Complete school management</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Complete school
+                                        management
+                                    </div>
                                 </a>
-                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <a href="#"
+                                   class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">For Teachers</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Teaching and assessment tools</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Teaching and assessment
+                                        tools
+                                    </div>
                                 </a>
-                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <a href="#"
+                                   class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">For Students</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Interactive learning platform</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Interactive learning
+                                        platform
+                                    </div>
                                 </a>
                             </div>
                         </div>
@@ -318,7 +341,8 @@
                             fill="currentColor"
                             viewBox="0 0 24 24"
                         >
-                            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+                            <path
+                                d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
                         </svg>
 
                         <!-- Moon icon for dark mode -->
@@ -328,17 +352,19 @@
                             fill="currentColor"
                             viewBox="0 0 24 24"
                         >
-                            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                  d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"
+                                  clip-rule="evenodd"/>
                         </svg>
                     </button>
 
                     <!-- Auth buttons -->
                     <div class="hidden md:flex items-center space-x-3">
-                        <a href="{{ route('sign-in') }}"
+                        <a href="{{ route('login') }}"
                            class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
                             Sign In
                         </a>
-                        <a href="{{ route('sign-up') }}"
+                        <a href="{{ route('register') }}"
                            class="cta-button relative px-6 py-3 text-white font-semibold rounded-xl shadow-lg">
                             <span class="relative z-10">Get Started Free</span>
                         </a>
@@ -350,11 +376,15 @@
                         class="md:hidden p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
                         @click="mobileMenuOpen = !mobileMenuOpen"
                     >
-                        <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
-                        <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
@@ -383,8 +413,11 @@
                         <button @click="solutionsOpen = !solutionsOpen"
                                 class="mobile-nav-item w-full text-left text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-all duration-200 flex items-center justify-between">
                             <span>🚀 Solutions</span>
-                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': solutionsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            <svg class="w-4 h-4 transition-transform duration-200"
+                                 :class="{ 'rotate-180': solutionsOpen }" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
                         <div x-show="solutionsOpen"
@@ -395,10 +428,18 @@
                              x-transition:leave-start="opacity-100 max-h-96"
                              x-transition:leave-end="opacity-0 max-h-0"
                              class="pl-6 mt-2 space-y-2 overflow-hidden">
-                            <a href="{{ route('branding.features') }}" class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Modules & Features</a>
-                            <a href="#" class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">🏫 For Schools</a>
-                            <a href="#" class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">👨‍🏫 For Teachers</a>
-                            <a href="#" class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">👨‍🎓 For Students</a>
+                            <a href="{{ route('branding.features') }}"
+                               class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋
+                                Modules & Features</a>
+                            <a href="#"
+                               class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">🏫
+                                For Schools</a>
+                            <a href="#"
+                               class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">👨‍🏫
+                                For Teachers</a>
+                            <a href="#"
+                               class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">👨‍🎓
+                                For Students</a>
                         </div>
                     </div>
 
@@ -416,11 +457,11 @@
                     </a>
 
                     <div class="pt-6 border-t border-gray-200/50 dark:border-gray-700/50 space-y-3">
-                        <a href="{{ route('sign-in') }}"
+                        <a href="{{ route('login') }}"
                            class="block w-full px-4 py-3 text-center text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium border border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-300 dark:hover:border-blue-400 transition-all duration-200">
                             Sign In
                         </a>
-                        <a href="{{ route('sign-up') }}"
+                        <a href="{{ route('register') }}"
                            class="block w-full px-4 py-3 text-center text-white font-semibold bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
                             Get Started Free 🚀
                         </a>
@@ -438,7 +479,7 @@
         </main>
 
         <!-- Footer -->
-        <x-layouts.footer />
+        <x-layouts.footer/>
     </div>
 </div>
 

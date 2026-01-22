@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class NoteSharedMail extends Mailable implements ShouldQueue
@@ -17,7 +16,9 @@ class NoteSharedMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public Note $note;
+
     public User $recipient;
+
     public bool $canEdit;
 
     public function __construct(Note $note, User $recipient, bool $canEdit = false)
@@ -36,7 +37,7 @@ class NoteSharedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Note Shared: ' . $this->note->title,
+            subject: 'Note Shared: '.$this->note->title,
         );
     }
 
@@ -60,7 +61,7 @@ class NoteSharedMail extends Mailable implements ShouldQueue
     public function build()
     {
         return $this->to($this->recipient->email, $this->recipient->name)
-            ->subject('Note Shared: ' . $this->note->title)
+            ->subject('Note Shared: '.$this->note->title)
             ->view('emails.note-shared')
             ->with([
                 'note' => $this->note,

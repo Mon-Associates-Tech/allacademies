@@ -11,8 +11,11 @@ use Illuminate\View\Component;
 class AuthLayout extends Component
 {
     public array $colWidths;
+
     public int $maxCols = 7;
+
     public bool $mainOnly = true;
+
     /**
      * @var false
      */
@@ -30,4 +33,3 @@ class AuthLayout extends Component
         return view('components.auth');
     }
 }
-

@@ -3,10 +3,9 @@
 namespace App\Models\Media;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-
 
 class MediaFolder extends Model
 {
@@ -16,11 +15,11 @@ class MediaFolder extends Model
         'description',
         'parent_id',
         'path',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     public function parent(): BelongsTo
@@ -45,11 +44,11 @@ class MediaFolder extends Model
 
     public function getFullPathAttribute(): string
     {
-        if (!$this->parent) {
+        if (! $this->parent) {
             return $this->name;
         }
 
-        return $this->parent->full_path . '/' . $this->name;
+        return $this->parent->full_path.'/'.$this->name;
     }
 
     protected static function boot()
@@ -64,7 +63,7 @@ class MediaFolder extends Model
             // Generate path
             if ($folder->parent_id) {
                 $parent = self::find($folder->parent_id);
-                $folder->path = $parent->path . '/' . $folder->slug;
+                $folder->path = $parent->path.'/'.$folder->slug;
             } else {
                 $folder->path = $folder->slug;
             }

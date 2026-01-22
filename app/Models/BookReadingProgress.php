@@ -16,11 +16,11 @@ class BookReadingProgress extends Model
         'user_id',
         'current_page',
         'total_pages',
-        'last_read_at'
+        'last_read_at',
     ];
 
     protected $casts = [
-        'last_read_at' => 'datetime'
+        'last_read_at' => 'datetime',
     ];
 
     public function getActivitylogOptions(): LogOptions

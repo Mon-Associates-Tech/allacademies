@@ -3,6 +3,7 @@
 namespace App\Livewire\Administrators;
 
 use App\Livewire\AppComponent;
+use App\Models\AcademicFeeStructure;
 use App\Models\Student;
 use App\Models\StudentParent;
 use App\Models\User;
@@ -10,23 +11,31 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\WithPagination;
-use App\Models\AcademicFeeStructure;
-use Illuminate\Support\Facades\Auth;
 
-class ParentManagement extends AppComponent ///
+class ParentManagement extends AppComponent // /
 {
     use WithPagination;
 
     public $search = '';
+
     public $selectedParent = null;
+
     public $showDetailModal = false;
+
     public $showCreateModal = false;
+
     public $showEditModal = false;
+
     public $showAssociateModal = false;
+
     public $viewMode = 'list';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 12;
+
     public $statusFilter = 'all';
 
     // Form properties
@@ -42,7 +51,9 @@ class ParentManagement extends AppComponent ///
 
     // Student association properties
     public $selectedStudents = [];
+
     public $availableStudents = [];
+
     public $studentSearch = '';
 
     protected $queryString = [
@@ -55,7 +66,7 @@ class ParentManagement extends AppComponent ///
 
     public function mount()
     {
-       // $this->authorize('own');
+        // $this->authorize('own');
     }
 
     public function updatingSearch()
@@ -121,7 +132,7 @@ class ParentManagement extends AppComponent ///
 
         if ($this->studentSearch) {
             $query->whereHas('user', function ($q) {
-                $q->where('name', 'like', '%' . $this->studentSearch . '%');
+                $q->where('name', 'like', '%'.$this->studentSearch.'%');
             });
         }
 
@@ -165,7 +176,7 @@ class ParentManagement extends AppComponent ///
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Parent created successfully!'
+                'message' => 'Parent created successfully!',
             ]);
 
             $this->closeCreateModal();
@@ -174,7 +185,7 @@ class ParentManagement extends AppComponent ///
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to create parent: ' . $e->getMessage()
+                'message' => 'Failed to create parent: '.$e->getMessage(),
             ]);
         }
     }
@@ -194,7 +205,7 @@ class ParentManagement extends AppComponent ///
                 'is_active' => $this->form['is_active'],
             ];
 
-            if (!empty($this->form['password'])) {
+            if (! empty($this->form['password'])) {
                 $userData['password'] = Hash::make($this->form['password']);
             }
 
@@ -204,7 +215,7 @@ class ParentManagement extends AppComponent ///
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Parent updated successfully!'
+                'message' => 'Parent updated successfully!',
             ]);
 
             $this->closeEditModal();
@@ -212,7 +223,7 @@ class ParentManagement extends AppComponent ///
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to update parent: ' . $e->getMessage()
+                'message' => 'Failed to update parent: '.$e->getMessage(),
             ]);
         }
     }
@@ -224,7 +235,7 @@ class ParentManagement extends AppComponent ///
             $syncData = [];
             foreach ($this->selectedStudents as $studentId) {
                 $syncData[$studentId] = [
-                    'relationship' => $this->form['relationship'] ?? 'parent'
+                    'relationship' => $this->form['relationship'] ?? 'parent',
                 ];
             }
 
@@ -233,23 +244,23 @@ class ParentManagement extends AppComponent ///
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Student associations updated successfully!'
+                'message' => 'Student associations updated successfully!',
             ]);
 
             $this->closeAssociateModal();
 
         } catch (\Exception $e) {
-        \Log::error('Failed to update student associations', [
-            'error' => $e->getMessage(),
-            'parent_id' => $this->selectedParent?->id,
-            'selected_students' => $this->selectedStudents,
-            'form_relationship' => $this->form['relationship'] ?? 'not set',
-            'trace' => $e->getTraceAsString()
-        ]);
+            \Log::error('Failed to update student associations', [
+                'error' => $e->getMessage(),
+                'parent_id' => $this->selectedParent?->id,
+                'selected_students' => $this->selectedStudents,
+                'form_relationship' => $this->form['relationship'] ?? 'not set',
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to update associations: ' . $e->getMessage()
+                'message' => 'Failed to update associations: '.$e->getMessage(),
             ]);
         }
     }
@@ -269,7 +280,7 @@ class ParentManagement extends AppComponent ///
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Parent deleted successfully!'
+                'message' => 'Parent deleted successfully!',
             ]);
 
             $this->resetPage();
@@ -277,7 +288,7 @@ class ParentManagement extends AppComponent ///
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to delete parent: ' . $e->getMessage()
+                'message' => 'Failed to delete parent: '.$e->getMessage(),
             ]);
         }
     }
@@ -290,14 +301,14 @@ class ParentManagement extends AppComponent ///
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($isUpdate ? $this->selectedParent->user->id : null)
+                Rule::unique('users', 'email')->ignore($isUpdate ? $this->selectedParent->user->id : null),
             ],
             'form.phone' => 'nullable|string|max:20',
             'form.relationship' => 'required|string|in:parent,father,mother,guardian,other',
             'form.is_active' => 'boolean',
         ];
 
-        if (!$isUpdate || !empty($this->form['password'])) {
+        if (! $isUpdate || ! empty($this->form['password'])) {
             $rules['form.password'] = 'required|string|min:8|confirmed';
             $rules['form.password_confirmation'] = 'required';
         }
@@ -358,77 +369,74 @@ class ParentManagement extends AppComponent ///
 
     public function getParentsProperty()
     {
-        //dd(StudentParent::with(['user', 'students'])->get());
+        // dd(StudentParent::with(['user', 'students'])->get());
         return StudentParent::withoutGlobalScopes()->with(['user', 'students'])->get();
 
-            // ->whereHas('user', function (Builder $query) {
-            //     if ($this->search) {
-            //         $query->where(function ($q) {
-            //             $q->where('name', 'like', '%' . $this->search . '%')
-            //                 ->orWhere('email', 'like', '%' . $this->search . '%')
-            //                 ->orWhere('phone', 'like', '%' . $this->search . '%');
-            //         });
-            //     }
+        // ->whereHas('user', function (Builder $query) {
+        //     if ($this->search) {
+        //         $query->where(function ($q) {
+        //             $q->where('name', 'like', '%' . $this->search . '%')
+        //                 ->orWhere('email', 'like', '%' . $this->search . '%')
+        //                 ->orWhere('phone', 'like', '%' . $this->search . '%');
+        //         });
+        //     }
 
-            //     if ($this->statusFilter !== 'all') {
-            //         $isActive = $this->statusFilter === 'active';
-            //         $query->where('is_active', $isActive);
-            //     }
-            // })
-            // ->when($this->sortBy === 'name', function ($query) {
-            //     $query->join('users', 'parents.user_id', '=', 'users.id')
-            //         ->orderBy('users.name', $this->sortDirection)
-            //         ->select('parents.*');
-            // })
-            // ->when($this->sortBy === 'students_count', function ($query) {
-            //     $query->withCount('students')
-            //         ->orderBy('students_count', $this->sortDirection);
-            // })
-            // ->when(!in_array($this->sortBy, ['name', 'students_count']), function ($query) {
-            //     $query->orderBy($this->sortBy, $this->sortDirection);
-            // })
-            // ->paginate($this->perPage);
+        //     if ($this->statusFilter !== 'all') {
+        //         $isActive = $this->statusFilter === 'active';
+        //         $query->where('is_active', $isActive);
+        //     }
+        // })
+        // ->when($this->sortBy === 'name', function ($query) {
+        //     $query->join('users', 'parents.user_id', '=', 'users.id')
+        //         ->orderBy('users.name', $this->sortDirection)
+        //         ->select('parents.*');
+        // })
+        // ->when($this->sortBy === 'students_count', function ($query) {
+        //     $query->withCount('students')
+        //         ->orderBy('students_count', $this->sortDirection);
+        // })
+        // ->when(!in_array($this->sortBy, ['name', 'students_count']), function ($query) {
+        //     $query->orderBy($this->sortBy, $this->sortDirection);
+        // })
+        // ->paginate($this->perPage);
     }
 
-public function getParentsProperty_old()
-{
-    return StudentParent::with(['user', 'students.academicLevel', 'students.academicGroup'])
-        ->get()
-        ->map(function ($parent) {
-            $wards = $parent->students->map(function ($student) {
-                $feeStructure = AcademicFeeStructure::where('school_id', $student->school_id)
-                    ->where('academic_group_id', $student->academic_group_id)
-                    ->where('academic_level_id', $student->academic_level_id)
-                    ->latest()
-                    ->first();
+    public function getParentsProperty_old()
+    {
+        return StudentParent::with(['user', 'students.academicLevel', 'students.academicGroup'])
+            ->get()
+            ->map(function ($parent) {
+                $wards = $parent->students->map(function ($student) {
+                    $feeStructure = AcademicFeeStructure::where('school_id', $student->school_id)
+                        ->where('academic_group_id', $student->academic_group_id)
+                        ->where('academic_level_id', $student->academic_level_id)
+                        ->latest()
+                        ->first();
+
+                    return [
+                        'student' => $student,
+                        'totalAmount' => $feeStructure->amount ?? 0,
+                        'paymentMethod' => $feeStructure->payment_method ?? 'Momo',
+                        'dueDate' => $feeStructure->due_date,
+                        'amountPaid' => $student->amount_paid ?? 0,
+                        'remainingAmount' => ($feeStructure->amount ?? 0) - ($student->amount_paid ?? 0),
+                        'feeStatus' => $student->fee_status ?? 'Pending',
+                    ];
+                });
 
                 return [
-                    'student' => $student,
-                    'totalAmount' => $feeStructure->amount ?? 0,
-                    'paymentMethod' => $feeStructure->payment_method ?? 'Momo',
-                    'dueDate' => $feeStructure->due_date,
-                    'amountPaid' => $student->amount_paid ?? 0,
-                    'remainingAmount' => ($feeStructure->amount ?? 0) - ($student->amount_paid ?? 0),
-                    'feeStatus' => $student->fee_status ?? 'Pending',
+                    'parent' => $parent,
+                    'wards' => $wards,
                 ];
             });
-
-            return [
-                'parent' => $parent,
-                'wards' => $wards
-            ];
-        });
-}
-
-
-
+    }
 
     public function getParentStatsProperty()
     {
         return [
             'total' => StudentParent::count(),
-            'active' => StudentParent::whereHas('user', fn($q) => $q->where('is_active', true))->count(),
-            'inactive' => StudentParent::whereHas('user', fn($q) => $q->where('is_active', false))->count(),
+            'active' => StudentParent::whereHas('user', fn ($q) => $q->where('is_active', true))->count(),
+            'inactive' => StudentParent::whereHas('user', fn ($q) => $q->where('is_active', false))->count(),
             'with_multiple_children' => StudentParent::has('students', '>', 1)->count(),
         ];
     }

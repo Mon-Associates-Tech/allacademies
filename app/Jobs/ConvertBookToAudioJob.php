@@ -23,18 +23,21 @@ class ConvertBookToAudioJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $bookId;
+
     public int $timeout = 0;
+
     public int $tries = 10; // Allow up to 10 attempts
+
     public int $maxExceptions = 3; // Max consecutive failures before giving up
+
     public ?string $tts_model = '';
 
     protected PdfContentExtractionService $pdfExtractor;
 
-
-    public function __construct(Book $book, string $tts_model = null)
+    public function __construct(Book $book, ?string $tts_model = null)
     {
         $this->tts_model = $tts_model;
-        if (!$tts_model) {
+        if (! $tts_model) {
             $this->tts_model = config('openai.models.tts_model');
         }
         $this->bookId = $book->id;
@@ -48,8 +51,9 @@ class ConvertBookToAudioJob implements ShouldQueue
         $this->pdfExtractor = $pdfExtractor;
 
         $book = Book::find($this->bookId);
-        if (!$book) {
+        if (! $book) {
             Log::error("❌ Book not found for ID {$this->bookId}");
+
             return;
         }
 
@@ -86,16 +90,18 @@ class ConvertBookToAudioJob implements ShouldQueue
         ];
 
         $relativePdfPath = $book->getAttributes()['content_url'] ?? null;
-        if (!$relativePdfPath) {
+        if (! $relativePdfPath) {
             Log::error("❌ Missing content_url for book ID {$book->id}");
             $this->notifyFailure($book, 'Missing PDF file');
+
             return;
         }
 
         $pdfPath = Storage::disk('public')->path($relativePdfPath);
-        if (!file_exists($pdfPath)) {
+        if (! file_exists($pdfPath)) {
             Log::error("❌ PDF not found at path: {$pdfPath}");
             $this->notifyFailure($book, 'PDF file not found');
+
             return;
         }
 
@@ -106,6 +112,7 @@ class ConvertBookToAudioJob implements ShouldQueue
         } catch (Exception $e) {
             Log::error("❌ Failed to get page count: {$e->getMessage()}");
             $this->notifyFailure($book, 'Failed to parse PDF');
+
             return;
         }
 
@@ -114,10 +121,11 @@ class ConvertBookToAudioJob implements ShouldQueue
         if (empty($toc)) {
             Log::error("❌ No valid chapters found in TOC for book ID {$book->id}");
             $this->notifyFailure($book, 'No valid chapters found');
+
             return;
         }
 
-        Log::info("Found " . count($toc) . " chapters in TOC.");
+        Log::info('Found '.count($toc).' chapters in TOC.');
 
         $apiKey = config('services.openai.key');
         $baseFolder = "audio-books/{$book->id}";
@@ -138,6 +146,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                 if (Storage::disk('public')->exists($chapterPath)) {
                     $chapterAudios[] = $chapterPath;
                 }
+
                 continue;
             }
 
@@ -158,6 +167,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                     Log::warning("⚠️ No text extracted for Chapter {$chapterNum}");
                     $progress['failed_chapters'][] = $chapterNum;
                     $book->update(['audio_conversion_progress' => $progress]);
+
                     continue;
                 }
 
@@ -166,7 +176,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                 $chunkPaths = [];
 
                 foreach ($chunks as $chunkIndex => $chunk) {
-                    Log::info("🔊 Chapter {$chapterNum}, Chunk " . ($chunkIndex + 1) . "/" . count($chunks));
+                    Log::info("🔊 Chapter {$chapterNum}, Chunk ".($chunkIndex + 1).'/'.count($chunks));
 
                     // Check if chunk file already exists
                     $tempChunkPath = "{$chaptersFolder}/temp_chunk_ch{$chapterNum}_{$chunkIndex}.mp3";
@@ -175,6 +185,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                     if (file_exists($fullChunkPath)) {
                         Log::info("⏭️ Using existing chunk file for Chapter {$chapterNum}, Chunk {$chunkIndex}");
                         $chunkPaths[] = $fullChunkPath;
+
                         continue;
                     }
 
@@ -192,7 +203,8 @@ class ConvertBookToAudioJob implements ShouldQueue
                         ->post('https://api.openai.com/v1/audio/speech', $payload);
 
                     if ($response->failed()) {
-                        Log::error("❌ Failed chunk {$chunkIndex} in Chapter {$chapterNum}: " . $response->body());
+                        Log::error("❌ Failed chunk {$chunkIndex} in Chapter {$chapterNum}: ".$response->body());
+
                         continue;
                     }
 
@@ -204,7 +216,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                 }
 
                 // Merge chunks into chapter file
-                if (!empty($chunkPaths)) {
+                if (! empty($chunkPaths)) {
                     $chapterPath = "{$chaptersFolder}/chapter{$chapterNum}.mp3";
                     $chapterFullPath = Storage::disk('public')->path($chapterPath);
 
@@ -228,9 +240,10 @@ class ConvertBookToAudioJob implements ShouldQueue
                 }
 
             } catch (Throwable $ex) {
-                Log::error("⚠️ Exception processing Chapter {$chapterNum}: " . $ex->getMessage());
+                Log::error("⚠️ Exception processing Chapter {$chapterNum}: ".$ex->getMessage());
                 $progress['failed_chapters'][] = $chapterNum;
                 $book->update(['audio_conversion_progress' => $progress]);
+
                 continue;
             }
         }
@@ -238,6 +251,7 @@ class ConvertBookToAudioJob implements ShouldQueue
         if (empty($chapterAudios)) {
             Log::error("❌ No chapter audios generated for book ID {$book->id}");
             $this->notifyFailure($book, 'No audio chapters were generated');
+
             return;
         }
 
@@ -269,7 +283,7 @@ class ConvertBookToAudioJob implements ShouldQueue
             ]
         );
 
-        Log::info("✅ Completed audio conversion for book ID {$book->id} with " . count($chapterAudios) . " chapters");
+        Log::info("✅ Completed audio conversion for book ID {$book->id} with ".count($chapterAudios).' chapters');
         $this->notifySuccess($book, count($chapterAudios));
     }
 
@@ -288,7 +302,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                 Log::info("📧 Failure notification sent to author for book {$book->id}");
             }
         } catch (Throwable $e) {
-            Log::error("Failed to send failure notification: " . $e->getMessage());
+            Log::error('Failed to send failure notification: '.$e->getMessage());
         }
     }
 
@@ -303,12 +317,13 @@ class ConvertBookToAudioJob implements ShouldQueue
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 $toc = $decoded;
             } else {
-                Log::error("❌ Failed to decode table_of_contents JSON: " . json_last_error_msg());
+                Log::error('❌ Failed to decode table_of_contents JSON: '.json_last_error_msg());
+
                 return [];
             }
         }
 
-        if (!is_array($toc)) {
+        if (! is_array($toc)) {
             return [];
         }
 
@@ -316,14 +331,14 @@ class ConvertBookToAudioJob implements ShouldQueue
             ->filter(function ($ch) {
                 return is_array($ch)
                     && isset($ch['chapter'], $ch['page_start'], $ch['page_end'])
-                    && (int)$ch['chapter'] > 0;
+                    && (int) $ch['chapter'] > 0;
             })
             ->map(function ($ch) {
                 return [
-                    'chapter' => (int)$ch['chapter'],
+                    'chapter' => (int) $ch['chapter'],
                     'title' => $ch['title'] ?? "Chapter {$ch['chapter']}",
-                    'page_start' => (int)$ch['page_start'],
-                    'page_end' => (int)$ch['page_end'],
+                    'page_start' => (int) $ch['page_start'],
+                    'page_end' => (int) $ch['page_end'],
                 ];
             })
             ->sortBy('chapter')
@@ -346,7 +361,7 @@ class ConvertBookToAudioJob implements ShouldQueue
                 Log::info("📧 Notification sent to author for book {$book->id}");
             }
         } catch (Throwable $e) {
-            Log::error("Failed to send success notification: " . $e->getMessage());
+            Log::error('Failed to send success notification: '.$e->getMessage());
         }
     }
 }

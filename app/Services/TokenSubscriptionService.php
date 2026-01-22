@@ -35,7 +35,7 @@ class TokenSubscriptionService
             // FIX: Compare enum with enum, not string
             if ($isTopUp && $currentSubscription &&
                 $currentSubscription->status === TokenSubscriptionStatus::ACTIVE &&
-                !$currentSubscription->isExpired() &&
+                ! $currentSubscription->isExpired() &&
                 $currentSubscription->tokens_remaining > 0 &&
                 $currentSubscription->action_type !== 'trial') {
 
@@ -67,6 +67,95 @@ class TokenSubscriptionService
             // Otherwise, create new subscription and replace old one
             return $this->replaceSubscription($user, $currentSubscription, $newPackage, true);
         });
+    }
+
+    /**
+     * Replace an existing subscription with a new one
+     */
+    protected function replaceSubscription(
+        User $user,
+        ?UserTokenSubscription $currentSubscription,
+        OpenAiTokenPackage $newPackage,
+        bool $preserveTokens = true
+    ): UserTokenSubscription {
+        // Free packages should NEVER go through this method
+        // They should be created directly via User::createFreeTrialSubscription()
+        if ($newPackage->isFree()) {
+            throw new \Exception('Free trial packages should not go through payment flow. Use User::createFreeTrialSubscription() instead.');
+        }
+
+        $actionType = $this->determineActionType($currentSubscription, $newPackage);
+        $newTokens = $newPackage->token_limit;
+        $carryOverTokens = 0;
+
+        // FIX: Compare enum with enum
+        if ($preserveTokens && $currentSubscription &&
+            $currentSubscription->status === TokenSubscriptionStatus::ACTIVE &&
+            ! $currentSubscription->isExpired() &&
+            $currentSubscription->tokens_remaining > 0) {
+
+            $carryOverTokens = $currentSubscription->tokens_remaining;
+        }
+
+        $totalTokens = $newTokens + $carryOverTokens;
+
+        Log::info('replaceSubscription', [
+            'new_tokens' => $newTokens,
+            'carry_over_tokens' => $carryOverTokens,
+            'total_tokens' => $totalTokens,
+            'action_type' => $actionType,
+        ]);
+
+        // Create new subscription with PENDING status (will be activated after payment)
+        $newSubscription = UserTokenSubscription::create([
+            'user_id' => $user->id,
+            'package_id' => $newPackage->id,
+            'tokens_purchased' => $totalTokens,
+            'tokens_used' => 0,
+            'tokens_remaining' => $totalTokens,
+            'status' => TokenSubscriptionStatus::PENDING, // Always PENDING for paid packages
+            'purchased_at' => null, // Will be set after payment
+            'activated_at' => null, // Will be set after payment
+            'expires_at' => null, // Will be set after payment
+            'action_type' => $actionType,
+        ]);
+
+        Log::info('Created new subscription', [
+            'new_sub_id' => $newSubscription->id,
+        ]);
+
+        // Deactivate old subscription
+        if ($currentSubscription) {
+            $currentSubscription->deactivate(TokenSubscriptionStatus::REPLACED);
+            $currentSubscription->replaced_by_id = $newSubscription->id;
+            $currentSubscription->save();
+
+            Log::info('Deactivated and linked old subscription', [
+                'old_sub_id' => $currentSubscription->id,
+                'linked_to' => $newSubscription->id,
+            ]);
+        }
+
+        return $newSubscription;
+    }
+
+    protected function determineActionType(?UserTokenSubscription $current, OpenAiTokenPackage $new): string
+    {
+        if (! $current || $current->action_type === 'trial') {
+            return 'purchase';
+        }
+
+        $currentPrice = $current->package ? $current->package->price : $current->pricingTier?->initial_price ?? 0;
+        $newPrice = $new->price;
+
+        if ($newPrice > $currentPrice) {
+            return 'upgrade';
+        }
+        if ($newPrice < $currentPrice) {
+            return 'downgrade';
+        }
+
+        return 'purchase';
     }
 
     /**
@@ -152,10 +241,10 @@ class TokenSubscriptionService
             if ($currentActive && $currentActive->id !== $subscription->id) {
                 // Carry over remaining tokens if needed
                 // Get the token limit from either package or pricing tier
-                $tokenLimit = $subscription->package 
-                    ? $subscription->package->token_limit 
+                $tokenLimit = $subscription->package
+                    ? $subscription->package->token_limit
                     : $subscription->pricingTier?->monthly_token_limit ?? $subscription->tokens_purchased;
-                
+
                 if ($currentActive->tokens_remaining > 0 &&
                     $subscription->tokens_purchased == $tokenLimit) {
 
@@ -278,90 +367,6 @@ class TokenSubscriptionService
         session()->forget('topup_info');
     }
 
-    /**
-     * Replace an existing subscription with a new one
-     */
-    protected function replaceSubscription(
-        User $user,
-        ?UserTokenSubscription $currentSubscription,
-        OpenAiTokenPackage $newPackage,
-        bool $preserveTokens = true
-    ): UserTokenSubscription {
-        // Free packages should NEVER go through this method
-        // They should be created directly via User::createFreeTrialSubscription()
-        if ($newPackage->isFree()) {
-            throw new \Exception('Free trial packages should not go through payment flow. Use User::createFreeTrialSubscription() instead.');
-        }
-
-        $actionType = $this->determineActionType($currentSubscription, $newPackage);
-        $newTokens = $newPackage->token_limit;
-        $carryOverTokens = 0;
-
-        // FIX: Compare enum with enum
-        if ($preserveTokens && $currentSubscription &&
-            $currentSubscription->status === TokenSubscriptionStatus::ACTIVE &&
-            !$currentSubscription->isExpired() &&
-            $currentSubscription->tokens_remaining > 0) {
-
-            $carryOverTokens = $currentSubscription->tokens_remaining;
-        }
-
-        $totalTokens = $newTokens + $carryOverTokens;
-
-        Log::info('replaceSubscription', [
-            'new_tokens' => $newTokens,
-            'carry_over_tokens' => $carryOverTokens,
-            'total_tokens' => $totalTokens,
-            'action_type' => $actionType,
-        ]);
-
-        // Create new subscription with PENDING status (will be activated after payment)
-        $newSubscription = UserTokenSubscription::create([
-            'user_id' => $user->id,
-            'package_id' => $newPackage->id,
-            'tokens_purchased' => $totalTokens,
-            'tokens_used' => 0,
-            'tokens_remaining' => $totalTokens,
-            'status' => TokenSubscriptionStatus::PENDING, // Always PENDING for paid packages
-            'purchased_at' => null, // Will be set after payment
-            'activated_at' => null, // Will be set after payment
-            'expires_at' => null, // Will be set after payment
-            'action_type' => $actionType,
-        ]);
-
-        Log::info('Created new subscription', [
-            'new_sub_id' => $newSubscription->id,
-        ]);
-
-        // Deactivate old subscription
-        if ($currentSubscription) {
-            $currentSubscription->deactivate(TokenSubscriptionStatus::REPLACED);
-            $currentSubscription->replaced_by_id = $newSubscription->id;
-            $currentSubscription->save();
-
-            Log::info('Deactivated and linked old subscription', [
-                'old_sub_id' => $currentSubscription->id,
-                'linked_to' => $newSubscription->id,
-            ]);
-        }
-
-        return $newSubscription;
-    }
-    protected function determineActionType(?UserTokenSubscription $current, OpenAiTokenPackage $new): string
-    {
-        if (!$current || $current->action_type === 'trial') {
-            return 'purchase';
-        }
-
-        $currentPrice = $current->package ? $current->package->price : $current->pricingTier?->initial_price ?? 0;
-        $newPrice = $new->price;
-
-        if ($newPrice > $currentPrice) return 'upgrade';
-        if ($newPrice < $currentPrice) return 'downgrade';
-
-        return 'purchase';
-    }
-
     public function checkExpiredSubscriptions(): int
     {
         $expiredCount = 0;
@@ -381,35 +386,49 @@ class TokenSubscriptionService
 
     public function getUserSubscriptionStats(User $user): array
     {
-        $current = $user->activeTokenSubscription;
-        $history = $user->subscriptionHistory()->count();
+        $currentCycle = $user->getCurrentActiveCycle();
+        $allCycles = $user->subscriptionCycles;
 
-        $totalSpent = $user->tokenSubscriptions()
-            ->join('openai_token_packages', 'user_token_subscriptions.package_id', '=', 'openai_token_packages.id')
-            ->whereNotNull('user_token_subscriptions.purchased_at')
-            ->where('openai_token_packages.is_free', false)
-            ->sum('openai_token_packages.price');
+        // Calculate total spent:
+        // 1. Sum MAX(current_price) per subscription_group_id (subscription payments)
+        // 2. Add topup payments from Payment records linked to topup cycles
+        $subscriptionSpent = $user->subscriptionCycles()
+            ->selectRaw('subscription_group_id, MAX(current_price) as group_total')
+            ->groupBy('subscription_group_id')
+            ->get()
+            ->sum('group_total');
 
-        $totalTokensPurchased = $user->tokenSubscriptions()
-            ->whereNotNull('activated_at')
-            ->sum('tokens_purchased');
+        $topupSpent = \App\Models\Payment::whereIn('reference', function ($query) use ($user) {
+            $query->select('reference')
+                ->from('payments')
+                ->whereExists(function ($subQuery) use ($user) {
+                    $subQuery->select(\DB::raw(1))
+                        ->from('subscription_cycles')
+                        ->where('user_id', $user->id)
+                        ->where('is_topup', true)
+                        ->whereRaw('payments.created_at BETWEEN subscription_cycles.created_at AND subscription_cycles.updated_at');
+                });
+        })->sum('amount');
+
+        $totalSpent = $subscriptionSpent + $topupSpent;
+
+        $totalTokensPurchased = $user->subscriptionCycles()
+            ->sum('tokens_allocated');
 
         $totalTokensUsed = $user->tokenUsageLogs()->sum('total_tokens');
 
-        $paidSubscriptionsCount = $user->tokenSubscriptions()
-            ->join('openai_token_packages', 'user_token_subscriptions.package_id', '=', 'openai_token_packages.id')
-            ->whereNotNull('user_token_subscriptions.purchased_at')
-            ->where('openai_token_packages.is_free', false)
-            ->count();
+        $paidCyclesCount = $user->subscriptionCycles()
+            ->distinct('subscription_group_id')
+            ->count('subscription_group_id');
 
         return [
-            'current_subscription' => $current,
-            'total_subscriptions' => $history + ($current ? 1 : 0),
-            'paid_subscriptions_count' => $paidSubscriptionsCount,
+            'current_subscription' => $currentCycle,
+            'total_subscriptions' => $allCycles->count(),
+            'paid_subscriptions_count' => $paidCyclesCount,
             'total_spent' => round($totalSpent ?? 0, 2),
             'total_tokens_purchased' => $totalTokensPurchased,
             'total_tokens_used' => $totalTokensUsed,
-            'has_active' => (bool) $current,
+            'has_active' => (bool) $currentCycle,
             'needs_upgrade' => $user->needsTokenUpgrade(),
         ];
     }

@@ -3,6 +3,7 @@
 ## Code Quality Standards
 
 ### PHP Code Style
+
 - **PSR-12 Compliance**: Follow PSR-12 coding standards for PHP
 - **Laravel Pint**: Use Laravel Pint for automatic code formatting (`php artisan pint`)
 - **Type Declarations**: Use strict types and return type declarations
@@ -10,6 +11,7 @@
 - **Null Safety**: Use null coalescing operators (`??`) and optional chaining (`?->`)
 
 ### Naming Conventions
+
 - **Classes**: PascalCase (e.g., `UserTokenSubscription`, `TokenSubscriptionService`)
 - **Methods**: camelCase (e.g., `createFreeTrialSubscription`, `hasOpenAiTokens`)
 - **Variables**: camelCase (e.g., `$currentSubscription`, `$tokenLimit`)
@@ -19,12 +21,14 @@
 - **Routes**: kebab-case (e.g., `/academic-groups`, `/book-subscriptions`)
 
 ### Documentation Standards
+
 - **PHPDoc Blocks**: Document all public methods with parameter types and return types
 - **Inline Comments**: Use section separators with `// ==================== SECTION NAME ====================`
 - **Method Documentation**: Include `@param`, `@return`, `@throws` annotations
 - **Complex Logic**: Add explanatory comments for business logic
 
 ### File Organization
+
 - **Model Organization**: Group related methods with section comments (Relationships, Scopes, Accessors, etc.)
 - **Service Classes**: One service per business domain (e.g., `TokenSubscriptionService`, `AssessmentService`)
 - **Trait Usage**: Extract reusable behaviors into traits (e.g., `BelongsToSchool`, `HasRoles`)
@@ -33,6 +37,7 @@
 ## Architectural Patterns
 
 ### Multi-Tenancy Implementation
+
 ```php
 // Use BelongsToSchool trait for school-scoped models
 trait BelongsToSchool
@@ -64,6 +69,7 @@ $school = getCurrentSchoolContext();
 ```
 
 ### Enum-Based Type Safety
+
 ```php
 // Define backed enums for fixed value sets
 enum UserRole: string
@@ -92,6 +98,7 @@ if ($subscription->status === TokenSubscriptionStatus::ACTIVE) {
 ```
 
 ### Service Layer Pattern
+
 ```php
 // Encapsulate business logic in service classes
 class TokenSubscriptionService
@@ -120,6 +127,7 @@ public function store(Request $request, TokenSubscriptionService $service)
 ```
 
 ### Model Observers & Lifecycle Hooks
+
 ```php
 // Use model events for automatic actions
 protected static function booted(): void
@@ -148,6 +156,7 @@ static::observe(new class {
 ```
 
 ### Database Transactions
+
 ```php
 // Wrap critical operations in transactions
 return DB::transaction(function () use ($user, $data) {
@@ -160,7 +169,7 @@ return DB::transaction(function () use ($user, $data) {
 public function replaceSubscription(User $user, OpenAiTokenPackage $package): UserTokenSubscription
 {
     return DB::transaction(function () use ($user, $package) {
-        $current = $user->activeTokenSubscription;
+        $current = $user->activeSubscriptionCycle;
         if ($current) {
             $current->deactivate(TokenSubscriptionStatus::REPLACED);
         }
@@ -172,6 +181,7 @@ public function replaceSubscription(User $user, OpenAiTokenPackage $package): Us
 ## Common Implementation Patterns
 
 ### Relationship Definitions
+
 ```php
 // Use explicit relationship methods with type hints
 public function school(): BelongsTo
@@ -199,6 +209,7 @@ public function questions(): MorphMany
 ```
 
 ### Query Scopes
+
 ```php
 // Define reusable query scopes
 public function scopeActive($query)
@@ -233,6 +244,7 @@ $teachers = User::byRole(UserRole::TEACHER)->get();
 ```
 
 ### Helper Function Patterns
+
 ```php
 // Always check function existence
 if (!function_exists('school_setting')) {
@@ -267,6 +279,7 @@ function getStudent($user_id = null, $student_id = null, $school_id = null, $wit
 ```
 
 ### Logging Patterns
+
 ```php
 // Use structured logging with context
 Log::info('changeSubscription called', [
@@ -297,6 +310,7 @@ Log::error('Failed to create role model', [
 ```
 
 ### Authorization Patterns
+
 ```php
 // Use role checking methods on User model
 public function isSuperAdmin(): bool
@@ -333,6 +347,7 @@ class BookPolicy
 ```
 
 ### Polymorphic Morph Map
+
 ```php
 // Register morph map in AppServiceProvider
 Relation::enforceMorphMap([
@@ -351,18 +366,21 @@ Relation::enforceMorphMap([
 ## Best Practices
 
 ### Error Handling
+
 - Use try-catch blocks for operations that may fail
 - Log errors with full context before handling
 - Provide fallback behavior when appropriate
 - Use database transactions for critical operations
 
 ### Performance Optimization
+
 - Use eager loading to prevent N+1 queries: `with(['school', 'user'])`
 - Add database indexes for frequently queried columns
 - Cache expensive operations with appropriate TTL
 - Use queue jobs for heavy background processing
 
 ### Security Practices
+
 - Validate and sanitize all user input
 - Use Laravel's built-in CSRF protection
 - Implement proper authorization checks with policies
@@ -370,6 +388,7 @@ Relation::enforceMorphMap([
 - Use parameterized queries (Eloquent does this automatically)
 
 ### Testing Considerations
+
 - Write feature tests for critical user flows
 - Use factories for test data generation
 - Mock external services (OpenAI, Paystack, etc.)
@@ -377,6 +396,7 @@ Relation::enforceMorphMap([
 - Verify authorization rules with policy tests
 
 ### Code Reusability
+
 - Extract common logic into traits
 - Create service classes for complex business logic
 - Use helper functions for frequently used operations
@@ -384,6 +404,7 @@ Relation::enforceMorphMap([
 - Leverage Laravel's built-in features before creating custom solutions
 
 ### Livewire Component Patterns
+
 - Keep components focused on single responsibility
 - Use component properties for reactive state
 - Emit events for component communication
@@ -391,6 +412,7 @@ Relation::enforceMorphMap([
 - Use computed properties for derived data
 
 ### API Development
+
 - Use API resources for consistent response formatting
 - Implement proper HTTP status codes
 - Version APIs when making breaking changes
@@ -398,6 +420,7 @@ Relation::enforceMorphMap([
 - Use Sanctum for API authentication
 
 ### Database Migrations
+
 - Never modify existing migrations in production
 - Use descriptive migration names
 - Add indexes for foreign keys and frequently queried columns
@@ -405,8 +428,10 @@ Relation::enforceMorphMap([
 - Test migrations on a copy of production data
 
 ### Configuration Management
+
 - Store environment-specific values in `.env`
 - Use config files for application-wide settings
 - Never commit sensitive credentials to version control
 - Document required environment variables
 - Provide sensible defaults in config files
+- Currencies should be in ghana cedis

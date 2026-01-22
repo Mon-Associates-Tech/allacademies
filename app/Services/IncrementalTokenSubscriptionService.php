@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\PricingTier;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\User;
@@ -12,13 +11,14 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Extension to TokenSubscriptionService that integrates with IncrementalPricingService
- * 
+ *
  * This service handles creating subscriptions with incremental pricing models
  * where the cost changes after an initial period.
  */
 class IncrementalTokenSubscriptionService
 {
     protected IncrementalPricingService $pricingService;
+
     protected SubscriptionCycleService $cycleService;
 
     public function __construct(
@@ -31,13 +31,9 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Create a new incremental pricing subscription
-     * 
+     *
      * This creates both a UserTokenSubscription and initializes subscription cycles
      * for monthly token resets.
-     *
-     * @param User $user
-     * @param PricingTier $pricingTier
-     * @return UserTokenSubscription
      */
     public function createIncrementalSubscription(
         User $user,
@@ -81,14 +77,9 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Upgrade subscription from one pricing tier to another
-     * 
+     *
      * This handles tier upgrades while preserving the subscription start date
      * to maintain consistent pricing periods.
-     *
-     * @param User $user
-     * @param PricingTier $newPricingTier
-     * @param UserTokenSubscription $currentSubscription
-     * @return UserTokenSubscription
      */
     public function upgradeSubscription(
         User $user,
@@ -149,13 +140,8 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Downgrade subscription from one pricing tier to another
-     * 
-     * Downgrades take effect in the next billing cycle.
      *
-     * @param User $user
-     * @param PricingTier $newPricingTier
-     * @param UserTokenSubscription $currentSubscription
-     * @return UserTokenSubscription
+     * Downgrades take effect in the next billing cycle.
      */
     public function downgradeSubscription(
         User $user,
@@ -198,16 +184,12 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Get subscription pricing information for display
-     *
-     * @param User $user
-     * @param UserTokenSubscription $subscription
-     * @return array
      */
     public function getSubscriptionInfo(User $user, UserTokenSubscription $subscription): array
     {
         $pricingTier = $subscription->package?->pricingTier;
 
-        if (!$pricingTier) {
+        if (! $pricingTier) {
             return [];
         }
 
@@ -227,10 +209,6 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Check if user has tokens available in current cycle
-     *
-     * @param User $user
-     * @param int $requiredTokens
-     * @return bool
      */
     public function hasAvailableTokens(User $user, int $requiredTokens = 1): bool
     {
@@ -239,10 +217,6 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Deduct tokens from user's current cycle
-     *
-     * @param User $user
-     * @param int $tokens
-     * @return bool
      */
     public function deductTokens(User $user, int $tokens): bool
     {
@@ -251,15 +225,11 @@ class IncrementalTokenSubscriptionService
 
     /**
      * Get current pricing for a tier based on subscription date
-     *
-     * @param PricingTier $pricingTier
-     * @param User $user
-     * @param Carbon|null $subscriptionStartDate
-     * @return float
      */
-    public function getCurrentMonthlyPrice(PricingTier $pricingTier, User $user, Carbon $subscriptionStartDate = null): float
+    public function getCurrentMonthlyPrice(PricingTier $pricingTier, User $user, ?Carbon $subscriptionStartDate = null): float
     {
         $startDate = $subscriptionStartDate ?? now();
+
         return $this->pricingService->getCurrentPrice($user, $pricingTier, $startDate);
     }
 }

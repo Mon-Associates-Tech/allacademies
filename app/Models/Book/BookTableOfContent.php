@@ -9,11 +9,11 @@ class BookTableOfContent extends Model
 {
     protected $fillable = [
         'book_id',
-        'contents'
+        'contents',
     ];
 
     protected $casts = [
-        'contents' => 'array'
+        'contents' => 'array',
     ];
 
     public function book()
@@ -24,9 +24,10 @@ class BookTableOfContent extends Model
     public function getFormattedContents()
     {
         $toc = $this->contents;
-        if (!$toc) {
+        if (! $toc) {
             return [];
         }
+
         return collect($toc)->map(function ($chapter) {
             return [
                 'chapter_number' => $chapter['chapter'] ?? 1,
@@ -38,7 +39,7 @@ class BookTableOfContent extends Model
                 'page_count' => isset($chapter['page_start'], $chapter['page_end'])
                     ? $chapter['page_end'] - $chapter['page_start'] + 1
                     : 0,
-                'sections' => $chapter['sections'] ?? []
+                'sections' => $chapter['sections'] ?? [],
             ];
         })->toArray();
     }

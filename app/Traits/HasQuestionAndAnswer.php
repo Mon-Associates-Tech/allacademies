@@ -11,9 +11,6 @@ trait HasQuestionAndAnswer
     /**
      * Extract the best available text from a question field structure
      * Priority order: down, up, html, summary
-     *
-     * @param object|array|string|null $fieldData
-     * @return string|null
      */
     public function extractBestText(object|array|string|null $fieldData): ?string
     {
@@ -29,48 +26,48 @@ trait HasQuestionAndAnswer
 
         // Handle Mark objects specifically
         if ($fieldData instanceof Mark) {
-            if (!empty($fieldData->down) && trim($fieldData->down) !== '') {
+            if (! empty($fieldData->down) && trim($fieldData->down) !== '') {
                 return $fieldData->down;
             }
-            if (!empty($fieldData->up) && trim($fieldData->up) !== '') {
+            if (! empty($fieldData->up) && trim($fieldData->up) !== '') {
                 return $fieldData->up;
             }
-            if (!empty($fieldData->html) && trim($fieldData->html) !== '') {
+            if (! empty($fieldData->html) && trim($fieldData->html) !== '') {
                 return (string) $fieldData->html;
             }
-            if (!empty($fieldData->summary) && trim($fieldData->summary) !== '') {
+            if (! empty($fieldData->summary) && trim($fieldData->summary) !== '') {
                 return $fieldData->summary;
             }
         }
 
         // Handle other objects
         if (is_object($fieldData)) {
-            if (property_exists($fieldData, 'down') && !empty($fieldData->down) && trim($fieldData->down) !== '') {
+            if (property_exists($fieldData, 'down') && ! empty($fieldData->down) && trim($fieldData->down) !== '') {
                 return $fieldData->down;
             }
-            if (property_exists($fieldData, 'up') && !empty($fieldData->up) && trim($fieldData->up) !== '') {
+            if (property_exists($fieldData, 'up') && ! empty($fieldData->up) && trim($fieldData->up) !== '') {
                 return $fieldData->up;
             }
-            if (property_exists($fieldData, 'html') && !empty($fieldData->html) && trim($fieldData->html) !== '') {
+            if (property_exists($fieldData, 'html') && ! empty($fieldData->html) && trim($fieldData->html) !== '') {
                 return (string) $fieldData->html;
             }
-            if (property_exists($fieldData, 'summary') && !empty($fieldData->summary) && trim($fieldData->summary) !== '') {
+            if (property_exists($fieldData, 'summary') && ! empty($fieldData->summary) && trim($fieldData->summary) !== '') {
                 return $fieldData->summary;
             }
         }
 
         // Handle array structure
         if (is_array($fieldData)) {
-            if (!empty($fieldData['down']) && trim($fieldData['down']) !== '') {
+            if (! empty($fieldData['down']) && trim($fieldData['down']) !== '') {
                 return $fieldData['down'];
             }
-            if (!empty($fieldData['up']) && trim($fieldData['up']) !== '') {
+            if (! empty($fieldData['up']) && trim($fieldData['up']) !== '') {
                 return $fieldData['up'];
             }
-            if (!empty($fieldData['html']) && trim($fieldData['html']) !== '') {
+            if (! empty($fieldData['html']) && trim($fieldData['html']) !== '') {
                 return $fieldData['html'];
             }
-            if (!empty($fieldData['summary']) && trim($fieldData['summary']) !== '') {
+            if (! empty($fieldData['summary']) && trim($fieldData['summary']) !== '') {
                 return $fieldData['summary'];
             }
         }
@@ -80,9 +77,6 @@ trait HasQuestionAndAnswer
 
     /**
      * Process question data to extract clean text values
-     *
-     * @param object|array $questionData
-     * @return array
      */
     public function processQuestionData(object|array $questionData): array
     {
@@ -106,9 +100,6 @@ trait HasQuestionAndAnswer
 
     /**
      * Unify individual option fields into a single options array
-     *
-     * @param object|array $questionData
-     * @return array
      */
     public function unifyOptions(object|array $questionData): array
     {
@@ -137,7 +128,7 @@ trait HasQuestionAndAnswer
 
             if ($optionValue !== null) {
                 $optionText = $this->extractBestText($optionValue);
-                if (!empty($optionText)) {
+                if (! empty($optionText)) {
                     $options[$letters[$index]] = $optionText;
                 }
             }
@@ -148,9 +139,6 @@ trait HasQuestionAndAnswer
 
     /**
      * Process a question model to extract clean data
-     *
-     * @param mixed $question
-     * @return array
      */
     public function processQuestionModel(mixed $question): array
     {
@@ -177,7 +165,7 @@ trait HasQuestionAndAnswer
                 foreach ($optionKeys as $index => $key) {
                     if (array_key_exists($key, $question->getAttributes()) || $question->hasGetMutator($key)) {
                         $optionText = $this->extractBestText($question->getAttribute($key));
-                        if (!empty($optionText)) {
+                        if (! empty($optionText)) {
                             $options[$letters[$index]] = $optionText;
                         }
                     }
@@ -201,16 +189,13 @@ trait HasQuestionAndAnswer
 
     /**
      * Debug method to inspect the structure of question data
-     *
-     * @param mixed $question
-     * @return array
      */
     public function debugQuestionData(mixed $question): array
     {
         $debug = [
             'question_class' => get_class($question),
             'question_data' => [],
-            'option_data' => []
+            'option_data' => [],
         ];
 
         if ($question instanceof Model) {
@@ -223,7 +208,7 @@ trait HasQuestionAndAnswer
                     'raw' => $questionValue,
                     'type' => gettype($questionValue),
                     'class' => is_object($questionValue) ? get_class($questionValue) : null,
-                    'extracted' => $this->extractBestText($questionValue)
+                    'extracted' => $this->extractBestText($questionValue),
                 ];
 
                 if ($questionValue instanceof Mark) {
@@ -231,7 +216,7 @@ trait HasQuestionAndAnswer
                         'up' => $questionValue->up,
                         'down' => $questionValue->down,
                         'html' => $questionValue->html,
-                        'summary' => $questionValue->summary
+                        'summary' => $questionValue->summary,
                     ];
                 }
             }
@@ -246,7 +231,7 @@ trait HasQuestionAndAnswer
                             'raw' => $optionValue,
                             'type' => gettype($optionValue),
                             'class' => is_object($optionValue) ? get_class($optionValue) : null,
-                            'extracted' => $this->extractBestText($optionValue)
+                            'extracted' => $this->extractBestText($optionValue),
                         ];
 
                         if ($optionValue instanceof Mark) {
@@ -254,7 +239,7 @@ trait HasQuestionAndAnswer
                                 'up' => $optionValue->up,
                                 'down' => $optionValue->down,
                                 'html' => $optionValue->html,
-                                'summary' => $optionValue->summary
+                                'summary' => $optionValue->summary,
                             ];
                         }
                     }

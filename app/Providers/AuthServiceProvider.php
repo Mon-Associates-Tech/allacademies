@@ -2,17 +2,17 @@
 
 namespace App\Providers;
 
-use App\Models\Chat\UserTokenSubscription;
-use App\Models\Role;
-use App\Models\User;
-use App\Models\Team;
+use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Models\AcademicSubject;
-use App\Enums\SubscriptionStatus;
+use App\Models\Chat\UserTokenSubscription;
+use App\Models\Role;
+use App\Models\Team;
+use App\Models\User;
 use App\Policies\RolePolicy;
 use App\Policies\UserTokenSubscriptionPolicy;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -22,7 +22,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-//        Role::class => RolePolicy::class,
+        //        Role::class => RolePolicy::class,
         Student::class => StudentPolicy::class,
         Teacher::class => TeacherPolicy::class,
         Librarian::class => LibrarianPolicy::class,
@@ -46,8 +46,6 @@ class AuthServiceProvider extends ServiceProvider
 
     /**
      * Register any authentication / authorization services.
-     *
-     * @return void
      */
     public function boot(): void
     {
@@ -77,9 +75,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('privileged', static function (User $user, Team $team) {
             return $team->owner_id === $user->id ||
                 $team->members()
-                ->where('user_id', $user->id)
-                ->wherePivot('role', 'admin')
-                ->exists();
+                    ->where('user_id', $user->id)
+                    ->wherePivot('role', 'admin')
+                    ->exists();
         });
     }
 }

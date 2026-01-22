@@ -7,6 +7,7 @@
     'action_link' => '',
     'actionLinkText' => '',
     'showTitleArea' => true,
+    'fullWidth' => false,
     // background allows callers to set additional body background classes, e.g. 'bg-white dark:bg-gray-900'
     'background' => '',
 ])
@@ -113,7 +114,10 @@
 
             <!-- Page content - NO OVERFLOW HERE -->
             <div class="pb-12 mb-8 w-full">
-                <div class="w-full sm:px-4 lg:px-4">
+                <div
+                    x-data="{}"
+                    class="w-full overflow-y-visible thin-scrollbar {{ $fullWidth ? '' : 'sm:px-4 lg:px-4' }}"
+                >
                     {{ $slot }}
                 </div>
             </div>

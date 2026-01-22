@@ -11,10 +11,10 @@ class Changelog extends Model
         'task_name',
         'task_description',
         'additional_info',
-        'completed_items'
+        'completed_items',
     ];
 
     protected $casts = [
-        'completed_items' => 'array'
+        'completed_items' => 'array',
     ];
 }

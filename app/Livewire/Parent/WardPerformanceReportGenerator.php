@@ -3,22 +3,29 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
-use App\Models\Student;
 use App\Models\Assessment;
+use App\Models\Student;
 use App\Models\StudentParent;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
-use Carbon\Carbon;
 
 class WardPerformanceReportGenerator extends AppComponent
 {
     public $selectedWardId = null;
+
     public $reportType = 'performance';
+
     public $dateRange = 'month';
+
     public $selectedSubjectId = null;
+
     public $customStartDate = null;
+
     public $customEndDate = null;
+
     public $showReportPreview = false;
+
     public $generatedReport = null;
 
     public function mount()
@@ -55,7 +62,7 @@ class WardPerformanceReportGenerator extends AppComponent
 
     public function downloadReport($format = 'pdf')
     {
-        if (!$this->generatedReport) {
+        if (! $this->generatedReport) {
             $this->generateReport();
         }
 
@@ -66,7 +73,7 @@ class WardPerformanceReportGenerator extends AppComponent
             'format' => $format,
             'start_date' => $this->getStartDate(),
             'end_date' => $this->getEndDate(),
-            'subject_id' => $this->selectedSubjectId
+            'subject_id' => $this->selectedSubjectId,
         ]);
     }
 
@@ -76,13 +83,13 @@ class WardPerformanceReportGenerator extends AppComponent
         $students = StudentParent::where('user_id', Auth::id())
             ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
             ->get()
-            ->flatMap(function($parent) {
+            ->flatMap(function ($parent) {
                 return $parent->students;
             })
             ->unique('id'); // Remove duplicates
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -93,24 +100,27 @@ class WardPerformanceReportGenerator extends AppComponent
             SORT_REGULAR, $this->sortDirection === 'desc');
     }
 
-
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::with([
             'user',
             'academicLevel.academicGroup',
             'academicGroup',
-            'studentGroup'
+            'studentGroup',
         ])->find($this->selectedWardId);
     }
 
     #[Computed]
     public function availableSubjects()
     {
-        if (!$this->selectedWard) return collect();
+        if (! $this->selectedWard) {
+            return collect();
+        }
 
         return $this->selectedWard->getAllAccessibleSubjects();
     }
@@ -136,7 +146,7 @@ class WardPerformanceReportGenerator extends AppComponent
             'date_range' => [
                 'start' => $startDate,
                 'end' => $endDate,
-                'period' => $this->dateRange
+                'period' => $this->dateRange,
             ],
             'subject' => $this->selectedSubjectId ?
                 $this->availableSubjects->find($this->selectedSubjectId) : null,
@@ -149,36 +159,36 @@ class WardPerformanceReportGenerator extends AppComponent
                 'passed_count' => $assessments->where('passed', true)->count(),
                 'failed_count' => $assessments->where('passed', false)->count(),
                 'pass_rate' => $assessments->count() > 0 ?
-                    ($assessments->where('passed', true)->count() / $assessments->count() * 100) : 0
+                    ($assessments->where('passed', true)->count() / $assessments->count() * 100) : 0,
             ],
             'subject_breakdown' => $assessments->groupBy('academic_subject_id')
-                ->map(function($subjectAssessments) {
+                ->map(function ($subjectAssessments) {
                     return [
                         'subject' => $subjectAssessments->first()->academicSubject,
                         'count' => $subjectAssessments->count(),
                         'average' => $subjectAssessments->avg('score'),
                         'passed' => $subjectAssessments->where('passed', true)->count(),
-                        'failed' => $subjectAssessments->where('passed', false)->count()
+                        'failed' => $subjectAssessments->where('passed', false)->count(),
                     ];
                 }),
-            'monthly_trend' => $assessments->groupBy(function($assessment) {
+            'monthly_trend' => $assessments->groupBy(function ($assessment) {
                 return $assessment->created_at->format('Y-m');
-            })->map(function($monthAssessments) {
+            })->map(function ($monthAssessments) {
                 return [
                     'month' => $monthAssessments->first()->created_at->format('M Y'),
                     'count' => $monthAssessments->count(),
                     'average' => $monthAssessments->avg('score'),
-                    'passed' => $monthAssessments->where('passed', true)->count()
+                    'passed' => $monthAssessments->where('passed', true)->count(),
                 ];
             }),
             'generated_at' => now(),
-            'generated_by' => Auth::user()
+            'generated_by' => Auth::user(),
         ];
     }
 
     private function getStartDate()
     {
-        return match($this->dateRange) {
+        return match ($this->dateRange) {
             'week' => now()->subWeek(),
             'month' => now()->subMonth(),
             'quarter' => now()->subMonths(3),
@@ -190,7 +200,7 @@ class WardPerformanceReportGenerator extends AppComponent
 
     private function getEndDate()
     {
-        return match($this->dateRange) {
+        return match ($this->dateRange) {
             'custom' => Carbon::parse($this->customEndDate),
             default => now()
         };

@@ -2,14 +2,13 @@
 
 namespace App\Listeners;
 
-use Brick\Money\Money;
-use App\Models\Payment;
 use App\Enums\SubscriptionStatus;
 use App\Events\SubscriptionUpdated;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Models\Payment;
+use App\Notifications\SubscriptionPaidNotification;
+use Brick\Money\Money;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\SubscriptionPaidNotification;
 
 class EvaluateSubscriptionListener implements ShouldQueue
 {
@@ -26,7 +25,6 @@ class EvaluateSubscriptionListener implements ShouldQueue
     /**
      * Handle the event.
      *
-     * @param  SubscriptionUpdated  $event
      * @return void
      */
     public function handle(SubscriptionUpdated $event)

@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Administrators;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\AcademicSubject as Subject;
-use App\Models\AcademicLevel;
 use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject as Subject;
 use App\Models\AcademicTopic as Topic;
 use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class SubjectManagement extends Component
 {
@@ -16,44 +16,68 @@ class SubjectManagement extends Component
 
     // For Subject
     public $name;
+
     public $slug;
+
     public $description;
+
     public $academicLevelId;
 
     // For Topic
     public $topicName;
+
     public $topicSlug;
+
     public $topicDescription;
+
     public $subjectId;
+
     public $subjectCode;
 
     // For Subtopic
     public $subtopicName;
+
     public $subtopicSlug;
+
     public $subtopicDescription;
+
     public $topicId;
 
     // Filter and search
     public $academicGroupId;
+
     public $searchTerm = '';
 
     // UI states
     public $isEditingSubject = false;
+
     public $isEditingTopic = false;
+
     public $isEditingSubtopic = false;
+
     public $editingSubjectId;
+
     public $editingTopicId;
+
     public $editingSubtopicId;
+
     public $viewingSubjectId;
+
     public $viewingTopicId;
+
     public $showTopicForm = false;
+
     public $showSubtopicForm = false;
 
     // Data arrays
     public $academicGroups;
+
     public $academicLevels = [];
+
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
 
     protected $subjectRules = [
@@ -188,6 +212,7 @@ class SubjectManagement extends Component
         // Check if subject has topics
         if ($subject->topics()->count() > 0) {
             session()->flash('error', 'Cannot delete subject with topics. Please remove those first.');
+
             return;
         }
 
@@ -281,6 +306,7 @@ class SubjectManagement extends Component
         // Check if topic has subtopics
         if ($topic->subtopics()->count() > 0) {
             session()->flash('error', 'Cannot delete topic with subtopics. Please remove those first.');
+
             return;
         }
 
@@ -372,6 +398,7 @@ class SubjectManagement extends Component
         // Check if subtopic has lessons
         if ($subtopic->lessons()->count() > 0) {
             session()->flash('error', 'Cannot delete subtopic with lessons. Please remove those first.');
+
             return;
         }
 
@@ -408,7 +435,9 @@ class SubjectManagement extends Component
 
                 case 'subtopic':
                     $topic = Topic::find($this->topicId);
-                    if (!$topic) return $slug;
+                    if (! $topic) {
+                        return $slug;
+                    }
 
                     $query = $topic->subtopics()->where('slug', $slug);
                     if ($excludeId) {
@@ -422,7 +451,7 @@ class SubjectManagement extends Component
             }
 
             if ($exists) {
-                $slug = $originalSlug . '-' . $counter++;
+                $slug = $originalSlug.'-'.$counter++;
             }
         }
 
@@ -484,26 +513,24 @@ class SubjectManagement extends Component
             return view('livewire.administrators.subject-management');
         }
 
-
-//        $subjectsQuery = Subject::with(['academicLevel.academicGroup'])
-      //      ->withCount(['topics', 'lessons']);
+        //        $subjectsQuery = Subject::with(['academicLevel.academicGroup'])
+        //      ->withCount(['topics', 'lessons']);
 
         $subjectsQuery = Subject::with(['academicLevel.academicGroup']);
-
 
         // Filter by academic level if set
         if ($this->academicLevelId) {
             $subjectsQuery->where('academic_level_id', $this->academicLevelId);
-        } else if ($this->academicGroupId) {
+        } elseif ($this->academicGroupId) {
             // Filter by academic group if the level is not set
-            $subjectsQuery->whereHas('academicLevel', function($query) {
+            $subjectsQuery->whereHas('academicLevel', function ($query) {
                 $query->where('academic_group_id', $this->academicGroupId);
             });
         }
 
         // Search
         if ($this->searchTerm) {
-            $subjectsQuery->where(function($query) {
+            $subjectsQuery->where(function ($query) {
                 $query->where('name', 'like', '%'.$this->searchTerm.'%')
                     ->orWhere('description', 'like', '%'.$this->searchTerm.'%');
             });
@@ -512,7 +539,7 @@ class SubjectManagement extends Component
         $subjects = $subjectsQuery->paginate(10);
 
         return view('livewire.administrators.subject-management', [
-            'subjectsList' => $subjects
+            'subjectsList' => $subjects,
         ]);
     }
 }

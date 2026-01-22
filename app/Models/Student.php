@@ -16,8 +16,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Student extends Model
 {
-    use HasFactory, LogsActivity;
     use BelongsToSchoolEnhanced;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'school_id', 'user_id', 'student_id', 'student_group_id',
@@ -32,25 +32,22 @@ class Student extends Model
         'parent_phone',
         'emergency_contact',
         'id_card_issue_date',
-        'id_card_expiry_date'
+        'id_card_expiry_date',
     ];
 
     protected $casts = [
         'admission_date' => 'date',
         'graduation_date' => 'date',
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     protected $with = [
         'user',
         'user',
         'academicLevel',
-        'academicGroup'
+        'academicGroup',
     ];
 
-    /**
-     * @return LogOptions
-     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -59,11 +56,10 @@ class Student extends Model
             ->dontSubmitEmptyLogs();
     }
 
-
     public function schoolFees()
-   {
-    return $this->hasMany(\App\Models\SchoolFee::class, 'student_id');
-   }
+    {
+        return $this->hasMany(\App\Models\SchoolFee::class, 'student_id');
+    }
 
     public function user(): BelongsTo
     {
@@ -92,7 +88,6 @@ class Student extends Model
         );
     }
 
-
     public function subscriptions(): Student|HasMany
     {
         return $this->hasMany(BookSubscription::class);
@@ -117,6 +112,7 @@ class Student extends Model
     {
         return $this->primaryTeacher()->first();
     }
+
     public function secondaryTeachers()
     {
         return $this->belongsToMany(Teacher::class, 'teacher_student')
@@ -145,16 +141,12 @@ class Student extends Model
         return $this->belongsTo(AcademicGroup::class);
     }
 
-
-
-
     public function academicSubjects(): BelongsToMany
     {
         return $this->belongsToMany(AcademicSubject::class, 'student_subject')
             ->withTimestamps()
             ->withPivot('is_active', 'assigned_by', 'notes', 'assigned_at');
     }
-
 
     public function levelSubjects()
     {
@@ -167,7 +159,6 @@ class Student extends Model
             'id' // Local key on AcademicLevel table
         );
     }
-
 
     public function subjectsFromLevel(): BelongsTo|Builder
     {
@@ -195,7 +186,6 @@ class Student extends Model
         return $query->get();
     }
 
-
     public function individualSubjects(): BelongsToMany
     {
         return $this->belongsToMany(AcademicSubject::class, 'student_subject')
@@ -214,7 +204,6 @@ class Student extends Model
     {
         return $this->getAllAccessibleSubjects();
     }
-
 
     public function getAllAccessibleSubjects()
     {
@@ -235,7 +224,7 @@ class Student extends Model
                 $allSubjects[$subject->id] = $subject;
             } else {
                 // Remove the subject if it's marked as inactive (override from level)
-//                $allSubjects->forget($subject->id);
+                //                $allSubjects->forget($subject->id);
             }
         }
 
@@ -251,7 +240,7 @@ class Student extends Model
     {
         // First check if student's user belongs to a team
         if ($this->user) {
-           // return $this->user->currentTeam;
+            // return $this->user->currentTeam;
         }
 
         // Fallback to actual school if no team exists
@@ -275,7 +264,7 @@ class Student extends Model
             'level_subjects' => collect(),
             'individual_active' => collect(),
             'individual_removed' => collect(),
-            'total_accessible' => collect()
+            'total_accessible' => collect(),
         ];
 
         // Get subjects from academic level
@@ -324,6 +313,7 @@ class Student extends Model
     public function getCanBorrowBooksAttribute(): bool
     {
         $activeCard = $this->activeLibraryCard;
+
         return $activeCard && $activeCard->can_borrow;
     }
 
@@ -381,82 +371,82 @@ class Student extends Model
         return $query->where('academic_group_id', $groupId);
     }
 
-// Generate school-specific student ID
-public static function generateStudentId($schoolId = null): string
-{
-    $school = null;
-    if(!empty($schoolId)){
-        $school = School::find($schoolId);
-    }
-
-
-    // Handle case where school doesn't exist or doesn't have proper attributes
-    $schoolCode = 'SCH';
-    if ($school) {
-        // Try to get school code, fallback to name, then to generic code
-        if (!empty($school->code)) {
-            $schoolCode = substr(strtoupper($school->code), 0, 3);
-        } elseif (!empty($school->name)) {
-            $schoolCode = substr(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $school->name)), 0, 3);
-            // Ensure we have at least 3 characters
-            $schoolCode = str_pad($schoolCode, 3, 'X', STR_PAD_RIGHT);
+    // Generate school-specific student ID
+    public static function generateStudentId($schoolId = null): string
+    {
+        $school = null;
+        if (! empty($schoolId)) {
+            $school = School::find($schoolId);
         }
+
+        // Handle case where school doesn't exist or doesn't have proper attributes
+        $schoolCode = 'SCH';
+        if ($school) {
+            // Try to get school code, fallback to name, then to generic code
+            if (! empty($school->code)) {
+                $schoolCode = substr(strtoupper($school->code), 0, 3);
+            } elseif (! empty($school->name)) {
+                $schoolCode = substr(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $school->name)), 0, 3);
+                // Ensure we have at least 3 characters
+                $schoolCode = str_pad($schoolCode, 3, 'X', STR_PAD_RIGHT);
+            }
+        }
+
+        $year = date('Y');
+
+        try {
+            $lastStudent = static::withoutGlobalScope('school')
+                ->where('school_id', $schoolId)
+                ->where('student_id', 'like', "{$schoolCode}{$year}%")
+                ->latest('student_id')
+                ->first();
+
+            $sequence = $lastStudent ?
+                (int) substr($lastStudent->student_id, -4) + 1 : 1;
+
+            $studentId = $schoolCode.$year.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        } catch (\Exception $e) {
+            // Fallback if there's any database issue
+            $studentId = $schoolCode.$year.str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+        }
+
+        return $studentId;
     }
-
-    $year = date('Y');
-
-    try {
-        $lastStudent = static::withoutGlobalScope('school')
-            ->where('school_id', $schoolId)
-            ->where('student_id', 'like', "{$schoolCode}{$year}%")
-            ->latest('student_id')
-            ->first();
-
-        $sequence = $lastStudent ?
-            (int)substr($lastStudent->student_id, -4) + 1 : 1;
-
-        $studentId = $schoolCode . $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-    } catch (\Exception $e) {
-        // Fallback if there's any database issue
-        $studentId = $schoolCode . $year . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
-    }
-
-    return $studentId;
-}
-
 
     public function scopeForCurrentUser($query)
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('0=1');
         }
 
         if ($user->canAccessCrossSchool()) {
             $schoolId = app()->has('current_school') ? app('current_school')->id : null;
+
             return $schoolId ? $query->where('school_id', $schoolId) : $query;
         }
 
         return $query->where('school_id', $user->school_id);
     }
 
-public function academicProgression(): Student|HasMany
-{
-    return $this->hasMany(StudentAcademicProgression::class)->orderBy('start_date');
-}
+    public function academicProgression(): Student|HasMany
+    {
+        return $this->hasMany(StudentAcademicProgression::class)->orderBy('start_date');
+    }
 
-public function currentAcademicLevel(): BelongsTo
-{
-    return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
-}
+    public function currentAcademicLevel(): BelongsTo
+    {
+        return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
+    }
 
     public function reportCards()
     {
         return $this->hasMany(ReportCard::class);
     }
 
-    public function idCards(){
+    public function idCards()
+    {
         return $this->hasMany(StudentIdCard::class);
     }
 
@@ -466,9 +456,9 @@ public function currentAcademicLevel(): BelongsTo
     public function accessibleBookSubscriptions()
     {
         return BookSubscription::where('user_id', $this->user_id)
-            ->orWhere(function($query) {
+            ->orWhere(function ($query) {
                 // Get subscriptions made by parents for this student
-                $query->whereIn('subscribed_by', function($subQuery) {
+                $query->whereIn('subscribed_by', function ($subQuery) {
                     $subQuery->select('user_id')
                         ->from('parent_student')
                         ->where('student_id', $this->id);
@@ -482,10 +472,10 @@ public function currentAcademicLevel(): BelongsTo
     public function canAccessBook($bookId): bool
     {
         return BookSubscription::where('book_id', $bookId)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('user_id', $this->user_id)
-                    ->orWhere(function($q) {
-                        $q->whereIn('subscribed_by', function($subQuery) {
+                    ->orWhere(function ($q) {
+                        $q->whereIn('subscribed_by', function ($subQuery) {
                             $subQuery->select('user_id')
                                 ->from('parent_student')
                                 ->where('student_id', $this->id);

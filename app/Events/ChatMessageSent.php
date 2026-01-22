@@ -20,7 +20,7 @@ class ChatMessageSent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('chat-group.' . $this->message->chat_group_id),
+            new Channel('chat-group.'.$this->message->chat_group_id),
         ];
     }
 
@@ -36,8 +36,8 @@ class ChatMessageSent implements ShouldBroadcast
             'user' => [
                 'id' => $this->message->user->id,
                 'name' => $this->message->user->name,
-                'avatar' => $this->message->user->avatar
-            ]
+                'avatar' => $this->message->user->avatar,
+            ],
         ];
     }
 }

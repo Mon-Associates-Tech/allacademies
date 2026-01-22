@@ -3,14 +3,11 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
-use App\Models\Student;
-use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\AcademicSubject;
+use App\Models\Student;
 use App\Models\StudentParent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 
@@ -19,14 +16,23 @@ class ParentWardPerformance extends AppComponent
     use WithPagination;
 
     public $selectedWardId = null;
+
     public $selectedSubjectId = null;
+
     public $selectedPeriod = 'all';
+
     public $selectedAssignmentType = 'all';
+
     public $viewMode = 'overview'; // overview, detailed, analytics
+
     public $searchTerm = '';
+
     public $sortBy = 'submitted_at';
+
     public $sortDirection = 'desc';
+
     public $availablePeriods = ['all', 'week', 'month', 'quarter', 'year'];
+
     public $dateRange = null;
 
     public function mount()
@@ -62,21 +68,21 @@ class ParentWardPerformance extends AppComponent
         $students = StudentParent::withoutGlobalScopes()
             ->where('user_id', Auth::id())
             ->with([
-                'students' => function($query) {
+                'students' => function ($query) {
                     $query->withoutGlobalScopes();
                 },
                 'students.user',
                 'students.academicLevel.academicGroup',
-                'students.studentGroup'
+                'students.studentGroup',
             ])
             ->get()
-            ->flatMap(function($parent) {
+            ->flatMap(function ($parent) {
                 return $parent->students;
             })
             ->unique('id');
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -90,19 +96,23 @@ class ParentWardPerformance extends AppComponent
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::withoutGlobalScopes()
             ->with([
                 'academicLevel.academicGroup',
-                'user'
+                'user',
             ])->find($this->selectedWardId);
     }
 
     #[Computed]
     public function availableSubjects()
     {
-        if (!$this->selectedWard) return collect();
+        if (! $this->selectedWard) {
+            return collect();
+        }
 
         return $this->selectedWard->getAllAccessibleSubjects();
     }
@@ -110,26 +120,28 @@ class ParentWardPerformance extends AppComponent
     #[Computed]
     public function assignmentSubmissions()
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
 
         $query = AssignmentSubmission::where('student_id', $this->selectedWardId)
             ->with(['assignment.academicSubject', 'assignment.teacher.user'])
             ->whereIn('status', ['submitted', 'graded']);
 
         if ($this->selectedSubjectId) {
-            $query->whereHas('assignment', function($q) {
+            $query->whereHas('assignment', function ($q) {
                 $q->where('academic_subject_id', $this->selectedSubjectId);
             });
         }
 
         if ($this->selectedAssignmentType !== 'all') {
-            $query->whereHas('assignment', function($q) {
+            $query->whereHas('assignment', function ($q) {
                 $q->where('type', $this->selectedAssignmentType);
             });
         }
 
         if ($this->selectedPeriod !== 'all') {
-            $date = match($this->selectedPeriod) {
+            $date = match ($this->selectedPeriod) {
                 'week' => now()->subWeek(),
                 'month' => now()->subMonth(),
                 'quarter' => now()->subMonths(3),
@@ -148,22 +160,24 @@ class ParentWardPerformance extends AppComponent
     #[Computed]
     public function performanceAnalytics()
     {
-        if (!$this->selectedWardId) return [];
+        if (! $this->selectedWardId) {
+            return [];
+        }
 
         $cacheKey = "assignment_performance_{$this->selectedWardId}_{$this->selectedSubjectId}_{$this->selectedPeriod}";
 
-        return Cache::remember($cacheKey, 300, function() {
+        return Cache::remember($cacheKey, 300, function () {
             $query = AssignmentSubmission::where('student_id', $this->selectedWardId)
                 ->whereIn('status', ['submitted', 'graded']);
 
             if ($this->selectedSubjectId) {
-                $query->whereHas('assignment', function($q) {
+                $query->whereHas('assignment', function ($q) {
                     $q->where('academic_subject_id', $this->selectedSubjectId);
                 });
             }
 
             if ($this->selectedPeriod !== 'all') {
-                $date = match($this->selectedPeriod) {
+                $date = match ($this->selectedPeriod) {
                     'week' => now()->subWeek(),
                     'month' => now()->subMonth(),
                     'quarter' => now()->subMonths(3),
@@ -179,16 +193,16 @@ class ParentWardPerformance extends AppComponent
             $submissions = $query->with('assignment')->get();
 
             // Calculate scores and statistics
-            $submissionsWithScores = $submissions->filter(function($submission) {
+            $submissionsWithScores = $submissions->filter(function ($submission) {
                 return $submission->total_marks > 0;
             });
 
-            $scores = $submissionsWithScores->map(function($submission) {
+            $scores = $submissionsWithScores->map(function ($submission) {
                 return ($submission->score / $submission->total_marks) * 100;
             });
 
             $passThreshold = 50; // 50% pass mark
-            $passedCount = $scores->filter(fn($score) => $score >= $passThreshold)->count();
+            $passedCount = $scores->filter(fn ($score) => $score >= $passThreshold)->count();
 
             return [
                 'total_assignments' => $submissions->count(),
@@ -212,12 +226,12 @@ class ParentWardPerformance extends AppComponent
     private function getSubjectBreakdown($submissions)
     {
         return $submissions->groupBy('assignment.academic_subject_id')
-            ->map(function($subjectSubmissions) {
+            ->map(function ($subjectSubmissions) {
                 $scores = $subjectSubmissions
-                    ->filter(fn($s) => $s->total_marks > 0)
-                    ->map(fn($s) => ($s->score / $s->total_marks) * 100);
+                    ->filter(fn ($s) => $s->total_marks > 0)
+                    ->map(fn ($s) => ($s->score / $s->total_marks) * 100);
 
-                $passedCount = $scores->filter(fn($score) => $score >= 50)->count();
+                $passedCount = $scores->filter(fn ($score) => $score >= 50)->count();
 
                 return [
                     'subject_id' => $subjectSubmissions->first()->assignment->academic_subject_id,
@@ -232,14 +246,14 @@ class ParentWardPerformance extends AppComponent
 
     private function getMonthlyTrend($submissions)
     {
-        return $submissions->groupBy(function($submission) {
+        return $submissions->groupBy(function ($submission) {
             return $submission->submitted_at?->format('Y-m') ?? 'pending';
         })
-            ->filter(fn($group, $key) => $key !== 'pending')
-            ->map(function($monthSubmissions) {
+            ->filter(fn ($group, $key) => $key !== 'pending')
+            ->map(function ($monthSubmissions) {
                 $scores = $monthSubmissions
-                    ->filter(fn($s) => $s->total_marks > 0)
-                    ->map(fn($s) => ($s->score / $s->total_marks) * 100);
+                    ->filter(fn ($s) => $s->total_marks > 0)
+                    ->map(fn ($s) => ($s->score / $s->total_marks) * 100);
 
                 return [
                     'count' => $monthSubmissions->count(),
@@ -252,10 +266,10 @@ class ParentWardPerformance extends AppComponent
     private function getAssignmentTypeBreakdown($submissions)
     {
         return $submissions->groupBy('assignment.type')
-            ->map(function($typeSubmissions, $type) {
+            ->map(function ($typeSubmissions, $type) {
                 $scores = $typeSubmissions
-                    ->filter(fn($s) => $s->total_marks > 0)
-                    ->map(fn($s) => ($s->score / $s->total_marks) * 100);
+                    ->filter(fn ($s) => $s->total_marks > 0)
+                    ->map(fn ($s) => ($s->score / $s->total_marks) * 100);
 
                 return [
                     'type' => $type ?? 'unknown',
@@ -296,17 +310,19 @@ class ParentWardPerformance extends AppComponent
 
     private function calculatePerformanceTrend($submissions)
     {
-        if ($submissions->count() < 2) return 'stable';
+        if ($submissions->count() < 2) {
+            return 'stable';
+        }
 
         $sorted = $submissions->sortByDesc('submitted_at');
 
         $recentScores = $sorted->take(5)
-            ->filter(fn($s) => $s->total_marks > 0)
-            ->map(fn($s) => ($s->score / $s->total_marks) * 100);
+            ->filter(fn ($s) => $s->total_marks > 0)
+            ->map(fn ($s) => ($s->score / $s->total_marks) * 100);
 
         $previousScores = $sorted->skip(5)->take(5)
-            ->filter(fn($s) => $s->total_marks > 0)
-            ->map(fn($s) => ($s->score / $s->total_marks) * 100);
+            ->filter(fn ($s) => $s->total_marks > 0)
+            ->map(fn ($s) => ($s->score / $s->total_marks) * 100);
 
         if ($recentScores->isEmpty() || $previousScores->isEmpty()) {
             return 'stable';
@@ -315,8 +331,13 @@ class ParentWardPerformance extends AppComponent
         $recentAvg = $recentScores->avg();
         $previousAvg = $previousScores->avg();
 
-        if ($recentAvg > $previousAvg + 5) return 'improving';
-        if ($recentAvg < $previousAvg - 5) return 'declining';
+        if ($recentAvg > $previousAvg + 5) {
+            return 'improving';
+        }
+        if ($recentAvg < $previousAvg - 5) {
+            return 'declining';
+        }
+
         return 'stable';
     }
 

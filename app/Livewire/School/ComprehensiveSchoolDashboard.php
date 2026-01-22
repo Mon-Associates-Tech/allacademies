@@ -2,31 +2,32 @@
 
 namespace App\Livewire\School;
 
+use App\Models\AcademicSubject;
 use App\Models\School;
 use App\Models\SchoolSetting;
-use App\Models\AcademicPeriod;
-use App\Models\AcademicGroup;
-use App\Models\AcademicLevel;
-use App\Models\AcademicSubject;
 use App\Services\ImportExportService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
 
 class ComprehensiveSchoolDashboard extends Component
 {
     use WithFileUploads;
 
     public School $school;
+
     public $activeTab = 'overview';
 
     // Academic structure data
     public $academicGroups = [];
+
     public $academicLevels = [];
+
     public $academicSubjects = [];
+
     public $periods = [];
+
     public $currentPeriod = null;
 
     // Stats
@@ -34,39 +35,61 @@ class ComprehensiveSchoolDashboard extends Component
 
     // School basic info
     public $schoolName;
+
     public $schoolCode;
+
     public $schoolEmail;
+
     public $schoolPhone;
+
     public $schoolWebsite;
+
     public $schoolAddress;
+
     public $schoolCity;
+
     public $schoolState;
+
     public $schoolCountry;
+
     public $postalCode;
+
     public $schoolType;
+
     public $schoolDescription;
+
     public $studentCapacity;
+
     public $timezone;
+
     public $currency;
 
     // Settings
     public $settings = [];
+
     public $settingGroups = [];
 
     // Modals
     public $showEditModal = false;
+
     public $showImportModal = false;
+
     public $showTemplateModal = false;
+
     public $editMode = false;
 
     // Import
     public $importType = 'students';
+
     public $importFile;
+
     public $defaultPassword = 'Welcome@2024';
 
     // Import options
     public $createMissingLevels = true;
+
     public $createMissingGroups = true;
+
     public $sendWelcomeEmail = false;
 
     // Supported import types
@@ -89,8 +112,9 @@ class ComprehensiveSchoolDashboard extends Component
     {
         $this->school = Auth::user()->school;
 
-        if (!$this->school) {
+        if (! $this->school) {
             session()->flash('error', 'No school associated with your account.');
+
             return redirect()->route('dashboard');
         }
 
@@ -129,7 +153,7 @@ class ComprehensiveSchoolDashboard extends Component
     {
         // Load Academic Groups with their levels
         $this->academicGroups = $this->school->academicGroups()
-            ->with(['academicLevels' => function($query) {
+            ->with(['academicLevels' => function ($query) {
                 $query->orderBy('name');
             }])
             ->wherePivot('is_active', true)
@@ -142,7 +166,7 @@ class ComprehensiveSchoolDashboard extends Component
                     'levels_count' => $group->academicLevels->count(),
                     'students_count' => $group->students()->where('school_id', $this->school->id)->count(),
                     'teachers_count' => $group->teachers()->count(),
-                    'levels' => $group->academicLevels->map(function($level) {
+                    'levels' => $group->academicLevels->map(function ($level) {
                         return [
                             'id' => $level->id,
                             'name' => $level->name,
@@ -150,7 +174,7 @@ class ComprehensiveSchoolDashboard extends Component
                             'students_count' => $level->studentsForSchool($this->school->id)->count(),
                             'subjects_count' => $level->academicSubjects()->count(),
                         ];
-                    })
+                    }),
                 ];
             })
             ->toArray();
@@ -169,38 +193,39 @@ class ComprehensiveSchoolDashboard extends Component
                     'group_name' => $level->academicGroup->name ?? 'N/A',
                     'students_count' => $level->studentsForSchool($this->school->id)->count(),
                     'subjects_count' => $level->academicSubjects()->count(),
-                    'subjects' => $level->academicSubjects->map(function($subject) {
+                    'subjects' => $level->academicSubjects->map(function ($subject) {
                         return [
                             'id' => $subject->id,
                             'name' => $subject->name,
                             'code' => $subject->code,
                         ];
-                    })
+                    }),
                 ];
             })
             ->toArray();
 
         // Load all Subjects grouped by level
-        $this->academicSubjects = AcademicSubject::whereHas('academicLevel.schools', function($query) {
+        $this->academicSubjects = AcademicSubject::whereHas('academicLevel.schools', function ($query) {
             $query->where('school_id', $this->school->id);
         })
             ->with(['academicLevel.academicGroup'])
             ->orderBy('name')
             ->get()
             ->groupBy('academic_level_id')
-            ->map(function($subjects, $levelId) {
+            ->map(function ($subjects, $levelId) {
                 $level = $subjects->first()->academicLevel;
+
                 return [
                     'level_name' => $level->name ?? 'N/A',
                     'group_name' => $level->academicGroup->name ?? 'N/A',
-                    'subjects' => $subjects->map(function($subject) {
+                    'subjects' => $subjects->map(function ($subject) {
                         return [
                             'id' => $subject->id,
                             'name' => $subject->name,
                             'code' => $subject->code,
                             'description' => $subject->description,
                         ];
-                    })
+                    }),
                 ];
             })
             ->toArray();
@@ -255,7 +280,7 @@ class ComprehensiveSchoolDashboard extends Component
             'total_parents' => $this->school->parents()->count(),
             'academic_groups' => $this->school->academicGroups()->wherePivot('is_active', true)->count(),
             'academic_levels' => $this->school->academicLevels()->wherePivot('is_active', true)->count(),
-            'total_subjects' => AcademicSubject::whereHas('academicLevel.schools', function($query) {
+            'total_subjects' => AcademicSubject::whereHas('academicLevel.schools', function ($query) {
                 $query->where('school_id', $this->school->id);
             })->count(),
             'current_period' => $this->currentPeriod ? $this->currentPeriod->getDisplayName() : 'No active period',
@@ -344,7 +369,7 @@ class ComprehensiveSchoolDashboard extends Component
         $this->validate([
             'importFile' => 'required|file|mimes:csv,xlsx,xls|max:10240',
             'importType' => 'required|in:students,teachers,librarians,administrators,parents',
-            'defaultPassword' => 'required|string|min:6'
+            'defaultPassword' => 'required|string|min:6',
         ]);
 
         try {
@@ -371,11 +396,11 @@ class ComprehensiveSchoolDashboard extends Component
                 $this->closeImportModal();
                 $this->loadAllData();
             } else {
-                session()->flash('error', 'Import failed: ' . $result['message']);
+                session()->flash('error', 'Import failed: '.$result['message']);
             }
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Import failed: ' . $e->getMessage());
+            session()->flash('error', 'Import failed: '.$e->getMessage());
         }
     }
 
@@ -397,8 +422,9 @@ class ComprehensiveSchoolDashboard extends Component
     {
         $words = explode(' ', $this->school->name);
         if (count($words) >= 2) {
-            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+            return strtoupper(substr($words[0], 0, 1).substr($words[1], 0, 1));
         }
+
         return strtoupper(substr($this->school->name, 0, 2));
     }
 }

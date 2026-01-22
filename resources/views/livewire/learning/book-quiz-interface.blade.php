@@ -235,7 +235,7 @@
                                         </div>
 
                                         <!-- Content Selection -->
-                                        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                                        <div class="bg-white shadow sm:rounded-lg mb-6">
                                             <div class="px-4 py-5 sm:p-6">
                                                 @if($contentSourceTab === 'book')
                                                     <div class="space-y-4">
@@ -261,16 +261,16 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject
                                                                 *</label>
-                                                            <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                                wire:model="selectedSubjectId">
-                                                                <option value="">Choose a subject...</option>
-                                                                @foreach($availableSubjects as $subject)
-                                                                    <option value="{{ $subject->id }}">
-                                                                        {{ $subject->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                            <livewire:common.searchable-multi-select
+                                                                :items="$availableSubjects"
+                                                                :selected="$selectedSubjectId ? [$selectedSubjectId] : []"
+                                                                placeholder="Search and select a subject..."
+                                                                :multiple="false"
+                                                                name="selectedSubjectId"
+                                                                value-key="id"
+                                                                label-key="display_name"
+                                                                wire:key="subject-select-book"
+                                                            />
                                                             @error('selectedSubjectId') <p
                                                                 class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                                             <p class="mt-1 text-xs text-gray-500">Select the subject
@@ -345,16 +345,16 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject
                                                                 *</label>
-                                                            <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                                wire:model="selectedSubjectId">
-                                                                <option value="">Choose a subject...</option>
-                                                                @foreach($availableSubjects as $subject)
-                                                                    <option value="{{ $subject->id }}">
-                                                                        {{ $subject->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                            <livewire:common.searchable-multi-select
+                                                                :items="$availableSubjects"
+                                                                :selected="$selectedSubjectId ? [$selectedSubjectId] : []"
+                                                                placeholder="Search and select a subject..."
+                                                                :multiple="false"
+                                                                name="selectedSubjectId"
+                                                                value-key="id"
+                                                                label-key="display_name"
+                                                                wire:key="subject-select-upload"
+                                                            />
                                                             @error('selectedSubjectId') <p
                                                                 class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                                             <p class="mt-1 text-xs text-gray-500">Select the subject
@@ -1445,6 +1445,19 @@
 
     <script>
         document.addEventListener('livewire:init', function () {
+            // Handle URL updates for quiz persistence
+            Livewire.on('update-url', (params) => {
+                const url = new URL(window.location);
+                
+                if (params[0].quiz) {
+                    url.searchParams.set('quiz', params[0].quiz);
+                } else {
+                    url.searchParams.delete('quiz');
+                }
+                
+                window.history.pushState({}, '', url);
+            });
+            
             Livewire.on('download-results', (data) => {
                 let content = `Quiz Results Report\n==================\n\n`;
                 content += `Book: ${data[0].book}\n`;

@@ -13,11 +13,11 @@ class MediaAttachment extends Model
         'attachable_type',
         'collection',
         'sort_order',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     public function mediaFile(): BelongsTo
@@ -30,4 +30,3 @@ class MediaAttachment extends Model
         return $this->morphTo();
     }
 }
-

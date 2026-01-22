@@ -37,7 +37,7 @@ class UserLoginService
         ]);
 
         // Set cache for 5 minutes
-        Cache::put('user-online-' . $user->id, true, now()->addMinutes(5));
+        Cache::put('user-online-'.$user->id, true, now()->addMinutes(5));
 
         // Get location data
         $ip = request()->ip();
@@ -89,24 +89,26 @@ class UserLoginService
                 'login_at' => $activeSession->login_at,
                 'logout_at' => $logoutTime,
                 'duration_minutes' => $duration,
-                'logout_type' => $logoutType
+                'logout_type' => $logoutType,
             ]);
         }
 
         // Update user online status
         $user->update([
             'is_online' => false,
-            'last_seen_at' => now()
+            'last_seen_at' => now(),
         ]);
 
         // Remove from cache
-        Cache::forget('user-online-' . $user->id);
+        Cache::forget('user-online-'.$user->id);
     }
 
     public function handleSessionTimeout($userId): void
     {
         $user = \App\Models\User::find($userId);
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         $activeSessions = LoginActivity::where('user_id', $userId)
             ->whereNull('logout_at')
@@ -126,7 +128,7 @@ class UserLoginService
 
         $user->update([
             'is_online' => false,
-            'last_seen_at' => now()
+            'last_seen_at' => now(),
         ]);
 
         Cache::forget('user-online-' . $userId);
@@ -146,7 +148,7 @@ class UserLoginService
             'action' => 'logged_out',
             'logout_at' => $logoutTime,
             'duration_minutes' => max(0, $duration),
-            'logout_type' => 'forced'
+            'logout_type' => 'forced',
         ]);
 
         $remainingActiveSessions = LoginActivity::where('user_id', $session->user_id)
@@ -156,7 +158,7 @@ class UserLoginService
         if ($remainingActiveSessions === 0) {
             $session->user->update([
                 'is_online' => false,
-                'last_seen_at' => now()
+                'last_seen_at' => now(),
             ]);
         }
 

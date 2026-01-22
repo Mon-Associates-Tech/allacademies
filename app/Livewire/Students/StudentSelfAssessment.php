@@ -3,61 +3,85 @@
 namespace App\Livewire\Students;
 
 use App\Models\AcademicSubject;
-use App\Models\AcademicTopic;
 use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-use Carbon\Carbon;
 
 class StudentSelfAssessment extends Component
 {
     // Assessment configuration
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $timeLimitMinutes = 30;
+
     public $difficulty = 'all';
 
     // Assessment state
     public $step = 'configuration'; // configuration, assessment, results
+
     public $currentQuestionIndex = 0;
+
     public $questions = [];
+
     public $responses = [];
+
     public $assessment = null;
+
     public $startTime = null;
+
     public $timeRemaining = null;
+
     public $isSubmitting = false;
+
     public $showConfirmSubmit = false;
+
     public $showReview = false;
+
     public $showSettings = false;
+
     public $showHelp = false;
+
     public $showFeedback = false;
+
     public $feedbackText = '';
+
     public $saveProgress = false;
 
     // Data collections
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
+
     public $results = null;
+
     public $performance = null;
+
     public $customErrors = [];
 
     // Progress tracking
     public $answeredQuestions = [];
+
     public $completedCount = 0;
+
     public $progressPercentage = 0;
 
     protected $rules = [
@@ -66,12 +90,12 @@ class StudentSelfAssessment extends Component
         'timeLimitMinutes' => 'required|integer|min:5|max:180',
         'questionTypes' => 'required|array',
         'questionTypes.*' => 'boolean',
-        'feedbackText' => 'required|string|max:1000'
+        'feedbackText' => 'required|string|max:1000',
     ];
 
     protected $listeners = [
         'timeUp' => 'handleTimeUp',
-        'saveProgressData' => 'saveProgressData'
+        'saveProgressData' => 'saveProgressData',
     ];
 
     public function mount()
@@ -98,7 +122,7 @@ class StudentSelfAssessment extends Component
                 'step' => $this->step,
                 'selectedSubject' => $this->selectedSubject,
                 'questionCount' => $this->questionCount,
-            ]
+            ],
         ]);
     }
 
@@ -106,8 +130,9 @@ class StudentSelfAssessment extends Component
     {
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $this->subjects = collect();
+
             return;
         }
 
@@ -128,7 +153,7 @@ class StudentSelfAssessment extends Component
             ->get();
 
         foreach ($individualSubjects as $subject) {
-            if (!$this->subjects->contains('id', $subject->id)) {
+            if (! $this->subjects->contains('id', $subject->id)) {
                 $this->subjects->push($subject);
             }
         }
@@ -138,9 +163,9 @@ class StudentSelfAssessment extends Component
             ->wherePivot('is_active', 'true')
             ->pluck('academic_subjects.id');
 
-        //$this->subjects = $this->subjects->reject(function ($subject) use ($removedSubjects) {
-         //   return $removedSubjects->contains($subject->id);
-       // });
+        // $this->subjects = $this->subjects->reject(function ($subject) use ($removedSubjects) {
+        //   return $removedSubjects->contains($subject->id);
+        // });
 
         // Fallback to all subjects if no specific subjects found
         if ($this->subjects->isEmpty()) {
@@ -153,7 +178,7 @@ class StudentSelfAssessment extends Component
         $this->questionTypes = [
             'multiple_choice_question' => true,
             'true_or_false_question' => true,
-            'essay_question' => false
+            'essay_question' => false,
         ];
     }
 
@@ -194,22 +219,25 @@ class StudentSelfAssessment extends Component
 
         if (empty($selectedTypes)) {
             $this->addError('questionTypes', 'You must select at least one question type.');
+
             return false;
         }
 
         $this->clearError('questionTypes');
+
         return true;
     }
 
     public function startAssessment()
     {
         logInfo('start assessment');
-//        $this->validate();
+        //        $this->validate();
 
-        if (!$this->validateQuestionTypes()) {
+        if (! $this->validateQuestionTypes()) {
             logInfo('Validation failed for question types', [
-                //'errors' => $this->getErrorBag()->toArray()
+                // 'errors' => $this->getErrorBag()->toArray()
             ]);
+
             return;
         }
 
@@ -218,6 +246,7 @@ class StudentSelfAssessment extends Component
 
             if (empty($this->questions)) {
                 $this->addError('questions', 'No questions found for the selected criteria. Please adjust your selection.');
+
                 return;
             }
 
@@ -227,8 +256,8 @@ class StudentSelfAssessment extends Component
             $this->logActivity('started_assessment');
 
         } catch (\Exception $e) {
-            $this->handleError($e, __METHOD__);;
-            $this->addError('assessment', 'Failed to start assessment: ' . $e->getMessage());
+            $this->handleError($e, __METHOD__);
+            $this->addError('assessment', 'Failed to start assessment: '.$e->getMessage());
         }
     }
 
@@ -252,11 +281,11 @@ class StudentSelfAssessment extends Component
         $this->questions = array_map(function ($question, $index) {
             return array_merge($question, [
                 'index' => $index,
-            // Remove this line that causes serialization issues:
-            // 'formatted' => $this->formatQuestion($question)
-        ]);
-    }, $this->questions, array_keys($this->questions));
-}
+                // Remove this line that causes serialization issues:
+                // 'formatted' => $this->formatQuestion($question)
+            ]);
+        }, $this->questions, array_keys($this->questions));
+    }
 
     public function distributeQuestions($selectedTypes)
     {
@@ -299,7 +328,7 @@ class StudentSelfAssessment extends Component
             });
         } else {
             $query->whereHas('subtopic.academicTopic', function ($q) {
-//                $q->where('academic_subject_id', $this->selectedSubject);
+                //                $q->where('academic_subject_id', $this->selectedSubject);
             });
         }
 
@@ -316,7 +345,7 @@ class StudentSelfAssessment extends Component
         $models = [
             'multiple_choice_question' => MultipleChoiceQuestion::class,
             'true_or_false_question' => TrueOrFalseQuestion::class,
-            'essay_question' => EssayQuestion::class
+            'essay_question' => EssayQuestion::class,
         ];
 
         return $models[$type];
@@ -344,74 +373,73 @@ class StudentSelfAssessment extends Component
         ];
     }
 
-// Create a method to get formatted question data when needed (not stored in component state)
-public function getFormattedQuestion($questionIndex)
-{
-    if (!isset($this->questions[$questionIndex])) {
-        return null;
-    }
-
-    $question = $this->questions[$questionIndex];
-
-
-    // Format the question for display
-    $formatted = [
-        'display_question' => $this->cleanHtml($question['question']),
-        'display_options' => []
-    ];
-
-    if ($question['type'] === 'multiple_choice_question') {
-        foreach ($question['options'] as $key => $option) {
-            if (!empty($option)) {
-                $formatted['options'][$key] = $this->cleanHtml($option);
-            }
-        }
-    } elseif ($question['type'] === 'true_or_false_question') {
-        $formatted['options'] = [
-            'true' => 'True',
-            'false' => 'False'
-        ];
-    }
-
-    return $formatted;
-}
-
-// Add this method to safely clean HTML
-private function cleanHtml($text)
-{
-    if (is_string($text)) {
-        return strip_tags($text);
-    }
-
-    if (is_array($text)) {
-        return strip_tags($text['down'] ?? $text['up'] ?? '');
-    }
-
-    if (is_object($text)) {
-        return strip_tags($text->down ?? $text->up ?? '');
-    }
-
-    return '';
-}
-
-    public function formatQuestion($question)
+    // Create a method to get formatted question data when needed (not stored in component state)
+    public function getFormattedQuestion($questionIndex)
     {
-        // Additional formatting for display
+        if (! isset($this->questions[$questionIndex])) {
+            return null;
+        }
+
+        $question = $this->questions[$questionIndex];
+
+        // Format the question for display
         $formatted = [
-            'question' => $this->cleanHtml($question['question']),
-            'options' => []
+            'display_question' => $this->cleanHtml($question['question']),
+            'display_options' => [],
         ];
 
         if ($question['type'] === 'multiple_choice_question') {
             foreach ($question['options'] as $key => $option) {
-                if (!empty($option)) {
+                if (! empty($option)) {
                     $formatted['options'][$key] = $this->cleanHtml($option);
                 }
             }
         } elseif ($question['type'] === 'true_or_false_question') {
             $formatted['options'] = [
                 'true' => 'True',
-                'false' => 'False'
+                'false' => 'False',
+            ];
+        }
+
+        return $formatted;
+    }
+
+    // Add this method to safely clean HTML
+    private function cleanHtml($text)
+    {
+        if (is_string($text)) {
+            return strip_tags($text);
+        }
+
+        if (is_array($text)) {
+            return strip_tags($text['down'] ?? $text['up'] ?? '');
+        }
+
+        if (is_object($text)) {
+            return strip_tags($text->down ?? $text->up ?? '');
+        }
+
+        return '';
+    }
+
+    public function formatQuestion($question)
+    {
+        // Additional formatting for display
+        $formatted = [
+            'question' => $this->cleanHtml($question['question']),
+            'options' => [],
+        ];
+
+        if ($question['type'] === 'multiple_choice_question') {
+            foreach ($question['options'] as $key => $option) {
+                if (! empty($option)) {
+                    $formatted['options'][$key] = $this->cleanHtml($option);
+                }
+            }
+        } elseif ($question['type'] === 'true_or_false_question') {
+            $formatted['options'] = [
+                'true' => 'True',
+                'false' => 'False',
             ];
         }
 
@@ -425,7 +453,7 @@ private function cleanHtml($text)
             'subject_id' => $this->selectedSubject,
             'topic_id' => $this->selectedTopic,
             'subtopic_id' => $this->selectedSubtopic,
-            'title' => 'Self Assessment - ' . $this->getSubjectName(),
+            'title' => 'Self Assessment - '.$this->getSubjectName(),
             'type' => Assessment::TYPE_SELF,
             'question_types' => array_keys(array_filter($this->questionTypes)),
             'max_score' => collect($this->questions)->sum('score'),
@@ -433,7 +461,7 @@ private function cleanHtml($text)
             'status' => Assessment::STATUS_IN_PROGRESS,
             'has_essay_questions' => in_array('essay_question', array_keys(array_filter($this->questionTypes))),
             'start_time' => now(),
-            'questions_data' => json_encode($this->questions) // JSON encode the data
+            'questions_data' => json_encode($this->questions), // JSON encode the data
         ]);
     }
 
@@ -473,7 +501,7 @@ private function cleanHtml($text)
     {
         $this->responses[$this->currentQuestionIndex] = $answer;
 
-        if (!$this->answeredQuestions[$this->currentQuestionIndex]) {
+        if (! $this->answeredQuestions[$this->currentQuestionIndex]) {
             $this->answeredQuestions[$this->currentQuestionIndex] = true;
             $this->completedCount++;
         }
@@ -499,8 +527,8 @@ private function cleanHtml($text)
                     'responses' => $this->responses,
                     'current_index' => $this->currentQuestionIndex,
                     'completed_count' => $this->completedCount,
-                    'last_saved' => now()
-                ]
+                    'last_saved' => now(),
+                ],
             ]);
         }
     }
@@ -529,7 +557,7 @@ private function cleanHtml($text)
             $this->logActivity('submitted_assessment');
 
         } catch (\Exception $e) {
-            $this->addError('submit', 'Failed to submit assessment: ' . $e->getMessage());
+            $this->addError('submit', 'Failed to submit assessment: '.$e->getMessage());
         } finally {
             $this->isSubmitting = false;
         }
@@ -551,7 +579,7 @@ private function cleanHtml($text)
                 'score_earned' => $isCorrect ? $question['score'] : 0,
                 'max_score' => $question['score'],
                 'type' => $question['type'],
-                'is_graded' => $question['type'] !== 'essay_question'
+                'is_graded' => $question['type'] !== 'essay_question',
             ];
         }
 
@@ -569,7 +597,7 @@ private function cleanHtml($text)
         }
 
         if ($question['type'] === 'true_or_false_question') {
-            return (bool)$response === (bool)$question['correct_answer'];
+            return (bool) $response === (bool) $question['correct_answer'];
         }
 
         if ($question['type'] === 'multiple_choice_question') {
@@ -582,7 +610,7 @@ private function cleanHtml($text)
     public function calculateResults()
     {
         $totalQuestions = count($this->questions);
-        $answeredQuestions = count(array_filter($this->responses, fn($r) => $r !== null));
+        $answeredQuestions = count(array_filter($this->responses, fn ($r) => $r !== null));
         $correctAnswers = 0;
         $totalScore = 0;
         $maxScore = 0;
@@ -597,12 +625,12 @@ private function cleanHtml($text)
             }
 
             $type = $question['type'];
-            if (!isset($typeResults[$type])) {
+            if (! isset($typeResults[$type])) {
                 $typeResults[$type] = [
                     'total' => 0,
                     'correct' => 0,
                     'score' => 0,
-                    'max_score' => 0
+                    'max_score' => 0,
                 ];
             }
 
@@ -624,20 +652,31 @@ private function cleanHtml($text)
             'percentage' => $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0,
             'time_taken' => now()->diffInSeconds($this->startTime),
             'type_results' => $typeResults,
-            'grade' => $this->calculateGrade($totalScore, $maxScore)
+            'grade' => $this->calculateGrade($totalScore, $maxScore),
         ];
     }
 
     public function calculateGrade($score, $maxScore)
     {
-        if ($maxScore == 0) return 'N/A';
+        if ($maxScore == 0) {
+            return 'N/A';
+        }
 
         $percentage = ($score / $maxScore) * 100;
 
-        if ($percentage >= 90) return 'A';
-        if ($percentage >= 80) return 'B';
-        if ($percentage >= 70) return 'C';
-        if ($percentage >= 60) return 'D';
+        if ($percentage >= 90) {
+            return 'A';
+        }
+        if ($percentage >= 80) {
+            return 'B';
+        }
+        if ($percentage >= 70) {
+            return 'C';
+        }
+        if ($percentage >= 60) {
+            return 'D';
+        }
+
         return 'F';
     }
 
@@ -656,12 +695,12 @@ private function cleanHtml($text)
             'subject_id' => $this->selectedSubject,
             'topic_id' => $this->selectedTopic,
             'subtopic_id' => $this->selectedSubtopic,
-            'completed_at' => now()
+            'completed_at' => now(),
         ];
 
         AssessmentResponse::create([
             'assessment_id' => $this->assessment->id,
-            'data' => $responseData
+            'data' => $responseData,
         ]);
     }
 
@@ -676,7 +715,7 @@ private function cleanHtml($text)
             'end_time' => now(),
             'score' => $this->results['total_score'],
             'max_score' => $this->results['max_score'],
-            'percentage_score' => $this->results['percentage']
+            'percentage_score' => $this->results['percentage'],
         ]);
     }
 
@@ -685,7 +724,7 @@ private function cleanHtml($text)
         $this->reset([
             'step', 'currentQuestionIndex', 'questions', 'responses',
             'assessment', 'startTime', 'timeRemaining', 'results',
-            'answeredQuestions', 'completedCount', 'progressPercentage'
+            'answeredQuestions', 'completedCount', 'progressPercentage',
         ]);
 
         $this->step = 'configuration';
@@ -694,22 +733,22 @@ private function cleanHtml($text)
 
     public function toggleReview()
     {
-        $this->showReview = !$this->showReview;
+        $this->showReview = ! $this->showReview;
     }
 
     public function toggleSettings()
     {
-        $this->showSettings = !$this->showSettings;
+        $this->showSettings = ! $this->showSettings;
     }
 
     public function toggleHelp()
     {
-        $this->showHelp = !$this->showHelp;
+        $this->showHelp = ! $this->showHelp;
     }
 
     public function toggleFeedback()
     {
-        $this->showFeedback = !$this->showFeedback;
+        $this->showFeedback = ! $this->showFeedback;
     }
 
     public function submitFeedback()
@@ -746,6 +785,7 @@ private function cleanHtml($text)
     public function getSubjectName()
     {
         $subject = $this->subjects->firstWhere('id', $this->selectedSubject);
+
         return $subject ? $subject->name : 'Unknown Subject';
     }
 
@@ -771,12 +811,11 @@ private function cleanHtml($text)
                     'action' => $action,
                     'assessment_id' => $this->assessment?->id,
                     'subject_id' => $this->selectedSubject,
-                    'step' => $this->step
+                    'step' => $this->step,
                 ], $properties))
                 ->log("Student {$action} in self-assessment");
         }
     }
-
 
     public function render()
     {

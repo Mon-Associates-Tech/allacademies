@@ -2,39 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\SubscriptionStatus;
-use App\Http\Requests\PaymentRequest;
-use App\Models\Chat\UserTokenSubscription;
-use App\Models\Payment;
-use App\Models\Subscription;
-use App\Models\BookSubscription;
-use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
+use App\Enums\SubscriptionStatus;
+use App\Events\SubscriptionUpdated;
+use App\Http\Requests\PaymentRequest;
 use App\Models\AcademicFeeStructure;
-use App\Services\TokenSubscriptionService;
+use App\Models\BookSubscription;
+use App\Models\Payment;
+use App\Models\School;
+use App\Models\SchoolFee;
+use App\Models\Student;
+use App\Models\Subaccount;
+use App\Models\Subscription;
+use App\Services\PaystackService;
 use App\Services\SubaccountPaymentService;
+use App\Services\TokenSubscriptionService;
 use App\Traits\HandlesPayments;
 use Brick\Money\Money;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Exception;
-use Illuminate\Support\Facades\DB;
-use App\Services\PaystackService;
-use App\Models\Student;
-use App\Models\StudentPayment;
-use App\Models\SchoolFee;
-use App\Models\School;
-use App\Models\Subaccount;
-use Illuminate\Support\Facades\Auth;
-
 
 class PaymentController extends Controller
 {
     use HandlesPayments;
 
     protected $paystack;
+
     protected $subscriptionService;
 
     public function __construct(PaystackService $paystack, TokenSubscriptionService $subscriptionService)
@@ -126,6 +124,7 @@ class PaymentController extends Controller
 
             if ($bookSubscription) {
                 $this->payForBookSubscription($request, $bookSubscription); // $this->processBookSubscriptionPayment($request, $bookSubscription);
+
                 return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
             } else {
                 throw ValidationException::withMessages([
@@ -139,6 +138,7 @@ class PaymentController extends Controller
 
         if ($subscription) {
             $this->payForSubscription($request, $subscription);
+
             return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
         } else {
             throw ValidationException::withMessages([
@@ -150,8 +150,6 @@ class PaymentController extends Controller
     /**
      * Process the payment for a book subscription.
      *
-     * @param PaymentRequest $request
-     * @param BookSubscription $bookSubscription
      * @return RedirectResponse
      */
     public function processBookSubscriptionPayment(PaymentRequest $request, BookSubscription $bookSubscription)
@@ -161,7 +159,7 @@ class PaymentController extends Controller
                 $amount = Money::of($request->validated('amount'), 'GHS');
                 $payment = new Payment([
                     'reference' => $request->validated('reference'),
-                    'amount' => (string)$amount->getAmount(),
+                    'amount' => (string) $amount->getAmount(),
                     'status' => PaymentStatus::SUCCEEDED,
                     'currency' => 'GHS',
                     'book_subscription_id' => $bookSubscription->id,
@@ -181,9 +179,8 @@ class PaymentController extends Controller
     /**
      * Process the payment for a regular subscription.
      *
-     * @param PaymentRequest $request
-     * @param Subscription $subscription
      * @return RedirectResponse
+     *
      * @throws ValidationException|\Throwable
      */
     private function processSubscriptionPayment(PaymentRequest $request, Subscription $subscription)
@@ -201,7 +198,7 @@ class PaymentController extends Controller
                 $amount = Money::of($request->validated('amount'), 'GHS');
                 $payment = new Payment([
                     'reference' => $request->validated('reference'),
-                    'amount' => (string)$amount->getAmount(),
+                    'amount' => (string) $amount->getAmount(),
                     'status' => PaymentStatus::SUCCEEDED,
                     'currency' => 'GHS',
                 ]);
@@ -220,9 +217,6 @@ class PaymentController extends Controller
 
         return to_route('payments.index')->with('success', 'Payment for subscription has been manually recorded.');
     }
-
-
-
 
     public function initialize(Request $request)
     {
@@ -244,8 +238,6 @@ class PaymentController extends Controller
 
         return redirect($response['data']['authorization_url']);
     }
-
-
 
     /**
      * Initialize book subscription payment with split payment to author
@@ -415,17 +407,17 @@ class PaymentController extends Controller
 
                 // 2. Record payment
                 Payment::create([
-                    'reference'       => $paymentDetails['reference'],
-                    'amount'          => $subscription->amount,  //$paymentDetails['amount'],
-                    'currency'        => $paymentDetails['currency'] ?? 'GHS',
-                    'status'          => 'succeeded',
+                    'reference' => $paymentDetails['reference'],
+                    'amount' => $subscription->amount,  // $paymentDetails['amount'],
+                    'currency' => $paymentDetails['currency'] ?? 'GHS',
+                    'status' => 'succeeded',
                     'subscription_id' => $subscription->id,
                 ]);
             });
 
             return redirect()
                 ->route('subscriptions.index')
-                ->with('success', 'Subscription paid successfully! Ref: ' . $subscription->reference);
+                ->with('success', 'Subscription paid successfully! Ref: '.$subscription->reference);
         }
 
         return redirect()
@@ -433,7 +425,7 @@ class PaymentController extends Controller
             ->with('error', 'Payment failed or was cancelled.');
     }
 
-    //Sub Account
+    // Sub Account
     public function initializeSubAccount(Request $request)
     {
         $data = [
@@ -469,34 +461,32 @@ class PaymentController extends Controller
         ]);
     }
 
-
-
     public function processPayment(Request $request, PaystackService $paystack)
     {
         // 1️⃣ Validate request input
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'amount'     => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1',
         ]);
 
         // 2️⃣ Get student and related school
         $student = Student::with(['school', 'academicGroup', 'academicLevel'])->findOrFail($validated['student_id']);
-        $school  = $student->school;
+        $school = $student->school;
 
-        if (!$school) {
+        if (! $school) {
             return back()->withErrors(['school' => 'Student is not linked to any school.']);
         }
 
         // 3️⃣ Get school’s Paystack subaccount info
         $subaccount = Subaccount::where('school_id', $school->id)->first();
 
-        if (!$subaccount || !$subaccount->subaccount_code) {
+        if (! $subaccount || ! $subaccount->subaccount_code) {
             return back()->withErrors(['payment' => 'This school does not have a registered Paystack subaccount.']);
         }
 
         // 4️⃣ Determine payer info (student or parent)
         $payer = Auth::user();
-        $payer_id   = $payer->id ?? null;
+        $payer_id = $payer->id ?? null;
         $payer_type = $payer ? get_class($payer) : null;
 
         // 5️⃣ Get the current term (academic period)
@@ -517,9 +507,9 @@ class PaymentController extends Controller
 
         // 8️⃣ Prepare Paystack transaction payload
         $paymentData = [
-            'email'        => $payer->email ?? 'guest@example.com',
-            'amount'       => $validated['amount'] * 100, // Paystack expects amount in pesewas
-            'currency'     => 'GHS',
+            'email' => $payer->email ?? 'guest@example.com',
+            'amount' => $validated['amount'] * 100, // Paystack expects amount in pesewas
+            'currency' => 'GHS',
             'callback_url' => $callbackUrl,
         ];
 
@@ -534,7 +524,7 @@ class PaymentController extends Controller
         // 9️⃣ Initialize transaction via Paystack API
         $response = $paystack->initializeTransaction($paymentData);
 
-        if (empty($response['status']) || !$response['status'] || empty($response['data']['authorization_url'])) {
+        if (empty($response['status']) || ! $response['status'] || empty($response['data']['authorization_url'])) {
             return back()->withErrors(['payment' => 'Unable to initialize payment. Please try again.']);
         }
 
@@ -543,33 +533,30 @@ class PaymentController extends Controller
 
         // 🔟 Record payment in DB (now includes term_total_amount and current_term_id)
         SchoolFee::create([
-            'school_id'          => $school->id,
-            'student_id'         => $student->id,
-            'payer_id'           => $payer_id,
-            'payer_type'         => $payer_type,
-            'school_name'        => $school->name,
-            'amount'             => $validated['amount'],
-            'term_total_amount'  => $termTotalAmount,
-            'term_id'    => $currentTermId,
-            'currency'           => 'GHS',
-            'status'             => 'pending',
-            'reference'          => $reference,
-            'authorization_url'  => $response['data']['authorization_url'],
-            'paystack_response'  => json_encode($response),
+            'school_id' => $school->id,
+            'student_id' => $student->id,
+            'payer_id' => $payer_id,
+            'payer_type' => $payer_type,
+            'school_name' => $school->name,
+            'amount' => $validated['amount'],
+            'term_total_amount' => $termTotalAmount,
+            'term_id' => $currentTermId,
+            'currency' => 'GHS',
+            'status' => 'pending',
+            'reference' => $reference,
+            'authorization_url' => $response['data']['authorization_url'],
+            'paystack_response' => json_encode($response),
         ]);
 
         // 1️⃣1️⃣ Redirect user to Paystack for payment
         return redirect($response['data']['authorization_url']);
     }
 
-
-
-
     public function paymentCallback(Request $request, PaystackService $paystack, Student $student)
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('feepayment.form')
                 ->withErrors(['payment' => 'Missing payment reference.']);
         }
@@ -577,7 +564,7 @@ class PaymentController extends Controller
         // ✅ Verify transaction with Paystack
         $response = $paystack->verifyTransaction($reference);
 
-        if (empty($response['status']) || !$response['status']) {
+        if (empty($response['status']) || ! $response['status']) {
             return redirect()->route('feepayment.form')
                 ->withErrors(['payment' => 'Payment verification failed.']);
         }
@@ -599,7 +586,6 @@ class PaymentController extends Controller
             ->route('feepayment.thankyou', ['student' => $student->id])
             ->with('success', 'Payment successful!');
     }
-
 
     public function thankYou(Student $student)
     {

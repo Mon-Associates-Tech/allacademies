@@ -13,13 +13,21 @@ class Assignments extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $subjectFilter = 'all';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $showDetails = false;
+
     public $selectedAssignment = null;
+
     public $student;
+
     public $unauthorized = false; // New property to track unauthorized access
 
     protected $queryString = [
@@ -30,23 +38,20 @@ class Assignments extends Component
         'sortDirection' => ['except' => 'desc'],
     ];
 
-public function mount()
-{
-    $user = Auth::user();
+    public function mount()
+    {
+        $user = Auth::user();
 
+        $this->student = $user->student;
 
-    $this->student = $user->student;
+        if (! $this->student) {
+            $this->student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
+        }
 
-    if (!$this->student) {
-        $this->student = Student::withoutGlobalScopes()->where('user_id', $user->id)->first();
+        if (! $this->student) {
+            $this->unauthorized = true;
+        }
     }
-
-
-    if (!$this->student) {
-        $this->unauthorized = true;
-    }
-}
-
 
     public function updatingSearch()
     {
@@ -103,7 +108,7 @@ public function mount()
     public function getAssignmentsProperty()
     {
         // Return empty collection if unauthorized
-        if (!$this->student || $this->unauthorized) {
+        if (! $this->student || $this->unauthorized) {
             return collect();
         }
 
@@ -111,8 +116,8 @@ public function mount()
 
         // Start with basic query
         $query = \App\Models\Assignment::where('status', 'published');
-//            ->where('starts_at', '<=', now());
-//            ->where('ends_at', '>', now());
+        //            ->where('starts_at', '<=', now());
+        //            ->where('ends_at', '>', now());
 
         // Log the basic query count
         $basicCount = $query->count();
@@ -125,7 +130,7 @@ public function mount()
             \Log::info('Checking academic groups: ', $academicGroupIds);
 
             // Check if assigned to any of student's academic groups
-            if (!empty($academicGroupIds)) {
+            if (! empty($academicGroupIds)) {
                 $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
                     $q->whereIn('academic_groups.id', $academicGroupIds);
                 });
@@ -133,7 +138,7 @@ public function mount()
 
             // Check if assigned to student's academic level
             if ($student->academic_level_id) {
-                \Log::info('Checking academic level: ' . $student->academic_level_id);
+                \Log::info('Checking academic level: '.$student->academic_level_id);
                 $query->orWhereHas('academicLevels', function ($q) use ($student) {
                     $q->where('academic_levels.id', $student->academic_level_id);
                 });
@@ -142,35 +147,35 @@ public function mount()
             // Check if assigned to any of student's groups
             $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
             \Log::info('Checking student groups: ', $studentGroupIds);
-            if (!empty($studentGroupIds)) {
+            if (! empty($studentGroupIds)) {
                 $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
                     $q->whereIn('student_groups.id', $studentGroupIds);
                 });
             }
 
             // Check if assigned directly to this student
-            \Log::info('Checking direct student assignment for ID: ' . $student->id);
+            \Log::info('Checking direct student assignment for ID: '.$student->id);
             $query->orWhereHas('students', function ($q) use ($student) {
                 $q->where('students.id', $student->id);
             });
         })
-        ->with(['academicSubject', 'teacher.user', 'submissions' => function ($query) use ($student) {
-            $query->where('student_id', $student->id);
-        }]);
+            ->with(['academicSubject', 'teacher.user', 'submissions' => function ($query) use ($student) {
+                $query->where('student_id', $student->id);
+            }]);
 
         // Log the final query
         $finalCount = $query->count();
         \Log::info("Final assignment query count (with relationships): {$finalCount}");
 
         // Get the actual SQL for debugging
-        \Log::info('Final SQL Query: ' . $query->toSql());
+        \Log::info('Final SQL Query: '.$query->toSql());
         \Log::info('Query Bindings: ', $query->getBindings());
 
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('description', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -184,12 +189,12 @@ public function mount()
             if ($this->statusFilter === 'completed') {
                 $query->whereHas('submissions', function ($q) use ($student) {
                     $q->where('student_id', $student->id)
-                      ->whereIn('status', ['completed', 'submitted', 'graded']);
+                        ->whereIn('status', ['completed', 'submitted', 'graded']);
                 });
             } elseif ($this->statusFilter === 'pending') {
                 $query->whereDoesntHave('submissions', function ($q) use ($student) {
                     $q->where('student_id', $student->id)
-                      ->whereIn('status', ['completed', 'submitted', 'graded']);
+                        ->whereIn('status', ['completed', 'submitted', 'graded']);
                 });
             }
         }
@@ -198,14 +203,14 @@ public function mount()
         $query->orderBy($this->sortBy, $this->sortDirection);
 
         $result = $query->paginate(12);
-        \Log::info('Paginated result count: ' . $result->count());
+        \Log::info('Paginated result count: '.$result->count());
 
         return $result;
     }
 
     public function getSubjectsProperty()
     {
-        if (!$this->student || $this->unauthorized) {
+        if (! $this->student || $this->unauthorized) {
             return collect();
         }
 
@@ -214,13 +219,13 @@ public function mount()
 
     public function getAssignmentStatus($assignment)
     {
-        if (!$this->student || $this->unauthorized) {
+        if (! $this->student || $this->unauthorized) {
             return 'not_started';
         }
 
         $submission = $assignment->submissions->where('student_id', $this->student->id)->first();
 
-        if (!$submission) {
+        if (! $submission) {
             return 'not_started';
         }
 
@@ -229,13 +234,13 @@ public function mount()
 
     public function getAssignmentProgress($assignment)
     {
-        if (!$this->student || $this->unauthorized) {
+        if (! $this->student || $this->unauthorized) {
             return 0;
         }
 
         $submission = $assignment->submissions->where('student_id', $this->student->id)->first();
 
-        if (!$submission) {
+        if (! $submission) {
             return 0;
         }
 

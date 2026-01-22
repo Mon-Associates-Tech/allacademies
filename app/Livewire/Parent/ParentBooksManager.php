@@ -21,24 +21,32 @@ class ParentBooksManager extends AppComponent
     use WithPagination;
 
     public $selectedWardId = null;
+
     public $selectedCategoryId = null;
+
     public $searchTerm = '';
+
     public $sortBy = 'title';
+
     public $sortDirection = 'asc';
+
     public $viewMode = 'grid';
+
     public $activeTab = 'subscribed'; // New tab property
+
     public $showSubscriptionModal = false;
+
     public $selectedBookId = null;
+
     public $subscriptionType = 'monthly';
 
     public function mount()
     {
         $wards = $this->wards;
         if ($wards->isNotEmpty()) {
-           // $this->selectedWardId = $wards->first()->id;
+            // $this->selectedWardId = $wards->first()->id;
         }
     }
-
 
     public function selectWard($wardId)
     {
@@ -90,13 +98,19 @@ class ParentBooksManager extends AppComponent
 
     public function getBookStatus($bookId)
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
-        $student = getStudent(student_id: $this->selectedWardId, withoutScopes: true); //Student::find($this->selectedWardId);
-        if (!$student) return null;
+        $student = getStudent(student_id: $this->selectedWardId, withoutScopes: true); // Student::find($this->selectedWardId);
+        if (! $student) {
+            return null;
+        }
 
         $book = Book::find($bookId);
-        if (!$book) return null;
+        if (! $book) {
+            return null;
+        }
 
         // Check if book is subscribed
         $subscription = BookSubscription::where('user_id', $student->user->id)
@@ -108,7 +122,7 @@ class ParentBooksManager extends AppComponent
             return [
                 'type' => 'subscribed',
                 'label' => 'Subscribed',
-                'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
+                'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
             ];
         }
 
@@ -122,7 +136,7 @@ class ParentBooksManager extends AppComponent
             return [
                 'type' => 'borrowed',
                 'label' => 'Borrowed',
-                'class' => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                'class' => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
             ];
         }
 
@@ -131,7 +145,7 @@ class ParentBooksManager extends AppComponent
             return [
                 'type' => 'free',
                 'label' => 'Free',
-                'class' => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                'class' => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
             ];
         }
 
@@ -140,8 +154,9 @@ class ParentBooksManager extends AppComponent
 
     public function subscribeToBook()
     {
-        if (!$this->selectedBookId || !$this->selectedWardId) {
+        if (! $this->selectedBookId || ! $this->selectedWardId) {
             session()->flash('error', 'Please select a book and ward');
+
             return;
         }
 
@@ -149,14 +164,16 @@ class ParentBooksManager extends AppComponent
         $student = Student::findOrFail($this->selectedWardId);
 
         // Check authorization using the policy
-        if (!auth()->user()->can('subscribe', $book)) {
+        if (! auth()->user()->can('subscribe', $book)) {
             session()->flash('error', 'You are not authorized to subscribe to this book');
+
             return;
         }
 
         // Check if student has softcopy access
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             session()->flash('error', 'This book does not have a digital version available');
+
             return;
         }
 
@@ -168,6 +185,7 @@ class ParentBooksManager extends AppComponent
 
         if ($existingSubscription) {
             session()->flash('error', 'Already subscribed to this book');
+
             return;
         }
 
@@ -186,22 +204,23 @@ class ParentBooksManager extends AppComponent
         session()->flash('success', 'Subscription created! Please complete payment to activate.');
     }
 
-
     #[Computed]
     public function subscribedBooks()
     {
-        if (!$this->selectedWardId) {
+        if (! $this->selectedWardId) {
             return $this->allSubscribedBooks();
         }
 
         $student = Student::withoutGlobalScopes()->find($this->selectedWardId);
 
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         // Get books subscribed by the ward OR by the parent for this ward
-        $subscribedBookIds = BookSubscription::where(function($query) use ($student) {
+        $subscribedBookIds = BookSubscription::where(function ($query) use ($student) {
             $query->where('user_id', $student->user->id)
-                ->orWhere(function($q) use ($student) {
+                ->orWhere(function ($q) use ($student) {
                     // Parent subscribed for this ward
                     $q->where('subscribed_by', auth()->user()->id)
                         ->where('user_id', $student->user->id);
@@ -215,11 +234,11 @@ class ParentBooksManager extends AppComponent
             ->whereIn('id', $subscribedBookIds);
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('author', function($author) {
-                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('author', function ($author) {
+                        $author->where('name', 'LIKE', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -233,7 +252,6 @@ class ParentBooksManager extends AppComponent
         return $query->paginate(12);
     }
 
-
     #[Computed]
     public function allSubscribedBooks()
     {
@@ -242,13 +260,14 @@ class ParentBooksManager extends AppComponent
 
         if ($wards->isEmpty()) {
             \Log::info('ParentBooksManager: No wards found for parent', [
-                'parent_user_id' => auth()->id()
+                'parent_user_id' => auth()->id(),
             ]);
+
             return collect();
         }
 
         // Extract ward user IDs
-        $wardUserIds = $wards->map(function($ward) {
+        $wardUserIds = $wards->map(function ($ward) {
             return $ward->user ? $ward->user->id : null;
         })->filter()->toArray();
 
@@ -260,14 +279,15 @@ class ParentBooksManager extends AppComponent
 
         if (empty($wardUserIds)) {
             \Log::warning('ParentBooksManager: No ward user IDs found');
+
             return collect();
         }
 
         // Get subscriptions for all wards OR made by parent OR parent's own subscriptions
-        $subscribedBookIds = BookSubscription::where(function($query) use ($wardUserIds) {
+        $subscribedBookIds = BookSubscription::where(function ($query) use ($wardUserIds) {
             $query->whereIn('user_id', $wardUserIds) // All wards' subscriptions
-            ->orWhere('subscribed_by', auth()->user()->id) // Parent subscribed
-            ->orWhere('user_id', auth()->user()->id); // Parent's own subscriptions
+                ->orWhere('subscribed_by', auth()->user()->id) // Parent subscribed
+                ->orWhere('user_id', auth()->user()->id); // Parent's own subscriptions
         })
             ->where('status', 'paid')
             ->pluck('book_id')
@@ -275,7 +295,7 @@ class ParentBooksManager extends AppComponent
 
         \Log::info('ParentBooksManager subscribed books found', [
             'subscribed_book_ids' => $subscribedBookIds->toArray(),
-            'count' => $subscribedBookIds->count()
+            'count' => $subscribedBookIds->count(),
         ]);
 
         if ($subscribedBookIds->isEmpty()) {
@@ -286,11 +306,11 @@ class ParentBooksManager extends AppComponent
             ->whereIn('id', $subscribedBookIds);
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('author', function($author) {
-                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('author', function ($author) {
+                        $author->where('name', 'LIKE', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -304,25 +324,23 @@ class ParentBooksManager extends AppComponent
         return $query->paginate(12);
     }
 
-
-
     #[Computed]
     public function activeSubscriptions()
     {
         // If no ward selected, show all subscriptions
-        if (!$this->selectedWardId) {
+        if (! $this->selectedWardId) {
             $wards = $this->wards;
 
             if ($wards->isEmpty()) {
                 return collect();
             }
 
-            $wardUserIds = $wards->map(function($ward) {
+            $wardUserIds = $wards->map(function ($ward) {
                 return $ward->user ? $ward->user->id : null;
             })->filter()->toArray();
 
-            return BookSubscription::where(function($query) use ($wardUserIds) {
-                if (!empty($wardUserIds)) {
+            return BookSubscription::where(function ($query) use ($wardUserIds) {
+                if (! empty($wardUserIds)) {
                     $query->whereIn('user_id', $wardUserIds)
                         ->orWhere('subscribed_by', auth()->user()->id)
                         ->orWhere('user_id', auth()->user()->id);
@@ -338,12 +356,14 @@ class ParentBooksManager extends AppComponent
 
         $student = Student::withoutGlobalScopes()->find($this->selectedWardId);
 
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         // Include subscriptions made by parent for this ward
-        return BookSubscription::where(function($query) use ($student) {
+        return BookSubscription::where(function ($query) use ($student) {
             $query->where('user_id', $student->user->id)
-                ->orWhere(function($q) use ($student) {
+                ->orWhere(function ($q) use ($student) {
                     $q->where('subscribed_by', auth()->user()->id)
                         ->where('user_id', $student->user->id);
                 });
@@ -352,16 +372,17 @@ class ParentBooksManager extends AppComponent
             ->with(['book.bookCategory', 'book.author', 'subscribedBy', 'user'])
             ->get();
     }
+
     #[Computed]
     public function subscriptionStats(): array
     {
-        if (!$this->selectedWardId) {
+        if (! $this->selectedWardId) {
             return $this->allSubscriptionStats();
         }
 
         $student = Student::withoutGlobalScopes()->find($this->selectedWardId);
 
-        if (!$student) {
+        if (! $student) {
             return [
                 'active_subscriptions' => 0,
                 'active_borrowings' => 0,
@@ -372,9 +393,9 @@ class ParentBooksManager extends AppComponent
         }
 
         // Include subscriptions made by parent
-        $subscriptions = BookSubscription::where(function($query) use ($student) {
+        $subscriptions = BookSubscription::where(function ($query) use ($student) {
             $query->where('user_id', $student->user->id)
-                ->orWhere(function($q) use ($student) {
+                ->orWhere(function ($q) use ($student) {
                     $q->where('subscribed_by', auth()->user()->id)
                         ->where('user_id', $student->user->id);
                 });
@@ -408,13 +429,13 @@ class ParentBooksManager extends AppComponent
         }
 
         // Get all ward user IDs
-        $wardUserIds = $wards->map(function($ward) {
+        $wardUserIds = $wards->map(function ($ward) {
             return $ward->user ? $ward->user->id : null;
         })->filter()->toArray();
 
         // Get all subscriptions for wards and parent
-        $subscriptions = BookSubscription::where(function($query) use ($wardUserIds) {
-            if (!empty($wardUserIds)) {
+        $subscriptions = BookSubscription::where(function ($query) use ($wardUserIds) {
+            if (! empty($wardUserIds)) {
                 $query->whereIn('user_id', $wardUserIds)
                     ->orWhere('subscribed_by', auth()->user()->id)
                     ->orWhere('user_id', auth()->user()->id);
@@ -425,8 +446,8 @@ class ParentBooksManager extends AppComponent
         })->get();
 
         // Get all borrowings for wards and parent
-        $borrowings = BookBorrowing::where(function($query) use ($wardUserIds) {
-            if (!empty($wardUserIds)) {
+        $borrowings = BookBorrowing::where(function ($query) use ($wardUserIds) {
+            if (! empty($wardUserIds)) {
                 $query->whereIn('user_id', $wardUserIds)
                     ->orWhere('user_id', auth()->user()->id);
             } else {
@@ -446,16 +467,20 @@ class ParentBooksManager extends AppComponent
     #[Computed]
     public function availableBooks(): array|LengthAwarePaginator|Collection
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
 
         $student = Student::withoutGlobalScopes()->find($this->selectedWardId);
 
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         // Get IDs of books that are already subscribed or borrowed
-        $subscribedBookIds = BookSubscription::where(function($query) use ($student) {
+        $subscribedBookIds = BookSubscription::where(function ($query) use ($student) {
             $query->where('user_id', $student->user->id)
-                ->orWhere(function($q) use ($student) {
+                ->orWhere(function ($q) use ($student) {
                     $q->where('subscribed_by', auth()->user()->id)
                         ->where('user_id', $student->user->id);
                 });
@@ -473,11 +498,11 @@ class ParentBooksManager extends AppComponent
             ->whereNotIn('id', $unavailableBookIds);
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('author', function($author) {
-                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('author', function ($author) {
+                        $author->where('name', 'LIKE', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -494,13 +519,15 @@ class ParentBooksManager extends AppComponent
     #[Computed]
     public function borrowedBooks()
     {
-        if (!$this->selectedWardId) {
+        if (! $this->selectedWardId) {
             return $this->allBorrowedBooks();
         }
 
         $student = Student::withoutGlobalScopes()->find($this->selectedWardId);
 
-        if (!$student) return collect();
+        if (! $student) {
+            return collect();
+        }
 
         $borrowedBookIds = BookBorrowing::where('user_id', $student->user->id)
             ->where('status', 'active')
@@ -510,11 +537,11 @@ class ParentBooksManager extends AppComponent
             ->whereIn('id', $borrowedBookIds);
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('author', function($author) {
-                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('author', function ($author) {
+                        $author->where('name', 'LIKE', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -539,7 +566,7 @@ class ParentBooksManager extends AppComponent
         }
 
         // Extract ward user IDs
-        $wardUserIds = $wards->map(function($ward) {
+        $wardUserIds = $wards->map(function ($ward) {
             return $ward->user ? $ward->user->id : null;
         })->filter()->toArray();
 
@@ -548,9 +575,9 @@ class ParentBooksManager extends AppComponent
         }
 
         // Get borrowings for all wards OR parent's own borrowings
-        $borrowedBookIds = BookBorrowing::where(function($query) use ($wardUserIds) {
+        $borrowedBookIds = BookBorrowing::where(function ($query) use ($wardUserIds) {
             $query->whereIn('user_id', $wardUserIds) // All wards' borrowings
-            ->orWhere('user_id', auth()->user()->id); // Parent's own borrowings
+                ->orWhere('user_id', auth()->user()->id); // Parent's own borrowings
         })
             ->where('status', 'active')
             ->pluck('book_id')
@@ -564,11 +591,11 @@ class ParentBooksManager extends AppComponent
             ->whereIn('id', $borrowedBookIds);
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('author', function($author) {
-                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('author', function ($author) {
+                        $author->where('name', 'LIKE', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -590,7 +617,7 @@ class ParentBooksManager extends AppComponent
             ->where('user_id', Auth::id())
             ->first();
 
-        if (!$parent) {
+        if (! $parent) {
             return collect();
         }
 
@@ -601,7 +628,7 @@ class ParentBooksManager extends AppComponent
             ->get();
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -612,23 +639,26 @@ class ParentBooksManager extends AppComponent
             SORT_REGULAR, $this->sortDirection === 'desc');
     }
 
-
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::withoutGlobalScopes()
             ->with([
                 'user',
-                'academicLevel.academicGroup'
+                'academicLevel.academicGroup',
             ])->find($this->selectedWardId);
     }
 
     #[Computed]
     public function selectedBook()
     {
-        if (!$this->selectedBookId) return null;
+        if (! $this->selectedBookId) {
+            return null;
+        }
 
         return Book::with(['bookCategory', 'author'])->find($this->selectedBookId);
     }
@@ -643,12 +673,14 @@ class ParentBooksManager extends AppComponent
         };
     }
 
-
     #[Computed]
     public function activeBorrowings()
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
         $student = getStudent(student_id: $this->selectedWardId, withoutScopes: true);
+
         return BookBorrowing::where('user_id', $student->user->id)
             ->where('status', SubscriptionStatus::PAID->value)
             ->with(['book.bookCategory', 'book.author'])

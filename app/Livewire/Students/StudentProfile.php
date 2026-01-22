@@ -2,36 +2,48 @@
 
 namespace App\Livewire\Students;
 
-use App\Models\Assessment;
 use App\Models\Activity;
+use App\Models\Assessment;
 use App\Models\Student;
-use App\Models\AcademicFeeStructure;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Carbon\Carbon;
 
 class StudentProfile extends Component
 {
     use WithFileUploads;
 
     public $student;
+
     public $name;
+
     public $email;
+
     public $phone;
+
     public $address;
+
     public $date_of_birth;
+
     public $emergency_contact_name;
+
     public $emergency_contact_phone;
+
     public $avatar;
+
     public $currentAvatar;
+
     public $isEditing = false;
 
     // New properties for enhanced profile
     public $bio;
+
     public $favorite_subjects;
+
     public $learning_goals;
+
     public $social_links;
 
     protected $rules = [
@@ -46,13 +58,13 @@ class StudentProfile extends Component
         'bio' => 'nullable|string|max:500',
         'favorite_subjects' => 'nullable|string|max:255',
         'learning_goals' => 'nullable|string|max:1000',
-        'social_links' => 'nullable|array'
+        'social_links' => 'nullable|array',
     ];
 
     public function mount()
     {
         $this->student = Auth::user()->student;
-        $this->student = Student::withoutGlobalScopes()->where("user_id", Auth::id())->first();
+        $this->student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
 
         if ($this->student) {
             $user = $this->student->user;
@@ -75,9 +87,9 @@ class StudentProfile extends Component
 
     public function toggleEdit()
     {
-        $this->isEditing = !$this->isEditing;
+        $this->isEditing = ! $this->isEditing;
 
-        if (!$this->isEditing) {
+        if (! $this->isEditing) {
             // Reset form when canceling edit
             $this->mount();
         }
@@ -87,8 +99,9 @@ class StudentProfile extends Component
     {
         $this->validate();
 
-        if (!$this->student) {
+        if (! $this->student) {
             session()->flash('error', 'Student profile not found.');
+
             return;
         }
 
@@ -119,7 +132,7 @@ class StudentProfile extends Component
             'bio' => $this->bio,
             'favorite_subjects' => $this->favorite_subjects,
             'learning_goals' => $this->learning_goals,
-            'social_links' => json_encode($this->social_links ?? [])
+            'social_links' => json_encode($this->social_links ?? []),
         ]);
 
         $this->isEditing = false;
@@ -130,7 +143,9 @@ class StudentProfile extends Component
 
     public function removeAvatar()
     {
-        if (!$this->student) return;
+        if (! $this->student) {
+            return;
+        }
 
         $user = $this->student->user;
 
@@ -147,7 +162,9 @@ class StudentProfile extends Component
     // New methods for enhanced profile insights
     private function getProfileStats()
     {
-        if (!$this->student) return [];
+        if (! $this->student) {
+            return [];
+        }
 
         $totalAssessments = Assessment::where('student_id', $this->student->id)->count();
         $averageScore = Assessment::where('student_id', $this->student->id)
@@ -164,13 +181,15 @@ class StudentProfile extends Component
             'total_assessments' => $totalAssessments,
             'average_score' => round($averageScore, 1),
             'this_month_assessments' => $thisMonthAssessments,
-            'member_since' => $memberSince
+            'member_since' => $memberSince,
         ];
     }
 
     private function getRecentActivity()
     {
-        if (!$this->student) return collect();
+        if (! $this->student) {
+            return collect();
+        }
 
         return Assessment::where('student_id', $this->student->id)
             ->with(['subject', 'topic'])
@@ -181,7 +200,9 @@ class StudentProfile extends Component
 
     private function getUpcomingTasks()
     {
-        if (!$this->student) return collect();
+        if (! $this->student) {
+            return collect();
+        }
 
         return Activity::forStudent($this->student->id)
             ->upcoming()
@@ -248,7 +269,7 @@ class StudentProfile extends Component
                     'payer',
                     'student.academicGroup',
                     'student.academicLevel',
-                    'academicPeriod'
+                    'academicPeriod',
                 ])
                 ->orderBy('created_at', 'desc')
                 ->get();

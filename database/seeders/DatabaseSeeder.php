@@ -38,39 +38,39 @@ class DatabaseSeeder extends Seeder
             ['name' => 'student', 'description' => 'Student role with limited access'],
             ['name' => 'teacher', 'description' => 'Teacher role with access to educational content'],
             ['name' => 'librarian', 'description' => 'Librarian role with access to book management'],
-            ['name' => 'author', 'description' => 'Author role with access to own publications']
+            ['name' => 'author', 'description' => 'Author role with access to own publications'],
         ];
 
         foreach ($roles as $role) {
-           // Role::create($role);
+            // Role::create($role);
         }
 
         // Create admin user
-     //   $adminUser = User::create([
-      //      'name' => 'Admin User',
-      //      'email' => 'admin@example.com',
-      //      'password' => Hash::make('password'),
-       //     'role' => 'admin',
+        //   $adminUser = User::create([
+        //      'name' => 'Admin User',
+        //      'email' => 'admin@example.com',
+        //      'password' => Hash::make('password'),
+        //     'role' => 'admin',
         //    'email_verified_at' => now(),
-        //]);
+        // ]);
 
-      //  $adminUser->roles()->attach(Role::where('name', 'admin')->first());
+        //  $adminUser->roles()->attach(Role::where('name', 'admin')->first());
 
-      //  Administrator::create(['user_id' => $adminUser->id]);
+        //  Administrator::create(['user_id' => $adminUser->id]);
 
         // Create book categories
         $categories = [
             'Fiction', 'Non-Fiction', 'Science', 'Mathematics', 'History',
             'Geography', 'Biography', 'Autobiography', 'Fantasy', 'Mystery',
             'Thriller', 'Romance', 'Horror', 'Poetry', 'Drama',
-            'Comics', 'Art', 'Cooking', 'Health', 'Travel'
+            'Comics', 'Art', 'Cooking', 'Health', 'Travel',
         ];
 
         foreach ($categories as $category) {
-//            BookCategory::create([
-//                'name' => $category,
-//                'description' => "Books in the {$category} category"
-//            ]);
+            //            BookCategory::create([
+            //                'name' => $category,
+            //                'description' => "Books in the {$category} category"
+            //            ]);
         }
 
         // Create subjects
@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
             'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science',
             'English', 'Literature', 'History', 'Geography', 'Economics',
             'Art', 'Music', 'Physical Education', 'Psychology', 'Sociology',
-            'Philosophy', 'Political Science', 'French', 'Spanish', 'German'
+            'Philosophy', 'Political Science', 'French', 'Spanish', 'German',
         ];
 
         foreach ($subjects as $subject) {
@@ -86,8 +86,8 @@ class DatabaseSeeder extends Seeder
                 'name' => $subject,
                 'academic_level_id' => AcademicLevelFactory::new()->create()->id,
                 'code' => strtoupper(substr($subject, 0, 3)),
-                'description' => "The study of {$subject}"
-]);
+                'description' => "The study of {$subject}",
+            ]);
         }
 
         // Create teachers (20)
@@ -97,24 +97,24 @@ class DatabaseSeeder extends Seeder
             $user->roles()->attach(Role::where('name', 'teacher')->first());
             $teachers[] = Teacher::create(['user_id' => $user->id]);
         }
-            Log::info('Teachers created');
+        Log::info('Teachers created');
         // Create student groups (20)
         $studentGroups = [];
         $groupNames = [
             'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5',
             'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10',
             'Grade 11', 'Grade 12', 'Class A', 'Class B', 'Class C',
-            'Class D', 'Class E', 'Advanced Group', 'Beginners Group', 'Intermediate Group'
+            'Class D', 'Class E', 'Advanced Group', 'Beginners Group', 'Intermediate Group',
         ];
 
         foreach ($groupNames as $index => $name) {
             $studentGroups[] = StudentGroup::create([
                 'name' => $name,
                 'teacher_id' => $teachers[$index % count($teachers)]->id,
-                'description' => "A group for {$name} students"
+                'description' => "A group for {$name} students",
             ]);
         }
-        Log::info('student groups created');;
+        Log::info('student groups created');
 
         // Create students (20 per group)
         $allStudents = [];
@@ -124,12 +124,12 @@ class DatabaseSeeder extends Seeder
                 $user->roles()->attach(Role::where('name', 'student')->first());
                 $allStudents[] = Student::create([
                     'user_id' => $user->id,
-                    'student_group_id' => $group->id
+                    'student_group_id' => $group->id,
                 ]);
             }
         }
 
-        Log::info('students created');;
+        Log::info('students created');
 
         // Create librarians (10)
         $librarians = [];
@@ -139,7 +139,7 @@ class DatabaseSeeder extends Seeder
             $librarians[] = Librarian::create(['user_id' => $user->id, 'employee_id' => rand(1000, 9999)]);
         }
 
-        Log::info('librarians created');;
+        Log::info('librarians created');
 
         // Create authors (20)
         $authors = [];
@@ -148,7 +148,7 @@ class DatabaseSeeder extends Seeder
             $user->roles()->attach(Role::where('name', 'author')->first());
             $authors[] = Author::create([
                 'user_id' => $user->id,
-                'biography' => "Biography of author {$user->name}"
+                'biography' => "Biography of author {$user->name}",
             ]);
         }
 
@@ -160,34 +160,34 @@ class DatabaseSeeder extends Seeder
             for ($i = 0; $i < 5; $i++) {
                 $categoryId = BookCategory::inRandomOrder()->first()->id;
                 $allBooks[] = Book::create([
-                    'title' => "Book " . ($i + 1) . " by " . $author->user->name,
+                    'title' => 'Book '.($i + 1).' by '.$author->user->name,
                     'author_id' => $author->id,
                     'book_category_id' => $categoryId,
-                    'edition' => rand(1, 5) . "th Edition",
-                    'publisher' => "Publisher " . rand(1, 10),
+                    'edition' => rand(1, 5).'th Edition',
+                    'publisher' => 'Publisher '.rand(1, 10),
                     'pages' => rand(100, 800),
                     'has_hardcopy' => rand(0, 1),
                     'has_softcopy' => rand(0, 1) || $i % 2 == 0, // Ensure some books have softcopy
-                    'additional_info' => "Additional information about the book"
+                    'additional_info' => 'Additional information about the book',
                 ]);
             }
         }
 
-        Log::info('books created');;
+        Log::info('books created');
 
         // Create topics (5 per subject)
         $allTopics = [];
         foreach (AcademicSubject::all() as $subject) {
             for ($i = 0; $i < 5; $i++) {
                 $allTopics[] = AcademicTopic::create([
-                    'name' => "Topic " . ($i + 1) . " in " . $subject->name,
+                    'name' => 'Topic '.($i + 1).' in '.$subject->name,
                     'academic_subject_id' => $subject->id,
-//                    'description' => "Description of topic " . ($i + 1) . " in " . $subject->name
+                    //                    'description' => "Description of topic " . ($i + 1) . " in " . $subject->name
                 ]);
             }
         }
 
-        Log::info('topics created');;
+        Log::info('topics created');
 
         // Create lessons (3 per teacher)
         $allLessons = [];
@@ -197,12 +197,12 @@ class DatabaseSeeder extends Seeder
                 $group = StudentGroup::where('teacher_id', $teacher->id)->first() ?? StudentGroup::inRandomOrder()->first();
 
                 $allLessons[] = Lesson::create([
-                    'title' => "Lesson " . ($i + 1) . " by " . $teacher->user->name,
-                    'description' => "Description of lesson " . ($i + 1),
+                    'title' => 'Lesson '.($i + 1).' by '.$teacher->user->name,
+                    'description' => 'Description of lesson '.($i + 1),
                     'teacher_id' => $teacher->id,
                     'academic_subject_id' => $subject->id,
                     'student_group_id' => $group->id,
-                    'date' => now()->addDays(rand(-30, 30))
+                    'date' => now()->addDays(rand(-30, 30)),
                 ]);
             }
         }
@@ -219,9 +219,9 @@ class DatabaseSeeder extends Seeder
                     'lesson_id' => $lesson->id,
                     'academic_subject_id' => $lesson->subject_id,
                     'academic_topic_id' => $topic->id,
-                    'title' => "Note " . ($i + 1) . " for " . $lesson->title,
-                    'content' => "Content of note " . ($i + 1) . " for " . $lesson->title,
-                    'file_path' => null
+                    'title' => 'Note '.($i + 1).' for '.$lesson->title,
+                    'content' => 'Content of note '.($i + 1).' for '.$lesson->title,
+                    'file_path' => null,
                 ]);
             }
         }
@@ -247,13 +247,13 @@ class DatabaseSeeder extends Seeder
                         'borrow_date' => $borrowDate,
                         'due_date' => $dueDate,
                         'return_date' => $returnDate,
-                        'status' => $returnDate ? 'returned' : 'borrowed'
+                        'status' => $returnDate ? 'returned' : 'borrowed',
                     ]);
                 }
             }
         }
 
-        Log::info('book borrowings created');;
+        Log::info('book borrowings created');
 
         // Create book subscriptions (1 per 5 students)
         foreach ($allStudents as $index => $student) {
@@ -272,7 +272,7 @@ class DatabaseSeeder extends Seeder
                         'book_id' => $book->id,
                         'start_date' => $startDate,
                         'end_date' => $endDate,
-                        'status' => now()->between($startDate, $endDate) ? 'active' : 'expired'
+                        'status' => now()->between($startDate, $endDate) ? 'active' : 'expired',
                     ]);
                 }
             }
@@ -295,7 +295,7 @@ class DatabaseSeeder extends Seeder
                     'book_id' => $book->id,
                     'start_date' => $startDate,
                     'end_date' => $endDate,
-                    'status' => now()->between($startDate, $endDate) ? 'active' : 'expired'
+                    'status' => now()->between($startDate, $endDate) ? 'active' : 'expired',
                 ]);
             }
         }
@@ -311,7 +311,7 @@ class DatabaseSeeder extends Seeder
                     'student_id' => $student->id,
                     'book_id' => $book->id,
                     'score' => rand(0, 100),
-                    'comments' => rand(0, 1) ? "Comments for assessment by student {$student->user->name}" : null
+                    'comments' => rand(0, 1) ? "Comments for assessment by student {$student->user->name}" : null,
                 ]);
             }
         }
@@ -326,9 +326,9 @@ class DatabaseSeeder extends Seeder
                 BookApproval::create([
                     'librarian_id' => $librarian->id,
                     'book_id' => $book->id,
-//                    'approval_date' => now()->subDays(rand(1, 180)),
+                    //                    'approval_date' => now()->subDays(rand(1, 180)),
                     'status' => ['approved', 'rejected', 'pending'][rand(0, 2)],
-                    'comments' => rand(0, 1) ? "Comments for book approval by librarian {$librarian->user->name}" : null
+                    'comments' => rand(0, 1) ? "Comments for book approval by librarian {$librarian->user->name}" : null,
                 ]);
             }
         }

@@ -13,6 +13,7 @@ class AssignmentAssignedMail extends Mailable
     use Queueable, SerializesModels;
 
     public Assignment $assignment;
+
     public Student $student;
 
     public function __construct(Assignment $assignment, Student $student)
@@ -23,13 +24,13 @@ class AssignmentAssignedMail extends Mailable
 
     public function build()
     {
-        return $this->subject('New Assignment: ' . $this->assignment->title)
-                    ->view('emails.assignment_notification')
-                    ->with([
-                        'assignment' => $this->assignment,
-                        'student' => $this->student,
-                        'teacherName' => $this->assignment->teacher->user->name ?? 'Your Teacher',
-                        'subjectName' => $this->assignment->academicSubject->name ?? 'Unknown Subject',
-                    ]);
+        return $this->subject('New Assignment: '.$this->assignment->title)
+            ->view('emails.assignment_notification')
+            ->with([
+                'assignment' => $this->assignment,
+                'student' => $this->student,
+                'teacherName' => $this->assignment->teacher->user->name ?? 'Your Teacher',
+                'subjectName' => $this->assignment->academicSubject->name ?? 'Unknown Subject',
+            ]);
     }
 }

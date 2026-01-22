@@ -17,12 +17,22 @@ class TokenUsageService
      */
     public function logUsage(User $user, array $usage, string $requestType = 'chat', ?string $model = null): void
     {
+        // Refresh user data to ensure we have the latest subscription cycle info
+        $user->refresh();
         $subscriptionCycle = $user->getCurrentActiveCycle();
+
+        // Retry once if no cycle found (handles stale data/connection issues)
+        if (! $subscriptionCycle) {
+            $user->load('subscriptionCycles');
+            $subscriptionCycle = $user->getCurrentActiveCycle();
+        }
 
         if (! $subscriptionCycle) {
             Log::warning('Token usage logging skipped: No active subscription cycle found for user.', [
                 'user_id' => $user->id,
                 'request_type' => $requestType,
+                'has_active_token_subscription' => $user->activeSubscriptionCycle !== null,
+                'subscription_cycles_count' => $user->subscriptionCycles()->count(),
             ]);
 
             return;
@@ -146,6 +156,16 @@ class TokenUsageService
     }
 
     /**
+     * Get usage stats for a user's current cycle
+     */
+    public function getUserCurrentCycleStats(User $user): ?array
+    {
+        $cycle = $user->getCurrentActiveCycle();
+
+        return $cycle ? $this->getCycleUsageStats($cycle) : null;
+    }
+
+    /**
      * Get usage stats for a cycle
      */
     public function getCycleUsageStats(SubscriptionCycle $cycle): array
@@ -167,16 +187,6 @@ class TokenUsageService
             'days_remaining' => $cycle->getRemainingDays(),
             'is_nearing_depletion' => $cycle->isNearingDepletion(),
         ];
-    }
-
-    /**
-     * Get usage stats for a user's current cycle
-     */
-    public function getUserCurrentCycleStats(User $user): ?array
-    {
-        $cycle = $user->getCurrentActiveCycle();
-
-        return $cycle ? $this->getCycleUsageStats($cycle) : null;
     }
 
     /**

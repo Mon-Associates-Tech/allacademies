@@ -2,12 +2,12 @@
 
 namespace App\Support;
 
+use App\Enums\SubscriptionPackage;
 use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\NumberFormatException;
 use Brick\Math\Exception\RoundingNecessaryException;
 use Brick\Money\Exception\UnknownCurrencyException;
 use Brick\Money\Money;
-use App\Enums\SubscriptionPackage;
 
 class Pricer
 {
@@ -19,17 +19,17 @@ class Pricer
      */
     public static function calculate(SubscriptionPackage $package, int $duration, int $subjects, int $beneficiaries, ?string $tag): Money
     {
-//        $unit = static::getUnitPrice($package, $duration);
+        //        $unit = static::getUnitPrice($package, $duration);
 
-        $unit = SubscriptionCalculator::unitSubscriptionPrice($package,  $duration, $tag);
+        $unit = SubscriptionCalculator::unitSubscriptionPrice($package, $duration, $tag);
 
         $money = Money::of($unit, 'GHS');
 
-        if (SubscriptionPackage::INSTITUTION_FULL === $package) {
+        if ($package === SubscriptionPackage::INSTITUTION_FULL) {
             $money = $money->multipliedBy($beneficiaries);
         }
 
-        if(SubscriptionPackage::INDIVIDUAL_FULL === $package) {
+        if ($package === SubscriptionPackage::INDIVIDUAL_FULL) {
             $money = $money->multipliedBy($subjects);
         }
 
@@ -38,23 +38,23 @@ class Pricer
 
     public static function getUnitPrice(SubscriptionPackage $package, int $duration): int
     {
-        if (SubscriptionPackage::INSTITUTION_FULL === $package && 12 === $duration) {
+        if ($package === SubscriptionPackage::INSTITUTION_FULL && $duration === 12) {
             return 15;
         }
 
-        if (SubscriptionPackage::INSTITUTION_FULL === $package && 6 === $duration) {
+        if ($package === SubscriptionPackage::INSTITUTION_FULL && $duration === 6) {
             return 9;
         }
 
-        if (SubscriptionPackage::INSTITUTION_FULL === $package) {
+        if ($package === SubscriptionPackage::INSTITUTION_FULL) {
             return 6;
         }
 
-        if (12 === $duration) {
+        if ($duration === 12) {
             return 30;
         }
 
-        if (6 === $duration) {
+        if ($duration === 6) {
             return 20;
         }
 

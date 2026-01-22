@@ -18,7 +18,7 @@ class TokenUsageCumulativeTest extends TestCase
     {
         parent::setUp();
 
-        if (!Schema::hasTable('users')) {
+        if (! Schema::hasTable('users')) {
             Schema::create('users', function ($table) {
                 $table->id();
                 $table->string('name');
@@ -29,7 +29,7 @@ class TokenUsageCumulativeTest extends TestCase
             });
         }
 
-        if (!Schema::hasTable('subscription_cycles')) {
+        if (! Schema::hasTable('subscription_cycles')) {
             Schema::create('subscription_cycles', function ($table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
@@ -42,7 +42,7 @@ class TokenUsageCumulativeTest extends TestCase
             });
         }
 
-        if (!Schema::hasTable('open_ai_token_usage_logs')) {
+        if (! Schema::hasTable('open_ai_token_usage_logs')) {
             Schema::create('open_ai_token_usage_logs', function ($table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();

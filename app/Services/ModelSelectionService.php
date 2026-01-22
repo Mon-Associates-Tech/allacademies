@@ -8,34 +8,16 @@ use Illuminate\Support\Facades\Log;
 class ModelSelectionService
 {
     /**
-     * Get the appropriate OpenAI model based on user's subscription
+     * Get appropriate model for image generation
      */
-    public function getModelForUser(User $user): string
+    public function getImageModelForUser(User $user): string
     {
-        // Non-subscribers always get premium model
-        if ($user->role !== \App\Enums\UserRole::SUBSCRIBER) {
-            return config('openai.openai.premium_model', 'gpt-4-turbo');
+        // Image generation typically requires premium access
+        if ($this->hasPremiumAccess($user)) {
+            return 'gpt-image-1';
         }
 
-        // For subscribers, check their active subscription
-        $subscription = $user->activeTokenSubscription;
-
-        if (!$subscription || !$subscription->package) {
-            return config('openai.openai.default_model', 'gpt-4.1-nano');
-        }
-
-        // If package has a specific model defined, use it
-        if (!empty($subscription->package->model)) {
-            return $subscription->package->model;
-        }
-
-        // Determine model based on package type
-        if ($subscription->package->is_free || $subscription->package->price == 0) {
-            return config('openai.openai.default_model', 'gpt-4.1-nano');
-        }
-
-        // Paid packages get premium model
-        return config('openai.openai.premium_model', 'gpt-4-turbo');
+        return 'gpt-image-1'; // Fallback to standard image model
     }
 
     /**
@@ -50,16 +32,29 @@ class ModelSelectionService
     }
 
     /**
-     * Get appropriate model for image generation
+     * Get the appropriate OpenAI model based on user's subscription
      */
-    public function getImageModelForUser(User $user): string
+    public function getModelForUser(User $user): string
     {
-        // Image generation typically requires premium access
-        if ($this->hasPremiumAccess($user)) {
-            return 'gpt-image-1';
+        // Non-guests always get premium model
+        if ($user->role !== \App\Enums\UserRole::GUEST) {
+            return config('openai.openai.premium_model', 'gpt-4-turbo');
         }
 
-        return 'gpt-image-1'; // Fallback to standard image model
+        // For guests, check their active subscription cycle
+        $cycle = $user->getCurrentActiveCycle();
+
+        if (! $cycle || ! $cycle->pricingTier) {
+            return config('openai.openai.default_model', 'gpt-4.1-nano');
+        }
+
+        // Determine model based on pricing tier
+        if ($cycle->pricingTier->name === 'Premium') {
+            return config('openai.openai.premium_model', 'gpt-4-turbo');
+        }
+
+        // Basic tier gets default model
+        return config('openai.openai.default_model', 'gpt-4.1-nano');
     }
 
     /**
@@ -81,13 +76,13 @@ class ModelSelectionService
         $prompt = [
             [
                 'role' => 'system',
-                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests.'
+                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests.',
             ],
             [
                 'role' => 'user',
-                'content' => "User request: " . ($parameters['input'] ?? '') .
-                    "\n\nContext: " . json_encode(array_slice($conversationHistory, -3))
-            ]
+                'content' => 'User request: '.($parameters['input'] ?? '').
+                    "\n\nContext: ".json_encode(array_slice($conversationHistory, -3)),
+            ],
         ];
 
         try {
@@ -101,6 +96,7 @@ class ModelSelectionService
             return $type === 'image' ? 'image' : 'text';
         } catch (\Exception $e) {
             Log::error('Model detection failed', ['error' => $e->getMessage()]);
+
             return 'text';
         }
     }

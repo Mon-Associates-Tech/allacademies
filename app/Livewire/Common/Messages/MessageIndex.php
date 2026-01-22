@@ -11,9 +11,13 @@ class MessageIndex extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 15;
 
     protected $queryString = [
@@ -48,8 +52,9 @@ class MessageIndex extends Component
         $message = Message::findOrFail($messageId);
 
         // Check if user has permission to delete
-        if ($message->sender_id !== auth()->id() && !auth()->user()->hasRole(['admin', 'super-admin'])) {
+        if ($message->sender_id !== auth()->id() && ! auth()->user()->hasRole(['admin', 'super-admin'])) {
             session()->flash('error', 'You do not have permission to delete this message.');
+
             return;
         }
 
@@ -62,7 +67,7 @@ class MessageIndex extends Component
         $message = Message::findOrFail($messageId);
 
         $newMessage = $message->replicate();
-        $newMessage->subject = 'Copy of ' . $message->subject;
+        $newMessage->subject = 'Copy of '.$message->subject;
         $newMessage->status = Message::STATUS_DRAFT;
         $newMessage->sent_at = null;
         $newMessage->scheduled_at = null;
@@ -77,6 +82,7 @@ class MessageIndex extends Component
         }
 
         session()->flash('success', 'Message duplicated successfully.');
+
         return redirect()->route('admin.messages.edit', $newMessage);
     }
 
@@ -85,10 +91,10 @@ class MessageIndex extends Component
         $query = Message::with(['sender', 'recipients'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('subject', 'like', '%' . $this->search . '%')
-                        ->orWhere('body', 'like', '%' . $this->search . '%')
+                    $q->where('subject', 'like', '%'.$this->search.'%')
+                        ->orWhere('body', 'like', '%'.$this->search.'%')
                         ->orWhereHas('sender', function ($sq) {
-                            $sq->where('name', 'like', '%' . $this->search . '%');
+                            $sq->where('name', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -110,7 +116,7 @@ class MessageIndex extends Component
                 'scheduled' => Message::where('status', Message::STATUS_SCHEDULED)->count(),
                 'sent' => Message::where('status', Message::STATUS_SENT)->count(),
                 'failed' => Message::where('status', Message::STATUS_FAILED)->count(),
-            ]
+            ],
         ]);
     }
 }

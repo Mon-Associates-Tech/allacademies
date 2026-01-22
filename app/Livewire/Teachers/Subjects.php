@@ -12,20 +12,28 @@ class Subjects extends Component
     use WithPagination;
 
     public $searchTerm = '';
+
     public $selectedSubject = null;
+
     public $showSubjectModal = false;
+
     public $teacher;
+
     public $viewMode = 'list'; // grid or list view
+
     public $sortBy = 'name';
+
     public $sortDirection = 'asc';
+
     public $filterByLevel = '';
+
     public $filterByGroup = '';
 
     public function mount(): void
     {
         $this->teacher = Auth::user()->teacher;
 
-        if (!$this->teacher) {
+        if (! $this->teacher) {
             $this->teacher = Teacher::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
     }
@@ -69,7 +77,7 @@ class Subjects extends Component
                 'lessons',
                 'academicTopics',
                 'quizzes',
-                'examinations'
+                'examinations',
             ])
             ->findOrFail($subjectId);
 
@@ -90,20 +98,20 @@ class Subjects extends Component
                 'lessons',
                 'academicTopics',
                 'quizzes',
-                'examinations'
+                'examinations',
             ]);
 
         // Apply filters
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('code', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('academicLevel', function($levelQuery) {
-                        $levelQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('code', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('academicLevel', function ($levelQuery) {
+                        $levelQuery->where('name', 'like', '%'.$this->searchTerm.'%');
                     })
-                    ->orWhereHas('academicLevel.academicGroup', function($groupQuery) {
-                        $groupQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+                    ->orWhereHas('academicLevel.academicGroup', function ($groupQuery) {
+                        $groupQuery->where('name', 'like', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -113,7 +121,7 @@ class Subjects extends Component
         }
 
         if ($this->filterByGroup) {
-            $query->whereHas('academicLevel', function($levelQuery) {
+            $query->whereHas('academicLevel', function ($levelQuery) {
                 $levelQuery->where('academic_group_id', $this->filterByGroup);
             });
         }
@@ -122,14 +130,14 @@ class Subjects extends Component
         switch ($this->sortBy) {
             case 'level':
                 $query->join('academic_levels', 'academic_subjects.academic_level_id', '=', 'academic_levels.id')
-                      ->orderBy('academic_levels.name', $this->sortDirection)
-                      ->select('academic_subjects.*');
+                    ->orderBy('academic_levels.name', $this->sortDirection)
+                    ->select('academic_subjects.*');
                 break;
             case 'group':
                 $query->join('academic_levels', 'academic_subjects.academic_level_id', '=', 'academic_levels.id')
-                      ->join('academic_groups', 'academic_levels.academic_group_id', '=', 'academic_groups.id')
-                      ->orderBy('academic_groups.name', $this->sortDirection)
-                      ->select('academic_subjects.*');
+                    ->join('academic_groups', 'academic_levels.academic_group_id', '=', 'academic_groups.id')
+                    ->orderBy('academic_groups.name', $this->sortDirection)
+                    ->select('academic_subjects.*');
                 break;
             default:
                 $query->orderBy($this->sortBy, $this->sortDirection);
@@ -152,7 +160,7 @@ class Subjects extends Component
             'academicLevels' => $academicLevels,
             'availableGroups' => $availableGroups,
             'availableLevels' => $availableLevels,
-            'teacherName' => $this->teacher->user->name
+            'teacherName' => $this->teacher->user->name,
         ]);
     }
 }

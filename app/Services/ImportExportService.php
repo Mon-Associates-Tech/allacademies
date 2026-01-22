@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
-use App\Imports\StudentsImporter;
+use App\Exports\BooksExporter;
 use App\Exports\StudentsExporter;
 use App\Exports\TeachersExporter;
-use App\Exports\BooksExporter;
+use App\Imports\StudentsImporter;
 use Illuminate\Http\UploadedFile;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ImportExportService
 {
@@ -30,25 +29,25 @@ class ImportExportService
 
     public function validateImportFile(UploadedFile $file, string $model): array
     {
-        if (!isset($this->availableImporters[$model])) {
+        if (! isset($this->availableImporters[$model])) {
             return [
                 'valid' => false,
-                'message' => "Import not supported for model: {$model}"
+                'message' => "Import not supported for model: {$model}",
             ];
         }
 
         $requiredColumns = $this->getRequiredColumns($model);
-        $validator = new CsvValidator();
+        $validator = new CsvValidator;
 
         return $validator->validateCsvStructure($file, $requiredColumns);
     }
 
     public function performImport(UploadedFile $file, string $model, array $options = []): array
     {
-        if (!isset($this->availableImporters[$model])) {
+        if (! isset($this->availableImporters[$model])) {
             return [
                 'success' => false,
-                'message' => "Import not supported for model: {$model}"
+                'message' => "Import not supported for model: {$model}",
             ];
         }
 
@@ -65,24 +64,24 @@ class ImportExportService
             return [
                 'success' => true,
                 'message' => 'Import completed successfully',
-                'stats' => $stats
+                'stats' => $stats,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
-                'details' => $e->getTrace()
+                'details' => $e->getTrace(),
             ];
         }
     }
 
     public function performExport(string $model, string $format, array $filters = [], array $options = []): array
     {
-        if (!isset($this->availableExporters[$model])) {
+        if (! isset($this->availableExporters[$model])) {
             return [
                 'success' => false,
-                'message' => "Export not supported for model: {$model}"
+                'message' => "Export not supported for model: {$model}",
             ];
         }
 
@@ -100,13 +99,13 @@ class ImportExportService
                 'success' => true,
                 'message' => 'Export completed successfully',
                 'filename' => $filename,
-                'download_url' => Storage::disk('public')->url($path)
+                'download_url' => Storage::disk('public')->url($path),
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ];
         }
     }
@@ -118,7 +117,7 @@ class ImportExportService
         if (empty($sampleData)) {
             return [
                 'success' => false,
-                'message' => 'No sample data available for this model'
+                'message' => 'No sample data available for this model',
             ];
         }
 
@@ -133,13 +132,13 @@ class ImportExportService
             return [
                 'success' => true,
                 'filename' => $filename,
-                'download_url' => Storage::disk('public')->url($path)
+                'download_url' => Storage::disk('public')->url($path),
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Error generating sample file: ' . $e->getMessage()
+                'message' => 'Error generating sample file: '.$e->getMessage(),
             ];
         }
     }
@@ -182,8 +181,8 @@ class ImportExportService
                     'parent_name' => 'Jane Doe',
                     'parent_phone' => '+233207654321',
                     'parent_email' => 'jane.doe@example.com',
-                    'emergency_contact' => '+233501234567'
-                ]
+                    'emergency_contact' => '+233501234567',
+                ],
             ],
             'teachers' => [
                 [
@@ -200,7 +199,7 @@ class ImportExportService
                     'hire_date' => '2024-01-01',
                     'address' => '456 Teacher Lane, Accra',
                     'emergency_contact' => '+233507654321',
-                ]
+                ],
             ],
             'librarians' => [
                 [
@@ -215,8 +214,8 @@ class ImportExportService
                     'employee_id' => 'LIB2024001',
                     'hire_date' => '2024-01-01',
                     'address' => '789 Library Road, Accra',
-                    'emergency_contact' => '+233607654321'
-                ]
+                    'emergency_contact' => '+233607654321',
+                ],
             ],
             'administrators' => [
                 [
@@ -232,8 +231,8 @@ class ImportExportService
                     'employee_id' => 'ADM2024001',
                     'hire_date' => '2024-01-01',
                     'address' => '321 Admin Street, Accra',
-                    'emergency_contact' => '+233707654321'
-                ]
+                    'emergency_contact' => '+233707654321',
+                ],
             ],
             'parents' => [
                 [
@@ -246,7 +245,7 @@ class ImportExportService
                     'relationship' => 'Father',
                     'occupation' => 'Engineer',
                     'student_id' => 'STD2024001', // Link to student
-                ]
+                ],
             ],
             'books' => [
                 [
@@ -255,9 +254,9 @@ class ImportExportService
                     'isbn' => '978-0123456789',
                     'category' => 'Science',
                     'pages' => '450',
-                    'published_year' => '2023'
-                ]
-            ]
+                    'published_year' => '2023',
+                ],
+            ],
         ];
 
         return $samples[$model] ?? [];
@@ -289,6 +288,7 @@ class ImportExportService
     protected function generateExportFilename(string $model, string $format): string
     {
         $timestamp = now()->format('Y-m-d_H-i-s');
+
         return "{$model}_export_{$timestamp}.{$format}";
     }
 }
