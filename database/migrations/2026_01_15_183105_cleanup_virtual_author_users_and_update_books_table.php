@@ -25,10 +25,11 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
 
-        // Cleanup virtual author users
+        // Cleanup virtual author users - only nullify user_id, don't delete users
         $virtualAuthors = DB::table('users')
             ->where('role', 'author')
             ->whereNotNull('password')
+            ->whereRaw('LENGTH(name) - LENGTH(REPLACE(name, " ", "")) = 0') // Single word names only
             ->get();
 
         foreach ($virtualAuthors as $user) {
@@ -50,9 +51,6 @@ return new class extends Migration
                         ->where('id', $author->id)
                         ->update(['user_id' => null]);
                 }
-
-                // Delete the virtual user account
-                DB::table('users')->where('id', $user->id)->delete();
             }
         }
     }
