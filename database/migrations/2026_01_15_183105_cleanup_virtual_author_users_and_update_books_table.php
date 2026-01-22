@@ -18,9 +18,11 @@ return new class extends Migration
             $table->json('academic_subject_ids')->nullable()->after('academic_level_ids');
         });
 
-        // Make user_id nullable in authors table
+        // Make user_id nullable in authors table to allow standalone author records
         Schema::table('authors', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
             $table->unsignedBigInteger('user_id')->nullable()->change();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
 
         // Cleanup virtual author users
@@ -43,13 +45,13 @@ return new class extends Migration
                             ->update(['name' => $user->name]);
                     }
 
-                    // Nullify user_id
+                    // Nullify user_id in authors table (author record remains)
                     DB::table('authors')
                         ->where('id', $author->id)
                         ->update(['user_id' => null]);
                 }
 
-                // Delete the virtual user
+                // Delete the virtual user account
                 DB::table('users')->where('id', $user->id)->delete();
             }
         }
