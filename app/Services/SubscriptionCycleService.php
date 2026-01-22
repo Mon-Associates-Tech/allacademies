@@ -70,26 +70,24 @@ class SubscriptionCycleService
         $oldGroupId = $existingCycle->subscription_group_id;
 
         // Get the ORIGINAL base tokens from the old tier (not the current allocated amount)
-        // This prevents compounding when merging multiple times
         $oldBaseTokens = $existingCycle->is_merged
-            ? $oldTier->monthly_token_limit  // If already merged, use tier's base limit
-            : $existingCycle->getBaseTokensAllocated(); // Otherwise use current base
+            ? $oldTier->monthly_token_limit
+            : $existingCycle->getBaseTokensAllocated();
 
         $oldTopupTokens = $existingCycle->topup_tokens_allocated;
         $newBaseTokens = $newTier->monthly_token_limit;
 
         $combinedTokens = $oldBaseTokens + $newBaseTokens + $oldTopupTokens;
 
-        // Calculate combined price
-        $oldPrice = $oldTier->getMonthlyPriceIncrement($existingCycle->cycle_number);
-        $newPrice = $newTier->getMonthlyPriceIncrement($newCycleNumber);
-        $combinedPrice = $oldPrice + $newPrice;
+        // Calculate combined price: add the NEW cycle's increment to existing price
+        $newCycleIncrement = $newTier->getMonthlyPriceIncrement($newCycleNumber);
+        $combinedPrice = $existingCycle->current_price + $newCycleIncrement;
 
         // Update existing cycle with merged data
         $existingCycle->update([
-            'pricing_tier_id' => $newTier->id, // Use new tier (most recent)
+            'pricing_tier_id' => $newTier->id,
             'tokens_allocated' => $combinedTokens,
-            'topup_tokens_allocated' => $oldTopupTokens, // Preserve old topup
+            'topup_tokens_allocated' => $oldTopupTokens,
             'current_price' => $combinedPrice,
             'merged_with_group_id' => $newGroupId,
             'is_merged' => true,
@@ -102,6 +100,9 @@ class SubscriptionCycleService
             'old_tokens' => $oldBaseTokens,
             'new_tokens' => $newBaseTokens,
             'combined_tokens' => $combinedTokens,
+            'old_price' => $existingCycle->current_price - $newCycleIncrement,
+            'new_cycle_increment' => $newCycleIncrement,
+            'combined_price' => $combinedPrice,
             'old_tier' => $oldTier->name,
             'new_tier' => $newTier->name,
         ]);
@@ -114,14 +115,14 @@ class SubscriptionCycleService
      */
     protected function createNewCycle(User $user, PricingTier $pricingTier, string $groupId, int $cycleNumber, $startDate, $endDate, bool $isPending = false): SubscriptionCycle
     {
-        $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
+        // Use PricingTier's method to get correct cumulative price
         $cumulativePrice = $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
 
         // If pending payment, always create as inactive with 0 tokens
         $status = 'inactive';
         $tokensAllocated = 0;
-        
-        if (!$isPending) {
+
+        if (! $isPending) {
             // Only check if should be active when not pending payment
             $isCurrentCycle = now()->between($startDate, $endDate);
             $status = $isCurrentCycle ? 'active' : 'inactive';
@@ -426,23 +427,34 @@ class SubscriptionCycleService
     public function activatePendingCycles(string $groupId, PricingTier $pricingTier): int
     {
         $cycles = SubscriptionCycle::where('subscription_group_id', $groupId)
-            ->where('status', 'inactive')
-            ->where('tokens_allocated', 0)
+            ->orWhere('merged_with_group_id', $groupId)
             ->get();
 
         $activatedCount = 0;
         foreach ($cycles as $cycle) {
-            $cycle->tokens_allocated = $pricingTier->monthly_token_limit;
+            // If cycle has no tokens (pending), allocate them
+            if ($cycle->tokens_allocated == 0) {
+                $cycle->tokens_allocated = $pricingTier->monthly_token_limit;
+            }
+
+            // Activate if within date range
             $isCurrentCycle = now()->between($cycle->cycle_start_date, $cycle->cycle_end_date);
-            $cycle->status = $isCurrentCycle ? 'active' : 'inactive';
-            $cycle->save();
-            $activatedCount++;
+            if ($isCurrentCycle && $cycle->status !== 'active') {
+                $cycle->status = 'active';
+                $cycle->save();
+                $activatedCount++;
+            } elseif ($cycle->tokens_allocated > 0 && $cycle->status === 'inactive') {
+                // Just save token allocation for future cycles
+                $cycle->save();
+            }
         }
 
         if ($activatedCount > 0) {
             Log::info('Pending cycles activated after payment', [
                 'group_id' => $groupId,
                 'count' => $activatedCount,
+                'pricing_tier_id' => $pricingTier->id,
+                'tokens_per_cycle' => $pricingTier->monthly_token_limit,
             ]);
         }
 

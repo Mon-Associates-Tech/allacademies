@@ -389,19 +389,22 @@ class TokenSubscriptionService
         $currentCycle = $user->getCurrentActiveCycle();
         $allCycles = $user->subscriptionCycles;
 
+        // Calculate total spent by grouping cycles by subscription_group_id
+        // For each group, only count the last cycle's current_price (which is cumulative for that group)
         $totalSpent = $user->subscriptionCycles()
-//            ->where('status', '!=', 'inactive')
-            ->sum('current_price');
+            ->selectRaw('subscription_group_id, MAX(current_price) as group_total')
+            ->groupBy('subscription_group_id')
+            ->get()
+            ->sum('group_total');
 
         $totalTokensPurchased = $user->subscriptionCycles()
-//            ->where('status', '!=', 'inactive')
             ->sum('tokens_allocated');
 
         $totalTokensUsed = $user->tokenUsageLogs()->sum('total_tokens');
 
         $paidCyclesCount = $user->subscriptionCycles()
-//            ->where('status', '!=', 'inactive')
-            ->count();
+            ->distinct('subscription_group_id')
+            ->count('subscription_group_id');
 
         return [
             'current_subscription' => $currentCycle,

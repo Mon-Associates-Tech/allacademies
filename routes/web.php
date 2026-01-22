@@ -375,7 +375,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Token Payment Routes
     Route::prefix('token-payments')->name('token-payments.')->group(function () {
-        Route::get('/token/{subscription}/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
+        Route::get('/token/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
         Route::get('/callback', [TokenPaymentController::class, 'callback'])->name('callback');
     });
 
