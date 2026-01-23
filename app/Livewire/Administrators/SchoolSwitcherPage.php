@@ -3,7 +3,6 @@
 namespace App\Livewire\Administrators;
 
 use App\Models\School;
-use Illuminate\Http\RedirectResponse;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -92,7 +91,7 @@ class SchoolSwitcherPage extends Component
         // return redirect()->route('admin.school-switcher');
     }
 
-    public function viewSchoolDetails($schoolId): RedirectResponse
+    public function viewSchoolDetails($schoolId)
     {
         return redirect()->route('admin.school-details', $schoolId);
     }
