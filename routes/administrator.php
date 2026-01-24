@@ -9,6 +9,7 @@ use App\Livewire\Administrators\BookManagement;
 use App\Livewire\Administrators\GroupManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
+use App\Livewire\Administrators\ReportCardManagement;
 use App\Livewire\Administrators\SchoolSwitcherPage;
 use App\Livewire\Administrators\StudentManagement;
 use App\Livewire\Administrators\SubjectManagement;
@@ -41,6 +42,9 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
     Route::get('datamanager', [\App\Http\Controllers\Student\StudentManagementController::class, 'index'])->name('data-manager');
+
+    // Report Card Management
+    Route::get('/report-cards', ReportCardManagement::class)->name('report-cards');
 
     // Main activity trail page
     Route::get('/admin/activity-trail', [ActivityTrailController::class, 'index'])

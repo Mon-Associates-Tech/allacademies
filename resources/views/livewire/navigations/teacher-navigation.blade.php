@@ -211,6 +211,21 @@
             </a>
         </li>
 
+        <!-- Report Cards -->
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.report-cards') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('teachers.report-cards')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('teachers.report-cards') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-3h8v2H8v-2zm0-3h5v2H8V9z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Report Cards</span>
+                </div>
+            </a>
+        </li>
+
         <!-- Notifications -->
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
