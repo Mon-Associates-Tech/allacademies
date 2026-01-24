@@ -148,12 +148,14 @@ class TokenSubscriptionController extends Controller
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
 
+        // Calculate total price using same logic as checkout
+        $totalPrice = 0;
+        for ($cycleNumber = 1; $cycleNumber <= $months; $cycleNumber++) {
+            $totalPrice += $pricingTier->getMonthlyPriceIncrement($cycleNumber);
+        }
+
         // Create subscription cycles as PENDING (no tokens assigned yet)
         $cycles = $this->cycleService->createSubscriptionCycles($user, $pricingTier, $months, true);
-
-        // Get total price from last cycle (cumulative)
-        $lastCycle = $cycles[count($cycles) - 1];
-        $totalPrice = (float) $lastCycle->current_price;
         $groupId = $cycles[0]->subscription_group_id;
 
         \Log::info('Processing payment for multi-month subscription', [
