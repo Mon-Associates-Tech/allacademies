@@ -432,19 +432,27 @@ class SubscriptionCycleService
 
         $activatedCount = 0;
         foreach ($cycles as $cycle) {
-            // If cycle has no tokens (pending), allocate them
-            if ($cycle->tokens_allocated == 0) {
+            $tokensAdded = false;
+
+            // New cycles from this subscription (not merged)
+            if ($cycle->subscription_group_id === $groupId && $cycle->tokens_allocated == 0) {
                 $cycle->tokens_allocated = $pricingTier->monthly_token_limit;
+                $tokensAdded = true;
             }
 
-            // Activate if within date range
+            // Merged cycles - add new subscription's tokens
+            if ($cycle->merged_with_group_id === $groupId && $cycle->is_merged) {
+                $cycle->tokens_allocated += $pricingTier->monthly_token_limit;
+                $tokensAdded = true;
+            }
+
             $isCurrentCycle = now()->between($cycle->cycle_start_date, $cycle->cycle_end_date);
             if ($isCurrentCycle && $cycle->status !== 'active') {
                 $cycle->status = 'active';
-                $cycle->save();
                 $activatedCount++;
-            } elseif ($cycle->tokens_allocated > 0 && $cycle->status === 'inactive') {
-                // Just save token allocation for future cycles
+            }
+
+            if ($tokensAdded || $cycle->isDirty('status')) {
                 $cycle->save();
             }
         }

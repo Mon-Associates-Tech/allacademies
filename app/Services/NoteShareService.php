@@ -48,8 +48,8 @@ class NoteShareService
                     $share = $this->createIndividualShare($note, $user, $canEdit);
                     if ($share->wasRecentlyCreated) {
                         $sharesCreated++;
-                        $usersNotified[] = $user;
                     }
+                    $usersNotified[] = $user;
                 }
             } else {
                 // For group-based sharing, create one share record per group
@@ -104,8 +104,20 @@ class NoteShareService
 
         DB::transaction(function () use ($note, $email, $user, $canEdit, &$sharesCreated) {
             if ($user) {
-                // User exists - create regular share
-                $share = $this->createIndividualShare($note, $user, $canEdit);
+                // User exists - create individual share with user_id
+                $share = NoteShare::updateOrCreate(
+                    [
+                        'note_id' => $note->id,
+                        'shared_with_user_id' => $user->id,
+                        'share_type' => self::SHARE_INDIVIDUAL,
+                    ],
+                    [
+                        'can_edit' => $canEdit,
+                        'shareable_type' => null,
+                        'shareable_id' => null,
+                        'guest_email' => null,
+                    ]
+                );
                 if ($share->wasRecentlyCreated) {
                     $sharesCreated++;
                 }
@@ -179,11 +191,36 @@ class NoteShareService
     {
         $recipients = collect();
 
+        // Email shares don't use resolveRecipients - they're handled separately
+        if ($shareType === self::SHARE_EMAIL) {
+            return $recipients;
+        }
+
+        // Cast IDs to integers for database queries
+        $ids = array_map('intval', $ids);
+
+        \Log::info('Resolving recipients', [
+            'share_type' => $shareType,
+            'ids' => $ids,
+            'school_id' => $schoolId,
+        ]);
+
         switch ($shareType) {
             case self::SHARE_INDIVIDUAL:
-                $recipients = User::whereIn('id', $ids)
-                    ->where('school_id', $schoolId)
-                    ->get();
+                \Log::info('Querying individual users', [
+                    'ids' => $ids,
+                    'school_id' => $schoolId,
+                ]);
+                $query = User::whereIn('id', $ids);
+                \Log::info('SQL Query', [
+                    'sql' => $query->toSql(),
+                    'bindings' => $query->getBindings(),
+                ]);
+                $recipients = $query->get();
+                \Log::info('Individual users found', [
+                    'count' => $recipients->count(),
+                    'user_ids' => $recipients->pluck('id')->toArray(),
+                ]);
                 break;
 
             case self::SHARE_ACADEMIC_GROUP:
@@ -216,6 +253,12 @@ class NoteShareService
                     ->get();
                 break;
         }
+
+        \Log::info('Recipients resolved', [
+            'share_type' => $shareType,
+            'count' => $recipients->count(),
+            'recipient_ids' => $recipients->pluck('id')->toArray(),
+        ]);
 
         // Log recipients without valid emails
         $invalidEmailUsers = $recipients->filter(function ($user) {

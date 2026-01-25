@@ -256,6 +256,9 @@ class NotesController extends Controller
         return redirect()->route('notes.index')->with('success', 'Note deleted successfully.');
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function share(Request $request, Note $note)
     {
         if ($note->user_id !== Auth::id()) {
@@ -263,9 +266,9 @@ class NotesController extends Controller
         }
 
         $request->validate([
-            'share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide',
+            'share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide,email',
             'recipient_ids' => 'required|array|min:1',
-            'recipient_ids.*' => 'required|integer',
+            'recipient_ids.*' => $request->share_type === 'email' ? 'required|string' : 'required',
             'can_edit' => 'boolean',
         ]);
 

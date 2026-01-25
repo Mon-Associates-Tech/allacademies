@@ -80,9 +80,21 @@ class Note extends Model
             return true;
         }
 
-        // Check group-based shares
+        // Check guest email shares
         $user = User::find($userId);
-        if (! $user || ! $user->student) {
+        if ($user && $user->email) {
+            if ($this->shares()->where('guest_email', $user->email)->exists()) {
+                return true;
+            }
+        }
+
+        // Check group-based shares
+        if (! $user) {
+            return false;
+        }
+
+        // If user doesn't have a student record, only check individual shares (already done above)
+        if (! $user->student) {
             return false;
         }
 
