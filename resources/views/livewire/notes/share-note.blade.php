@@ -187,8 +187,6 @@
             <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
             @enderror
 
-            {{ json_encode($this->selectedRecipients) }}
-
             @if(!empty($selectedRecipients))
                 <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p class="text-sm text-blue-800 dark:text-blue-300">
