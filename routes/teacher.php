@@ -1,7 +1,5 @@
 <?php
 
-use App\Livewire\Students\VirtualClassroom\MyVirtualSessions;
-use App\Livewire\Students\VirtualClassroom\ViewSessionRecordings;
 use App\Livewire\Teachers\Activities;
 use App\Livewire\Teachers\Assignments;
 use App\Livewire\Teachers\Attendance\AttendanceHistory;
@@ -36,7 +34,6 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
     Route::get('/create-assignment', CreateAssignment::class)->name('assignments.create');
     Route::get('/assignments/{assignment}/edit', App\Livewire\Teachers\EditAssignment::class)->name('assignments.edit');
 
-
     Route::get('students', Students::class)->name('students.index');
     Route::get('/students/{student}', StudentDetails::class)
         ->name('student.details');
@@ -44,19 +41,17 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
     Route::get('performance', StudentPerformances::class)->name('performance');
     Route::get('account', TeacherProfile::class)->name('account');
     Route::get('activities', Activities::class)->name('activities');
-//    Route::get('notifications', TeacherNotifications::class)->name('notifications.index');
+    //    Route::get('notifications', TeacherNotifications::class)->name('notifications.index');
     Route::get('schedules', Schedules::class)->name('schedules');
     Route::get('classroom', VirtualClassroom::class)->name('classroom');
     Route::get('submissions/{submission}', ViewAssignmentSubmission::class)
         ->name('submissions.view');
-
 
     Route::get('/attendance', AttendanceList::class)->name('attendance.index');
     Route::get('/attendance/take', TakeAttendance::class)->name('attendance.take');
     Route::get('/attendance/{attendance}/edit', TakeAttendance::class)->name('attendance.edit');
     Route::get('/attendance/{student}/history', AttendanceHistory::class)
         ->name('attendance.history');
-
 
     // Message index - view all sent messages
     Route::get('/messages', MessageIndex::class)->name('messages.index');
@@ -86,4 +81,3 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
 });
 
 Route::get('teachers/{user}/profile', PublicProfile::class)->name('teachers.profile.public');
-

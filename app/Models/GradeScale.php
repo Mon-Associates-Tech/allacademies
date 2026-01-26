@@ -13,7 +13,7 @@ class GradeScale extends Model
         'max_score',
         'letter_grade',
         'grade_point',
-        'remarks'
+        'remarks',
     ];
 
     public function school()
@@ -32,4 +32,3 @@ class GradeScale extends Model
         return $scale ? $scale->letter_grade : 'N/A';
     }
 }
-

@@ -15,9 +15,13 @@ class VirtualSessionParticipants extends Component
     use WithPagination;
 
     public VirtualSession $session;
+
     public $search = '';
+
     public $statusFilter = 'all'; // all, invited, joined, left, declined
+
     public $showAddModal = false;
+
     public $selectedStudents = [];
 
     public function mount(VirtualSession $session)
@@ -32,7 +36,7 @@ class VirtualSessionParticipants extends Component
 
     public function toggleAddModal()
     {
-        $this->showAddModal = !$this->showAddModal;
+        $this->showAddModal = ! $this->showAddModal;
         $this->selectedStudents = [];
     }
 
@@ -40,6 +44,7 @@ class VirtualSessionParticipants extends Component
     {
         if (empty($this->selectedStudents)) {
             $this->dispatch('error', 'Please select at least one student.');
+
             return;
         }
 
@@ -50,7 +55,7 @@ class VirtualSessionParticipants extends Component
                 ->where('user_id', Student::find($studentId)->user_id)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 $student = Student::with('user')->find($studentId);
 
                 $participant = SessionParticipant::create([
@@ -79,6 +84,7 @@ class VirtualSessionParticipants extends Component
 
         if ($participant->virtual_session_id !== $this->session->id) {
             $this->dispatch('error', 'Invalid participant.');
+
             return;
         }
 
@@ -92,6 +98,7 @@ class VirtualSessionParticipants extends Component
 
         if ($participant->virtual_session_id !== $this->session->id) {
             $this->dispatch('error', 'Invalid participant.');
+
             return;
         }
 

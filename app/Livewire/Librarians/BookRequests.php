@@ -13,11 +13,17 @@ class BookRequests extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'pending';
+
     public $selectedDate = '';
+
     public $showApprovalModal = false;
+
     public $selectedRequest = null;
+
     public $rejectionReason = '';
+
     public $customDueDate = '';
 
     protected $queryString = [
@@ -43,13 +49,13 @@ class BookRequests extends Component
             ->where('status', $this->statusFilter);
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->whereHas('student.user', function($user) {
-                    $user->where('name', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->whereHas('student.user', function ($user) {
+                    $user->where('name', 'like', '%'.$this->search.'%');
                 })
-                ->orWhereHas('book', function($book) {
-                    $book->where('title', 'like', '%' . $this->search . '%');
-                });
+                    ->orWhereHas('book', function ($book) {
+                        $book->where('title', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 

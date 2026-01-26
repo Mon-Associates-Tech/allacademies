@@ -14,7 +14,7 @@ class ReportCardGrade extends Model
         'final_exam_score',
         'total_score',
         'grade_label',
-        'remarks'
+        'remarks',
     ];
 
     public function reportCard()
@@ -32,4 +32,3 @@ class ReportCardGrade extends Model
         return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 }
-

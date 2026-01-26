@@ -22,7 +22,7 @@ return new class extends Migration
                 'award',
                 'certification',
                 'milestone',
-                'other'
+                'other',
             ]);
             $table->foreignId('recorded_by_id')->constrained('users');
             $table->datetime('recorded_date');

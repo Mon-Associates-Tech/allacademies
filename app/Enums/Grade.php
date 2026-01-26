@@ -96,7 +96,7 @@ enum Grade: string
         if ($this === self::A) {
             return '90-100%';
         }
-        
-        return $this->getMinimumPercentage() . '-' . $this->getMaximumPercentage() . '%';
+
+        return $this->getMinimumPercentage().'-'.$this->getMaximumPercentage().'%';
     }
 }

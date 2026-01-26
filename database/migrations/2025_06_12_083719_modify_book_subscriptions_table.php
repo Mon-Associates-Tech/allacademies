@@ -9,9 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('book_subscriptions', function (Blueprint $table) {
-            $table->string('reference')->nullable()->unique()->after('status');
-            $table->decimal('annual_fee', 8, 2)->nullable()->after('reference');
-            $table->timestamp('payment_completed_at')->nullable()->after('annual_fee');
+            if (!Schema::hasColumn('book_subscriptions', 'reference')) {
+                $table->string('reference')->nullable()->unique()->after('status');
+            }
+            if (!Schema::hasColumn('book_subscriptions', 'annual_fee')) {
+                $table->decimal('annual_fee', 8, 2)->nullable()->after('reference');
+            }
+            if (!Schema::hasColumn('book_subscriptions', 'payment_completed_at')) {
+                $table->timestamp('payment_completed_at')->nullable()->after('annual_fee');
+            }
         });
     }
 

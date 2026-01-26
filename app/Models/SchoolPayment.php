@@ -6,12 +6,13 @@ use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class SchoolPayment extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -44,7 +45,8 @@ class SchoolPayment extends Model
         'created_by',
         'verified_by',
         'verified_at',
-        'payment_structure_id'
+        'payment_structure_id',
+        'subaccount_id',
     ];
 
     protected $casts = [
@@ -67,13 +69,19 @@ class SchoolPayment extends Model
     {
         parent::boot();
 
+        Relation::morphMap([
+            'parent' => StudentParent::class,
+            'student' => Student::class,
+            'other' => User::class,
+        ]);
+
         static::creating(function ($payment) {
             if (empty($payment->reference)) {
                 $payment->reference = $payment->generateReference();
             }
 
             // Auto-populate academic context from student if not provided
-            if ($payment->student_id && !$payment->academic_group_id) {
+            if ($payment->student_id && ! $payment->academic_group_id) {
                 $student = Student::find($payment->student_id);
                 if ($student) {
                     $payment->academic_group_id = $student->academic_group_id;
@@ -114,9 +122,9 @@ class SchoolPayment extends Model
         return $this->belongsTo(AcademicPeriod::class);
     }
 
-    public function payer(): BelongsTo
+    public function payer()
     {
-        return $this->belongsTo(User::class, 'payer_id');
+        return $this->morphTo();
     }
 
     public function creator(): BelongsTo
@@ -132,6 +140,11 @@ class SchoolPayment extends Model
     public function schoolPaymentType(): BelongsTo
     {
         return $this->belongsTo(SchoolPaymentStructure::class);
+    }
+
+    public function subaccount(): BelongsTo
+    {
+        return $this->belongsTo(Subaccount::class);
     }
 
     // Scopes
@@ -207,6 +220,7 @@ class SchoolPayment extends Model
         $prefix = 'PAY';
         $timestamp = now()->format('YmdHis');
         $random = strtoupper(Str::random(6));
+
         return "{$prefix}-{$timestamp}-{$random}";
     }
 
@@ -260,10 +274,17 @@ class SchoolPayment extends Model
         }
 
         if ($this->payer) {
-            return $this->payer->name;
+            // For parent payers, get the user's name through the relationship
+            if ($this->payer_type === 'parent' && isset($this->payer->user)) {
+                return $this->payer->user->name ?? 'Unknown Payer';
+            }
+
+            // For student and other payers, directly access the name
+            return $this->payer->name ?? 'Unknown Payer';
         }
 
-        return 'Unknown Payer';
+        // Fallback to payer_name or payer_email if relationship failed
+        return $this->payer_name ?? $this->payer_email ?? 'Unknown Payer';
     }
 
     // Payment type constants
@@ -295,7 +316,7 @@ class SchoolPayment extends Model
             'annual' => 'Annual',
             'monthly' => 'Monthly',
             'one_time' => 'One Time',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
     }
 

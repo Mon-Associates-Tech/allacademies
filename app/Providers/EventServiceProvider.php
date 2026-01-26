@@ -51,11 +51,11 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         Event::listen(Login::class, static function (Login $event) {
-           // app(UserLoginService::class)->handleLogin($event->user);
+            // app(UserLoginService::class)->handleLogin($event->user);
         });
 
         Event::listen(Logout::class, static function (Logout $event) {
-           // app(UserLoginService::class)->handleLogout($event->user, 'manual');
+            // app(UserLoginService::class)->handleLogout($event->user, 'manual');
         });
     }
 

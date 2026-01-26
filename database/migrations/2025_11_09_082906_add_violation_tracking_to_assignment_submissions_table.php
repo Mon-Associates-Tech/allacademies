@@ -17,7 +17,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('assignment_submissions',static function (Blueprint $table) {
+        Schema::table('assignment_submissions', static function (Blueprint $table) {
             $table->dropColumn(['tab_switch_count', 'violation_logs', 'cancelled_due_to_violation']);
         });
     }

@@ -9,11 +9,17 @@ use Livewire\Component;
 class BookTableOfContents extends Component
 {
     public Book $book;
+
     public $searchTerm = '';
+
     public $expandedChapters = [];
+
     public $viewMode = 'detailed'; // 'detailed' or 'compact'
+
     public $showPageNumbers = true;
+
     public $highlightedChapter = null;
+
     public $filteredChapters = [];
 
     public function mount(Book $book)
@@ -22,7 +28,7 @@ class BookTableOfContents extends Component
         $this->filteredChapters = $this->book->formatted_table_of_contents;
 
         // Auto-expand first chapter if it has sections
-        if (!empty($this->filteredChapters) && !empty($this->filteredChapters[0]['sections'])) {
+        if (! empty($this->filteredChapters) && ! empty($this->filteredChapters[0]['sections'])) {
             $this->expandedChapters[] = 1;
         }
     }
@@ -81,7 +87,7 @@ class BookTableOfContents extends Component
 
     public function togglePageNumbers()
     {
-        $this->showPageNumbers = !$this->showPageNumbers;
+        $this->showPageNumbers = ! $this->showPageNumbers;
     }
 
     public function jumpToChapter($chapterNumber)
@@ -89,7 +95,7 @@ class BookTableOfContents extends Component
         $this->highlightedChapter = $chapterNumber;
 
         // Auto-expand if not already expanded
-        if (!in_array($chapterNumber, $this->expandedChapters)) {
+        if (! in_array($chapterNumber, $this->expandedChapters)) {
             $this->expandedChapters[] = $chapterNumber;
         }
 
@@ -122,15 +128,15 @@ class BookTableOfContents extends Component
         if ($readingTimeMinutes < 1) {
             return '< 1 min';
         } elseif ($readingTimeMinutes < 60) {
-            return round($readingTimeMinutes) . ' min';
+            return round($readingTimeMinutes).' min';
         } else {
             $hours = floor($readingTimeMinutes / 60);
             $minutes = round($readingTimeMinutes % 60);
 
             if ($minutes === 0) {
-                return $hours . 'h';
+                return $hours.'h';
             } else {
-                return $hours . 'h ' . $minutes . 'm';
+                return $hours.'h '.$minutes.'m';
             }
         }
     }
@@ -139,6 +145,7 @@ class BookTableOfContents extends Component
     {
         if (empty($this->searchTerm)) {
             $this->filteredChapters = $this->book->formatted_table_of_contents;
+
             return;
         }
 
@@ -157,7 +164,7 @@ class BookTableOfContents extends Component
                 }
 
                 // Search in sections
-                if (!empty($chapter['sections'])) {
+                if (! empty($chapter['sections'])) {
                     foreach ($chapter['sections'] as $section) {
                         if (str_contains(strtolower($section), $searchTerm)) {
                             return true;
@@ -182,7 +189,7 @@ class BookTableOfContents extends Component
     {
         // Generate a text version of the table of contents
         $tocText = "Table of Contents - {$this->book->title}\n";
-        $tocText .= str_repeat("=", 50) . "\n\n";
+        $tocText .= str_repeat('=', 50)."\n\n";
 
         foreach ($this->book->formatted_table_of_contents as $chapter) {
             $tocText .= "Chapter {$chapter['chapter_number']}: {$chapter['title']}\n";
@@ -191,11 +198,11 @@ class BookTableOfContents extends Component
                 $tocText .= "  {$chapter['page_range']}\n";
             }
 
-            if (!empty($chapter['description'])) {
+            if (! empty($chapter['description'])) {
                 $tocText .= "  {$chapter['description']}\n";
             }
 
-            if (!empty($chapter['sections'])) {
+            if (! empty($chapter['sections'])) {
                 foreach ($chapter['sections'] as $section) {
                     $tocText .= "    • {$section}\n";
                 }

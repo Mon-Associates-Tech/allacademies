@@ -4,39 +4,55 @@ namespace App\Livewire\Media;
 
 use App\Models\Media\MediaFile;
 use App\Models\Media\MediaFolder;
+use App\Services\MediaService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Services\MediaService;
 
 class MediaLibrary extends Component
 {
     use WithFileUploads;
 
     public $currentFolderId = null;
+
     public $selectedFiles = [];
+
     public $selectedFolders = [];
+
     public $view = 'grid'; // 'grid' or 'list'
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $search = '';
+
     public $filterMimeType = '';
+
     public $showUploadModal = false;
+
     public $showCreateFolderModal = false;
+
     public $showFileDetailsModal = false;
+
     public $showMoveModal = false;
+
     public $showDeleteModal = false;
 
     // Upload properties
     public $uploadFiles = [];
+
     public $uploadProgress = 0;
 
     // Folder creation
     public $newFolderName = '';
+
     public $newFolderDescription = '';
 
     // File details
     public $selectedFile = null;
+
     public $fileAltText = '';
+
     public $fileDescription = '';
 
     // Move operation
@@ -47,13 +63,14 @@ class MediaLibrary extends Component
 
     // Data
     public $folders = [];
+
     public $files = [];
 
     protected $listeners = [
         'fileUploaded' => 'refreshContent',
         'folderCreated' => 'refreshContent',
         'fileDeleted' => 'refreshContent',
-        'fileMoved' => 'refreshContent'
+        'fileMoved' => 'refreshContent',
     ];
 
     protected MediaService $mediaService;
@@ -65,7 +82,7 @@ class MediaLibrary extends Component
 
     public function mount()
     {
-//        $this->currentFolderId = $folderId;
+        //        $this->currentFolderId = $folderId;
         $this->refreshContent();
     }
 
@@ -78,7 +95,7 @@ class MediaLibrary extends Component
     {
         $content = $this->mediaService->getFolderContents($this->currentFolderId, [
             'search' => $this->search,
-            'mime_type' => $this->filterMimeType
+            'mime_type' => $this->filterMimeType,
         ]);
 
         $this->folders = $content['folders'];
@@ -99,7 +116,7 @@ class MediaLibrary extends Component
     public function toggleFileSelection($fileId)
     {
         if (in_array($fileId, $this->selectedFiles)) {
-            $this->selectedFiles = array_filter($this->selectedFiles, fn($id) => $id !== $fileId);
+            $this->selectedFiles = array_filter($this->selectedFiles, fn ($id) => $id !== $fileId);
         } else {
             $this->selectedFiles[] = $fileId;
         }
@@ -108,7 +125,7 @@ class MediaLibrary extends Component
     public function toggleFolderSelection($folderId)
     {
         if (in_array($folderId, $this->selectedFolders)) {
-            $this->selectedFolders = array_filter($this->selectedFolders, fn($id) => $id !== $folderId);
+            $this->selectedFolders = array_filter($this->selectedFolders, fn ($id) => $id !== $folderId);
         } else {
             $this->selectedFolders[] = $folderId;
         }
@@ -138,13 +155,14 @@ class MediaLibrary extends Component
         // Debug: Check if files are actually selected
         if (empty($this->uploadFiles)) {
             $this->dispatch('notify', 'No files selected for upload.', 'warning');
+
             return;
         }
 
         logError($this->uploadFiles);
 
         $this->validate([
-            'uploadFiles.*' => 'required|file|max:10240' // 10MB max
+            'uploadFiles.*' => 'required|file|max:10240', // 10MB max
         ]);
 
         try {
@@ -158,7 +176,7 @@ class MediaLibrary extends Component
 
             $this->dispatch('notify', 'Files uploaded successfully!', 'success');
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Upload failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', 'Upload failed: '.$e->getMessage(), 'error');
         }
     }
 
@@ -167,7 +185,7 @@ class MediaLibrary extends Component
     {
         $this->validate([
             'newFolderName' => 'required|string|max:255',
-            'newFolderDescription' => 'nullable|string'
+            'newFolderDescription' => 'nullable|string',
         ]);
 
         $this->mediaService->createFolder(
@@ -194,18 +212,19 @@ class MediaLibrary extends Component
     public function updateFileDetails()
     {
         // Add a check to ensure selectedFile exists
-        if (!$this->selectedFile) {
+        if (! $this->selectedFile) {
             $this->dispatch('notify', 'No file selected.', 'error');
+
             return;
         }
         $this->validate([
             'fileAltText' => 'nullable|string',
-            'fileDescription' => 'nullable|string'
+            'fileDescription' => 'nullable|string',
         ]);
 
         $this->selectedFile->update([
             'alt_text' => $this->fileAltText,
-            'description' => $this->fileDescription
+            'description' => $this->fileDescription,
         ]);
 
         $this->showFileDetailsModal = false;
@@ -219,6 +238,7 @@ class MediaLibrary extends Component
     {
         if (empty($this->selectedFiles) && empty($this->selectedFolders)) {
             $this->dispatch('notify', 'Please select files or folders to move.', 'warning');
+
             return;
         }
 
@@ -247,6 +267,7 @@ class MediaLibrary extends Component
     {
         if (empty($this->selectedFiles) && empty($this->selectedFolders)) {
             $this->dispatch('notify', 'Please select files or folders to delete.', 'warning');
+
             return;
         }
 
@@ -268,7 +289,8 @@ class MediaLibrary extends Component
                 try {
                     $this->mediaService->deleteFolder($folder, true);
                 } catch (\Exception $e) {
-                    $this->dispatch('notify', 'Error deleting folder: ' . $e->getMessage(), 'error');
+                    $this->dispatch('notify', 'Error deleting folder: '.$e->getMessage(), 'error');
+
                     continue;
                 }
             }
@@ -317,7 +339,6 @@ class MediaLibrary extends Component
 
         $this->refreshContent();
     }
-
 
     public function getAllFolders()
     {

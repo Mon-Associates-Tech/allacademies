@@ -14,8 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('book_reading_progress', static function (Blueprint $table) {
-            $table->dropConstrainedForeignIdFor(Student::class);
-            $table->foreignIdFor(User::class)->after('book_id');
+            if (Schema::hasColumn('book_reading_progress', 'student_id')) {
+                $table->dropUnique(['student_id']);
+                $table->dropConstrainedForeignIdFor(Student::class);
+            }
+            if (!Schema::hasColumn('book_reading_progress', 'user_id')) {
+                $table->foreignIdFor(User::class)->after('book_id');
+            }
         });
     }
 
@@ -25,8 +30,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('book_reading_progress', static function (Blueprint $table) {
-            $table->dropConstrainedForeignIdFor(User::class);
-            $table->foreignIdFor(Student::class)->after('book_id');
+            if (Schema::hasColumn('book_reading_progress', 'user_id')) {
+                $table->dropConstrainedForeignIdFor(User::class);
+            }
+            if (!Schema::hasColumn('book_reading_progress', 'student_id')) {
+                $table->foreignIdFor(Student::class)->after('book_id');
+            }
         });
     }
 };

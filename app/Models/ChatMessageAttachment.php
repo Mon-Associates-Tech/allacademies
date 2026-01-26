@@ -10,7 +10,7 @@ class ChatMessageAttachment extends Model
 {
     protected $fillable = [
         'chat_message_id', 'file_name', 'file_path',
-        'file_type', 'file_size', 'mime_type'
+        'file_type', 'file_size', 'mime_type',
     ];
 
     public function chatMessage(): BelongsTo
@@ -34,7 +34,7 @@ class ChatMessageAttachment extends Model
             $unitIndex++;
         }
 
-        return round($size, 2) . ' ' . $units[$unitIndex];
+        return round($size, 2).' '.$units[$unitIndex];
     }
 
     public function isImage(): bool
@@ -48,7 +48,7 @@ class ChatMessageAttachment extends Model
             'application/pdf',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain'
+            'text/plain',
         ]);
     }
 }

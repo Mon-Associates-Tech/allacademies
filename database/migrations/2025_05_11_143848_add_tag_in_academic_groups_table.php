@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('academic_groups', function (Blueprint $table) {
-            $table->string('tag')->after('name')->nullable()->default('basic');
+            if (!Schema::hasColumn('academic_groups', 'tag')) {
+                $table->string('tag')->after('name')->nullable()->default('basic');
+            }
         });
     }
 

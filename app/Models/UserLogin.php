@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class UserLogin extends Model
 {
@@ -21,14 +20,15 @@ class UserLogin extends Model
         'login_at',
         'logout_at',
         'duration_minutes',
-        'logout_type'
+        'logout_type',
     ];
 
     protected $table = 'login_activities';
+
     protected $casts = [
         'login_at' => 'datetime',
         'logout_at' => 'datetime',
-        'duration_minutes' => 'integer'
+        'duration_minutes' => 'integer',
     ];
 
     public function user()
@@ -65,16 +65,19 @@ class UserLogin extends Model
                 // Fallback: calculate duration if not stored
                 if ($this->login_at && $this->logout_at) {
                     $calculatedMinutes = $this->logout_at->diffInMinutes($this->login_at);
+
                     return $this->formatMinutesToDuration($calculatedMinutes);
                 }
+
                 return 'Unknown';
             }
         }
 
         // If session is active (no logout_at), show current session duration
-        if (!$this->logout_at && $this->login_at) {
+        if (! $this->logout_at && $this->login_at) {
             $currentDuration = now()->diffInMinutes($this->login_at);
-            return $this->formatMinutesToDuration($currentDuration) . ' (active)';
+
+            return $this->formatMinutesToDuration($currentDuration).' (active)';
         }
 
         return 'Unknown';
@@ -94,6 +97,7 @@ class UserLogin extends Model
             if ($remainingMinutes > 0) {
                 return "{$hours}h {$remainingMinutes}m";
             }
+
             return "{$hours}h";
         }
 
@@ -103,7 +107,7 @@ class UserLogin extends Model
     // Helper method to format time ago
     private function formatTimeAgo($loginTime)
     {
-        if (!$loginTime) {
+        if (! $loginTime) {
             return 'Unknown';
         }
 
@@ -113,27 +117,29 @@ class UserLogin extends Model
         if ($minutesAgo < 1) {
             return 'Just now';
         } elseif ($minutesAgo < 60) {
-            return $minutesAgo . ' minute' . ($minutesAgo > 1 ? 's' : '') . ' ago';
+            return $minutesAgo.' minute'.($minutesAgo > 1 ? 's' : '').' ago';
         } else {
             $hoursAgo = floor($minutesAgo / 60);
             $remainingMinutes = $minutesAgo % 60;
 
-            $timeString = $hoursAgo . ' hour' . ($hoursAgo > 1 ? 's' : '');
+            $timeString = $hoursAgo.' hour'.($hoursAgo > 1 ? 's' : '');
             if ($remainingMinutes > 0) {
-                $timeString .= ' ' . $remainingMinutes . ' minute' . ($remainingMinutes > 1 ? 's' : '');
+                $timeString .= ' '.$remainingMinutes.' minute'.($remainingMinutes > 1 ? 's' : '');
             }
-            return $timeString . ' ago';
+
+            return $timeString.' ago';
         }
     }
 
     // Alternative method for getting current session duration (useful for real-time updates)
     public function getCurrentDurationAttribute()
     {
-        if (!$this->login_at) {
+        if (! $this->login_at) {
             return 0;
         }
 
         $endTime = $this->logout_at ?: now();
+
         return $this->login_at->diffInMinutes($endTime);
     }
 
@@ -146,7 +152,7 @@ class UserLogin extends Model
     // Get logout type display name
     public function getLogoutTypeDisplayAttribute()
     {
-        return match($this->logout_type) {
+        return match ($this->logout_type) {
             'manual' => 'Manual Logout',
             'session_timeout' => 'Session Timeout',
             'forced' => 'Forced Logout',
@@ -158,7 +164,7 @@ class UserLogin extends Model
     // Get human readable time difference for login
     public function getLoginTimeAttribute()
     {
-        if (!$this->login_at) {
+        if (! $this->login_at) {
             return 'Unknown';
         }
 
@@ -168,7 +174,7 @@ class UserLogin extends Model
     // Get human readable time difference for logout
     public function getLogoutTimeAttribute()
     {
-        if (!$this->logout_at) {
+        if (! $this->logout_at) {
             return null;
         }
 

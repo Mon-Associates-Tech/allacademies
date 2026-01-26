@@ -13,7 +13,9 @@ class NotificationsHandler extends AppComponent
     use WithPagination;
 
     public $filter = 'all';
+
     public $selectedNotifications = [];
+
     public $showMarkAllModal = false;
 
     public function filterNotifications($filter)
@@ -41,7 +43,9 @@ class NotificationsHandler extends AppComponent
 
     public function markSelectedAsRead()
     {
-        if (empty($this->selectedNotifications)) return;
+        if (empty($this->selectedNotifications)) {
+            return;
+        }
 
         DatabaseNotification::whereIn('id', $this->selectedNotifications)
             ->where('notifiable_id', Auth::id())
@@ -56,7 +60,7 @@ class NotificationsHandler extends AppComponent
     public function toggleNotificationSelection($notificationId)
     {
         if (in_array($notificationId, $this->selectedNotifications)) {
-            $this->selectedNotifications = array_filter($this->selectedNotifications, function($id) use ($notificationId) {
+            $this->selectedNotifications = array_filter($this->selectedNotifications, function ($id) use ($notificationId) {
                 return $id !== $notificationId;
             });
         } else {

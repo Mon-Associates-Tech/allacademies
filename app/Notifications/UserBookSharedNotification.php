@@ -14,6 +14,7 @@ class UserBookSharedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     protected UserBookShare $share;
+
     protected UserBook $userBook;
 
     public function __construct(UserBookShare $share)

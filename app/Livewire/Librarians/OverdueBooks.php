@@ -2,10 +2,8 @@
 
 namespace App\Livewire\Librarians;
 
-use App\Models\BookBorrowing as BookBorrow  ;
-use App\Models\Student;
+use App\Models\BookBorrowing as BookBorrow;
 use App\Notifications\OverdueBookReminder;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,15 +12,22 @@ class OverdueBooks extends Component
     use WithPagination;
 
     public $search = '';
+
     public $overdueFilter = 'all';
+
     public $sortBy = 'due_date';
+
     public $sortDirection = 'asc';
+
     public $perPage = 15;
 
     // Reminder modal properties
     public $showReminderModal = false;
+
     public $selectedBorrows = [];
+
     public $reminderMessage = '';
+
     public $reminderType = 'email';
 
     protected $queryString = [
@@ -83,8 +88,9 @@ class OverdueBooks extends Component
     {
         $borrow = BookBorrow::with(['student', 'bookCopy.book'])->find($borrowId);
 
-        if (!$borrow) {
+        if (! $borrow) {
             session()->flash('error', 'Borrow record not found.');
+
             return;
         }
 
@@ -107,6 +113,7 @@ class OverdueBooks extends Component
     {
         if (empty($this->selectedBorrows)) {
             session()->flash('error', 'Please select books to send reminders for.');
+
             return;
         }
 
@@ -116,8 +123,9 @@ class OverdueBooks extends Component
         foreach ($this->selectedBorrows as $borrowId) {
             $borrow = BookBorrow::with(['student', 'bookCopy.book'])->find($borrowId);
 
-            if (!$borrow) {
+            if (! $borrow) {
                 $failedCount++;
+
                 continue;
             }
 
@@ -150,8 +158,9 @@ class OverdueBooks extends Component
     {
         $borrow = BookBorrow::with(['bookCopy'])->find($borrowId);
 
-        if (!$borrow) {
+        if (! $borrow) {
             session()->flash('error', 'Borrow record not found.');
+
             return;
         }
 
@@ -171,6 +180,7 @@ class OverdueBooks extends Component
     public function calculateLateFee($expectedReturnDate)
     {
         $daysOverdue = max(0, now()->diffInDays($expectedReturnDate, false));
+
         return $daysOverdue * 0.50; // $0.50 per day
     }
 
@@ -202,16 +212,16 @@ class OverdueBooks extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->whereHas('bookCopy.book', function ($bookQuery) {
-                    $bookQuery->where('title', 'like', '%' . $this->search . '%')
-                             ->orWhere('author', 'like', '%' . $this->search . '%');
+                    $bookQuery->where('title', 'like', '%'.$this->search.'%')
+                        ->orWhere('author', 'like', '%'.$this->search.'%');
                 })
-                ->orWhereHas('student', function ($studentQuery) {
-                    $studentQuery->where('name', 'like', '%' . $this->search . '%')
-                               ->orWhere('email', 'like', '%' . $this->search . '%');
-                })
-                ->orWhereHas('bookCopy', function ($copyQuery) {
-                    $copyQuery->where('barcode', 'like', '%' . $this->search . '%');
-                });
+                    ->orWhereHas('student', function ($studentQuery) {
+                        $studentQuery->where('name', 'like', '%'.$this->search.'%')
+                            ->orWhere('email', 'like', '%'.$this->search.'%');
+                    })
+                    ->orWhereHas('bookCopy', function ($copyQuery) {
+                        $copyQuery->where('barcode', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 

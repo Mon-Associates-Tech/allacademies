@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Models\AcademicYear;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
 use App\Models\SchoolPaymentStructure;
 use Illuminate\Http\Request;
 
@@ -116,7 +116,7 @@ class SchoolPaymentStructureController extends Controller
         $validated['currency'] = 'GHS';
 
         // Create new Academic Year if needed
-        if (!$request->filled('academic_year_id') && $request->has('new_year_start_date')) {
+        if (! $request->filled('academic_year_id') && $request->has('new_year_start_date')) {
             $year = new AcademicYear([
                 'school_id' => $validated['school_id'],
                 'start_date' => $request->new_year_start_date,
@@ -131,7 +131,7 @@ class SchoolPaymentStructureController extends Controller
         }
 
         // Create new Academic Period if needed
-        if (!$request->filled('academic_period_id') && $request->has('new_period_start_date')) {
+        if (! $request->filled('academic_period_id') && $request->has('new_period_start_date')) {
             $period = new AcademicPeriod([
                 'school_id' => $validated['school_id'],
                 'academic_year_id' => $validated['academic_year_id'] ?? null, // Link to the year we just created or selected
@@ -160,7 +160,7 @@ class SchoolPaymentStructureController extends Controller
         $fieldsToRemove = [
             'new_year_start_date', 'new_year_end_date',
             'new_period_name', 'new_period_type', 'new_period_sequence',
-            'new_period_start_date', 'new_period_end_date'
+            'new_period_start_date', 'new_period_end_date',
         ];
 
         foreach ($fieldsToRemove as $field) {

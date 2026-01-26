@@ -6,18 +6,18 @@ use App\Support\Mark;
 use App\Traits\HasQuestionAndAnswer;
 use App\Traits\QuestionOwnership;
 use App\Traits\Trackable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TrueOrFalseQuestion extends Model
 {
     use HasFactory;
-    use SoftDeletes;
-    use Trackable;
     use HasQuestionAndAnswer;
     use QuestionOwnership;
+    use SoftDeletes;
+    use Trackable;
 
     /**
      * @var array<int, string>
@@ -30,7 +30,7 @@ class TrueOrFalseQuestion extends Model
         'academic_topic_id',
         'academic_subtopic_id',
         'added_by',
-        'modified_by'
+        'modified_by',
     ];
 
     /**

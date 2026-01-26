@@ -7,7 +7,7 @@
                     OpenAI Token Usage
                 </h3>
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ $subscription->package->name }} Package ({{ $subscription->package->model }})
+                    {{ $subscription->package?->name }} Package ({{ $subscription->package?->model }})
                 </span>
             </div>
 

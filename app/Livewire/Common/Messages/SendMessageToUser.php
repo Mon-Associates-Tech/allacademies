@@ -4,8 +4,8 @@ namespace App\Livewire\Common\Messages;
 
 use App\Models\Message;
 use App\Services\MessageService;
-use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class SendMessageToUser extends Component
@@ -14,14 +14,20 @@ class SendMessageToUser extends Component
     use WithFileUploads;
 
     public $userId;
+
     public $userName;
+
     public $subject = '';
+
     public $body = '';
+
     public $isUrgent = false;
 
     // File uploads
     public $attachments = [];
+
     public $tempAttachments = [];
+
     private $fileCache = [];
 
     protected $rules = [
@@ -55,13 +61,13 @@ class SendMessageToUser extends Component
 
         // Validate each new attachment
         $this->validate([
-            'attachments.*' => 'file|max:10240'
+            'attachments.*' => 'file|max:10240',
         ]);
 
         foreach ($this->attachments as $attachment) {
             // Store file temporarily
             $tempId = (string) \Illuminate\Support\Str::uuid();
-            $tempFilename = $tempId . '.' . $attachment->getClientOriginalExtension();
+            $tempFilename = $tempId.'.'.$attachment->getClientOriginalExtension();
 
             $tempPath = $attachment->storeAs('temp-message-attachments', $tempFilename, 'public');
 
@@ -84,11 +90,11 @@ class SendMessageToUser extends Component
     protected function formatFileSize($bytes)
     {
         if ($bytes < 1024) {
-            return $bytes . ' B';
+            return $bytes.' B';
         } elseif ($bytes < 1048576) {
-            return round($bytes / 1024, 1) . ' KB';
+            return round($bytes / 1024, 1).' KB';
         } else {
-            return round($bytes / 1048576, 1) . ' MB';
+            return round($bytes / 1048576, 1).' MB';
         }
     }
 
@@ -105,7 +111,7 @@ class SendMessageToUser extends Component
 
         $this->tempAttachments = array_filter(
             $this->tempAttachments,
-            fn($att) => (string) $att['id'] !== $attachmentId
+            fn ($att) => (string) $att['id'] !== $attachmentId
         );
 
         if (isset($this->fileCache[$attachmentId])) {
@@ -141,7 +147,7 @@ class SendMessageToUser extends Component
 
         try {
             $messageService->sendMessage($message);
-            session()->flash('success', 'Message sent to ' . $this->userName . ' successfully!');
+            session()->flash('success', 'Message sent to '.$this->userName.' successfully!');
             $this->resetForm();
             $this->dispatch('messageSent');
             $this->dispatch('close-modal', name: 'send-message-to-user');
@@ -153,14 +159,14 @@ class SendMessageToUser extends Component
     protected function saveAttachments(Message $message)
     {
         foreach ($this->tempAttachments as $attachment) {
-            if (!isset($attachment['temp_path']) ||
-                !\Illuminate\Support\Facades\Storage::disk('public')->exists($attachment['temp_path'])) {
+            if (! isset($attachment['temp_path']) ||
+                ! \Illuminate\Support\Facades\Storage::disk('public')->exists($attachment['temp_path'])) {
                 continue;
             }
 
-            $filename = (string) \Illuminate\Support\Str::uuid() . '.' .
+            $filename = (string) \Illuminate\Support\Str::uuid().'.'.
                        pathinfo($attachment['original_filename'], PATHINFO_EXTENSION);
-            $finalPath = 'message-attachments/' . $filename;
+            $finalPath = 'message-attachments/'.$filename;
 
             \Illuminate\Support\Facades\Storage::disk('public')->move($attachment['temp_path'], $finalPath);
 
@@ -191,4 +197,3 @@ class SendMessageToUser extends Component
         return view('livewire.common.messages.send-message-to-user');
     }
 }
-

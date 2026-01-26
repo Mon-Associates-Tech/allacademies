@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -12,32 +13,31 @@ return new class extends Migration {
     {
         Schema::table('users', function (Blueprint $table) {
             // Add school_id for multi-tenancy (nullable for superadmin)
-              $table->unsignedBigInteger('school_id')->nullable()->after('id');
+            $table->unsignedBigInteger('school_id')->nullable()->after('id');
 
             // Update existing fields
-             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('is_active');
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('is_active');
 
             // Add foreign key
-              $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
+            $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
 
             // Add indexes for performance
-              $table->index(['school_id', 'email']);
-              $table->index(['school_id', 'status']);
-              $table->index(['school_id', 'role']);
+            $table->index(['school_id', 'email']);
+            $table->index(['school_id', 'status']);
+            $table->index(['school_id', 'role']);
         });
-
 
         Schema::table('students', function (Blueprint $table) {
             // Add student_id for school-specific identification
-             $table->string('student_id', 50)->after('user_id');
+            $table->string('student_id', 50)->after('user_id');
 
             // Add admission tracking
-             $table->date('admission_date')->nullable()->after('academic_group_id');
-             $table->date('graduation_date')->nullable()->after('admission_date');
-              $table->enum('status', ['active', 'inactive', 'graduated', 'transferred'])->default('active')->after('graduation_date');
+            $table->date('admission_date')->nullable()->after('academic_group_id');
+            $table->date('graduation_date')->nullable()->after('admission_date');
+            $table->enum('status', ['active', 'inactive', 'graduated', 'transferred'])->default('active')->after('graduation_date');
 
             // Add metadata for additional student info
-             $table->json('metadata')->nullable()->after('status');
+            $table->json('metadata')->nullable()->after('status');
 
             // Add unique constraints and indexes
             $table->unique(['school_id', 'student_id'], 'unique_school_student_id');
@@ -48,7 +48,7 @@ return new class extends Migration {
 
         Schema::table('teachers', function (Blueprint $table) {
             // Add school_id if not exists (from your existing School relationship)
-            if (!Schema::hasColumn('teachers', 'school_id')) {
+            if (! Schema::hasColumn('teachers', 'school_id')) {
                 $table->unsignedBigInteger('school_id')->after('id')->nullable();
             }
 
@@ -62,14 +62,12 @@ return new class extends Migration {
             $table->enum('status', ['active', 'inactive', 'terminated'])->default('active')->after('employment_type');
             $table->json('qualifications')->nullable()->after('status');
 
-
             // Add unique constraints and indexes
             $table->unique(['school_id', 'employee_id'], 'unique_school_employee_id');
             $table->index(['school_id', 'status']);
             $table->index(['school_id', 'department']);
             $table->index(['school_id', 'hire_date']);
         });
-
 
         Schema::table('parents', function (Blueprint $table) {
             // Add school_id (parents can be associated with multiple schools through children)
@@ -90,7 +88,6 @@ return new class extends Migration {
             $table->index(['school_id', 'status']);
             $table->index(['user_id', 'school_id']);
         });
-
 
         Schema::table('authors', function (Blueprint $table) {
             // Authors might not belong to specific schools (they can be global)
@@ -137,13 +134,12 @@ return new class extends Migration {
 
         Schema::dropIfExists('user_system_roles');
 
-
         Schema::table('academic_groups', function (Blueprint $table) {
             $table->dropForeign(['school_id']);
             $table->dropIndex(['school_id', 'name']);
             $table->dropIndex(['school_id', 'tag']);
             $table->dropUnique('unique_school_academic_group');
-            if (!Schema::hasColumn('academic_groups', 'school_id')) {
+            if (! Schema::hasColumn('academic_groups', 'school_id')) {
                 $table->dropColumn('school_id');
             }
         });
@@ -168,7 +164,7 @@ return new class extends Migration {
             $table->dropIndex(['school_id', 'admission_date']);
             $table->dropColumn([
                 'student_id', 'admission_date', 'graduation_date',
-                'status', 'metadata'
+                'status', 'metadata',
             ]);
         });
 
@@ -182,7 +178,7 @@ return new class extends Migration {
 
             $table->dropColumn([
                 'employee_id', 'department', 'hire_date', 'termination_date',
-                'salary', 'employment_type', 'status', 'qualifications'
+                'salary', 'employment_type', 'status', 'qualifications',
             ]);
 
             if (Schema::hasColumn('teachers', 'school_id')) {
@@ -197,7 +193,7 @@ return new class extends Migration {
             $table->dropIndex(['user_id', 'school_id']);
             $table->dropColumn([
                 'school_id', 'occupation', 'phone', 'emergency_contact',
-                'address', 'status'
+                'address', 'status',
             ]);
         });
 

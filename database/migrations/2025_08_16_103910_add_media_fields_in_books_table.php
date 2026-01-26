@@ -27,7 +27,7 @@ return new class extends Migration
                 'single_audio_file',
                 'single_video_file',
                 'chapter_audio_files',
-                'chapter_video_files'
+                'chapter_video_files',
             ]);
         });
     }

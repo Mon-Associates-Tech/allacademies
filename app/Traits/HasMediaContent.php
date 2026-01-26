@@ -38,9 +38,11 @@ trait HasMediaContent
      */
     public function hasVideoContent()
     {
-        if (!$this->media) return false;
+        if (! $this->media) {
+            return false;
+        }
 
-        return !empty($this->media->single_video) || !empty($this->media->chapter_videos);
+        return ! empty($this->media->single_video) || ! empty($this->media->chapter_videos);
     }
 
     /**
@@ -48,9 +50,11 @@ trait HasMediaContent
      */
     public function hasAudioContent()
     {
-        if (!$this->media) return false;
+        if (! $this->media) {
+            return false;
+        }
 
-        return !empty($this->media->single_audio) || !empty($this->media->chapter_audios);
+        return ! empty($this->media->single_audio) || ! empty($this->media->chapter_audios);
     }
 
     /**
@@ -58,9 +62,11 @@ trait HasMediaContent
      */
     public function hasChapterContent()
     {
-        if (!$this->media) return false;
+        if (! $this->media) {
+            return false;
+        }
 
-        return !empty($this->media->chapter_videos) || !empty($this->media->chapter_audios);
+        return ! empty($this->media->chapter_videos) || ! empty($this->media->chapter_audios);
     }
 
     /**
@@ -141,4 +147,3 @@ trait HasMediaContent
         return $this->createMedia($mediaData);
     }
 }
-

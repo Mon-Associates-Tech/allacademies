@@ -59,7 +59,7 @@ class Subscription extends Model
         return $this->hasMany(BookSubscription::class);
     }
 
-     public function user()
+    public function user()
     {
         return $this->belongsTo(User::class, 'subscriber_id');
     }

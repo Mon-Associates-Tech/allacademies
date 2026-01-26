@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('academic_periods', function (Blueprint $table) {
-            if(Schema::hasIndex('academic_periods', 'unique_current_period')){
+            if (Schema::hasIndex('academic_periods', 'unique_current_period')) {
                 $table->dropIndex('unique_current_period');
             }
             $table->enum('type', ['term', 'semester', 'trimester', 'session', 'year', 'quarter', 'other'])->change();

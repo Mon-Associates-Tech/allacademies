@@ -15,17 +15,16 @@ use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
 use App\Livewire\Administrators\UserImpersonation;
 use App\Livewire\Administrators\UserLoginLog;
+use App\Livewire\Changelogs\ChangelogList;
+use App\Livewire\Changelogs\CreateChangelog;
 use App\Livewire\Common\ActivityLogManager;
 use App\Livewire\Common\Messages\ComposeMessage;
 use App\Livewire\Common\Messages\MessageEdit;
 use App\Livewire\Common\Messages\MessageIndex;
 use App\Livewire\Common\Messages\MessageShow;
 use App\Livewire\School\SchoolDetails;
-use App\Livewire\Changelogs\ChangelogList;
-use App\Livewire\Changelogs\CreateChangelog;
 use App\Livewire\SchoolSettings\LetterheadSettings;
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
@@ -63,7 +62,6 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/admin/activity-trail/{activity}', [ActivityTrailController::class, 'show'])
         ->name('activity-trail.show');
 
-
     // Messages routes
     Route::prefix('messages')->name('messages.')->group(function () {
         Route::get('/', MessageIndex::class)->name('index');
@@ -71,7 +69,6 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
         Route::get('/{message}', MessageShow::class)->name('show');
         Route::get('/{message}/edit', MessageEdit::class)->name('edit');
     });
-
 
     Route::get('/academic-activities', ActivityLogManager::class)
         ->name('academic-activities')

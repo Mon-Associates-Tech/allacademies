@@ -22,14 +22,14 @@ class BookSubscription extends Model
         'reference',
         'annual_fee',
         'payment_completed_at',
-        'subscribed_by'
+        'subscribed_by',
     ];
 
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'payment_completed_at' => 'datetime',
-        'annual_fee' => 'decimal:2'
+        'annual_fee' => 'decimal:2',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -50,7 +50,8 @@ class BookSubscription extends Model
         return $this->belongsTo(Book::class);
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 

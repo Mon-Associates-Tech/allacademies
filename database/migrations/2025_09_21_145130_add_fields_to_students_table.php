@@ -41,7 +41,7 @@ return new class extends Migration
                 'parent_email',
                 'emergency_contact',
                 'id_card_issue_date',
-                'id_card_expiry_date'
+                'id_card_expiry_date',
             ]);
         });
     }

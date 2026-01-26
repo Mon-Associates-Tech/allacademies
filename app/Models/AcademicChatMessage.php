@@ -35,8 +35,8 @@ class AcademicChatMessage extends Model
     public function scopeConversations($query)
     {
         return $query->select('conversation_id', 'conversation_title', 'user_id')
-                    ->whereNotNull('conversation_id')
-                    ->groupBy('conversation_id', 'conversation_title', 'user_id')
-                    ->orderBy('created_at', 'desc');
+            ->whereNotNull('conversation_id')
+            ->groupBy('conversation_id', 'conversation_title', 'user_id')
+            ->orderBy('created_at', 'desc');
     }
 }

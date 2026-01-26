@@ -4,20 +4,20 @@ namespace App\Listeners;
 
 use App\Models\LoginActivity;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Carbon;
 use Jenssegers\Agent\Agent;
 use Stevebauman\Location\Facades\Location;
-use Illuminate\Support\Carbon;
 
 class StoreUserLoginHistory
 {
     public function handle(Login $event): void
     {
 
-//        LoginActivity::where('user_id', $event->user->id)
-//            ->whereNull('logout_at')
-//            ->update(['logout_at' => Carbon::now()]);
+        //        LoginActivity::where('user_id', $event->user->id)
+        //            ->whereNull('logout_at')
+        //            ->update(['logout_at' => Carbon::now()]);
 
-        $agent = new Agent();
+        $agent = new Agent;
         $ip = request()->ip();
         $location = Location::get($ip) ?? null;
 

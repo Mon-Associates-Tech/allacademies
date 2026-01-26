@@ -14,8 +14,7 @@ return [
     |
     */
 
-
-    /*Set up payment */
+    /* Set up payment */
     'paystack' => [
         'env' => env('PAYSTACK_ENV', 'development'), // 'production' or 'development'
         'production' => [
@@ -27,11 +26,11 @@ return [
             'secret_key' => env('PAYSTACK_SECRET_KEY'),
             'public_key' => env('PAYSTACK_PUBLIC_KEY'),
             'payment_url' => 'https://api.paystack.co',
-        ]
+        ],
     ],
 
     'openai' => [
-    'key' => env('OPENAI_API_KEY'),
+        'key' => env('OPENAI_API_KEY'),
     ],
 
     'mailgun' => [

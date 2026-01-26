@@ -18,34 +18,57 @@ class CreateBook extends Component
 
     // Basic book information
     public $title;
+
     public $slug;
+
     public $authorId;
+
     public $newAuthorName = '';
+
     public $newAuthorEmail = '';
+
     public $showNewAuthorForm = false;
+
     public $bookCategoryId;
+
     public $newCategoryName = '';
+
     public $newCategoryDescription = '';
+
     public $showNewCategoryForm = false;
+
     public $edition;
+
     public $publisher;
+
     public $pages;
+
     public $hasHardcopy = false;
+
     public $hasSoftcopy = false;
+
     public $additionalInfo;
+
     public $coverImage;
+
     public $pdfFile;
+
     public $annualSubscriptionFee = 0;
+
     public $subscriptionConditions;
+
     public $status = 'published'; // Default to published
 
     // Table of Contents
     public $tableOfContents = [];
+
     public $showTableOfContents = false;
+
     public $expandedChapters = [];
 
     // Data collections
     public $authors;
+
     public $bookCategories;
 
     protected $rules = [
@@ -132,21 +155,21 @@ class CreateBook extends Component
 
     public function updatedPages()
     {
-        if ($this->pages && !$this->showTableOfContents) {
+        if ($this->pages && ! $this->showTableOfContents) {
             $this->generateTableOfContents();
         }
     }
 
     public function toggleNewAuthorForm()
     {
-        $this->showNewAuthorForm = !$this->showNewAuthorForm;
+        $this->showNewAuthorForm = ! $this->showNewAuthorForm;
         $this->reset(['newAuthorName', 'newAuthorEmail']);
         $this->resetValidation(['newAuthorName', 'newAuthorEmail']);
     }
 
     public function toggleNewCategoryForm()
     {
-        $this->showNewCategoryForm = !$this->showNewCategoryForm;
+        $this->showNewCategoryForm = ! $this->showNewCategoryForm;
         $this->reset(['newCategoryName', 'newCategoryDescription']);
         $this->resetValidation(['newCategoryName', 'newCategoryDescription']);
     }
@@ -187,7 +210,7 @@ class CreateBook extends Component
             DB::commit();
             session()->flash('message', 'New author created successfully!');
         } catch (\Exception $e) {
-            logError('Exception in createNewAuthor:'. $e);
+            logError('Exception in createNewAuthor:'.$e);
             DB::rollback();
             $this->addError('newAuthorEmail', 'Failed to create author. Please try again.');
         }
@@ -219,14 +242,14 @@ class CreateBook extends Component
 
             session()->flash('message', 'New category created successfully!');
         } catch (\Exception $e) {
-            logError('Exception in createNewCategory:'. $e);
+            logError('Exception in createNewCategory:'.$e);
             $this->addError('newCategoryName', 'Failed to create category. Please try again.');
         }
     }
 
     public function toggleTableOfContents()
     {
-        $this->showTableOfContents = !$this->showTableOfContents;
+        $this->showTableOfContents = ! $this->showTableOfContents;
         if ($this->showTableOfContents && empty($this->tableOfContents)) {
             $this->generateTableOfContents();
         }
@@ -251,15 +274,17 @@ class CreateBook extends Component
                     'description' => '',
                     'page_start' => 1,
                     'page_end' => 10,
-                    'sections' => []
-                ]
+                    'sections' => [],
+                ],
             ];
         }
     }
 
     public function generateTableOfContents()
     {
-        if (!$this->pages) return;
+        if (! $this->pages) {
+            return;
+        }
 
         $chaptersCount = max(1, min(15, intval($this->pages / 20)));
         $this->tableOfContents = [];
@@ -271,7 +296,7 @@ class CreateBook extends Component
                 'description' => "Content for chapter {$i}",
                 'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
                 'page_end' => $i * intval($this->pages / $chaptersCount),
-                'sections' => []
+                'sections' => [],
             ];
         }
     }
@@ -288,7 +313,7 @@ class CreateBook extends Component
             'description' => '',
             'page_start' => $nextPageStart,
             'page_end' => $nextPageStart + 10,
-            'sections' => []
+            'sections' => [],
         ];
     }
 
@@ -313,11 +338,11 @@ class CreateBook extends Component
             'title' => 'New Section',
             'page_start' => $sectionPageStart,
             'page_end' => $sectionPageEnd,
-            'description' => ''
+            'description' => '',
         ];
 
         // Auto-expand the chapter when adding a section
-        if (!in_array($chapterIndex, $this->expandedChapters)) {
+        if (! in_array($chapterIndex, $this->expandedChapters)) {
             $this->expandedChapters[] = $chapterIndex;
         }
     }
@@ -352,12 +377,12 @@ class CreateBook extends Component
                 'title' => "Section {$i}",
                 'page_start' => $sectionPageStart,
                 'page_end' => $sectionPageEnd,
-                'description' => "Content for section {$i}"
+                'description' => "Content for section {$i}",
             ];
         }
 
         // Auto-expand the chapter
-        if (!in_array($chapterIndex, $this->expandedChapters)) {
+        if (! in_array($chapterIndex, $this->expandedChapters)) {
             $this->expandedChapters[] = $chapterIndex;
         }
     }
@@ -367,24 +392,27 @@ class CreateBook extends Component
         $this->validate();
 
         // Validate that at least one format is selected
-        if (!$this->hasHardcopy && !$this->hasSoftcopy) {
+        if (! $this->hasHardcopy && ! $this->hasSoftcopy) {
             $this->addError('hasHardcopy', 'Please select at least one format (hardcopy or softcopy).');
+
             return;
         }
 
         // If softcopy is selected but no PDF file provided
-        if ($this->hasSoftcopy && !$this->pdfFile) {
+        if ($this->hasSoftcopy && ! $this->pdfFile) {
             $this->addError('pdfFile', 'PDF file is required for softcopy books.');
+
             return;
         }
 
         // Additional validation for table of contents
-        if ($this->showTableOfContents && !empty($this->tableOfContents)) {
+        if ($this->showTableOfContents && ! empty($this->tableOfContents)) {
             $errors = $this->validateTableOfContents();
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 foreach ($errors as $field => $message) {
                     $this->addError($field, $message);
                 }
+
                 return;
             }
         }
@@ -430,9 +458,10 @@ class CreateBook extends Component
 
             $statusLabel = PublishingStatus::from($this->status)->getLabel();
             session()->flash('message', "Book created successfully and saved as {$statusLabel}!");
+
             return redirect()->route('admin.book-management');
         } catch (\Exception $e) {
-            logError('Exception in create:'. $e);
+            logError('Exception in create:'.$e);
             DB::rollback();
             $this->addError('general', 'Failed to create book. Please try again.');
         }
@@ -449,7 +478,7 @@ class CreateBook extends Component
             }
 
             // Validate sections
-            if (!empty($chapter['sections'])) {
+            if (! empty($chapter['sections'])) {
                 foreach ($chapter['sections'] as $sectionIndex => $section) {
                     // Section pages must be within chapter bounds
                     if ($section['page_start'] < $chapter['page_start'] || $section['page_end'] > $chapter['page_end']) {
@@ -469,9 +498,10 @@ class CreateBook extends Component
 
     public function cancel()
     {
-        if(auth()->user()->role === 'admin' || auth()->user()->role === 'owner') {
+        if (auth()->user()->role === 'admin' || auth()->user()->role === 'owner') {
             return redirect()->route('admin.book-management');
         }
+
         return redirect()->route('author.books.index');
     }
 

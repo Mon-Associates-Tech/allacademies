@@ -48,6 +48,7 @@ class GenerateRecurringSessionsJob implements ShouldQueue
         // Check if recurrence should be stopped
         if ($parent->recurrence_end_date && now()->gt($parent->recurrence_end_date)) {
             $parent->update(['recurrence_active' => false]);
+
             return;
         }
 
@@ -56,13 +57,13 @@ class GenerateRecurringSessionsJob implements ShouldQueue
             ->orderBy('scheduled_start', 'desc')
             ->first();
 
-        $startFrom = $lastChild 
+        $startFrom = $lastChild
             ? Carbon::parse($lastChild->scheduled_start)
             : Carbon::parse($parent->scheduled_start);
 
         // Generate sessions for the next 8 weeks
         $generateUntil = now()->addWeeks(8);
-        
+
         // Don't generate beyond the recurrence end date
         if ($parent->recurrence_end_date) {
             $generateUntil = min($generateUntil, Carbon::parse($parent->recurrence_end_date));
@@ -85,7 +86,7 @@ class GenerateRecurringSessionsJob implements ShouldQueue
                 ->where('scheduled_start', $currentDate)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 $this->createChildSession($parent, $currentDate);
                 $generatedCount++;
             }
@@ -104,34 +105,34 @@ class GenerateRecurringSessionsJob implements ShouldQueue
             case 'daily':
                 $next->addDays($parent->recurrence_interval);
                 break;
-                
+
             case 'weekly':
                 $recurrenceDays = $parent->recurrence_days ?? [];
                 $currentDayOfWeek = $next->dayOfWeekIso;
                 $found = false;
-                
+
                 // Look for next day in the same week
                 for ($i = 1; $i <= 7; $i++) {
                     $next->addDay();
                     $nextDayOfWeek = $next->dayOfWeekIso;
-                    
+
                     if (in_array($nextDayOfWeek, $recurrenceDays)) {
                         $found = true;
                         break;
                     }
                 }
-                
+
                 // If we've cycled through the week, add interval weeks
-                if (!$found || ($parent->recurrence_interval > 1 && $next->dayOfWeekIso <= $currentDayOfWeek)) {
+                if (! $found || ($parent->recurrence_interval > 1 && $next->dayOfWeekIso <= $currentDayOfWeek)) {
                     $next->addWeeks($parent->recurrence_interval - 1);
-                    
+
                     // Find first occurrence day in the new week
-                    while (!in_array($next->dayOfWeekIso, $recurrenceDays) && $next->dayOfWeek !== 0) {
+                    while (! in_array($next->dayOfWeekIso, $recurrenceDays) && $next->dayOfWeek !== 0) {
                         $next->addDay();
                     }
                 }
                 break;
-                
+
             case 'monthly':
                 $next->addMonths($parent->recurrence_interval);
                 break;
@@ -164,7 +165,7 @@ class GenerateRecurringSessionsJob implements ShouldQueue
                 'webcams_only_for_moderator' => $parent->webcams_only_for_moderator,
                 'max_participants' => $parent->max_participants,
                 'guest_policy' => $parent->guest_policy,
-                'meeting_id' => 'session-' . time() . '-' . rand(1000, 9999),
+                'meeting_id' => 'session-'.time().'-'.rand(1000, 9999),
                 'attendee_password' => $parent->attendee_password,
                 'moderator_password' => $parent->moderator_password,
                 'parent_session_id' => $parent->id,

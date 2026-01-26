@@ -5,18 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class JoinTeamController extends Controller
 {
     /**
      * Generate member joining code
      *
-     * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
     public function generate(Team $team)
@@ -33,7 +32,6 @@ class JoinTeamController extends Controller
     /**
      * Remove member joining code
      *
-     * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
     public function remove(Team $team)
@@ -59,7 +57,7 @@ class JoinTeamController extends Controller
 
     /**
      * Add member to a team
-     * @param  \Illuminate\Http\Request  $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function join(Request $request)
@@ -152,7 +150,6 @@ class JoinTeamController extends Controller
     /**
      * Show team preview before joining (optional enhancement)
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function preview(Request $request)
@@ -164,9 +161,9 @@ class JoinTeamController extends Controller
         $code = strtoupper(trim($request->code));
         $team = Team::where('joining_code', $code)->first();
 
-        if (!$team) {
+        if (! $team) {
             return response()->json([
-                'error' => 'Invalid team code'
+                'error' => 'Invalid team code',
             ], 404);
         }
 
@@ -177,7 +174,7 @@ class JoinTeamController extends Controller
                 'member_count' => $team->members()->count(),
                 'owner' => $team->owner->name,
                 'created_at' => $team->created_at->format('M Y'),
-            ]
+            ],
         ]);
     }
 }

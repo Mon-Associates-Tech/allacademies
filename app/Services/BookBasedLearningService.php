@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Book;
 use App\Models\QuizSession;
 use App\Models\ReadingAchievement;
-use App\Models\ReadingProgress;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -44,13 +43,13 @@ class BookBasedLearningService
         }
 
         // Boost books in favorite genres
-        if (!empty($favoriteGenres)) {
+        if (! empty($favoriteGenres)) {
             $query->whereIn('genre', $favoriteGenres);
         }
 
         // Exclude already read books
         $readBookIds = $user->readingProgress()->pluck('book_id')->toArray();
-        if (!empty($readBookIds)) {
+        if (! empty($readBookIds)) {
             $query->whereNotIn('id', $readBookIds);
         }
 
@@ -92,6 +91,7 @@ class BookBasedLearningService
         }
 
         arsort($genreCounts);
+
         return array_slice(array_keys($genreCounts), 0, 3);
     }
 
@@ -121,10 +121,19 @@ class BookBasedLearningService
         });
 
         // Convert percentage to difficulty scale (1-10)
-        if ($averageScore >= 90) return 8; // Advanced
-        if ($averageScore >= 80) return 6; // Intermediate-Advanced
-        if ($averageScore >= 70) return 5; // Intermediate
-        if ($averageScore >= 60) return 4; // Beginner-Intermediate
+        if ($averageScore >= 90) {
+            return 8;
+        } // Advanced
+        if ($averageScore >= 80) {
+            return 6;
+        } // Intermediate-Advanced
+        if ($averageScore >= 70) {
+            return 5;
+        } // Intermediate
+        if ($averageScore >= 60) {
+            return 4;
+        } // Beginner-Intermediate
+
         return 3; // Beginner
     }
 
@@ -146,7 +155,7 @@ class BookBasedLearningService
             'cover_image_url' => $book->cover_image_url,
             'themes' => $book->themes,
             'recommendation_reasons' => $this->getRecommendationReasons($book, $user),
-            'match_score' => $this->calculateMatchScore($book, $user)
+            'match_score' => $this->calculateMatchScore($book, $user),
         ];
     }
 
@@ -166,17 +175,17 @@ class BookBasedLearningService
         // Check difficulty appropriateness
         $userLevel = $this->determineUserReadingLevel($user);
         if (abs($book->difficulty_score - $userLevel) <= 1) {
-            $reasons[] = "Perfect difficulty level for your reading skills";
+            $reasons[] = 'Perfect difficulty level for your reading skills';
         }
 
         // Check themes alignment
-        if (!empty($book->themes)) {
-            $reasons[] = "Explores themes: " . implode(', ', array_slice($book->themes, 0, 3));
+        if (! empty($book->themes)) {
+            $reasons[] = 'Explores themes: '.implode(', ', array_slice($book->themes, 0, 3));
         }
 
         // Check academic level match
         if (in_array($user->academic_level, $book->academic_levels ?? [])) {
-            $reasons[] = "Aligned with your academic level";
+            $reasons[] = 'Aligned with your academic level';
         }
 
         return $reasons;
@@ -233,7 +242,7 @@ class BookBasedLearningService
     public function generateAdaptiveQuiz(User $user, ?Book $book, array $parameters): array
     {
         // Check if we're working with file content instead of a book
-        $isFileBased = !empty($parameters['file_content']);
+        $isFileBased = ! empty($parameters['file_content']);
 
         if ($isFileBased) {
             // For file-based quizzes, we don't have previous performance or focus areas
@@ -267,7 +276,7 @@ class BookBasedLearningService
             'adaptive_difficulty' => $adaptiveDifficulty,
             'focus_areas' => $focusAreas,
             'weak_concepts' => $weakAreas,
-            'user_performance_history' => $userPerformanceHistory
+            'user_performance_history' => $userPerformanceHistory,
         ]);
 
         return $this->generateQuizWithContext($book, $adaptiveContext, $user);
@@ -361,7 +370,7 @@ class BookBasedLearningService
             $questionDetails = $quiz->results['question_details'] ?? [];
 
             foreach ($questionDetails as $detail) {
-                if (!($detail['is_correct'] ?? true)) {
+                if (! ($detail['is_correct'] ?? true)) {
                     $questionType = $detail['question_type'] ?? 'unknown';
                     $weakAreas[$questionType] = ($weakAreas[$questionType] ?? 0) + 1;
                 }
@@ -370,6 +379,7 @@ class BookBasedLearningService
 
         // Return areas where user got wrong answers most frequently
         arsort($weakAreas);
+
         return array_slice(array_keys($weakAreas), 0, 3);
     }
 
@@ -379,7 +389,7 @@ class BookBasedLearningService
     protected function identifyFocusAreas(User $user, ?Book $book, array $weakAreas): array
     {
 
-        if (!$book) {
+        if (! $book) {
             return [];
         }
         $focusAreas = [];
@@ -396,7 +406,7 @@ class BookBasedLearningService
             $chapterId = $quiz->chapter_id;
             $score = $quiz->results['percentage'] ?? 0;
 
-            if (!isset($chapterPerformance[$chapterId])) {
+            if (! isset($chapterPerformance[$chapterId])) {
                 $chapterPerformance[$chapterId] = [];
             }
             $chapterPerformance[$chapterId][] = $score;
@@ -422,7 +432,7 @@ class BookBasedLearningService
                             'page_count' => isset($chapter['page_start'], $chapter['page_end'])
                                 ? $chapter['page_end'] - $chapter['page_start'] + 1
                                 : 0,
-                            'sections' => $chapter['sections'] ?? []
+                            'sections' => $chapter['sections'] ?? [],
                         ];
                     })->toArray();
 
@@ -433,7 +443,7 @@ class BookBasedLearningService
                             'type' => 'chapter',
                             'id' => $chapterId,
                             'title' => $chapterInfo['title'],
-                            'average_score' => $avgScore
+                            'average_score' => $avgScore,
                         ];
                     }
                 }
@@ -448,7 +458,7 @@ class BookBasedLearningService
      */
     protected function getUserPerformanceHistory(User $user, ?Book $book): array
     {
-        if (!$book) {
+        if (! $book) {
             return [];
         }
 
@@ -464,7 +474,7 @@ class BookBasedLearningService
                 'score' => $quiz->results['percentage'] ?? 0,
                 'question_count' => $quiz->results['total_questions'] ?? 0,
                 'time_taken' => $quiz->time_taken ?? 0,
-                'difficulty' => $quiz->difficulty
+                'difficulty' => $quiz->difficulty,
             ];
         })->toArray();
     }
@@ -488,7 +498,7 @@ class BookBasedLearningService
         $requiredTokens = ($questionCount * $tokensPerQuestion) + $baseTokens;
 
         // Add 20% safety buffer
-        $maxTokens = (int)($requiredTokens * 1.2);
+        $maxTokens = (int) ($requiredTokens * 1.2);
 
         // Ensure minimum and maximum bounds
         $maxTokens = max(20000, min(160000, $maxTokens));
@@ -502,13 +512,12 @@ class BookBasedLearningService
 
         $result = $this->chatService->chat($chatParameters);
 
-        if (!$result['success']) {
-            throw new RuntimeException('Failed to generate adaptive quiz: ' . ($result['error'] ?? 'Unknown error'));
+        if (! $result['success']) {
+            throw new RuntimeException('Failed to generate adaptive quiz: '.($result['error'] ?? 'Unknown error'));
         }
 
         return $this->parseAdaptiveQuizResponse($result['content'], $context);
     }
-
 
     /**
      * Build enhanced adaptive quiz prompt with comprehensive context
@@ -518,14 +527,14 @@ class BookBasedLearningService
         $questionCount = $context['question_count'] ?? 10;
 
         $prompt = '';
-        if (!empty($context['file_content'])) {
+        if (! empty($context['file_content'])) {
             $prompt = "Generate a quiz based on the following content:\n\n";
-            $prompt .= substr($context['file_content'], 0, 3000) . "\n\n";
+            $prompt .= substr($context['file_content'], 0, 3000)."\n\n";
             $prompt .= "CONTENT DETAILS:\n";
-            if (!empty($context['file_name'])) {
+            if (! empty($context['file_name'])) {
                 $prompt .= "- File Name: {$context['file_name']}\n";
             }
-        } else if ($book !== null && isset($book->id)) {
+        } elseif ($book !== null && isset($book->id)) {
             $prompt = "Generate an adaptive quiz for \"{$book->title}\" by {$book->author->user?->name}.\n\n";
             $prompt .= "BOOK DETAILS:\n";
             $prompt .= "- Title: {$book->title}\n";
@@ -556,37 +565,37 @@ class BookBasedLearningService
         $prompt .= "\n=== RESPONSE FORMAT (JSON ONLY) ===\n";
         $prompt .= "Return ONLY valid JSON with this EXACT structure:\n\n";
         $prompt .= "{\n";
-        $prompt .= '  "quiz_session": {' . "\n";
-        $prompt .= '    "book_title": "string",' . "\n";
-        $prompt .= '    "author": "string",' . "\n";
-        $prompt .= '    "context": "string"' . "\n";
+        $prompt .= '  "quiz_session": {'."\n";
+        $prompt .= '    "book_title": "string",'."\n";
+        $prompt .= '    "author": "string",'."\n";
+        $prompt .= '    "context": "string"'."\n";
         $prompt .= "  },\n";
-        $prompt .= '  "questions": [' . "\n";
+        $prompt .= '  "questions": ['."\n";
 
         // Show example for EACH question type
         if ($context['question_type'] === 'multiple_choice' || $context['question_type'] === 'mixed') {
             $prompt .= "    // Question 1 example:\n";
             $prompt .= "    {\n";
-            $prompt .= '      "question": "What is the primary focus of the book?",' . "\n";
-            $prompt .= '      "type": "multiple_choice",' . "\n";
-            $prompt .= '      "options": ["Option A", "Option B", "Option C", "Option D"],' . "\n";
-            $prompt .= '      "correct_answer": "Option B",' . "\n";
-            $prompt .= '      "explanation": "Explanation here",' . "\n";
-            $prompt .= '      "difficulty": "medium",' . "\n";
-            $prompt .= '      "points": 1' . "\n";
+            $prompt .= '      "question": "What is the primary focus of the book?",'."\n";
+            $prompt .= '      "type": "multiple_choice",'."\n";
+            $prompt .= '      "options": ["Option A", "Option B", "Option C", "Option D"],'."\n";
+            $prompt .= '      "correct_answer": "Option B",'."\n";
+            $prompt .= '      "explanation": "Explanation here",'."\n";
+            $prompt .= '      "difficulty": "medium",'."\n";
+            $prompt .= '      "points": 1'."\n";
             $prompt .= "    },\n";
         }
 
         if ($context['question_type'] === 'true_false' || $context['question_type'] === 'mixed') {
             $prompt .= "    // Question 2 example:\n";
             $prompt .= "    {\n";
-            $prompt .= '      "question": "The author emphasizes public interaction?",' . "\n";
-            $prompt .= '      "type": "true_false",' . "\n";
-            $prompt .= '      "options": ["True", "False"],' . "\n";
-            $prompt .= '      "correct_answer": "True",' . "\n";
-            $prompt .= '      "explanation": "Explanation here",' . "\n";
-            $prompt .= '      "difficulty": "easy",' . "\n";
-            $prompt .= '      "points": 1' . "\n";
+            $prompt .= '      "question": "The author emphasizes public interaction?",'."\n";
+            $prompt .= '      "type": "true_false",'."\n";
+            $prompt .= '      "options": ["True", "False"],'."\n";
+            $prompt .= '      "correct_answer": "True",'."\n";
+            $prompt .= '      "explanation": "Explanation here",'."\n";
+            $prompt .= '      "difficulty": "easy",'."\n";
+            $prompt .= '      "points": 1'."\n";
             $prompt .= "    },\n";
         }
 
@@ -594,12 +603,12 @@ class BookBasedLearningService
         if ($context['question_type'] === 'essay' || $context['question_type'] === 'mixed') {
             $prompt .= "    // Essay Question example:\n";
             $prompt .= "    {\n";
-            $prompt .= '      "question": "Discuss the main themes presented in the book. How do they relate to modern society?",' . "\n";
-            $prompt .= '      "type": "essay",' . "\n";
-            $prompt .= '      "correct_answer": "The expected answer should discuss themes such as identity, social justice, and human connection. Students should provide specific examples from the text and relate them to contemporary issues.",' . "\n";
-            $prompt .= '      "explanation": "A strong essay answer will identify key themes, provide textual evidence, and make meaningful connections to current events or personal experiences.",' . "\n";
-            $prompt .= '      "difficulty": "hard",' . "\n";
-            $prompt .= '      "points": 3' . "\n";
+            $prompt .= '      "question": "Discuss the main themes presented in the book. How do they relate to modern society?",'."\n";
+            $prompt .= '      "type": "essay",'."\n";
+            $prompt .= '      "correct_answer": "The expected answer should discuss themes such as identity, social justice, and human connection. Students should provide specific examples from the text and relate them to contemporary issues.",'."\n";
+            $prompt .= '      "explanation": "A strong essay answer will identify key themes, provide textual evidence, and make meaningful connections to current events or personal experiences.",'."\n";
+            $prompt .= '      "difficulty": "hard",'."\n";
+            $prompt .= '      "points": 3'."\n";
             $prompt .= "    },\n";
         }
 
@@ -631,7 +640,6 @@ class BookBasedLearningService
     /**
      * Parse adaptive quiz response with enhanced error handling
      */
-
     protected function parseAdaptiveQuizResponse(string $content, array $context): array
     {
         // Simply try to decode the entire content as JSON
@@ -655,7 +663,7 @@ class BookBasedLearningService
 
         Log::error('Failed to parse quiz response', [
             'json_error' => json_last_error_msg(),
-            'content_preview' => substr($content, 0, 500)
+            'content_preview' => substr($content, 0, 500),
         ]);
 
         return $this->parseQuizManually($content, $context);
@@ -670,84 +678,84 @@ class BookBasedLearningService
         if (isset($parsed['quiz_session']) && isset($parsed['questions']) && is_array($parsed['questions'])) {
             Log::info('Found complete quiz structure', [
                 'has_quiz_session' => true,
-                'question_count' => count($parsed['questions'])
+                'question_count' => count($parsed['questions']),
             ]);
 
             return [
                 'quiz_session' => $parsed['quiz_session'],
                 'questions' => $this->normalizeQuestions($parsed['questions']),
                 'adaptive_features' => $parsed['adaptive_features'] ?? [
-                        'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
-                        'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                        'scaffolding_included' => true
-                    ],
+                    'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
+                    'focus_areas_addressed' => $context['focus_areas'] ?? [],
+                    'scaffolding_included' => true,
+                ],
                 'metadata' => $parsed['metadata'] ?? [
-                        'generation_type' => 'adaptive',
-                        'user_level' => $context['user_level'] ?? 'intermediate',
-                        'questions_generated' => count($parsed['questions']),
-                        'questions_requested' => $context['question_count'] ?? 10
-                    ]
+                    'generation_type' => 'adaptive',
+                    'user_level' => $context['user_level'] ?? 'intermediate',
+                    'questions_generated' => count($parsed['questions']),
+                    'questions_requested' => $context['question_count'] ?? 10,
+                ],
             ];
         }
 
         // CASE 2: Has nested questions array
         if (isset($parsed['questions']) && is_array($parsed['questions'])) {
             Log::info('Found nested questions array', [
-                'question_count' => count($parsed['questions'])
+                'question_count' => count($parsed['questions']),
             ]);
 
             return [
                 'quiz_session' => [
                     'book_title' => $context['book_title'] ?? 'Quiz',
                     'author' => $context['author'] ?? 'Unknown',
-                    'context' => 'Generated quiz'
+                    'context' => 'Generated quiz',
                 ],
                 'questions' => $this->normalizeQuestions($parsed['questions']),
                 'adaptive_features' => [
                     'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
                     'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                    'scaffolding_included' => true
+                    'scaffolding_included' => true,
                 ],
                 'metadata' => [
                     'generation_type' => 'adaptive',
                     'user_level' => $context['user_level'] ?? 'intermediate',
                     'questions_generated' => count($parsed['questions']),
-                    'questions_requested' => $context['question_count'] ?? 10
-                ]
+                    'questions_requested' => $context['question_count'] ?? 10,
+                ],
             ];
         }
 
         // CASE 3: Questions at root level (array of questions)
         if (isset($parsed[0]) && is_array($parsed[0]) && isset($parsed[0]['question'])) {
             Log::info('Found questions at root level', [
-                'question_count' => count($parsed)
+                'question_count' => count($parsed),
             ]);
 
             return [
                 'quiz_session' => [
                     'book_title' => $context['book_title'] ?? 'Quiz',
                     'author' => $context['author'] ?? 'Unknown',
-                    'context' => 'Generated quiz'
+                    'context' => 'Generated quiz',
                 ],
                 'questions' => $this->normalizeQuestions($parsed),
                 'adaptive_features' => [
                     'difficulty_adjusted' => $context['adaptive_difficulty'] ?? false,
                     'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                    'scaffolding_included' => true
+                    'scaffolding_included' => true,
                 ],
                 'metadata' => [
                     'generation_type' => 'adaptive',
                     'user_level' => $context['user_level'] ?? 'intermediate',
                     'questions_generated' => count($parsed),
-                    'questions_requested' => $context['question_count'] ?? 10
-                ]
+                    'questions_requested' => $context['question_count'] ?? 10,
+                ],
             ];
         }
 
         Log::warning('Parsed JSON but structure not recognized', [
             'keys' => array_keys($parsed),
             'is_array' => is_array($parsed),
-            'count' => count($parsed)
+            'count' => count($parsed),
         ]);
 
         // Fall back to manual parsing
@@ -762,7 +770,7 @@ class BookBasedLearningService
         $normalized = [];
 
         foreach ($questions as $question) {
-            if (!is_array($question)) {
+            if (! is_array($question)) {
                 continue;
             }
 
@@ -776,7 +784,7 @@ class BookBasedLearningService
                 'difficulty' => $question['difficulty'] ?? 'medium',
                 'points' => $question['points'] ?? 1,
                 'explanation' => $question['explanation'] ?? '',
-                'learning_objective' => $question['learning_objective'] ?? ''
+                'learning_objective' => $question['learning_objective'] ?? '',
             ];
 
             // Handle type-specific fields
@@ -821,7 +829,7 @@ class BookBasedLearningService
 
                         Log::warning('Essay question missing question text, using fallback', [
                             'original_keys' => array_keys($question),
-                            'fallback_used' => $normalizedQuestion['question']
+                            'fallback_used' => $normalizedQuestion['question'],
                         ]);
                     }
 
@@ -837,9 +845,9 @@ class BookBasedLearningService
                     unset($normalizedQuestion['options']);
 
                     Log::debug('Normalized essay question', [
-                        'has_question' => !empty($normalizedQuestion['question']),
+                        'has_question' => ! empty($normalizedQuestion['question']),
                         'question_length' => strlen($normalizedQuestion['question']),
-                        'has_answer' => !empty($normalizedQuestion['correct_answer'])
+                        'has_answer' => ! empty($normalizedQuestion['correct_answer']),
                     ]);
                     break;
 
@@ -858,7 +866,7 @@ class BookBasedLearningService
         Log::info('Normalized questions', [
             'original_count' => count($questions),
             'normalized_count' => count($normalized),
-            'types' => array_count_values(array_column($normalized, 'type'))
+            'types' => array_count_values(array_column($normalized, 'type')),
         ]);
 
         return $normalized;
@@ -900,15 +908,15 @@ class BookBasedLearningService
                     $options = array_map('trim', $optionMatches[1]);
                 }
 
-                if (!empty($questionText)) {
+                if (! empty($questionText)) {
                     $questions[] = [
                         'question' => $questionText,
-                        'type' => !empty($options) ? 'multiple_choice' : 'essay',
+                        'type' => ! empty($options) ? 'multiple_choice' : 'essay',
                         'options' => $options,
-                        'correct_answer' => !empty($options) ? $options[0] : '',
+                        'correct_answer' => ! empty($options) ? $options[0] : '',
                         'explanation' => 'Review the material for the answer.',
                         'difficulty' => $context['difficulty'] ?? 'medium',
-                        'points' => 1
+                        'points' => 1,
                     ];
                 }
             }
@@ -922,7 +930,7 @@ class BookBasedLearningService
                 'success' => false,
                 'error' => 'Failed to parse quiz questions from AI response. Please try again.',
                 'error_code' => 'PARSE_ERROR',
-                'questions' => []
+                'questions' => [],
             ];
         }
 
@@ -930,19 +938,19 @@ class BookBasedLearningService
             'quiz_session' => [
                 'book_title' => $context['book_title'] ?? 'Quiz',
                 'author' => $context['author'] ?? 'Unknown',
-                'context' => 'Generated quiz'
+                'context' => 'Generated quiz',
             ],
             'questions' => $questions,
             'adaptive_features' => [
                 'difficulty_adjusted' => $context['adaptive_difficulty'] ?? 'medium',
                 'focus_areas_addressed' => $context['focus_areas'] ?? [],
-                'scaffolding_included' => true
+                'scaffolding_included' => true,
             ],
             'metadata' => [
                 'generation_type' => 'adaptive',
                 'user_level' => $context['user_level'] ?? 'intermediate',
-                'parsing_method' => 'manual'
-            ]
+                'parsing_method' => 'manual',
+            ],
         ];
     }
 
@@ -976,7 +984,7 @@ class BookBasedLearningService
             'strength_areas' => [],
             'improvement_areas' => [],
             'reading_level_assessment' => '',
-            'personalized_recommendations' => []
+            'personalized_recommendations' => [],
         ];
 
         // Analyze by question types
@@ -987,14 +995,14 @@ class BookBasedLearningService
                 $analysis['strength_areas'][] = [
                     'area' => $this->getReadableQuestionType($type),
                     'accuracy' => $performance['accuracy'],
-                    'description' => $this->getStrengthDescription($type, $performance['accuracy'])
+                    'description' => $this->getStrengthDescription($type, $performance['accuracy']),
                 ];
             } elseif ($performance['accuracy'] < 0.6) {
                 $analysis['improvement_areas'][] = [
                     'area' => $this->getReadableQuestionType($type),
                     'accuracy' => $performance['accuracy'],
                     'recommendations' => $this->getImprovementRecommendations($type),
-                    'practice_activities' => $this->getPracticeActivities($type, $user->learning_style)
+                    'practice_activities' => $this->getPracticeActivities($type, $user->learning_style),
                 ];
             }
         }
@@ -1071,7 +1079,7 @@ class BookBasedLearningService
                 'type' => 'perfect_score',
                 'name' => 'Perfect Score!',
                 'description' => 'Achieved 95% or higher on a quiz',
-                'criteria' => ['score' => $quizResults['percentage']]
+                'criteria' => ['score' => $quizResults['percentage']],
             ];
         }
 
@@ -1081,7 +1089,7 @@ class BookBasedLearningService
                 'type' => 'high_score',
                 'name' => 'High Achiever',
                 'description' => 'Scored 90% or higher on a quiz',
-                'criteria' => ['score' => $quizResults['percentage']]
+                'criteria' => ['score' => $quizResults['percentage']],
             ];
         }
 
@@ -1091,7 +1099,7 @@ class BookBasedLearningService
                 'type' => 'first_quiz',
                 'name' => 'First Quiz Completed',
                 'description' => 'Completed your first book quiz',
-                'criteria' => ['quiz_count' => 1]
+                'criteria' => ['quiz_count' => 1],
             ];
         }
 
@@ -1101,7 +1109,7 @@ class BookBasedLearningService
                 'type' => 'quiz_master',
                 'name' => 'Quiz Master',
                 'description' => 'Completed 10 or more quizzes',
-                'criteria' => ['quiz_count' => $totalQuizzes]
+                'criteria' => ['quiz_count' => $totalQuizzes],
             ];
         }
 
@@ -1116,7 +1124,7 @@ class BookBasedLearningService
                 'type' => 'consistent_performer',
                 'name' => 'Consistent Performer',
                 'description' => 'Completed 3 or more quizzes in one week',
-                'criteria' => ['recent_quiz_count' => $recentQuizzes]
+                'criteria' => ['recent_quiz_count' => $recentQuizzes],
             ];
         }
 
@@ -1136,7 +1144,7 @@ class BookBasedLearningService
             'academic_level' => $parameters['academic_level'] ?? 'high_school',
             'discussion_focus' => $parameters['focus'] ?? 'general',
             'group_size' => $parameters['group_size'] ?? 'small',
-            'time_available' => $parameters['time_minutes'] ?? 45
+            'time_available' => $parameters['time_minutes'] ?? 45,
         ];
 
         $prompt = $this->buildDiscussionQuestionsPrompt($context);
@@ -1148,7 +1156,7 @@ class BookBasedLearningService
             'topics' => ['discussion', 'literary_analysis', 'critical_thinking'],
             'response_format' => 'structured',
             'creativity_level' => 1,
-            'response_length' => 1200
+            'response_length' => 1200,
         ];
 
         $result = $this->chatService->chat($chatParameters);
@@ -1175,8 +1183,8 @@ class BookBasedLearningService
         $prompt .= "- Group Size: {$context['group_size']} group\n";
         $prompt .= "- Time Available: {$context['time_available']} minutes\n";
 
-        if (!empty($context['themes'])) {
-            $prompt .= "- Key Themes: " . implode(', ', $context['themes']) . "\n";
+        if (! empty($context['themes'])) {
+            $prompt .= '- Key Themes: '.implode(', ', $context['themes'])."\n";
         }
 
         $prompt .= "\nGENERATE:\n";
@@ -1200,7 +1208,7 @@ class BookBasedLearningService
             'analysis_questions' => [],
             'personal_connection_questions' => [],
             'creative_questions' => [],
-            'discussion_formats' => []
+            'discussion_formats' => [],
         ];
     }
 
@@ -1240,18 +1248,18 @@ class BookBasedLearningService
                 'title' => $book->title,
                 'author' => $book->author,
                 'total_pages' => $totalPages,
-                'estimated_reading_time' => $book->estimated_reading_time
+                'estimated_reading_time' => $book->estimated_reading_time,
             ],
             'plan' => [
                 'target_days' => $recommendedDays,
                 'daily_page_target' => ceil($totalPages / $recommendedDays),
                 'daily_time_needed' => ceil((ceil($totalPages / $recommendedDays) * 60) / $userReadingSpeed),
-                'alternative_suggested' => $alternativePlan
+                'alternative_suggested' => $alternativePlan,
             ],
             'milestones' => $milestones,
             'reading_strategies' => $strategies,
             'weekly_goals' => $this->generateWeeklyGoals($milestones),
-            'comprehension_checkpoints' => $this->generateComprehensionCheckpoints($book)
+            'comprehension_checkpoints' => $this->generateComprehensionCheckpoints($book),
         ];
     }
 
@@ -1270,6 +1278,7 @@ class BookBasedLearningService
 
             // Adjust for book difficulty
             $difficultyAdjustment = 1 - (($book->difficulty_score - 5) * 0.1);
+
             return $avgSpeed * $difficultyAdjustment;
         }
 
@@ -1279,7 +1288,7 @@ class BookBasedLearningService
             'middle_school' => 20,
             'high_school' => 25,
             'college' => 30,
-            'graduate' => 35
+            'graduate' => 35,
         ];
 
         $baseSpeed = $defaultSpeeds[$user->academic_level] ?? 25;
@@ -1324,7 +1333,7 @@ class BookBasedLearningService
                 'page_start' => '', // TOC format doesn't have direct page_start
                 'page_end' => '',   // TOC format doesn't have direct page_end
                 'estimated_days' => ceil($targetDays * ($group->count() / $chapters->count())),
-                'key_concepts' => [] // TOC format doesn't have key_concepts
+                'key_concepts' => [], // TOC format doesn't have key_concepts
             ];
 
             $currentMilestone++;
@@ -1353,7 +1362,7 @@ class BookBasedLearningService
                 'page_start' => $startPage,
                 'page_end' => $endPage,
                 'estimated_days' => ceil($targetDays / $milestonesCount),
-                'page_count' => $endPage - $startPage + 1
+                'page_count' => $endPage - $startPage + 1,
             ];
         }
 
@@ -1388,7 +1397,7 @@ class BookBasedLearningService
             'topics' => ['vocabulary', 'reading_comprehension'],
             'response_format' => 'structured',
             'creativity_level' => 1,
-            'response_length' => 1000
+            'response_length' => 1000,
         ];
 
         $result = $this->chatService->chat($chatParameters);
@@ -1409,14 +1418,14 @@ class BookBasedLearningService
         $percentage = $quizResults['percentage'] ?? 0;
 
         if ($percentage < 70) {
-            $suggestions[] = "Review the book chapters again";
-            $suggestions[] = "Take notes while reading";
+            $suggestions[] = 'Review the book chapters again';
+            $suggestions[] = 'Take notes while reading';
         } elseif ($percentage < 85) {
-            $suggestions[] = "Explore related books by the same author";
-            $suggestions[] = "Join a book discussion group";
+            $suggestions[] = 'Explore related books by the same author';
+            $suggestions[] = 'Join a book discussion group';
         } else {
-            $suggestions[] = "Try more challenging books";
-            $suggestions[] = "Explore critical analysis of this work";
+            $suggestions[] = 'Try more challenging books';
+            $suggestions[] = 'Explore critical analysis of this work';
         }
 
         return $suggestions;
@@ -1430,32 +1439,33 @@ class BookBasedLearningService
         $user = auth()->user();
 
         // Check token availability first
-        if ($user && !$user->hasOpenAiTokens()) {
+        if ($user && ! $user->hasOpenAiTokens()) {
             Log::warning('Insufficient tokens for book quiz', ['user_id' => $user->id]);
+
             return [
                 'success' => false,
-                'error' => 'Insufficient tokens. Please purchase a token package to continue.'
+                'error' => 'Insufficient tokens. Please purchase a token package to continue.',
             ];
         }
 
         // Validate book context if book_id is provided
         if (isset($parameters['book_id'])) {
-            if (!$book) {
+            if (! $book) {
                 // Try to load the book if not provided
                 $book = Book::with(['chapters', 'sections', 'author'])->find($parameters['book_id']);
             }
 
-            if (!$book) {
+            if (! $book) {
                 Log::warning('Book not found for quiz generation', [
                     'user_id' => $user?->id,
-                    'book_id' => $parameters['book_id']
+                    'book_id' => $parameters['book_id'],
                 ]);
 
                 return [
                     'success' => false,
                     'error' => 'The selected book could not be found. Please select a different book or try uploading your own content.',
                     'error_code' => 'BOOK_NOT_FOUND',
-                    'fallback_available' => !empty($parameters['file_content'])
+                    'fallback_available' => ! empty($parameters['file_content']),
                 ];
             }
 
@@ -1465,23 +1475,23 @@ class BookBasedLearningService
                     'user_id' => $user?->id,
                     'book_id' => $book->id,
                     'has_chapters' => $book->chapters->isNotEmpty(),
-                    'chapter_id' => $parameters['chapter_id'] ?? null
+                    'chapter_id' => $parameters['chapter_id'] ?? null,
                 ]);
 
                 return [
                     'success' => false,
                     'error' => 'The selected book or chapter does not have enough content to generate a quiz. Please select a different range or upload your own content.',
                     'error_code' => 'INSUFFICIENT_CONTENT',
-                    'suggestions' => $this->getBookContentSuggestions($book)
+                    'suggestions' => $this->getBookContentSuggestions($book),
                 ];
             }
         }
 
         // If we have file content as fallback, use that instead
-        if (!$book && !empty($parameters['file_content'])) {
+        if (! $book && ! empty($parameters['file_content'])) {
             Log::info('Using uploaded file content instead of book', [
                 'user_id' => $user?->id,
-                'file_name' => $parameters['file_name'] ?? 'unknown'
+                'file_name' => $parameters['file_name'] ?? 'unknown',
             ]);
 
             $parameters['message'] = $this->buildQuizPromptFromFile($parameters);
@@ -1499,7 +1509,7 @@ class BookBasedLearningService
      */
     protected function bookHasInsufficientContent(?Book $book, array $parameters): bool
     {
-        if (!$book) {
+        if (! $book) {
             return true;
         }
 
@@ -1507,12 +1517,13 @@ class BookBasedLearningService
         if (isset($parameters['chapter_id'])) {
             $chapter = $book->chapters()->find($parameters['chapter_id']);
 
-            if (!$chapter) {
+            if (! $chapter) {
                 return true;
             }
 
             // Check if chapter has content (adjust threshold as needed)
             $contentLength = strlen($chapter->content ?? '');
+
             return $contentLength < 100; // Minimum 100 characters
         }
 
@@ -1532,16 +1543,16 @@ class BookBasedLearningService
         $suggestions = [];
 
         if ($book->chapters->isNotEmpty()) {
-            $suggestions[] = "Try selecting one of the available chapters: " .
+            $suggestions[] = 'Try selecting one of the available chapters: '.
                 $book->chapters->pluck('title')->take(3)->implode(', ');
         }
 
         if ($book->sections->isNotEmpty()) {
-            $suggestions[] = "Try selecting from available sections";
+            $suggestions[] = 'Try selecting from available sections';
         }
 
-        $suggestions[] = "Upload a text file or document with content from this book";
-        $suggestions[] = "Select a different book from the library";
+        $suggestions[] = 'Upload a text file or document with content from this book';
+        $suggestions[] = 'Select a different book from the library';
 
         return $suggestions;
     }
@@ -1554,14 +1565,14 @@ class BookBasedLearningService
         $prompt = "Generate a {$parameters['difficulty']} difficulty quiz with {$parameters['question_count']} questions ";
         $prompt .= "of type {$parameters['question_type']} based on the following content:\n\n";
 
-        if (!empty($parameters['file_name'])) {
+        if (! empty($parameters['file_name'])) {
             $prompt .= "Source: {$parameters['file_name']}\n\n";
         }
 
         $prompt .= "Content:\n{$parameters['file_content']}\n\n";
 
-        if (!empty($parameters['focus_topics'])) {
-            $prompt .= "Focus on these topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+        if (! empty($parameters['focus_topics'])) {
+            $prompt .= 'Focus on these topics: '.implode(', ', $parameters['focus_topics'])."\n";
         }
 
         $prompt .= "\nGenerate questions that test comprehension and understanding of the material.";
@@ -1577,7 +1588,7 @@ class BookBasedLearningService
         $prompt = "Generate a {$parameters['difficulty']} difficulty quiz with {$parameters['question_count']} questions ";
         $prompt .= "of type {$parameters['question_type']} based on the following book:\n\n";
         $prompt .= "Book Title: {$book->title}\n";
-        $prompt .= "Author: " . ($book->author->name ?? 'Unknown') . "\n";
+        $prompt .= 'Author: '.($book->author->name ?? 'Unknown')."\n";
 
         if (isset($parameters['chapter_id']) && $book->chapters->isNotEmpty()) {
             $chapter = $book->chapters()->find($parameters['chapter_id']);
@@ -1589,18 +1600,18 @@ class BookBasedLearningService
             $prompt .= "Book Description: {$book->description}\n\n";
         }
 
-        if (!empty($parameters['focus_topics'])) {
-            $prompt .= "Focus on these topics: " . implode(', ', $parameters['focus_topics']) . "\n";
+        if (! empty($parameters['focus_topics'])) {
+            $prompt .= 'Focus on these topics: '.implode(', ', $parameters['focus_topics'])."\n";
         }
 
-        if (!empty($parameters['page_start']) && !empty($parameters['page_end'])) {
+        if (! empty($parameters['page_start']) && ! empty($parameters['page_end'])) {
             $prompt .= "Focus on pages {$parameters['page_start']} to {$parameters['page_end']}\n";
         }
 
         $prompt .= "\nGenerate questions that test comprehension and understanding of the material.";
 
         if ($parameters['include_quotes'] ?? false) {
-            $prompt .= " Include relevant quotes from the book in the questions where appropriate.";
+            $prompt .= ' Include relevant quotes from the book in the questions where appropriate.';
         }
 
         return $prompt;
@@ -1622,20 +1633,23 @@ class BookBasedLearningService
 
             if ($escapeNext) {
                 $escapeNext = false;
+
                 continue;
             }
 
             if ($char === '\\') {
                 $escapeNext = true;
+
                 continue;
             }
 
             if ($char === '"') {
-                $inString = !$inString;
+                $inString = ! $inString;
+
                 continue;
             }
 
-            if (!$inString) {
+            if (! $inString) {
                 if ($char === $startChar) {
                     $depth++;
                 } elseif ($char === $endChar) {
@@ -1658,7 +1672,8 @@ class BookBasedLearningService
 
             // Add missing closing brackets
             $closingBrackets = str_repeat($endChar, $depth);
-            return $content . $closingBrackets;
+
+            return $content.$closingBrackets;
         }
 
         return false;
@@ -1688,7 +1703,6 @@ class BookBasedLearningService
 
         return false;
     }
-
 
     /**
      * Additional helper methods would continue here...

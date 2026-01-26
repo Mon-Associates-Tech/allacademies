@@ -115,6 +115,19 @@
                         </select>
                     </div>
 
+                    <!-- Receiving Account (Subaccount) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Receiving Account</label>
+                        <select name="subaccount_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                            <option value="">All Accounts</option>
+                            @foreach($filterOptions['subaccounts'] as $account)
+                                <option value="{{ $account['id'] }}" {{ request('subaccount_id') == $account['id'] ? 'selected' : '' }}>
+                                    {{ $account['name'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Academic Year -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Year</label>

@@ -3,25 +3,34 @@
 namespace App\Livewire\Common;
 
 use App\Constants\GhanaBanks;
+use App\Models\Subaccount;
 use App\Services\SubaccountPaymentService;
-use Livewire\Component;
 use Exception;
+use Livewire\Component;
 
 class PaymentAccountManager extends Component
 {
     // Public properties for binding
     public $model; // The model that has a subaccount (School or Author)
+
     public $modelType; // 'school' or 'author'
 
     // Modal state
     public $showAccountModal = false;
+
     public $editingAccountId = null;
 
     // Form fields
     public $accountBank = '';
+
     public $accountBankCode = '';
+
     public $accountNumber = '';
+
     public $accountName = '';
+
+    // Subaccounts list
+    public $subaccounts = [];
 
     // Validation rules
     protected $rules = [
@@ -37,14 +46,37 @@ class PaymentAccountManager extends Component
 
     public function mount($model, $modelType = 'school')
     {
-        // Validate that the model has a subaccount relationship
-        if (!method_exists($model, 'subaccount')) {
-            throw new \Exception("Model " . get_class($model) . " does not have a subaccount relationship");
+        // Validate that the model has a subaccounts relationship
+        if (! method_exists($model, 'subaccounts')) {
+            throw new \Exception('Model '.get_class($model).' does not have a subaccounts relationship');
         }
 
         $this->model = $model;
         $this->modelType = $modelType;
-        $this->loadAccountInformation();
+        $this->loadSubaccounts();
+    }
+
+    /**
+     * Load all subaccounts for the model
+     */
+    public function loadSubaccounts(): void
+    {
+        $this->subaccounts = $this->model->activeSubaccounts()
+            ->get()
+            ->map(function (Subaccount $subaccount) {
+                return [
+                    'id' => $subaccount->id,
+                    'name' => $subaccount->name,
+                    'business_name' => $subaccount->business_name,
+                    'bank' => $subaccount->settlement_bank,
+                    'bank_code' => $subaccount->bank_code,
+                    'account_number' => $subaccount->account_number,
+                    'is_primary' => $subaccount->is_primary,
+                    'status' => $subaccount->status,
+                    'subaccount_code' => $subaccount->subaccount_code,
+                ];
+            })
+            ->toArray();
     }
 
     public function saveAccount(): void
@@ -67,7 +99,13 @@ class PaymentAccountManager extends Component
 
             if ($this->editingAccountId) {
                 // Update existing subaccount
-                $subaccount = $this->model->subaccount;
+                $subaccount = Subaccount::find($this->editingAccountId);
+
+                if (! $subaccount || $subaccount->subaccountable_id !== $this->model->id) {
+                    session()->flash('error', 'Subaccount not found or does not belong to this model.');
+
+                    return;
+                }
 
                 $bankData = [
                     'business_name' => $this->accountName ?: $this->model->name,
@@ -94,16 +132,23 @@ class PaymentAccountManager extends Component
                     'phone' => $contactPhone,
                 ];
 
-                $subaccountService->createSubAccount($this->model, $bankData, $contactData, $percentageCharge);
+                $subaccountService->createSubAccount(
+                    $this->model,
+                    $bankData,
+                    $contactData,
+                    $percentageCharge,
+                    ! $this->model->hasPrimarySubaccount(), // Set as primary only if no primary exists
+                    $this->accountName
+                );
                 session()->flash('success', 'Account information added successfully!');
             }
 
             $this->showAccountModal = false;
             $this->resetAccountForm();
-            $this->loadAccountInformation();
+            $this->loadSubaccounts();
             $this->dispatch('accountUpdated');
         } catch (Exception $e) {
-            $errorMessage = 'Failed to save account: ' . $e->getMessage();
+            $errorMessage = 'Failed to save account: '.$e->getMessage();
             session()->flash('error', $errorMessage);
         }
     }
@@ -143,9 +188,10 @@ class PaymentAccountManager extends Component
 
         return '';
     }
+
     public function loadAccountInformation(): void
     {
-        $subaccount = $this->model->subaccount;
+        $subaccount = $this->model->primarySubaccount();
 
         if ($subaccount) {
             $this->accountBank = $subaccount->settlement_bank ?? '';
@@ -163,10 +209,9 @@ class PaymentAccountManager extends Component
 
     public function editAccount(): void
     {
-        $subaccount = $this->model->subaccount;
+        $subaccount = Subaccount::find($this->editingAccountId);
 
-        if ($subaccount) {
-            $this->editingAccountId = $subaccount->id;
+        if ($subaccount && $subaccount->subaccountable_id === $this->model->id) {
             $this->accountBank = $subaccount->settlement_bank ?? '';
             $this->accountBankCode = $subaccount->bank_code ?? '';
             $this->accountNumber = $subaccount->account_number ?? '';
@@ -175,19 +220,62 @@ class PaymentAccountManager extends Component
         }
     }
 
-    public function deleteAccount(): void
+    /**
+     * Open edit modal for a specific subaccount
+     */
+    public function openEditModal($subaccountId): void
+    {
+        $this->editingAccountId = $subaccountId;
+        $this->editAccount();
+    }
+
+    /**
+     * Delete a specific subaccount
+     */
+    public function deleteAccount($subaccountId = null): void
     {
         try {
-            $subaccount = $this->model->subaccount;
+            $accountId = $subaccountId ?? $this->editingAccountId;
 
-            if ($subaccount) {
-                $subaccount->delete();
-                session()->flash('success', 'Account information removed successfully!');
-                $this->loadAccountInformation();
-                $this->dispatch('accountDeleted');
+            $subaccount = Subaccount::find($accountId);
+
+            if (! $subaccount || $subaccount->subaccountable_id !== $this->model->id) {
+                session()->flash('error', 'Subaccount not found.');
+
+                return;
             }
+
+            $subaccountService = app(SubaccountPaymentService::class);
+            $subaccountService->deleteSubAccount($subaccount, false); // Soft delete
+
+            session()->flash('success', 'Account information removed successfully!');
+            $this->loadSubaccounts();
+            $this->dispatch('accountDeleted');
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to delete account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete account: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Set a subaccount as primary
+     */
+    public function setPrimarySubaccount($subaccountId): void
+    {
+        try {
+            $subaccount = Subaccount::find($subaccountId);
+
+            if (! $subaccount || $subaccount->subaccountable_id !== $this->model->id) {
+                session()->flash('error', 'Subaccount not found.');
+
+                return;
+            }
+
+            $this->model->setPrimarySubaccount($subaccount);
+            session()->flash('success', 'Primary account updated successfully!');
+            $this->loadSubaccounts();
+            $this->dispatch('accountUpdated');
+        } catch (Exception $e) {
+            session()->flash('error', 'Failed to update primary account: '.$e->getMessage());
         }
     }
 

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudentGroup extends Model
 {
@@ -122,22 +122,22 @@ class StudentGroup extends Model
 
     public function hasTeacher(): bool
     {
-        return !is_null($this->teacher_id);
+        return ! is_null($this->teacher_id);
     }
 
     public function belongsToAcademicGroup(): bool
     {
-        return !is_null($this->academic_group_id);
+        return ! is_null($this->academic_group_id);
     }
 
     public function belongsToAcademicLevel(): bool
     {
-        return !is_null($this->academic_level_id);
+        return ! is_null($this->academic_level_id);
     }
 
     public function belongsToAcademicSubject(): bool
     {
-        return !is_null($this->academic_subject_id);
+        return ! is_null($this->academic_subject_id);
     }
 
     public function getDisplayName(): string
@@ -145,11 +145,11 @@ class StudentGroup extends Model
         $name = $this->name;
 
         if ($this->academicLevel) {
-            $name .= ' - ' . $this->academicLevel->name;
+            $name .= ' - '.$this->academicLevel->name;
         }
 
         if ($this->academicSubject) {
-            $name .= ' (' . $this->academicSubject->name . ')';
+            $name .= ' ('.$this->academicSubject->name.')';
         }
 
         return $name;
@@ -160,19 +160,19 @@ class StudentGroup extends Model
         $parts = [$this->name];
 
         if ($this->academicGroup) {
-            $parts[] = 'Group: ' . $this->academicGroup->name;
+            $parts[] = 'Group: '.$this->academicGroup->name;
         }
 
         if ($this->academicLevel) {
-            $parts[] = 'Level: ' . $this->academicLevel->name;
+            $parts[] = 'Level: '.$this->academicLevel->name;
         }
 
         if ($this->academicSubject) {
-            $parts[] = 'Subject: ' . $this->academicSubject->name;
+            $parts[] = 'Subject: '.$this->academicSubject->name;
         }
 
         if ($this->teacher) {
-            $parts[] = 'Teacher: ' . $this->teacher->user->name;
+            $parts[] = 'Teacher: '.$this->teacher->user->name;
         }
 
         return implode(' | ', $parts);

@@ -97,7 +97,7 @@ class LibrarianController extends Controller
         $book = Book::findOrFail($validated['book_id']);
         $student = Student::findOrFail($validated['student_id']);
 
-        if (!$book->has_hardcopy) {
+        if (! $book->has_hardcopy) {
             return response()->json(['message' => 'This book does not have a hardcopy available for lending'], 422);
         }
 
@@ -145,7 +145,7 @@ class LibrarianController extends Controller
         $studentGroup = StudentGroup::findOrFail($validated['student_group_id']);
         $this->authorize('groupSubscribe', $book);
 
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             return response()->json(['message' => 'This book does not have a softcopy available for subscription'], 422);
         }
 
@@ -165,6 +165,7 @@ class LibrarianController extends Controller
     public function getBookApprovals(Librarian $librarian)
     {
         $approvals = $librarian->bookApprovals()->with('book')->paginate();
+
         return BookApprovalResource::collection($approvals);
     }
 

@@ -22,17 +22,17 @@ class ForumPost extends Model
         'dislikes_count',
         'edited_at',
         'edited_by',
-        'edit_reason'
+        'edit_reason',
     ];
 
     protected $casts = [
         'is_answer' => 'boolean',
         'is_approved' => 'boolean',
-        'edited_at' => 'datetime'
+        'edited_at' => 'datetime',
     ];
 
-    protected $with  = [
-       'user',
+    protected $with = [
+        'user',
 
     ];
 

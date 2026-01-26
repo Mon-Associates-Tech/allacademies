@@ -2,18 +2,21 @@
 
 namespace App\Livewire\Users;
 
-use Livewire\Component;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class DeleteUserModal extends Component
 {
     use AuthorizesRequests;
 
     public $userId;
+
     public $user;
+
     public $showModal = false;
+
     public $itemsToDelete = [];
 
     protected $listeners = ['openDeleteModal'];
@@ -45,8 +48,9 @@ class DeleteUserModal extends Component
 
     public function loadItemsToDelete()
     {
-        if (!$this->user) {
+        if (! $this->user) {
             $this->itemsToDelete = [];
+
             return;
         }
 
@@ -134,6 +138,7 @@ class DeleteUserModal extends Component
                 }
             }
         }
+
         return $count;
     }
 
@@ -141,8 +146,9 @@ class DeleteUserModal extends Component
     {
         $user = User::find($this->userId);
 
-        if (!$user) {
+        if (! $user) {
             $this->showModal = false;
+
             return;
         }
 
@@ -199,6 +205,7 @@ class DeleteUserModal extends Component
 
         // Redirect to users index with success message
         session()->flash('message', 'User successfully deleted.');
+
         return redirect()->route('users.index');
     }
 

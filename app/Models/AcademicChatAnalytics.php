@@ -21,13 +21,13 @@ class AcademicChatAnalytics extends Model
         'message_count',
         'total_tokens_used',
         'average_response_time',
-        'learning_outcomes'
+        'learning_outcomes',
     ];
 
     protected $casts = [
         'topics' => 'array',
         'learning_outcomes' => 'array',
-        'average_response_time' => 'decimal:2'
+        'average_response_time' => 'decimal:2',
     ];
 
     /**

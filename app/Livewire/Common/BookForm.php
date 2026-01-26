@@ -18,42 +18,67 @@ class BookForm extends Component
 
     // Book properties
     public $title;
+
     public $slug;
+
     public $book_category_id;
+
     public $edition;
+
     public $publisher;
+
     public $pages;
+
     public $has_hardcopy = false;
+
     public $has_softcopy = false;
+
     public $additional_info;
+
     public $annual_subscription_fee = 0;
+
     public $subscription_conditions;
+
     public $cover_image;
+
     public $pdf_file;
+
     public $status = 'draft';
 
     // Author selection properties
     public $author_selection_type = 'existing'; // 'existing' or 'new'
+
     public $selected_author_id;
 
     // New author properties
     public $author_name;
+
     public $author_biography;
+
     public $author_website;
+
     public $author_social_links;
+
     public $author_writing_experience;
+
     public $author_education;
+
     public $author_awards;
+
     public $author_statement;
+
     public $author_pen_name;
 
     // Component state
     public $editingBook;
+
     public $showModal = false;
+
     public $isAdmin = false;
 
     // Data collections
     public $authors;
+
     public $categories;
 
     protected function rules()
@@ -102,7 +127,7 @@ class BookForm extends Component
         }
 
         // For authors, default to creating for themselves
-        if (!$this->isAdmin && Auth::user()->author) {
+        if (! $this->isAdmin && Auth::user()->author) {
             $this->author_selection_type = 'existing';
             $this->selected_author_id = Auth::user()->author->id;
         }
@@ -139,14 +164,16 @@ class BookForm extends Component
         $this->validate();
 
         // Validate that at least one format is selected
-        if (!$this->has_hardcopy && !$this->has_softcopy) {
+        if (! $this->has_hardcopy && ! $this->has_softcopy) {
             $this->addError('has_hardcopy', 'Please select at least one format (hardcopy or softcopy).');
+
             return;
         }
 
         // If softcopy is selected but no PDF file provided (and not editing with existing PDF)
-        if ($this->has_softcopy && !$this->pdf_file && (!$this->editingBook || !$this->editingBook->pdf_file_path)) {
+        if ($this->has_softcopy && ! $this->pdf_file && (! $this->editingBook || ! $this->editingBook->pdf_file_path)) {
             $this->addError('pdf_file', 'PDF file is required for softcopy books.');
+
             return;
         }
 

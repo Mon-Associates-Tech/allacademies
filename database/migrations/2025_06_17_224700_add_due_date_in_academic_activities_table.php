@@ -12,10 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('academic_activities', function (Blueprint $table) {
-            $table->timestamp('due_date')
-                ->nullable()
-                ->after('end_time')
-                ->comment('The due date for the academic activity');
+            if (!Schema::hasColumn('academic_activities', 'due_date')) {
+                $table->timestamp('due_date')
+                    ->nullable()
+                    ->after('end_time')
+                    ->comment('The due date for the academic activity');
+            }
         });
     }
 

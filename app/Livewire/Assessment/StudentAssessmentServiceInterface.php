@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Assessment;
 
-use App\Models\Student;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
-use Illuminate\Support\Collection;
+use App\Models\Student;
 
 interface StudentAssessmentServiceInterface
 {

@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
 
-            if(Schema::hasColumn('teachers', 'employee_id')){
-                Schema::table('teachers', function (Blueprint $table) {
-                    $table->string('employee_id')->nullable()->change();
-                });
-            }
+        if (Schema::hasColumn('teachers', 'employee_id')) {
+            Schema::table('teachers', function (Blueprint $table) {
+                $table->string('employee_id')->nullable()->change();
+            });
+        }
 
     }
 

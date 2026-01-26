@@ -13,6 +13,7 @@ class MyVirtualSessions extends Component
     use WithPagination;
 
     public $view = 'upcoming'; // upcoming, past, all
+
     public $search = '';
 
     protected $queryString = ['view', 'search'];
@@ -25,12 +26,14 @@ class MyVirtualSessions extends Component
         // Authorize
         if ($participant->user_id !== Auth::id()) {
             $this->dispatch('error', 'Unauthorized action.');
+
             return;
         }
 
         // Check if session is live
-        if (!$session->isLive()) {
+        if (! $session->isLive()) {
             $this->dispatch('error', 'This session is not currently live.');
+
             return;
         }
 
@@ -46,7 +49,7 @@ class MyVirtualSessions extends Component
             return redirect()->away($joinUrl);
 
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Failed to join session: ' . $e->getMessage());
+            $this->dispatch('error', 'Failed to join session: '.$e->getMessage());
         }
     }
 
@@ -58,7 +61,7 @@ class MyVirtualSessions extends Component
         if ($this->search) {
             $query->whereHas('virtualSession', function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
-                  ->orWhere('description', 'like', "%{$this->search}%");
+                    ->orWhere('description', 'like', "%{$this->search}%");
             });
         }
 
@@ -66,16 +69,16 @@ class MyVirtualSessions extends Component
             case 'upcoming':
                 $query->whereHas('virtualSession', function ($q) {
                     $q->where('status', 'scheduled')
-                      ->where('scheduled_start', '>', now());
+                        ->where('scheduled_start', '>', now());
                 })
-                ->whereIn('status', ['invited', 'joined'])
-                ->orderBy('created_at', 'desc');
+                    ->whereIn('status', ['invited', 'joined'])
+                    ->orderBy('created_at', 'desc');
                 break;
             case 'past':
                 $query->whereHas('virtualSession', function ($q) {
                     $q->whereIn('status', ['ended', 'cancelled']);
                 })
-                ->orderBy('created_at', 'desc');
+                    ->orderBy('created_at', 'desc');
                 break;
             default:
                 $query->orderBy('created_at', 'desc');

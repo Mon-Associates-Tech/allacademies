@@ -15,7 +15,7 @@ class BookSubscriptionController extends Controller
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
-            'subscription_type' => 'required|in:monthly,annual'
+            'subscription_type' => 'required|in:monthly,annual',
         ]);
 
         // Verify parent has access to this student
@@ -30,7 +30,7 @@ class BookSubscriptionController extends Controller
         if ($existingSubscription) {
             return response()->json([
                 'success' => false,
-                'message' => 'Student already has an active subscription to this book'
+                'message' => 'Student already has an active subscription to this book',
             ], 400);
         }
 
@@ -44,13 +44,13 @@ class BookSubscriptionController extends Controller
             'starts_at' => now(),
             'expires_at' => $request->subscription_type === 'annual'
                 ? now()->addYear()
-                : now()->addMonth()
+                : now()->addMonth(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Subscription created successfully',
-            'subscription' => $subscription
+            'subscription' => $subscription,
         ]);
     }
 
@@ -62,12 +62,12 @@ class BookSubscriptionController extends Controller
         $subscription->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
-            'cancelled_by' => Auth::id()
+            'cancelled_by' => Auth::id(),
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Subscription cancelled successfully'
+            'message' => 'Subscription cancelled successfully',
         ]);
     }
 
@@ -77,7 +77,7 @@ class BookSubscriptionController extends Controller
             ->where('student_id', $studentId)
             ->exists();
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             abort(403, 'Unauthorized access to this student.');
         }
     }

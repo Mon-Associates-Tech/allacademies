@@ -13,11 +13,17 @@ class LibraryBooks extends Component
     use WithPagination;
 
     public $search = '';
+
     public $categoryFilter = '';
+
     public $statusFilter = '';
+
     public $formatFilter = '';
+
     public $availabilityFilter = '';
+
     public $sortBy = 'title';
+
     public $sortDirection = 'asc';
 
     protected $queryString = [
@@ -76,18 +82,18 @@ class LibraryBooks extends Component
     {
         $query = Book::with(['bookCategory', 'author.user'])
             ->withCount([
-                'borrowings as active_borrowings_count' => function($query) {
+                'borrowings as active_borrowings_count' => function ($query) {
                     $query->where('status', 'active');
                 },
-                'borrowings as total_borrowings_count'
+                'borrowings as total_borrowings_count',
             ]);
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                    ->orWhere('description', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('author.user', function($user) {
-                        $user->where('name', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('author.user', function ($user) {
+                        $user->where('name', 'like', '%'.$this->search.'%');
                     });
             });
         }
@@ -106,11 +112,11 @@ class LibraryBooks extends Component
 
         if ($this->availabilityFilter) {
             if ($this->availabilityFilter === 'available') {
-                $query->whereDoesntHave('borrowings', function($q) {
+                $query->whereDoesntHave('borrowings', function ($q) {
                     $q->where('status', 'active');
                 });
             } elseif ($this->availabilityFilter === 'borrowed') {
-                $query->whereHas('borrowings', function($q) {
+                $query->whereHas('borrowings', function ($q) {
                     $q->where('status', 'active');
                 });
             }
@@ -135,7 +141,7 @@ class LibraryBooks extends Component
     public function availableBooks()
     {
         return $this->getBooksQuery()
-            ->whereDoesntHave('borrowings', function($q) {
+            ->whereDoesntHave('borrowings', function ($q) {
                 $q->where('status', 'active');
             })
             ->count();
@@ -145,7 +151,7 @@ class LibraryBooks extends Component
     public function borrowedBooks()
     {
         return $this->getBooksQuery()
-            ->whereHas('borrowings', function($q) {
+            ->whereHas('borrowings', function ($q) {
                 $q->where('status', 'active');
             })
             ->count();
@@ -155,7 +161,7 @@ class LibraryBooks extends Component
     {
         $book = Book::findOrFail($bookId);
         $book->update([
-            'status' => $book->status === 'published' ? 'draft' : 'published'
+            'status' => $book->status === 'published' ? 'draft' : 'published',
         ]);
 
         session()->flash('success', 'Book status updated successfully!');

@@ -2,25 +2,31 @@
 
 namespace App\Livewire\Administrators;
 
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\User;
-use App\Models\Role;
-use Illuminate\Support\Facades\Hash;
-use Log;
 
 class UserManagement extends Component
 {
     use WithPagination;
 
     public $name;
+
     public $email;
+
     public $password;
+
     public $roleIds = [];
+
     public $userSearchTerm = '';
+
     public $isEditing = false;
+
     public $editingUserId;
+
     public $roles;
 
     protected $rules = [
@@ -109,16 +115,16 @@ class UserManagement extends Component
     }
 
     #[Computed]
-   public function getUsersProperty()
-{
+    public function getUsersProperty()
+    {
 
-    return User::when($this->userSearchTerm, function ($query) {
-                return $query->where('name', 'like', '%' . $this->userSearchTerm . '%')
-                             ->orWhere('email', 'like', '%' . $this->userSearchTerm . '%');
-            })
+        return User::when($this->userSearchTerm, function ($query) {
+            return $query->where('name', 'like', '%'.$this->userSearchTerm.'%')
+                ->orWhere('email', 'like', '%'.$this->userSearchTerm.'%');
+        })
             ->with('roles')
             ->paginate(10);
-}
+    }
 
     public function updatedUserSearchTerm()
     {
@@ -128,7 +134,6 @@ class UserManagement extends Component
 
     public function render()
     {
-
 
         return view('livewire.administrators.user-management');
     }

@@ -9,10 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('students', static function (Blueprint $table) {
-            $table->text('bio')->nullable();
-            $table->string('favorite_subjects')->nullable();
-            $table->text('learning_goals')->nullable();
-            $table->json('social_links')->nullable();
+            if (!Schema::hasColumn('students', 'bio')) {
+                $table->text('bio')->nullable();
+            }
+            if (!Schema::hasColumn('students', 'favorite_subjects')) {
+                $table->string('favorite_subjects')->nullable();
+            }
+            if (!Schema::hasColumn('students', 'learning_goals')) {
+                $table->text('learning_goals')->nullable();
+            }
+            if (!Schema::hasColumn('students', 'social_links')) {
+                $table->json('social_links')->nullable();
+            }
         });
     }
 

@@ -2,28 +2,39 @@
 
 namespace App\Livewire\Administrators;
 
-use Livewire\Component;
-use Livewire\WithPagination;
+use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\Teacher;
-use App\Models\Student;
 use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class GroupManagement extends Component
 {
     use WithPagination;
 
     public $name;
+
     public $slug;
+
     public $description;
+
     public $teacherId;
+
     public $searchTerm = '';
+
     public $isEditing = false;
+
     public $editingGroupId;
+
     public $teachers;
+
     public $selectedGroupId;
+
     public $showStudents = false;
+
     public $studentsNotInGroup = [];
+
     public $selectedStudents = [];
 
     protected $rules = [
@@ -109,6 +120,7 @@ class GroupManagement extends Component
         // Check if students are in this group
         if ($group->students()->count() > 0) {
             session()->flash('error', 'Cannot delete group that has students. Please move students to another group first.');
+
             return;
         }
 
@@ -135,6 +147,7 @@ class GroupManagement extends Component
     {
         if (empty($this->selectedStudents)) {
             session()->flash('error', 'No students selected.');
+
             return;
         }
 
@@ -178,7 +191,7 @@ class GroupManagement extends Component
     {
         $groups = StudentGroup::where('name', 'like', '%'.$this->searchTerm.'%')
             ->orWhere('description', 'like', '%'.$this->searchTerm.'%')
-            ->orWhereHas('teacher.user', function($query) {
+            ->orWhereHas('teacher.user', function ($query) {
                 $query->where('name', 'like', '%'.$this->searchTerm.'%');
             })
             ->with(['teacher.user', 'students'])
@@ -190,7 +203,7 @@ class GroupManagement extends Component
 
         return view('livewire.administrators.group-management', [
             'groups' => $groups,
-            'studentsInGroup' => $studentsInSelectedGroup
+            'studentsInGroup' => $studentsInSelectedGroup,
         ]);
     }
 }

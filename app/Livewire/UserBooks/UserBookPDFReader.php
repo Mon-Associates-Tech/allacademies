@@ -14,23 +14,35 @@ class UserBookPDFReader extends Component
 {
     // Core properties
     public $bookId;
+
     public $book;
+
     public $currentPage = 1;
+
     public $totalPages = 0;
+
     public $isVisible = false;
+
     public $hasAccess = false;
+
     public $errorMessage = null;
 
     // UI state properties
     public $isLoading = false;
+
     public $scale = 1.2;
+
     public $isFullscreen = false;
 
     // Configuration properties
     public $autoSaveInterval = 30000; // 30 seconds
+
     public $progressSaveDelay = 5000; // 5 seconds after page change
+
     public $maxZoom = 3.0;
+
     public $minZoom = 0.5;
+
     public $zoomStep = 0.2;
 
     public function mount($bookId = null, array $config = []): void
@@ -62,7 +74,7 @@ class UserBookPDFReader extends Component
             $this->loadBook();
             \Log::info('User book loaded successfully', [
                 'hasAccess' => $this->hasAccess,
-                'book_title' => $this->book->title ?? 'No title'
+                'book_title' => $this->book->title ?? 'No title',
             ]);
 
             if ($this->hasAccess) {
@@ -87,7 +99,7 @@ class UserBookPDFReader extends Component
                         'maxZoom' => $this->maxZoom,
                         'minZoom' => $this->minZoom,
                         'zoomStep' => $this->zoomStep,
-                    ]
+                    ],
                 ];
 
                 \Log::info('Dispatching initializePDFReader with data', $dispatchData);
@@ -97,20 +109,20 @@ class UserBookPDFReader extends Component
             } else {
                 \Log::warning('User does not have access to user book', [
                     'errorMessage' => $this->errorMessage,
-                    'bookId' => $this->bookId
+                    'bookId' => $this->bookId,
                 ]);
                 $this->dispatch('show-error', [
-                    'message' => $this->errorMessage ?? 'You do not have access to this book.'
+                    'message' => $this->errorMessage ?? 'You do not have access to this book.',
                 ]);
             }
         } catch (\Exception $e) {
             \Log::error('Exception in openReader', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            $this->errorMessage = 'Failed to open PDF reader: ' . $e->getMessage();
+            $this->errorMessage = 'Failed to open PDF reader: '.$e->getMessage();
             $this->dispatch('show-error', [
-                'message' => $this->errorMessage
+                'message' => $this->errorMessage,
             ]);
         } finally {
             $this->isLoading = false;
@@ -149,7 +161,6 @@ class UserBookPDFReader extends Component
             $this->isFullscreen = (bool) $data['isFullscreen'];
         }
     }
-
 
     public function goToPage(int $pageNumber): void
     {
@@ -205,7 +216,7 @@ class UserBookPDFReader extends Component
     // Fullscreen methods
     public function toggleFullscreen(): void
     {
-        $this->isFullscreen = !$this->isFullscreen;
+        $this->isFullscreen = ! $this->isFullscreen;
         $this->dispatch('pdfToggleFullscreen');
     }
 
@@ -222,7 +233,7 @@ class UserBookPDFReader extends Component
         } catch (\Exception $e) {
             \Log::error('Failed to load user book', [
                 'bookId' => $this->bookId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             $this->errorMessage = 'Book not found.';
             $this->hasAccess = false;
@@ -237,6 +248,7 @@ class UserBookPDFReader extends Component
         // Owner can always access their own books
         if ($this->book->user_id === $user->id) {
             $this->hasAccess = true;
+
             return;
         }
 
@@ -248,6 +260,7 @@ class UserBookPDFReader extends Component
 
         if ($sharedAccess) {
             $this->hasAccess = true;
+
             return;
         }
 
@@ -271,7 +284,7 @@ class UserBookPDFReader extends Component
         } catch (\Exception $e) {
             \Log::warning('Failed to log user book access', [
                 'book_id' => $this->bookId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -281,14 +294,17 @@ class UserBookPDFReader extends Component
         $this->reset([
             'bookId', 'book', 'currentPage', 'totalPages',
             'hasAccess', 'errorMessage', 'isLoading',
-            'scale', 'isFullscreen'
+            'scale', 'isFullscreen',
         ]);
     }
 
     // Computed properties
     public function getProgressPercentage(): float|int
     {
-        if ($this->totalPages <= 0) return 0;
+        if ($this->totalPages <= 0) {
+            return 0;
+        }
+
         return round(($this->currentPage / $this->totalPages) * 100, 2);
     }
 
@@ -332,7 +348,7 @@ class UserBookPDFReader extends Component
         \Log::info('Rendering UserBookPDFReaderComponent', [
             'isVisible' => $this->isVisible,
             'hasAccess' => $this->hasAccess,
-            'bookId' => $this->bookId
+            'bookId' => $this->bookId,
         ]);
 
         return view('livewire.user-books.user-book-pdf-reader-modal', [
@@ -347,4 +363,3 @@ class UserBookPDFReader extends Component
         ]);
     }
 }
-

@@ -31,7 +31,7 @@ return new class extends Migration
             $table->dropColumn(['description']);
         });
         Schema::table('academic_subjects', function (Blueprint $table) {
-            //$table->dropColumn(['description']);
+            // $table->dropColumn(['description']);
         });
     }
 };

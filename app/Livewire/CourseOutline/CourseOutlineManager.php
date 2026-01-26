@@ -2,14 +2,11 @@
 
 namespace App\Livewire\CourseOutline;
 
-use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
-use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\CourseOutline;
 use App\Models\CourseOutlineItem;
-use JetBrains\PhpStorm\NoReturn;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -19,36 +16,58 @@ class CourseOutlineManager extends Component
 
     // Existing properties for creating outline
     public $selectedSubject;
+
     public $selectedLevel;
+
     public $selectedPeriod;
+
     public $title;
+
     public $description;
 
     // For outline items
     public $showItemForm = false;
+
     public $selectedOutline;
+
     public $selectedTopic;
+
     public $selectedSubtopic;
+
     public $plannedDate;
+
     public $teachingStrategy;
+
     public $resourcesNeeded;
+
     public $learningObjectives;
+
     public $assessmentMethod;
+
     public $notes;
 
     // For new topic/subtopic creation
     public $showNewTopicForm = false;
+
     public $showNewSubtopicForm = false;
+
     public $newTopicTitle;
+
     public $newTopicDescription;
+
     public $newSubtopicTitle;
+
     public $newSubtopicDescription;
 
     // Lists
     public $subjects = [];
+
     public $levels = [];
+
     public $periods = [];
+
     public $topics = [];
+
     public $subtopics = [];
 
     protected $rules = [
@@ -105,7 +124,7 @@ class CourseOutlineManager extends Component
             'resourcesNeeded',
             'learningObjectives',
             'assessmentMethod',
-            'notes'
+            'notes',
         ]);
     }
 
@@ -121,7 +140,7 @@ class CourseOutlineManager extends Component
             'resourcesNeeded',
             'learningObjectives',
             'assessmentMethod',
-            'notes'
+            'notes',
         ]);
     }
 
@@ -230,7 +249,7 @@ class CourseOutlineManager extends Component
         return view('livewire.teachers.course.course-outline-manager', [
             'outlines' => CourseOutline::where('teacher_id', auth()->user()->teacher->id)
                 ->with(['outlineItems.topic', 'outlineItems.subtopic', 'academicSubject', 'academicLevel', 'academicPeriod'])
-                ->paginate(10)
+                ->paginate(10),
         ]);
     }
 }

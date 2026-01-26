@@ -26,7 +26,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
      */
     public function getTopicsForSubject(int $subjectId): Collection
     {
-        if (!$this->canAccessSubject($subjectId)) {
+        if (! $this->canAccessSubject($subjectId)) {
             return collect();
         }
 
@@ -41,11 +41,12 @@ class SubjectSelectionService implements SubjectSelectionInterface
      */
     public function canAccessSubject(int $subjectId): bool
     {
-        if (!$this->student) {
+        if (! $this->student) {
             return false;
         }
 
         $availableSubjects = $this->getAvailableSubjects();
+
         return $availableSubjects->contains('id', $subjectId);
     }
 
@@ -54,11 +55,11 @@ class SubjectSelectionService implements SubjectSelectionInterface
      */
     public function getAvailableSubjects(): Collection
     {
-        if (!$this->student && auth()->user()->role === UserRole::STUDENT->value) {
+        if (! $this->student && auth()->user()->role === UserRole::STUDENT->value) {
             $this->student = Student::firstOrFail(['user_id' => auth()->user()->id, 'student_id' => Student::generateStudentId(auth()->user()->school_id)]);
         }
 
-        if (!$this->student) {
+        if (! $this->student) {
             session()->flash('error', 'You do not have access to this subject.');
         }
 
@@ -80,7 +81,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
 
         // Merge individual subjects, removing duplicates
         foreach ($individualSubjects as $subject) {
-            if (!$subjects->contains('id', $subject->id)) {
+            if (! $subjects->contains('id', $subject->id)) {
                 $subjects->push($subject);
             }
         }
@@ -104,7 +105,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
     {
         $topic = AcademicTopic::find($topicId);
 
-        if (!$topic || !$this->canAccessSubject($topic->academic_subject_id)) {
+        if (! $topic || ! $this->canAccessSubject($topic->academic_subject_id)) {
             return collect();
         }
 
@@ -146,7 +147,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
      */
     public function getSelectionHierarchy(int $subjectId, ?int $topicId = null, ?int $subtopicId = null): array
     {
-        if (!$this->validateSelection($subjectId, $topicId, $subtopicId)) {
+        if (! $this->validateSelection($subjectId, $topicId, $subtopicId)) {
             return [];
         }
 
@@ -195,7 +196,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
     public function validateSelection(int $subjectId, ?int $topicId = null, ?int $subtopicId = null): bool
     {
         // Check if user has access to the subject
-        if (!$this->canAccessSubject($subjectId)) {
+        if (! $this->canAccessSubject($subjectId)) {
             return false;
         }
 
@@ -205,7 +206,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
                 ->where('academic_subject_id', $subjectId)
                 ->first();
 
-            if (!$topic) {
+            if (! $topic) {
                 return false;
             }
 
@@ -215,14 +216,14 @@ class SubjectSelectionService implements SubjectSelectionInterface
                     ->where('academic_topic_id', $topicId)
                     ->first();
 
-                if (!$subtopic) {
+                if (! $subtopic) {
                     return false;
                 }
             }
         }
 
         // If subtopic is selected without topic, it's invalid
-        if ($subtopicId && !$topicId) {
+        if ($subtopicId && ! $topicId) {
             return false;
         }
 
@@ -234,7 +235,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
      */
     public function getAvailableQuestionCounts(int $subjectId, ?int $topicId = null, ?int $subtopicId = null): array
     {
-        if (!$this->validateSelection($subjectId, $topicId, $subtopicId)) {
+        if (! $this->validateSelection($subjectId, $topicId, $subtopicId)) {
             return [];
         }
 
@@ -275,6 +276,7 @@ class SubjectSelectionService implements SubjectSelectionInterface
     public function setStudent(Student $student): self
     {
         $this->student = $student;
+
         return $this;
     }
 }

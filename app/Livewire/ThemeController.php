@@ -7,6 +7,7 @@ use Livewire\Component;
 class ThemeController extends Component
 {
     public $darkMode = false;
+
     public $sidebarExpanded = false;
 
     public function mount()
@@ -18,14 +19,14 @@ class ThemeController extends Component
 
     public function toggleDarkMode()
     {
-        $this->darkMode = !$this->darkMode;
+        $this->darkMode = ! $this->darkMode;
         session(['dark-mode' => $this->darkMode]);
         $this->dispatch('dark-mode-toggled', ['darkMode' => $this->darkMode]);
     }
 
     public function toggleSidebar()
     {
-        $this->sidebarExpanded = !$this->sidebarExpanded;
+        $this->sidebarExpanded = ! $this->sidebarExpanded;
         session(['sidebar-expanded' => $this->sidebarExpanded]);
         $this->dispatch('sidebar-toggled', ['sidebarExpanded' => $this->sidebarExpanded]);
     }

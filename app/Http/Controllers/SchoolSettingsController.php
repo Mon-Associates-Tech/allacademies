@@ -12,6 +12,7 @@ class SchoolSettingsController extends Controller
     public function index()
     {
         $settings = SchoolSetting::getGrouped();
+
         return view('school-settings.index', compact('settings'));
     }
 
@@ -30,7 +31,7 @@ class SchoolSettingsController extends Controller
             'group' => 'required|string|max:255',
             'options' => 'nullable|array',
             'required' => 'boolean',
-            'sort_order' => 'integer'
+            'sort_order' => 'integer',
         ]);
 
         if ($validator->fails()) {
@@ -53,14 +54,14 @@ class SchoolSettingsController extends Controller
     public function update(Request $request, SchoolSetting $schoolSetting)
     {
         $validator = Validator::make($request->all(), [
-            'key' => 'required|string|max:255|unique:school_settings,key,' . $schoolSetting->id,
+            'key' => 'required|string|max:255|unique:school_settings,key,'.$schoolSetting->id,
             'type' => 'required|in:text,longtext,image,json,pdf,boolean,number,select,radio',
             'label' => 'required|string|max:255',
             'description' => 'nullable|string',
             'group' => 'required|string|max:255',
             'options' => 'nullable|array',
             'required' => 'boolean',
-            'sort_order' => 'integer'
+            'sort_order' => 'integer',
         ]);
 
         if ($validator->fails()) {

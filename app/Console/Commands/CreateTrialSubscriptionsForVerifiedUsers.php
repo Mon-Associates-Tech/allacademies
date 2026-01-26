@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class CreateTrialSubscriptionsForVerifiedUsers extends Command
 {
     protected $signature = 'subscriptions:create-trials-for-verified';
+
     protected $description = 'Create free trial token subscriptions for all verified users without subscriptions';
 
     public function handle(): int
@@ -23,6 +24,7 @@ class CreateTrialSubscriptionsForVerifiedUsers extends Command
 
         if ($count === 0) {
             $this->info('No users need trial subscriptions.');
+
             return self::SUCCESS;
         }
 

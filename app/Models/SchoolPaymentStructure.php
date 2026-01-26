@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SchoolPaymentStructure extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -21,6 +21,7 @@ class SchoolPaymentStructure extends Model
         'academic_level_id',
         'name',
         'payment_type',
+        'subaccount_id',
         'amount',
         'currency',
         'due_date',
@@ -84,6 +85,11 @@ class SchoolPaymentStructure extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SchoolPayment::class, 'payment_structure_id');
+    }
+
+    public function subaccount(): BelongsTo
+    {
+        return $this->belongsTo(Subaccount::class);
     }
 
     // Scopes
@@ -174,7 +180,9 @@ class SchoolPaymentStructure extends Model
     public function getCollectionRate(): float
     {
         $totalStudents = $this->getApplicableStudents()->count();
-        if ($totalStudents === 0) return 0;
+        if ($totalStudents === 0) {
+            return 0;
+        }
 
         $paidStudents = $this->payments()
             ->succeeded()

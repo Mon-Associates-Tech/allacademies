@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('academic_chat_messages', static function (Blueprint $table) {
-           $table->string('model_used')->nullable()->after('usage');
+            $table->string('model_used')->nullable()->after('usage');
             $table->json('images')->nullable()->after('model_used');
         });
     }
@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('academic_chat_messages', static function (Blueprint $table) {
             $table->dropIndex(['user_id', 'conversation_id']);
-            $table->dropColumn([ 'model_used', 'images']);
+            $table->dropColumn(['model_used', 'images']);
         });
     }
 };

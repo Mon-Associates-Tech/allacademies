@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 trait HasStudents
 {
-
     /**
      * Get all students associated with this teacher
      * Includes students from:
@@ -16,7 +15,7 @@ trait HasStudents
      * - Academic groups the teacher belongs to
      * - Student groups managed by the teacher
      *
-     * @param bool $withSource - Whether to include source information
+     * @param  bool  $withSource  - Whether to include source information
      * @return Collection
      */
     public function getAllStudents($withSource = false)
@@ -45,10 +44,10 @@ trait HasStudents
                 ->get();
 
             foreach ($levelStudents as $student) {
-                if (!$studentIds->contains($student->id)) {
+                if (! $studentIds->contains($student->id)) {
                     $studentIds->push($student->id);
                     if ($withSource) {
-                        $student->association_source = 'Academic Level: ' . $level->name;
+                        $student->association_source = 'Academic Level: '.$level->name;
                         $student->association_type = 'level';
                         $student->is_primary_level = $level->pivot->is_primary ?? false;
                         $studentsWithSource->push($student);
@@ -66,10 +65,10 @@ trait HasStudents
                 ->get();
 
             foreach ($groupStudents as $student) {
-                if (!$studentIds->contains($student->id)) {
+                if (! $studentIds->contains($student->id)) {
                     $studentIds->push($student->id);
                     if ($withSource) {
-                        $student->association_source = 'Academic Group: ' . $group->name;
+                        $student->association_source = 'Academic Group: '.$group->name;
                         $student->association_type = 'group';
                         $student->is_primary_group = $group->pivot->is_primary ?? false;
                         $studentsWithSource->push($student);
@@ -85,10 +84,10 @@ trait HasStudents
                 ->get();
 
             foreach ($studentGroupStudents as $student) {
-                if (!$studentIds->contains($student->id)) {
+                if (! $studentIds->contains($student->id)) {
                     $studentIds->push($student->id);
                     if ($withSource) {
-                        $student->association_source = 'Student Group: ' . $studentGroup->name;
+                        $student->association_source = 'Student Group: '.$studentGroup->name;
                         $student->association_type = 'student_group';
                         $studentsWithSource->push($student);
                     }
@@ -153,19 +152,20 @@ trait HasStudents
     /**
      * Check if teacher has access to a specific student
      *
-     * @param int|Student $student
+     * @param  int|Student  $student
      * @return bool
      */
     public function hasStudent($student)
     {
         $studentId = is_object($student) ? $student->id : $student;
+
         return $this->getAllStudents()->contains('id', $studentId);
     }
 
     /**
      * Get students by academic level
      *
-     * @param int $academicLevelId
+     * @param  int  $academicLevelId
      * @return Collection
      */
     public function getStudentsByLevel($academicLevelId)
@@ -178,7 +178,7 @@ trait HasStudents
     /**
      * Get students by academic group
      *
-     * @param int $academicGroupId
+     * @param  int  $academicGroupId
      * @return Collection
      */
     public function getStudentsByGroup($academicGroupId)
@@ -235,5 +235,4 @@ trait HasStudents
             'by_association_type' => $studentsWithDetails->groupBy('association_type')->map->count()->toArray(),
         ];
     }
-
 }

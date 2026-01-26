@@ -85,7 +85,8 @@
             <!-- Brand Section -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                    <div
+                        class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                         <img src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo" class="w-8 h-8">
                     </div>
                     <div>
@@ -170,7 +171,7 @@
                             </svg>
                             Features & Modules
                         </a></li>
-                    <li><a href="{{ route('sign-up') }}"
+                    <li><a href="{{ route('register') }}"
                            class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,9 +204,11 @@
                             Success Stories
                         </a></li>
 
-                    <li><x-link.primary type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
+                    <li>
+                        <x-link.primary type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
                             <span>Make Payment</span>
-                        </x-link.primary></li>
+                        </x-link.primary>
+                    </li>
                 </ul>
             </div>
 
@@ -412,7 +415,7 @@
                         email: email,
                         _token: '{{ csrf_token() }}'
                     })
-                        .then(function(response) {
+                        .then(function (response) {
                             if (response.data.success) {
                                 alert('Thank you for subscribing! You\'ll hear from us soon.');
                                 newsletterForm.reset();
@@ -420,7 +423,7 @@
                                 alert(response.data.message || 'An error occurred. Please try again.');
                             }
                         })
-                        .catch(function(error) {
+                        .catch(function (error) {
                             if (error.response && error.response.data && error.response.data.message) {
                                 alert(error.response.data.message);
                             } else {
@@ -428,7 +431,7 @@
                             }
                             console.error('Newsletter subscription error:', error);
                         })
-                        .finally(function() {
+                        .finally(function () {
                             // Re-enable button
                             submitButton.disabled = false;
                             submitButton.innerHTML = originalText;

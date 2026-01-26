@@ -98,7 +98,7 @@
         </div>
 
         <!-- CTA Button -->
-        <a href="{{ route('sign-up') }}"
+        <a href="{{ route('register') }}"
            class="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white py-5 px-8 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 block text-center group/button relative overflow-hidden">
                             <span
                                 class="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-800 opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></span>
@@ -214,7 +214,7 @@
         </div>
 
         <!-- CTA Button -->
-        <a href="{{ route('sign-up') }}"
+        <a href="{{ route('register') }}"
            class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-5 px-8 rounded-2xl font-bold text-xl hover:from-blue-700 hover:to-green-700 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 block text-center group relative overflow-hidden">
                             <span
                                 class="absolute inset-0 bg-gradient-to-r from-blue-700 to-green-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
@@ -346,7 +346,7 @@
         </div>
 
         <!-- Enhanced CTA button -->
-        <a href="{{route('sign-up')}}"
+        <a href="{{route('register')}}"
            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-5 px-8 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 block text-center group/button relative overflow-hidden">
                             <span
                                 class="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></span>

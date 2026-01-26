@@ -3,21 +3,26 @@
 namespace App\Livewire\Librarians;
 
 use App\Models\BookBorrowing;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
-use Carbon\Carbon;
 
 class BorrowedBooks extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $dueDateFilter = '';
+
     public $overdueOnly = false;
+
     public $showReturnModal = false;
+
     public $selectedBorrowing = null;
+
     public $returnCondition = 'good';
+
     public $returnNotes = '';
 
     protected $queryString = [
@@ -48,13 +53,13 @@ class BorrowedBooks extends Component
             ->where('status', 'active');
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->whereHas('student.user', function($user) {
-                    $user->where('name', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->whereHas('student.user', function ($user) {
+                    $user->where('name', 'like', '%'.$this->search.'%');
                 })
-                ->orWhereHas('book', function($book) {
-                    $book->where('title', 'like', '%' . $this->search . '%');
-                });
+                    ->orWhereHas('book', function ($book) {
+                        $book->where('title', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 

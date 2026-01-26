@@ -12,10 +12,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicTopic extends Model
 {
+    use AcademicGroupLogs;
     use HasFactory;
     use SoftDeletes;
     use Trackable;
-    use AcademicGroupLogs;
 
     /**
      * @var array<int, string>
@@ -61,6 +61,4 @@ class AcademicTopic extends Model
     {
         return $this->morphMany(Question::class, 'questionable');
     }
-
-
 }

@@ -122,5 +122,4 @@ return new class extends Migration
             $table->dropColumn(['added_by', 'modified_by']);
         });
     }
-
 };

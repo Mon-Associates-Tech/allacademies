@@ -20,12 +20,33 @@ class Note extends Model implements CalendarEventable
         'user_id',
         'book_id',
         'academic_subject_id',
-        'is_public'
+        'is_public',
+        'background_color',
     ];
 
     protected $casts = [
-        'is_public' => 'boolean'
+        'is_public' => 'boolean',
     ];
+
+    public static function getBackgroundColors(): array
+    {
+        return [
+            'white' => ['name' => 'White', 'class' => 'bg-white dark:bg-gray-800'],
+            'blue' => ['name' => 'Blue', 'class' => 'bg-blue-50 dark:bg-blue-900/20'],
+            'green' => ['name' => 'Green', 'class' => 'bg-green-50 dark:bg-green-900/20'],
+            'yellow' => ['name' => 'Yellow', 'class' => 'bg-yellow-50 dark:bg-yellow-900/20'],
+            'purple' => ['name' => 'Purple', 'class' => 'bg-purple-50 dark:bg-purple-900/20'],
+            'pink' => ['name' => 'Pink', 'class' => 'bg-pink-50 dark:bg-pink-900/20'],
+            'indigo' => ['name' => 'Indigo', 'class' => 'bg-indigo-50 dark:bg-indigo-900/20'],
+        ];
+    }
+
+    public function getBackgroundClass(): string
+    {
+        $colors = self::getBackgroundColors();
+
+        return $colors[$this->background_color]['class'] ?? $colors['white']['class'];
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -122,9 +143,21 @@ class Note extends Model implements CalendarEventable
             return true;
         }
 
-        // Check group-based shares
+        // Check guest email shares
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if ($user && $user->email) {
+            if ($this->shares()->where('guest_email', $user->email)->exists()) {
+                return true;
+            }
+        }
+
+        // Check group-based shares
+        if (! $user) {
+            return false;
+        }
+
+        // If user doesn't have a student record, only check individual shares (already done above)
+        if (! $user->student) {
             return false;
         }
 
@@ -166,7 +199,7 @@ class Note extends Model implements CalendarEventable
         }
 
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -196,6 +229,7 @@ class Note extends Model implements CalendarEventable
             })
             ->exists();
     }
+
     public function canUserView($userId): bool
     {
         return $this->user_id === $userId ||

@@ -21,9 +21,9 @@ return new class extends Migration
 
             // Recording Details
             $table->string('type')->default('bbb');
-//            $table->enum('type', ['bbb', 'uploaded'])->default('bbb');
+            //            $table->enum('type', ['bbb', 'uploaded'])->default('bbb');
             $table->string('status')->default('processing');
-//            $table->enum('status', ['processing', 'published', 'unpublished', 'deleted'])->default('processing');
+            //            $table->enum('status', ['processing', 'published', 'unpublished', 'deleted'])->default('processing');
             $table->string('format')->nullable(); // presentation, video, etc.
 
             // BBB Recording Data

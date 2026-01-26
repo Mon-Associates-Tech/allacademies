@@ -8,9 +8,13 @@ use Livewire\Component;
 class PublicProfile extends Component
 {
     public User $user;
+
     public $student;
+
     public $totalAssessments = 0;
+
     public $averageScore = 0;
+
     public $recentActivity;
 
     public function mount(User $user)
@@ -18,7 +22,7 @@ class PublicProfile extends Component
         $this->user = $user;
         $this->student = $user->student;
 
-        if (!$this->student) {
+        if (! $this->student) {
             abort(404, 'Student profile not found.');
         }
 
@@ -51,7 +55,7 @@ class PublicProfile extends Component
     {
         return view('livewire.students.public-profile')
             ->layout('layouts.app', [
-                'title' => $this->user->name . ' - Student Profile'
+                'title' => $this->user->name.' - Student Profile',
             ]);
     }
 }

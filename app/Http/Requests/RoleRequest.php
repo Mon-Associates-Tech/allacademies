@@ -15,7 +15,7 @@ class RoleRequest extends FormRequest
     {
         return $this->isMethod('GET') ? [] : [
             'email' => ['required', 'string', 'email', 'exists:users,email'],
-            'role' => ['required', 'string', 'in:admin,moderator,subscriber'],
+            'role' => ['required', 'string', 'in:admin,moderator,guest'],
         ];
     }
 }

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class LibraryCard extends Model
 {
@@ -34,10 +33,13 @@ class LibraryCard extends Model
     ];
 
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_EXPIRED = 'expired';
 
     const TYPE_STUDENT = 'student';
+
     const TYPE_PREMIUM = 'premium';
 
     // Relationships
@@ -69,7 +71,7 @@ class LibraryCard extends Model
     // Accessors
     public function getIsActiveAttribute()
     {
-        return $this->status === self::STATUS_ACTIVE && !$this->is_expired;
+        return $this->status === self::STATUS_ACTIVE && ! $this->is_expired;
     }
 
     public function getIsExpiredAttribute()
@@ -84,7 +86,7 @@ class LibraryCard extends Model
 
     public function getCanBorrowAttribute()
     {
-        return $this->is_active && !$this->is_expired;
+        return $this->is_active && ! $this->is_expired;
     }
 
     // Scopes
@@ -106,7 +108,7 @@ class LibraryCard extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         return $query->where('expiry_date', '<=', now()->addDays($days))
-                    ->where('expiry_date', '>=', now());
+            ->where('expiry_date', '>=', now());
     }
 
     // Methods
@@ -116,7 +118,7 @@ class LibraryCard extends Model
             'status' => self::STATUS_SUSPENDED,
             'suspended_at' => now(),
             'suspended_by' => auth()->id(),
-            'notes' => $this->notes . ($reason ? "\nSuspended: {$reason}" : ''),
+            'notes' => $this->notes.($reason ? "\nSuspended: {$reason}" : ''),
         ]);
     }
 

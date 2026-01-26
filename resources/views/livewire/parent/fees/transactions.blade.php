@@ -228,9 +228,19 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div
-                                        class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->payer->name }}</div>
+                                        class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->getPayerDisplayName() }}</div>
                                     <div
-                                        class="text-xs text-gray-500 dark:text-gray-400">{{ $transaction->payer->email }}</div>
+                                        class="text-xs text-gray-500 dark:text-gray-400">
+                                        @if($transaction->payer)
+                                            @if($transaction->payer_type === 'parent')
+                                                {{ $transaction->payer->user->email ?? 'N/A' }}
+                                            @else
+                                                {{ $transaction->payer->email ?? 'N/A' }}
+                                            @endif
+                                        @else
+                                            {{ $transaction->payer_email ?? 'N/A' }}
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span

@@ -7,7 +7,7 @@ trait ShouldScopeSchool
     // In models that should be school-scoped (like Teacher, Student, etc.)
     public function scopeForSchool($query, $schoolId = null)
     {
-        if (!$schoolId) {
+        if (! $schoolId) {
             $schoolId = auth()->user()->school_id ?? null;
         }
 
@@ -42,5 +42,4 @@ trait ShouldScopeSchool
 
         return $query->whereRaw('1=0'); // No results for unauthenticated users
     }
-
 }

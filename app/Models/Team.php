@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\TeamStatus;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Enums\TeamStatus;
 
 class Team extends Model
 {
@@ -22,7 +22,7 @@ class Team extends Model
         'status',
         'declined_reason',
         'joining_code',
-        'owner_id'
+        'owner_id',
     ];
 
     /**
@@ -30,7 +30,7 @@ class Team extends Model
      */
     protected $casts = [
         'status' => TeamStatus::class,
-        'meta' => 'array'
+        'meta' => 'array',
     ];
 
     public function owner()

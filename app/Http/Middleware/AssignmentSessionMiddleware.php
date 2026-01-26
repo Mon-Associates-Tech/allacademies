@@ -14,12 +14,12 @@ class AssignmentSessionMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
         $student = Auth::user()->student;
-        if (!$student) {
+        if (! $student) {
             return $next($request);
         }
 
@@ -43,11 +43,11 @@ class AssignmentSessionMiddleware
             $currentRoute = $request->route()->getName();
 
             // If trying to access restricted route, redirect back to assignment
-            if (!in_array($currentRoute, $allowedRoutes)) {
+            if (! in_array($currentRoute, $allowedRoutes)) {
                 session()->flash('warning', 'You have an active assignment in progress. Please complete or submit it before navigating away.');
-                
+
                 return redirect()->route('students.assignment.take', [
-                    'assignment' => $activeSubmission->assignment_id
+                    'assignment' => $activeSubmission->assignment_id,
                 ]);
             }
         }

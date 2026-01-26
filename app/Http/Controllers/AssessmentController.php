@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AssessmentResultExport;
+use App\Http\Resources\AssessmentCollection;
+use App\Http\Resources\AssessmentResource;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use App\Http\Resources\AssessmentResource;
-use App\Http\Resources\AssessmentCollection;
 use Maatwebsite\Excel\Excel;
 use PhpOffice\PhpSpreadsheet\Exception;
 
@@ -100,7 +100,7 @@ class AssessmentController extends Controller
             'questions' => $data,
             'total' => $response->data['total_score'],
             'max' => $response->data['max_score'],
-            'percent' => $response->data['percentage_score']
+            'percent' => $response->data['percentage_score'],
         ]);
 
         return $pdf->download("assessment_{$id}.pdf");

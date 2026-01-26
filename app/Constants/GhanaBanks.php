@@ -6,8 +6,6 @@ class GhanaBanks
 {
     /**
      * Get all Ghana bank codes and names
-     *
-     * @return array
      */
     public static function all(): array
     {
@@ -16,7 +14,7 @@ class GhanaBanks
             '280100' => 'Access Bank (Ghana) Plc',
             '080100' => 'Agricultural Development Bank Plc',
             '300341' => 'Affinity Ghana Savings and Loans',
-            'ATL'    => 'AirtelTigo Money',
+            'ATL' => 'AirtelTigo Money',
             '070101' => 'ARB Apex Bank',
             '210100' => 'Bank of Africa Ghana Limited',
             '010100' => 'Bank of Ghana',
@@ -30,7 +28,7 @@ class GhanaBanks
             '330100' => 'First National Bank Ghana Limited',
             '040100' => 'GCB Bank Limited',
             '230100' => 'Guaranty Trust Bank (Ghana) Limited',
-            'MTN'    => 'MTN Mobile Money',
+            'MTN' => 'MTN Mobile Money',
             '050100' => 'National Investment Bank Limited',
             '360100' => 'OmniBSIC Bank Ghana Limited',
             '300457' => 'Paystack Limited',
@@ -42,27 +40,23 @@ class GhanaBanks
             '020100' => 'Standard Chartered Bank Ghana Plc',
             '060100' => 'United Bank for Africa Ghana Limited',
             '100100' => 'Universal Merchant Bank Ghana Limited',
-            'VOD'    => 'Vodafone Cash',
+            'VOD' => 'Vodafone Cash',
             '120100' => 'Zenith Bank Ghana',
         ];
     }
 
     /**
      * Get bank name from code
-     *
-     * @param string $code
-     * @return string
      */
     public static function getNameFromCode(string $code): string
     {
         $banks = self::all();
+
         return $banks[$code] ?? $code;
     }
 
     /**
      * Get bank codes only
-     *
-     * @return array
      */
     public static function codes(): array
     {
@@ -71,8 +65,6 @@ class GhanaBanks
 
     /**
      * Get bank names only
-     *
-     * @return array
      */
     public static function names(): array
     {
@@ -81,9 +73,6 @@ class GhanaBanks
 
     /**
      * Check if a bank code exists
-     *
-     * @param string $code
-     * @return bool
      */
     public static function codeExists(string $code): bool
     {

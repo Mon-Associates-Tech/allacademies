@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->date('due_date');
             $table->string('payment_method')->default('Momo')->nullable(); // e.g., Momo, Paystack
-           
+
             $table->foreign('academic_group_id')->references('id')->on('academic_groups')->onDelete('cascade');
             $table->foreign('academic_level_id')->references('id')->on('academic_levels')->onDelete('cascade');
             $table->foreign('current_term_id')->references('id')->on('academic_periods')->onDelete('cascade');

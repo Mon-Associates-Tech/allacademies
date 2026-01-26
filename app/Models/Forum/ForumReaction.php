@@ -14,7 +14,7 @@ class ForumReaction extends Model
         'reactable_type',
         'reactable_id',
         'user_id',
-        'type'
+        'type',
     ];
 
     public function reactable()

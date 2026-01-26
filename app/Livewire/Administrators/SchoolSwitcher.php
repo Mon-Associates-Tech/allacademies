@@ -10,8 +10,11 @@ use Livewire\Component;
 class SchoolSwitcher extends Component
 {
     public $currentSchool = null;
+
     public $schools = [];
+
     public $showAllSchools = true;
+
     public $showExpanded = false;
 
     protected $listeners = ['refreshSchoolContext' => 'refreshContext'];
@@ -19,8 +22,8 @@ class SchoolSwitcher extends Component
     public function mount()
     {
         // Check if user has permission to switch schools
-        if (!$this->canSwitchSchools()) {
-           abort(403, 'Unauthorized to switch schools');
+        if (! $this->canSwitchSchools()) {
+            abort(403, 'Unauthorized to switch schools');
         }
 
         $this->loadSchools();
@@ -43,7 +46,7 @@ class SchoolSwitcher extends Component
 
     public function handleSchoolChange($schoolId)
     {
-        if (!$this->canSwitchSchools()) {
+        if (! $this->canSwitchSchools()) {
             return;
         }
 
@@ -58,14 +61,15 @@ class SchoolSwitcher extends Component
 
     public function switchToSchool($schoolId)
     {
-        if (!$this->canSwitchSchools()) {
+        if (! $this->canSwitchSchools()) {
             return;
         }
 
         $school = School::find($schoolId);
 
-        if (!$school) {
+        if (! $school) {
             session()->flash('error', 'School not found.');
+
             return;
         }
 
@@ -82,13 +86,13 @@ class SchoolSwitcher extends Component
         $this->dispatch('school-switched', [
             'schoolId' => $schoolId,
             'schoolName' => $school->name,
-            'reload' => true
+            'reload' => true,
         ]);
     }
 
     public function showAllSchools()
     {
-        if (!$this->canSwitchSchools()) {
+        if (! $this->canSwitchSchools()) {
             return;
         }
 
@@ -108,7 +112,7 @@ class SchoolSwitcher extends Component
         $this->dispatch('school-switched', [
             'schoolId' => null,
             'schoolName' => 'All Schools',
-            'reload' => true
+            'reload' => true,
         ]);
     }
 
@@ -121,6 +125,7 @@ class SchoolSwitcher extends Component
     public function canSwitchSchools(): bool
     {
         $user = Auth::user();
+
         return $user && ($user->hasRole('owner') || $user->isSuperAdmin());
     }
 
@@ -132,6 +137,7 @@ class SchoolSwitcher extends Component
             $school = School::find($schoolId);
             if ($school) {
                 app()->instance('current_school', $school);
+
                 return $school;
             }
         }
@@ -141,7 +147,7 @@ class SchoolSwitcher extends Component
 
     public function getStatsProperty()
     {
-        if (!$this->canSwitchSchools()) {
+        if (! $this->canSwitchSchools()) {
             return [];
         }
 
@@ -164,7 +170,7 @@ class SchoolSwitcher extends Component
             // If there's an error with cross-school queries, return basic stats
             return [
                 'total_schools' => School::active()->count(),
-                'error' => 'Unable to load detailed stats'
+                'error' => 'Unable to load detailed stats',
             ];
         }
 

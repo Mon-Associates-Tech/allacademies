@@ -13,20 +13,26 @@ use Brick\Money\Exception\UnknownCurrencyException;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Arr;
 use Livewire\Component;
 
 class SubscriptionForm extends Component
 {
     public $package;
+
     public $durationInMonths = 3;
+
     public $beneficiaries;
+
     public $academicLevels;
+
     public $academicGroups;
+
     public $academicGroupId;
+
     public $academicSubjects;
 
     public $academicGroupTag;
+
     public $currentTeam;
 
     public function mount($academicGroups, $currentTeam): void
@@ -64,7 +70,7 @@ class SubscriptionForm extends Component
                             'code' => $subject->code ?? '',
                             // Add any other subject properties your blade template needs
                         ];
-                    })->toArray()
+                    })->toArray(),
                 ];
             })->toArray();
         } else {
@@ -114,18 +120,15 @@ class SubscriptionForm extends Component
     {
         if ($this->academicGroupId) {
             $academicGroup = AcademicGroup::find($this->academicGroupId);
+
             return $academicGroup?->tag ?? AcademicGroupTag::BASIC;
         }
+
         return AcademicGroupTag::BASIC;
     }
 
-    public function updatedAcademicGroup(){
+    public function updatedAcademicGroup() {}
 
-    }
-
-    /**
-     * @return int
-     */
     public function getDurationInMonthsProperty(): int
     {
         return (int) $this->durationInMonths;

@@ -40,9 +40,9 @@ class AuthorSeeder extends Seeder
                 'social_links' => json_encode([
                     'twitter' => 'https://twitter.com/MargaretAtwood',
                     'website' => 'https://margaretatwood.ca',
-                    'goodreads' => 'https://goodreads.com/author/show/3472.Margaret_Atwood'
+                    'goodreads' => 'https://goodreads.com/author/show/3472.Margaret_Atwood',
                 ]),
-                'author_statement' => 'Writing is a process of discovery. You don\'t know what you\'re going to write until you write it.'
+                'author_statement' => 'Writing is a process of discovery. You don\'t know what you\'re going to write until you write it.',
             ],
             [
                 'name' => 'Haruki Murakami',
@@ -54,9 +54,9 @@ class AuthorSeeder extends Seeder
                 'writing_experience' => 35,
                 'social_links' => json_encode([
                     'website' => 'https://harukimurakami.com',
-                    'goodreads' => 'https://goodreads.com/author/show/3354.Haruki_Murakami'
+                    'goodreads' => 'https://goodreads.com/author/show/3354.Haruki_Murakami',
                 ]),
-                'author_statement' => 'If you only read the books that everyone else is reading, you can only think what everyone else is thinking.'
+                'author_statement' => 'If you only read the books that everyone else is reading, you can only think what everyone else is thinking.',
             ],
             [
                 'name' => 'Toni Morrison',
@@ -68,10 +68,10 @@ class AuthorSeeder extends Seeder
                 'writing_experience' => 40,
                 'social_links' => json_encode([
                     'website' => 'https://tonimorrison.com',
-                    'goodreads' => 'https://goodreads.com/author/show/14470.Toni_Morrison'
+                    'goodreads' => 'https://goodreads.com/author/show/14470.Toni_Morrison',
                 ]),
-                'author_statement' => 'If there\'s a book that you want to read, but it hasn\'t been written yet, then you must write it.'
-            ]
+                'author_statement' => 'If there\'s a book that you want to read, but it hasn\'t been written yet, then you must write it.',
+            ],
         ];
 
         foreach ($establishedAuthors as $authorData) {
@@ -81,12 +81,12 @@ class AuthorSeeder extends Seeder
                     'email' => $authorData['email'],
                 ],
                 [
-                'name' => $authorData['name'],
-                'email' => $authorData['email'],
-                'password' => Hash::make('password'),
-                'role' => 'author',
-                'email_verified_at' => now(),
-            ]);
+                    'name' => $authorData['name'],
+                    'email' => $authorData['email'],
+                    'password' => Hash::make('password'),
+                    'role' => 'author',
+                    'email_verified_at' => now(),
+                ]);
 
             Author::firstOrCreate([
                 'user_id' => $user->id,
@@ -104,7 +104,7 @@ class AuthorSeeder extends Seeder
 
         // Create 7 more established authors using factory
         User::factory(7)->create([
-            'role' => 'author'
+            'role' => 'author',
         ])->each(function ($user) {
             Author::factory()->awardWinner()->create([
                 'user_id' => $user->id,
@@ -126,9 +126,9 @@ class AuthorSeeder extends Seeder
                 'social_links' => json_encode([
                     'twitter' => 'https://twitter.com/SofiaChenWrites',
                     'instagram' => 'https://instagram.com/sofiachenauthor',
-                    'website' => 'https://sofiachenwriter.com'
+                    'website' => 'https://sofiachenwriter.com',
                 ]),
-                'author_statement' => 'I write to explore the spaces between cultures, the places where identity becomes fluid and stories find their truth.'
+                'author_statement' => 'I write to explore the spaces between cultures, the places where identity becomes fluid and stories find their truth.',
             ],
             [
                 'name' => 'Marcus Johnson',
@@ -140,10 +140,10 @@ class AuthorSeeder extends Seeder
                 'writing_experience' => 2,
                 'social_links' => json_encode([
                     'twitter' => 'https://twitter.com/MarcusJWrites',
-                    'facebook' => 'https://facebook.com/marcusjohnsonwriter'
+                    'facebook' => 'https://facebook.com/marcusjohnsonwriter',
                 ]),
-                'author_statement' => 'Every story I tell is a testament to the strength and beauty of communities that mainstream media often overlooks.'
-            ]
+                'author_statement' => 'Every story I tell is a testament to the strength and beauty of communities that mainstream media often overlooks.',
+            ],
         ];
 
         foreach ($emergingAuthors as $authorData) {
@@ -153,12 +153,12 @@ class AuthorSeeder extends Seeder
                     'email' => $authorData['email'],
                 ],
                 [
-                'name' => $authorData['name'],
-                'email' => $authorData['email'],
-                'password' => Hash::make('password'),
-                'role' => 'author',
-                'email_verified_at' => now(),
-            ]);
+                    'name' => $authorData['name'],
+                    'email' => $authorData['email'],
+                    'password' => Hash::make('password'),
+                    'role' => 'author',
+                    'email_verified_at' => now(),
+                ]);
 
             Author::firstOrCreate([
                 'user_id' => $user->id,
@@ -176,7 +176,7 @@ class AuthorSeeder extends Seeder
 
         // Create 8 more emerging authors using factory
         User::factory(8)->create([
-            'role' => 'author'
+            'role' => 'author',
         ])->each(function ($user) {
             Author::factory()->emerging()->create([
                 'user_id' => $user->id,
@@ -197,10 +197,10 @@ class AuthorSeeder extends Seeder
                 'writing_experience' => 15,
                 'social_links' => json_encode([
                     'linkedin' => 'https://linkedin.com/in/elizabethharperliterature',
-                    'website' => 'https://elizabethharper.yale.edu'
+                    'website' => 'https://elizabethharper.yale.edu',
                 ]),
-                'author_statement' => 'Academic writing should bridge the gap between scholarly research and public understanding, making literature accessible to all.'
-            ]
+                'author_statement' => 'Academic writing should bridge the gap between scholarly research and public understanding, making literature accessible to all.',
+            ],
         ];
 
         foreach ($academicAuthors as $authorData) {
@@ -210,12 +210,12 @@ class AuthorSeeder extends Seeder
                     'email' => $authorData['email'],
                 ],
                 [
-                'name' => $authorData['name'],
-                'email' => $authorData['email'],
-                'password' => Hash::make('password'),
-                'role' => 'author',
-                'email_verified_at' => now(),
-            ]);
+                    'name' => $authorData['name'],
+                    'email' => $authorData['email'],
+                    'password' => Hash::make('password'),
+                    'role' => 'author',
+                    'email_verified_at' => now(),
+                ]);
 
             Author::firstOrCreate([
                 'user_id' => $user->id,
@@ -233,7 +233,7 @@ class AuthorSeeder extends Seeder
 
         // Create 4 more academic authors using factory
         User::factory(4)->create([
-            'role' => 'author'
+            'role' => 'author',
         ])->each(function ($user) {
             Author::factory()->academic()->create([
                 'user_id' => $user->id,
@@ -257,9 +257,9 @@ class AuthorSeeder extends Seeder
                     'facebook' => 'https://facebook.com/alexandrareedbooks',
                     'instagram' => 'https://instagram.com/alexreedwrites',
                     'website' => 'https://alexandrareedbooks.com',
-                    'goodreads' => 'https://goodreads.com/author/show/alexreed'
+                    'goodreads' => 'https://goodreads.com/author/show/alexreed',
                 ]),
-                'author_statement' => 'Love stories have the power to heal, inspire, and remind us of our shared humanity. I write to celebrate the magic of human connection.'
+                'author_statement' => 'Love stories have the power to heal, inspire, and remind us of our shared humanity. I write to celebrate the magic of human connection.',
             ],
             [
                 'name' => 'James Mitchell',
@@ -272,10 +272,10 @@ class AuthorSeeder extends Seeder
                 'social_links' => json_encode([
                     'twitter' => 'https://twitter.com/JMSteelBooks',
                     'website' => 'https://jmsteelthrillers.com',
-                    'youtube' => 'https://youtube.com/c/JMSteelAuthor'
+                    'youtube' => 'https://youtube.com/c/JMSteelAuthor',
                 ]),
-                'author_statement' => 'A great thriller should keep you guessing until the very last page, then leave you immediately wanting more.'
-            ]
+                'author_statement' => 'A great thriller should keep you guessing until the very last page, then leave you immediately wanting more.',
+            ],
         ];
 
         foreach ($popularAuthors as $authorData) {
@@ -285,12 +285,12 @@ class AuthorSeeder extends Seeder
                     'email' => $authorData['email'],
                 ],
                 [
-                'name' => $authorData['name'],
-                'email' => $authorData['email'],
-                'password' => Hash::make('password'),
-                'role' => 'author',
-                'email_verified_at' => now(),
-            ]);
+                    'name' => $authorData['name'],
+                    'email' => $authorData['email'],
+                    'password' => Hash::make('password'),
+                    'role' => 'author',
+                    'email_verified_at' => now(),
+                ]);
 
             Author::firstOrCreate([
                 'user_id' => $user->id,
@@ -308,7 +308,7 @@ class AuthorSeeder extends Seeder
 
         // Create 3 more popular authors using factory
         User::factory(3)->create([
-            'role' => 'author'
+            'role' => 'author',
         ])->each(function ($user) {
             Author::factory()->create([
                 'user_id' => $user->id,

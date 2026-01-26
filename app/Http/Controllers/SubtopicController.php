@@ -20,7 +20,7 @@ class SubtopicController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic)
+    public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
@@ -54,13 +54,6 @@ class SubtopicController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param Request $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, Request $request): RedirectResponse
     {
@@ -69,18 +62,13 @@ class SubtopicController extends Controller
 
         $subtopic = $academicTopic->subtopics()->create($request->all());
 
-        return to_route('subtopics.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group') ])
+        return to_route('subtopics.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.created', ['name' => $academicTopic->name]));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param AcademicSubtopic $subtopic
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic)
@@ -98,11 +86,6 @@ class SubtopicController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param AcademicSubtopic $subtopic
      * @return Factory|\Illuminate\Foundation\Application|\Illuminate\View\View|object|View
      */
     public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic)
@@ -112,7 +95,6 @@ class SubtopicController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
      */
     public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic, Request $request)
     {
@@ -130,21 +112,14 @@ class SubtopicController extends Controller
             'academic_topic' => $academicTopic,
             'academic_subject' => $academicSubject,
             'academic_level' => $academicLevel,
-            'academic_group' => $academicGroup
+            'academic_group' => $academicGroup,
         ])->with('success', __('status.resource.updated', ['name' => $subtopic->name]));
-
-
 
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param AcademicSubtopic $subtopic
      * @return RedirectResponse
      */
     public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, AcademicSubtopic $subtopic)
@@ -156,7 +131,7 @@ class SubtopicController extends Controller
             'academic_topic' => $academicTopic,
             'academic_subject' => $academicSubject,
             'academic_level' => $academicLevel,
-            'academic_group' => $academicGroup
+            'academic_group' => $academicGroup,
         ])
             ->with('success', __('status.resource.deleted', ['name' => $subtopic->name]));
     }

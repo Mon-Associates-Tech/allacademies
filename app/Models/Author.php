@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Traits\BelongsToSchoolEnhanced;
+use App\Traits\HasMultipleSubAccounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Author extends Model
 {
-    use HasFactory;
     use BelongsToSchoolEnhanced;
+    use HasFactory;
+    use HasMultipleSubAccounts;
 
     protected static bool $schoolRestricted = false;
 
@@ -24,12 +25,13 @@ class Author extends Model
         'education',
         'awards',
         'author_statement',
-        'pen_name'
+        'pen_name',
     ];
 
-   protected  $with = [
-        'user'
+    protected $with = [
+        'user',
     ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -87,13 +89,5 @@ class Author extends Model
         $booksWithRatings = $books->where('average_rating', '>', 0)->count();
 
         return $booksWithRatings > 0 ? round($totalRating / $booksWithRatings, 1) : 0;
-    }
-
-    /**
-     * Get the author's subaccount for payments
-     */
-    public function subaccount(): MorphOne
-    {
-        return $this->morphOne(Subaccount::class, 'subaccountable');
     }
 }

@@ -2,14 +2,15 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Str;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class Mark implements Castable
 {
     public ?string $summary;
+
     public ?HtmlString $html;
 
     public function __construct(public ?string $up, public ?string $down)
@@ -43,7 +44,8 @@ class Mark implements Castable
 
     public static function castUsing(array $arguments)
     {
-        return new class implements CastsAttributes {
+        return new class implements CastsAttributes
+        {
             public function get($model, string $key, $value, array $attributes)
             {
                 return is_null($value) ? $value : Mark::fromString($value);
@@ -59,7 +61,7 @@ class Mark implements Castable
                     $value = Mark::fromArray($value);
                 }
 
-                if (!$value instanceof Mark) {
+                if (! $value instanceof Mark) {
                     throw new \InvalidArgumentException('Expected an instanceof of App\Support\Mark');
                 }
 

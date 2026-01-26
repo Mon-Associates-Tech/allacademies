@@ -2,61 +2,60 @@
 
 namespace App\Livewire;
 
-use App\Support\TokenSubscriptionStatus;
 use Livewire\Component;
 
 class TrialExpirationBanner extends Component
 {
     public bool $showBanner = false;
+
     public ?int $daysRemaining = null;
+
     public ?string $expiresAt = null;
+
     public bool $isExpired = false;
+
     public bool $isExpiringSoon = false;
+
     public ?int $tokensRemaining = null;
+
     public ?int $tokensUsed = null;
+
     public array $features = [];
 
     public function mount(): void
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return;
         }
 
-        // Check if banner was dismissed recently (within last hour)
         if (session()->get('trial_banner_dismissed_at') &&
             now()->diffInMinutes(session()->get('trial_banner_dismissed_at')) < 60) {
             $this->showBanner = false;
+
             return;
         }
+        $user->load('subscriptionCycles');
+        $activeCycle = $user->getCurrentActiveCycle();
 
-        // Get active trial subscription
-        $trialSubscription = $user->tokenSubscriptions()
-            ->where('action_type', 'trial')
-            ->where('status', TokenSubscriptionStatus::ACTIVE->value)
-            ->whereNotNull('expires_at')
-            ->first();
-
-        if (!$trialSubscription) {
+        if (! $activeCycle || ! $activeCycle->isTrial()) {
             $this->showBanner = false;
+
             return;
         }
 
-        $expiresAt = $trialSubscription->expires_at;
+        $expiresAt = $activeCycle->cycle_end_date;
         $now = now();
 
-        // Calculate days remaining
-        $this->daysRemaining = max(0, $now->diffInDays($expiresAt, false));
+        $this->daysRemaining = $activeCycle->getRemainingDays();
         $this->expiresAt = $expiresAt->format('M j, Y');
-        $this->tokensRemaining = $trialSubscription->tokens_remaining;
-        $this->tokensUsed = $trialSubscription->tokens_used;
+        $this->tokensRemaining = $activeCycle->getTokensRemainingAttribute();
+        $this->tokensUsed = $activeCycle->tokens_used;
 
-        // Check if expired or expiring soon (within 3 days)
-        $this->isExpired = $expiresAt->isPast();
-        $this->isExpiringSoon = !$this->isExpired && $this->daysRemaining <= 3;
+        $this->isExpired = $activeCycle->isExpired();
+        $this->isExpiringSoon = $activeCycle->isEndingSoon();
 
-        // Only show if expiring soon or just expired (within last 24 hours)
         if ($this->isExpiringSoon || ($this->isExpired && $now->diffInHours($expiresAt) <= 24)) {
             $this->showBanner = true;
             $this->loadFeatures();

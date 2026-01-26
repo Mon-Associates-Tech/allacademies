@@ -4,47 +4,65 @@ namespace App\Livewire\Authors;
 
 use App\Livewire\AppComponent;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class Promotions extends AppComponent
 {
     public $activeTab = 'campaigns';
+
     public $showCreateModal = false;
+
     public $showEditModal = false;
+
     public $selectedPromotion = null;
 
     // Campaign Form Data
     public $campaignTitle = '';
+
     public $campaignDescription = '';
+
     public $campaignType = 'discount';
+
     public $discountType = 'percentage';
+
     public $discountValue = '';
+
     public $startDate = '';
+
     public $endDate = '';
+
     public $targetAudience = 'all';
+
     public $selectedBooks = [];
+
     public $maxUsage = '';
+
     public $minPurchaseAmount = '';
+
     public $promoCode = '';
+
     public $campaignBudget = '';
+
     public $campaignStatus = 'active';
 
     // Filters
     public $statusFilter = 'all';
+
     public $typeFilter = 'all';
+
     public $searchTerm = '';
 
     // Social Media
     public $socialPlatform = 'facebook';
+
     public $socialContent = '';
+
     public $socialScheduleDate = '';
 
     public function mount()
     {
         $this->startDate = now()->format('Y-m-d');
         $this->endDate = now()->addDays(30)->format('Y-m-d');
-        $this->promoCode = 'PROMO' . strtoupper(substr(md5(time()), 0, 6));
+        $this->promoCode = 'PROMO'.strtoupper(substr(md5(time()), 0, 6));
     }
 
     public function render(): View
@@ -89,7 +107,7 @@ class Promotions extends AppComponent
                 'budget' => 500,
                 'spent' => 234.50,
                 'conversion_rate' => 12.5,
-                'books' => ['The Great Adventure', 'Mystery of the Old House']
+                'books' => ['The Great Adventure', 'Mystery of the Old House'],
             ],
             [
                 'id' => 2,
@@ -110,7 +128,7 @@ class Promotions extends AppComponent
                 'budget' => 300,
                 'spent' => 198.25,
                 'conversion_rate' => 8.7,
-                'books' => ['Journey to Tomorrow']
+                'books' => ['Journey to Tomorrow'],
             ],
             [
                 'id' => 3,
@@ -131,7 +149,7 @@ class Promotions extends AppComponent
                 'budget' => 800,
                 'spent' => 756.80,
                 'conversion_rate' => 15.3,
-                'books' => ['Study Guide Pro', 'Mathematics Made Easy']
+                'books' => ['Study Guide Pro', 'Mathematics Made Easy'],
             ],
             [
                 'id' => 4,
@@ -152,8 +170,8 @@ class Promotions extends AppComponent
                 'budget' => 1000,
                 'spent' => 0,
                 'conversion_rate' => 0,
-                'books' => ['Holiday Stories', 'Winter Tales', 'Christmas Magic']
-            ]
+                'books' => ['Holiday Stories', 'Winter Tales', 'Christmas Magic'],
+            ],
         ]);
     }
 
@@ -171,7 +189,7 @@ class Promotions extends AppComponent
             'top_performing_promo' => 'SUMMER25',
             'this_month_revenue' => 2340.25,
             'last_month_revenue' => 1980.50,
-            'growth_rate' => 18.2
+            'growth_rate' => 18.2,
         ];
     }
 
@@ -184,7 +202,7 @@ class Promotions extends AppComponent
                 'conversion_rate' => 12.5,
                 'revenue' => 1250.50,
                 'usage_count' => 87,
-                'roi' => 233.5
+                'roi' => 233.5,
             ],
             [
                 'title' => 'Back to School Special',
@@ -192,7 +210,7 @@ class Promotions extends AppComponent
                 'conversion_rate' => 15.3,
                 'revenue' => 2100.25,
                 'usage_count' => 234,
-                'roi' => 177.4
+                'roi' => 177.4,
             ],
             [
                 'title' => 'New Release Promotion',
@@ -200,8 +218,8 @@ class Promotions extends AppComponent
                 'conversion_rate' => 8.7,
                 'revenue' => 890.75,
                 'usage_count' => 156,
-                'roi' => 149.2
-            ]
+                'roi' => 149.2,
+            ],
         ]);
     }
 
@@ -213,29 +231,29 @@ class Promotions extends AppComponent
                 'title' => 'Holiday Bundle Deal campaign created',
                 'timestamp' => now()->subHours(2),
                 'icon' => 'plus-circle',
-                'color' => 'green'
+                'color' => 'green',
             ],
             [
                 'type' => 'promo_used',
                 'title' => 'SUMMER25 used by customer John Doe',
                 'timestamp' => now()->subHours(4),
                 'icon' => 'shopping-cart',
-                'color' => 'blue'
+                'color' => 'blue',
             ],
             [
                 'type' => 'campaign_milestone',
                 'title' => 'New Release Promotion reached 150 uses',
                 'timestamp' => now()->subHours(6),
                 'icon' => 'trending-up',
-                'color' => 'purple'
+                'color' => 'purple',
             ],
             [
                 'type' => 'budget_alert',
                 'title' => 'Back to School Special budget 90% used',
                 'timestamp' => now()->subHours(12),
                 'icon' => 'exclamation-triangle',
-                'color' => 'orange'
-            ]
+                'color' => 'orange',
+            ],
         ]);
     }
 
@@ -255,8 +273,8 @@ class Promotions extends AppComponent
                 'facebook' => ['reach' => 6500, 'engagement' => 520, 'clicks' => 145],
                 'twitter' => ['reach' => 4200, 'engagement' => 380, 'clicks' => 98],
                 'instagram' => ['reach' => 3500, 'engagement' => 280, 'clicks' => 76],
-                'linkedin' => ['reach' => 1400, 'engagement' => 60, 'clicks' => 21]
-            ]
+                'linkedin' => ['reach' => 1400, 'engagement' => 60, 'clicks' => 21],
+            ],
         ];
     }
 
@@ -268,43 +286,43 @@ class Promotions extends AppComponent
                 'description' => 'Create beautiful email campaigns to promote your books',
                 'icon' => 'mail',
                 'color' => 'blue',
-                'status' => 'available'
+                'status' => 'available',
             ],
             [
                 'name' => 'Social Media Scheduler',
                 'description' => 'Schedule posts across multiple social platforms',
                 'icon' => 'calendar',
                 'color' => 'green',
-                'status' => 'available'
+                'status' => 'available',
             ],
             [
                 'name' => 'Landing Page Creator',
                 'description' => 'Build custom landing pages for your promotions',
                 'icon' => 'globe',
                 'color' => 'purple',
-                'status' => 'available'
+                'status' => 'available',
             ],
             [
                 'name' => 'Analytics Dashboard',
                 'description' => 'Track performance across all marketing channels',
                 'icon' => 'chart-bar',
                 'color' => 'orange',
-                'status' => 'available'
+                'status' => 'available',
             ],
             [
                 'name' => 'Review Management',
                 'description' => 'Manage and respond to book reviews',
                 'icon' => 'star',
                 'color' => 'yellow',
-                'status' => 'coming_soon'
+                'status' => 'coming_soon',
             ],
             [
                 'name' => 'Influencer Network',
                 'description' => 'Connect with book influencers and reviewers',
                 'icon' => 'users',
                 'color' => 'pink',
-                'status' => 'coming_soon'
-            ]
+                'status' => 'coming_soon',
+            ],
         ]);
     }
 
@@ -315,7 +333,7 @@ class Promotions extends AppComponent
             ['id' => 2, 'title' => 'Mystery of the Old House', 'price' => 24.99],
             ['id' => 3, 'title' => 'Journey to Tomorrow', 'price' => 29.99],
             ['id' => 4, 'title' => 'Study Guide Pro', 'price' => 34.99],
-            ['id' => 5, 'title' => 'Mathematics Made Easy', 'price' => 27.99]
+            ['id' => 5, 'title' => 'Mathematics Made Easy', 'price' => 27.99],
         ]);
     }
 
@@ -328,7 +346,7 @@ class Promotions extends AppComponent
                 'discount_type' => 'percentage',
                 'suggested_discount' => 20,
                 'duration' => 14,
-                'category' => 'discount'
+                'category' => 'discount',
             ],
             [
                 'name' => 'New Release Launch',
@@ -336,7 +354,7 @@ class Promotions extends AppComponent
                 'discount_type' => 'fixed',
                 'suggested_discount' => 5,
                 'duration' => 7,
-                'category' => 'launch'
+                'category' => 'launch',
             ],
             [
                 'name' => 'Bundle Deal',
@@ -344,7 +362,7 @@ class Promotions extends AppComponent
                 'discount_type' => 'bundle',
                 'suggested_discount' => 15,
                 'duration' => 21,
-                'category' => 'bundle'
+                'category' => 'bundle',
             ],
             [
                 'name' => 'Flash Sale',
@@ -352,8 +370,8 @@ class Promotions extends AppComponent
                 'discount_type' => 'percentage',
                 'suggested_discount' => 40,
                 'duration' => 3,
-                'category' => 'flash'
-            ]
+                'category' => 'flash',
+            ],
         ]);
     }
 
@@ -364,14 +382,14 @@ class Promotions extends AppComponent
                 'title' => 'Holiday Bundle Deal',
                 'start_date' => now()->addDays(30),
                 'type' => 'bundle',
-                'budget' => 1000
+                'budget' => 1000,
             ],
             [
                 'title' => 'New Year Sale',
                 'start_date' => now()->addDays(45),
                 'type' => 'discount',
-                'budget' => 750
-            ]
+                'budget' => 750,
+            ],
         ]);
     }
 
@@ -383,8 +401,8 @@ class Promotions extends AppComponent
                 'end_date' => now()->subDays(1),
                 'final_usage' => 234,
                 'final_revenue' => 2100.25,
-                'roi' => 177.4
-            ]
+                'roi' => 177.4,
+            ],
         ]);
     }
 
@@ -396,21 +414,21 @@ class Promotions extends AppComponent
                 'subscribers' => 3200,
                 'previous_customers' => 2800,
                 'new_visitors' => 1600,
-                'students' => 800
+                'students' => 800,
             ],
             'demographics' => [
                 'age_18_24' => 15,
                 'age_25_34' => 35,
                 'age_35_44' => 30,
                 'age_45_54' => 15,
-                'age_55_plus' => 5
+                'age_55_plus' => 5,
             ],
             'interests' => [
                 'fiction' => 45,
                 'non_fiction' => 35,
                 'educational' => 25,
-                'self_help' => 20
-            ]
+                'self_help' => 20,
+            ],
         ];
     }
 
@@ -423,8 +441,8 @@ class Promotions extends AppComponent
             'competitor_insights' => [
                 'Most competitors offer 15-25% discounts',
                 'Bundle deals are increasingly popular',
-                'Free shipping threshold is typically $25-30'
-            ]
+                'Free shipping threshold is typically $25-30',
+            ],
         ];
     }
 
@@ -509,8 +527,8 @@ class Promotions extends AppComponent
         $campaign = $this->getCampaigns()->firstWhere('id', $campaignId);
         if ($campaign) {
             $this->populateForm($campaign);
-            $this->campaignTitle = $campaign['title'] . ' (Copy)';
-            $this->promoCode = 'PROMO' . strtoupper(substr(md5(time()), 0, 6));
+            $this->campaignTitle = $campaign['title'].' (Copy)';
+            $this->promoCode = 'PROMO'.strtoupper(substr(md5(time()), 0, 6));
             $this->showCreateModal = true;
         }
     }
@@ -529,7 +547,7 @@ class Promotions extends AppComponent
 
     public function generatePromoCode()
     {
-        $this->promoCode = 'PROMO' . strtoupper(substr(md5(time()), 0, 6));
+        $this->promoCode = 'PROMO'.strtoupper(substr(md5(time()), 0, 6));
     }
 
     public function useTemplate($templateName)
@@ -557,7 +575,7 @@ class Promotions extends AppComponent
         $this->selectedBooks = [];
         $this->maxUsage = '';
         $this->minPurchaseAmount = '';
-        $this->promoCode = 'PROMO' . strtoupper(substr(md5(time()), 0, 6));
+        $this->promoCode = 'PROMO'.strtoupper(substr(md5(time()), 0, 6));
         $this->campaignBudget = '';
         $this->campaignStatus = 'active';
     }

@@ -20,9 +20,9 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('type')->default('live');
-//            $table->enum('type', ['live', 'recorded'])->default('live');
+            //            $table->enum('type', ['live', 'recorded'])->default('live');
             $table->string('status')->default('scheduled');
-//            $table->enum('status', ['scheduled', 'live', 'ended', 'cancelled'])->default('scheduled');
+            //            $table->enum('status', ['scheduled', 'live', 'ended', 'cancelled'])->default('scheduled');
 
             // BigBlueButton Integration
             $table->string('meeting_id')->unique()->nullable();
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->boolean('mute_on_start')->default(false);
             $table->boolean('webcams_only_for_moderator')->default(false);
             $table->integer('max_participants')->default(100);
-//            $table->enum('guest_policy', ['ALWAYS_ACCEPT', 'ALWAYS_DENY', 'ASK_MODERATOR'])->default('ASK_MODERATOR');
+            //            $table->enum('guest_policy', ['ALWAYS_ACCEPT', 'ALWAYS_DENY', 'ASK_MODERATOR'])->default('ASK_MODERATOR');
             $table->string('guest_policy')->default('ASK_MODERATOR');
 
             // Session URLs

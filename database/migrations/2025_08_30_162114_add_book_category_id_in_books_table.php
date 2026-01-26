@@ -25,7 +25,7 @@ return new class extends Migration
         foreach ($bookCategories as $bc) {
             // if book already has a category_id, skip (keeps first one only)
             $exists = DB::table('books')->where('id', $bc->book_id)->value('book_category_id');
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('books')
                     ->where('id', $bc->book_id)
                     ->update(['book_category_id' => $bc->category_id]);

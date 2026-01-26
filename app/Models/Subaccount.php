@@ -16,22 +16,27 @@ class Subaccount extends Model
         'subaccountable_type',
         'subaccountable_id',
         'subaccount_code',
+        'name',
         'business_name',
         'settlement_bank',
         'account_number',
         'percentage_charge',
         'description',
         'paystack_response',
-        'bank_code'
+        'bank_code',
+        'is_primary',
+        'status',
     ];
 
     protected $casts = [
         'paystack_response' => 'array',
         'percentage_charge' => 'decimal:2',
+        'is_primary' => 'boolean',
     ];
 
     /**
      * Get the parent subaccountable model (School, Author, User, etc.)
+     * This is a true polymorphic relationship
      */
     public function subaccountable(): MorphTo
     {
@@ -40,6 +45,7 @@ class Subaccount extends Model
 
     /**
      * Legacy relationship for backward compatibility
+     *
      * @deprecated Use subaccountable() instead
      */
     public function school(): BelongsTo
@@ -76,7 +82,7 @@ class Subaccount extends Model
      */
     public function getOwnerNameAttribute(): string
     {
-        return $this->business_name ?? $this->subaccountable?->name ?? 'Unknown';
+        return $this->name ?? $this->business_name ?? $this->subaccountable?->name ?? 'Unknown';
     }
 
     /**
@@ -89,30 +95,48 @@ class Subaccount extends Model
                 ?? $this->subaccountable->user?->email
                 ?? null;
         }
+
         return null;
     }
 
-    /**
-     * Scope to get subaccounts for a specific model type
-     */
+    // Scopes for filtering
     public function scopeForModel($query, string $modelClass)
     {
         return $query->where('subaccountable_type', $modelClass);
     }
 
-    /**
-     * Scope to get school subaccounts
-     */
     public function scopeForSchools($query)
     {
         return $query->where('subaccountable_type', School::class);
     }
 
-    /**
-     * Scope to get author subaccounts
-     */
     public function scopeForAuthors($query)
     {
         return $query->where('subaccountable_type', Author::class);
+    }
+
+    public function scopeForUsers($query)
+    {
+        return $query->where('subaccountable_type', User::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopePrimary($query)
+    {
+        return $query->where('is_primary', true);
+    }
+
+    public function scopeSecondary($query)
+    {
+        return $query->where('is_primary', false);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
     }
 }

@@ -8,9 +8,14 @@ namespace App\Interfaces;
 interface HasMediaContent
 {
     public function media();
+
     public function getTitle();
+
     public function getDescription();
+
     public function hasVideoContent();
+
     public function hasAudioContent();
+
     public function hasChapterContent();
 }

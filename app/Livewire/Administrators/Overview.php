@@ -20,6 +20,7 @@ use Livewire\Component;
 class Overview extends Component
 {
     public $selectedPeriod = 'week';
+
     public $showQuickActions = true;
 
     public function mount()
@@ -110,7 +111,7 @@ class Overview extends Component
             'status' => $issueCount === 0 ? 'excellent' : ($issueCount <= 1 ? 'good' : ($issueCount <= 2 ? 'fair' : 'poor')),
             'issues_count' => $issueCount,
             'issues' => $issues,
-            'score' => max(0, 100 - ($issueCount * 20))
+            'score' => max(0, 100 - ($issueCount * 20)),
         ];
     }
 
@@ -143,7 +144,7 @@ class Overview extends Component
                 'type' => 'warning',
                 'message' => "{$overdueCount} books are overdue",
                 'action' => 'View Overdue Books',
-                'route' => 'admin.book-management'
+                'route' => 'admin.book-management',
             ];
         }
 
@@ -154,7 +155,7 @@ class Overview extends Component
                 'type' => 'info',
                 'message' => "{$pendingBooks} books pending approval",
                 'action' => 'Review Books',
-                'route' => 'admin.book-approvals'
+                'route' => 'admin.book-approvals',
             ];
         }
 
@@ -165,7 +166,7 @@ class Overview extends Component
                 'type' => 'warning',
                 'message' => "{$unverifiedUsers} users pending email verification",
                 'action' => 'Manage Users',
-                'route' => 'users.index'
+                'route' => 'users.index',
             ];
         }
 
@@ -194,7 +195,7 @@ class Overview extends Component
                 'description' => 'Register a new student in the system',
                 'icon' => 'user-plus',
                 'route' => 'admin.student-management',
-                'color' => 'blue'
+                'color' => 'blue',
             ],
             [
                 'title' => 'Approve Books',
@@ -202,7 +203,7 @@ class Overview extends Component
                 'icon' => 'check-circle',
                 'route' => 'admin.book-approvals',
                 'color' => 'green',
-                'badge' => Book::where('status', 'pending')->orWhereNull('status')->count()
+                'badge' => Book::where('status', 'pending')->orWhereNull('status')->count(),
             ],
             [
                 'title' => 'Manage Overdue',
@@ -211,35 +212,35 @@ class Overview extends Component
                 'route' => 'admin.book-management',
                 'color' => 'red',
                 'badge' => BookBorrowing::where('status', 'active')
-                    ->where('due_date', '<', now())->count()
+                    ->where('due_date', '<', now())->count(),
             ],
             [
                 'title' => 'User Impersonation',
                 'description' => 'Login as another user for support',
                 'icon' => 'user-secret',
                 'route' => 'admin.users.impersonate',
-                'color' => 'purple'
+                'color' => 'purple',
             ],
             [
                 'title' => 'System Reports',
                 'description' => 'Generate comprehensive system reports',
                 'icon' => 'chart-bar',
                 'route' => 'dashboard', // Replace with actual reports route
-                'color' => 'indigo'
+                'color' => 'indigo',
             ],
             [
                 'title' => 'Academic Settings',
                 'description' => 'Configure academic groups and levels',
                 'icon' => 'cog',
                 'route' => 'school-settings.index',
-                'color' => 'gray'
-            ]
+                'color' => 'gray',
+            ],
         ];
     }
 
     private function getPeriodStartDate()
     {
-        return match($this->selectedPeriod) {
+        return match ($this->selectedPeriod) {
             'today' => Carbon::today(),
             'week' => Carbon::now()->startOfWeek(),
             'month' => Carbon::now()->startOfMonth(),
@@ -254,10 +255,10 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-        ->where('created_at', '>=', $startDate)
-        ->groupBy('date')
-        ->orderBy('date')
-        ->get();
+            ->where('created_at', '>=', $startDate)
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
     }
 
     private function getBorrowingTrend($startDate)
@@ -266,10 +267,10 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-        ->where('created_at', '>=', $startDate)
-        ->groupBy('date')
-        ->orderBy('date')
-        ->get();
+            ->where('created_at', '>=', $startDate)
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
     }
 
     private function getPopularBookCategories()

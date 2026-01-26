@@ -11,7 +11,9 @@ class UserMessages extends Component
     use WithPagination;
 
     public $search = '';
+
     public $readFilter = 'all';
+
     public $selectedMessage = null;
 
     protected $queryString = [
@@ -66,8 +68,8 @@ class UserMessages extends Component
             ->with(['message.sender', 'message.attachments'])
             ->when($this->search, function ($query) {
                 $query->whereHas('message', function ($q) {
-                    $q->where('subject', 'like', '%' . $this->search . '%')
-                        ->orWhere('body', 'like', '%' . $this->search . '%');
+                    $q->where('subject', 'like', '%'.$this->search.'%')
+                        ->orWhere('body', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->readFilter === 'unread', function ($query) {

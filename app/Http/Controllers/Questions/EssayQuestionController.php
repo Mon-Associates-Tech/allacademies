@@ -10,7 +10,6 @@ use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
-use App\Models\MultipleChoiceQuestion;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -19,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 class EssayQuestionController extends Controller
 {
     use HasSubtopic;
+
     /**
      * Display a listing of the resource.
      *
@@ -39,13 +39,6 @@ class EssayQuestionController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param EssayQuestionRequest $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestionRequest $request): RedirectResponse
     {
@@ -85,17 +78,11 @@ class EssayQuestionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param EssayQuestion $essayQuestion
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public
-    function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
     {
-//        $this->authorize('moderate');
+        //        $this->authorize('moderate');
 
         $essayQuestion->load('academicTopic.academicSubject.academicLevel.academicGroup');
         $essayQuestion->load('subtopic');
@@ -108,15 +95,9 @@ class EssayQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param EssayQuestion $essayQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public
-    function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion)
     {
         $this->authorize('moderate');
 
@@ -130,17 +111,8 @@ class EssayQuestionController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param EssayQuestionRequest $request
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param EssayQuestion $essayQuestion
-     * @return RedirectResponse
      */
-    public
-    function update(EssayQuestionRequest $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion): RedirectResponse
+    public function update(EssayQuestionRequest $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion): RedirectResponse
     {
         $this->authorize('moderate');
 
@@ -156,16 +128,8 @@ class EssayQuestionController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param EssayQuestion $essayQuestion
-     * @return RedirectResponse
      */
-    public
-    function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion): RedirectResponse
+    public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestion $essayQuestion): RedirectResponse
     {
         $this->authorize('moderate');
 

@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicFeeStructure;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicPeriod;
 use App\Models\School;
+use App\Models\SchoolFee;
 use App\Models\Subaccount;
 use App\Services\PaystackService;
 use App\Services\SubaccountPaymentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\SchoolFee;
-use App\Models\AcademicGroup;;
-use App\Models\AcademicLevel;
-use App\Models\AcademicPeriod;
-use App\Models\AcademicFeeStructure;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SchoolController extends Controller
 {
@@ -29,20 +29,19 @@ class SchoolController extends Controller
     {
         //  $schools = School::with('subaccount')->orderBy('name')->get();
         $schools = School::with('subaccount')->orderBy('name')->paginate(10);
+
         return view('payments.school-fees.create', compact('schools'));
     }
-
-
 
     // Store new school + create subaccount
     public function store(Request $request)
     {
         $request->validate([
-            'name'            => 'required|string|max:255',
-            'email'           => 'required|email|unique:schools,email',
-            'phone'           => 'nullable|string|max:20',
-            'address'         => 'nullable|string|max:255',
-            'bank_code'       => 'required|string',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:schools,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'bank_code' => 'required|string',
             'settlement_bank' => 'required|string',
             'account_number' => 'required|numeric|digits_between:8,16',
         ]);
@@ -78,22 +77,20 @@ class SchoolController extends Controller
         }
     }
 
-
-
     public function collectFees(School $school)
     {
-        if (!$school->subaccount) {
+        if (! $school->subaccount) {
             return back()->with('error', 'This school has no subaccount.');
         }
 
         $subaccountService = app(SubaccountPaymentService::class);
 
         $data = [
-            'email'        => $school->email,
-            'amount'       => 100000, // 1000 GHS in kobo
-            'metadata'     => [
+            'email' => $school->email,
+            'amount' => 100000, // 1000 GHS in kobo
+            'metadata' => [
                 'school_id' => $school->id,
-                'school'    => $school->name,
+                'school' => $school->name,
             ],
             'callback_url' => route('schoolfees.callback'),
         ];
@@ -107,13 +104,12 @@ class SchoolController extends Controller
 
         $response = $this->paystack->initializeTransaction($data);
 
-        if (!isset($response['status']) || !$response['status']) {
+        if (! isset($response['status']) || ! $response['status']) {
             return back()->with('error', $response['message'] ?? 'Payment initialization failed.');
         }
 
         return redirect($response['data']['authorization_url']);
     }
-
 
     public function schoolFeesCallback(Request $request)
     {
@@ -122,7 +118,7 @@ class SchoolController extends Controller
         // Step 1: Verify with Paystack
         $response = $this->paystack->verifyTransaction($reference);
 
-        if (!$response['status'] || $response['data']['status'] !== 'success') {
+        if (! $response['status'] || $response['data']['status'] !== 'success') {
             return redirect()
                 ->route('schools.create') // or a "schools.index" page
                 ->with('error', 'Payment failed or was cancelled.');
@@ -132,9 +128,9 @@ class SchoolController extends Controller
 
         // Step 2: Get school info from metadata
         $schoolId = $paymentDetails['metadata']['school_id'] ?? null;
-        $school   = School::find($schoolId);
+        $school = School::find($schoolId);
 
-        if (!$school) {
+        if (! $school) {
             return redirect()
                 ->route('schools.create')
                 ->with('error', 'Invalid school in payment metadata.');
@@ -143,32 +139,30 @@ class SchoolController extends Controller
         // Step 3: Save payment in school_fees table
         DB::transaction(function () use ($school, $paymentDetails) {
             SchoolFee::create([
-                'school_id'         => $school->id,
-                'school_name'       => $school->name,
-                'amount'            => $paymentDetails['amount'], // Paystack returns in pesewas
-                'currency'          => $paymentDetails['currency'] ?? 'GHS',
-                'status'            => $paymentDetails['status'], // success, failed
-                'reference'         => $paymentDetails['reference'],
+                'school_id' => $school->id,
+                'school_name' => $school->name,
+                'amount' => $paymentDetails['amount'], // Paystack returns in pesewas
+                'currency' => $paymentDetails['currency'] ?? 'GHS',
+                'status' => $paymentDetails['status'], // success, failed
+                'reference' => $paymentDetails['reference'],
                 'authorization_url' => $paymentDetails['authorization_url'] ?? null,
-                //'paystack_response' => $paymentDetails,
+                // 'paystack_response' => $paymentDetails,
             ]);
         });
 
         return redirect()
             ->route('schools.create')
-            ->with('success', 'School fees payment successful! Ref: ' . $paymentDetails['reference']);
+            ->with('success', 'School fees payment successful! Ref: '.$paymentDetails['reference']);
     }
-
 
     public function showFeeSetupForm()
     {
         $schoolId = Auth::user()->school_id;
 
         // Fetch groups and levels that belong to the logged-in admin’s school
-//        $academicGroups = AcademicGroup::where('school_id', $schoolId)->get();
+        //        $academicGroups = AcademicGroup::where('school_id', $schoolId)->get();
         $academicLevels = AcademicLevel::where('school_id', $schoolId)->get();
         $academicGroups = auth()->user()->school?->academicGroups()->get();
-
 
         // school_academic_group
         // school_academic_level
@@ -179,16 +173,15 @@ class SchoolController extends Controller
         return view('payments.school-fees.setup', compact('academicGroups', 'academicLevels', 'academicTerms'));
     }
 
-
     public function storeFeeStructure(Request $request)
     {
         $validated = $request->validate([
             'academic_group_id' => 'required|exists:academic_groups,id',
             'academic_level_id' => 'required|exists:academic_levels,id',
-            'current_term_id'   => 'required|exists:academic_periods,id',
-            'amount'            => 'required|numeric|min:0',
-            'due_date'          => 'required|date',
-            'payment_method'    => 'nullable|string|max:50',
+            'current_term_id' => 'required|exists:academic_periods,id',
+            'amount' => 'required|numeric|min:0',
+            'due_date' => 'required|date',
+            'payment_method' => 'nullable|string|max:50',
         ]);
 
         $validated['school_id'] = Auth::user()->school_id;
@@ -200,14 +193,6 @@ class SchoolController extends Controller
             ->with('success', 'Fee structure created successfully!');
     }
 }
-
-
-
-
-
-
-
-
 
 /*
 {"business_name":"Morning glory","description":"Subaccount for Morning glory","primary_contact_name":"Morning glory","primary_contact_email":"glory@gmail.com","primary_contact_phone":"0556709771","account_number":"1211010098973","percentage_charge":0,"settlement_bank":"GCB Bank Limited","currency":"GHS","bank":44,"integration":1588444,"domain":"test","account_name":"JOSEPH KWAME NKETIA","product":"collection","managed_by_integration":1588444,"subaccount_code":"ACCT_txstbu7htklyej0","is_verified":false,"settlement_schedule":"AUTO","active":true,"migrate":false,"id":1472808,"createdAt":"2025-09-22T14:22:41.943Z","updatedAt":"2025-09-22T14:22:41.943Z"}
@@ -250,7 +235,6 @@ CREATE TABLE `subaccounts` (
 
 
 */
-
 
 /*
 

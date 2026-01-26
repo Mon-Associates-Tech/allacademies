@@ -16,21 +16,21 @@ class WardController extends Controller
         $hasAccess = StudentParent::where('user_id', Auth::id())
             ->where('student_id', $student->id)
             ->exists();
-            
-        if (!$hasAccess) {
+
+        if (! $hasAccess) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access to this student'
+                'message' => 'Unauthorized access to this student',
             ], 403);
         }
-        
+
         // Store selected ward in session
         session(['selected_ward_id' => $student->id]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Ward selected successfully',
-            'student' => $student->load(['user', 'academicLevel.academicGroup'])
+            'student' => $student->load(['user', 'academicLevel.academicGroup']),
         ]);
     }
 }

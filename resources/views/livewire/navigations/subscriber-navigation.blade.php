@@ -112,7 +112,8 @@
                     <svg
                         class="shrink-0 fill-current {{ Route::is('quiz.performance*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                        <path d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+                        <path
+                            d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Performance</span>
                 </div>
@@ -123,7 +124,7 @@
         <!-- Forums -->
         <li class="mb-0.5 last:mb-0">
             <a class="block px-3 py-2 rounded-lg transition {{ Route::is('subscriber.forums') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('subscriber.forums')}}">
+               href="{{route('guests.forums')}}">
                 <div class="flex items-center">
                     <svg
                         class="shrink-0 fill-current {{ Route::is('subscriber.forums') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"

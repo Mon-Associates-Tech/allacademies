@@ -5,8 +5,6 @@ use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
 use App\Http\Controllers\AuthorController;
-use App\Http\Controllers\BookApprovalController;
-use App\Http\Controllers\BookBorrowingController;
 use App\Http\Controllers\BookCategoryController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookProgressController;
@@ -15,7 +13,6 @@ use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
-use App\Http\Controllers\GroupBookSubscriptionController;
 use App\Http\Controllers\ImportTemplateController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
@@ -40,27 +37,18 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
-use App\Http\Controllers\TokenSubscriptionController;
+use App\Http\Controllers\TokenPaymentController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
 use App\Livewire\Learning\BookQuizInterface;
-use App\Livewire\Teachers\EssayGrader;
-use App\Models\Assessment;
-use App\Models\Student;
-use App\Services\SchoolContextService;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Unauthenticated Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
 */
 
 // Public Routes
@@ -71,15 +59,17 @@ Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
-// Authentication Routes
-Route::middleware('guest')->group(function () {
-    // Sign In/Up Routes
-    Route::get('sign-in', [SignInController::class, 'create'])->name('sign-in');
-    Route::post('sign-in', [SignInController::class, 'store']);
-    Route::get('sign-up', [SignUpController::class, 'create'])->name('sign-up');
-    Route::post('sign-up', [SignUpController::class, 'store']);
+// Newsletter Routes
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
-    // Password Reset Routes
+// Guest Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('login', [SignInController::class, 'create'])->name('login');
+    Route::post('login', [SignInController::class, 'store']);
+    Route::get('register', [SignUpController::class, 'create'])->name('register');
+    Route::post('register', [SignUpController::class, 'store']);
+
     Route::prefix('password')->name('password.')->group(function () {
         Route::get('forgot', [PasswordController::class, 'forgotForm'])->name('request');
         Route::post('forgot', [PasswordController::class, 'forgot'])->name('email');
@@ -98,18 +88,49 @@ Route::get('2fa/verify', [SignInController::class, 'show2faForm'])->name('2fa.ve
 Route::post('2fa/verify', [SignInController::class, 'verify2fa']);
 Route::post('/2fa/resend', [SignInController::class, 'resend2fa'])->name('2fa.resend');
 
-// Newsletter Routes
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+// Public Payment Routes
+Route::prefix('general/pay')->name('payments.public.')->group(function () {
+    Route::get('/init', [App\Http\Controllers\PublicPaymentController::class, 'showLookupForm'])->name('lookup');
+    Route::post('/lookup', [App\Http\Controllers\PublicPaymentController::class, 'lookupStudent'])->name('lookup.post');
+    Route::post('/initialize', [App\Http\Controllers\PublicPaymentController::class, 'initializePayment'])->name('initialize');
+    Route::get('/callback', [App\Http\Controllers\PublicPaymentController::class, 'paymentCallback'])->name('callback');
+    Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
+});
 
-// Authenticated Routes
+// Public Book Routes
+Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('books.public');
+
+// Public Financial Aid
+Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
+
+// Payment Callback Routes
+Route::get('/payment', [PaymentController::class, 'showForm'])->name('payment.form');
+Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.initialize');
+Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBook'])->name('payment.book.initialize');
+Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback'])->name('payment.book.callback');
+Route::get('/createSubAccount', [PaymentController::class, 'createSubAccount'])->name('payment.subAccount');
+Route::get('/payment/callback/school-fees', [SchoolController::class, 'schoolFeesCallback'])->name('schoolfees.callback');
+
+// Fee Payment Routes
+Route::get('/feepayment/{student}', [PaymentController::class, 'showPaymentForm'])->name('feepayment.form');
+Route::post('/feepayment', [PaymentController::class, 'processPayment'])->name('feepayment.process');
+Route::get('/feepayment/callback', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
+Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
+Route::get('/feepayment/callback/{student}', [PaymentController::class, 'paymentCallback'])->name('feepayment.student.callback');
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth'])->group(function () {
     // Sign Out
     Route::post('sign-out', [SignOutController::class, 'store'])->name('logout');
 
     // Ping Route
     Route::post('/ping', static function () {
-        // Just touch the session
         return response()->noContent();
     });
 
@@ -121,17 +142,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('security', SecurityController::class)->name('security');
-    Route::get('/preferences', function () {
-        return view('preferences');
-    })->name('preferences');
+    Route::get('/preferences', fn () => view('preferences'))->name('preferences');
 
     // Password Change Routes
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware('verified')->group(function () {
         Route::get('password/change', [PasswordController::class, 'changeForm'])->name('password.change');
         Route::post('password/change', [PasswordController::class, 'change']);
     });
 
-    // Dashboard Routes
+    // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Team Routes
@@ -141,16 +160,14 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('teams/{team}/remove-code', [JoinTeamController::class, 'remove'])->name('teams.remove-code');
     Route::get('teams/joining', [JoinTeamController::class, 'joining'])->name('teams.joining');
     Route::post('teams/add-member', [JoinTeamController::class, 'join'])->name('teams.add-member');
-
-    // Team Member Routes
     Route::resource('teams.members', MemberController::class)->except(['show', 'edit', 'update']);
     Route::get('teams/{team}/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
     Route::post('teams/{team}/members/{member}', [MemberController::class, 'update'])->name('members.update');
 
     // Subscription & Payment Routes
     Route::resource('subscriptions', SubscriptionController::class);
-    Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
+    Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])->name('subscriptions.toggle-test-mode');
 
     // Settings Routes
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -174,12 +191,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('audit-teams/bulk-approve', [AuditTeamController::class, 'bulkApprove'])->name('audit-teams.bulk-approve');
 
     // Export Routes
-    Route::post('export/pdf', static function () {
-        return exportToPdf();
-    })->name('export.pdf');
-    Route::post('export/word', static function () {
-        return exportToWord();
-    })->name('export.word');
+    Route::post('export/pdf', fn () => exportToPdf())->name('export.pdf');
+    Route::post('export/word', fn () => exportToWord())->name('export.word');
 
     // Role Routes
     Route::resource('roles', RoleController::class);
@@ -261,8 +274,6 @@ Route::middleware(['auth'])->group(function () {
     // Lesson Routes
     Route::resource('lessons', LessonController::class);
     Route::get('lessons/{lesson}/notes', [LessonController::class, 'getNotes'])->name('lessons.notes');
-
-    // Lesson Note Routes
     Route::resource('lesson-notes', LessonNoteController::class);
 
     // Assessment Routes
@@ -292,13 +303,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
 
     // Academic Content Routes
-    Route::get('/course-outlines', function () {
-        return view('course-outlines');
-    })->name('course-outlines');
-
-    Route::get('/academic-calendar', function () {
-        return view('academic-calendar');
-    })->name('academic-calendar');
+    Route::get('/course-outlines', fn () => view('course-outlines'))->name('course-outlines');
+    Route::get('/academic-calendar', fn () => view('academic-calendar'))->name('academic-calendar');
 
     // Media Routes
     Route::get('/mediapage', [\App\Http\Controllers\Media\MediaController::class, 'index'])->name('media.index');
@@ -317,7 +323,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Chat Routes
-    Route::middleware(['auth', 'verified', 'token.subscription'])->group(function () {
+    Route::middleware(['verified', 'token.subscription'])->group(function () {
         Route::get('/chat', ChatInterface::class)->name('chat');
         Route::get('/chat/{group}', ChatInterface::class)->name('chat.group');
     });
@@ -328,176 +334,120 @@ Route::middleware(['auth'])->group(function () {
     // Learning Routes
     Route::get('/learning/quiz/{bookId?}', BookQuizInterface::class)->middleware('token.subscription')->name('learning.quiz');
 
-
-    // Academic Settings
-//    Route::get('academic-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('academic-settings');
-
     // School Settings
     Route::get('/school-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('school-settings.index');
-    Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)
-        ->name('school-settings.fee-structure.setup');
-});
+    Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)->name('school-settings.fee-structure.setup');
 
+    // Token Subscription Management Routes (Admin Only - Revenue Tracking)
+    Route::prefix('dashboard/messenger-transactions')->name('admin.messenger-transactions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\MessengerTransactionsController::class, 'index'])->name('index');
+    });
 
+    // Token Subscription Routes (User Purchases)
+    Route::prefix('token-subscriptions')->name('token-subscriptions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\TokenSubscriptionController::class, 'create'])->name('create');
+        Route::post('/checkout', [\App\Http\Controllers\TokenSubscriptionController::class, 'checkout'])->name('checkout');
+        Route::post('/process-payment', [\App\Http\Controllers\TokenSubscriptionController::class, 'processPayment'])->name('process-payment');
+        Route::post('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'store'])->name('store');
+        Route::get('/{subscription}', [\App\Http\Controllers\TokenSubscriptionController::class, 'show'])->name('show');
+        Route::get('/{cycle}/topup', [\App\Http\Controllers\TokenSubscriptionController::class, 'topup'])->name('topup');
+        Route::post('/topup/process', [\App\Http\Controllers\TokenSubscriptionController::class, 'processTopup'])->name('process-topup');
+    });
 
-// Include additional route files
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+    // Token Allocation Management Routes (Admin Only)
+    Route::prefix('token-allocations')->name('token-allocations.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TokenAllocationController::class, 'index'])->name('index');
+        Route::get('/create-tier', [\App\Http\Controllers\TokenAllocationController::class, 'createTier'])->name('create-tier');
+        Route::post('/store-tier', [\App\Http\Controllers\TokenAllocationController::class, 'storeTier'])->name('store-tier');
+        Route::get('/tiers/{tier}/edit', [\App\Http\Controllers\TokenAllocationController::class, 'editTier'])->name('edit-tier');
+        Route::put('/tiers/{tier}', [\App\Http\Controllers\TokenAllocationController::class, 'updateTier'])->name('update-tier');
+        Route::get('/assign-tokens', [\App\Http\Controllers\TokenAllocationController::class, 'assignTokens'])->name('assign-tokens');
+        Route::post('/store-assignment', [\App\Http\Controllers\TokenAllocationController::class, 'storeAssignment'])->name('store-assignment');
+        Route::get('/users-json', [\App\Http\Controllers\TokenAllocationController::class, 'getUsersJson'])->name('users-json');
+        Route::patch('/cycles/{cycle}/deactivate', [\App\Http\Controllers\TokenAllocationController::class, 'deactivateCycle'])->name('deactivate-cycle');
+        Route::delete('/cycles/{cycle}/revoke', [\App\Http\Controllers\TokenAllocationController::class, 'revokeTokens'])->name('revoke-tokens');
+        Route::get('/users/{user}/tokens', [\App\Http\Controllers\TokenAllocationController::class, 'viewUserTokens'])->name('view-user-tokens');
+    });
 
-// Book Reading Progress Routes
-Route::middleware(['auth'])->group(function () {
-    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
-    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
-    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
-    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
-    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
-
-
-    Route::get('/course-outlines', function () {
-        return view('course-outlines');
-    })->name('course-outlines');
-
-    Route::get('/academic-calendar', function () {
-        return view('academic-calendar');
-    })->name('academic-calendar');
-});
-
-
-// Adding paystack payment routes
-Route::get('/payment', [PaymentController::class, 'showForm'])->name('payment.form');
-Route::get('/pay', [PaymentController::class, 'initialize'])->name('payment.initialize');
-Route::get('/book-pay/{subscription}', [PaymentController::class, 'initializeBook'])->name('payment.book.initialize');
-Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
-Route::get('/payment/book-callback', [PaymentController::class, 'bookCallback']) ->name('payment.book.callback');
-Route::get('/createSubAccount', [PaymentController::class, 'createSubAccount'])->name('payment.subAccount');
-
-Route::get('/feepayment/{student}', [PaymentController::class, 'showPaymentForm'])->name('feepayment.form');
-Route::post('/feepayment', [PaymentController::class, 'processPayment'])->name('feepayment.process');
-Route::get('/feepayment/callback', [PaymentController::class, 'paymentCallback'])->name('feepayment.callback');
-Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
-Route::get('/feepayment/callback/{student}', [PaymentController::class, 'paymentCallback'])->name('feepayment.student.callback');
-
-Route::get('/feepayment/{student}/thank-you', [PaymentController::class, 'thankYou'])->name('feepayment.thankyou');
-
-
-Route::post('/subscriptions/toggle-test-mode', [SubscriptionController::class, 'toggleTestMode'])
-    ->name('subscriptions.toggle-test-mode')
-    ->middleware('auth');
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/token-subscriptions', [TokenSubscriptionController::class, 'index'])->name('token-subscriptions.index');
-    Route::get('/token-subscriptions/create', [TokenSubscriptionController::class, 'create'])->name('token-subscriptions.create');
-    Route::post('/token-subscriptions', [TokenSubscriptionController::class, 'store'])->name('token-subscriptions.store');
-    Route::get('/token-subscriptions/{subscription}', [TokenSubscriptionController::class, 'show'])->name('token-subscriptions.show');
-
+    // Quiz Performance Routes
     Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
-
-    // View a specific user's performance (for parents/teachers)
     Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
 
     // Token Payment Routes
-    Route::get('/payment/token/{subscription}/initialize', [PaymentController::class, 'initializeTokenSubscription'])->name('payment.token.initialize');
-    Route::get('/payment/token/callback', [PaymentController::class, 'tokenCallback'])->name('payment.token.callback');
+    Route::prefix('token-payments')->name('token-payments.')->group(function () {
+        Route::get('/token/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
+        Route::get('/callback', [TokenPaymentController::class, 'callback'])->name('callback');
+    });
 
-    Route::get('/user-books/create', fn() => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
-    Route::get('/user-books/shared', fn() => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
-
+    // User Books Routes
+    Route::get('/user-books/create', fn () => view('user-books/create'))->middleware('token.subscription')->name('user-books.create');
+    Route::get('/user-books/shared', fn () => view('user-books.shared'))->middleware('token.subscription')->name('user-books.shared');
     Route::get('/user-books', \App\Livewire\UserBooks\UserBooksIndex::class)->middleware('token.subscription')->name('user-books.index');
-
     Route::get('/user-books/{userBook}', function (App\Models\UserBook $userBook) {
-        // Ensure user can access this book (either owns it or it's shared with them)
         if ($userBook->user_id !== auth()->id() &&
-            !$userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
+            ! $userBook->shares()->where('shared_to_user_id', auth()->id())->where('status', 'accepted')->exists()) {
             abort(403);
         }
-
         $userBook->load('user');
+
         return view('user-books.show', compact('userBook'));
     })->middleware('token.subscription')->name('user-books.show');
     Route::get('/user-books/{userBook}/edit', \App\Livewire\UserBooks\UserBookForm::class)->middleware('token.subscription')->name('user-books.edit');
+    Route::get('/{userBook}/manage-shares', \App\Livewire\UserBooks\ManageShares::class)->middleware('token.subscription')->name('user-books.manage-shares');
 
-    Route::get('/{userBook}/manage-shares', \App\Livewire\UserBooks\ManageShares::class)->middleware('token.subscription')
-        ->name('user-books.manage-shares');
-});
+    // School Routes
+    Route::prefix('schools')->group(function () {
+        Route::get('/create', [SchoolController::class, 'create'])->name('schools.create');
+        Route::post('/store', [SchoolController::class, 'store'])->name('schools.store');
+        Route::post('/{school}/collect-fees', [SchoolController::class, 'collectFees'])->name('schools.collectFees');
+    });
 
+    // School Fee Setup Routes
+    Route::get('/school/fee-setup', [SchoolController::class, 'showFeeSetupForm'])->name('school.fee-setup');
+    Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])->name('school.fee-setup.store');
 
-
-Route::prefix('schools')->group(function () {
-    Route::get('/create', [SchoolController::class, 'create'])->name('schools.create');
-    Route::post('/store', [SchoolController::class, 'store'])->name('schools.store');
-    Route::post('/{school}/collect-fees', [SchoolController::class, 'collectFees'])->name('schools.collectFees');
-});
-Route::get('/payment/callback/school-fees', [SchoolController::class, 'schoolFeesCallback'])->name('schoolfees.callback');
-
-
-// School fees setup routes (inside SchoolController)
-Route::get('/school/fee-setup', [SchoolController::class, 'showFeeSetupForm'])
-    ->name('school.fee-setup');
-
-Route::post('/school/fee-setup', [SchoolController::class, 'storeFeeStructure'])
-    ->name('school.fee-setup.store');
-
+    // Academic Term Switch
     Route::post('/academic/term/switch', function (\Illuminate\Http\Request $request) {
-    $termId = $request->input('term_id');
+        $termId = $request->input('term_id');
+        \Illuminate\Support\Facades\DB::table('academic_periods')->update(['is_current' => false]);
+        \Illuminate\Support\Facades\DB::table('academic_periods')->where('id', $termId)->update(['is_current' => true]);
 
-    \Illuminate\Support\Facades\DB::table('academic_periods')->update(['is_current' => false]);
-    \Illuminate\Support\Facades\DB::table('academic_periods')->where('id', $termId)->update(['is_current' => true]);
+        return back()->with('success', 'Current term has been updated successfully.');
+    })->name('academic.term.switch');
 
-    return back()->with('success', 'Current term has been updated successfully.');
-})->name('academic.term.switch');
+    // School Comprehensive View
+    Route::middleware('verified')->group(function () {
+        Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchoolDashboard::class)->name('school.comprehensive-view');
+        Route::get('school/import-formats', [ImportTemplateController::class, 'viewFormats'])->name('school.import-formats');
+        Route::get('school/download-template/{type}', [ImportTemplateController::class, 'download'])->name('school.download-template');
+    });
 
+    // Admin Routes
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('payments', App\Http\Controllers\Admin\SchoolPaymentController::class);
+        Route::get('payments/export', [App\Http\Controllers\Admin\SchoolPaymentController::class, 'export'])->name('payments.export');
+        Route::resource('school-payment-structures', App\Http\Controllers\Admin\SchoolPaymentStructureController::class);
+    });
 
-Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchoolDashboard::class)
-    ->name('school.comprehensive-view')
-    ->middleware(['auth', 'verified']);
+    // Notes Routes
+    Route::middleware('token.subscription')->group(function () {
+        Route::resource('notes', NotesController::class);
+        Route::get('/notes/{note}/download', [NotesController::class, 'download'])->name('notes.download');
+        Route::post('/notes/{note}/share', [NotesController::class, 'share'])->name('notes.share');
+        Route::delete('/notes/{note}/unshare/{user}', [NotesController::class, 'unshare'])->name('notes.unshare');
+        Route::get('/notes/{note}/attachments/{attachment}/download', [NotesController::class, 'downloadAttachment'])->name('notes.attachments.download');
+        Route::get('/notes/{note}/attachments/{attachment}/view', [NotesController::class, 'viewAttachment'])->name('notes.attachments.view');
 
-Route::get('school/import-formats', [ImportTemplateController::class, 'viewFormats'])
-    ->name('school.import-formats')
-    ->middleware(['auth', 'verified']);
+        // Calendar Events Routes
+        Route::resource('calendar-events', \App\Http\Controllers\CalendarEventsController::class);
+        Route::post('/calendar-events/{event}/create-note', [CalendarEventsController::class, 'createNoteFromEvent'])
+            ->name('calendar-events.create-note');
+    });
 
-Route::get('school/download-template/{type}', [ImportTemplateController::class, 'download'])
-    ->name('school.download-template')
-    ->middleware(['auth', 'verified']);
-
-Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('books.public');
-
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('payments', App\Http\Controllers\Admin\SchoolPaymentController::class);
-    Route::get('payments/export', [App\Http\Controllers\Admin\SchoolPaymentController::class, 'export'])->name('payments.export');
-
-    Route::resource('school-payment-structures', App\Http\Controllers\Admin\SchoolPaymentStructureController::class);
-
+    // Financial Aid
+    Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
 });
-
-// Public payment routes (for parents/others)
-Route::prefix('general/pay')->name('payments.public.')->group(function () {
-    Route::get('/init', [App\Http\Controllers\PublicPaymentController::class, 'showLookupForm'])->name('lookup');
-    Route::post('/lookup', [App\Http\Controllers\PublicPaymentController::class, 'lookupStudent'])->name('lookup.post');
-    Route::post('/initialize', [App\Http\Controllers\PublicPaymentController::class, 'initializePayment'])->name('initialize');
-    Route::get('/callback', [App\Http\Controllers\PublicPaymentController::class, 'paymentCallback'])->name('callback');
-    Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
-});
-
-Route::middleware(['auth', 'token.subscription'])->group(function () {
-    Route::resource('notes', NotesController::class);
-    Route::get('/notes/{note}/download', [NotesController::class, 'download'])->name('notes.download');
-    Route::post('/notes/{note}/share', [NotesController::class, 'share'])->name('notes.share');
-    Route::delete('/notes/{note}/unshare/{user}', [NotesController::class, 'unshare'])->name('notes.unshare');
-    // Attachment routes
-    Route::get('/notes/{note}/attachments/{attachment}/download', [NotesController::class, 'downloadAttachment'])
-        ->name('notes.attachments.download');
-    Route::get('/notes/{note}/attachments/{attachment}/view', [NotesController::class, 'viewAttachment'])
-        ->name('notes.attachments.view');
-
-    // Calendar Events Routes
-    Route::resource('calendar-events', \App\Http\Controllers\CalendarEventsController::class);
-    Route::post('/calendar-events/{event}/create-note', [CalendarEventsController::class, 'createNoteFromEvent'])
-        ->name('calendar-events.create-note');
-});
-
-Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
-
-Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
 
 // Calendar Route
 Route::get('/calendar', function () {
@@ -505,7 +455,6 @@ Route::get('/calendar', function () {
 })->name('calendar.index');
 
 // Include additional route files
-
 include_once 'student.php';
 include_once 'teacher.php';
 include_once 'author.php';
@@ -513,16 +462,5 @@ include_once 'librarian.php';
 include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'academic.php';
-
-//
-include_once 'subscriber.php';
+include_once 'guest.php';
 include_once 'misc.php';
-
-
-/*
-fees(academic_group_id,academic_level_id,current_term_id,Amount,due_date,payment_method,school_id)
-academic_periods
-pending, inprogress,completed
-*/
-
-

@@ -7,11 +7,17 @@ use Livewire\Component;
 class MockDataBanner extends Component
 {
     public string $heading = 'Sample Data';
+
     public string $message = 'The information displayed on this page contains sample data and may not reflect actual values.';
+
     public string $variant = 'info'; // info, warning, notice
+
     public bool $dismissible = true;
+
     public bool $showIcon = true;
+
     public string $actionText = '';
+
     public string $actionUrl = '';
 
     public bool $isVisible = true;
@@ -58,7 +64,7 @@ class MockDataBanner extends Component
     private function getBannerId(): string
     {
         // Create a unique ID based on heading and message
-        return md5($this->heading . $this->message);
+        return md5($this->heading.$this->message);
     }
 
     public function render()

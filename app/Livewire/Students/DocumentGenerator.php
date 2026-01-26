@@ -9,24 +9,32 @@ use App\Models\ReportCardGrade;
 use App\Models\Student;
 use App\Models\StudentIdCard;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class DocumentGenerator extends Component
 {
     public Student $student;
+
     public $documentType = 'report-card';
+
     public $selectedAcademicYearId;
+
     public $selectedTerm = 'Term 1';
+
     public $academicYears;
+
     public $reportCards;
+
     public $idCards;
+
     public $libraryCards;
+
     public $attendanceSummary;
 
     // Report card data
     public $grades = [];
+
     public $subjectIds = [];
 
     // ID Card data
@@ -34,10 +42,12 @@ class DocumentGenerator extends Component
 
     // Library Card data
     public $libraryCardType = 'student';
+
     public $libraryCardExpiryMonths = 12;
 
     // Preview mode
     public $previewMode = false;
+
     public $previewData = null;
 
     protected $queryString = ['documentType'];
@@ -69,7 +79,7 @@ class DocumentGenerator extends Component
             'reportCards.grades.subject',
             'idCards',
             'libraryCards',
-            'attendanceRecords'
+            'attendanceRecords',
         ]);
 
         // Load academic years
@@ -181,12 +191,25 @@ class DocumentGenerator extends Component
 
     private function calculateGradeLabel($score)
     {
-        if ($score >= 90) return 'A+';
-        if ($score >= 80) return 'A';
-        if ($score >= 70) return 'B+';
-        if ($score >= 60) return 'B';
-        if ($score >= 50) return 'C';
-        if ($score >= 40) return 'D';
+        if ($score >= 90) {
+            return 'A+';
+        }
+        if ($score >= 80) {
+            return 'A';
+        }
+        if ($score >= 70) {
+            return 'B+';
+        }
+        if ($score >= 60) {
+            return 'B';
+        }
+        if ($score >= 50) {
+            return 'C';
+        }
+        if ($score >= 40) {
+            return 'D';
+        }
+
         return 'F';
     }
 
@@ -200,7 +223,7 @@ class DocumentGenerator extends Component
                     if ($academicYear) {
                         $query->whereBetween('date', [
                             $academicYear->start_date,
-                            $academicYear->end_date
+                            $academicYear->end_date,
                         ]);
                     }
                 }
@@ -217,7 +240,7 @@ class DocumentGenerator extends Component
             'present' => $presentCount,
             'absent' => $absentCount,
             'late' => $lateCount,
-            'rate' => $totalSessions > 0 ? round(($presentCount / $totalSessions) * 100, 1) : 0
+            'rate' => $totalSessions > 0 ? round(($presentCount / $totalSessions) * 100, 1) : 0,
         ];
     }
 
@@ -277,11 +300,11 @@ class DocumentGenerator extends Component
 
             return $reportCard;
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to generate report card: ' . $e->getMessage());
+            session()->flash('error', 'Failed to generate report card: '.$e->getMessage());
+
             return null;
         }
     }
-
 
     public function downloadReportCard($reportCardId = null)
     {
@@ -289,7 +312,7 @@ class DocumentGenerator extends Component
             $reportCard = ReportCard::findOrFail($reportCardId);
         } else {
             $reportCard = $this->generateReportCard();
-            if (!$reportCard) {
+            if (! $reportCard) {
                 return;
             }
         }
@@ -298,13 +321,14 @@ class DocumentGenerator extends Component
 
         $pdf = PDF::loadView('students.report-card-pdf', [
             'reportCard' => $reportCard,
-            'attendanceSummary' => $this->attendanceSummary
+            'attendanceSummary' => $this->attendanceSummary,
         ]);
 
-        return response()->streamDownload(function() use ($pdf) {
+        return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, "report-card-{$this->student->user->name}-{$reportCard->term}.pdf");
     }
+
     public function generateIdCard()
     {
         try {
@@ -337,7 +361,8 @@ class DocumentGenerator extends Component
 
             return $idCard;
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to generate ID card: ' . $e->getMessage());
+            session()->flash('error', 'Failed to generate ID card: '.$e->getMessage());
+
             return null;
         }
     }
@@ -348,7 +373,7 @@ class DocumentGenerator extends Component
             $idCard = StudentIdCard::findOrFail($idCardId);
         } else {
             $idCard = $this->generateIdCard();
-            if (!$idCard) {
+            if (! $idCard) {
                 return;
             }
         }
@@ -357,13 +382,14 @@ class DocumentGenerator extends Component
 
         $pdf = PDF::loadView('students.id-card-pdf', [
             'student' => $idCard->student,
-            'idCard' => $idCard
+            'idCard' => $idCard,
         ]);
 
-        return response()->streamDownload(function() use ($pdf) {
+        return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, "id-card-{$this->student->user->name}.pdf");
     }
+
     public function generateLibraryCard()
     {
         try {
@@ -400,7 +426,8 @@ class DocumentGenerator extends Component
 
             return $libraryCard;
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to generate library card: ' . $e->getMessage());
+            session()->flash('error', 'Failed to generate library card: '.$e->getMessage());
+
             return null;
         }
     }
@@ -411,7 +438,7 @@ class DocumentGenerator extends Component
             $libraryCard = LibraryCard::findOrFail($libraryCardId);
         } else {
             $libraryCard = $this->generateLibraryCard();
-            if (!$libraryCard) {
+            if (! $libraryCard) {
                 return;
             }
         }
@@ -420,10 +447,10 @@ class DocumentGenerator extends Component
 
         $pdf = PDF::loadView('students.library-card', [
             'student' => $libraryCard->student,
-            'libraryCard' => $libraryCard
+            'libraryCard' => $libraryCard,
         ]);
 
-        return response()->streamDownload(function() use ($pdf) {
+        return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, "library-card-{$this->student->user->name}.pdf");
     }
@@ -435,22 +462,22 @@ class DocumentGenerator extends Component
         $pdf = PDF::loadView('students.attendance-report', [
             'student' => $this->student,
             'data' => $data,
-            'academicYear' => AcademicYear::find($this->selectedAcademicYearId)
+            'academicYear' => AcademicYear::find($this->selectedAcademicYearId),
         ]);
 
-        return response()->streamDownload(function() use ($pdf) {
+        return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, "attendance-report-{$this->student->user->name}.pdf");
     }
 
     private function generateCardNumber($prefix)
     {
-        return $prefix . $this->student->school?->code . date('Y') . str_pad($this->student->id, 5, '0', STR_PAD_LEFT);
+        return $prefix.$this->student->school?->code.date('Y').str_pad($this->student->id, 5, '0', STR_PAD_LEFT);
     }
 
     private function generateBarcode()
     {
-        return 'BAR' . time() . rand(1000, 9999);
+        return 'BAR'.time().rand(1000, 9999);
     }
 
     private function getReportCardData()
@@ -505,13 +532,13 @@ class DocumentGenerator extends Component
                         if ($academicYear) {
                             $query->whereBetween('date', [
                                 $academicYear->start_date,
-                                $academicYear->end_date
+                                $academicYear->end_date,
                             ]);
                         }
                     }
                 })
                 ->orderBy('created_at', 'desc')
-                ->get()
+                ->get(),
         ];
     }
 

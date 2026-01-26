@@ -12,6 +12,7 @@ class BookShareResponded extends Mailable
     use Queueable, SerializesModels;
 
     public UserBookShare $share;
+
     public string $action;
 
     public function __construct(UserBookShare $share, string $action)

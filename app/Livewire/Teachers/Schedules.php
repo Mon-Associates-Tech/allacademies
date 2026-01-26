@@ -2,27 +2,37 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\AssignmentSubmission;
-use Livewire\Component;
-use Carbon\Carbon;
-use App\Models\Teacher;
+use App\Models\AcademicSubject;
 use App\Models\Assessment;
 use App\Models\Assignment;
-use App\Models\AcademicSubject;
+use App\Models\AssignmentSubmission;
+use App\Models\Teacher;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class Schedules extends Component
 {
     public $viewMode = 'calendar';
+
     public $filterType = 'all';
+
     public $selectedDate;
+
     public $currentMonth;
+
     public $currentYear;
+
     public $monthName;
+
     public $weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
     public $calendarData = [];
+
     public $showActivityModal = false;
+
     public $selectedActivity = null;
+
     public $activityType = null;
 
     public function mount()
@@ -108,7 +118,7 @@ class Schedules extends Component
                 'isCurrentMonth' => $currentDay->month === $this->currentMonth,
                 'isToday' => $currentDay->isToday(),
                 'activityCount' => $dayActivities->count(),
-                'activities' => $dayActivities
+                'activities' => $dayActivities,
             ];
 
             $week[] = $dayData;
@@ -126,7 +136,7 @@ class Schedules extends Component
     {
         $teacher = Auth::user()->teacher;
 
-        if (!$teacher) {
+        if (! $teacher) {
             return collect();
         }
 
@@ -134,25 +144,25 @@ class Schedules extends Component
 
         // Get assessments
         if ($this->filterType === 'all' || $this->filterType === 'assessments') {
-//            $assessments = AssignmentSubmission::where('teacher_id', $teacher->id)
-//                ->whereDate('', $date)
-//                ->get()
-//                ->map(function ($assessment) {
-//                    return [
-//                        'id' => $assessment->id,
-//                        'title' => $assessment->title,
-//                        'type' => 'assessment',
-//                        'date' => $assessment->scheduled_date,
-//                        'color' => 'blue',
-//                        'icon' => 'fas fa-clipboard-check',
-//                        'status' => $assessment->status,
-//                        'subject' => $assessment->subject->name ?? 'N/A',
-//                        'percentage' => $assessment->percentage_score,
-//                        'score' => $assessment->score,
-//                        'max_score' => $assessment->max_score,
-//                    ];
-//                });
-//            $activities = $activities->merge($assessments);
+            //            $assessments = AssignmentSubmission::where('teacher_id', $teacher->id)
+            //                ->whereDate('', $date)
+            //                ->get()
+            //                ->map(function ($assessment) {
+            //                    return [
+            //                        'id' => $assessment->id,
+            //                        'title' => $assessment->title,
+            //                        'type' => 'assessment',
+            //                        'date' => $assessment->scheduled_date,
+            //                        'color' => 'blue',
+            //                        'icon' => 'fas fa-clipboard-check',
+            //                        'status' => $assessment->status,
+            //                        'subject' => $assessment->subject->name ?? 'N/A',
+            //                        'percentage' => $assessment->percentage_score,
+            //                        'score' => $assessment->score,
+            //                        'max_score' => $assessment->max_score,
+            //                    ];
+            //                });
+            //            $activities = $activities->merge($assessments);
         }
 
         // Get assignments
@@ -187,7 +197,7 @@ class Schedules extends Component
     {
         $teacher = Auth::user()->teacher;
 
-        if (!$teacher) {
+        if (! $teacher) {
             return [
                 'assessments_created' => 0,
                 'assignments_created' => 0,
@@ -198,9 +208,9 @@ class Schedules extends Component
         $weekStart = Carbon::now()->startOfWeek();
         $weekEnd = Carbon::now()->endOfWeek();
 
-//        $assessmentsCount = Assessment::where('teacher_id', $teacher->id)
-//            ->whereBetween('start_time', [$weekStart, $weekEnd])
-//            ->count();
+        //        $assessmentsCount = Assessment::where('teacher_id', $teacher->id)
+        //            ->whereBetween('start_time', [$weekStart, $weekEnd])
+        //            ->count();
 
         $assignmentsCount = Assignment::where('teacher_id', $teacher->id)
             ->whereBetween('ends_at', [$weekStart, $weekEnd])
@@ -222,7 +232,7 @@ class Schedules extends Component
     {
         $teacher = Auth::user()->teacher;
 
-        if (!$teacher) {
+        if (! $teacher) {
             return [
                 'total_activities' => 0,
                 'subjects_taught' => 0,
@@ -232,9 +242,9 @@ class Schedules extends Component
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-//        $assessmentsCount = AssignmentSubmission::where('teacher_id', $teacher->id)
-//            ->whereBetween('start_time', [$monthStart, $monthEnd])
-//            ->count();
+        //        $assessmentsCount = AssignmentSubmission::where('teacher_id', $teacher->id)
+        //            ->whereBetween('start_time', [$monthStart, $monthEnd])
+        //            ->count();
 
         $assignmentsCount = Assignment::where('teacher_id', $teacher->id)
             ->whereBetween('ends_at', [$monthStart, $monthEnd])
@@ -255,4 +265,3 @@ class Schedules extends Component
         return view('livewire.teachers.schedules');
     }
 }
-

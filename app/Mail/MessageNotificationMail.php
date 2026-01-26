@@ -7,9 +7,9 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
 class MessageNotificationMail extends Mailable implements ShouldQueue
@@ -17,6 +17,7 @@ class MessageNotificationMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public ModelMessage $userMessage;
+
     public User $recipient;
 
     public function __construct(ModelMessage $user_message, User $recipient)
@@ -29,7 +30,7 @@ class MessageNotificationMail extends Mailable implements ShouldQueue
     {
         return new Envelope(
             from: config('mail.from.address'),
-            subject: ($this->userMessage->is_urgent ? '[URGENT] ' : '') . $this->userMessage->subject,
+            subject: ($this->userMessage->is_urgent ? '[URGENT] ' : '').$this->userMessage->subject,
         );
     }
 
@@ -50,7 +51,7 @@ class MessageNotificationMail extends Mailable implements ShouldQueue
         $attachments = [];
 
         foreach ($this->userMessage->attachments as $attachment) {
-            $attachments[] = Attachment::fromPath(storage_path('app/public/' . $attachment->path))
+            $attachments[] = Attachment::fromPath(storage_path('app/public/'.$attachment->path))
                 ->as($attachment->original_filename)
                 ->withMime($attachment->mime_type);
         }

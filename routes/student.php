@@ -22,7 +22,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->group(function () {
 
-
     Route::prefix('fees')->name('fees.')->group(function () {
         Route::get('/', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('index');
         Route::get('/payment', [\App\Http\Controllers\StudentFeeController::class, 'payment'])->name('payment');
@@ -64,7 +63,6 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('/messages/compose', ComposeMessage::class)->name('messages.compose');
     Route::get('/messages', MessageIndex::class)->name('messages.index');
     Route::get('/messages/{message}', MessageShow::class)->name('messages.show');
-
 
     Route::get('/students', [StudentManagementController::class, 'index'])->name('index');
     Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');

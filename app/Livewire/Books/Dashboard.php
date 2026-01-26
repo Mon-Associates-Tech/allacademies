@@ -14,12 +14,17 @@ class Dashboard extends Component
     use WithPagination;
 
     public $search = '';
+
     public $category = '';
+
     public $filterType = ''; // 'free', 'paid', 'all'
+
     public $sortBy = 'title';
+
     public $sortDirection = 'asc';
 
     public $subscribedBookIds = [];
+
     public $books = [];
 
     public function mount()
@@ -95,9 +100,9 @@ class Dashboard extends Component
         $booksQuery = Book::query()
             ->with(['author', 'author.user', 'category'])
             ->when($this->search, function ($query) {
-                return $query->where('title', 'like', '%' . $this->search . '%')
+                return $query->where('title', 'like', '%'.$this->search.'%')
                     ->orWhereHas('author.user', function ($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%');
+                        $q->where('name', 'like', '%'.$this->search.'%');
                     });
             })
             ->when($this->category, function ($query) {
@@ -119,8 +124,7 @@ class Dashboard extends Component
         $this->currentPage = $paginator->currentPage();
         $this->totalPages = $paginator->lastPage();
         $this->perPage = $paginator->perPage();
-//        dd($this->books);
-
+        //        dd($this->books);
 
         return view('livewire.books.dashboard', [
             'books' => $this->books,
@@ -133,8 +137,9 @@ class Dashboard extends Component
     {
         $user = Auth::user();
 
-        if (!$user->student) {
+        if (! $user->student) {
             $this->addError('subscription', 'Only students can subscribe to books');
+
             return;
         }
 
@@ -146,6 +151,7 @@ class Dashboard extends Component
 
         if ($existingSubscription) {
             $this->addError('subscription', 'You are already subscribed to this book');
+
             return;
         }
 
@@ -166,15 +172,17 @@ class Dashboard extends Component
         $user = Auth::user();
 
         // Check if a user has permission to subscribe for the group
-        if (!$user->hasRole(['administrator', 'teacher', 'librarian'])) {
+        if (! $user->hasRole(['administrator', 'teacher', 'librarian'])) {
             $this->addError('groupSubscription', 'You do not have permission to subscribe groups');
+
             return;
         }
 
         $group = StudentGroup::find($groupId);
 
-        if (!$group || $group->creator_id !== $user->id) {
+        if (! $group || $group->creator_id !== $user->id) {
             $this->addError('groupSubscription', 'You do not have permission to manage this group');
+
             return;
         }
 
@@ -186,6 +194,7 @@ class Dashboard extends Component
 
         if ($existingSubscription) {
             $this->addError('groupSubscription', 'This group is already subscribed to this book');
+
             return;
         }
 

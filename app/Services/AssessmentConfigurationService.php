@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Assignment;
 use App\Models\Assessment;
+use App\Models\Assignment;
 use App\Models\AssignmentSection;
-use App\Models\Question;
-use App\Models\MultipleChoiceQuestion;
-use App\Models\TrueOrFalseQuestion;
 use App\Models\EssayQuestion;
+use App\Models\MultipleChoiceQuestion;
+use App\Models\Question;
 use App\Models\Student;
+use App\Models\TrueOrFalseQuestion;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -39,7 +39,7 @@ class AssessmentConfigurationService
                 'action' => 'created_assessment_from_assignment',
                 'assignment_id' => $assignment->id,
                 'assignment_title' => $assignment->title,
-                'total_questions' => $questions->count()
+                'total_questions' => $questions->count(),
             ])
             ->log('Student created assessment from assignment');
 
@@ -71,7 +71,7 @@ class AssessmentConfigurationService
             ->withProperties([
                 'action' => 'created_self_assessment',
                 'configuration' => $config,
-                'total_questions' => $questions->count()
+                'total_questions' => $questions->count(),
             ])
             ->log('Student created self assessment');
 
@@ -101,8 +101,9 @@ class AssessmentConfigurationService
         $questions = collect();
         $questionType = $this->mapQuestionType($section->question_type);
 
-        if (!$questionType) {
+        if (! $questionType) {
             Log::warning("Unknown question type: {$section->question_type}");
+
             return $questions;
         }
 
@@ -117,6 +118,7 @@ class AssessmentConfigurationService
 
         if ($availableQuestions->isEmpty()) {
             Log::warning("No questions found for section: {$section->title}");
+
             return $questions;
         }
 
@@ -156,7 +158,7 @@ class AssessmentConfigurationService
         $questions = collect();
 
         // Get all enabled question types
-        $enabledTypes = array_filter($config['question_types'], function($enabled) {
+        $enabledTypes = array_filter($config['question_types'], function ($enabled) {
             return $enabled;
         });
 
@@ -164,7 +166,9 @@ class AssessmentConfigurationService
         $remainder = $config['question_count'] % count($enabledTypes);
 
         foreach ($enabledTypes as $type => $enabled) {
-            if (!$enabled) continue;
+            if (! $enabled) {
+                continue;
+            }
 
             $count = $questionsPerType;
             if ($remainder > 0) {
@@ -187,7 +191,7 @@ class AssessmentConfigurationService
         $questions = collect();
         $questionClass = $this->mapQuestionTypeToClass($type);
 
-        if (!$questionClass) {
+        if (! $questionClass) {
             return $questions;
         }
 
@@ -251,7 +255,7 @@ class AssessmentConfigurationService
     {
         if ($assessment->subject_id) {
             // Filter by subject topics if assignment has specific topics
-            $query->whereHas('academicTopic', function($topicQuery) use ($assessment) {
+            $query->whereHas('academicTopic', function ($topicQuery) use ($assessment) {
                 $topicQuery->where('academic_subject_id', $assessment->subject_id);
             });
         }
@@ -262,17 +266,17 @@ class AssessmentConfigurationService
      */
     public function applyContentFilters($query, array $config): void
     {
-        if (!empty($config['subject_id'])) {
-            $query->whereHas('academicTopic', function($topicQuery) use ($config) {
+        if (! empty($config['subject_id'])) {
+            $query->whereHas('academicTopic', function ($topicQuery) use ($config) {
                 $topicQuery->where('academic_subject_id', $config['subject_id']);
             });
         }
 
-        if (!empty($config['topic_id'])) {
+        if (! empty($config['topic_id'])) {
             $query->where('academic_topic_id', $config['topic_id']);
         }
 
-        if (!empty($config['subtopic_id'])) {
+        if (! empty($config['subtopic_id'])) {
             $query->where('subtopic_id', $config['subtopic_id']);
         }
     }

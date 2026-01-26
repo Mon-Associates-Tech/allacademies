@@ -4,39 +4,38 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        // Get all indexes on the table
-        $indexes = DB::select("SHOW INDEX FROM book_reading_progress WHERE Key_name = 'book_reading_progress_book_id_unique'");
+        Schema::table('book_reading_progress', function (Blueprint $table) {
+            try {
+                $table->dropForeign(['book_id']);
+            } catch (Exception $e) {
+                // Foreign key might not exist
+            }
 
-        if (!empty($indexes)) {
-            // If the problematic unique index exists, we need to drop it
-            Schema::table('book_reading_progress', function (Blueprint $table) {
-                try {
-                    // First drop foreign key constraint
-                    $table->dropForeign('book_reading_progress_book_id_foreign');
-                } catch (Exception $e) {
-                    // Foreign key might not exist or have different name
-                }
+            try {
+                $table->dropUnique(['book_id']);
+            } catch (Exception $e) {
+                // Index might not exist
+            }
 
-                try {
-                    // Then drop the unique index
-                    $table->dropUnique('book_reading_progress_book_id_unique');
-                } catch (Exception $e) {
-                    // Index might not exist or have different name
-                }
-
-                // Add the correct unique constraint
+            try {
                 $table->unique(['book_id', 'user_id'], 'book_user_unique_progress');
+            } catch (Exception $e) {
+                // Unique constraint might already exist
+            }
 
-                // Re-add the foreign key constraint
+            try {
                 $table->foreign('book_id')->references('id')->on('books')->onDelete('cascade');
-            });
-        }
+            } catch (Exception $e) {
+                // Foreign key might already exist
+            }
+        });
     }
 
     /**
@@ -46,24 +45,28 @@ return new class extends Migration {
     {
         Schema::table('book_reading_progress', function (Blueprint $table) {
             try {
-                // Drop the correct unique constraint
                 $table->dropUnique('book_user_unique_progress');
             } catch (Exception $e) {
                 // Handle if constraint doesn't exist
             }
 
             try {
-                // Drop foreign key constraint
-                $table->dropForeign('book_reading_progress_book_id_foreign');
+                $table->dropForeign(['book_id']);
             } catch (Exception $e) {
                 // Handle if constraint doesn't exist
             }
 
-            // Re-add the incorrect unique constraint on book_id only
-            $table->unique('book_id');
+            try {
+                $table->unique('book_id');
+            } catch (Exception $e) {
+                // Handle if constraint already exists
+            }
 
-            // Re-add the foreign key constraint
-            $table->foreign('book_id')->references('id')->on('books')->onDelete('cascade');
+            try {
+                $table->foreign('book_id')->references('id')->on('books')->onDelete('cascade');
+            } catch (Exception $e) {
+                // Handle if constraint already exists
+            }
         });
     }
 };

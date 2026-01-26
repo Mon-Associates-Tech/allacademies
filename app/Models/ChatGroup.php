@@ -16,13 +16,13 @@ class ChatGroup extends Model
     protected $fillable = [
         'name', 'description', 'type', 'school_id', 'created_by',
         'academic_level_id', 'academic_group_id', 'is_private',
-        'is_active', 'settings'
+        'is_active', 'settings',
     ];
 
     protected $casts = [
         'is_private' => 'boolean',
         'is_active' => 'boolean',
-        'settings' => 'array'
+        'settings' => 'array',
     ];
 
     protected $with = ['creator'];
@@ -91,14 +91,14 @@ class ChatGroup extends Model
             'can_add_members' => $canAddMembers,
             'can_remove_members' => in_array($role, ['admin', 'moderator']),
             'joined_at' => now(),
-            'is_active' => true
+            'is_active' => true,
         ]);
     }
 
     public function removeMember(User $user): void
     {
         $this->members()->updateExistingPivot($user->id, [
-            'is_active' => false
+            'is_active' => false,
         ]);
     }
 
@@ -114,7 +114,9 @@ class ChatGroup extends Model
             ->wherePivot('is_active', true)
             ->first();
 
-        if (!$membership) return false;
+        if (! $membership) {
+            return false;
+        }
 
         return $membership->pivot->can_add_members ||
             in_array($membership->pivot->role, ['admin', 'moderator']) ||
@@ -137,7 +139,7 @@ class ChatGroup extends Model
             ->where('user_id', $user->id)
             ->first()?->pivot?->last_read_at;
 
-        if (!$lastReadTime) {
+        if (! $lastReadTime) {
             return $this->messages()->count();
         }
 
@@ -147,7 +149,7 @@ class ChatGroup extends Model
     public function markAsRead(User $user): void
     {
         $this->allMembers()->updateExistingPivot($user->id, [
-            'last_read_at' => now()
+            'last_read_at' => now(),
         ]);
     }
 
@@ -162,7 +164,7 @@ class ChatGroup extends Model
                 ->get();
 
             foreach ($students as $student) {
-                if ($student->user && !$this->isUserMember($student->user)) {
+                if ($student->user && ! $this->isUserMember($student->user)) {
                     $this->addMember($student->user);
                 }
             }
@@ -176,7 +178,7 @@ class ChatGroup extends Model
                 ->get();
 
             foreach ($teachers as $teacher) {
-                if ($teacher->user && !$this->isUserMember($teacher->user)) {
+                if ($teacher->user && ! $this->isUserMember($teacher->user)) {
                     $this->addMember($teacher->user, 'moderator', true);
                 }
             }
@@ -191,7 +193,7 @@ class ChatGroup extends Model
                 ->get();
 
             foreach ($students as $student) {
-                if ($student->user && !$this->isUserMember($student->user)) {
+                if ($student->user && ! $this->isUserMember($student->user)) {
                     $this->addMember($student->user);
                 }
             }
@@ -203,7 +205,7 @@ class ChatGroup extends Model
     {
         return $query->whereHas('members', function ($q) use ($user) {
             $q->where('users.id', $user->id) // Properly qualified
-            ->where('chat_group_members.is_active', true); // Properly qualified
+                ->where('chat_group_members.is_active', true); // Properly qualified
         });
     }
 

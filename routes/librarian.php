@@ -1,13 +1,13 @@
 <?php
 
+use App\Livewire\Librarians\BookInventory;
 use App\Livewire\Librarians\BookRequests;
+use App\Livewire\Librarians\BookReturns;
 use App\Livewire\Librarians\BorrowedBooks;
 use App\Livewire\Librarians\LibraryBooks;
 use App\Livewire\Librarians\LibraryDashboard;
 use App\Livewire\Librarians\LibraryReports;
-use App\Livewire\Librarians\BookReturns;
 use App\Livewire\Librarians\OverdueBooks;
-use App\Livewire\Librarians\BookInventory;
 use App\Livewire\Librarians\StudentLibraryProfiles;
 use Illuminate\Support\Facades\Route;
 

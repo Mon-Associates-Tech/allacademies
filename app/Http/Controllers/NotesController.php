@@ -11,14 +11,15 @@ use App\Services\NoteShareService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-useLog;
+use Log;
 use Str;
 
 class NotesController extends Controller
 {
-    public function __construct(protected NoteShareService $shareService, protected NoteExportService $exportService)
-    {
-    }
+    public function __construct(
+        protected NoteShareService $shareService,
+        protected NoteExportService $exportService
+    ) {}
 
     public function index(Request $request)
     {
@@ -153,12 +154,20 @@ if ($request->filled('book_id')) {
                 $dateRange .= date('M d, Y', strtotime($request->date_from));
             }
             if ($request->filled('date_to')) {
-                $dateRange .= ' - '. date('M d, Y', strtotime($request->date_to));
+                $dateRange .= ' - '.date('M d, Y', strtotime($request->date_to));
             }
             $filters['date_range'] = $dateRange;
         }
 
         return $filters;
+    }
+
+    public function create()
+    {
+        $books = Book::all();
+        $subjects = AcademicSubject::all();
+
+        return view('notes.create', compact('books', 'subjects'));
     }
 
     public function store(Request $request)
@@ -204,26 +213,20 @@ if ($request->filled('book_id')) {
         return redirect()->route('notes.show', $note)->with('success', 'Note created successfully.');
     }
 
-    public function create()
-    {
-        $books = Book::all();
-       $subjects = AcademicSubject::all();
-        returnview('notes.create', compact('books', 'subjects'));
-    }
-
     public function show(Note $note)
     {
-        if (!$note->canUserView(Auth::id())) {
+        if (! $note->canUserView(Auth::id())) {
             abort(403);
         }
 
         $note->load(['book', 'academicSubject', 'user']);
-return view('notes.show', compact('note'));
+
+        return view('notes.show', compact('note'));
     }
 
     public function edit(Note $note)
     {
-        if (!$note->canUserEdit(Auth::id())) {
+        if (! $note->canUserEdit(Auth::id())) {
             abort(403);
         }
 
@@ -231,12 +234,13 @@ return view('notes.show', compact('note'));
         $subjects = AcademicSubject::all();
 
         $note->load(['book', 'academicSubject']);
+
         return view('notes.edit', compact('note', 'books', 'subjects'));
     }
 
     public function update(Request $request, Note $note)
     {
-        if (!$note->canUserEdit(Auth::id())) {
+        if (! $note->canUserEdit(Auth::id())) {
             abort(403);
         }
 
@@ -260,7 +264,7 @@ $request->validate([
             'content' => $request->content,
             'book_id' => $request->book_id,
             'academic_subject_id' => $request->academic_subject_id,
-            'is_public' => $request->boolean('is_public')
+            'is_public' => $request->boolean('is_public'),
         ]);
 
         // Debug: Log request data for calendar event
@@ -319,20 +323,30 @@ public
         }
 
         $note->delete();
+
         return redirect()->route('notes.index')->with('success', 'Note deleted successfully.');
     }
 
-    public function share(Request$request, Note $note)
-   {
+    /**
+     * @throws \Throwable
+     */
+    public function share(Request $request, Note $note)
+    {
         if ($note->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $request->validate(['share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide', 'recipient_ids'=> 'required|array|min:1','recipient_ids.*' => 'required|integer', 'can_edit' => 'boolean']);
+        $request->validate([
+            'share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide,email',
+            'recipient_ids' => 'required|array|min:1',
+            'recipient_ids.*' => $request->share_type === 'email' ? 'required|string' : 'required',
+            'can_edit' => 'boolean',
+        ]);
 
         $result = $this->shareService->shareNote($note, $request->share_type, $request->recipient_ids, $request->boolean('can_edit'));
 
-        return back()->with('success', "Note sharedwith{$result['users_notified']} " . Str::plural('recipient', $result['users_notified']) . " successfully.");
+        return back()->with('success', "Note shared with {$result['users_notified']} ".
+            \Str::plural('recipient', $result['users_notified']).' successfully.');
     }
 
     public
@@ -375,25 +389,27 @@ public
    function download(Note $note, Request $request)
     {
         // Check permissions
-        if (!$note->canUserView(Auth::id())) {
-            abort(403, 'You do not havepermission to downloadthis note.');
+        if (! $note->canUserView(Auth::id())) {
+            abort(403, 'You do not have permission to download this note.');
         }
 
         $format = $request->get('format', 'pdf');
 
-       // Validate format
-        if (!in_array($format, ['pdf', 'txt', 'docx'])) {
+        // Validate format
+        if (! in_array($format, ['pdf', 'txt', 'docx'])) {
             return back()->with('error', 'Invalid export format.');
         }
 
         try {
             $result =$this->exportService->export($note, $format);
 
-            if (!$result['success']){
+            if (! $result['success']) {
                 return back()->with('error', $result['error']);
             }
 
-            return response($result['content'])->header('Content-Type', $result['mime_type'])->header('Content-Disposition', 'attachment; filename="' .$result['filename'] . '"');
+            return response($result['content'])
+                ->header('Content-Type', $result['mime_type'])
+                ->header('Content-Disposition', 'attachment; filename="'.$result['filename'].'"');
 
         } catch (Exception $e) {
             Log::error('Note download failed', ['note_id' => $note->id, 'format' => $format, 'error' => $e->getMessage(),]);
@@ -402,10 +418,31 @@ public
         }
     }
 
-    public function viewAttachment(Note $note,NoteAttachment $attachment)
+    public function downloadAttachment(Note $note, NoteAttachment $attachment)
     {
         // Check permissions
-        if (!$note->canUserView(Auth::id())) {
+        if (! $note->canUserView(Auth::id())) {
+            abort(403, 'You do not have permission to access this note.');
+        }
+
+        // Verify attachment belongs to note
+        if ($attachment->note_id !== $note->id) {
+            abort(404);
+        }
+
+        $filePath = storage_path('app/public/'.$attachment->path);
+
+        if (! file_exists($filePath)) {
+            return back()->with('error', 'File not found.');
+        }
+
+        return response()->download($filePath, $attachment->original_filename);
+    }
+
+    public function viewAttachment(Note $note, NoteAttachment $attachment)
+    {
+        // Check permissions
+        if (! $note->canUserView(Auth::id())) {
             abort(403, 'You do not have permission to access this note.');
         }
 
@@ -414,13 +451,15 @@ public
             abort(404);
         }
 
-        $filePath = storage_path('app/public/' . $attachment->path);
+        $filePath = storage_path('app/public/'.$attachment->path);
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return back()->with('error', 'File not found.');
         }
 
-        return response()->file($filePath, ['Content-Type' => $attachment->mime_type, 'Content-Disposition' => 'inline; filename="' . $attachment->original_filename . '"']);
+        return response()->file($filePath, [
+            'Content-Type' => $attachment->mime_type,
+            'Content-Disposition' => 'inline; filename="'.$attachment->original_filename.'"',
+        ]);
     }
-
 }

@@ -4,14 +4,17 @@ namespace App\Livewire\Chats;
 
 use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\UserTokenSubscription;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class TokenUsageMonitor extends Component
 {
     public $subscription;
+
     public $packages;
+
     public $selectedPackage;
+
     public $showAlert = false;
 
     protected $listeners = ['tokenUsageUpdated' => '$refresh'];
@@ -24,7 +27,7 @@ class TokenUsageMonitor extends Component
 
     public function loadSubscription(): void
     {
-        $this->subscription = Auth::user()->activeTokenSubscription;
+        $this->subscription = Auth::user()->activeSubscriptionCycle;
 
         if ($this->subscription && $this->subscription->isNearingDepletion()) {
             $this->showAlert = true;
@@ -38,8 +41,9 @@ class TokenUsageMonitor extends Component
 
     public function subscribe(): void
     {
-        if (!$this->selectedPackage) {
+        if (! $this->selectedPackage) {
             session()->flash('error', 'Please select a package first.');
+
             return;
         }
 
@@ -54,7 +58,7 @@ class TokenUsageMonitor extends Component
             'status' => 'active',
         ]);
 
-        session()->flash('success', 'Successfully subscribed to ' . $this->selectedPackage->name . ' package!');
+        session()->flash('success', 'Successfully subscribed to '.$this->selectedPackage->name.' package!');
 
         $this->selectedPackage = null;
         $this->loadSubscription();
@@ -68,7 +72,7 @@ class TokenUsageMonitor extends Component
 
     public function getProgressColor(): string
     {
-        if (!$this->subscription) {
+        if (! $this->subscription) {
             return 'gray';
         }
 

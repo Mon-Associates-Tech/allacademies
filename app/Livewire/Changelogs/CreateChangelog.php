@@ -2,15 +2,19 @@
 
 namespace App\Livewire\Changelogs;
 
-use Livewire\Component;
 use App\Models\Changelog;
+use Livewire\Component;
 
 class CreateChangelog extends Component
 {
     public $title;
+
     public $task_name;
+
     public $task_description;
+
     public $additional_info;
+
     public $completed_items = [''];
 
     protected $rules = [
@@ -19,7 +23,7 @@ class CreateChangelog extends Component
         'task_description' => 'required|string',
         'additional_info' => 'nullable|string',
         'completed_items' => 'required|array|min:1',
-        'completed_items.*' => 'required|string|max:255'
+        'completed_items.*' => 'required|string|max:255',
     ];
 
     public function addCompletedItem()
@@ -42,7 +46,7 @@ class CreateChangelog extends Component
             'task_name' => $this->task_name,
             'task_description' => $this->task_description,
             'additional_info' => $this->additional_info,
-            'completed_items' => array_values(array_filter($this->completed_items))
+            'completed_items' => array_values(array_filter($this->completed_items)),
         ]);
 
         session()->flash('message', 'Changelog entry created successfully.');

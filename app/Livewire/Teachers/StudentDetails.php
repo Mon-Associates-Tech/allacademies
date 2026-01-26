@@ -10,12 +10,19 @@ use Livewire\Component;
 class StudentDetails extends Component
 {
     public $student;
+
     public $teacher;
+
     public $academicHistory;
+
     public $assignments;
+
     public $activities;
+
     public $assignmentSubmissions;
+
     public $submissionFilter;
+
     public $historyFilter = '';
 
     public function mount(Student $student)
@@ -25,7 +32,7 @@ class StudentDetails extends Component
         // Check if the teacher has access to this student
         $hasAccess = $this->teacher->hasAccessToStudent($student);
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             return redirect()->route('teachers.students.index')
                 ->with('error', 'You do not have access to view this student.');
         }
@@ -35,11 +42,9 @@ class StudentDetails extends Component
         $this->loadStudentData();
     }
 
-
-
     public function getTypeColor($type)
     {
-        return match($type) {
+        return match ($type) {
             'level_change' => 'bg-blue-500',
             'assessment' => 'bg-purple-500',
             'achievement' => 'bg-green-500',
@@ -54,7 +59,7 @@ class StudentDetails extends Component
 
     public function getTypeBadgeColor($type)
     {
-        return match($type) {
+        return match ($type) {
             'level_change' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
             'assessment' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
             'achievement' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -93,7 +98,6 @@ class StudentDetails extends Component
         }
 
         $this->assignmentSubmissions = $submissionsQuery->get();
-
 
         // Load recent activities
         $this->activities = $this->student->user->loginActivities()

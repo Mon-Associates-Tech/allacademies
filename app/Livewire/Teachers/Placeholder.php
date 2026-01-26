@@ -11,7 +11,7 @@ class Placeholder
     public function mount($assessmentId)
     {
         $response = AssessmentResponse::where('assessment_id', $assessmentId)->first();
-        $this->essays = collect($response->data['questions'])->filter(fn($q) => $q['question_type'] === 'essay_question');
+        $this->essays = collect($response->data['questions'])->filter(fn ($q) => $q['question_type'] === 'essay_question');
 
         foreach ($this->essays as $e) {
             $this->scores[$e['question_id']] = $e['score'];
@@ -43,5 +43,4 @@ class Placeholder
 
         session()->flash('success', 'Score saved successfully.');
     }
-
 }

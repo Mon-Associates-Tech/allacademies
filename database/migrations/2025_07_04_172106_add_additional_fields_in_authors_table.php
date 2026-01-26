@@ -29,7 +29,7 @@ return new class extends Migration
                 'writing_experience',
                 'education',
                 'awards',
-                'author_statement'
+                'author_statement',
             ]);
         });
     }

@@ -17,7 +17,7 @@ class ForumAttachment extends Model
         'file_path',
         'file_size',
         'mime_type',
-        'user_id'
+        'user_id',
     ];
 
     public function attachable()
@@ -39,6 +39,6 @@ class ForumAttachment extends Model
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 }

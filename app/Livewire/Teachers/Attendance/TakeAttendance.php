@@ -2,24 +2,33 @@
 
 namespace App\Livewire\Teachers\Attendance;
 
+use App\Models\AcademicSubject;
 use App\Models\Attendance\Attendance;
 use App\Models\Attendance\AttendanceRecord;
 use Livewire\Component;
-use App\Models\AcademicSubject;
-use Illuminate\Support\Collection;
 
 class TakeAttendance extends Component
 {
     public $academicLevelId;
+
     public $academicSubjectId;
+
     public $date;
+
     public $session = 'morning';
+
     public $students = [];
+
     public $academicLevels = [];
+
     public $subjects = [];
+
     public $selectedStudents = [];
+
     public $attendanceId;
+
     public $searchQuery = '';
+
     public $allStudents = []; // Store all students for filtering
 
     protected $queryString = ['searchQuery'];
@@ -65,7 +74,7 @@ class TakeAttendance extends Component
         foreach ($this->students as $student) {
             $this->selectedStudents[$student['id']] = [
                 'present' => $present,
-                'reason' => $present ? null : $this->selectedStudents[$student['id']]['reason'] ?? null
+                'reason' => $present ? null : $this->selectedStudents[$student['id']]['reason'] ?? null,
             ];
         }
     }
@@ -117,10 +126,10 @@ class TakeAttendance extends Component
 
         // Initialize all students as present by default
         foreach ($this->allStudents as $student) {
-            if (!isset($this->selectedStudents[$student['id']])) {
+            if (! isset($this->selectedStudents[$student['id']])) {
                 $this->selectedStudents[$student['id']] = [
                     'present' => true,
-                    'reason' => null
+                    'reason' => null,
                 ];
             }
         }
@@ -130,19 +139,19 @@ class TakeAttendance extends Component
         }
     }
 
-//    public function toggleAllStudents($present)
-//    {
-//        foreach ($this->students as $student) {
-//            $this->selectedStudents[$student['id']]['present'] = $present;
-//            if ($present) {
-//                $this->selectedStudents[$student['id']]['reason'] = null;
-//            }
-//        }
-//    }
+    //    public function toggleAllStudents($present)
+    //    {
+    //        foreach ($this->students as $student) {
+    //            $this->selectedStudents[$student['id']]['present'] = $present;
+    //            if ($present) {
+    //                $this->selectedStudents[$student['id']]['reason'] = null;
+    //            }
+    //        }
+    //    }
 
     public function toggleStudentPresence($studentId)
     {
-        $this->selectedStudents[$studentId]['present'] = !$this->selectedStudents[$studentId]['present'];
+        $this->selectedStudents[$studentId]['present'] = ! $this->selectedStudents[$studentId]['present'];
         if ($this->selectedStudents[$studentId]['present']) {
             $this->selectedStudents[$studentId]['reason'] = null;
         }
@@ -168,19 +177,20 @@ class TakeAttendance extends Component
                 AttendanceRecord::updateOrCreate(
                     [
                         'attendance_id' => $attendance->id,
-                        'student_id' => $studentId
+                        'student_id' => $studentId,
                     ],
                     [
                         'status' => $data['present'] ? 'present' : 'absent',
-                        'remarks' => $data['present'] ? null : $data['reason']
+                        'remarks' => $data['present'] ? null : $data['reason'],
                     ]
                 );
             }
 
             session()->flash('message', 'Attendance saved successfully.');
+
             return redirect()->route('teachers.attendance.list');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to save attendance: ' . $e->getMessage());
+            session()->flash('error', 'Failed to save attendance: '.$e->getMessage());
         }
     }
 
@@ -190,6 +200,7 @@ class TakeAttendance extends Component
 
         if ($attendance->teacher_id !== auth()->user()->teacher->id) {
             session()->flash('error', 'You do not have permission to edit this attendance.');
+
             return redirect()->route('teachers.attendance.list');
         }
 

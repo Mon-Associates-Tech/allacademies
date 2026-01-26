@@ -132,6 +132,7 @@ class BigBlueButtonService
                 'meeting_id' => $meetingId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -162,6 +163,7 @@ class BigBlueButtonService
                 'meeting_id' => $meetingId,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -178,6 +180,7 @@ class BigBlueButtonService
             );
 
             $response = $this->bbb->endMeeting($endParams);
+
             return $response->success();
 
         } catch (Exception $e) {
@@ -185,6 +188,7 @@ class BigBlueButtonService
                 'session_id' => $session->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -195,7 +199,7 @@ class BigBlueButtonService
     public function getRecordings(string $meetingId): array
     {
         try {
-            $recordingsParams = new GetRecordingsParameters();
+            $recordingsParams = new GetRecordingsParameters;
             $recordingsParams->setMeetingId($meetingId);
 
             $response = $this->bbb->getRecordings($recordingsParams);
@@ -215,6 +219,7 @@ class BigBlueButtonService
                         'metadata' => $record->getMetas(),
                     ];
                 }
+
                 return $recordings;
             }
 
@@ -224,6 +229,7 @@ class BigBlueButtonService
                 'meeting_id' => $meetingId,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -235,12 +241,14 @@ class BigBlueButtonService
     {
         try {
             $response = $this->bbb->deleteRecordings($recordingId);
+
             return $response->success();
         } catch (Exception $e) {
             Log::error('BBB Delete Recording Error', [
                 'recording_id' => $recordingId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -252,12 +260,14 @@ class BigBlueButtonService
     {
         try {
             $response = $this->bbb->publishRecordings($recordingId, $publish);
+
             return $response->success();
         } catch (Exception $e) {
             Log::error('BBB Publish Recording Error', [
                 'recording_id' => $recordingId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -314,6 +324,7 @@ class BigBlueButtonService
                 'has_video' => $attendee->hasVideo(),
             ];
         }
+
         return $formatted;
     }
 
@@ -330,6 +341,7 @@ class BigBlueButtonService
                 'length' => $format->getLength(),
             ];
         }
+
         return $formatted;
     }
 
@@ -368,5 +380,4 @@ class BigBlueButtonService
 
         return $this->bbb->getJoinMeetingURL($joinParams);
     }
-
 }

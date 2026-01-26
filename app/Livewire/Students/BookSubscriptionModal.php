@@ -13,13 +13,16 @@ use Livewire\Component;
 class BookSubscriptionModal extends Component
 {
     public $showModal = false;
+
     public $subscriptionData = [];
+
     public $step = 1; // 1: conditions, 2: payment info
+
     public $acceptedConditions = false;
 
     protected $listeners = [
         'showSubscriptionModal' => 'show',
-        'closeSubscriptionModal' => 'close'
+        'closeSubscriptionModal' => 'close',
     ];
 
     public function show($subscriptionData): void
@@ -45,8 +48,9 @@ class BookSubscriptionModal extends Component
 
     public function proceedToPayment(): void
     {
-        if (!$this->acceptedConditions) {
+        if (! $this->acceptedConditions) {
             session()->flash('error', 'You must accept the subscription conditions to proceed.');
+
             return;
         }
 
@@ -55,16 +59,18 @@ class BookSubscriptionModal extends Component
 
     public function confirmSubscription(): void
     {
-        if (!$this->acceptedConditions) {
+        if (! $this->acceptedConditions) {
             session()->flash('error', 'You must accept the subscription conditions to proceed.');
+
             return;
         }
 
         $student = Auth::user()->student;
         $bookId = $this->subscriptionData['book_id'] ?? null;
 
-        if (!$bookId) {
+        if (! $bookId) {
             session()->flash('error', 'Invalid book selection.');
+
             return;
         }
 
@@ -79,16 +85,18 @@ class BookSubscriptionModal extends Component
             if ($existingSubscription->status === 'active') {
                 session()->flash('error', 'You are already subscribed to this book.');
                 $this->close();
+
                 return;
             } elseif ($existingSubscription->status === 'pending_payment') {
                 session()->flash('error', 'You have a pending subscription for this book.');
                 $this->close();
+
                 return;
             }
         }
 
         // Create subscription with pending payment status
-        $reference = 'SUB-' . strtoupper(uniqid()) . '-' . $student->id;
+        $reference = 'SUB-'.strtoupper(uniqid()).'-'.$student->id;
 
         $subscription = BookSubscription::create([
             'student_id' => $student->id,

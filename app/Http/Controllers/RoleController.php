@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\RoleCollection;
+use App\Http\Resources\RoleResource;
 use App\Models\Role;
 use Illuminate\Http\Request;
-use App\Http\Resources\RoleResource;
-use App\Http\Resources\RoleCollection;
 
 class RoleController extends Controller
 {
@@ -36,7 +36,7 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'slug' => 'sometimes|required|string|max:255|unique:roles,slug,' . $role->id,
+            'slug' => 'sometimes|required|string|max:255|unique:roles,slug,'.$role->id,
             'description' => 'nullable|string',
         ]);
 

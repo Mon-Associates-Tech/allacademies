@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('teams', function (Blueprint $table) {
-            $table->string('joining_code')->nullable()->unique();
+            if (!Schema::hasColumn('teams', 'joining_code')) {
+                $table->string('joining_code')->nullable()->unique();
+            }
         });
     }
 

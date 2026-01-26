@@ -16,9 +16,15 @@ return new class extends Migration
     public function up()
     {
         Schema::table('teams', function (Blueprint $table) {
-            $table->json('meta')->default(new Expression('(JSON_OBJECT())'));
-            $table->string('status')->default(TeamStatus::DECLINED->value)->index();
-            $table->text('declined_reason')->nullable();
+            if (!Schema::hasColumn('teams', 'meta')) {
+                $table->json('meta')->default(new Expression('(JSON_OBJECT())'));
+            }
+            if (!Schema::hasColumn('teams', 'status')) {
+                $table->string('status')->default(TeamStatus::DECLINED->value)->index();
+            }
+            if (!Schema::hasColumn('teams', 'declined_reason')) {
+                $table->text('declined_reason')->nullable();
+            }
         });
     }
 

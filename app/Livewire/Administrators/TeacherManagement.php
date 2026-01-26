@@ -2,19 +2,19 @@
 
 namespace App\Livewire\Administrators;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\Teacher;
-use App\Models\User;
-use App\Models\Role;
-use App\Models\AcademicSubject;
+use App\Enums\UserRole;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
+use App\Models\Role;
 use App\Models\Student;
-use App\Enums\UserRole;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class TeacherManagement extends Component
 {
@@ -22,34 +22,54 @@ class TeacherManagement extends Component
 
     // Form fields
     public $name;
+
     public $email;
+
     public $password;
+
     public $specialization;
+
     public $biography;
+
     public $academicGroupId;
+
     public $academicLevelId;
+
     public $selectedSubjects = [];
 
     // Search and filters
     public $searchTerm = '';
+
     public $filterAcademicGroup = '';
+
     public $filterAcademicLevel = '';
+
     public $filterSubject = '';
+
     public $filterSpecialization = '';
 
     // UI state
     public $isEditing = false;
+
     public $editingTeacherId;
+
     public $showTeacherModal = false;
+
     public $showDeleteModal = false;
+
     public $selectedTeacher;
+
     public $teacherToDelete;
+
     public $existingUser = null;
+
     public $userExists = false;
 
     // Collections
     public $academicGroups;
+
     public $academicLevels = [];
+
     public $availableSubjects = [];
 
     protected $rules = [
@@ -145,6 +165,7 @@ class TeacherManagement extends Component
         if (empty($this->email)) {
             $this->existingUser = null;
             $this->userExists = false;
+
             return;
         }
 
@@ -186,12 +207,13 @@ class TeacherManagement extends Component
             $this->availableSubjects = [];
         }
     }
+
     public function create()
     {
         // Dynamic validation rules
         $rules = $this->rules;
 
-        if (!$this->userExists) {
+        if (! $this->userExists) {
             $rules['email'] = 'required|email|unique:users,email';
             $rules['password'] = 'required|string|min:8';
         } else {
@@ -222,7 +244,7 @@ class TeacherManagement extends Component
 
                 // Step 2: Assign teacher role
                 $teacherRole = Role::where('name', 'teacher')->first();
-                if ($teacherRole && !$user->roles()->where('name', 'teacher')->exists()) {
+                if ($teacherRole && ! $user->roles()->where('name', 'teacher')->exists()) {
                     $user->roles()->attach($teacherRole);
                 }
 
@@ -249,7 +271,7 @@ class TeacherManagement extends Component
                 }
 
                 // Step 6: Associate with selected subjects
-                if (!empty($this->selectedSubjects)) {
+                if (! empty($this->selectedSubjects)) {
                     $subjectData = [];
                     foreach ($this->selectedSubjects as $subjectId) {
                         $subjectData[$subjectId] = [
@@ -265,9 +287,9 @@ class TeacherManagement extends Component
             });
 
             $this->resetForm();
-            session()->flash('message', 'Teacher "' . $this->name . '" created successfully with automatic student assignments!');
+            session()->flash('message', 'Teacher "'.$this->name.'" created successfully with automatic student assignments!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to create teacher: ' . $e->getMessage());
+            session()->flash('error', 'Failed to create teacher: '.$e->getMessage());
         }
 
         $this->js('window.Modal.close("teacher-form")');
@@ -275,7 +297,7 @@ class TeacherManagement extends Component
 
     private function autoAssignStudents($teacher)
     {
-        if (!$this->academicLevelId) {
+        if (! $this->academicLevelId) {
             return;
         }
 
@@ -304,7 +326,7 @@ class TeacherManagement extends Component
             'user',
             'subjects',
             'academicGroups',
-            'academicLevels'
+            'academicLevels',
         ])->findOrFail($teacherId);
 
         $this->name = $teacher->user->name;
@@ -351,7 +373,7 @@ class TeacherManagement extends Component
                     'email' => $this->email,
                 ];
 
-                if (!empty($this->password)) {
+                if (! empty($this->password)) {
                     $userData['password'] = Hash::make($this->password);
                 }
 
@@ -382,7 +404,7 @@ class TeacherManagement extends Component
 
                 // Update subject associations
                 $teacher->subjects()->detach();
-                if (!empty($this->selectedSubjects)) {
+                if (! empty($this->selectedSubjects)) {
                     $subjectData = [];
                     foreach ($this->selectedSubjects as $subjectId) {
                         $subjectData[$subjectId] = [
@@ -399,9 +421,9 @@ class TeacherManagement extends Component
             });
 
             $this->resetForm();
-            session()->flash('message', 'Teacher "' . $teacher->user->name . '" updated successfully!');
+            session()->flash('message', 'Teacher "'.$teacher->user->name.'" updated successfully!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update teacher: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update teacher: '.$e->getMessage());
         }
 
         $this->js('window.Modal.close("teacher-form")');
@@ -437,7 +459,7 @@ class TeacherManagement extends Component
             $this->teacherToDelete = null;
             session()->flash('message', 'Teacher deleted successfully!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to delete teacher: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete teacher: '.$e->getMessage());
         }
     }
 
@@ -452,7 +474,7 @@ class TeacherManagement extends Component
         $this->reset([
             'name', 'email', 'password', 'specialization', 'biography',
             'academicGroupId', 'academicLevelId', 'selectedSubjects',
-            'isEditing', 'editingTeacherId', 'existingUser', 'userExists'
+            'isEditing', 'editingTeacherId', 'existingUser', 'userExists',
         ]);
         $this->academicLevels = [];
         $this->availableSubjects = [];
@@ -466,8 +488,8 @@ class TeacherManagement extends Component
         // Search filter
         if ($this->searchTerm) {
             $query->whereHas('user', function ($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
@@ -494,7 +516,7 @@ class TeacherManagement extends Component
 
         // Specialization filter
         if ($this->filterSpecialization) {
-            $query->where('specialization', 'like', '%' . $this->filterSpecialization . '%');
+            $query->where('specialization', 'like', '%'.$this->filterSpecialization.'%');
         }
 
         $teachers = $query->latest()->paginate(10);
@@ -517,7 +539,7 @@ class TeacherManagement extends Component
             $this->filterAcademicGroup,
             $this->filterAcademicLevel,
             $this->filterSubject,
-            $this->filterSpecialization
+            $this->filterSpecialization,
         ])->filter()->count();
 
         return view('livewire.administrators.teacher-management', [

@@ -19,6 +19,7 @@ class SendMessageJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+
     public $backoff = [60, 300, 900]; // 1 min, 5 min, 15 min
 
     protected Message $message;
@@ -59,7 +60,7 @@ class SendMessageJob implements ShouldQueue
             Log::info("Successfully sent message: {$this->message->id}");
 
         } catch (\Exception $e) {
-            Log::error("Failed to send message {$this->message->id}: " . $e->getMessage());
+            Log::error("Failed to send message {$this->message->id}: ".$e->getMessage());
 
             $this->message->update(['status' => Message::STATUS_FAILED]);
 
@@ -74,7 +75,7 @@ class SendMessageJob implements ShouldQueue
         foreach ($recipients as $recipient) {
             try {
                 // Send email using your preferred mail class
-                 Mail::to($recipient->user->email)->send(new MessageNotificationMail($this->message, $recipient));
+                Mail::to($recipient->user->email)->send(new MessageNotificationMail($this->message, $recipient));
 
                 $recipient->update([
                     'email_sent' => true,
@@ -82,7 +83,7 @@ class SendMessageJob implements ShouldQueue
                 ]);
 
             } catch (\Exception $e) {
-                Log::error("Failed to send email to {$recipient->email} for message {$this->message->id}: " . $e->getMessage());
+                Log::error("Failed to send email to {$recipient->email} for message {$this->message->id}: ".$e->getMessage());
 
                 $recipient->update([
                     'email_failed_at' => now(),
