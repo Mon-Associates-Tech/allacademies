@@ -332,7 +332,7 @@
                                                 </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <a href="{{ route('token-subscriptions.show', $sub->id) }}"
+                                            <a href="{{ route('token-subscriptions.show', ['subscription' => $sub]) }}"
                                                class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                                                 View Details →
                                             </a>
