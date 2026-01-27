@@ -13,7 +13,7 @@ class TokenAllocationController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->isSuperAdmin() && !auth()->user()->isOwner()) {
+            if (! auth()->user()->isSuperAdmin() && ! auth()->user()->isOwner()) {
                 abort(403, 'Unauthorized access');
             }
 
@@ -23,17 +23,28 @@ class TokenAllocationController extends Controller
 
     public function index(Request $request)
     {
-        $filter = $request->get('filter', 'admin');
-        
-        $pricingTiers = PricingTier::orderBy('name')->get();
-        $recentAllocations = SubscriptionCycle::with(['user', 'pricingTier'])
-            ->when($filter === 'admin', fn($q) => $q->allocatedByAdmin())
-            ->when($filter === 'user', fn($q) => $q->where('allocated_by_admin', false))
-            ->latest()
-            ->take(20)
-            ->get();
+        $filter = $request->get('filter', 'all');
+        $search = $request->get('search', '');
+        $status = $request->get('status', '');
+        $tierId = $request->get('tier_id', '');
 
-        return view('token-allocations.index', compact('pricingTiers', 'recentAllocations', 'filter'));
+        $pricingTiers = PricingTier::orderBy('name')->get();
+        $allocations = SubscriptionCycle::with(['user', 'pricingTier'])
+            ->when($filter === 'admin', fn ($q) => $q->allocatedByAdmin())
+            ->when($filter === 'user', fn ($q) => $q->where('allocated_by_admin', false))
+            ->when($search, function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($tierId, fn ($q) => $q->where('pricing_tier_id', $tierId))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('token-allocations.index', compact('pricingTiers', 'allocations', 'filter', 'search', 'status', 'tierId'));
     }
 
     public function createTier()
@@ -141,13 +152,13 @@ class TokenAllocationController extends Controller
         });
 
         return redirect()->route('token-allocations.index')
-            ->with('success', 'Tokens assigned to ' . count($validated['user_ids']) . ' user(s) successfully');
+            ->with('success', 'Tokens assigned to '.count($validated['user_ids']).' user(s) successfully');
     }
 
     public function deactivateCycle(Request $request, $cycleId)
     {
         $cycle = SubscriptionCycle::findOrFail($cycleId);
-        
+
         $cycle->update(['status' => 'inactive']);
 
         return redirect()->back()
@@ -157,7 +168,7 @@ class TokenAllocationController extends Controller
     public function revokeTokens(Request $request, $cycleId)
     {
         $cycle = SubscriptionCycle::findOrFail($cycleId);
-        
+
         $cycle->update([
             'status' => 'cancelled',
             'tokens_allocated' => 0,
@@ -198,7 +209,7 @@ class TokenAllocationController extends Controller
             ->map(function ($user) {
                 return [
                     'id' => $user->id,
-                    'text' => $user->name . ' (' . $user->email . ')',
+                    'text' => $user->name.' ('.$user->email.')',
                 ];
             });
 

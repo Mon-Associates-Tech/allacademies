@@ -346,6 +346,7 @@ Route::middleware(['auth'])->group(function () {
     // Token Subscription Routes (User Purchases)
     Route::prefix('token-subscriptions')->name('token-subscriptions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'index'])->name('index');
+        Route::get('/history', [\App\Http\Controllers\TokenSubscriptionController::class, 'history'])->name('history');
         Route::get('/create', [\App\Http\Controllers\TokenSubscriptionController::class, 'create'])->name('create');
         Route::post('/checkout', [\App\Http\Controllers\TokenSubscriptionController::class, 'checkout'])->name('checkout');
         Route::post('/process-payment', [\App\Http\Controllers\TokenSubscriptionController::class, 'processPayment'])->name('process-payment');
