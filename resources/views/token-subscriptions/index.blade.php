@@ -325,10 +325,10 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full
-                                                    {{ $sub->status->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
-                                                    {{ $sub->status->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
-                                                    {{ $sub->status->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
-                                                    {{ ucfirst($sub->status->value) }}
+                                                    {{ $sub->status?->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
+                                                    {{ $sub->status?->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
+                                                    {{ $sub->status?->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
+                                                    {{ ucfirst($sub->status?->value ?? 'unknown') }}
                                                 </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -382,10 +382,10 @@
                                     {{-- Status and Action --}}
                                     <div class="flex items-center justify-between">
                                         <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full
-                                            {{ $sub->status->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
-                                            {{ $sub->status->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
-                                            {{ $sub->status->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
-                                            {{ ucfirst($sub->status->value) }}
+                                            {{ $sub->status?->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
+                                            {{ $sub->status?->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
+                                            {{ $sub->status?->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
+                                            {{ ucfirst($sub->status?->value ?? 'unknown') }}
                                         </span>
                                         <a href="{{ route('token-subscriptions.show', $sub->id) }}"
                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors">
