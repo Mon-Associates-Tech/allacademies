@@ -133,22 +133,64 @@
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Recent Allocations</h2>
-                    <div class="flex gap-2">
-                        <a href="{{ route('token-allocations.index', ['filter' => 'all']) }}"
-                           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                            All
-                        </a>
-                        <a href="{{ route('token-allocations.index', ['filter' => 'admin']) }}"
-                           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filter === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                            Admin Assigned
-                        </a>
-                        <a href="{{ route('token-allocations.index', ['filter' => 'user']) }}"
-                           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filter === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                            User Subscribed
-                        </a>
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Allocations</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('token-allocations.index', array_merge(request()->except('filter', 'page'), ['filter' => 'all'])) }}"
+                               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                                All
+                            </a>
+                            <a href="{{ route('token-allocations.index', array_merge(request()->except('filter', 'page'), ['filter' => 'admin'])) }}"
+                               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filter === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                                Admin Assigned
+                            </a>
+                            <a href="{{ route('token-allocations.index', array_merge(request()->except('filter', 'page'), ['filter' => 'user'])) }}"
+                               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filter === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                                User Subscribed
+                            </a>
+                        </div>
                     </div>
+
+                    <form method="GET" action="{{ route('token-allocations.index') }}" class="mt-4">
+                        <input type="hidden" name="filter" value="{{ $filter }}">
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <div class="flex-1">
+                                <input type="text"
+                                       name="search"
+                                       value="{{ $search }}"
+                                       placeholder="Search by user name or email..."
+                                       class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <select name="status"
+                                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">All Statuses</option>
+                                    <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
+                                    <option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="expired" {{ $status === 'expired' ? 'selected' : '' }}>Expired</option>
+                                    <option value="cancelled" {{ $status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                </select>
+                                <select name="tier_id"
+                                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">All Tiers</option>
+                                    @foreach($pricingTiers as $tier)
+                                        <option value="{{ $tier->id }}" {{ $tierId == $tier->id ? 'selected' : '' }}>{{ $tier->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit"
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    Filter
+                                </button>
+                                @if($search || $status || $tierId)
+                                    <a href="{{ route('token-allocations.index', ['filter' => $filter]) }}"
+                                       class="px-4 py-2 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">
+                                        Clear
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -178,7 +220,7 @@
                         </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($recentAllocations as $allocation)
+                        @forelse($allocations as $allocation)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $allocation->user->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ $allocation->pricingTier->name }}</td>
@@ -214,7 +256,7 @@
                                             <form action="{{ route('token-allocations.deactivate-cycle', $allocation->id) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="submit" 
+                                                <button type="submit"
                                                         class="p-2 rounded-lg bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 text-orange-600 dark:text-orange-400 transition-colors"
                                                         title="Deactivate Cycle"
                                                         onclick="return confirm('Deactivate this cycle?')">
@@ -227,7 +269,7 @@
                                         <form action="{{ route('token-allocations.revoke-tokens', $allocation->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
+                                            <button type="submit"
                                                     class="p-2 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition-colors"
                                                     title="Revoke Tokens"
                                                     onclick="return confirm('Revoke all tokens from this cycle? This cannot be undone.')">
@@ -241,14 +283,19 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No recent
-                                    allocations
+                                <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                    No allocations found
                                 </td>
                             </tr>
                         @endforelse
                         </tbody>
                     </table>
                 </div>
+                @if($allocations->hasPages())
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                        {{ $allocations->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
