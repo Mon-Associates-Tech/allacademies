@@ -29,7 +29,6 @@ class TokenSubscriptionController extends Controller
         $user = Auth::user();
 
         $activeSubscription = $user->activeSubscriptionCycle;
-        $subscriptionHistory = $user->subscriptionHistory;
         $pendingSubscription = $user->tokenSubscriptions()
             ->where('status', TokenSubscriptionStatus::PENDING->value)
             ->first();
@@ -44,11 +43,20 @@ class TokenSubscriptionController extends Controller
 
         return view('token-subscriptions.index', compact(
             'activeSubscription',
-            'subscriptionHistory',
             'pendingSubscription',
             'currentCycle',
             'stats'
         ));
+    }
+
+    public function history()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $subscriptionHistory = $user->subscriptionHistory;
+
+        return view('token-subscriptions.history', compact('subscriptionHistory'));
     }
 
     public function store(Request $request)
@@ -183,7 +191,7 @@ class TokenSubscriptionController extends Controller
             ->with('success', 'Ready for payment. Please complete your transaction.');
     }
 
-    public function show($subscription)
+    public function show(SubscriptionCycle $subscription)
     {
         /** @var User $user */
         $user = Auth::user();
