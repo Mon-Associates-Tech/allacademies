@@ -1,19 +1,19 @@
 <div class="school-switcher">
     @if($canSwitchSchools = $this->canSwitchSchools())
-        <div class="bg-white shadow-sm border-b border-gray-200 overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
-                            <span class="text-sm font-medium text-gray-700">School Context:</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">School Context:</span>
                         </div>
 
                         <div class="relative">
                             <select wire:change="handleSchoolChange($event.target.value)"
-                                    class="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md pl-3 pr-8 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400">
                                 <option value="" @if($showAllSchools) selected @endif>All Schools</option>
                                 @foreach($schools as $school)
                                     <option value="{{ $school->id }}"
@@ -23,21 +23,21 @@
                                 @endforeach
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </div>
                         </div>
 
                         @if($currentSchool)
-                            <div class="flex items-center space-x-2 text-sm text-green-600">
+                            <div class="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
                                 </svg>
                                 <span>{{ $currentSchool->name }}</span>
                             </div>
                         @else
-                            <div class="flex items-center space-x-2 text-sm text-blue-600">
+                            <div class="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                 </svg>
@@ -47,7 +47,7 @@
                     </div>
 
                     <!-- Quick Stats -->
-                    <div class="hidden md:flex items-center space-x-6 text-sm text-gray-600">
+                    <div class="hidden md:flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
                         @php $stats = $this->stats @endphp
                         @if($showAllSchools)
                             <div class="flex items-center space-x-1">
@@ -77,7 +77,7 @@
                     <div class="flex items-center space-x-2">
                         @if(!$showAllSchools && $currentSchool)
                             <button wire:click="showAllSchools"
-                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                                 </svg>
@@ -85,7 +85,7 @@
                             </button>
                         @endif
 
-                        <div class="text-xs text-gray-500">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
                             {{ $schools->count() }} schools available
                         </div>
                     </div>
@@ -95,30 +95,30 @@
 
         <!-- Flash Messages -->
         @if (session()->has('success'))
-            <div class="bg-green-50 border-l-4 border-green-400 p-4" x-data x-init="setTimeout(() => $el.remove(), 3000)">
+            <div class="bg-green-50 dark:bg-green-900/50 border-l-4 border-green-400 dark:border-green-500 p-4" x-data x-init="setTimeout(() => $el.remove(), 3000)">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-green-400 dark:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-green-700">{{ session('success') }}</p>
+                        <p class="text-sm text-green-700 dark:text-green-300">{{ session('success') }}</p>
                     </div>
                 </div>
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="bg-red-50 border-l-4 border-red-400 p-4" x-data x-init="setTimeout(() => $el.remove(), 5000)">
+            <div class="bg-red-50 dark:bg-red-900/50 border-l-4 border-red-400 dark:border-red-500 p-4" x-data x-init="setTimeout(() => $el.remove(), 5000)">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-red-400 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-red-700">{{ session('error') }}</p>
+                        <p class="text-sm text-red-700 dark:text-red-300">{{ session('error') }}</p>
                     </div>
                 </div>
             </div>
