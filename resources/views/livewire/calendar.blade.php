@@ -188,7 +188,7 @@
     <x-modal-component
         name="create-event-modal"
         title="Create Event"
-        size="md"
+        size="xl"
         :show="$showCreateModal"
     >
         <form wire:submit.prevent="createEvent">

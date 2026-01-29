@@ -30,6 +30,9 @@
                                 return;
                             }
 
+                            // Detect dark mode
+                            const isDarkMode = document.documentElement.classList.contains('dark');
+
                             tinymce.init({
                                 selector: '#' + this.editorId,
                                 height: height,
@@ -39,7 +42,11 @@
                                 toolbar_mode: 'sliding',
                                 block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3',
                                 forced_root_block: 'p',
-                                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; } p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }',
+                                skin: isDarkMode ? 'oxide-dark' : 'oxide',
+                                content_css: isDarkMode ? 'dark' : 'default',
+                                content_style: isDarkMode
+                                    ? 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; background-color: #1f2937; color: #f3f4f6; } p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }'
+                                    : 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; } p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }',
                                 paste_as_text: false,
                                 promotion: false,
                                 branding: false,
