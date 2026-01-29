@@ -192,58 +192,45 @@
         :show="$showCreateModal"
     >
         <form wire:submit.prevent="createEvent">
-                    @if ($errors->any())
-            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <h3 class="text-sm font-medium text-red-800 dark:text-red-200 mb-2">Validation Errors:</h3>
-                <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li>• {{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+            @if ($errors->any())
+                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200 mb-2">Validation Errors:</h3>
+                    <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                    <input
-                        type="text"
-                        wire:model="eventTitle"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required
-                    >
-                    @error('eventTitle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                <x-form.input
+                    name="eventTitle"
+                    label="Title"
+                    wire:model="eventTitle"
+                    :required="true"
+                />
 
-                <div>
-                    <x-form.markdown-editor
-                        name="eventDescription"
-                        wire-model="eventDescription"
-                        :value="$eventDescription"
-                        label="Description"
-                        :height="200"
-                    />
-                </div>
+                <x-form.markdown-editor
+                    name="eventDescription"
+                    wire-model="eventDescription"
+                    :value="$eventDescription"
+                    label="Description"
+                    :height="200"
+                />
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                        <input
-                            type="datetime-local"
-                            wire:model="eventStartDate"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required
-                        >
-                        @error('eventStartDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                    <x-form.datetime-input
+                        name="eventStartDate"
+                        label="Start Date"
+                        wire:model="eventStartDate"
+                        :required="true"
+                    />
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-                        <input
-                            type="datetime-local"
-                            wire:model="eventEndDate"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                    </div>
+                    <x-form.datetime-input
+                        name="eventEndDate"
+                        label="End Date"
+                        wire:model="eventEndDate"
+                    />
                 </div>
 
                 <div class="flex items-center">
@@ -251,7 +238,7 @@
                         type="checkbox"
                         wire:model="eventAllDay"
                         id="eventAllDay"
-                        class="rounded text-blue-600 focus:ring-blue-500"
+                        class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                     >
                     <label for="eventAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day Event</label>
                 </div>
@@ -291,17 +278,7 @@
                     </button>
                     <button
                         type="button"
-                        @click="
-                            // Sync all TinyMCE editors before submitting
-                            if (typeof tinymce !== 'undefined') {
-                                tinymce.get().forEach(function(editor) {
-                                    if (editor.id.includes('eventDescription')) {
-                                        $wire.set('eventDescription', editor.getContent());
-                                    }
-                                });
-                            }
-                            $nextTick(() => { $wire.createEvent(); });
-                        "
+                        wire:click="createEvent"
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     >
                         Create Event
@@ -320,38 +297,31 @@
     >
         <form wire:submit.prevent="createNote" name="create-note-form">
             @if ($errors->any())
-            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <h3 class="text-sm font-medium text-red-800 dark:text-red-200 mb-2">Validation Errors:</h3>
-                <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li>• {{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200 mb-2">Validation Errors:</h3>
+                    <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                    <input
-                        type="text"
-                        wire:model="noteTitle"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        required
-                    >
-                    @error('noteTitle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                <x-form.input
+                    name="noteTitle"
+                    label="Title"
+                    wire:model="noteTitle"
+                    :required="true"
+                />
 
-                <div>
-                    <x-form.markdown-editor
-                        name="noteContent"
-                        wire-model="noteContent"
-                        :value="$noteContent"
-                        label="Content"
-                        :height="200"
-                        :required="true"
-                    />
-                    @error('noteContent') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                <x-form.markdown-editor
+                    name="noteContent"
+                    wire-model="noteContent"
+                    :value="$noteContent"
+                    label="Content"
+                    :height="200"
+                    :required="true"
+                />
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -408,23 +378,17 @@
 
                     <div x-show="showCalendarFields" x-collapse class="mt-4 space-y-4">
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                                <input
-                                    type="datetime-local"
-                                    wire:model="eventStartDate"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                >
-                            </div>
+                            <x-form.datetime-input
+                                name="noteEventStartDate"
+                                label="Start Date"
+                                wire:model="eventStartDate"
+                            />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-                                <input
-                                    type="datetime-local"
-                                    wire:model="eventEndDate"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                >
-                            </div>
+                            <x-form.datetime-input
+                                name="noteEventEndDate"
+                                label="End Date"
+                                wire:model="eventEndDate"
+                            />
                         </div>
 
                         <div class="flex items-center">
@@ -432,7 +396,7 @@
                                 type="checkbox"
                                 wire:model="eventAllDay"
                                 id="noteEventAllDay"
-                                class="rounded text-green-600 focus:ring-green-500"
+                                class="rounded text-green-600 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600"
                             >
                             <label for="noteEventAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day</label>
                         </div>
@@ -474,19 +438,7 @@
                     </button>
                     <button
                         type="button"
-                        @click="
-                            (async () => {
-                                // Sync all TinyMCE editors before submitting
-                                if (typeof tinymce !== 'undefined') {
-                                    for (const editor of tinymce.get()) {
-                                        if (editor.id.includes('noteContent')) {
-                                            await $wire.set('noteContent', editor.getContent());
-                                        }
-                                    }
-                                }
-                                await $wire.createNote();
-                            })();
-                        "
+                        wire:click="createNote"
                         class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
                     >
                         Create Note
@@ -499,8 +451,8 @@
     <!-- Event View Modal -->
     <x-modal-component
         name="view-event-modal"
-        title="Event Details"
-        size="lg"
+        :title="$selectedEvent ? ($selectedEvent->event_type_name === 'Note' ? 'Note Details' : 'Event Details') : 'Details'"
+        size="xl"
         :show="$showViewModal"
     >
         @if($selectedEvent)
@@ -591,7 +543,7 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                         </svg>
-                        Edit Event
+                        Edit {{ $selectedEvent->event_type_name === 'Note' ? 'Note' : 'Event' }}
                     </span>
                 </button>
                 @endif
@@ -621,54 +573,41 @@
     <!-- Event Edit Modal -->
     <x-modal-component
         name="edit-event-modal"
-        title="Edit Event"
-        size="lg"
+        :title="$selectedEvent ? ($selectedEvent->event_type_name === 'Note' ? 'Edit Note' : 'Edit Event') : 'Edit'"
+        size="xl"
         :show="$showEditModal"
     >
         @if($selectedEvent)
         <form wire:submit.prevent="updateEvent">
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                    <input
-                        type="text"
-                        wire:model="eventTitle"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required
-                    >
-                    @error('eventTitle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                <x-form.input
+                    name="editEventTitle"
+                    label="Title"
+                    wire:model="eventTitle"
+                    :required="true"
+                />
 
-                <div>
-                    <x-form.markdown-editor
-                        name="eventDescription"
-                        wire-model="eventDescription"
-                        :value="$eventDescription"
-                        label="Description"
-                        :height="200"
-                    />
-                </div>
+                <x-form.markdown-editor
+                    name="editEventDescription"
+                    wire-model="eventDescription"
+                    :value="$eventDescription"
+                    label="Description"
+                    :height="200"
+                />
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                        <input
-                            type="datetime-local"
-                            wire:model="eventStartDate"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required
-                        >
-                        @error('eventStartDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                    <x-form.datetime-input
+                        name="editEventStartDate"
+                        label="Start Date"
+                        wire:model="eventStartDate"
+                        :required="true"
+                    />
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-                        <input
-                            type="datetime-local"
-                            wire:model="eventEndDate"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                    </div>
+                    <x-form.datetime-input
+                        name="editEventEndDate"
+                        label="End Date"
+                        wire:model="eventEndDate"
+                    />
                 </div>
 
                 <div class="flex items-center">
@@ -676,7 +615,7 @@
                         type="checkbox"
                         wire:model="eventAllDay"
                         id="editEventAllDay"
-                        class="rounded text-blue-600 focus:ring-blue-500"
+                        class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                     >
                     <label for="editEventAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day Event</label>
                 </div>
@@ -730,20 +669,10 @@
                         </button>
                         <button
                             type="button"
-                            @click="
-                                // Sync all TinyMCE editors before submitting
-                                if (typeof tinymce !== 'undefined') {
-                                    tinymce.get().forEach(function(editor) {
-                                        if (editor.id.includes('eventDescription')) {
-                                            $wire.set('eventDescription', editor.getContent());
-                                        }
-                                    });
-                                }
-                                $nextTick(() => { $wire.updateEvent(); });
-                            "
+                            wire:click="updateEvent"
                             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                         >
-                            Update Event
+                            Update {{ $selectedEvent->event_type_name === 'Note' ? 'Note' : 'Event' }}
                         </button>
                     </div>
                 </div>

@@ -150,17 +150,19 @@ updatePreview() {
     @endpush
 @endonce
 
-@props(['name', 'value' => null, 'label' => null, 'height' => 400, 'info' => null, 'required' => false])
+@props(['name', 'value' => null, 'label' => null, 'height' => 400, 'info' => null, 'required' => false, 'wireModel' => null])
 
 @php
     $markdown = old($name, $value);
     // Generate a unique ID and replace dots with underscores to make it a valid CSS selector
     $uniqueId = str_replace('.', '_', uniqid());
     $editorId = 'markdown-editor-' . str_replace(['[', ']', '.'], ['_', '_', '_'], $name) . '_' . $uniqueId;
+    // Use wireModel prop if provided, or check attributes for wire-model/wire:model, otherwise fall back to name
+    $livewireModel = $wireModel ?? $attributes->get('wire-model') ?? $attributes->get('wire:model') ?? $name;
 @endphp
 
 <div class="space-y-1"
-     x-data="markdownEditor(@js($markdown ?? ''), @js($editorId), @js($height), @js($name))"
+     x-data="markdownEditor(@js($markdown ?? ''), @js($editorId), @js($height), @js($livewireModel))"
      x-init="
         $nextTick(() => {
             initEditor();
@@ -188,7 +190,7 @@ updatePreview() {
      :data-editor-id="editorId">
 
     @if($label)
-        <label class="block text-sm tracking-tighter font-medium text-gray-700 dark:text-gray-300">
+        <label class="block text-sm tracking-tighter pb-1 font-medium text-gray-700 dark:text-gray-300">
             {{ $label }}
             @if($required)
                 <span class="text-red-500">*</span>

@@ -359,7 +359,15 @@ class Calendar extends Component
 
     public function createEvent()
     {
-        $this->validate();
+        $this->validate([
+            'eventTitle' => 'required|string|max:255',
+            'eventDescription' => 'nullable|string',
+            'eventStartDate' => 'required|date',
+            'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate',
+            'eventAllDay' => 'boolean',
+            'eventColor' => 'nullable|string',
+            'eventVisibility' => 'required|in:private,public,shared',
+        ]);
 
         $eventData = [
             'title' => $this->eventTitle,
@@ -407,7 +415,15 @@ class Calendar extends Component
 
     public function updateEvent()
     {
-        $this->validate();
+        $this->validate([
+            'eventTitle' => 'required|string|max:255',
+            'eventDescription' => 'nullable|string',
+            'eventStartDate' => 'required|date',
+            'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate',
+            'eventAllDay' => 'boolean',
+            'eventColor' => 'nullable|string',
+            'eventVisibility' => 'required|in:private,public,shared',
+        ]);
 
         if ($this->selectedEvent && $this->selectedEvent->canUserEdit(auth()->id())) {
             $eventData = [
@@ -431,6 +447,7 @@ class Calendar extends Component
             $this->loadEvents();
 
             $this->dispatch('calendarEventUpdated');
+            $this->dispatch('close-modal', name: 'edit-event-modal');
         }
     }
 
@@ -503,7 +520,7 @@ class Calendar extends Component
         if ($date) {
             // Convert the date string to the proper format for datetime-local input
             if (is_string($date) && strlen($date) > 10) {
-                // If it's in Y-m-d\TH:i format, useit as is
+                // If it's in Y-m-d\TH:i format, use it as is
                 $this->eventStartDate = $date;
             } else {
                 // If it's just a date, set to start of day
