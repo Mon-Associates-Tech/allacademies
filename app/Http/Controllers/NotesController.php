@@ -261,6 +261,7 @@ class NotesController extends Controller
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
             'is_public' => 'boolean',
             'background_color' => 'nullable|string|in:'.implode(',', array_keys(Note::getBackgroundColors())),
+            'add_to_calendar' => 'in:on,1,0,true,false',
             'calendar_event_start_date' => 'nullable|date',
             'calendar_event_end_date' => 'nullable|date|after_or_equal:calendar_event_start_date',
             'calendar_event_all_day' => 'boolean',
@@ -292,7 +293,7 @@ class NotesController extends Controller
             $startDate = $request->calendar_event_start_date;
             if ($startDate && strpos($startDate, 'T') !== false) {
                 // Convert 'T' format to space format for proper datetime handling
-                $startDate = str_replace('T', '', $startDate);
+                $startDate = str_replace('T', ' ', $startDate);
             }
             $endDate = $request->calendar_event_end_date;
             if ($endDate && strpos($endDate, 'T') !== false) {

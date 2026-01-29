@@ -37,18 +37,16 @@ trait HasCalendarEvents
     /**
      * Get the calendar event associated with this model.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function calendarEvent()
     {
-        return $this->morphOne(CalendarEvent::class, 'event');
+        return $this->hasOne(CalendarEvent::class, 'event_id')
+            ->where('event_type', static::class);
     }
 
     /**
      * Create a calendar event for this model.
-     *
-     * @param array $eventData
-     * @return CalendarEvent
      */
     public function createCalendarEvent(array $eventData): CalendarEvent
     {
@@ -69,9 +67,6 @@ trait HasCalendarEvents
 
     /**
      * Update or create a calendar event for this model.
-     *
-     * @param array $eventData
-     * @return CalendarEvent
      */
     public function updateOrCreateCalendarEvent(array $eventData): CalendarEvent
     {
@@ -95,8 +90,6 @@ trait HasCalendarEvents
 
     /**
      * Sync the model's data with its calendar event.
-     *
-     * @return void
      */
     public function syncWithCalendarEvent(): void
     {
@@ -111,8 +104,6 @@ trait HasCalendarEvents
 
     /**
      * Remove the calendar event associated with this model.
-     *
-     * @return bool
      */
     public function removeCalendarEvent(): bool
     {
@@ -125,8 +116,6 @@ trait HasCalendarEvents
 
     /**
      * Check if this model has a calendar event.
-     *
-     * @return bool
      */
     public function hasCalendarEvent(): bool
     {
@@ -136,8 +125,6 @@ trait HasCalendarEvents
     /**
      * Get the title to display on the calendar.
      * Override this method in your model to customize.
-     *
-     * @return string
      */
     public function getCalendarTitle(): string
     {
@@ -147,8 +134,6 @@ trait HasCalendarEvents
     /**
      * Get the description to display on the calendar.
      * Override this method in your model to customize.
-     *
-     * @return string|null
      */
     public function getCalendarDescription(): ?string
     {
@@ -158,8 +143,6 @@ trait HasCalendarEvents
     /**
      * Get the default color for this event type on the calendar.
      * Override this method in your model to customize.
-     *
-     * @return string|null
      */
     public function getCalendarColor(): ?string
     {
@@ -169,8 +152,6 @@ trait HasCalendarEvents
     /**
      * Get the user ID who owns this eventable item.
      * Override this method in your model if the user field has a different name.
-     *
-     * @return int
      */
     public function getCalendarUserId(): int
     {
@@ -180,8 +161,6 @@ trait HasCalendarEvents
     /**
      * Get the event type identifier for display purposes.
      * This returns a human-readable type name.
-     *
-     * @return string
      */
     public function getCalendarEventType(): string
     {
@@ -191,8 +170,6 @@ trait HasCalendarEvents
     /**
      * Get the URL to view this item's details.
      * Override this method in your model to provide the correct route.
-     *
-     * @return string|null
      */
     public function getCalendarEventUrl(): ?string
     {
@@ -202,8 +179,6 @@ trait HasCalendarEvents
     /**
      * Get additional metadata for the calendar event.
      * Override this method to include model-specific data.
-     *
-     * @return array
      */
     public function getCalendarMetadata(): array
     {
@@ -217,8 +192,6 @@ trait HasCalendarEvents
     /**
      * Convert the model to a calendar event array format.
      * Useful for API responses and JavaScript calendar libraries.
-     *
-     * @return array
      */
     public function toCalendarEventArray(): array
     {
