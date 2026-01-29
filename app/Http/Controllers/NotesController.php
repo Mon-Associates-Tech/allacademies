@@ -198,7 +198,7 @@ class NotesController extends Controller
             // Convert datetime-local format to proper datetime format if needed
             $startDate = $request->calendar_event_start_date;
             if ($startDate && strpos($startDate, 'T') !== false) {
-                // Convert 'T' format to space format for properdatetime handling
+                // Convert 'T' format to space format for proper datetime handling
                 $startDate = str_replace('T', ' ', $startDate);
             }
 
