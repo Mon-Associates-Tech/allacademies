@@ -39,6 +39,104 @@
             </div>
         </div>
 
+        <!-- Search and Filter Row -->
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col lg:flex-row gap-3">
+                <!-- Search Input -->
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="searchQuery"
+                        placeholder="Search events..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                    @if($searchQuery)
+                        <button
+                            wire:click="$set('searchQuery', '')"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+
+                <!-- Time Filter -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <select
+                        wire:model.live="timeFilter"
+                        class="flex-1 sm:flex-none min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                        <option value="all">All Events</option>
+                        <option value="upcoming">Upcoming Events</option>
+                        <option value="past">Past Events</option>
+                    </select>
+
+                    <!-- Custom Date Range Toggle -->
+                    <button
+                        wire:click="toggleCustomDateRange"
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap {{ $showCustomDateRange ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}"
+                        title="Custom date range"
+                    >
+                        <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="hidden sm:inline">Date Range</span>
+                    </button>
+
+                    <!-- Clear All Filters -->
+                    @if($hasActiveFilters)
+                        <button
+                            wire:click="clearAllFilters"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors whitespace-nowrap"
+                            title="Clear all filters"
+                        >
+                            <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span class="hidden sm:inline">Clear</span>
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Custom Date Range Picker -->
+            @if($showCustomDateRange)
+                <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div class="flex flex-col sm:flex-row items-end gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">From</label>
+                            <input
+                                type="date"
+                                wire:model="customStartDate"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            >
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">To</label>
+                            <input
+                                type="date"
+                                wire:model="customEndDate"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            >
+                        </div>
+                        <button
+                            wire:click="applyCustomDateRange"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                        >
+                            Apply
+                        </button>
+                    </div>
+                </div>
+            @endif
+        </div>
+
         <!-- Bottom Row: Navigation and View Switcher -->
         <div class="px-4 py-3">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
@@ -77,31 +175,36 @@
                     <span class="text-lg font-semibold text-gray-900 dark:text-white">
                         {{ $currentDate?->format('F Y') }}
                     </span>
+                    @if($searchQuery)
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Searching: "{{ $searchQuery }}"
+                        </p>
+                    @endif
                 </div>
 
                 <!-- View Switcher -->
                 <div class="flex items-center bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1">
                     <button
                         wire:click="changeView('month')"
-                        class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $view === 'month' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
+                        class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $view === 'month' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
                     >
                         Month
                     </button>
                     <button
                         wire:click="changeView('week')"
-                        class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $view === 'week' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
+                        class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $view === 'week' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
                     >
                         Week
                     </button>
                     <button
                         wire:click="changeView('day')"
-                        class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $view === 'day' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
+                        class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $view === 'day' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
                     >
                         Day
                     </button>
                     <button
                         wire:click="changeView('list')"
-                        class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $view === 'list' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
+                        class="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $view === 'list' ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}"
                     >
                         List
                     </button>
@@ -218,7 +321,7 @@
                     :height="200"
                 />
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <x-form.datetime-input
                         name="eventStartDate"
                         label="Start Date"
@@ -243,7 +346,7 @@
                     <label for="eventAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day Event</label>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
                         <input
@@ -263,6 +366,88 @@
                             <option value="public">Public</option>
                             <option value="shared">Shared</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Reminder Section -->
+                <div x-data="{ showReminderOptions: @entangle('enableReminder') }" class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            wire:model.live="enableReminder"
+                            id="enableReminder"
+                            class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                        >
+                        <label for="enableReminder" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                Set Reminder
+                            </span>
+                        </label>
+                    </div>
+
+                    <div x-show="showReminderOptions" x-collapse class="mt-4 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Remind me</label>
+                            <select
+                                wire:model="reminderMinutesBefore"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                @foreach($reminderTimeOptions as $minutes => $label)
+                                    <option value="{{ $minutes }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notification Channels</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        value="email"
+                                        wire:model="reminderChannels"
+                                        class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                                        <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        Email
+                                    </span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        value="database"
+                                        wire:model="reminderChannels"
+                                        class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                                        <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                        </svg>
+                                        In-App Notification
+                                    </span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        value="sms"
+                                        wire:model="reminderChannels"
+                                        class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                                        <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                        SMS (if configured)
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -323,7 +508,7 @@
                     :required="true"
                 />
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Book</label>
                         <select
@@ -377,7 +562,7 @@
                     </div>
 
                     <div x-show="showCalendarFields" x-collapse class="mt-4 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <x-form.datetime-input
                                 name="noteEventStartDate"
                                 label="Start Date"
@@ -401,7 +586,7 @@
                             <label for="noteEventAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day</label>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
                                 <input
@@ -422,6 +607,75 @@
                                     <option value="shared">Shared</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <!-- Reminder Section for Note Calendar Event -->
+                        <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <div class="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    wire:model.live="enableReminder"
+                                    id="noteEnableReminder"
+                                    class="rounded text-green-600 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600"
+                                >
+                                <label for="noteEnableReminder" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                        </svg>
+                                        Set Reminder
+                                    </span>
+                                </label>
+                            </div>
+
+                            @if($enableReminder)
+                            <div class="mt-3 space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Remind me</label>
+                                    <select
+                                        wire:model="reminderMinutesBefore"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    >
+                                        @foreach($reminderTimeOptions as $minutes => $label)
+                                            <option value="{{ $minutes }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notify via</label>
+                                    <div class="flex flex-wrap gap-3">
+                                        <label class="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                value="email"
+                                                wire:model="reminderChannels"
+                                                class="rounded text-green-600 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600"
+                                            >
+                                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Email</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                value="database"
+                                                wire:model="reminderChannels"
+                                                class="rounded text-green-600 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600"
+                                            >
+                                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">In-App</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                value="sms"
+                                                wire:model="reminderChannels"
+                                                class="rounded text-green-600 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600"
+                                            >
+                                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">SMS</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -488,7 +742,7 @@
             @endif
 
             <!-- Date & Time -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Start</label>
                     <p class="text-gray-900 dark:text-white">
@@ -595,7 +849,7 @@
                     :height="200"
                 />
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <x-form.datetime-input
                         name="editEventStartDate"
                         label="Start Date"
@@ -620,7 +874,7 @@
                     <label for="editEventAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day Event</label>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
                         <input
@@ -645,7 +899,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="flex justify-between w-full">
+                <div class="flex flex-col-reverse sm:flex-row justify-between w-full gap-3">
                     <button
                         type="button"
                         wire:click="deleteEvent"

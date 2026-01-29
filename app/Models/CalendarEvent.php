@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Contracts\CalendarEventable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Collection;
 
 class CalendarEvent extends Model
 {
@@ -85,6 +87,7 @@ class CalendarEvent extends Model
         }
 
         $typeName = $this->event_type_name;
+
         return self::EVENT_TYPE_COLORS[$typeName] ?? self::EVENT_TYPE_COLORS['default'];
     }
 
@@ -140,6 +143,82 @@ class CalendarEvent extends Model
         return $this->hasMany(CalendarEventShare::class);
     }
 
+    /**
+     * Get the reminders for this calendar event.
+     */
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(CalendarEventReminder::class);
+    }
+
+    /**
+     * Get pending reminders for this event.
+     */
+    public function pendingReminders(): HasMany
+    {
+        return $this->reminders()->where('status', CalendarEventReminder::STATUS_PENDING);
+    }
+
+    /**
+     * Create a reminder for this event.
+     *
+     * @param  array<string>  $channels
+     */
+    public function createReminder(
+        int $userId,
+        int $minutesBefore = 15,
+        array $channels = ['email', 'database']
+    ): CalendarEventReminder {
+        return CalendarEventReminder::createForEvent($this, $userId, $minutesBefore, $channels);
+    }
+
+    /**
+     * Create multiple reminders for this event.
+     *
+     * @param  array<int>  $minutesBeforeList
+     * @param  array<string>  $channels
+     * @return Collection<CalendarEventReminder>
+     */
+    public function createReminders(
+        int $userId,
+        array $minutesBeforeList = [15, 60, 1440],
+        array $channels = ['email', 'database']
+    ): Collection {
+        $reminders = collect();
+
+        foreach ($minutesBeforeList as $minutesBefore) {
+            $remindAt = $this->start_date->copy()->subMinutes($minutesBefore);
+
+            if ($remindAt->isFuture()) {
+                $reminders->push(
+                    $this->createReminder($userId, $minutesBefore, $channels)
+                );
+            }
+        }
+
+        return $reminders;
+    }
+
+    /**
+     * Cancel all pending reminders for this event.
+     */
+    public function cancelAllReminders(): int
+    {
+        return $this->pendingReminders()->update([
+            'status' => CalendarEventReminder::STATUS_CANCELLED,
+        ]);
+    }
+
+    /**
+     * Cancel reminders for a specific user.
+     */
+    public function cancelUserReminders(int $userId): int
+    {
+        return $this->pendingReminders()
+            ->where('user_id', $userId)
+            ->update(['status' => CalendarEventReminder::STATUS_CANCELLED]);
+    }
+
     public function isSharedWith($userId): bool
     {
         // Check direct individual shares
@@ -149,7 +228,7 @@ class CalendarEvent extends Model
 
         // Check group-based shares
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -198,7 +277,7 @@ class CalendarEvent extends Model
         }
 
         $user = User::find($userId);
-        if (!$user || !$user->student) {
+        if (! $user || ! $user->student) {
             return false;
         }
 
@@ -231,8 +310,6 @@ class CalendarEvent extends Model
 
     /**
      * Convert the calendar event to an array format suitable for JavaScript calendar libraries.
-     *
-     * @return array
      */
     public function toCalendarArray(): array
     {
@@ -270,10 +347,6 @@ class CalendarEvent extends Model
 
     /**
      * Create a calendar event from any model that implements CalendarEventable.
-     *
-     * @param CalendarEventable $model
-     * @param array $eventData
-     * @return static
      */
     public static function createFromEventable(CalendarEventable $model, array $eventData): static
     {
@@ -295,8 +368,6 @@ class CalendarEvent extends Model
     /**
      * Get all registered eventable model types.
      * This can be extended to dynamically discover eventable models.
-     *
-     * @return array
      */
     public static function getEventableTypes(): array
     {

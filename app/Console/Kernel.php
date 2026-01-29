@@ -20,6 +20,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:update-user-online-status')->everyMinute();
         $schedule->command('sessions:cleanup --timeout=30')->everyFiveMinutes();
         $schedule->command('messages:send-scheduled')->everyMinute();
+        $schedule->command('calendar:process-reminders')->everyMinute();
         $schedule->command('tokens:check-expired')->daily();
 
         // Generate recurring sessions daily
