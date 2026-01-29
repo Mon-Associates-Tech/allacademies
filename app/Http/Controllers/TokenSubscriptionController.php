@@ -196,16 +196,18 @@ class TokenSubscriptionController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Priority: Try to get as SubscriptionCycle first (new system)
-        $subscriptionCycle = SubscriptionCycle::with('usageLogs', 'pricingTier')
-            ->forUser($user->id)
-            ->find($subscription);
+        // Ensure the subscription belongs to the current user
+        if ($subscription->user_id !== $user->id) {
+            abort(403, 'Unauthorized access to subscription.');
+        }
+
+        // Load relationships
+        $subscription->load('usageLogs', 'pricingTier');
 
         return view('token-subscriptions.show-cycle', [
-            'subscriptionCycle' => $subscriptionCycle,
-            'usageLogs' => $subscriptionCycle->usageLogs()->latest()->paginate(15),
+            'subscriptionCycle' => $subscription,
+            'usageLogs' => $subscription->usageLogs()->latest()->paginate(15),
         ]);
-
     }
 
     /**
