@@ -128,6 +128,31 @@
                         </div>
                     </div>
 
+                    {{-- Background Color --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Background Color
+                            <span class="text-gray-400 font-normal">(Optional)</span>
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach(\App\Models\Note::getBackgroundColors() as $key => $color)
+                                <label class="cursor-pointer">
+                                    <input type="radio"
+                                           name="background_color"
+                                           value="{{ $key }}"
+                                           {{ old('background_color', $note->background_color ?? 'white') === $key ? 'checked' : '' }}
+                                           class="sr-only peer">
+                                    <span class="px-4 py-2 rounded-lg border-2 transition-all inline-block {{ $color['class'] }} peer-checked:border-indigo-600 peer-checked:ring-2 peer-checked:ring-indigo-500 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500">
+                                        {{ $color['name'] }}
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('background_color')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- Calendar Integration --}}
                     <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <div class="flex items-start">
@@ -147,7 +172,7 @@
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div id="calendar-fields" class="mt-4 space-y-4" style="{{ old('add_to_calendar') ? '' : 'display: none;' }}">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -163,7 +188,7 @@
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror
                                 </div>
-                                
+
                                 <div>
                                     <label for="calendar_event_end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         End Date & Time
@@ -178,7 +203,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="flex items-center">
                                     <input type="checkbox"
@@ -190,7 +215,7 @@
                                         All Day Event
                                     </label>
                                 </div>
-                                
+
                                 <div>
                                     <label for="calendar_event_color" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Event Color
@@ -202,7 +227,7 @@
                                            class="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded">
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <label for="calendar_event_visibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Event Visibility

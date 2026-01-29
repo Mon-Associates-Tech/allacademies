@@ -171,6 +171,7 @@ class NotesController extends Controller
             'book_id' => 'nullable|exists:books,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
             'is_public' => 'boolean',
+            'background_color' => 'nullable|string|in:'.implode(',', array_keys(Note::getBackgroundColors())),
             'add_to_calendar' => 'in:on,1,0,true,false',
             'calendar_event_start_date' => 'nullable|date',
             'calendar_event_end_date' => 'nullable|date|after_or_equal:calendar_event_start_date',
@@ -179,7 +180,15 @@ class NotesController extends Controller
             'calendar_event_visibility' => 'nullable|in:private,public,shared',
         ]);
 
-        $note = Note::create(['title' => $request->title, 'content' => $request->content, 'user_id' => Auth::id(), 'book_id' => $request->book_id, 'academic_subject_id' => $request->academic_subject_id, 'is_public' => $request->boolean('is_public')]);
+        $note = Note::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'user_id' => Auth::id(),
+            'book_id' => $request->book_id,
+            'academic_subject_id' => $request->academic_subject_id,
+            'is_public' => $request->boolean('is_public'),
+            'background_color' => $request->background_color ?? 'white',
+        ]);
 
         // Debug: Log request data for calendar event
         Log::info('Note creation request data', ['add_to_calendar' => $request->boolean('add_to_calendar'), 'calendar_event_start_date' => $request->calendar_event_start_date, 'calendar_event_end_date' => $request->calendar_event_end_date, 'all_request_data' => $request->all()]);
@@ -251,6 +260,7 @@ class NotesController extends Controller
             'book_id' => 'nullable|exists:books,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
             'is_public' => 'boolean',
+            'background_color' => 'nullable|string|in:'.implode(',', array_keys(Note::getBackgroundColors())),
             'calendar_event_start_date' => 'nullable|date',
             'calendar_event_end_date' => 'nullable|date|after_or_equal:calendar_event_start_date',
             'calendar_event_all_day' => 'boolean',
@@ -264,6 +274,7 @@ class NotesController extends Controller
             'book_id' => $request->book_id,
             'academic_subject_id' => $request->academic_subject_id,
             'is_public' => $request->boolean('is_public'),
+            'background_color' => $request->background_color ?? $note->background_color ?? 'white',
         ]);
 
         // Debug: Log request data for calendar event
