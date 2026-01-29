@@ -11,36 +11,61 @@ use Livewire\Component;
 class Calendar extends Component
 {
     public $view = 'month'; // month, week, day, list, year
+
     public $startDate;
+
     public $endDate;
+
     public $events = [];
+
     public $selectedEvent = null;
+
     public $showEventModal = false;
+
     public $showViewModal = false;
+
     public $showEditModal = false;
+
     public $showCreateModal = false;
+
     public $showCreateNoteModal = false;
+
     public $eventTitle = '';
+
     public $eventDescription = '';
+
     public $eventStartDate;
+
     public $eventEndDate;
+
     public $eventAllDay = false;
+
     public $eventColor = '';
+
     public $eventVisibility = 'private';
+
     public $eventTypeId = null; // For specifying the type of related model
+
     public $eventType = null; // For specifying the type of event
 
     // Note creation fields
     public $noteTitle = '';
+
     public $noteContent = '';
+
     public $noteBookId = null;
+
     public $noteSubjectId = null;
+
     public $noteIsPublic = false;
 
     // Event type filtering
     public $availableEventTypes = [];
+
     public $selectedEventTypes = []; // Empty means show all
+
     public $eventTypeColors = [];
+
     public $eventCounts = [];
 
     protected $listeners = [
@@ -96,7 +121,7 @@ class Calendar extends Component
         $user = auth()->user();
         $now = Carbon::now();
 
-        if (!$startDate) {
+        if (! $startDate) {
             switch ($this->view) {
                 case 'day':
                     $this->startDate = $now->copy()->startOfDay();
@@ -130,7 +155,7 @@ class Calendar extends Component
 
         // Convert selected event types to full class names for filtering
         $filterTypes = null;
-        if (!empty($this->selectedEventTypes)) {
+        if (! empty($this->selectedEventTypes)) {
             $filterTypes = array_map(function ($typeName) {
                 return $this->availableEventTypes[$typeName] ?? $typeName;
             }, $this->selectedEventTypes);
@@ -207,7 +232,7 @@ class Calendar extends Component
 
         // Convert selected event types to full class names for filtering
         $filterTypes = null;
-        if (!empty($this->selectedEventTypes)) {
+        if (! empty($this->selectedEventTypes)) {
             $filterTypes = array_map(function ($typeName) {
                 return $this->availableEventTypes[$typeName] ?? $typeName;
             }, $this->selectedEventTypes);
@@ -235,7 +260,7 @@ class Calendar extends Component
             'availableEventTypes' => $this->availableEventTypes,
             'selectedEventTypes' => $this->selectedEventTypes,
             'eventTypeColors' => $this->eventTypeColors,
-            'eventCounts' => $this->eventCounts // Event counts by type
+            'eventCounts' => $this->eventCounts, // Event counts by type
         ]);
     }
 
@@ -280,7 +305,7 @@ class Calendar extends Component
                 $this->startDate->addWeek();
                 $this->endDate = $this->startDate->copy()->endOfWeek();
                 break;
-            case'year':
+            case 'year':
                 $this->startDate->addYear();
                 $this->endDate = $this->startDate->copy()->endOfYear();
                 break;
@@ -328,13 +353,12 @@ class Calendar extends Component
             'eventVisibility',
             'selectedEvent',
             'eventTypeId',
-            'eventType'
+            'eventType',
         ]);
     }
 
     public function createEvent()
     {
-        dd('create event called');
         $this->validate();
 
         $eventData = [
@@ -353,12 +377,16 @@ class Calendar extends Component
         $service = app(CalendarEventService::class);
         $service->createEvent($eventData);
 
-
         $this->resetEventForm();
         $this->showCreateModal = false;
         $this->loadEvents();
 
+        // Dispatch close modal event
+        $this->dispatch('close-modal', name: 'create-event-modal');
         $this->dispatch('calendarEventCreated');
+
+        // Show success message
+        session()->flash('success', 'Event created successfully!');
     }
 
     public function updateEventFromCalendar($eventId)
@@ -473,12 +501,12 @@ class Calendar extends Component
         $this->resetNoteForm();
 
         if ($date) {
-            //Convert the date string to the proper format for datetime-local input
+            // Convert the date string to the proper format for datetime-local input
             if (is_string($date) && strlen($date) > 10) {
                 // If it's in Y-m-d\TH:i format, useit as is
                 $this->eventStartDate = $date;
             } else {
-// If it's just a date, set to start of day
+                // If it's just a date, set to start of day
                 $carbonDate = Carbon::parse($date);
                 $this->eventStartDate = $carbonDate->format('Y-m-d\\TH:i');
             }
@@ -499,7 +527,7 @@ class Calendar extends Component
             'eventEndDate',
             'eventAllDay',
             'eventColor',
-            'eventVisibility'
+            'eventVisibility',
         ]);
     }
 
@@ -545,7 +573,12 @@ class Calendar extends Component
         $this->showCreateNoteModal = false;
         $this->loadEvents(); // Reload events to show the new one
 
+        // Dispatch close modal event
+        $this->dispatch('close-modal', name: 'create-note-modal');
         $this->dispatch('noteCreated');
+
+        // Show success message
+        session()->flash('success', 'Note created successfully!');
     }
 
     public function toggleCalendarIntegration()

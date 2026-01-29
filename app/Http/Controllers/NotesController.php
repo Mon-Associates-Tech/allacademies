@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Log;
 use Str;
+use Throwable;
 
 class NotesController extends Controller
 {
@@ -33,7 +34,7 @@ class NotesController extends Controller
         });
 
         // Filter by ownership type
-if ($request->filled('ownership')) {
+        if ($request->filled('ownership')) {
             if ($request->ownership === 'my_notes') {
                 $query->where('user_id', Auth::id());
             } elseif ($request->ownership === 'shared_with_me') {
@@ -48,7 +49,7 @@ if ($request->filled('ownership')) {
             $query->where('book_id', $request->book_id);
         }
 
-//Filter by academic subject
+        // Filter by academic subject
         if ($request->filled('subject_id')) {
             $query->where('academic_subject_id', $request->subject_id);
         }
@@ -72,14 +73,14 @@ if ($request->filled('ownership')) {
 
         // Filter by date range
         if ($request->filled('date_from')) {
-$query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('created_at', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by','created_at');
+        $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
 
         switch ($sortBy) {
@@ -88,7 +89,7 @@ $query->whereDate('created_at', '>=', $request->date_from);
                 break;
             case 'updated_at':
                 $query->orderBy('updated_at', $sortOrder);
-break;
+                break;
             default:
                 $query->orderBy('created_at', $sortOrder);
         }
@@ -97,7 +98,7 @@ break;
         $query->with(['book', 'academicSubject', 'user', 'shares']);
 
         // Paginate with 12 items per page
-        $notes =$query->paginate(12)->appends($request->query());
+        $notes = $query->paginate(12)->appends($request->query());
 
         // Get filter options
         $books = Book::whereHas('notes', function ($q) {
@@ -109,7 +110,7 @@ break;
         $subjects = AcademicSubject::whereHas('notes', function ($q) {
             $q->where('user_id', Auth::id())->orWhereHas('shares', function ($shareQuery) {
                 $shareQuery->where('shared_with_user_id', Auth::id());
-          });
+            });
         })->orderBy('name')->get();
 
         // Get active filters for display
@@ -118,19 +119,19 @@ break;
         return view('notes.index', compact('notes', 'books', 'subjects', 'activeFilters'));
     }
 
-    private function getActiveFilters(Request $request):array
+    private function getActiveFilters(Request $request): array
     {
-        $filters= [];
+        $filters = [];
 
         if ($request->filled('search')) {
             $filters['search'] = $request->search;
         }
 
         if ($request->filled('ownership')) {
-            $filters['ownership'] = $request->ownership === 'my_notes' ? 'My Notes' :'Shared with Me';
+            $filters['ownership'] = $request->ownership === 'my_notes' ? 'My Notes' : 'Shared with Me';
         }
 
-if ($request->filled('book_id')) {
+        if ($request->filled('book_id')) {
             $book = Book::find($request->book_id);
             if ($book) {
                 $filters['book'] = $book->title;
@@ -162,14 +163,6 @@ if ($request->filled('book_id')) {
         return $filters;
     }
 
-    public function create()
-    {
-        $books = Book::all();
-        $subjects = AcademicSubject::all();
-
-        return view('notes.create', compact('books', 'subjects'));
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -186,18 +179,18 @@ if ($request->filled('book_id')) {
             'calendar_event_visibility' => 'nullable|in:private,public,shared',
         ]);
 
-        $note = Note::create(['title' => $request->title, 'content' => $request->content, 'user_id' => Auth::id(), 'book_id' =>$request->book_id,'academic_subject_id' => $request->academic_subject_id, 'is_public' => $request->boolean('is_public')]);
+        $note = Note::create(['title' => $request->title, 'content' => $request->content, 'user_id' => Auth::id(), 'book_id' => $request->book_id, 'academic_subject_id' => $request->academic_subject_id, 'is_public' => $request->boolean('is_public')]);
 
         // Debug: Log request data for calendar event
         Log::info('Note creation request data', ['add_to_calendar' => $request->boolean('add_to_calendar'), 'calendar_event_start_date' => $request->calendar_event_start_date, 'calendar_event_end_date' => $request->calendar_event_end_date, 'all_request_data' => $request->all()]);
 
         // Create calendar event if requested
-        if ($request->filled('add_to_calendar')&& $request->filled('calendar_event_start_date')) {
+        if ($request->filled('add_to_calendar') && $request->filled('calendar_event_start_date')) {
             // Convert datetime-local format to proper datetime format if needed
             $startDate = $request->calendar_event_start_date;
             if ($startDate && strpos($startDate, 'T') !== false) {
                 // Convert 'T' format to space format for properdatetime handling
-                $startDate= str_replace('T', ' ', $startDate);
+                $startDate = str_replace('T', ' ', $startDate);
             }
 
             $endDate = $request->calendar_event_end_date;
@@ -205,12 +198,20 @@ if ($request->filled('book_id')) {
                 $endDate = str_replace('T', ' ', $endDate);
             }
 
-            $eventData = ['title'=> $request->title, 'description' => $request->content, 'start_date' => $startDate, 'end_date' => $endDate, 'all_day' => $request->boolean('calendar_event_all_day'), 'color' => $request->calendar_event_color, 'visibility' => $request->calendar_event_visibility ?? 'private',];
+            $eventData = ['title' => $request->title, 'description' => $request->content, 'start_date' => $startDate, 'end_date' => $endDate, 'all_day' => $request->boolean('calendar_event_all_day'), 'color' => $request->calendar_event_color, 'visibility' => $request->calendar_event_visibility ?? 'private'];
 
             $note->createCalendarEvent($eventData);
         }
 
         return redirect()->route('notes.show', $note)->with('success', 'Note created successfully.');
+    }
+
+    public function create()
+    {
+        $books = Book::all();
+        $subjects = AcademicSubject::all();
+
+        return view('notes.create', compact('books', 'subjects'));
     }
 
     public function show(Note $note)
@@ -244,20 +245,18 @@ if ($request->filled('book_id')) {
             abort(403);
         }
 
-
-$request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'book_id' => 'nullable|exists:books,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
-            'is_public'=> 'boolean',
-'calendar_event_start_date' => 'nullable|date',
+            'is_public' => 'boolean',
+            'calendar_event_start_date' => 'nullable|date',
             'calendar_event_end_date' => 'nullable|date|after_or_equal:calendar_event_start_date',
             'calendar_event_all_day' => 'boolean',
             'calendar_event_color' => 'nullable|string',
             'calendar_event_visibility' => 'nullable|in:private,public,shared',
         ]);
-
 
         $note->update([
             'title' => $request->title,
@@ -268,17 +267,17 @@ $request->validate([
         ]);
 
         // Debug: Log request data for calendar event
-        \Log::info('Note update request data', [
+        Log::info('Note update request data', [
             'note_id' => $note->id,
             'add_to_calendar' => $request->boolean('add_to_calendar'),
             'calendar_event_start_date' => $request->calendar_event_start_date,
             'calendar_event_end_date' => $request->calendar_event_end_date,
-            'all_request_data' => $request->all()
+            'all_request_data' => $request->all(),
         ]);
 
         // Handle calendar event creation/update
         if ($request->boolean('add_to_calendar') && $request->filled('calendar_event_start_date')) {
-           // Convert datetime-local format to proper datetime format if needed
+            // Convert datetime-local format to proper datetime format if needed
             $startDate = $request->calendar_event_start_date;
             if ($startDate && strpos($startDate, 'T') !== false) {
                 // Convert 'T' format to space format for proper datetime handling
@@ -291,7 +290,7 @@ $request->validate([
 
             $eventData = [
                 'title' => $request->title,
-               'description' => $request->content,
+                'description' => $request->content,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'all_day' => $request->boolean('calendar_event_all_day'),
@@ -299,12 +298,12 @@ $request->validate([
                 'visibility' => $request->calendar_event_visibility ?? 'private',
             ];
 
-            if (!$note->calendarEvent) {
+            if (! $note->calendarEvent) {
                 $note->createCalendarEvent($eventData);
             } else {
                 $note->calendarEvent->update($eventData);
             }
-        } elseif ($request->has('add_to_calendar') && !$request->boolean('add_to_calendar')) {
+        } elseif ($request->has('add_to_calendar') && ! $request->boolean('add_to_calendar')) {
             // Remove calendar event if unchecked
             if ($note->calendarEvent) {
                 $note->calendarEvent->delete();
@@ -314,9 +313,7 @@ $request->validate([
         return redirect()->route('notes.show', $note)->with('success', 'Note updated successfully.');
     }
 
-
-public
-    function destroy(Note $note)
+    public function destroy(Note $note)
     {
         if ($note->user_id !== Auth::id()) {
             abort(403);
@@ -328,7 +325,7 @@ public
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function share(Request $request, Note $note)
     {
@@ -346,47 +343,23 @@ public
         $result = $this->shareService->shareNote($note, $request->share_type, $request->recipient_ids, $request->boolean('can_edit'));
 
         return back()->with('success', "Note shared with {$result['users_notified']} ".
-            \Str::plural('recipient', $result['users_notified']).' successfully.');
+            Str::plural('recipient', $result['users_notified']).' successfully.');
     }
 
-    public
-    function unshare(Note $note, Request $request)
+    public function unshare(Note $note, Request $request)
     {
-        if ($note->user_id !== Auth::id()){
+        if ($note->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $request->validate(['share_type' => 'required|string', 'identifier' => 'required',]);
+        $request->validate(['share_type' => 'required|string', 'identifier' => 'required']);
 
         $this->shareService->unshare($note, $request->share_type, $request->identifier);
 
         return back()->with('success', 'Noteaccess removed successfully.');
     }
 
-    public
-    function downloadAttachment(Note $note, NoteAttachment $attachment)
-   {
-        // Check permissions
-        if (!$note->canUserView(Auth::id())) {
-            abort(403, 'You do not have permission to access this note.');
-        }
-
-        //Verifyattachment belongs to note
-        if ($attachment->note_id !== $note->id) {
-            abort(404);
-        }
-
-        $filePath = storage_path('app/public/' . $attachment->path);
-
-        if (!file_exists($filePath)) {
-            return back()->with('error', 'File notfound.');
-        }
-
-        return response()->download($filePath, $attachment->original_filename);
-    }
-
-    public
-   function download(Note $note, Request $request)
+    public function download(Note $note, Request $request)
     {
         // Check permissions
         if (! $note->canUserView(Auth::id())) {
@@ -401,7 +374,7 @@ public
         }
 
         try {
-            $result =$this->exportService->export($note, $format);
+            $result = $this->exportService->export($note, $format);
 
             if (! $result['success']) {
                 return back()->with('error', $result['error']);
@@ -412,7 +385,7 @@ public
                 ->header('Content-Disposition', 'attachment; filename="'.$result['filename'].'"');
 
         } catch (Exception $e) {
-            Log::error('Note download failed', ['note_id' => $note->id, 'format' => $format, 'error' => $e->getMessage(),]);
+            Log::error('Note download failed', ['note_id' => $note->id, 'format' => $format, 'error' => $e->getMessage()]);
 
             return back()->with('error', 'Failed to downloadnote. Please try again.');
         }
@@ -446,8 +419,8 @@ public
             abort(403, 'You do not have permission to access this note.');
         }
 
-//Verify attachment belongs to note
-        if ($attachment->note_id !== $note->id){
+        // Verify attachment belongs to note
+        if ($attachment->note_id !== $note->id) {
             abort(404);
         }
 

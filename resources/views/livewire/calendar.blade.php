@@ -217,6 +217,7 @@
                 <div>
                     <x-form.markdown-editor
                         name="eventDescription"
+                        wire-model="eventDescription"
                         :value="$eventDescription"
                         label="Description"
                         :height="200"
@@ -289,7 +290,18 @@
                         Cancel
                     </button>
                     <button
-                        type="submit"
+                        type="button"
+                        @click="
+                            // Sync all TinyMCE editors before submitting
+                            if (typeof tinymce !== 'undefined') {
+                                tinymce.get().forEach(function(editor) {
+                                    if (editor.id.includes('eventDescription')) {
+                                        $wire.set('eventDescription', editor.getContent());
+                                    }
+                                });
+                            }
+                            $nextTick(() => { $wire.createEvent(); });
+                        "
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     >
                         Create Event
@@ -303,10 +315,20 @@
     <x-modal-component
         name="create-note-modal"
         title="Create Note"
-        size="lg"
+        size="xl"
         :show="$showCreateNoteModal"
     >
-        <form wire:submit.prevent="createNote">
+        <form wire:submit.prevent="createNote" name="create-note-form">
+            @if ($errors->any())
+            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <h3 class="text-sm font-medium text-red-800 dark:text-red-200 mb-2">Validation Errors:</h3>
+                <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
@@ -322,11 +344,13 @@
                 <div>
                     <x-form.markdown-editor
                         name="noteContent"
+                        wire-model="noteContent"
                         :value="$noteContent"
                         label="Content"
                         :height="200"
                         :required="true"
                     />
+                    @error('noteContent') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -449,7 +473,20 @@
                         Cancel
                     </button>
                     <button
-                        type="submit"
+                        type="button"
+                        @click="
+                            (async () => {
+                                // Sync all TinyMCE editors before submitting
+                                if (typeof tinymce !== 'undefined') {
+                                    for (const editor of tinymce.get()) {
+                                        if (editor.id.includes('noteContent')) {
+                                            await $wire.set('noteContent', editor.getContent());
+                                        }
+                                    }
+                                }
+                                await $wire.createNote();
+                            })();
+                        "
                         class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
                     >
                         Create Note
@@ -605,6 +642,7 @@
                 <div>
                     <x-form.markdown-editor
                         name="eventDescription"
+                        wire-model="eventDescription"
                         :value="$eventDescription"
                         label="Description"
                         :height="200"
@@ -691,7 +729,18 @@
                             Cancel
                         </button>
                         <button
-                            type="submit"
+                            type="button"
+                            @click="
+                                // Sync all TinyMCE editors before submitting
+                                if (typeof tinymce !== 'undefined') {
+                                    tinymce.get().forEach(function(editor) {
+                                        if (editor.id.includes('eventDescription')) {
+                                            $wire.set('eventDescription', editor.getContent());
+                                        }
+                                    });
+                                }
+                                $nextTick(() => { $wire.updateEvent(); });
+                            "
                             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                         >
                             Update Event

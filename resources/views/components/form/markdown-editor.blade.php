@@ -63,9 +63,31 @@
                                     editor.on('input change blur', () => {
                                         // Only update local markdown, don't sync with Livewire automatically
                                         if (!this.isInitializing) {
-                                            this.markdown = editor.getContent();
+                                            const content = editor.getContent();
+                                            this.markdown = content;
+                                            // Sync to Livewire if wireName is set and $wire is available
+                                            if (this.wireName && typeof this.$wire !== 'undefined') {
+                                                this.$wire.set(this.wireName, content);
+                                            }
                                         }
                                     });
+
+                                    // Sync content to hidden input on form submit
+                                    const form = editorElement.closest('form');
+                                    if (form) {
+                                        form.addEventListener('submit', (e) => {
+                                            // Get the latest content from TinyMCE
+                                            const content = editor.getContent();
+                                            // Update the Alpine markdown property which updates the hidden input
+                                            this.markdown = content;
+                                            // Also update the hidden input directly as a fallback
+                                            const hiddenInput = this.$refs.hiddenInput;
+                                            if (hiddenInput) {
+                                                hiddenInput.value = content;
+                                            }
+                                            console.log('Form submit - syncing TinyMCE content:', content.substring(0, 100));
+                                        }, true); // Use capture phase to ensure this runs first
+                                    }
                                 },
                                 init_instance_callback: (editor) => {
                                     console.log('TinyMCE instance created:', editor.id);
@@ -200,11 +222,13 @@ updatePreview() {
             </div>
         </div>
 
+        <!-- Hidden input to ensure content is submitted -->
+        <input type="hidden" name="{{ $name }}" :value="markdown" x-ref="hiddenInput">
+
         <!-- Editor Area -->
         <div x-show="!preview" class="bg-white dark:bg-gray-800" wire:ignore>
             <textarea
                 :id="editorId"
-                name="{{ $name }}"
                 class="w-full border-0 focus:ring-0 dark:bg-gray-800 dark:text-white"
                 style="min-height: {{ $height }}px; resize: vertical;"></textarea>
         </div>
