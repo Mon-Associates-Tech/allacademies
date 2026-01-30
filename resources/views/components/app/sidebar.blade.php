@@ -1,5 +1,14 @@
-@props(['variant' => 'v1', 'hasSchoolSwitcher' => false])
-<div class="min-w-fit thin-scrollbar">
+@props(['variant' => 'v1', 'hasSchoolSwitcher' => false, 'hasImpersonationBanner' => false])
+@php
+    // Calculate sidebar height based on visible banners
+    $heightClass = 'h-[100dvh]';
+    if ($hasSchoolSwitcher && $hasImpersonationBanner) {
+        $heightClass = 'h-[calc(100dvh-5rem)]'; // Both banners: 2.5rem + 2.5rem
+    } elseif ($hasSchoolSwitcher || $hasImpersonationBanner) {
+        $heightClass = 'h-[calc(100dvh-2.5rem)]'; // One banner: 2.5rem
+    }
+@endphp
+<div class="min-w-fit h-full thin-scrollbar">
     <!-- Sidebar backdrop (mobile only) -->
     <div
         class="fixed inset-0 bg-gray-900/30 z-40 lg:hidden lg:z-auto transition-opacity duration-200"
@@ -11,7 +20,7 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $hasSchoolSwitcher ? 'h-[calc(100dvh-2.5rem)]' : 'h-[100dvh]' }} no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
         :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-52'"
         @click.outside="$store.sidebar.open =  false"
         style=""
@@ -31,7 +40,7 @@
         </div>
 
         <!-- Scrollable content area -->
-        <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
             <div class="lg:pt-6">
                 <div :class="$store.sidebar.open ? 'w-12 h-12' : 'w-8 h-8'" class="mx-auto mb-2">
                     <x-avatar
@@ -206,7 +215,7 @@
         </div>
 
 
-        <div class="hidden lg:flex py-1 justify-end border-t border-gray-200 dark:border-gray-700 shrink-0">
+        <div class="hidden lg:flex mt-auto py-1 justify-end border-t border-gray-200 dark:border-gray-700 shrink-0 bg-slate-50 dark:bg-slate-900">
             <div class="w-12 pl-4 pr-3 py-2">
                 <button
                     class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"

@@ -15,6 +15,8 @@
 @php
     // Determine if school switcher should be shown
     $hasSchoolSwitcher = auth()->check() && auth()->user()->canAccessCrossSchool();
+    // Determine if impersonation banner is showing
+    $hasImpersonationBanner = session()->has('impersonated_by');
 @endphp
 
     <!DOCTYPE html>
@@ -77,8 +79,8 @@
 <div class="flex h-full overflow-hidden">
 
     <!-- Sidebar -->
-    <aside class="print:hidden">
-        <x-app.sidebar :variant="$attributes['sidebarVariant']" :hasSchoolSwitcher="$hasSchoolSwitcher"></x-app.sidebar>
+    <aside class="h-full print:hidden">
+        <x-app.sidebar :variant="$attributes['sidebarVariant']" :hasSchoolSwitcher="$hasSchoolSwitcher" :hasImpersonationBanner="$hasImpersonationBanner"></x-app.sidebar>
     </aside>
 
     <!-- Content area - THIS IS THE ONLY SCROLLABLE CONTAINER -->
