@@ -61,12 +61,6 @@ class LibrarianManagement extends Component
 
     public $sortDirection = 'asc';
 
-    public $statusFilter = 'all';
-
-    public $departmentFilter = '';
-
-    public $positionFilter = '';
-
     public $showBulkActions = false;
 
     public $selectedLibrarians = [];
