@@ -6,16 +6,15 @@ use App\Enums\UserRole;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Models\User;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -24,7 +23,6 @@ class UserController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
-
     public function index(Request $request)
     {
         $this->authorize('administrate');
@@ -78,7 +76,7 @@ class UserController extends Controller
                 }
             })
             ->when($request->missing('all'), function ($query) {
-                if (!request()->hasAny(['verified', 'unverified'])) {
+                if (! request()->hasAny(['verified', 'unverified'])) {
                     $query->whereNotNull('email_verified_at');
                 }
             })
@@ -96,7 +94,7 @@ class UserController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'academic_group_id']);
 
-        $subjects = AcademicSubject::whereHas('academicLevel.schools', function($q) {
+        $subjects = AcademicSubject::whereHas('academicLevel.schools', function ($q) {
             $user = auth()->user();
             if ($user->canAccessCrossSchool() && app()->has('current_school')) {
                 $q->where('school_id', app('current_school')->id);
@@ -118,7 +116,6 @@ class UserController extends Controller
     /**
      * Store a newly created user in storage.
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
@@ -154,10 +151,6 @@ class UserController extends Controller
 
     /**
      * Create role-specific account when user is created
-     *
-     * @param User $user
-     * @param string $role
-     * @return void
      */
     private function createRoleSpecificAccount(User $user, string $role): void
     {
@@ -192,25 +185,73 @@ class UserController extends Controller
     {
         $this->authorize('administrate');
 
-        // Load relationships and counts
+        // Load all relationship counts for comprehensive display
         $user->loadCount([
             'subscriptions',
             'ownedTeams',
             'joinedTeams',
             'worksheets',
-        ])->load([
+            'notes',
+            'quizSessions',
+            'borrowedBooks',
+            'bookSubscriptions',
+            'loginActivities',
+            'tokenSubscriptions',
+            'subscriptionCycles',
+            'tokenUsageLogs',
+            'uploadedMedia',
+            'preferences',
+            'roles',
+        ]);
+
+        // Load relationships with limits for display
+        $user->load([
+            'school',
             'primaryRole',
             'currentTeam',
+            'suspendedBy',
+            // Role-specific profiles
             'student',
+            'teacher',
+            'author',
+            'librarian',
+            'parent',
+            // Content relationships
             'subscriptions' => function ($query) {
-                $query->latest()->limit(5);
+                $query->latest()->limit(10);
             },
             'ownedTeams' => function ($query) {
-                $query->latest()->limit(3);
+                $query->latest()->limit(10);
             },
             'joinedTeams' => function ($query) {
-                $query->latest()->limit(3);
+                $query->latest()->limit(10);
             },
+            'notes' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'worksheets' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'quizSessions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'borrowedBooks' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'bookSubscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'loginActivities' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'tokenSubscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'subscriptionCycles' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'preferences',
+            'roles',
         ]);
 
         return view('users.show', [

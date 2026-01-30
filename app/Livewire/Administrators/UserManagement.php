@@ -4,6 +4,7 @@ namespace App\Livewire\Administrators;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\UserDeletionService;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -95,10 +96,11 @@ class UserManagement extends Component
         session()->flash('message', 'User updated successfully!');
     }
 
-    public function delete($userId)
+    public function delete($userId, UserDeletionService $deletionService)
     {
         $user = User::findOrFail($userId);
-        $user->delete();
+
+        $deletionService->deleteUser($user);
 
         session()->flash('message', 'User deleted successfully!');
     }

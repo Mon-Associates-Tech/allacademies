@@ -59,6 +59,9 @@ Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
+// Account Suspended Route
+Route::view('/account/suspended', 'auth.suspended')->name('account.suspended');
+
 // Newsletter Routes
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');

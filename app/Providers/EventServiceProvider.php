@@ -6,8 +6,6 @@ use App\Events\SubscriptionUpdated;
 use App\Events\UpdateSubscription;
 use App\Listeners\CreateTrialSubscriptionOnVerification;
 use App\Listeners\EvaluateSubscriptionListener;
-use App\Listeners\StoreUserLoginHistory;
-use App\Listeners\StoreUserLogoutHistory;
 use App\Services\UserLoginService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
