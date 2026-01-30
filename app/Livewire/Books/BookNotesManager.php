@@ -29,6 +29,8 @@ class BookNotesManager extends Component
 
     public string $newNoteTitle = '';
 
+    public string $newNoteContent = '';
+
     public string $newNoteColor = 'white';
 
     public string $editingColor = 'white';
@@ -128,6 +130,7 @@ class BookNotesManager extends Component
         ]);
 
         $this->newNoteTitle = '';
+        $this->newNoteContent = '';
         $this->newNoteColor = 'white';
         $this->dispatch('notify', ['message' => 'Note saved successfully!', 'type' => 'success']);
         $this->dispatch('clear-editor-newNoteContent');
