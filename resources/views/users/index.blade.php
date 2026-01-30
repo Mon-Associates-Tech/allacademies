@@ -156,12 +156,6 @@
                             User
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Role
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Activity
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -175,6 +169,21 @@
                     @foreach ($users as $user)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                             <td class="px-6 py-4 whitespace-nowrap">
+                                @php
+                                    $roleValue = $user->role instanceof App\Enums\UserRole ? $user->role->value : $user->role;
+                                    $roleColors = [
+                                        'admin' => 'text-red-600 dark:text-red-400',
+                                        'teacher' => 'text-blue-600 dark:text-blue-400',
+                                        'student' => 'text-green-600 dark:text-green-400',
+                                        'librarian' => 'text-purple-600 dark:text-purple-400',
+                                        'author' => 'text-yellow-600 dark:text-yellow-400',
+                                        'parent' => 'text-pink-600 dark:text-pink-400',
+                                        'guest' => 'text-indigo-600 dark:text-indigo-400',
+                                        'moderator' => 'text-orange-600 dark:text-orange-400',
+                                        'owner' => 'text-violet-600 dark:text-violet-400',
+                                    ];
+                                    $roleColorClass = $roleColors[$roleValue] ?? 'text-gray-600 dark:text-gray-400';
+                                @endphp
                                 <div class="flex items-center space-x-3">
                                     <div class="relative">
                                         <x-avatar avatar="{{$user->avatar}}" class="h-10 w-10"
@@ -187,60 +196,20 @@
                                     <div class="min-w-0 flex-1">
                                         <p class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ $user->name }}</p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $user->email }}</p>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-xs font-medium capitalize {{ $roleColorClass }}">{{ $roleValue ?? 'User' }}</span>
+                                            <span class="text-gray-300 dark:text-gray-600">•</span>
+                                            @if($user->email_verified_at)
+                                                <span class="text-xs text-green-600 dark:text-green-400">Verified</span>
+                                            @else
+                                                <span class="text-xs text-yellow-600 dark:text-yellow-400">Unverified</span>
+                                            @endif
+                                        </div>
                                         @if(Auth::user()->hasRole('owner'))
-                                            <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $user->school?->name }}</p>
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{{ $user->school?->name }}</p>
                                         @endif
                                     </div>
                                 </div>
-                            </td>
-
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $roleValue = $user->role instanceof App\Enums\UserRole ? $user->role->value : $user->role;
-                                    // Define role color mapping
-                                    $roleColors = [
-                                        'admin' => 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200',
-                                        'teacher' => 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200',
-                                        'student' => 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200',
-                                        'librarian' => 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200',
-                                        'author' => 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200',
-                                        'parent' => 'bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-200',
-                                        'guest' => 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200',
-                                        'moderator' => 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200',
-                                        'owner' => 'bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-200',
-                                    ];
-
-                                    $colorClass = $roleColors[$roleValue] ?? 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-200';
-                                @endphp
-
-                                <span
-                                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium capitalize {{ $colorClass }}">
-                                    {{ $roleValue ?? 'User' }}
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4 whitespace-nowrap">
-                <span @class([
-                    "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
-                    'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200' => $user->email_verified_at,
-                    'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200' => !$user->email_verified_at
-                ])>
-                    @if($user->email_verified_at)
-                        <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                        Verified
-                    @else
-                        <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                        Unverified
-                    @endif
-                </span>
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -262,82 +231,73 @@
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center justify-end space-x-2">
+                                <div class="flex items-center justify-end space-x-1">
+                                    <!-- View Button -->
                                     <a href="{{ route('users.show', ['user' => $user]) }}"
-                                       class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
-                                        View
+                                       class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                                       title="View Details">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        <span class="hidden sm:inline">View</span>
                                     </a>
 
+                                    <!-- Change Role Button (for owners only) -->
+                                    @can('own')
+                                        @if($roleValue !== 'owner')
+                                            <button
+                                                onclick="window.Modal.open('change-role-form', { userName: '{{$user->name}}', email: '{{$user->email}}', role: '{{$user->role}}', id: '{{$user->id}}' })"
+                                                class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                                                title="Change Role">
+                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                <span class="hidden sm:inline">Role</span>
+                                            </button>
+                                        @endif
+                                    @endcan
+
+                                    <!-- Impersonate/Troubleshoot Button -->
+                                    @if($user->canBeImpersonated())
+                                        <a href="{{ route('impersonate', $user->id) }}"
+                                           class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                                           title="Login as this user to troubleshoot">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                            </svg>
+                                            <span class="hidden lg:inline">Troubleshoot</span>
+                                        </a>
+                                    @endif
+
+                                    <!-- More Actions Dropdown -->
                                     <x-dropdown>
-                                        <!-- Trigger -->
                                         <button
-                                            class="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+                                            class="inline-flex items-center p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                                            title="More actions">
                                             <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path
-                                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                             </svg>
                                         </button>
 
-                                        <!-- Dropdown Content -->
                                         <x-slot name="content">
-                                            @can('own')
-                                                @if($roleValue !== 'owner')
-                                                    <x-dropdown.item
-                                                        onclick="window.Modal.open('change-role-form', { userName:  '{{$user->name}}', email: '{{$user->email}}', role: '{{$user->role}}', id: '{{$user->id}}' })">
-                                                        <x-slot name="icon">
-                                                            <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500"
-                                                                 fill="none"
-                                                                 stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                      stroke-width="2"
-                                                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                            </svg>
-                                                        </x-slot>
-                                                        Change Role
-                                                    </x-dropdown.item>
-                                                @endif
-                                            @endcan
-
                                             <x-dropdown.item :href="route('users.show', ['user' => $user])">
                                                 <x-slot name="icon">
-                                                    <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500"
-                                                         fill="none"
-                                                         stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                    <svg class="mr-3 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                     </svg>
                                                 </x-slot>
-                                                View Details
+                                                View Full Profile
                                             </x-dropdown.item>
-
-                                            @if($user->canBeImpersonated())
-                                                <x-dropdown.item
-                                                    :href="route('impersonate', $user->id)">
-                                                    <x-slot:icon>
-                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                             viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                  stroke-width="2"
-                                                                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                                                        </svg>
-                                                    </x-slot:icon>
-                                                    <span class="hidden sm:inline">Troubleshoot</span>
-                                                </x-dropdown.item>
-                                            @endif
 
                                             <x-dropdown.item click="$dispatch('open-delete-modal', {{ $user->id }})">
                                                 <x-slot name="icon">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                         viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    <svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                     </svg>
                                                 </x-slot>
-                                                Delete User
+                                                <span class="text-red-600 dark:text-red-400">Delete User</span>
                                             </x-dropdown.item>
                                         </x-slot>
                                     </x-dropdown>

@@ -80,7 +80,7 @@ class UserController extends Controller
                     $query->whereNotNull('email_verified_at');
                 }
             })
-            ->latest('id')
+            ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
 

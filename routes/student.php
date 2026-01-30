@@ -13,6 +13,7 @@ use App\Livewire\Students\Courses;
 use App\Livewire\Students\Messages\ComposeMessage;
 use App\Livewire\Students\Messages\MessageIndex;
 use App\Livewire\Students\Messages\MessageShow;
+use App\Livewire\Students\Notifications;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('performance', PerformanceOverview::class)->name('performance');
     Route::get('account', StudentProfile::class)->name('account');
     Route::get('activities', ActivityLogs::class)->name('activities');
+    Route::get('notifications', Notifications::class)->name('notifications');
     Route::get('schedules', StudentSchedule::class)->name('schedules');
     Route::get('courses', Courses::class)->name('courses');
     Route::get('courses/{courseId}', CourseDetails::class)->name('course.details');

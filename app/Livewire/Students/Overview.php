@@ -12,7 +12,8 @@ use Livewire\Component;
 class Overview extends Component
 {
     public $student;
-    public string $range = '30d';
+
+    public string $range = 'all';
 
     // Assignment Stats
     public $totalAssignments = 0;
@@ -54,22 +55,53 @@ class Overview extends Component
 
     // Chart props for Livewire components
     public array $barLabels = [];
+
     public array $barDatasets = [];
+
     public array $barOptions = [];
+
     public array $pieLabels = [];
+
     public array $pieValues = [];
+
     public array $pieOptions = [];
+
     public float $gaugeValue = 0.0;
+
     public int $gaugeMin = 0;
+
     public int $gaugeMax = 100;
+
     public array $gaugeThresholds = [];
+
+    // Book Quiz Chart props
+    public array $quizBarLabels = [];
+
+    public array $quizBarDatasets = [];
+
+    public array $quizBarOptions = [];
+
+    public array $quizPieLabels = [];
+
+    public array $quizPieValues = [];
+
+    public array $quizPieOptions = [];
+
+    public array $quizTrendData = [];
+
+    // Additional quiz stats
+    public $totalQuizAttempts = 0;
+
+    public $quizzesByDifficulty = [];
+
+    public $quizzesByType = [];
 
     public function mount()
     {
         $user = Auth::user();
         $this->student = getStudent();
 
-        if (!$this->student) {
+        if (! $this->student) {
             $this->student = \App\Models\Student::where('user_id', $user->id)->first();
         }
 
@@ -97,7 +129,7 @@ class Overview extends Component
 
     protected function loadAssignmentStats()
     {
-        $student =  getStudent();
+        $student = getStudent();
 
         // Get all assignments available to student
         $availableAssignments = $this->getAvailableAssignments();
@@ -212,42 +244,135 @@ class Overview extends Component
     protected function loadSelfAssessmentStats()
     {
         $student = $this->student;
+        $start = $this->rangeStart();
 
-        // Self-assessments are book-based quizzes
-        $selfAssessments = QuizSession::where('user_id', $student->user_id)
+        // Get ALL quiz sessions (both book-based and uploaded content)
+        $allQuizSessions = QuizSession::where('user_id', $student->user_id)
             ->where('status', 'completed')
-            ->whereNotNull('book_id') // Only book-based assessments
+            ->when($start, function ($q) use ($start) {
+                $q->where('completed_at', '>=', $start);
+            })
+            ->with(['book', 'subject'])
+            ->orderBy('completed_at', 'desc')
             ->get();
 
-        $this->totalSelfAssessments = $selfAssessments->count();
+        $this->totalQuizAttempts = $allQuizSessions->count();
+        $this->totalSelfAssessments = $allQuizSessions->count();
 
-        // Recent self-assessments
-        $this->recentSelfAssessments = QuizSession::where('user_id', $student->user_id)
-            ->where('status', 'completed')
-            ->whereNotNull('book_id')
-            ->with('book')
-            ->orderBy('completed_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($session) {
-                return [
-                    'id' => $session->id,
-                    'book_title' => $session->book->title ?? 'Unknown Book',
-                    'score' => $session->results['percentage'] ?? 0,
-                    'completed_at' => $session->completed_at,
-                    'questions_count' => $session->question_count ?? 0,
-                ];
-            });
+        // Recent self-assessments (all types)
+        $this->recentSelfAssessments = $allQuizSessions->take(5)->map(function ($session) {
+            $title = $session->book?->title ?? ($session->context['book_title'] ?? 'Uploaded Content');
+
+            return [
+                'id' => $session->id,
+                'book_title' => $title,
+                'score' => $session->results['percentage'] ?? 0,
+                'completed_at' => $session->completed_at,
+                'questions_count' => $session->question_count ?? 0,
+                'difficulty' => $session->difficulty ?? 'medium',
+                'type' => $session->book_id ? 'book' : 'uploaded',
+            ];
+        })->toArray();
 
         // Average self-assessment score
-        if ($selfAssessments->count() > 0) {
+        if ($allQuizSessions->count() > 0) {
             $this->averageSelfAssessmentScore = round(
-                $selfAssessments->avg(function ($session) {
+                $allQuizSessions->avg(function ($session) {
                     return $session->results['percentage'] ?? 0;
                 }),
                 1
             );
         }
+
+        // Group by difficulty for pie chart
+        $this->quizzesByDifficulty = $allQuizSessions->groupBy('difficulty')->map(function ($group, $difficulty) {
+            return [
+                'difficulty' => ucfirst($difficulty),
+                'count' => $group->count(),
+                'average_score' => round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1),
+            ];
+        })->values()->toArray();
+
+        // Group by question type
+        $this->quizzesByType = $allQuizSessions->groupBy('question_type')->map(function ($group, $type) {
+            $typeLabels = [
+                'multiple_choice' => 'Multiple Choice',
+                'true_false' => 'True/False',
+                'essay' => 'Essay',
+                'mixed' => 'Mixed',
+            ];
+
+            return [
+                'type' => $typeLabels[$type] ?? ucfirst(str_replace('_', ' ', $type)),
+                'count' => $group->count(),
+                'average_score' => round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1),
+            ];
+        })->values()->toArray();
+
+        // Prepare quiz chart data
+        $this->prepareQuizCharts($allQuizSessions);
+    }
+
+    protected function prepareQuizCharts($quizSessions): void
+    {
+        if ($quizSessions->isEmpty()) {
+            $this->quizBarLabels = [];
+            $this->quizBarDatasets = [];
+            $this->quizPieLabels = [];
+            $this->quizPieValues = [];
+            $this->quizTrendData = [];
+
+            return;
+        }
+
+        // Bar chart: Performance by book/content source
+        $bySource = $quizSessions->groupBy(function ($session) {
+            if ($session->book_id && $session->book) {
+                return $session->book->title;
+            }
+
+            return $session->context['book_title'] ?? 'Uploaded Content';
+        });
+
+        $this->quizBarLabels = $bySource->keys()->take(10)->toArray();
+        $barData = $bySource->take(10)->map(function ($group) {
+            return round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1);
+        })->values()->toArray();
+
+        $this->quizBarDatasets = [
+            [
+                'label' => 'Avg Score %',
+                'data' => $barData,
+                'backgroundColor' => '#8b5cf6',
+            ],
+        ];
+        $this->quizBarOptions = [
+            'plugins' => ['legend' => ['display' => true, 'position' => 'bottom']],
+            'scales' => [
+                'y' => ['beginAtZero' => true, 'max' => 100],
+            ],
+        ];
+
+        // Pie chart: Distribution by difficulty
+        $byDifficulty = $quizSessions->groupBy('difficulty');
+        $this->quizPieLabels = $byDifficulty->keys()->map(fn ($d) => ucfirst($d))->toArray();
+        $this->quizPieValues = $byDifficulty->map(fn ($g) => $g->count())->values()->toArray();
+        $this->quizPieOptions = ['plugins' => ['legend' => ['position' => 'right']]];
+
+        // Trend data: Performance over time
+        $this->quizTrendData = $quizSessions->sortBy('completed_at')
+            ->groupBy(function ($session) {
+                return $session->completed_at->format('Y-m-d');
+            })
+            ->map(function ($group, $date) {
+                return [
+                    'date' => $date,
+                    'score' => round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1),
+                    'count' => $group->count(),
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 
     protected function loadPerformanceData()
@@ -411,20 +536,20 @@ class Overview extends Component
                 'label' => 'Avg Score %',
                 'data' => $barData,
                 'backgroundColor' => '#3b82f6',
-            ]
+            ],
         ];
         $this->barOptions = [
-            'plugins' => [ 'legend' => [ 'display' => true, 'position' => 'bottom' ] ],
+            'plugins' => ['legend' => ['display' => true, 'position' => 'bottom']],
             'scales' => [
-                'y' => [ 'beginAtZero' => true, 'max' => 100 ]
-            ]
+                'y' => ['beginAtZero' => true, 'max' => 100],
+            ],
         ];
 
         // Pie chart: status distribution within selected range
         [$completed, $ongoing, $overdue] = $this->statusCountsInRange();
         $this->pieLabels = ['Completed', 'Ongoing', 'Overdue'];
-        $this->pieValues = [ $completed, $ongoing, $overdue ];
-        $this->pieOptions = [ 'plugins' => [ 'legend' => [ 'position' => 'right' ] ] ];
+        $this->pieValues = [$completed, $ongoing, $overdue];
+        $this->pieOptions = ['plugins' => ['legend' => ['position' => 'right']]];
 
         // Gauge: completion rate within selected range
         $den = max(1, $completed + $ongoing + $overdue);
@@ -446,12 +571,16 @@ class Overview extends Component
 
         $completed = AssignmentSubmission::where('student_id', $student->id)
             ->whereIn('status', ['completed', 'submitted', 'graded'])
-            ->when($start, function ($q) use ($start) { $q->where('submitted_at', '>=', $start); })
+            ->when($start, function ($q) use ($start) {
+                $q->where('submitted_at', '>=', $start);
+            })
             ->count();
 
         $ongoing = AssignmentSubmission::where('student_id', $student->id)
             ->where('status', 'in_progress')
-            ->when($start, function ($q) use ($start) { $q->where('updated_at', '>=', $start); })
+            ->when($start, function ($q) use ($start) {
+                $q->where('updated_at', '>=', $start);
+            })
             ->count();
 
         // Overdue: assignments with due date past now, started before now, in the window, not completed
@@ -460,7 +589,8 @@ class Overview extends Component
         $overdue = $available->filter(function ($assignment) use ($subs, $start) {
             $submission = $subs->where('assignment_id', $assignment->id)->first();
             $inWindow = $start ? ($assignment->ends_at >= $start) : true;
-            return $inWindow && $assignment->ends_at < now() && (!$submission || !in_array($submission->status, ['completed','submitted','graded']));
+
+            return $inWindow && $assignment->ends_at < now() && (! $submission || ! in_array($submission->status, ['completed', 'submitted', 'graded']));
         })->count();
 
         return [$completed, $ongoing, $overdue];
@@ -469,11 +599,12 @@ class Overview extends Component
     protected function rangeStart(): ?\Carbon\Carbon
     {
         return match ($this->range) {
+            'all' => null,
             '7d' => now()->subDays(7),
             '30d' => now()->subDays(30),
             '90d' => now()->subDays(90),
             'term' => now()->subDays(90),
-            default => now()->subDays(30),
+            default => null,
         };
     }
 

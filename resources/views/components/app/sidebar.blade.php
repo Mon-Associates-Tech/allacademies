@@ -1,11 +1,16 @@
 @props(['variant' => 'v1', 'hasSchoolSwitcher' => false, 'hasImpersonationBanner' => false])
 @php
-    // Calculate sidebar height based on visible banners
+    // Calculate sidebar height and top position based on visible banners
+    // On small devices (< lg), sidebar is absolutely positioned and needs top offset for banners
+    // On large devices (lg+), sidebar is static so top doesn't apply
     $heightClass = 'h-[100dvh]';
+    $topClass = 'top-0';
     if ($hasSchoolSwitcher && $hasImpersonationBanner) {
         $heightClass = 'h-[calc(100dvh-5rem)]'; // Both banners: 2.5rem + 2.5rem
+        $topClass = 'top-[5rem] lg:top-0'; // Offset for banners on small devices
     } elseif ($hasSchoolSwitcher || $hasImpersonationBanner) {
         $heightClass = 'h-[calc(100dvh-2.5rem)]'; // One banner: 2.5rem
+        $topClass = 'top-[2.5rem] lg:top-0'; // Offset for banner on small devices
     }
 @endphp
 <div class="min-w-fit h-full thin-scrollbar">
@@ -20,7 +25,7 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
         :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-52'"
         @click.outside="$store.sidebar.open =  false"
         style=""

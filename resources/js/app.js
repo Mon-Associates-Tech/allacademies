@@ -1,5 +1,12 @@
 import './bootstrap';
 
+// Import Chart.js and make it globally available
+import Chart from 'chart.js/auto';
+window.Chart = Chart;
+
+// Import chart helpers (must be after Chart.js is available)
+import './charts/helpers.js';
+
 import {gsap} from 'gsap';
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
