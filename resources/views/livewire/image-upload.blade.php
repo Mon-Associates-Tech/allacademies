@@ -4,7 +4,7 @@
   <div class="relative">
     <div>
       <label for="tag" class="block text-sm tracking-wide font-medium text-gray-700">Tags</label>
-      <input name="tag" id="tag" type="text" class="border-gray-300 rounded-lg shadow-sm w-full leading-tight" wire:model.live="tag" wire:keydown.enter="addTag(@js($tag))">
+      <input name="tag" id="tag" type="text" class="border-gray-300 dark:border-gray-600 rounded-lg shadow-sm w-full dark:bg-gray-700 dark:text-white leading-tight" wire:model.live="tag" wire:keydown.enter="addTag(@js($tag))">
       @error('tags') <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
     </div>
       @if ($suggestedTags)

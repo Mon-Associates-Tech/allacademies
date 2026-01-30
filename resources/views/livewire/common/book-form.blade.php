@@ -229,7 +229,7 @@
                                             <div class="relative">
                                                 <input type="text" wire:model="title"
                                                        placeholder="Enter the complete book title"
-                                                       class="block w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                                       class="block w-full pl-4 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                                                 <div
                                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
@@ -254,7 +254,7 @@
                                                 URL Slug
                                             </label>
                                             <input type="text" wire:model="slug" readonly
-                                                   class="block w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed">
+                                                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-gray-400 text-gray-500 cursor-not-allowed">
                                             <p class="mt-1 text-xs text-gray-500">Auto-generated from title</p>
                                         </div>
 
@@ -264,7 +264,7 @@
                                             </label>
                                             <div class="relative">
                                                 <select wire:model="authorId"
-                                                        class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                                        class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                                     <option value="">Choose an author</option>
                                                     @foreach($authors as $author)
                                                         <option
@@ -295,7 +295,7 @@
                                             </label>
                                             <div class="relative">
                                                 <select wire:model="bookCategoryId"
-                                                        class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                                        class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                                     <option value="">Select a category</option>
                                                     @foreach($categories as $category)
                                                         <option
@@ -324,7 +324,7 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Edition</label>
                                             <input type="text" wire:model="edition"
                                                    placeholder="e.g., 1st Edition, Revised Edition"
-                                                   class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             @error('edition')
                                             <p class="mt-2 text-sm text-red-600 flex items-center">
                                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -339,7 +339,7 @@
                                                 class="block text-sm font-medium text-gray-700 mb-2">Publisher</label>
                                             <input type="text" wire:model="publisher"
                                                    placeholder="Publishing house name"
-                                                   class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             @error('publisher')
                                             <p class="mt-2 text-sm text-red-600 flex items-center">
                                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -354,7 +354,7 @@
                                                 Pages</label>
                                             <input type="number" wire:model="pages" min="1"
                                                    placeholder="Total pages"
-                                                   class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             @error('pages')
                                             <p class="mt-2 text-sm text-red-600 flex items-center">
                                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -378,7 +378,7 @@
                                                 <input type="number" wire:model="annualSubscriptionFee" step="0.01"
                                                        min="0"
                                                        placeholder="0.00"
-                                                       class="block w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                       class="block w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             </div>
                                             <p class="mt-1 text-xs text-gray-500 flex items-center">
                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -419,7 +419,7 @@
                                                 <label
                                                     class="relative flex items-start p-4 bg-white border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition-colors">
                                                     <input type="checkbox" wire:model="hasHardcopy"
-                                                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5">
+                                                           class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mt-0.5">
                                                     <div class="ml-3">
                                                         <div class="flex items-center">
                                                             <svg class="w-5 h-5 text-green-600 mr-2" fill="none"
@@ -439,7 +439,7 @@
                                                 <label
                                                     class="relative flex items-start p-4 bg-white border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition-colors">
                                                     <input type="checkbox" wire:model="hasSoftcopy"
-                                                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5">
+                                                           class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mt-0.5">
                                                     <div class="ml-3">
                                                         <div class="flex items-center">
                                                             <svg class="w-5 h-5 text-purple-600 mr-2" fill="none"
@@ -582,7 +582,7 @@
                                                         <p class="text-sm font-medium text-gray-700 mb-2">Current
                                                             PDF:</p>
                                                         <a href="{{ Storage::url($existingPdf) }}" target="_blank"
-                                                           class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                                           class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                                  viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -642,7 +642,7 @@
                                                 Information</label>
                                             <textarea wire:model="additionalInfo" rows="4"
                                                       placeholder="Enter any additional information about the book, such as description, special notes, or summary..."
-                                                      class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                                                      class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
                                             @error('additionalInfo')
                                             <p class="mt-2 text-sm text-red-600 flex items-center">
                                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -657,7 +657,7 @@
                                                 Conditions</label>
                                             <textarea wire:model="subscriptionConditions" rows="4"
                                                       placeholder="Enter specific terms and conditions for subscribing to this book. Leave blank to use default library conditions..."
-                                                      class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                                                      class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
                                             <p class="mt-1 text-xs text-gray-500">These conditions will be shown to
                                                 users when they subscribe to this book</p>
                                             @error('subscriptionConditions')

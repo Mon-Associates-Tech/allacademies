@@ -72,7 +72,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
                         <div class="relative">
                             <select wire:model="filterStatus"
-                                    class="block w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                    class="block w-full pl-4 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                 <option value="">All Books</option>
                                 <option value="approved">✅ Approved</option>
                                 <option value="rejected">❌ Rejected</option>
@@ -91,7 +91,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category</label>
                         <div class="relative">
                             <select wire:model="filterCategory"
-                                    class="block w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                    class="block w-full pl-4 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                 <option value="">All Categories</option>
                                 @foreach($categories ?? [] as $category)
                                     <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -110,7 +110,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
                         <div class="relative">
                             <select wire:model="dateRange"
-                                    class="block w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                    class="block w-full pl-4 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                 <option value="">All Time</option>
                                 <option value="today">Today</option>
                                 <option value="week">This Week</option>
@@ -136,7 +136,7 @@
                             </div>
                             <input type="text" wire:model.debounce.300ms="searchTerm"
                                    placeholder="Search by title, author, or category..."
-                                   class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="block w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
                 </div>
@@ -413,7 +413,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <label class="relative flex items-start p-4 bg-white border-2 {{ $approvalStatus === 'approved' ? 'border-green-300 bg-green-50' : 'border-gray-200' }} rounded-lg cursor-pointer hover:border-green-300 transition-colors">
                                 <input type="radio" wire:model="approvalStatus" value="approved"
-                                       class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 mt-0.5">
+                                       class="h-5 w-5 text-green-600 dark:text-green-500 focus:ring-green-500 dark:focus:ring-green-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 mt-0.5">
                                 <div class="ml-3">
                                     <div class="flex items-center">
                                         <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -427,7 +427,7 @@
 
                             <label class="relative flex items-start p-4 bg-white border-2 {{ $approvalStatus === 'rejected' ? 'border-red-300 bg-red-50' : 'border-gray-200' }} rounded-lg cursor-pointer hover:border-red-300 transition-colors">
                                 <input type="radio" wire:model="approvalStatus" value="rejected"
-                                       class="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 mt-0.5">
+                                       class="h-5 w-5 text-red-600 dark:text-red-500 focus:ring-red-500 dark:focus:ring-red-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 mt-0.5">
                                 <div class="ml-3">
                                     <div class="flex items-center">
                                         <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,7 +457,7 @@
                         </label>
                         <textarea wire:model="approvalComments" rows="4"
                                   placeholder="Provide feedback about your decision. This will be shared with the author..."
-                                  class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                                  class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
                         <p class="mt-1 text-xs text-gray-500">Your comments will help authors understand the decision and improve their submissions</p>
                         @error('approvalComments')
                         <p class="mt-2 text-sm text-red-600 flex items-center">

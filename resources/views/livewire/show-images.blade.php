@@ -10,7 +10,7 @@
   </div>
 
   @if ($images->count())
-  <div class="overflow-hidden rounded-md border border-gray-300 bg-white">
+  <div class="overflow-hidden rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
     <ul role="list" class="divide-y divide-gray-300">
       @foreach ($images as $image)
       <li x-data="{ url: @js(asset($image->path)), description: @js($image->description) }" class="flex">

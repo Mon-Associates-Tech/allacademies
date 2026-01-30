@@ -309,7 +309,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name
                                 *</label>
                             <input wire:model.defer="name" type="text" id="name" @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
                             @error('name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -321,7 +321,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address
                                 *</label>
                             <input wire:model.defer="email" type="email" id="email" @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
                             @error('email')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -333,7 +333,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone
                                 Number</label>
                             <input wire:model.defer="phone" type="tel" id="phone" @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
                             @error('phone')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -346,7 +346,7 @@
                                 Birth</label>
                             <input wire:model.defer="date_of_birth" type="date" id="date_of_birth" @if(!$isEditing)
                                 disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
                             @error('date_of_birth')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -357,7 +357,7 @@
                             <label for="address"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                             <textarea wire:model.defer="address" id="address" rows="3" @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif"></textarea>
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif"></textarea>
                             @error('address')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -369,7 +369,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
                             <textarea wire:model.defer="bio" id="bio" rows="3" placeholder="Tell us about yourself..."
                                 @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif"></textarea>
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif"></textarea>
                             @error('bio')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -382,7 +382,7 @@
                                 Contact Name</label>
                             <input wire:model.defer="emergency_contact_name" type="text" id="emergency_contact_name"
                                 @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
                             @error('emergency_contact_name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -394,7 +394,7 @@
                                 Contact Phone</label>
                             <input wire:model.defer="emergency_contact_phone" type="tel" id="emergency_contact_phone"
                                 @if(!$isEditing) disabled @endif
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
+                                class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm @if(!$isEditing) bg-gray-50 dark:bg-gray-800 @endif">
                             @error('emergency_contact_phone')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror

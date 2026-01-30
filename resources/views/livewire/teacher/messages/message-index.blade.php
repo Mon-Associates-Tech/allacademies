@@ -125,7 +125,7 @@
                     <!-- Status Filter -->
                     <div>
                         <select wire:model.live="statusFilter"
-                                class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <option value="all">All Messages</option>
                             <option value="scheduled">Scheduled</option>
                             <option value="sent">Sent</option>
@@ -137,7 +137,7 @@
                 <!-- Per Page -->
                 <div class="mt-4 sm:mt-0">
                     <select wire:model.live="perPage"
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="15">15 per page</option>
                         <option value="25">25 per page</option>
                         <option value="50">50 per page</option>

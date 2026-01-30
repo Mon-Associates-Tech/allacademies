@@ -180,7 +180,7 @@
                                                id="max_tab_switches"
                                                min="0"
                                                max="10"
-                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                         <p class="mt-1 text-xs text-gray-500">Set to 0 for unlimited. Recommended: 2-3 switches.</p>
                                     </div>
 

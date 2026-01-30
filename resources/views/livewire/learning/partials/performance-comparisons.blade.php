@@ -89,7 +89,7 @@
                 @foreach($this->performanceByDifficulty as $index => $diff)
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-sm font-medium text-gray-700">{{ $diff['difficulty'] }}</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $diff['difficulty'] }}</span>
                             <span class="text-sm font-semibold {{ $diff['average_score'] >= 80 ? 'text-green-600' : ($diff['average_score'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
                                 {{ number_format($diff['average_score'], 1) }}%
                             </span>

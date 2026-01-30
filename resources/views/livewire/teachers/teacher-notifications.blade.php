@@ -31,7 +31,7 @@
                 <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
                     <button
                         wire:click="$set('filter', 'all')"
-                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                     >
                         All Notifications
                         <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
@@ -40,7 +40,7 @@
                     </button>
                     <button
                         wire:click="$set('filter', 'generic')"
-                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'generic' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'generic' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                     >
                         General
                         <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
@@ -49,7 +49,7 @@
                     </button>
                     <button
                         wire:click="$set('filter', 'assignments')"
-                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'assignments' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'assignments' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                     >
                         Assignments
                         <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
@@ -58,7 +58,7 @@
                     </button>
                     <button
                         wire:click="$set('filter', 'submissions')"
-                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'submissions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                        class="py-4 px-1 border-b-2 font-medium text-sm {{ $filter === 'submissions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                     >
                         Submissions
                         <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
@@ -256,7 +256,7 @@
                                 @if(!$selectedNotification['read_at'])
                                     <button
                                         wire:click="markAsRead('{{ $selectedNotification['id'] }}')"
-                                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                     >
                                         Mark as Read
                                     </button>

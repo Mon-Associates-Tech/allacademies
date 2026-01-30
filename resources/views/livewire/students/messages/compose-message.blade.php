@@ -16,7 +16,7 @@
                     type="text"
                     id="subject"
                     wire:model="subject"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter message subject"
                 >
                 @error('subject') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
@@ -105,7 +105,7 @@
                             <input type="text"
                                    wire:model.live.debounce.300ms="userSearch"
                                    placeholder="Search teachers or parents by name or email..."
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         @if(!empty($userSearch))
@@ -192,7 +192,7 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
 
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors">
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-gray-400 transition-colors">
                     <input type="file"
                            wire:model.live="attachments"
                            multiple
@@ -214,7 +214,7 @@
                 <!-- Selected Attachments Preview -->
                 @if(!empty($tempAttachments))
                     <div class="mt-4 space-y-2">
-                        <h4 class="text-sm font-medium text-gray-700">Selected Files:</h4>
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Selected Files:</h4>
                         @foreach($tempAttachments as $attachment)
                             <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
                                 <div class="flex items-center">
@@ -265,7 +265,7 @@
                             <div class="mt-2 ml-6">
                                 <input type="datetime-local"
                                        wire:model.live="scheduledAt"
-                                       class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                       class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 @error('scheduledAt') <span class="text-red-500 text-sm block mt-1">{{ $message }}</span> @enderror
                             </div>
                         @endif

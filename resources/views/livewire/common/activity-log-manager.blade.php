@@ -48,37 +48,37 @@
             <nav class="-mb-px flex space-x-8">
                 <button
                     wire:click="$set('activeTab', 'all')"
-                    class="@if($activeTab === 'all') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    class="@if($activeTab === 'all') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
                 >
                     All Activities
                 </button>
                 <button
                     wire:click="$set('activeTab', 'model')"
-                    class="@if($activeTab === 'model') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    class="@if($activeTab === 'model') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
                 >
                     By Model
                 </button>
                 <button
                     wire:click="$set('activeTab', 'user')"
-                    class="@if($activeTab === 'user') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    class="@if($activeTab === 'user') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
                 >
                     By User
                 </button>
                 <button
                     wire:click="$set('activeTab', 'date')"
-                    class="@if($activeTab === 'date') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    class="@if($activeTab === 'date') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
                 >
                     Date Range
                 </button>
                 <button
                     wire:click="$set('activeTab', 'instance')"
-                    class="@if($activeTab === 'instance') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    class="@if($activeTab === 'instance') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
                 >
                     Model Instance
                 </button>
                 <button
                     wire:click="$set('activeTab', 'statistics')"
-                    class="@if($activeTab === 'statistics') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    class="@if($activeTab === 'statistics') border-indigo-500 text-indigo-600 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
                 >
                     Statistics
                 </button>
@@ -118,7 +118,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Model Type</label>
                             <select
                                 wire:model="selectedModelType"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
                                 <option value="">All Models</option>
                                 @foreach($modelTypes as $key => $label)
@@ -134,7 +134,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Model Instance</label>
                             <select
                                 wire:model="selectedModelId"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
                                 <option value="">Select Instance</option>
                                 @foreach($modelInstances as $instance)
@@ -150,7 +150,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
                             <select
                                 wire:model="selectedUserId"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
                                 <option value="">All Users</option>
                                 @foreach($users as $user)
@@ -167,7 +167,7 @@
                             <input
                                 type="date"
                                 wire:model.defer="startDate"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
                         </div>
                         <div>
@@ -175,7 +175,7 @@
                             <input
                                 type="date"
                                 wire:model.defer="endDate"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
                         </div>
                     @endif
@@ -185,7 +185,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Items Per Page</label>
                         <select
                             wire:model="limitPerPage"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         >
                             <option value="10">10</option>
                             <option value="25">25</option>
@@ -208,7 +208,7 @@
 
                     <button
                         wire:click="resetFilters"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
                         Reset Filters
                     </button>
@@ -444,7 +444,7 @@
                     <div class="mt-6 text-center">
                         <button
                             wire:click="loadActivities"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             Load More Activities
                         </button>

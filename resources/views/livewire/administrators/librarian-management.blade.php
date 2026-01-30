@@ -113,7 +113,7 @@
                         <div class="relative">
                             <input type="text" wire:model.live.debounce.300ms="searchTerm"
                                    placeholder="Search librarians..."
-                                   class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,14 +123,14 @@
                         </div>
 
                         <select wire:model.live="statusFilter"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
 
                         <select wire:model.live="departmentFilter"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">All Departments</option>
                             @foreach($departments as $dept)
                                 <option value="{{ $dept }}">{{ $dept }}</option>
@@ -138,7 +138,7 @@
                         </select>
 
                         <select wire:model.live="positionFilter"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">All Positions</option>
                             @foreach($positions as $pos)
                                 <option value="{{ $pos }}">{{ $pos }}</option>
@@ -203,7 +203,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left">
                             <input type="checkbox" wire:model.live="selectAll"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                   class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded cursor-pointer">
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                             wire:click="sortBy('name')">
@@ -268,7 +268,7 @@
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4">
                                 <input type="checkbox" wire:model.live="selectedLibrarians" value="{{ $librarian->id }}"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded cursor-pointer">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
@@ -430,7 +430,7 @@
                                     Name <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" wire:model.blur="name"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
@@ -439,21 +439,21 @@
                                     Email <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" wire:model.blur="email"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                                 <input type="tel" wire:model.blur="phone"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
                                 <input type="date" wire:model.blur="dateOfBirth"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('dateOfBirth') <p
                                     class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
@@ -461,7 +461,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
                                 <textarea wire:model.blur="address" rows="4"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"></textarea>
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"></textarea>
                                 @error('address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
                         </div>
@@ -483,7 +483,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
                                 <input type="text" wire:model.blur="employeeId"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                        placeholder="e.g., LIB001">
                                 @error('employeeId') <p
                                     class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -493,7 +493,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Position</label>
                                 <input type="text" wire:model.blur="position"
                                        list="positions"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                        placeholder="e.g., Head Librarian, Assistant Librarian">
                                 <datalist id="positions">
                                     @foreach($positions as $pos)
@@ -507,7 +507,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
                                 <input type="text" wire:model.blur="department"
                                        list="departments"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                        placeholder="e.g., Main Library, Science Library">
                                 <datalist id="departments">
                                     @foreach($departments as $dept)
@@ -521,14 +521,14 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
                                 <input type="date" wire:model.blur="hireDate"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('hireDate') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div class="flex items-center p-4 bg-gray-50 rounded-lg">
                                 <input type="checkbox" wire:model="isActive" id="isActive"
-                                       class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="isActive" class="ml-3 block text-sm font-medium text-gray-700">
+                                       class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
+                                <label for="isActive" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Active Account
                                     <span class="block text-xs text-gray-500">Account will be able to login</span>
                                 </label>
@@ -552,7 +552,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Qualifications</label>
                                 <textarea wire:model.blur="qualifications" rows="5"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                                           placeholder="e.g., MLS, Bachelor's in Library Science"></textarea>
                                 @error('qualifications') <p
                                     class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -561,7 +561,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Specializations</label>
                                 <textarea wire:model.blur="specializations" rows="4"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                                           placeholder="e.g., Digital Archives, Research Methods"></textarea>
                                 @error('specializations') <p
                                     class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -583,7 +583,7 @@
                                             Password {{ $isEditing ? '' : '*' }}
                                         </label>
                                         <input type="password" wire:model.blur="password"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                         @error('password') <p
                                             class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
@@ -593,7 +593,7 @@
                                             Confirm Password {{ $isEditing ? '' : '*' }}
                                         </label>
                                         <input type="password" wire:model.blur="passwordConfirmation"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                         @error('passwordConfirmation') <p
                                             class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>

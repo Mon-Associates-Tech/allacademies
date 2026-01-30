@@ -26,13 +26,13 @@
                        id="search"
                        wire:model.live.debounce.300ms="search"
                        placeholder="Search by name or email..."
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div class="sm:w-48">
                 <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
                 <select id="role"
                         wire:model.live="selectedRole"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Roles</option>
                     @foreach($roles as $role)
                         <option value="{{ $role }}">{{ ucfirst($role) }}</option>

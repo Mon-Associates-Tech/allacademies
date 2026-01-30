@@ -92,7 +92,7 @@
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
                 <input type="text" id="search"
                        wire:model.live.debounce.300ms="searchTerm"
-                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                       class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                        placeholder="Search by IP, browser, device, country...">
             </div>
 
@@ -100,7 +100,7 @@
             <div>
                 <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select id="statusFilter" wire:model.live="statusFilter"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     <option value="all">All Sessions</option>
                     <option value="active">Active Only</option>
                     <option value="completed">Completed Only</option>
@@ -111,7 +111,7 @@
             <div>
                 <label for="dateFilter" class="block text-sm font-medium text-gray-700 mb-2">Period</label>
                 <select id="dateFilter" wire:model.live="dateFilter"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
                     <option value="week">This Week</option>

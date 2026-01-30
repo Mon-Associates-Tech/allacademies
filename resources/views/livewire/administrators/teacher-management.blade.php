@@ -144,7 +144,7 @@
                             <input
                                 type="text"
                                 wire:model.live.debounce.300ms="searchTerm"
-                                class="w-full sm:w-64 px-4 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full sm:w-64 px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Search teachers..."
                             >
                             <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +286,7 @@
                                 <input
                                     type="email"
                                     wire:model.blur="email"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     placeholder="Enter email address"
                                 >
                                 @if($userExists)
@@ -315,7 +315,7 @@
                                 <input
                                     type="text"
                                     wire:model="name"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     placeholder="Enter teacher's full name"
                                 >
                                 @error('name')
@@ -342,7 +342,7 @@
                                 <input
                                     type="password"
                                     wire:model="password"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     placeholder="{{ $userExists || $isEditing ? 'Enter new password (optional)' : 'Enter password' }}"
                                 >
                                 @error('password')
@@ -363,7 +363,7 @@
                                 <input
                                     type="text"
                                     wire:model="specialization"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     placeholder="e.g., Mathematics, Science, etc."
                                 >
                                 @error('specialization')
@@ -384,7 +384,7 @@
                                 <textarea
                                     wire:model="biography"
                                     rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     placeholder="Brief biography about the teacher..."
                                 ></textarea>
                                 @error('biography')
@@ -413,7 +413,7 @@
                                 </label>
                                 <select
                                     wire:model.live="academicGroupId"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 >
                                     <option value="">Select Academic Group</option>
                                     @foreach($academicGroups as $group)
@@ -437,7 +437,7 @@
                                 </label>
                                 <select
                                     wire:model.live="academicLevelId"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     {{ empty($academicLevels) ? 'disabled' : '' }}
                                 >
                                     <option value="">{{ empty($academicLevels) ? 'Select Academic Group First' : 'Select Academic Level' }}</option>

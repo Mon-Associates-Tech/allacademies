@@ -12,7 +12,7 @@
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-3">Edition</label>
             <input type="text" wire:model="edition" placeholder="e.g., 1st Edition, Revised Edition"
-                   class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             @error('edition') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
 
@@ -20,7 +20,7 @@
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-3">Publisher</label>
             <input type="text" wire:model="publisher" placeholder="Publishing house name"
-                   class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             @error('publisher') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
 
@@ -28,7 +28,7 @@
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-3">Number of Pages</label>
             <input type="number" wire:model.live="pages" min="1" placeholder="Total pages"
-                   class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             @error('pages') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
 
@@ -43,7 +43,7 @@
                     <span class="text-gray-500">₵</span>
                 </div>
                 <input type="number" wire:model="annualSubscriptionFee" step="0.01" min="0" placeholder="0.00"
-                       class="block w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="block w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <p class="mt-1 text-xs text-gray-500">Enter 0 to make this book free</p>
             @error('annualSubscriptionFee') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -55,7 +55,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <label class="relative flex items-start p-6 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                     <input type="checkbox" wire:model="hasHardcopy"
-                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                           class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mt-1">
                     <div class="ml-4">
                         <div class="flex items-center mb-2">
                             <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@
 
                 <label class="relative flex items-start p-6 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                     <input type="checkbox" wire:model="hasSoftcopy"
-                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                           class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mt-1">
                     <div class="ml-4">
                         <div class="flex items-center mb-2">
                             <svg class="w-6 h-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@
         <div class="lg:col-span-2">
             <label class="block text-sm font-semibold text-gray-700 mb-3">Additional Information</label>
             <textarea wire:model="additionalInfo" rows="4" placeholder="Any additional information about the book..."
-                      class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                      class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
             @error('additionalInfo') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
     </div>

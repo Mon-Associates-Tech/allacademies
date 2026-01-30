@@ -17,7 +17,7 @@
 
             <div class="flex gap-3">
                 <button wire:click="resetFilters"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition">
                     <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
@@ -42,7 +42,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
                 <select wire:model.live="selectedPeriod"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     @foreach($periods as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
@@ -53,7 +53,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Book</label>
                 <select wire:model.live="selectedBookId"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Books</option>
                     @foreach($availableBooks as $book)
                         <option value="{{ $book->id }}">{{ $book->title }}</option>
@@ -65,7 +65,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
                 <select wire:model.live="selectedDifficulty"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     @foreach($difficulties as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
@@ -76,7 +76,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
                 <select wire:model.live="selectedQuestionType"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     @foreach($questionTypes as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
@@ -90,13 +90,13 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Min Score (%)</label>
                 <input type="number" wire:model.live="minScore" min="0" max="100"
                        placeholder="0"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Max Score (%)</label>
                 <input type="number" wire:model.live="maxScore" min="0" max="100"
                        placeholder="100"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
         </div>
 
@@ -106,12 +106,12 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                     <input type="date" wire:model.live="startDate"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                     <input type="date" wire:model.live="endDate"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
             </div>
         @endif
@@ -243,19 +243,19 @@
         <div class="border-b border-gray-200">
             <nav class="flex -mb-px">
                 <button wire:click="$set('activeView', 'overview')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Overview
                 </button>
                 <button wire:click="$set('activeView', 'detailed')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'detailed' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'detailed' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Detailed Analysis
                 </button>
                 <button wire:click="$set('activeView', 'trends')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'trends' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'trends' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Trends
                 </button>
                 <button wire:click="$set('activeView', 'comparisons')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'comparisons' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'comparisons' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Comparisons
                 </button>
             </nav>

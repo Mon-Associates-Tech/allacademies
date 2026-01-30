@@ -28,7 +28,7 @@
                     type="text"
                     id="subject"
                     wire:model="subject"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter message subject"
                 >
                 @error('subject') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
@@ -170,7 +170,7 @@
                         <input type="text"
                                wire:model.live.debounce.300ms="userSearch"
                                placeholder="Search users by name or email..."
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     @if(!empty($userSearch))
@@ -333,7 +333,7 @@
                 @endif
 
                 <!-- Add New Attachments -->
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
                     <input type="file"
                            wire:model="attachments"
                            multiple
@@ -387,7 +387,7 @@
                         <div class="mt-2 ml-6">
                             <input type="datetime-local"
                                    wire:model.live="scheduledAt"
-                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             @error('scheduledAt') <span class="text-red-500 text-sm block mt-1">{{ $message }}</span> @enderror
                         </div>
                         @endif

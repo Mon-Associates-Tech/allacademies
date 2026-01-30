@@ -99,15 +99,15 @@
     <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8">
             <button wire:click="setActiveTab('details')"
-                    class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'details' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'details' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                 Message Details
             </button>
             <button wire:click="setActiveTab('recipients')"
-                    class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'recipients' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'recipients' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                 Recipients ({{ $totalCount }})
             </button>
             <button wire:click="setActiveTab('targeting')"
-                    class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'targeting' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'targeting' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                 Targeting Criteria
             </button>
         </nav>
@@ -176,7 +176,7 @@
                         <!-- Read Status Filter -->
                         <div>
                             <select wire:model.live="readStatusFilter"
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                 <option value="all">All Recipients</option>
                                 <option value="read">Read ({{ $readCount }})</option>
                                 <option value="unread">Unread ({{ $unreadCount }})</option>
@@ -210,7 +210,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                                <span class="text-sm font-medium text-gray-700">
+                                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                     {{ substr($recipient->user->name, 0, 2) }}
                                                 </span>
                                         </div>
@@ -322,7 +322,7 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-3">Additional Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <div class="text-sm font-medium text-gray-700">Priority</div>
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Priority</div>
                             <div class="mt-1">
                                 @if($message->is_urgent)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -337,14 +337,14 @@
                         </div>
 
                         <div>
-                            <div class="text-sm font-medium text-gray-700">Attachments</div>
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Attachments</div>
                             <div class="mt-1 text-sm text-gray-600">
                                 {{ $message->attachments->count() }} file(s)
                             </div>
                         </div>
 
                         <div>
-                            <div class="text-sm font-medium text-gray-700">Created</div>
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Created</div>
                             <div class="mt-1 text-sm text-gray-600">
                                 {{ $message->created_at->format('M j, Y H:i') }}
                             </div>

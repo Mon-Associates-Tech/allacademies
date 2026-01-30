@@ -26,7 +26,7 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span class="text-sm font-medium text-gray-700">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {{ substr($message->sender->name, 0, 1) }}
                             </span>
                         </div>

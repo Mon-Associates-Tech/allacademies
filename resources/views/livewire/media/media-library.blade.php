@@ -93,7 +93,7 @@
                             type="text"
                             wire:model.debounce.300ms="search"
                             placeholder="Search files..."
-                            class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                         <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
                              viewBox="0 0 24 24">
@@ -105,7 +105,7 @@
                     <!-- Filter -->
                     <select
                         wire:model="filterMimeType"
-                        class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">All Files</option>
                         <option value="image">Images</option>
@@ -367,7 +367,7 @@
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Select Files</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Files</label>
                                 <input
                                     type="file"
                                     wire:model="uploadFiles"
@@ -398,7 +398,7 @@
                         <button
                             type="button"
                             wire:click="$set('showUploadModal', false)"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                         >
                             Cancel
                         </button>
@@ -471,7 +471,7 @@
                                 <button
                                     type="button"
                                     wire:click="$set('showMoveModal', false)"
-                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                                 >
                                     Cancel
                                 </button>
@@ -523,7 +523,7 @@
                             <button
                                 type="button"
                                 wire:click="$set('showDeleteModal', false)"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                             >
                                 Cancel
                             </button>
@@ -598,7 +598,7 @@
 
     <div class="space-y-4">
         <div>
-            <label class="block text-sm font-medium text-gray-700">Select Files</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Files</label>
             <input
                 type="file"
                 wire:model="uploadFiles"
@@ -622,7 +622,7 @@
         <button
             type="button"
             wire:click="$set('showUploadModal', false)"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
         >
             Cancel
         </button>
@@ -644,11 +644,11 @@
 
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Folder Name</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Folder Name</label>
                                     <input
                                         type="text"
                                         wire:model="newFolderName"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Enter folder name"
                                     >
                                     @error('newFolderName') <span
@@ -656,12 +656,12 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Description
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description
                                         (Optional)</label>
                                     <textarea
                                         wire:model="newFolderDescription"
                                         rows="3"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Enter folder description"
                                     ></textarea>
                                 </div>
@@ -678,7 +678,7 @@
                             <button
                                 type="button"
                                 wire:click="$set('showCreateFolderModal', false)"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                             >
                                 Cancel
                             </button>
@@ -760,11 +760,11 @@
                                 <!-- Editable fields -->
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Alt Text</label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Alt Text</label>
                                         <input
                                             type="text"
                                             wire:model="fileAltText"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                            class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Describe this file for accessibility"
                                             value="{{ $selectedFile->alt_text ?? '' }}"
                                         >
@@ -773,11 +773,11 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                                         <textarea
                                             wire:model="fileDescription"
                                             rows="4"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                            class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Additional details about this file"
                                         >{{ $selectedFile->description ?? '' }}</textarea>
                                         @error('fileDescription') <span
@@ -797,7 +797,7 @@
                             <button
                                 type="button"
                                 wire:click="$set('showFileDetailsModal', false)"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                             >
                                 Cancel
                             </button>

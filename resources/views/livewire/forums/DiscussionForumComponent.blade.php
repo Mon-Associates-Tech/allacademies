@@ -73,11 +73,11 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <input wire:model.live="search" type="text" placeholder="Search topics..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                 </div>
                 <div>
                     <select wire:model.live="sortBy"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                         <option value="recent">Most Recent</option>
                         <option value="popular">Most Popular</option>
                         <option value="oldest">Oldest First</option>
@@ -85,7 +85,7 @@
                 </div>
                 <div>
                     <select wire:model.live="academicLevelFilter"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                         <option value="">All Levels</option>
                         @foreach($academicLevels as $level)
                             <option value="{{ $level->id }}">{{ $level->name }}</option>
@@ -94,7 +94,7 @@
                 </div>
                 <div>
                     <select wire:model.live="academicSubjectFilter"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                         <option value="">All Subjects</option>
                         @foreach($academicSubjects as $subject)
                             <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -577,7 +577,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Topic Title</label>
                     <input wire:model="newTopicTitle" type="text"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500"
                            placeholder="Enter a descriptive title for your topic">
                     @error('newTopicTitle') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                 </div>
@@ -588,7 +588,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic
                             Level</label>
                         <select wire:model="newTopicAcademicLevel"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                             <option value="">Select Level</option>
                             @foreach($academicLevels as $level)
                                 <option value="{{ $level->id }}">{{ $level->name }}</option>
@@ -599,7 +599,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
                         <select wire:model="newTopicAcademicSubject"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                             <option value="">Select Subject</option>
                             @foreach($academicSubjects as $subject)
                                 <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -611,7 +611,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Study
                             Group</label>
                         <select wire:model="newTopicStudyGroup"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                             <option value="">Select Group</option>
                             @foreach($studyGroups as $group)
                                 <option value="{{ $group->id }}">{{ $group->name }}</option>
@@ -625,7 +625,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Referenced Book
                         (Optional)</label>
                     <select wire:model="newTopicReferencedBook"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500">
                         <option value="">Select Book</option>
                         @foreach($books as $book)
                             <option value="{{ $book->id }}">{{ $book->title }}</option>
@@ -637,7 +637,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tags</label>
                     <input wire:model="newTopicTags" type="text"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500"
                            placeholder="Enter tags separated by commas (e.g., math, algebra, homework)">
                     <p class="text-sm text-gray-500 mt-1">Use tags to help others find your topic</p>
                 </div>
@@ -646,7 +646,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Content</label>
                     <textarea wire:model="newTopicContent" rows="8"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500 resize-none"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500 resize-none"
                               placeholder="Describe your topic in detail. What would you like to discuss?"></textarea>
                     @error('newTopicContent') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                 </div>
@@ -656,7 +656,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments
                         (Optional)</label>
                     <input wire:model="newTopicAttachments" type="file" multiple
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500"
                            accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif">
                     <p class="text-sm text-gray-500 mt-1">Maximum 10MB per file. Supported formats: PDF, DOC, TXT,
                         Images</p>
@@ -703,7 +703,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Reply</label>
                     <textarea wire:model="newPostContent" rows="8"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500 resize-none"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500 resize-none"
                               placeholder="Write your reply here. You can mention other users with @username"></textarea>
                     @error('newPostContent') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                 </div>
@@ -713,7 +713,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments
                         (Optional)</label>
                     <input wire:model="newPostAttachments" type="file" multiple
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-violet-500 focus:border-violet-500"
                            accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif">
                     <p class="text-sm text-gray-500 mt-1">Maximum 10MB per file</p>
                     @error('newPostAttachments.*') <span

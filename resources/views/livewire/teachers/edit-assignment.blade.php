@@ -8,16 +8,16 @@
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700">Title *</label>
+                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title *</label>
                     <input type="text" id="title" wire:model="title"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     @error('title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label for="type" class="block text-sm font-medium text-gray-700">Type *</label>
+                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type *</label>
                     <select id="type" wire:model.live="type"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                         <option value="quiz">Quiz</option>
                         <option value="examination">Examination</option>
                     </select>
@@ -27,9 +27,9 @@
 
             <!-- Subject Selection -->
             <div>
-                <label for="academic_subject_id" class="block text-sm font-medium text-gray-700">Subject *</label>
+                <label for="academic_subject_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject *</label>
                 <select id="academic_subject_id" wire:model.live="academic_subject_id"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Select a subject</option>
                     @foreach($availableSubjects as $subject)
                         <option value="{{ $subject['id'] }}">{{ $subject['name'] }} ({{ $subject['code'] }})</option>
@@ -40,40 +40,40 @@
 
             <!-- Description -->
             <div>
-                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                 <textarea id="description" wire:model="description" rows="3"
-                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                          class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"></textarea>
                 @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Instructions -->
             <div>
-                <label for="instructions" class="block text-sm font-medium text-gray-700">Instructions</label>
+                <label for="instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Instructions</label>
                 <textarea id="instructions" wire:model="instructions" rows="3"
-                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                          class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"></textarea>
                 @error('instructions') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Time Settings -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label for="duration_in_minutes" class="block text-sm font-medium text-gray-700">Duration (minutes) *</label>
+                    <label for="duration_in_minutes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration (minutes) *</label>
                     <input type="number" id="duration_in_minutes" wire:model="duration_in_minutes" min="5" max="480"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     @error('duration_in_minutes') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label for="starts_at" class="block text-sm font-medium text-gray-700">Start Date & Time *</label>
+                    <label for="starts_at" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date & Time *</label>
                     <input type="datetime-local" id="starts_at" wire:model="starts_at"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     @error('starts_at') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label for="ends_at" class="block text-sm font-medium text-gray-700">End Date & Time *</label>
+                    <label for="ends_at" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date & Time *</label>
                     <input type="datetime-local" id="ends_at" wire:model="ends_at"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     @error('ends_at') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -81,15 +81,15 @@
             <!-- Settings -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="total_marks" class="block text-sm font-medium text-gray-700">Total Marks *</label>
+                    <label for="total_marks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Marks *</label>
                     <input type="number" id="total_marks" wire:model="total_marks" min="1"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
                     @error('total_marks') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="flex items-center">
                     <input type="checkbox" id="is_randomized" wire:model="is_randomized"
-                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                           class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                     <label for="is_randomized" class="ml-2 block text-sm text-gray-900">
                         Randomize questions for each student
                     </label>
@@ -109,11 +109,11 @@
                                 <!-- Topics -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Topics</label>
-                                    <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                                    <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-800">
                                         @foreach($availableTopics as $topic)
                                             <label class="flex items-center">
                                                 <input type="checkbox" wire:model.live="selectedTopics" value="{{ $topic['id'] }}"
-                                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                                 <span class="ml-2 text-sm text-gray-900">{{ $topic['name'] }}</span>
                                             </label>
                                         @endforeach
@@ -125,11 +125,11 @@
                                 @if(!empty($availableSubtopics))
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Subtopics</label>
-                                        <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                                        <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-800">
                                             @foreach($availableSubtopics as $subtopic)
                                                 <label class="flex items-center">
                                                     <input type="checkbox" wire:model.live="selectedSubtopics" value="{{ $subtopic['id'] }}"
-                                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                                           class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                                     <span class="ml-2 text-sm text-gray-900">{{ $subtopic['name'] }}</span>
                                                 </label>
                                             @endforeach
@@ -148,7 +148,7 @@
                         <div class="border rounded-lg p-4">
                             <div class="flex items-center mb-3">
                                 <input type="checkbox" id="mcq_enabled" wire:model.live="questionTypes.multiple_choice_question.enabled"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <label for="mcq_enabled" class="ml-2 text-sm font-medium text-gray-900">
                                     Multiple Choice Questions
                                 </label>
@@ -158,12 +158,12 @@
                                     <div>
                                         <label class="block text-sm text-gray-700">Number of Questions</label>
                                         <input type="number" wire:model.live="questionTypes.multiple_choice_question.count" min="1" max="50"
-                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                               class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-700">Difficulty</label>
                                         <select wire:model.live="questionTypes.multiple_choice_question.difficulty"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                                             <option value="all">All Difficulties</option>
                                             <option value="easy">Easy</option>
                                             <option value="medium">Medium</option>
@@ -178,7 +178,7 @@
                         <div class="border rounded-lg p-4">
                             <div class="flex items-center mb-3">
                                 <input type="checkbox" id="tf_enabled" wire:model.live="questionTypes.true_or_false_question.enabled"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <label for="tf_enabled" class="ml-2 text-sm font-medium text-gray-900">
                                     True/False Questions
                                 </label>
@@ -188,12 +188,12 @@
                                     <div>
                                         <label class="block text-sm text-gray-700">Number of Questions</label>
                                         <input type="number" wire:model.live="questionTypes.true_or_false_question.count" min="1" max="50"
-                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                               class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-700">Difficulty</label>
                                         <select wire:model.live="questionTypes.true_or_false_question.difficulty"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                                             <option value="all">All Difficulties</option>
                                             <option value="easy">Easy</option>
                                             <option value="medium">Medium</option>
@@ -208,7 +208,7 @@
                         <div class="border rounded-lg p-4">
                             <div class="flex items-center mb-3">
                                 <input type="checkbox" id="essay_enabled" wire:model.live="questionTypes.essay_question.enabled"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <label for="essay_enabled" class="ml-2 text-sm font-medium text-gray-900">
                                     Essay Questions
                                 </label>
@@ -218,12 +218,12 @@
                                     <div>
                                         <label class="block text-sm text-gray-700">Number of Questions</label>
                                         <input type="number" wire:model.live="questionTypes.essay_question.count" min="1" max="20"
-                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                               class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-700">Difficulty</label>
                                         <select wire:model.live="questionTypes.essay_question.difficulty"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                                             <option value="all">All Difficulties</option>
                                             <option value="easy">Easy</option>
                                             <option value="medium">Medium</option>
@@ -278,11 +278,11 @@
                     @if(!empty($availableAcademicGroups))
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Academic Groups</label>
-                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-800">
                                 @foreach($availableAcademicGroups as $group)
                                     <label class="flex items-center">
                                         <input type="checkbox" wire:model.live="selectedAcademicGroups" value="{{ $group['id'] }}"
-                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                               class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                         <span class="ml-2 text-sm text-gray-900">{{ $group['name'] }}</span>
                                     </label>
                                 @endforeach
@@ -294,11 +294,11 @@
                     @if(!empty($availableAcademicLevels))
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Academic Levels</label>
-                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-800">
                                 @foreach($availableAcademicLevels as $level)
                                     <label class="flex items-center">
                                         <input type="checkbox" wire:model.live="selectedAcademicLevels" value="{{ $level['id'] }}"
-                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                               class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                         <span class="ml-2 text-sm text-gray-900">{{ $level['name'] }}</span>
                                     </label>
                                 @endforeach
@@ -310,11 +310,11 @@
                     @if(!empty($availableStudentGroups))
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Student Groups</label>
-                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-800">
                                 @foreach($availableStudentGroups as $group)
                                     <label class="flex items-center">
                                         <input type="checkbox" wire:model.live="selectedStudentGroups" value="{{ $group['id'] }}"
-                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                               class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                         <span class="ml-2 text-sm text-gray-900">{{ $group['name'] }}</span>
                                     </label>
                                 @endforeach
@@ -326,11 +326,11 @@
                     @if(!empty($availableStudents))
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Individual Students</label>
-                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-800">
                                 @foreach($availableStudents as $student)
                                     <label class="flex items-center">
                                         <input type="checkbox" wire:model.live="selectedStudents" value="{{ $student['id'] }}"
-                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                               class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                         <span class="ml-2 text-sm text-gray-900">{{ $student['name'] }}</span>
                                     </label>
                                 @endforeach

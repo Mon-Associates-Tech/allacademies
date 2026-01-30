@@ -52,7 +52,7 @@
                     @if($activeTab === 'results')
                         <!-- Back button when viewing results -->
                         <button wire:click="backToHistory"
-                                class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm flex items-center">
+                                class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -62,7 +62,7 @@
                     @else
                         <!-- Regular tabs -->
                         <button wire:click="$set('activeTab', 'new')"
-                                :class="$wire.activeTab === 'new' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                :class="$wire.activeTab === 'new' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300'"
                                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -71,7 +71,7 @@
                             New Quiz
                         </button>
                         <button wire:click="$set('activeTab', 'history')"
-                                :class="$wire.activeTab === 'history' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                :class="$wire.activeTab === 'history' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300'"
                                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -221,13 +221,13 @@
                                             <nav class="-mb-px flex space-x-8">
                                                 <button type="button"
                                                         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                   {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                   {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                         wire:click="$set('contentSourceTab', 'book')">
                                                     Select Book
                                                 </button>
                                                 <button type="button"
                                                         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                   {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                   {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                         wire:click="$set('contentSourceTab', 'upload')">
                                                     Upload Content
                                                 </button>
@@ -244,7 +244,7 @@
                                                             <label class="block text-sm font-medium text-gray-700 mb-1">Select
                                                                 Book</label>
                                                             <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                 wire:model="selectedBookId">
                                                                 <option value="">Choose a book...</option>
                                                                 @foreach($availableBooks as $book)
@@ -305,7 +305,7 @@
                                                                         class="block text-sm font-medium text-gray-700 mb-1">Chapter
                                                                         (Optional)</label>
                                                                     <select
-                                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                         wire:model="selectedChapterId">
                                                                         <option value="">All chapters</option>
                                                                         @foreach($bookChapters as $chapter)
@@ -325,7 +325,7 @@
                                                                         class="block text-sm font-medium text-gray-700 mb-1">Start
                                                                         Page (Optional)</label>
                                                                     <input type="number" min="1"
-                                                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                            wire:model="pageStart" placeholder="e.g., 1">
                                                                 </div>
                                                                 <div>
@@ -333,7 +333,7 @@
                                                                         class="block text-sm font-medium text-gray-700 mb-1">End
                                                                         Page (Optional)</label>
                                                                     <input type="number" min="1"
-                                                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                            wire:model="pageEnd" placeholder="e.g., 50">
                                                                 </div>
                                                             </div>

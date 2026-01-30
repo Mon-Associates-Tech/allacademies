@@ -15,7 +15,7 @@
                         <!-- Assignment Details -->
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Assignment Title *</label>
-                            <input type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            <input type="text" class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                    wire:model="title" placeholder="e.g., Chapter 3 Comprehension Questions">
                             @error('title') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
@@ -23,7 +23,7 @@
                         <!-- Subject Selection -->
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                            <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            <select class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                     wire:model="selectedSubjectId">
                                 <option value="">Choose a subject...</option>
                                 @foreach($availableSubjects as $subject)
@@ -38,7 +38,7 @@
 
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            <textarea class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                       wire:model="description" rows="3"
                                       placeholder="Instructions or additional information for students"></textarea>
                         </div>
@@ -51,13 +51,13 @@
                                 <nav class="-mb-px flex space-x-8">
                                     <button type="button"
                                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                                   {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                   {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                             wire:click="$set('contentSourceTab', 'book')">
                                         Select Book
                                     </button>
                                     <button type="button"
                                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                                   {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                   {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                             wire:click="$set('contentSourceTab', 'upload')">
                                         Upload Content
                                     </button>
@@ -69,7 +69,7 @@
                                     <div class="space-y-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Select Book</label>
-                                            <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            <select class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                     wire:model="selectedBookId">
                                                 <option value="">Choose a book...</option>
                                                 @foreach($availableBooks as $book)
@@ -103,7 +103,7 @@
                                             @if(!empty($bookChapters))
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 mb-1">Chapter (Optional)</label>
-                                                    <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                             wire:model="selectedChapterId">
                                                         <option value="">All chapters</option>
                                                         @foreach($bookChapters as $chapter)
@@ -119,13 +119,13 @@
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 mb-1">Start Page (Optional)</label>
                                                     <input type="number" min="1"
-                                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                            wire:model="pageStart">
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 mb-1">End Page (Optional)</label>
                                                     <input type="number" min="1"
-                                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                            wire:model="pageEnd">
                                                 </div>
                                             </div>
@@ -181,7 +181,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Question Type</label>
-                                    <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                             wire:model="questionType">
                                         <option value="multiple_choice">Multiple Choice</option>
                                         <option value="true_false">True/False</option>
@@ -192,7 +192,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Number of Questions</label>
                                     <input type="number" min="1" max="50"
-                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                            wire:model="questionCount" value="10">
                                     @error('questionCount') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
@@ -201,7 +201,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
-                                    <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                             wire:model="difficulty">
                                         <option value="easy">Easy</option>
                                         <option value="medium">Medium</option>
@@ -212,7 +212,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Total Marks *</label>
                                     <input type="number" min="1"
-                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                            wire:model="totalMarks"
                                            placeholder="e.g., 100">
                                     @error('totalMarks') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -221,7 +221,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Focus Topics (Optional)</label>
                                     <input type="text"
-                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                            wire:model="focusTopics" placeholder="e.g., characters, themes, plot">
                                 </div>
                             </div>
@@ -280,17 +280,17 @@
                                             <div id="question-{{ $index }}" class="hidden px-4 py-3 bg-gray-50 border-t border-gray-200">
                                                 <div class="space-y-3">
                                                     <div>
-                                                        <p class="text-sm font-medium text-gray-700">Type</p>
+                                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Type</p>
                                                         <p class="text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $question['type'])) }}</p>
                                                     </div>
                                                     <div>
-                                                        <p class="text-sm font-medium text-gray-700">Question</p>
+                                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Question</p>
                                                         <p class="text-sm text-gray-900">{{ $question['question'] }}</p>
                                                     </div>
 
                                                     @if(isset($question['options']) && !empty($question['options']))
                                                         <div>
-                                                            <p class="text-sm font-medium text-gray-700">Options</p>
+                                                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Options</p>
                                                             <ul class="mt-1 space-y-1">
                                                                 @foreach($question['options'] as $option)
                                                                     <li class="text-sm text-gray-900">• {{ $option }}</li>
@@ -301,14 +301,14 @@
 
                                                     @if(isset($question['correct_answer']))
                                                         <div>
-                                                            <p class="text-sm font-medium text-gray-700">Correct Answer</p>
+                                                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Correct Answer</p>
                                                             <p class="text-sm text-gray-900">{{ $question['correct_answer'] }}</p>
                                                         </div>
                                                     @endif
 
                                                     @if(isset($question['explanation']))
                                                         <div>
-                                                            <p class="text-sm font-medium text-gray-700">Explanation</p>
+                                                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Explanation</p>
                                                             <p class="text-sm text-gray-900">{{ $question['explanation'] }}</p>
                                                         </div>
                                                     @endif
@@ -327,12 +327,12 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
                                     <input type="number" min="1"
-                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                            wire:model="durationInMinutes" value="60">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Randomize Questions</label>
-                                    <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                             wire:model="isRandomized">
                                         <option value="1">Yes</option>
                                         <option value="0">No</option>
@@ -344,13 +344,13 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                                     <input type="datetime-local"
-                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                            wire:model="startDate">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                                     <input type="datetime-local"
-                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                            wire:model="endDate">
                                     @error('endDate') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>

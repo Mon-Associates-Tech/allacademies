@@ -252,7 +252,7 @@
                                         <input
                                             type="text"
                                             wire:model="exportFilters.{{ $filterKey }}"
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             placeholder="Enter filter value..."
                                         >
                                     </div>
