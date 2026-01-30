@@ -1,4 +1,6 @@
 <x-layouts.app>
+    <x-alert.token-subscription-banner />
+
     <div class="max-w-6xl mx-auto lg:px-8">
         {{-- Header Section --}}
         <div class="page-header-sky rounded-t-xl overflow-visible">
@@ -81,6 +83,18 @@
                                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                     Private
+                                </span>
+                            @endif
+
+                            @if($note->calendarEvent)
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20 dark:bg-orange-500/10 dark:text-orange-400 dark:ring-orange-500/20">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Added to Calendar
                                 </span>
                             @endif
                         </div>

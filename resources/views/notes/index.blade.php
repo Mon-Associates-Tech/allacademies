@@ -1,4 +1,7 @@
 <x-layouts.app>
+   
+        <x-alert.token-subscription-banner variant="full-page" />
+   
     <div class="max-w-7xl mx-auto">
         {{-- Header Section --}}
         <div class="page-header-blue py-6 rounded-t-lg">
@@ -273,7 +276,7 @@
         <div class="bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700 rounded-b-xl shadow-sm p-6">
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 @forelse($notes as $note)
-                    <div class="group relative bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 flex flex-col h-full overflow-hidden">
+                    <div class="group relative rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 flex flex-col h-full overflow-hidden {{ $note->getBackgroundClass() }}">
                         <div class="p-5 flex-1 flex flex-col">
                             <div class="flex items-start justify-between gap-2 mb-3">
                                 <div class="flex flex-wrap gap-2">
@@ -301,7 +304,7 @@
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                 <a href="{{ route('notes.show', $note) }}" class="focus:outline-none">
                                     <span class="absolute inset-0" aria-hidden="true"></span>
-                                    {{ $note->title }}
+                                    {{ $note->title ?? 'Untitled' }}
                                 </a>
                             </h3>
 
@@ -395,4 +398,5 @@
             @endif
         </div>
     </div>
+
 </x-layouts.app>

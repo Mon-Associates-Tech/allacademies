@@ -2,18 +2,22 @@
 
 namespace App\Livewire\Assessment;
 
-
 use Livewire\Component;
 
 class SubjectSelectionComponent extends Component
 {
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
 
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
+
     public $questionCounts = [];
 
     protected SubjectSelectionService $selectionService;
@@ -77,7 +81,7 @@ class SubjectSelectionComponent extends Component
 
     public function getSelectionHierarchy()
     {
-        if (!$this->selectedSubject) {
+        if (! $this->selectedSubject) {
             return [];
         }
 

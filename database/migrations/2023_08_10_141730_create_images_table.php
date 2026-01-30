@@ -12,23 +12,26 @@ return new class extends Migration
      *
      * @return void
      */
-
     public function up()
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
             $table->string('path');
-            $table->string('description')->fullText();
+            $table->string('description');
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->fullText('description');
+            }
             $table->json('tags');
             $table->timestamps();
             $table->softDeletes();
         });
 
-//        DB::statement("ALTER TABLE images ADD INDEX images_tags_index((CAST(tags AS CHAR(255) ARRAY)))");
-        DB::statement("ALTER TABLE images
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE images
 ADD COLUMN first_tag VARCHAR(255) GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(tags, '$[0]'))) STORED,
 ADD INDEX images_tags_index (first_tag);
 ");
+        }
     }
 
     /**

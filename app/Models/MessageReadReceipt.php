@@ -12,11 +12,11 @@ class MessageReadReceipt extends Model
     protected $fillable = [
         'message_id',
         'user_id',
-        'read_at'
+        'read_at',
     ];
 
     protected $casts = [
-        'read_at' => 'datetime'
+        'read_at' => 'datetime',
     ];
 
     public function message()

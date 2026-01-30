@@ -20,10 +20,12 @@
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
         }
+
         table, td {
             mso-table-lspace: 0pt;
             mso-table-rspace: 0pt;
         }
+
         img {
             -ms-interpolation-mode: bicubic;
             border: 0;
@@ -85,8 +87,12 @@
         }
 
         @keyframes slide {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(50px, 50px);
+            }
         }
 
         .logo-container {
@@ -529,7 +535,8 @@
                         </h2>
 
                         <p class="message">
-                            We received a sign-in request for your All Academies account. To ensure your security and complete your login, please use the verification code below:
+                            We received a login request for your All Academies account. To ensure your security and
+                            complete your login, please use the verification code below:
                         </p>
 
                         <!-- Verification Code -->
@@ -545,7 +552,8 @@
                         <div class="expiration-warning">
                             <p class="expiration-text">
                                 <span class="expiration-icon">⏰</span>
-                                This code will expire in <span class="expiration-time">15 minutes</span> for your security. Please complete the verification process promptly.
+                                This code will expire in <span class="expiration-time">15 minutes</span> for your
+                                security. Please complete the verification process promptly.
                             </p>
                         </div>
 
@@ -557,7 +565,7 @@
                             <ol class="instructions-list">
                                 <li>Return to the All Academies verification page</li>
                                 <li>Enter the 6-digit code exactly as shown above</li>
-                                <li>Click "Verify Code" to complete your sign-in</li>
+                                <li>Click "Verify Code" to complete your login</li>
                                 <li>You'll be redirected to your dashboard immediately</li>
                             </ol>
                         </div>
@@ -567,7 +575,9 @@
                             <p class="security-text">
                                 <span class="security-icon">🛡️</span>
                                 <strong>Important Security Notice:</strong> <br>
-                                If you didn't request this verification code, please ignore this email and consider changing your password immediately. Never share this code with anyone, including All Academies staff.
+                                If you didn't request this verification code, please ignore this email and consider
+                                changing your password immediately. Never share this code with anyone, including All
+                                Academies staff.
                             </p>
                         </div>
 
@@ -576,7 +586,9 @@
                         <!-- Support Section -->
                         <div class="support-section">
                             <p class="support-text">
-                                Need assistance? Contact our <a href="{{route('branding.contact')}}" class="support-link">support team</a> or visit our <a href="#" class="support-link">help center</a> for more information.
+                                Need assistance? Contact our <a href="{{route('branding.contact')}}"
+                                                                class="support-link">support team</a> or visit our <a
+                                    href="#" class="support-link">help center</a> for more information.
                             </p>
                         </div>
                     </td>

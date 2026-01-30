@@ -22,7 +22,7 @@ return new class extends Migration
             ->whereNotNull('school_id')
             ->update([
                 'subaccountable_type' => 'App\\Models\\School',
-                'subaccountable_id' => DB::raw('school_id')
+                'subaccountable_id' => DB::raw('school_id'),
             ]);
 
         // Now we can make school_id nullable (but keep it for backward compatibility if needed)
@@ -38,7 +38,7 @@ return new class extends Migration
         DB::table('subaccounts')
             ->where('subaccountable_type', 'App\\Models\\School')
             ->update([
-                'school_id' => DB::raw('subaccountable_id')
+                'school_id' => DB::raw('subaccountable_id'),
             ]);
 
         Schema::table('subaccounts', function (Blueprint $table) {

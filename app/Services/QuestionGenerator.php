@@ -22,39 +22,37 @@ use RuntimeException;
 
 class QuestionGenerator
 {
-
- public static function generate(
+    public static function generate(
         array $heading,
         array $sections,
         array $metadata = []
-    ): array
-    {
+    ): array {
         // Ensure file uploads are handled first
         $sections = static::preprocessSections($sections);
 
         $usedQuestions = [
             'multiple_choice_questions' => [],
             'true_or_false_questions' => [],
-            'essay_questions' => []
+            'essay_questions' => [],
         ];
 
         $processedSections = [];
 
         foreach ($sections as $index => $section) {
             try {
-                $processedSection = (new static())->processSection($section, $usedQuestions);
+                $processedSection = (new static)->processSection($section, $usedQuestions);
                 $processedSections[] = $processedSection;
-            } catch (NoTopicsException | NotEnoughQuestionsException $e) {
+            } catch (NoTopicsException|NotEnoughQuestionsException $e) {
                 Log::warning('Section processing failed', [
                     'section_index' => $index,
                     'section_name' => $section['name'] ?? 'Unnamed',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 throw $e;
             }
         }
 
-        $processedHeading = (new static())->processHeading($heading, $metadata);
+        $processedHeading = (new static)->processHeading($heading, $metadata);
 
         return [
             'title' => $heading['title'],
@@ -70,11 +68,11 @@ class QuestionGenerator
     {
         $table = $section['type'];
 
-        if (empty($section['topics']) || !is_array($section['topics'])) {
-            throw new NoTopicsException();
+        if (empty($section['topics']) || ! is_array($section['topics'])) {
+            throw new NoTopicsException;
         }
 
-        $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
+        $topicIds = collect($section['topics'])->map(fn ($id) => (int) $id)->all();
         $subtopics = $section['subtopics'] ?? [];
 
         // Get questions for this section
@@ -82,7 +80,7 @@ class QuestionGenerator
             $table,
             $topicIds,
             $subtopics,
-            (int)$section['count'],
+            (int) $section['count'],
             $usedQuestions[$table]
         );
 
@@ -119,13 +117,13 @@ class QuestionGenerator
         $subtopicQuestionCount = 0;
 
         // First, handle subtopic-specific questions if subtopics are specified
-        if (!empty($subtopics)) {
+        if (! empty($subtopics)) {
             // Group subtopics by their actual IDs to avoid duplicates
             $uniqueSubtopics = [];
             foreach ($subtopics as $subtopic) {
                 if (isset($subtopic['id']) && isset($subtopic['count'])) {
-                    $subtopicId = (int)$subtopic['id'];
-                    $count = (int)$subtopic['count'];
+                    $subtopicId = (int) $subtopic['id'];
+                    $count = (int) $subtopic['count'];
 
                     // Only process if count is greater than 0
                     if ($count > 0) {
@@ -143,8 +141,9 @@ class QuestionGenerator
             foreach ($uniqueSubtopics as $subtopicId => $count) {
                 $subtopicModel = AcademicSubtopic::find($subtopicId);
 
-                if (!$subtopicModel) {
+                if (! $subtopicModel) {
                     Log::warning('Subtopic not found', ['subtopic_id' => $subtopicId]);
+
                     continue;
                 }
 
@@ -168,7 +167,7 @@ class QuestionGenerator
                         'subtopic_name' => $subtopicModel->name,
                         'requested' => $count,
                         'available' => $fetchedCount,
-                        'table' => $table
+                        'table' => $table,
                     ]);
                 }
 
@@ -199,7 +198,7 @@ class QuestionGenerator
                     'requested' => $remainingQuestionsNeeded,
                     'available' => $fetchedCount,
                     'table' => $table,
-                    'subtopic_questions_count' => $subtopicQuestionCount
+                    'subtopic_questions_count' => $subtopicQuestionCount,
                 ]);
 
                 throw new NotEnoughQuestionsException(
@@ -212,6 +211,7 @@ class QuestionGenerator
 
         return array_unique($sectionQuestions);
     }
+
     /**
      * Process heading template rendering - extracted from generate method
      */
@@ -248,7 +248,6 @@ class QuestionGenerator
         return $heading;
     }
 
-
     /**
      * Preprocess sections to handle file uploads before any serialization
      */
@@ -256,45 +255,46 @@ class QuestionGenerator
     {
         return collect($sections)->map(function ($section) {
             if (isset($section['document']) && $section['document'] instanceof UploadedFile) {
-                $fileInfo = (new static())->storeUploadedFile($section['document']);
+                $fileInfo = (new static)->storeUploadedFile($section['document']);
                 $section = array_merge($section, $fileInfo);
             }
+
             return $section;
         })->toArray();
     }
 
     private function storeUploadedFile(UploadedFile $file): array
     {
-        $timestampedName = time() . '_' . $file->getClientOriginalName();
+        $timestampedName = time().'_'.$file->getClientOriginalName();
 
         try {
             // First, ensure the directory exists
             $documentsPath = storage_path('app/public/documents');
-            if (!file_exists($documentsPath) && !mkdir($documentsPath, 0755, true) && !is_dir($documentsPath)) {
+            if (! file_exists($documentsPath) && ! mkdir($documentsPath, 0755, true) && ! is_dir($documentsPath)) {
                 throw new RuntimeException(sprintf('Directory "%s" was not created', $documentsPath));
             }
 
             // Try the standard store method first
             $storedPath = $file->store('documents', 'public');
 
-            if (!$storedPath) {
+            if (! $storedPath) {
                 // If that fails, try storeAs with a clean filename
                 $cleanFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $timestampedName);
                 $storedPath = $file->storeAs('documents', $cleanFilename, 'public');
             }
 
-            if (!$storedPath) {
+            if (! $storedPath) {
                 // Last resort: manual file move
-                $storedPath = 'documents/' . $timestampedName;
-                $fullStoragePath = storage_path('app/public/' . $storedPath);
+                $storedPath = 'documents/'.$timestampedName;
+                $fullStoragePath = storage_path('app/public/'.$storedPath);
 
-                if (!move_uploaded_file($file->getRealPath(), $fullStoragePath)) {
+                if (! move_uploaded_file($file->getRealPath(), $fullStoragePath)) {
                     throw new RuntimeException('Failed to store file manually');
                 }
             }
 
             // Verify the file exists
-            if (!file_exists(storage_path('app/public/' . $storedPath))) {
+            if (! file_exists(storage_path('app/public/'.$storedPath))) {
                 throw new RuntimeException('File was not stored correctly');
             }
 
@@ -309,10 +309,10 @@ class QuestionGenerator
                 'storage_writable' => is_writable(storage_path('app/public')),
             ]);
 
-            throw new RuntimeException('Failed to store uploaded file: ' . $e->getMessage());
+            throw new RuntimeException('Failed to store uploaded file: '.$e->getMessage());
         }
 
-        $fullPath = storage_path('app/public/' . $storedPath);
+        $fullPath = storage_path('app/public/'.$storedPath);
         $extension = strtolower($file->getClientOriginalExtension());
 
         // Use the shared processing method
@@ -328,8 +328,9 @@ class QuestionGenerator
             'pdf_images' => [],
         ];
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             Log::warning('File does not exist for processing', ['path' => $filePath]);
+
             return $result;
         }
 
@@ -359,7 +360,7 @@ class QuestionGenerator
             default:
                 Log::warning('Unsupported file type', [
                     'extension' => $extension,
-                    'path' => $filePath
+                    'path' => $filePath,
                 ]);
         }
 
@@ -371,16 +372,16 @@ class QuestionGenerator
         $outputDir = storage_path('app/public/pdf_pages');
         $images = [];
 
-        if (!file_exists($outputDir) && !mkdir($outputDir, 0755, true) && !is_dir($outputDir)) {
+        if (! file_exists($outputDir) && ! mkdir($outputDir, 0755, true) && ! is_dir($outputDir)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $outputDir));
         }
 
         try {
-            if (!extension_loaded('imagick')) {
+            if (! extension_loaded('imagick')) {
                 throw new RuntimeException('Imagick extension not available');
             }
 
-            $imagick = new Imagick();
+            $imagick = new Imagick;
             $imagick->setResolution(300, 300);
             $imagick->readImage($pdfPath);
 
@@ -391,19 +392,19 @@ class QuestionGenerator
 
                 $pdfBaseName = pathinfo($originalPath, PATHINFO_FILENAME);
                 $filename = sprintf('pdf_page_%s_%s.jpg', $pdfBaseName, $i);
-                $outputPath = $outputDir . '/' . $filename;
+                $outputPath = $outputDir.'/'.$filename;
 
                 $page->writeImage($outputPath);
-                $images[] = 'pdf_pages/' . $filename;
+                $images[] = 'pdf_pages/'.$filename;
             }
 
         } catch (Exception $e) {
             Log::error('PDF processing failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            return ['pdf_error' => 'Failed to process PDF: ' . $e->getMessage()];
+            return ['pdf_error' => 'Failed to process PDF: '.$e->getMessage()];
         } finally {
             if (isset($imagick)) {
                 $imagick->clear();
@@ -420,7 +421,7 @@ class QuestionGenerator
     private function extractDocxText(string $filePath): string
     {
         try {
-            if (!class_exists(IOFactory::class)) {
+            if (! class_exists(IOFactory::class)) {
                 throw new RuntimeException('PhpWord library not available');
             }
 
@@ -430,31 +431,32 @@ class QuestionGenerator
             foreach ($phpWord->getSections() as $section) {
                 foreach ($section->getElements() as $element) {
                     if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
+                        $text .= $element->getText()."\n";
                     } elseif (method_exists($element, 'getElements')) {
                         foreach ($element->getElements() as $childElement) {
                             if (method_exists($childElement, 'getText')) {
-                                $text .= $childElement->getText() . "\n";
+                                $text .= $childElement->getText()."\n";
                             }
                         }
                     }
                 }
             }
+
             return trim($text);
         } catch (Exception $e) {
             Log::error('DOCX processing failed', [
                 'error' => $e->getMessage(),
-                'file' => $filePath
+                'file' => $filePath,
             ]);
 
-            return 'Error processing document: ' . $e->getMessage();
+            return 'Error processing document: '.$e->getMessage();
         }
     }
 
     private function processDocument(array $section, array $processedSection): array
     {
         $storedPath = $section['document'];
-        $fullPath = storage_path('app/public/' . $storedPath);
+        $fullPath = storage_path('app/public/'.$storedPath);
         $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
 
         // Use the shared processing method and merge with existing processed section
@@ -489,16 +491,16 @@ class QuestionGenerator
         foreach ($questions as $question) {
             if (is_numeric($question)) {
                 // It's already an ID
-                $questionIds[] = (int)$question;
+                $questionIds[] = (int) $question;
             } elseif (is_array($question) && isset($question['id'])) {
                 // It's an array with an ID
-                $questionIds[] = (int)$question['id'];
+                $questionIds[] = (int) $question['id'];
             } elseif (is_object($question) && isset($question->id)) {
                 // It's a model object with an ID
-                $questionIds[] = (int)$question->id;
+                $questionIds[] = (int) $question->id;
             } elseif (is_object($question) && method_exists($question, 'getKey')) {
                 // It's an Eloquent model
-                $questionIds[] = (int)$question->getKey();
+                $questionIds[] = (int) $question->getKey();
             }
         }
 
@@ -519,11 +521,10 @@ class QuestionGenerator
      */
     public function createExamination(
         AcademicSubject $academicSubject,
-        array           $validatedData,
-                        $team_id,
-                        $creator_id
-    ): Examination
-    {
+        array $validatedData,
+        $team_id,
+        $creator_id
+    ): Examination {
         $heading = $validatedData['heading'];
 
         $metadata = $validatedData['metadata'];
@@ -567,7 +568,7 @@ class QuestionGenerator
     public function processSections(mixed $sections): mixed
     {
         foreach ($sections as $index => $section) {
-            if (!empty($section['questions'])) {
+            if (! empty($section['questions'])) {
                 $sections[$index]['questions'] = $this->processQuestions($section);
             }
 
@@ -575,6 +576,7 @@ class QuestionGenerator
                 $sections[$index] = $this->processDocument($section, $sections[$index]);
             }
         }
+
         return $sections;
     }
 
@@ -593,6 +595,7 @@ class QuestionGenerator
         if (empty($questionIds)) {
             return [];
         }
+
         return $questionIds;
 
     }
@@ -632,8 +635,9 @@ class QuestionGenerator
                 default:
                     Log::warning('Unknown question type', [
                         'type' => $questionType,
-                        'ids' => $questionIds
+                        'ids' => $questionIds,
                     ]);
+
                     return [];
             }
 
@@ -646,13 +650,12 @@ class QuestionGenerator
             Log::error('Failed to fetch questions', [
                 'type' => $questionType,
                 'ids' => $questionIds,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [];
         }
     }
-
 
     /**
      * Format question object for consistent output structure
@@ -698,13 +701,13 @@ class QuestionGenerator
     public function formatExistingQuestions(array $questions): array
     {
         return collect($questions)->map(function ($question) {
-            if (!is_array($question)) {
+            if (! is_array($question)) {
                 return $question;
             }
 
             // Handle individual option fields (option_a, option_b, etc.)
             foreach (['question', 'answer', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e'] as $key) {
-                if (!isset($question[$key])) {
+                if (! isset($question[$key])) {
                     continue;
                 }
 
@@ -729,8 +732,10 @@ class QuestionGenerator
 
                     if (is_string($option) && $this->isJsonString($option)) {
                         $decoded = json_decode($option, true, 512, JSON_THROW_ON_ERROR);
+
                         return $decoded['up'] ?? $option;
                     }
+
                     return $option;
                 })->toArray();
             }

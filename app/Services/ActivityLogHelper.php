@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use Spatie\Activitylog\Models\Activity;
-use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogHelper
 {
@@ -18,7 +18,7 @@ class ActivityLogHelper
             'academiclevel',
             'academicsubject',
             'academictopic',
-            'academicsubtopic'
+            'academicsubtopic',
         ];
 
         return Activity::whereIn('log_name', $academicLogNames)
@@ -53,7 +53,7 @@ class ActivityLogHelper
                 'academiclevel',
                 'academicsubject',
                 'academictopic',
-                'academicsubtopic'
+                'academicsubtopic',
             ])
             ->with(['causer', 'subject'])
             ->orderBy('created_at', 'desc')
@@ -75,7 +75,7 @@ class ActivityLogHelper
                 'academiclevel',
                 'academicsubject',
                 'academictopic',
-                'academicsubtopic'
+                'academicsubtopic',
             ])
             ->with(['causer', 'subject'])
             ->orderBy('created_at', 'desc')
@@ -99,7 +99,7 @@ class ActivityLogHelper
                 'user_id' => $activity->properties['user_id'] ?? $activity->causer_id,
                 'changes' => [
                     'old' => $activity->properties['old'] ?? [],
-                    'new' => $activity->properties['attributes'] ?? []
+                    'new' => $activity->properties['attributes'] ?? [],
                 ],
                 'created_at' => $activity->created_at,
                 'formatted_date' => $activity->created_at->format('M d, Y \a\t g:i A'),
@@ -107,8 +107,8 @@ class ActivityLogHelper
                 'model_data' => $activity->subject ? [
                     'type' => class_basename($activity->subject),
                     'id' => $activity->subject->id,
-                    'identifier' => static::getModelIdentifier($activity->subject)
-                ] : null
+                    'identifier' => static::getModelIdentifier($activity->subject),
+                ] : null,
             ];
         })->toArray();
     }
@@ -116,14 +116,14 @@ class ActivityLogHelper
     /**
      * Get activity statistics
      */
-    public static function getActivityStatistics(Carbon $startDate = null, Carbon $endDate = null): array
+    public static function getActivityStatistics(?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $query = Activity::whereIn('log_name', [
             'academicgroup',
             'academiclevel',
             'academicsubject',
             'academictopic',
-            'academicsubtopic'
+            'academicsubtopic',
         ]);
 
         if ($startDate && $endDate) {
@@ -143,10 +143,11 @@ class ActivityLogHelper
             'activities_by_user' => $activities->groupBy('causer_id')
                 ->map(function ($userActivities) {
                     $firstActivity = $userActivities->first();
+
                     return [
                         'count' => $userActivities->count(),
                         'user_name' => $firstActivity->properties['user_name'] ??
-                            ($firstActivity->causer?->name ?? 'System')
+                            ($firstActivity->causer?->name ?? 'System'),
                     ];
                 })->toArray(),
             'recent_activity_count' => $activities->where('created_at', '>=', now()->subDays(7))->count(),
@@ -158,12 +159,14 @@ class ActivityLogHelper
      */
     private static function getModelIdentifier($model): string
     {
-        if (!$model) return 'Unknown';
+        if (! $model) {
+            return 'Unknown';
+        }
 
         $identifierFields = ['name', 'title', 'label', 'code', 'tag', 'slug'];
 
         foreach ($identifierFields as $field) {
-            if (isset($model->$field) && !empty($model->$field)) {
+            if (isset($model->$field) && ! empty($model->$field)) {
                 return $model->$field;
             }
         }
@@ -181,7 +184,7 @@ class ActivityLogHelper
             'academiclevel',
             'academicsubject',
             'academictopic',
-            'academicsubtopic'
+            'academicsubtopic',
         ])
             ->where(function ($query) use ($keyword) {
                 $query->where('description', 'LIKE', "%{$keyword}%")
@@ -200,7 +203,7 @@ class ActivityLogHelper
      */
     public static function getModelActivity($model, int $limit = 50): array
     {
-        if (!method_exists($model, 'activities')) {
+        if (! method_exists($model, 'activities')) {
             return [];
         }
 

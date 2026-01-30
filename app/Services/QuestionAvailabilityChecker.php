@@ -2,22 +2,20 @@
 
 namespace App\Services;
 
-use App\Models\AcademicSubject;
-use App\Models\AcademicTopic;
 use App\Models\AcademicSubtopic;
+use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
-use App\Models\EssayQuestion;
 
 class QuestionAvailabilityChecker
 {
     /**
      * Check if there are enough questions available for the given configuration
      *
-     * @param array $questionConfig The question configuration from the assignment
-     * @param int $subjectId The subject ID
-     * @param array $selectedTopics The selected topic IDs
-     * @param array $selectedSubtopics The selected subtopic IDs
+     * @param  array  $questionConfig  The question configuration from the assignment
+     * @param  int  $subjectId  The subject ID
+     * @param  array  $selectedTopics  The selected topic IDs
+     * @param  array  $selectedSubtopics  The selected subtopic IDs
      * @return array Contains 'valid' boolean and 'message' string
      */
     public function checkQuestionAvailability(array $questionConfig, int $subjectId, array $selectedTopics = [], array $selectedSubtopics = []): array
@@ -27,12 +25,12 @@ class QuestionAvailabilityChecker
 
         // Process each question type configuration
         foreach ($questionConfig as $config) {
-            if (!empty($config['type']) && !empty($config['count']) && $config['count'] > 0) {
+            if (! empty($config['type']) && ! empty($config['count']) && $config['count'] > 0) {
                 $totalRequestedQuestions += $config['count'];
                 $questionTypes[] = [
                     'type' => $config['type'],
                     'count' => $config['count'],
-                    'difficulty' => $config['difficulty'] ?? 'all'
+                    'difficulty' => $config['difficulty'] ?? 'all',
                 ];
             }
         }
@@ -45,14 +43,14 @@ class QuestionAvailabilityChecker
         $availableQuestions = 0;
         $details = [];
 
-        if (!empty($selectedSubtopics)) {
+        if (! empty($selectedSubtopics)) {
             // Count questions in selected subtopics
             foreach ($selectedSubtopics as $subtopicId) {
                 $subtopicQuestions = $this->getQuestionCountForSubtopic($subtopicId, $questionTypes);
                 $availableQuestions += $subtopicQuestions['total'];
                 $details["subtopic_$subtopicId"] = $subtopicQuestions;
             }
-        } elseif (!empty($selectedTopics)) {
+        } elseif (! empty($selectedTopics)) {
             // Count questions in selected topics
             foreach ($selectedTopics as $topicId) {
                 $topicQuestions = $this->getQuestionCountForTopic($topicId, $questionTypes);
@@ -70,7 +68,7 @@ class QuestionAvailabilityChecker
             return [
                 'valid' => false,
                 'message' => "Not enough questions available. Requested: $totalRequestedQuestions, Available: $availableQuestions",
-                'details' => $details
+                'details' => $details,
             ];
         }
 
@@ -79,10 +77,6 @@ class QuestionAvailabilityChecker
 
     /**
      * Get question count for a specific subtopic
-     *
-     * @param int $subtopicId
-     * @param array $questionTypes
-     * @return array
      */
     private function getQuestionCountForSubtopic(int $subtopicId, array $questionTypes): array
     {
@@ -106,15 +100,12 @@ class QuestionAvailabilityChecker
         }
 
         $counts['total'] = $total;
+
         return $counts;
     }
 
     /**
      * Get question count for a specific topic
-     *
-     * @param int $topicId
-     * @param array $questionTypes
-     * @return array
      */
     private function getQuestionCountForTopic(int $topicId, array $questionTypes): array
     {
@@ -123,7 +114,7 @@ class QuestionAvailabilityChecker
 
         $subtopicIds = AcademicSubtopic::where('academic_topic_id', $topicId)->pluck('id')->toArray();
 
-        if (!empty($subtopicIds)) {
+        if (! empty($subtopicIds)) {
             foreach ($questionTypes as $typeConfig) {
                 $type = $typeConfig['type'];
                 $difficulty = $typeConfig['difficulty'];
@@ -142,15 +133,12 @@ class QuestionAvailabilityChecker
         }
 
         $counts['total'] = $total;
+
         return $counts;
     }
 
     /**
      * Get question count for a specific subject
-     *
-     * @param int $subjectId
-     * @param array $questionTypes
-     * @return array
      */
     private function getQuestionCountForSubject(int $subjectId, array $questionTypes): array
     {
@@ -161,7 +149,7 @@ class QuestionAvailabilityChecker
             $query->where('academic_subject_id', $subjectId);
         })->pluck('id')->toArray();
 
-        if (!empty($subtopicIds)) {
+        if (! empty($subtopicIds)) {
             foreach ($questionTypes as $typeConfig) {
                 $type = $typeConfig['type'];
                 $difficulty = $typeConfig['difficulty'];
@@ -180,14 +168,12 @@ class QuestionAvailabilityChecker
         }
 
         $counts['total'] = $total;
+
         return $counts;
     }
 
     /**
      * Get question model class by type
-     *
-     * @param string $type
-     * @return string|null
      */
     private function getQuestionModel(string $type): ?string
     {

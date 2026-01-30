@@ -17,13 +17,21 @@ class ParentLibraryManager extends AppComponent
     use WithPagination;
 
     public $selectedWardId = null;
+
     public $selectedCategoryId = null;
+
     public $searchTerm = '';
+
     public $sortBy = 'title';
+
     public $sortDirection = 'asc';
+
     public $viewMode = 'grid';
+
     public $readingFilter = 'all';
+
     public $showBookReader = false;
+
     public $selectedBookId = null;
 
     public function mount()
@@ -71,6 +79,7 @@ class ParentLibraryManager extends AppComponent
     public function openBookReader($bookId)
     {
         $this->selectedBookId = $bookId;
+
         return redirect()->route('parent.library.read', ['book' => $bookId]);
     }
 
@@ -94,13 +103,13 @@ class ParentLibraryManager extends AppComponent
         $students = StudentParent::where('user_id', Auth::id())
             ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
             ->get()
-            ->flatMap(function($parent) {
+            ->flatMap(function ($parent) {
                 return $parent->students;
             })
             ->unique('id'); // Remove duplicates
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -111,29 +120,32 @@ class ParentLibraryManager extends AppComponent
             SORT_REGULAR, $this->sortDirection === 'desc');
     }
 
-
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::with([
             'user',
-            'academicLevel.academicGroup'
+            'academicLevel.academicGroup',
         ])->find($this->selectedWardId);
     }
 
     #[Computed]
     public function availableBooks()
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
 
         $student = Student::findOrFail($this->selectedWardId);
 
         // Get books that the ward has access to through subscriptions (including parent subscriptions)
-        $subscribedBookIds = BookSubscription::where(function($query) use ($student) {
+        $subscribedBookIds = BookSubscription::where(function ($query) use ($student) {
             $query->where('user_id', $student->user->id)
-                ->orWhere(function($q) use ($student) {
+                ->orWhere(function ($q) use ($student) {
                     $q->where('subscribed_by', auth()->user()->id)
                         ->where('user_id', $student->user->id);
                 });
@@ -145,11 +157,11 @@ class ParentLibraryManager extends AppComponent
             ->whereIn('id', $subscribedBookIds);
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhere('description', 'LIKE', '%' . $this->searchTerm . '%')
-                    ->orWhereHas('author', function($author) {
-                        $author->where('name', 'LIKE', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'LIKE', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('author', function ($author) {
+                        $author->where('name', 'LIKE', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -170,27 +182,31 @@ class ParentLibraryManager extends AppComponent
     #[Computed]
     public function categories()
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
 
         // Get categories of books the ward has access to
         $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
             ->pluck('book_id');
 
-        return BookCategory::whereHas('books', function($query) use ($subscribedBookIds) {
+        return BookCategory::whereHas('books', function ($query) use ($subscribedBookIds) {
             $query->whereIn('id', $subscribedBookIds);
         })
-        ->withCount(['books' => function($query) use ($subscribedBookIds) {
-            $query->whereIn('id', $subscribedBookIds);
-        }])
-        ->orderBy('name')
-        ->get();
+            ->withCount(['books' => function ($query) use ($subscribedBookIds) {
+                $query->whereIn('id', $subscribedBookIds);
+            }])
+            ->orderBy('name')
+            ->get();
     }
 
     #[Computed]
     public function readingStats()
     {
-        if (!$this->selectedWardId) return [];
+        if (! $this->selectedWardId) {
+            return [];
+        }
 
         $subscribedBooks = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
             ->where('status', 'active')
@@ -199,7 +215,7 @@ class ParentLibraryManager extends AppComponent
         return [
             'total_books' => $subscribedBooks,
             'books_read' => rand(5, 15), // Mock data
-            'reading_time' => rand(10, 50) . 'h', // Mock data
+            'reading_time' => rand(10, 50).'h', // Mock data
             'favorite_books' => rand(2, 8), // Mock data
         ];
     }
@@ -207,7 +223,9 @@ class ParentLibraryManager extends AppComponent
     #[Computed]
     public function recentlyRead()
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
 
         // Mock implementation - in real app, track reading history
         $subscribedBookIds = BookSubscription::where('user_id', Student::findOrFail($this->selectedWardId)->user->id)
@@ -223,7 +241,9 @@ class ParentLibraryManager extends AppComponent
     #[Computed]
     public function recommendations()
     {
-        if (!$this->selectedWardId) return collect();
+        if (! $this->selectedWardId) {
+            return collect();
+        }
 
         // Mock implementation - in real app, use recommendation algorithm
         return Book::with(['author'])

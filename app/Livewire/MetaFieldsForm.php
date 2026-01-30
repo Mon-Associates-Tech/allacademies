@@ -2,15 +2,18 @@
 
 namespace App\Livewire;
 
-
 use Livewire\Component;
 
 class MetaFieldsForm extends Component
 {
     public array $selectedOptions = [];
+
     public int $pagesCount = 1;
+
     public int $spacesCount = 1;
+
     public $file;
+
     public $image;
 
     public function render()

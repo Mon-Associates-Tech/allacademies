@@ -7,101 +7,119 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage payment account details for receiving funds</p>
             </div>
 
-            @if(!$model->subaccount)
-                <button wire:click="createAccount" type="button"
-                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Account
-                </button>
-            @endif
+            <button wire:click="createAccount" type="button"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Account
+            </button>
         </div>
 
         <!-- Current Account Display -->
-        @if($model->subaccount)
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-white font-semibold text-lg">Payment Account</h4>
-                                <p class="text-green-100 text-sm">Active & Verified</p>
+        @if(count($subaccounts) > 0)
+            <div class="space-y-4">
+                @foreach($subaccounts as $account)
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="bg-gradient-to-r {{ $account['is_primary'] ? 'from-green-500 to-emerald-600' : 'from-blue-500 to-cyan-600' }} px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-white font-semibold text-lg">
+                                            {{ $account['name'] ?? $account['business_name'] ?? 'Payment Account' }}
+                                        </h4>
+                                        <p class="{{ $account['is_primary'] ? 'text-green-100' : 'text-blue-100' }} text-sm">
+                                            {{ $account['status'] === 'active' ? 'Active & Verified' : 'Inactive' }}
+                                        </p>
+                                    </div>
+                                </div>
+                                @if($account['is_primary'])
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20 text-white backdrop-blur-sm">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Primary
+                                    </span>
+                                @endif
                             </div>
                         </div>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20 text-white backdrop-blur-sm">
-                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            Primary
-                        </span>
+
+                        <div class="p-6">
+                            <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account Name</dt>
+                                    <dd class="text-base font-semibold text-gray-900 dark:text-white">
+                                        {{ $account['business_name'] }}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Bank Name</dt>
+                                    <dd class="text-base font-semibold text-gray-900 dark:text-white">
+                                        {{ $account['bank'] }}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account Number</dt>
+                                    <dd class="text-base font-semibold text-gray-900 dark:text-white font-mono">
+                                        {{ $account['account_number'] }}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Bank Code</dt>
+                                    <dd class="text-base font-semibold text-gray-900 dark:text-white font-mono">
+                                        {{ $account['bank_code'] }}
+                                    </dd>
+                                </div>
+
+                                @if($account['subaccount_code'])
+                                    <div class="md:col-span-2">
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Subaccount Code</dt>
+                                        <dd class="text-sm font-mono text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg inline-block">
+                                            {{ $account['subaccount_code'] }}
+                                        </dd>
+                                    </div>
+                                @endif
+                            </dl>
+
+                            <!-- Action Buttons -->
+                            <div class="mt-6 flex items-center space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                @if(!$account['is_primary'])
+                                    <button wire:click="setPrimarySubaccount({{ $account['id'] }})" type="button"
+                                            class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Make Primary
+                                    </button>
+                                @endif
+
+                                <button wire:click="openEditModal({{ $account['id'] }})" type="button"
+                                        class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Edit Account
+                                </button>
+
+                                <button wire:click="deleteAccount({{ $account['id'] }})" wire:confirm="Are you sure you want to remove this account? This action cannot be undone." type="button"
+                                        class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-600 rounded-lg text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Remove Account
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="p-6">
-                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account Name</dt>
-                            <dd class="text-base font-semibold text-gray-900 dark:text-white">
-                                {{ $model->subaccount->business_name }}
-                            </dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Bank Name</dt>
-                            <dd class="text-base font-semibold text-gray-900 dark:text-white">
-                                {{ $model->subaccount->settlement_bank }}
-                            </dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account Number</dt>
-                            <dd class="text-base font-semibold text-gray-900 dark:text-white font-mono">
-                                {{ $model->subaccount->account_number }}
-                            </dd>
-                        </div>
-
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Bank Code</dt>
-                            <dd class="text-base font-semibold text-gray-900 dark:text-white font-mono">
-                                {{ $model->subaccount->bank_code }}
-                            </dd>
-                        </div>
-
-                        @if($model->subaccount->subaccount_code)
-                            <div class="md:col-span-2">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Subaccount Code</dt>
-                                <dd class="text-sm font-mono text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg inline-block">
-                                    {{ $model->subaccount->subaccount_code }}
-                                </dd>
-                            </div>
-                        @endif
-                    </dl>
-
-                    <!-- Action Buttons -->
-                    <div class="mt-6 flex items-center space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <button wire:click="editAccount" type="button"
-                                class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Edit Account
-                        </button>
-
-                        <button wire:click="deleteAccount" wire:confirm="Are you sure you want to remove this account? This action cannot be undone." type="button"
-                                class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-600 rounded-lg text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Remove Account
-                        </button>
-                    </div>
-                </div>
+                @endforeach
             </div>
 
             <!-- Account Information Notice -->
@@ -114,8 +132,9 @@
                         <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Account Information</h3>
                         <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
                             <ul class="list-disc list-inside space-y-1">
-                                <li>This account will be used to receive payments</li>
-                                <li>Ensure the account details are accurate to avoid payment delays</li>
+                                <li>The primary account will be used to receive payments by default</li>
+                                <li>You can add multiple accounts and switch between them</li>
+                                <li>Ensure all account details are accurate to avoid payment delays</li>
                                 <li>Changes to account information may take 24-48 hours to reflect</li>
                             </ul>
                         </div>

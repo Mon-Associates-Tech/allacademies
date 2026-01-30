@@ -25,12 +25,12 @@ class VirtualSessionReminderNotification extends Notification implements ShouldQ
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Reminder: ' . $this->session->title . ' starts in ' . $this->minutesBefore . ' minutes')
-            ->greeting('Hello ' . $notifiable->name . '!')
+            ->subject('Reminder: '.$this->session->title.' starts in '.$this->minutesBefore.' minutes')
+            ->greeting('Hello '.$notifiable->name.'!')
             ->line('This is a reminder that your virtual classroom session is starting soon.')
-            ->line('**Session:** ' . $this->session->title)
-            ->line('**Teacher:** ' . $this->session->teacher->user->name)
-            ->line('**Starts at:** ' . $this->session->scheduled_start->format('g:i A'))
+            ->line('**Session:** '.$this->session->title)
+            ->line('**Teacher:** '.$this->session->teacher->user->name)
+            ->line('**Starts at:** '.$this->session->scheduled_start->format('g:i A'))
             ->action('Join Session', route('students.classroom.sessions'))
             ->line('See you there!');
     }

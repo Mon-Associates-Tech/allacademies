@@ -13,17 +13,23 @@ class BookReviews extends Component
     use WithPagination;
 
     public Book $book;
+
     public $showReviewForm = false;
+
     public $editingReview = null;
 
     // Review form fields
     public $rating = 0;
+
     public $reviewTitle = '';
+
     public $reviewContent = '';
 
     // Filters and sorting
     public $sortBy = 'newest';
+
     public $filterByRating = 'all';
+
     public $perPage = 5;
 
     public function mount(Book $book)
@@ -96,21 +102,21 @@ class BookReviews extends Component
 
     public function toggleReviewForm()
     {
-        if (!auth()->check()) {
-            return redirect()->route('sign-in');
+        if (! auth()->check()) {
+            return redirect()->route('login');
         }
 
-        $this->showReviewForm = !$this->showReviewForm;
+        $this->showReviewForm = ! $this->showReviewForm;
 
-        if (!$this->showReviewForm) {
+        if (! $this->showReviewForm) {
             $this->resetReviewForm();
         }
     }
 
     public function submitReview()
     {
-        if (!auth()->check()) {
-            return redirect()->route('sign-in');
+        if (! auth()->check()) {
+            return redirect()->route('login');
         }
 
         $this->validate([
@@ -176,8 +182,8 @@ class BookReviews extends Component
 
     public function toggleHelpful($reviewId)
     {
-        if (!auth()->check()) {
-            return redirect()->route('sign-in');
+        if (! auth()->check()) {
+            return redirect()->route('login');
         }
 
         $review = BookReview::find($reviewId);
@@ -187,7 +193,7 @@ class BookReviews extends Component
             $this->dispatch('helpful-toggled', [
                 'reviewId' => $reviewId,
                 'wasHelpful' => $wasHelpful,
-                'helpfulCount' => $review->helpful_count
+                'helpfulCount' => $review->helpful_count,
             ]);
         }
     }
@@ -204,7 +210,7 @@ class BookReviews extends Component
 
     private function resetReviewForm()
     {
-        if (!$this->editingReview) {
+        if (! $this->editingReview) {
             $this->rating = 0;
             $this->reviewTitle = '';
             $this->reviewContent = '';
@@ -219,9 +225,9 @@ class BookReviews extends Component
             ->where('status', 'paid')
             ->exists() ||
             $this->book->borrowings()
-            ->where('user_id', $user->id)
-            ->whereNotNull('borrow_date')
-            ->exists();
+                ->where('user_id', $user->id)
+                ->whereNotNull('borrow_date')
+                ->exists();
     }
 
     public function loadMoreReviews()

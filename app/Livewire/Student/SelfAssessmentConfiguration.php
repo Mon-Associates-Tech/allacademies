@@ -22,30 +22,45 @@ class SelfAssessmentConfiguration extends Component
 
     // Setup phase
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $difficulty = 'all';
+
     public $timeLimitMinutes = null;
 
     // Assessment phase
     public $currentQuestionIndex = 0;
+
     public $questions = [];
+
     public $responses = [];
+
     public $assessment = null;
+
     public $timeRemaining = null;
+
     public $timeLimitSeconds = 0;
+
     public $startTime = null;
 
     // Results phase
     public $assessmentResult = null;
+
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
 
     protected $rules = [
@@ -57,8 +72,9 @@ class SelfAssessmentConfiguration extends Component
     {
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $this->subjects = collect();
+
             return;
         }
 
@@ -69,7 +85,7 @@ class SelfAssessmentConfiguration extends Component
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'accessed_self_assessment',
-                'page' => 'self-assessment'
+                'page' => 'self-assessment',
             ])
             ->log('Student accessed self-assessment page');
     }
@@ -94,22 +110,22 @@ class SelfAssessmentConfiguration extends Component
 
         // Merge individual subjects, removing duplicates
         foreach ($individualSubjects as $subject) {
-            if (!$this->subjects->contains('id', $subject->id)) {
+            if (! $this->subjects->contains('id', $subject->id)) {
                 $this->subjects->push($subject);
             }
         }
 
         // Remove subjects that are individually marked as inactive
         $removedSubjects = $student->individualSubjects()
-            ->wherePivot('is_active', true) //this is supposed to be false, just testing now
+            ->wherePivot('is_active', true) // this is supposed to be false, just testing now
             ->pluck('academic_subjects.id');
 
         $this->subjects = $this->subjects->reject(function ($subject) use ($removedSubjects) {
             return $removedSubjects->contains($subject->id);
         });
 
-        if(count($this->subjects) === 0) {
-           $this->subjects = Subject::get();
+        if (count($this->subjects) === 0) {
+            $this->subjects = Subject::get();
         }
     }
 
@@ -140,7 +156,7 @@ class SelfAssessmentConfiguration extends Component
         $this->validate();
 
         // Validate question type combinations
-        if (!$this->validateQuestionTypeCombinations()) {
+        if (! $this->validateQuestionTypeCombinations()) {
             return;
         }
 
@@ -153,12 +169,14 @@ class SelfAssessmentConfiguration extends Component
 
         if (empty($selectedTypes)) {
             session()->flash('error', 'Please select at least one question type.');
+
             return false;
         }
 
         // If essay is selected, it must be the only type
         if ($this->questionTypes['essay_question'] && count($selectedTypes) > 1) {
             session()->flash('error', 'Essay questions cannot be combined with other question types.');
+
             return false;
         }
 
@@ -170,7 +188,7 @@ class SelfAssessmentConfiguration extends Component
         $config = $this->getConfigurationArray();
         Log::info('Starting self-assessment with configuration', [
             'config' => $config,
-            'student_id' => auth()->user()->student->id
+            'student_id' => auth()->user()->student->id,
         ]);
 
         // Create assessment record
@@ -273,7 +291,7 @@ class SelfAssessmentConfiguration extends Component
         Log::info('Generated questions for self-assessment', [
             'assessment_id' => $this->assessment->id,
             'question_count' => count($this->questions),
-            'question_types' => array_keys($selectedTypes)
+            'question_types' => array_keys($selectedTypes),
         ]);
     }
 
@@ -289,7 +307,7 @@ class SelfAssessmentConfiguration extends Component
                 'type' => 'essay_question',
                 'model' => $question,
                 'points' => $question->score ?? 5,
-                'difficulty_level' => $question->difficulty_level ?? 'medium'
+                'difficulty_level' => $question->difficulty_level ?? 'medium',
             ];
         });
     }
@@ -307,14 +325,14 @@ class SelfAssessmentConfiguration extends Component
                 'type' => $type,
                 'model' => $question,
                 'points' => $question->score ?? 1,
-                'difficulty_level' => $question->difficulty_level ?? 'medium'
+                'difficulty_level' => $question->difficulty_level ?? 'medium',
             ];
         });
     }
 
     private function getQuestionModelClass($type): string
     {
-        return match($type) {
+        return match ($type) {
             'multiple_choice_question' => MultipleChoiceQuestion::class,
             'true_or_false_question' => TrueOrFalseQuestion::class,
             'essay_question' => EssayQuestion::class,
@@ -325,7 +343,7 @@ class SelfAssessmentConfiguration extends Component
     private function applyFilters($query): void
     {
         if ($this->selectedSubject) {
-//            $query->where('academic_subject_id', $this->selectedSubject);
+            //            $query->where('academic_subject_id', $this->selectedSubject);
         }
 
         if ($this->selectedTopic) {
@@ -369,7 +387,6 @@ class SelfAssessmentConfiguration extends Component
             ])
             ->log('Student started self-assessment');
     }
-
 
     public function render()
     {

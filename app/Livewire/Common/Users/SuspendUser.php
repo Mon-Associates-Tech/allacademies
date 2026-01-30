@@ -3,16 +3,19 @@
 namespace App\Livewire\Common\Users;
 
 use App\Models\User;
-use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Component;
 
 class SuspendUser extends Component
 {
     use AuthorizesRequests;
 
     public $userId;
+
     public $userName;
+
     public $reason = '';
+
     public $showConfirmation = false;
 
     protected $rules = [
@@ -41,6 +44,7 @@ class SuspendUser extends Component
             if ($user->id === auth()->id()) {
                 session()->flash('error', 'You cannot suspend your own account.');
                 $this->dispatch('close-modal', name: 'suspend-user');
+
                 return;
             }
 
@@ -52,7 +56,7 @@ class SuspendUser extends Component
                 'suspended_by' => auth()->id(),
             ]);
 
-            session()->flash('success', 'User ' . $this->userName . ' has been suspended successfully.');
+            session()->flash('success', 'User '.$this->userName.' has been suspended successfully.');
             $this->dispatch('userSuspended');
             $this->dispatch('close-modal', name: 'suspend-user');
         } catch (\Exception $e) {

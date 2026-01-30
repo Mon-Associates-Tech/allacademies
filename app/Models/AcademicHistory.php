@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class AcademicHistory extends Model
 {
@@ -19,12 +19,12 @@ class AcademicHistory extends Model
         'academic_period',
         'achievement_score',
         'notes',
-        'supporting_documents'
+        'supporting_documents',
     ];
 
     protected $casts = [
         'recorded_date' => 'datetime',
-        'supporting_documents' => 'array'
+        'supporting_documents' => 'array',
     ];
 
     // Relationship with Student

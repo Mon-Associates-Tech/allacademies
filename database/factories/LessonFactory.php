@@ -4,8 +4,8 @@ namespace Database\Factories;
 
 use App\Models\AcademicSubject;
 use App\Models\Lesson;
-use App\Models\Teacher;
 use App\Models\StudentGroup;
+use App\Models\Teacher;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class LessonFactory extends Factory

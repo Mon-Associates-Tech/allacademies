@@ -12,7 +12,9 @@ class UserImpersonation extends Component
     use WithPagination;
 
     public $search = '';
+
     public $selectedRole = '';
+
     public $showModal = false;
 
     protected $queryString = ['search', 'selectedRole'];
@@ -43,8 +45,8 @@ class UserImpersonation extends Component
     {
         $users = User::query()
             ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%');
+                $query->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('email', 'like', '%'.$this->search.'%');
             })
             ->when($this->selectedRole, function ($query) {
                 $query->where('role', $this->selectedRole);
@@ -54,7 +56,7 @@ class UserImpersonation extends Component
             ->orderBy('name')
             ->paginate(10);
 
-        $roles = ['student', 'teacher', 'librarian', 'author', 'parent', 'moderator', 'subscriber'];
+        $roles = ['student', 'teacher', 'librarian', 'author', 'parent', 'moderator', 'guest'];
 
         return view('livewire.administrators.user-impersonation', compact('users', 'roles'));
     }

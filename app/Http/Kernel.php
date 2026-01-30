@@ -42,8 +42,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             ApplyUserPreferences::class,
-//            \App\Http\Middleware\SchoolContextMiddleware::class,
-//            \App\Http\Middleware\AutomaticSchoolScoping::class,
+            //            \App\Http\Middleware\SchoolContextMiddleware::class,
+            //            \App\Http\Middleware\AutomaticSchoolScoping::class,
         ],
 
         'api' => [
@@ -78,5 +78,6 @@ class Kernel extends HttpKernel
         'chat.rate.limit' => \App\Http\Middleware\AcademicChatRateLimit::class,
         'school.scope' => \App\Http\Middleware\AutomaticSchoolScoping::class,
         'assignment.session' => \App\Http\Middleware\AssignmentSessionMiddleware::class,
+        'token.subscription' => \App\Http\Middleware\CheckTokenSubscription::class,
     ];
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\School;
@@ -16,6 +15,7 @@ class BaseSchoolController extends Controller
 
         $this->middleware(function ($request, $next) {
             $this->school = app('current_school');
+
             return $next($request);
         });
     }
@@ -30,7 +30,7 @@ class BaseSchoolController extends Controller
         }
 
         // Check school-specific permissions
-        if (!$user->canAccessSchool($this->school->id)) {
+        if (! $user->canAccessSchool($this->school->id)) {
             abort(403);
         }
 

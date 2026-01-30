@@ -7,7 +7,6 @@ use App\Http\Requests\TrueOrFalseQuestionRequest;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\TrueOrFalseQuestion;
 use Illuminate\Contracts\Foundation\Application;
@@ -18,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 class TrueOrFalseQuestionController extends Controller
 {
     use HasSubtopic;
+
     /**
      * Display a listing of the resource.
      *
@@ -39,13 +39,6 @@ class TrueOrFalseQuestionController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param TrueOrFalseQuestionRequest $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestionRequest $request): RedirectResponse
     {
@@ -82,14 +75,9 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param TrueOrFalseQuestion $trueOrFalseQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic,TrueOrFalseQuestion $trueOrFalseQuestion)
+    public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $trueOrFalseQuestion)
     {
         $this->authorize('moderate');
 
@@ -104,11 +92,6 @@ class TrueOrFalseQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param TrueOrFalseQuestion $trueOrFalseQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $trueOrFalseQuestion)
@@ -125,14 +108,6 @@ class TrueOrFalseQuestionController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param TrueOrFalseQuestionRequest $request
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param TrueOrFalseQuestion $true_or_false_question
-     * @return RedirectResponse
      */
     public function update(TrueOrFalseQuestionRequest $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $true_or_false_question): RedirectResponse
     {
@@ -148,13 +123,6 @@ class TrueOrFalseQuestionController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param TrueOrFalseQuestion $trueOrFalseQuestion
-     * @return RedirectResponse
      */
     public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, TrueOrFalseQuestion $trueOrFalseQuestion): RedirectResponse
     {

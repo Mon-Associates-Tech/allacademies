@@ -28,47 +28,91 @@ class BookMedia extends Model
 
     public function getSingleAudioAttribute(): ?string
     {
-        return $this->attributes['single_audio']
-            ? asset('storage/' . $this->attributes['single_audio'])
-            : null; // asset('/media/audio/great-expectations-sample.mp3');
+        if (! $this->attributes['single_audio']) {
+            return null;
+        }
+
+        $path = $this->attributes['single_audio'];
+
+        return str_starts_with($path, 'http') ? $path : asset('storage/'.$path);
     }
 
     public function getSingleVideoAttribute(): ?string
     {
-        return $this->attributes['single_video']
-            ? asset('storage/' . $this->attributes['single_video'])
-            : null; // asset('/media/video/the_ultimate_gift.mp4');
+        if (! $this->attributes['single_video']) {
+            return null;
+        }
+
+        $path = $this->attributes['single_video'];
+
+        return str_starts_with($path, 'http') ? $path : asset('storage/'.$path);
     }
 
-    // public function getChapterAudiosAttribute(): array
-    // {
-    //     $files = $this->attributes['chapter_audios'] ?? [];
-    //     if(is_array($files)){
-    //         return array_map(function($file) {
-    //             return asset('storage/' . $file);
-    //         }, $files);
-    //     }
-    //   return [];
-    // }
+    public function getChapterAudiosAttribute(): array
+    {
+        $files = $this->attributes['chapter_audios'] ?? [];
 
-public function getChapterAudiosAttribute(): array
-{
-    $files = $this->attributes['chapter_audios'] ?? [];
-    if (!is_array($files)) {
-        return [];
+        if (is_string($files)) {
+            $files = json_decode($files, true) ?? [];
+        }
+
+        if (! is_array($files)) {
+            return [];
+        }
+
+        return array_map(function ($item) {
+            // New format: {chapter: 1, file: 'path/to/file.mp3', title: 'Chapter Title'}
+            if (is_array($item) && isset($item['file'])) {
+                $item['url'] = str_starts_with($item['file'], 'http')
+                    ? $item['file']
+                    : asset('storage/'.$item['file']);
+
+                return $item;
+            }
+
+            // Legacy format: just file path
+            if (is_string($item)) {
+                return [
+                    'file' => $item,
+                    'url' => str_starts_with($item, 'http') ? $item : asset('storage/'.$item),
+                ];
+            }
+
+            return $item;
+        }, $files);
     }
-
-    return array_map(fn($file) => asset('storage/' . $file), $files);
-}
 
     public function getChapterVideosAttribute(): array
     {
         $files = $this->attributes['chapter_videos'] ?? [];
-        if(is_array($files)){
-            return array_map(function($file) {
-                return asset('storage/' . $file);
-            }, $files);
+
+        if (is_string($files)) {
+            $files = json_decode($files, true) ?? [];
         }
-       return [];
+
+        if (! is_array($files)) {
+            return [];
+        }
+
+        return array_map(function ($item) {
+            // New format: {chapter: 1, file: 'path/to/file.mp4', title: 'Chapter Title'}
+            if (is_array($item) && isset($item['file'])) {
+                $item['url'] = str_starts_with($item['file'], 'http')
+                    ? $item['file']
+                    : asset('storage/'.$item['file']);
+
+                return $item;
+            }
+
+            // Legacy format: just file path
+            if (is_string($item)) {
+                return [
+                    'file' => $item,
+                    'url' => str_starts_with($item, 'http') ? $item : asset('storage/'.$item),
+                ];
+            }
+
+            return $item;
+        }, $files);
     }
 }

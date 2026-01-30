@@ -9,8 +9,8 @@ use Livewire\WithFileUploads;
 
 class ExaminationSections extends Component
 {
-
     use withFileUploads;
+
     public array $topics;
 
     public array $sections;
@@ -18,11 +18,12 @@ class ExaminationSections extends Component
     public array $subtopics;
 
     public array $instructions;
+
     public array $metafields = [];
 
     public array $selectedOptions = [];
 
-    public function plus():void
+    public function plus(): void
     {
         $this->sections[] = [
             'name' => '',
@@ -35,7 +36,7 @@ class ExaminationSections extends Component
         ];
     }
 
-    public function minus():void
+    public function minus(): void
     {
         array_pop($this->sections);
     }
@@ -44,7 +45,7 @@ class ExaminationSections extends Component
     {
         $this->topics = $topics;
 
-        $this->sections = old('sections',  [
+        $this->sections = old('sections', [
             ['name' => '', 'type' => '', 'count' => '', 'topics' => [], 'instructions' => '', 'subtopics' => [], 'metafields' => []],
         ]);
     }
@@ -54,14 +55,14 @@ class ExaminationSections extends Component
         return view('livewire.examination-sections');
     }
 
-    public function countQuestions(AcademicTopic $topic, mixed $type):int
+    public function countQuestions(AcademicTopic $topic, mixed $type): int
     {
-        return $topic[$type . '_count'] ?? 0;
+        return $topic[$type.'_count'] ?? 0;
     }
 
-    public function countSubQuestions(AcademicSubtopic $subtopic, mixed $type):int
+    public function countSubQuestions(AcademicSubtopic $subtopic, mixed $type): int
     {
-        return $subtopic[$type . '_count'] ?? 0;
+        return $subtopic[$type.'_count'] ?? 0;
     }
 
     public function addMetafield()
@@ -80,7 +81,7 @@ class ExaminationSections extends Component
         $this->sections = array_values($this->sections);
     }
 
-    public function __construct(int $id = null)
+    public function __construct(?int $id = null)
     {
         $this->metafields[] = [
             'option' => null,
@@ -89,5 +90,4 @@ class ExaminationSections extends Component
             'file' => null,
         ];
     }
-
 }

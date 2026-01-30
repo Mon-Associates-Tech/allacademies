@@ -101,7 +101,7 @@
                                 {{ $user->role->value === 'librarian' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}
                                 {{ $user->role->value === 'author' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
                                 {{ $user->role->value === 'parent' ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200' : '' }}
-                                {{ in_array($user->role->value, ['moderator', 'subscriber']) ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : '' }}">
+                                {{ in_array($user->role->value, ['moderator', 'guest']) ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : '' }}">
                                 {{ ucfirst($user->role->value) }}
                             </span>
                         </td>

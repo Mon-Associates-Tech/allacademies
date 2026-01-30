@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Channels\SmsChannel;
+use App\Contracts\SmsProvider;
 use App\Livewire\Common\AppModal;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
@@ -12,6 +14,7 @@ use App\Models\Attendance\AttendanceRecord;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
+use App\Models\CalendarEvent;
 use App\Models\ChatGroup;
 use App\Models\EssayQuestion;
 use App\Models\Examination;
@@ -30,6 +33,7 @@ use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
 use App\Models\UserBook;
 use App\Services\ErrorNotificationService;
+use App\Services\Sms\NullSmsProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Blade;
@@ -46,7 +50,25 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton(ErrorNotificationService::class, function ($app) {
-            return new ErrorNotificationService();
+            return new ErrorNotificationService;
+        });
+
+        // Register SMS Provider - defaults to NullSmsProvider
+        // Replace with actual provider (Twilio, Nexmo, etc.) when configured
+        $this->app->singleton(SmsProvider::class, function ($app) {
+            // Future: Check config to determine which provider to use
+            // $provider = config('services.sms.provider');
+            // return match($provider) {
+            //     'twilio' => new TwilioSmsProvider(),
+            //     'nexmo' => new NexmoSmsProvider(),
+            //     default => new NullSmsProvider(),
+            // };
+            return new NullSmsProvider;
+        });
+
+        // Register SMS Channel with the provider
+        $this->app->singleton(SmsChannel::class, function ($app) {
+            return new SmsChannel($app->make(SmsProvider::class));
         });
     }
 
@@ -117,6 +139,7 @@ class AppServiceProvider extends ServiceProvider
             'studentIdCard' => \App\Models\StudentIdCard::class,
             'report_card' => \App\Models\ReportCard::class,
             'note' => Note::class,
+            'calendar_event' => CalendarEvent::class,
 
         ]);
     }

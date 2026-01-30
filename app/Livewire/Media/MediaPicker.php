@@ -2,24 +2,32 @@
 
 namespace App\Livewire\Media;
 
-use Livewire\Component;
 use App\Models\MediaFile;
 use App\Models\MediaFolder;
 use App\Services\MediaService;
+use Livewire\Component;
 
 class MediaPicker extends Component
 {
     public $isOpen = false;
+
     public $multiple = false;
+
     public $selectedMediaIds = [];
+
     public $currentFolderId = null;
+
     public $search = '';
+
     public $filterMimeType = '';
+
     public $acceptedTypes = []; // Array of mime types to filter by
 
     // Data
     public $folders = [];
+
     public $files = [];
+
     public $breadcrumb = [];
 
     // Events to emit back to parent
@@ -58,11 +66,11 @@ class MediaPicker extends Component
     public function refreshContent()
     {
         $filters = [
-            'search' => $this->search
+            'search' => $this->search,
         ];
 
         // Apply accepted types filter
-        if (!empty($this->acceptedTypes)) {
+        if (! empty($this->acceptedTypes)) {
             if (in_array('image', $this->acceptedTypes)) {
                 $filters['mime_type'] = 'image';
             } elseif (in_array('video', $this->acceptedTypes)) {
@@ -80,7 +88,7 @@ class MediaPicker extends Component
         $this->files = $content['files'];
 
         // Apply additional accepted types filtering if needed
-        if (!empty($this->acceptedTypes)) {
+        if (! empty($this->acceptedTypes)) {
             $this->files = $this->files->filter(function ($file) {
                 foreach ($this->acceptedTypes as $type) {
                     if ($type === 'image' && $file->isImage()) {
@@ -96,6 +104,7 @@ class MediaPicker extends Component
                         return true;
                     }
                 }
+
                 return false;
             });
         }
@@ -113,7 +122,7 @@ class MediaPicker extends Component
     {
         if ($this->multiple) {
             if (in_array($mediaId, $this->selectedMediaIds)) {
-                $this->selectedMediaIds = array_filter($this->selectedMediaIds, fn($id) => $id !== $mediaId);
+                $this->selectedMediaIds = array_filter($this->selectedMediaIds, fn ($id) => $id !== $mediaId);
             } else {
                 $this->selectedMediaIds[] = $mediaId;
             }

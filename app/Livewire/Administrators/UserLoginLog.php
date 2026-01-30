@@ -11,6 +11,7 @@ class UserLoginLog extends Component
     use WithPagination;
 
     public $searchTerm = '';
+
     public $userId = null;
 
     public function render()
@@ -33,7 +34,7 @@ class UserLoginLog extends Component
             ->paginate(15);
 
         return view('livewire.administrators.user-logins', [
-            'activities' => $activities
+            'activities' => $activities,
         ]);
     }
 }

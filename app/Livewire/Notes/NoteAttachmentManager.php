@@ -15,9 +15,13 @@ class NoteAttachmentManager extends Component
     use WithFileUploads;
 
     public Note $note;
+
     public array $attachments = [];
+
     public array $tempAttachments = [];
+
     public bool $uploading = false;
+
     public int $uploadProgress = 0;
 
     protected $rules = [
@@ -45,17 +49,18 @@ class NoteAttachmentManager extends Component
             // Validate file type
             $extension = strtolower($attachment->getClientOriginalExtension());
             $allowedExtensions = ['pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar', '7z', 'jpg', 'jpeg', 'png', 'gif'];
-            
-            if (!in_array($extension, $allowedExtensions)) {
+
+            if (! in_array($extension, $allowedExtensions)) {
                 $this->dispatch('notify', [
                     'type' => 'error',
-                    'message' => "File type '.{$extension}' is not allowed."
+                    'message' => "File type '.{$extension}' is not allowed.",
                 ]);
+
                 continue;
             }
 
             $tempId = (string) Str::uuid();
-            $tempFilename = $tempId . '.' . $extension;
+            $tempFilename = $tempId.'.'.$extension;
             $tempPath = $attachment->storeAs('temp-note-attachments', $tempFilename, 'public');
 
             $this->tempAttachments[] = [
@@ -85,7 +90,7 @@ class NoteAttachmentManager extends Component
         }
 
         $this->tempAttachments = array_values(
-            array_filter($this->tempAttachments, fn($att) => (string) $att['id'] !== $attachmentId)
+            array_filter($this->tempAttachments, fn ($att) => (string) $att['id'] !== $attachmentId)
         );
     }
 
@@ -94,8 +99,9 @@ class NoteAttachmentManager extends Component
         if (empty($this->tempAttachments)) {
             $this->dispatch('notify', [
                 'type' => 'warning',
-                'message' => 'No attachments to save.'
+                'message' => 'No attachments to save.',
             ]);
+
             return;
         }
 
@@ -103,12 +109,12 @@ class NoteAttachmentManager extends Component
         $saved = 0;
 
         foreach ($this->tempAttachments as $attachment) {
-            if (!isset($attachment['temp_path']) || !Storage::disk('public')->exists($attachment['temp_path'])) {
+            if (! isset($attachment['temp_path']) || ! Storage::disk('public')->exists($attachment['temp_path'])) {
                 continue;
             }
 
-            $filename = (string) Str::uuid() . '.' . $attachment['extension'];
-            $finalPath = 'note-attachments/' . $filename;
+            $filename = (string) Str::uuid().'.'.$attachment['extension'];
+            $finalPath = 'note-attachments/'.$filename;
 
             Storage::disk('public')->move($attachment['temp_path'], $finalPath);
 
@@ -130,7 +136,7 @@ class NoteAttachmentManager extends Component
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => "{$saved} " . Str::plural('attachment', $saved) . " uploaded successfully."
+            'message' => "{$saved} ".Str::plural('attachment', $saved).' uploaded successfully.',
         ]);
 
         $this->dispatch('attachments-updated');
@@ -140,20 +146,22 @@ class NoteAttachmentManager extends Component
     {
         $attachment = NoteAttachment::find($attachmentId);
 
-        if (!$attachment || $attachment->note_id !== $this->note->id) {
+        if (! $attachment || $attachment->note_id !== $this->note->id) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Attachment not found.'
+                'message' => 'Attachment not found.',
             ]);
+
             return;
         }
 
         // Check permissions
-        if (!$this->note->canUserEdit(Auth::id())) {
+        if (! $this->note->canUserEdit(Auth::id())) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'You do not have permission to delete this attachment.'
+                'message' => 'You do not have permission to delete this attachment.',
             ]);
+
             return;
         }
 
@@ -162,7 +170,7 @@ class NoteAttachmentManager extends Component
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Attachment deleted successfully.'
+            'message' => 'Attachment deleted successfully.',
         ]);
 
         $this->dispatch('attachments-updated');
@@ -171,11 +179,11 @@ class NoteAttachmentManager extends Component
     protected function formatFileSize($bytes): string
     {
         if ($bytes < 1024) {
-            return $bytes . ' B';
+            return $bytes.' B';
         } elseif ($bytes < 1048576) {
-            return round($bytes / 1024, 1) . ' KB';
+            return round($bytes / 1024, 1).' KB';
         } else {
-            return round($bytes / 1048576, 1) . ' MB';
+            return round($bytes / 1048576, 1).' MB';
         }
     }
 

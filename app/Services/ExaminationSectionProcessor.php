@@ -10,9 +10,10 @@ class ExaminationSectionProcessor
     public function processAllSections(array $sections): array
     {
         return array_map(function ($section) {
-            if (!isset($section['document'])) {
+            if (! isset($section['document'])) {
                 return $section; // Return unmodified section if no document
             }
+
             return $this->processSection($section);
         }, $sections);
     }
@@ -21,11 +22,11 @@ class ExaminationSectionProcessor
     {
         $processedSection = $section; // Keep all original section data
 
-        if (!isset($section['document'])) {
+        if (! isset($section['document'])) {
             return $processedSection;
         }
 
-        $path = storage_path('app/public/' . $section['document']);
+        $path = storage_path('app/public/'.$section['document']);
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         $processedSection['extension'] = $ext;
@@ -33,27 +34,27 @@ class ExaminationSectionProcessor
         $processedSection['pdf_images'] = [];
 
         // Only process if file exists
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return $processedSection;
         }
 
         // Process Word documents
         if (in_array($ext, ['doc', 'docx'])) {
-           // try {
-                $processedSection['document'] = $this->processWordDocument($path);
-//            } catch (\Exception $e) {
-//                // Keep original document if processing fails
-//                $processedSection['document'] = $section['document'];
-//            }
+            // try {
+            $processedSection['document'] = $this->processWordDocument($path);
+            //            } catch (\Exception $e) {
+            //                // Keep original document if processing fails
+            //                $processedSection['document'] = $section['document'];
+            //            }
         }
 
         // Process PDF documents
         if ($ext === 'pdf') {
-          //  try {
-                $processedSection['pdf_images'] = $this->processPdfDocument($path);
-          //  } catch (\Exception $e) {
-              ////  $processedSection['pdf_images'] = [];
-          //  }
+            //  try {
+            $processedSection['pdf_images'] = $this->processPdfDocument($path);
+            //  } catch (\Exception $e) {
+            // //  $processedSection['pdf_images'] = [];
+            //  }
         }
 
         return $processedSection;
@@ -67,7 +68,7 @@ class ExaminationSectionProcessor
         foreach ($phpWord->getSections() as $section) {
             foreach ($section->getElements() as $element) {
                 if (method_exists($element, 'getText')) {
-                    $docxText .= $element->getText() . "\n";
+                    $docxText .= $element->getText()."\n";
                 }
             }
         }
@@ -79,21 +80,21 @@ class ExaminationSectionProcessor
     {
         $outputDir = storage_path('app/public/pdf_pages');
 
-        if (!file_exists($outputDir)) {
+        if (! file_exists($outputDir)) {
             mkdir($outputDir, 0755, true);
         }
 
-        $imagick = new Imagick();
+        $imagick = new Imagick;
         $imagick->setResolution(300, 300);
         $imagick->readImage($path);
 
         $images = [];
         foreach ($imagick as $i => $page) {
             $page->setImageFormat('jpg');
-            $filename = 'pdf_page_' . $i . '.jpg';
-            $outputPath = $outputDir . '/' . $filename;
+            $filename = 'pdf_page_'.$i.'.jpg';
+            $outputPath = $outputDir.'/'.$filename;
             $page->writeImage($outputPath);
-            $images[] = 'pdf_pages/' . $filename;
+            $images[] = 'pdf_pages/'.$filename;
         }
 
         return $images;
@@ -107,10 +108,11 @@ class ExaminationSectionProcessor
             return $pdfExtractor->convertPagesToImages($path, [
                 'resolution' => 300,
                 'format' => 'jpg',
-                'output_dir' => 'pdf_pages'
+                'output_dir' => 'pdf_pages',
             ]);
         } catch (\Exception $e) {
             Log::error("PDF to image conversion failed: {$e->getMessage()}");
+
             return [];
         }
     }

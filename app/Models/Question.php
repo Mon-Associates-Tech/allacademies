@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\AcademicSubject as Subject;
+use App\Models\AcademicSubtopic as Subtopic;
+use App\Models\AcademicTopic as Topic;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\AcademicSubject as Subject;
-use App\Models\AcademicTopic as Topic;
-use App\Models\AcademicSubtopic as Subtopic;
 
 class Question extends Model
 {
@@ -20,7 +20,7 @@ class Question extends Model
         'subtopic_id',
         'points',
         'difficulty_level', // 'easy', 'medium', 'hard'
-        'user_id' // the user who created the question
+        'user_id', // the user who created the question
     ];
 
     protected $casts = [

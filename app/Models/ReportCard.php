@@ -12,11 +12,11 @@ class ReportCard extends Model
         'academic_year_id',
         'term',
         'school_id',
-        'generated_at'
+        'generated_at',
     ];
 
     protected $casts = [
-        'generated_at' => 'datetime'
+        'generated_at' => 'datetime',
     ];
 
     public function student(): BelongsTo

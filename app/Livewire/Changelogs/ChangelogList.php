@@ -2,15 +2,16 @@
 
 namespace App\Livewire\Changelogs;
 
+use App\Models\Changelog;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Changelog;
 
 class ChangelogList extends Component
 {
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
+
     public $showModal = false;
 
     protected $listeners = ['changelogAdded' => '$refresh'];
@@ -20,7 +21,7 @@ class ChangelogList extends Component
         $changelogs = Changelog::orderBy('created_at', 'desc')->paginate(10);
 
         return view('livewire.changelogs.changelog-list', [
-            'changelogs' => $changelogs
+            'changelogs' => $changelogs,
         ]);
     }
 
@@ -34,4 +35,3 @@ class ChangelogList extends Component
         $this->showModal = false;
     }
 }
-

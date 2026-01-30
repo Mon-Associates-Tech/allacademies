@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Students;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogs extends Component
@@ -13,15 +13,25 @@ class ActivityLogs extends Component
     use WithPagination;
 
     public $dateFrom;
+
     public $dateTo;
+
     public $activityType = 'all';
+
     public $search = '';
+
     public $selectedActivity = null;
+
     public $showModal = false;
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 15;
+
     public $showFilters = true;
+
     public $viewMode = 'timeline'; // timeline or list
 
     protected $queryString = [
@@ -30,7 +40,7 @@ class ActivityLogs extends Component
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
         'viewMode' => ['except' => 'timeline'],
-        'perPage' => ['except' => 15]
+        'perPage' => ['except' => 15],
     ];
 
     public function mount()
@@ -66,7 +76,7 @@ class ActivityLogs extends Component
 
     public function toggleFilters()
     {
-        $this->showFilters = !$this->showFilters;
+        $this->showFilters = ! $this->showFilters;
     }
 
     public function toggleViewMode()
@@ -138,41 +148,41 @@ class ActivityLogs extends Component
     public function getActivityLogsProperty()
     {
         $student = getStudent(auth()->id(), withoutScopes: true);
-        if (!$student) {
+        if (! $student) {
             return Activity::query()->where('id', 0)->paginate($this->perPage);
         }
         $query = Activity::query()
-            ->where(function($q) use ($student) {
+            ->where(function ($q) use ($student) {
                 $q->where('subject_type', get_class($student))
-                  ->where('subject_id', $student->id)
-                  ->orWhere('causer_id', Auth::id());
+                    ->where('subject_id', $student->id)
+                    ->orWhere('causer_id', Auth::id());
             })
-            ->when($this->dateFrom, function($query) {
+            ->when($this->dateFrom, function ($query) {
                 $query->whereDate('created_at', '>=', $this->dateFrom);
             })
-            ->when($this->dateTo, function($query) {
+            ->when($this->dateTo, function ($query) {
                 $query->whereDate('created_at', '<=', $this->dateTo);
             })
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
-                    $q->where('description', 'like', '%' . $this->search . '%')
-                      ->orWhere('log_name', 'like', '%' . $this->search . '%')
-                      ->orWhereRaw("JSON_EXTRACT(properties, '$.book_title') LIKE ?", ['%' . $this->search . '%'])
-                      ->orWhereRaw("JSON_EXTRACT(properties, '$.subject_name') LIKE ?", ['%' . $this->search . '%'])
-                      ->orWhereRaw("JSON_EXTRACT(properties, '$.assessment_title') LIKE ?", ['%' . $this->search . '%'])
-                      ->orWhereRaw("JSON_EXTRACT(properties, '$.course_name') LIKE ?", ['%' . $this->search . '%']);
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('description', 'like', '%'.$this->search.'%')
+                        ->orWhere('log_name', 'like', '%'.$this->search.'%')
+                        ->orWhereRaw("JSON_EXTRACT(properties, '$.book_title') LIKE ?", ['%'.$this->search.'%'])
+                        ->orWhereRaw("JSON_EXTRACT(properties, '$.subject_name') LIKE ?", ['%'.$this->search.'%'])
+                        ->orWhereRaw("JSON_EXTRACT(properties, '$.assessment_title') LIKE ?", ['%'.$this->search.'%'])
+                        ->orWhereRaw("JSON_EXTRACT(properties, '$.course_name') LIKE ?", ['%'.$this->search.'%']);
                 });
             })
-            ->when($this->activityType !== 'all', function($query) {
+            ->when($this->activityType !== 'all', function ($query) {
                 if ($this->activityType === 'assessment') {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('description', 'like', '%assessment%')
-                          ->orWhereRaw("JSON_EXTRACT(properties, '$.action') LIKE ?", ['%assessment%']);
+                            ->orWhereRaw("JSON_EXTRACT(properties, '$.action') LIKE ?", ['%assessment%']);
                     });
                 } else {
-                    $query->where(function($q) {
-                        $q->where('description', 'like', '%' . $this->activityType . '%')
-                          ->orWhereRaw("JSON_EXTRACT(properties, '$.action') LIKE ?", ['%' . $this->activityType . '%']);
+                    $query->where(function ($q) {
+                        $q->where('description', 'like', '%'.$this->activityType.'%')
+                            ->orWhereRaw("JSON_EXTRACT(properties, '$.action') LIKE ?", ['%'.$this->activityType.'%']);
                     });
                 }
             })
@@ -185,18 +195,20 @@ class ActivityLogs extends Component
     public function getActivityStatsProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return [];
+        if (! $student) {
+            return [];
+        }
 
         $baseQuery = Activity::query()
-            ->where(function($q) use ($student) {
+            ->where(function ($q) use ($student) {
                 $q->where('subject_type', get_class($student))
-                  ->where('subject_id', $student->id)
-                  ->orWhere('causer_id', Auth::id());
+                    ->where('subject_id', $student->id)
+                    ->orWhere('causer_id', Auth::id());
             })
-            ->when($this->dateFrom, function($query) {
+            ->when($this->dateFrom, function ($query) {
                 $query->whereDate('created_at', '>=', $this->dateFrom);
             })
-            ->when($this->dateTo, function($query) {
+            ->when($this->dateTo, function ($query) {
                 $query->whereDate('created_at', '<=', $this->dateTo);
             });
 
@@ -209,7 +221,7 @@ class ActivityLogs extends Component
             'today' => (clone $baseQuery)->whereDate('created_at', today())->count(),
             'this_week' => (clone $baseQuery)->whereBetween('created_at', [
                 Carbon::now()->startOfWeek(),
-                Carbon::now()->endOfWeek()
+                Carbon::now()->endOfWeek(),
             ])->count(),
         ];
     }
@@ -217,17 +229,19 @@ class ActivityLogs extends Component
     public function getActivityStreakProperty()
     {
         $student = Auth::user()->student;
-        if (!$student) return 0;
+        if (! $student) {
+            return 0;
+        }
 
         $streak = 0;
         $currentDate = Carbon::now();
 
         while (true) {
             $hasActivity = Activity::query()
-                ->where(function($q) use ($student) {
+                ->where(function ($q) use ($student) {
                     $q->where('subject_type', get_class($student))
-                      ->where('subject_id', $student->id)
-                      ->orWhere('causer_id', Auth::id());
+                        ->where('subject_id', $student->id)
+                        ->orWhere('causer_id', Auth::id());
                 })
                 ->whereDate('created_at', $currentDate->format('Y-m-d'))
                 ->exists();
@@ -253,14 +267,15 @@ class ActivityLogs extends Component
             'reading' => 'Reading Activities',
             'subscription' => 'Subscription Activities',
             'course' => 'Course Activities',
-            'lesson' => 'Lesson Activities'
+            'lesson' => 'Lesson Activities',
         ];
     }
 
     public function getActivityTypeColor($description)
     {
         $description = strtolower($description);
-        return match(true) {
+
+        return match (true) {
             str_contains($description, 'assessment') => 'green',
             str_contains($description, 'book') => 'purple',
             str_contains($description, 'schedule') => 'orange',
@@ -277,7 +292,7 @@ class ActivityLogs extends Component
         // Implementation for exporting activities to CSV/PDF
         $this->dispatch('notify', [
             'type' => 'info',
-            'message' => 'Export feature coming soon!'
+            'message' => 'Export feature coming soon!',
         ]);
     }
 
@@ -287,7 +302,7 @@ class ActivityLogs extends Component
             'activityLogs' => $this->activityLogs,
             'activityStats' => $this->activityStats,
             'activityStreak' => $this->activityStreak,
-            'activityTypeOptions' => $this->getActivityTypeOptions()
+            'activityTypeOptions' => $this->getActivityTypeOptions(),
         ]);
     }
 }

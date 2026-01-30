@@ -21,23 +21,24 @@ class SchoolSetting extends Model
         'group',
         'options',
         'required',
-        'sort_order'
+        'sort_order',
     ];
 
     protected $casts = [
         'options' => 'array',
-        'required' => 'boolean'
+        'required' => 'boolean',
     ];
 
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
+
     public function getValueAttribute($value)
     {
         return match ($this->type) {
-            'boolean' => (bool)$value,
-            'number' => is_numeric($value) ? (float)$value : $value,
+            'boolean' => (bool) $value,
+            'number' => is_numeric($value) ? (float) $value : $value,
             'json' => json_decode($value, true),
             'image', 'pdf' => $value ? Storage::url($value) : null,
             default => $value,
@@ -61,6 +62,7 @@ class SchoolSetting extends Model
     public static function get($key, $default = null)
     {
         $setting = static::where('key', $key)->first();
+
         return $setting ? $setting->value : $default;
     }
 
@@ -70,6 +72,7 @@ class SchoolSetting extends Model
         if ($setting) {
             $setting->update(['value' => $value]);
         }
+
         return $setting;
     }
 

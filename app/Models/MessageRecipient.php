@@ -17,14 +17,14 @@ class MessageRecipient extends Model
         'email_sent',
         'email_sent_at',
         'email_failed_at',
-        'failure_reason'
+        'failure_reason',
     ];
 
     protected $casts = [
         'read_at' => 'datetime',
         'email_sent' => 'boolean',
         'email_sent_at' => 'datetime',
-        'email_failed_at' => 'datetime'
+        'email_failed_at' => 'datetime',
     ];
 
     public function message(): BelongsTo
@@ -39,14 +39,14 @@ class MessageRecipient extends Model
 
     public function markAsRead(): void
     {
-        if (!$this->read_at) {
+        if (! $this->read_at) {
             $this->update(['read_at' => now()]);
         }
     }
 
     public function isRead(): bool
     {
-        return !is_null($this->read_at);
+        return ! is_null($this->read_at);
     }
 
     public function scopeRead($query)

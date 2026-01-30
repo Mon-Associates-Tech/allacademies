@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Teachers\Messages;
 
-use App\Models\User;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject as Subject;
+use App\Models\User;
 
 class TeacherMessageService
 {
@@ -64,4 +64,3 @@ class TeacherMessageService
         return [];
     }
 }
-

@@ -29,7 +29,7 @@
                     </svg>
                 </div>
                 <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">AI Tokens</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $subscription->package->name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $subscription->package?->name }}</p>
             </div>
 
             {{-- Vertical Progress Bar --}}

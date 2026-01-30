@@ -7,11 +7,17 @@ use Livewire\Component;
 class ScrollableTabs extends Component
 {
     public array $tabs = [];
+
     public string $activeTab = '';
+
     public string $orientation = 'horizontal'; // 'horizontal' or 'vertical'
+
     public string $tabContainerClass = '';
+
     public string $tabClass = '';
+
     public string $activeTabClass = '';
+
     public string $inactiveTabClass = '';
 
     public function mount(

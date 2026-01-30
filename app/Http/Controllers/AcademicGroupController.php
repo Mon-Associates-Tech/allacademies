@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\UserRole;
 use App\Http\Requests\AcademicGroupRequest;
 use App\Models\AcademicGroup;
 use Illuminate\Contracts\View\Factory;
@@ -10,7 +9,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class AcademicGroupController extends Controller
 {
@@ -44,9 +42,6 @@ class AcademicGroupController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroupRequest $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroupRequest $request): RedirectResponse
     {
@@ -61,7 +56,6 @@ class AcademicGroupController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function show(AcademicGroup $academicGroup)
@@ -71,7 +65,7 @@ class AcademicGroupController extends Controller
         // Load additional relationships and counts for better data display
         $academicGroup->loadCount([
             'academicLevels',
-            'teachers'
+            'teachers',
         ]);
 
         // You can also load recent academic levels if needed
@@ -87,7 +81,6 @@ class AcademicGroupController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function edit(AcademicGroup $academicGroup)
@@ -101,10 +94,6 @@ class AcademicGroupController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param AcademicGroupRequest $request
-     * @param AcademicGroup $academicGroup
-     * @return RedirectResponse
      */
     public function update(AcademicGroupRequest $request, AcademicGroup $academicGroup): RedirectResponse
     {
@@ -118,9 +107,6 @@ class AcademicGroupController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @return RedirectResponse
      */
     public function destroy(Request $request, AcademicGroup $academicGroup): RedirectResponse
     {

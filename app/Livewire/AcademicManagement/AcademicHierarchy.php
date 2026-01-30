@@ -2,12 +2,12 @@
 
 namespace App\Livewire\AcademicManagement;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\AcademicGroup;
+use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
-use App\Models\EssayQuestion;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class AcademicHierarchy extends Component
 {
@@ -16,25 +16,32 @@ class AcademicHierarchy extends Component
     protected $paginationTheme = 'tailwind';
 
     public $academicGroups = [];
+
     public $expandedGroups = [];
+
     public $expandedLevels = [];
+
     public $expandedSubjects = [];
+
     public $expandedTopics = [];
+
     public $expandedSubtopics = [];
 
     public $activeTab = 'mcq';
 
     public $selectedSubtopic = null;
+
     public $selectedTopic = null;
 
     // Track which topic/subtopic is showing questions
     public $questionsTopicId = null;
+
     public $questionsSubtopicId = null;
 
     public function mount()
     {
         $this->academicGroups = AcademicGroup::with([
-            'academicLevels.academicSubjects.academicTopics.subtopics'
+            'academicLevels.academicSubjects.academicTopics.subtopics',
         ])->get();
     }
 
@@ -128,7 +135,7 @@ class AcademicHierarchy extends Component
             $query->where('academic_subtopic_id', $this->questionsSubtopicId);
         } elseif ($this->questionsTopicId) {
             $query->where('academic_topic_id', $this->questionsTopicId)
-                  ->whereNull('academic_subtopic_id');
+                ->whereNull('academic_subtopic_id');
         } else {
             // Return empty paginator if nothing is selected
             return $this->activeTab === 'mcq' ?

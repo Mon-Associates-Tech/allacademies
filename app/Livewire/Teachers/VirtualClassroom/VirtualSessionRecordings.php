@@ -14,7 +14,9 @@ class VirtualSessionRecordings extends Component
     use WithPagination;
 
     public VirtualSession $session;
+
     public $search = '';
+
     public $syncing = false;
 
     public function mount(VirtualSession $session)
@@ -37,7 +39,7 @@ class VirtualSessionRecordings extends Component
 
             $this->dispatch('success', "Synced {$count} recording(s).");
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Failed to sync recordings: ' . $e->getMessage());
+            $this->dispatch('error', 'Failed to sync recordings: '.$e->getMessage());
         } finally {
             $this->syncing = false;
         }
@@ -61,7 +63,7 @@ class VirtualSessionRecordings extends Component
                 $this->dispatch('error', 'Failed to publish recording.');
             }
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Error: ' . $e->getMessage());
+            $this->dispatch('error', 'Error: '.$e->getMessage());
         }
     }
 
@@ -83,13 +85,13 @@ class VirtualSessionRecordings extends Component
                 $this->dispatch('error', 'Failed to unpublish recording.');
             }
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Error: ' . $e->getMessage());
+            $this->dispatch('error', 'Error: '.$e->getMessage());
         }
     }
 
     public function deleteRecording($recordingId)
     {
-        if (!confirm('Are you sure you want to delete this recording? This action cannot be undone.')) {
+        if (! confirm('Are you sure you want to delete this recording? This action cannot be undone.')) {
             return;
         }
 
@@ -107,7 +109,7 @@ class VirtualSessionRecordings extends Component
                 $this->dispatch('error', 'Failed to delete recording.');
             }
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Error: ' . $e->getMessage());
+            $this->dispatch('error', 'Error: '.$e->getMessage());
         }
     }
 

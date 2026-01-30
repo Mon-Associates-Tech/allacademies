@@ -11,7 +11,8 @@ class StudentParent extends Model
 {
     use BelongsToSchoolEnhanced;
 
-    protected $table  = 'parents';
+    protected $table = 'parents';
+
     protected $fillable = [
         'user_id',
         'relationship',
@@ -26,6 +27,7 @@ class StudentParent extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
     public function students(): BelongsToMany
     {
         return $this->belongsToMany(Student::class, 'parent_student', 'parent_id', 'student_id')

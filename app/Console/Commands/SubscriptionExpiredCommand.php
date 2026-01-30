@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Notification;
 use App\Notifications\SubscriptionExpiredNotification;
+use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification;
 
 class SubscriptionExpiredCommand extends Command
 {

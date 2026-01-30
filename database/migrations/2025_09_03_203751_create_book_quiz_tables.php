@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Migration: Create quiz_sessions table (compatible with existing Book model)
  */
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('quiz_sessions', function (Blueprint $table) {
@@ -184,7 +185,7 @@ return new class extends Migration {
             $table->enum('difficulty', ['easy', 'medium', 'hard'])->default('medium');
             $table->string('learning_objective')->nullable();
             $table->enum('cognitive_level', [
-                'remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'
+                'remember', 'understand', 'apply', 'analyze', 'evaluate', 'create',
             ])->default('understand');
             $table->integer('page_reference')->nullable();
             $table->json('tags')->nullable();

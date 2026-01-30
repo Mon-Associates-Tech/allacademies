@@ -2,15 +2,16 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\UserLogin;
 use App\Services\UserLoginService;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class CleanupUserSessions extends Command
 {
     protected $signature = 'sessions:cleanup {--timeout=30 : Session timeout in minutes} {--force : Force cleanup without confirmation}';
+
     protected $description = 'Cleanup stale user sessions and mark them as timed out';
 
     private UserLoginService $loginService;
@@ -42,8 +43,9 @@ class CleanupUserSessions extends Command
         if ($staleSessions->count() > 0) {
             $this->info("Found {$staleSessions->count()} stale sessions to clean up.");
 
-            if (!$force && !$this->confirm('Do you want to proceed with cleanup?')) {
+            if (! $force && ! $this->confirm('Do you want to proceed with cleanup?')) {
                 $this->info('Cleanup cancelled.');
+
                 return 0;
             }
 
@@ -93,7 +95,7 @@ class CleanupUserSessions extends Command
                                 'action' => 'logged_out',
                                 'logout_at' => $logoutTime,
                                 'duration_minutes' => max(0, $duration),
-                                'logout_type' => 'session_cleanup'
+                                'logout_type' => 'session_cleanup',
                             ]);
 
                             // Update user status if this was their last active session
@@ -104,7 +106,7 @@ class CleanupUserSessions extends Command
                             if ($remainingActiveSessions === 0) {
                                 $session->user->update([
                                     'is_online' => false,
-                                    'last_seen_at' => now()
+                                    'last_seen_at' => now(),
                                 ]);
                             }
 
@@ -118,14 +120,15 @@ class CleanupUserSessions extends Command
             case 'file':
                 // For file sessions, check if session files exist
                 $sessionPath = storage_path('framework/sessions');
-                if (!is_dir($sessionPath)) {
+                if (! is_dir($sessionPath)) {
                     $this->warn("Session directory not found: {$sessionPath}");
                     break;
                 }
 
                 $orphanedSessions = UserLogin::activeSessions()->get()->filter(function ($session) use ($sessionPath) {
-                    $sessionFile = $sessionPath . '/sess_' . $session->session_id;
-                    return !file_exists($sessionFile);
+                    $sessionFile = $sessionPath.'/sess_'.$session->session_id;
+
+                    return ! file_exists($sessionFile);
                 });
 
                 if ($orphanedSessions->count() > 0) {

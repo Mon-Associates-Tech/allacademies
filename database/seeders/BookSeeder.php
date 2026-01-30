@@ -280,16 +280,16 @@ class BookSeeder extends Seeder
                 'has_softcopy' => true,
                 'status' => 'published',
                 'category_name' => 'Reference',
-            ]
+            ],
         ];
 
         foreach ($books as $bookData) {
             // Find or create category
             $category = $categories->where('name', $bookData['category_name'])->first();
-            if (!$category) {
+            if (! $category) {
                 $category = BookCategory::create([
                     'name' => $bookData['category_name'],
-                    'description' => 'Books related to ' . $bookData['category_name']
+                    'description' => 'Books related to '.$bookData['category_name'],
                 ]);
                 $categories->push($category);
             }
@@ -369,7 +369,7 @@ class BookSeeder extends Seeder
                 'phone' => '+1234567890',
                 'email' => 'info@allacademies.edu',
                 'website' => 'https://allacademies.edu',
-//                'status' => 'active',
+                //                'status' => 'active',
             ]);
         }
     }
@@ -392,12 +392,12 @@ class BookSeeder extends Seeder
 
     private function generateSubscriptionConditions(): string
     {
-        return "1. Subscription is valid for one year from payment date\n" .
-               "2. Book content is for reading only - no downloading, copying or printing allowed\n" .
-               "3. Access will be revoked upon subscription expiry\n" .
-               "4. Subscription is non-refundable\n" .
-               "5. Content is protected by copyright laws\n" .
-               "6. Access requires stable internet connection\n" .
-               "7. Account sharing is strictly prohibited";
+        return "1. Subscription is valid for one year from payment date\n".
+               "2. Book content is for reading only - no downloading, copying or printing allowed\n".
+               "3. Access will be revoked upon subscription expiry\n".
+               "4. Subscription is non-refundable\n".
+               "5. Content is protected by copyright laws\n".
+               "6. Access requires stable internet connection\n".
+               '7. Account sharing is strictly prohibited';
     }
 }

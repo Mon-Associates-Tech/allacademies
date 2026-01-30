@@ -16,24 +16,34 @@ class TeacherProfile extends Component
 
     // Profile form properties
     public $name;
+
     public $email;
+
     public $phone;
+
     public $bio;
+
     public $avatar;
+
     public $cover_image;
 
     // Password form properties
     public $current_password;
+
     public $new_password;
+
     public $new_password_confirmation;
 
     // Modal states
     public $showPasswordModal = false;
+
     public $showPreferencesModal = false;
 
     // Statistics
     public $totalStudents = 0;
+
     public $totalAssignments = 0;
+
     public $totalSubjects = 0;
 
     // Teacher instance
@@ -58,7 +68,7 @@ class TeacherProfile extends Component
     {
         $this->teacher = Auth::user()->teacher;
 
-        if (!$this->teacher) {
+        if (! $this->teacher) {
             abort(403, 'Access denied. Teacher profile not found.');
         }
 
@@ -135,7 +145,7 @@ class TeacherProfile extends Component
             // Dispatch success event
             $this->dispatch('profile-updated', [
                 'message' => 'Profile updated successfully!',
-                'type' => 'success'
+                'type' => 'success',
             ]);
 
         } catch (\Exception $e) {
@@ -144,7 +154,7 @@ class TeacherProfile extends Component
             // Dispatch error event
             $this->dispatch('profile-error', [
                 'message' => 'An error occurred while updating your profile.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
     }
@@ -169,8 +179,9 @@ class TeacherProfile extends Component
         $user = Auth::user();
 
         // Check if current password is correct
-        if (!Hash::check($this->current_password, $user->password)) {
+        if (! Hash::check($this->current_password, $user->password)) {
             $this->addError('current_password', 'The current password is incorrect.');
+
             return;
         }
 
@@ -190,7 +201,7 @@ class TeacherProfile extends Component
             // Dispatch success event
             $this->dispatch('password-updated', [
                 'message' => 'Password updated successfully!',
-                'type' => 'success'
+                'type' => 'success',
             ]);
 
         } catch (\Exception $e) {
@@ -199,7 +210,7 @@ class TeacherProfile extends Component
             // Dispatch error event
             $this->dispatch('password-error', [
                 'message' => 'An error occurred while updating your password.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
     }
@@ -236,7 +247,7 @@ class TeacherProfile extends Component
         // Dispatch refresh event
         $this->dispatch('profile-refreshed', [
             'message' => 'Profile refreshed successfully!',
-            'type' => 'success'
+            'type' => 'success',
         ]);
     }
 

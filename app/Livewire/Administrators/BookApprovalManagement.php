@@ -14,20 +14,32 @@ class BookApprovalManagement extends Component
     use WithPagination;
 
     public $searchTerm = '';
+
     public $sortField = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $filterStatus = '';
+
     public $filterCategory = '';
+
     public $dateRange = '';
+
     public $selectedBookId;
+
     public $selectedBookTitle;
+
     public $approvalStatus;
+
     public $approvalComments;
+
     public $showApprovalModal = false;
 
     // Add properties for counts
     public $pendingCount = 0;
+
     public $approvedCount = 0;
+
     public $rejectedCount = 0;
 
     public function mount()
@@ -47,22 +59,22 @@ class BookApprovalManagement extends Component
     public function updateCounts()
     {
         $baseQuery = Book::query()
-            ->when($this->searchTerm, function($query) {
-                $query->where(function($subQuery) {
+            ->when($this->searchTerm, function ($query) {
+                $query->where(function ($subQuery) {
                     $subQuery->where('title', 'like', '%'.$this->searchTerm.'%')
-                        ->orWhereHas('author.user', function($q) {
+                        ->orWhereHas('author.user', function ($q) {
                             $q->where('name', 'like', '%'.$this->searchTerm.'%');
                         })
-                        ->orWhereHas('bookCategory', function($q) {
+                        ->orWhereHas('bookCategory', function ($q) {
                             $q->where('name', 'like', '%'.$this->searchTerm.'%');
                         });
                 });
             })
-            ->when($this->filterCategory, function($query) {
+            ->when($this->filterCategory, function ($query) {
                 $query->where('book_category_id', $this->filterCategory);
             })
-            ->when($this->dateRange, function($query) {
-                switch($this->dateRange) {
+            ->when($this->dateRange, function ($query) {
+                switch ($this->dateRange) {
                     case 'today':
                         $query->whereDate('created_at', today());
                         break;
@@ -71,7 +83,7 @@ class BookApprovalManagement extends Component
                         break;
                     case 'month':
                         $query->whereMonth('created_at', now()->month)
-                              ->whereYear('created_at', now()->year);
+                            ->whereYear('created_at', now()->year);
                         break;
                     case 'quarter':
                         $query->whereBetween('created_at', [now()->startOfQuarter(), now()->endOfQuarter()]);
@@ -81,21 +93,21 @@ class BookApprovalManagement extends Component
 
         // Count pending books (no approvals or only pending approvals)
         $this->pendingCount = (clone $baseQuery)
-            ->whereDoesntHave('approvals', function($q) {
+            ->whereDoesntHave('approvals', function ($q) {
                 $q->whereIn('status', ['approved', 'rejected']);
             })
             ->count();
 
         // Count approved books
         $this->approvedCount = (clone $baseQuery)
-            ->whereHas('approvals', function($q) {
+            ->whereHas('approvals', function ($q) {
                 $q->where('status', 'approved');
             })
             ->count();
 
         // Count rejected books
         $this->rejectedCount = (clone $baseQuery)
-            ->whereHas('approvals', function($q) {
+            ->whereHas('approvals', function ($q) {
                 $q->where('status', 'rejected');
             })
             ->count();
@@ -127,7 +139,7 @@ class BookApprovalManagement extends Component
         $this->selectedBookTitle = $bookTitle;
 
         // Get the latest approval for this book
-        $book = Book::with(['approvals' => function($query) {
+        $book = Book::with(['approvals' => function ($query) {
             $query->latest();
         }])->find($bookId);
 
@@ -165,8 +177,9 @@ class BookApprovalManagement extends Component
         // Find a librarian (in a real app, you'd use the authenticated librarian)
         $librarian = Librarian::first();
 
-        if (!$librarian) {
+        if (! $librarian) {
             session()->flash('error', 'No librarian found. Please contact administrator.');
+
             return;
         }
 
@@ -189,22 +202,22 @@ class BookApprovalManagement extends Component
     public function render()
     {
         $query = Book::query()
-            ->when($this->searchTerm, function($query) {
-                $query->where(function($subQuery) {
+            ->when($this->searchTerm, function ($query) {
+                $query->where(function ($subQuery) {
                     $subQuery->where('title', 'like', '%'.$this->searchTerm.'%')
-                        ->orWhereHas('author.user', function($q) {
+                        ->orWhereHas('author.user', function ($q) {
                             $q->where('name', 'like', '%'.$this->searchTerm.'%');
                         })
-                        ->orWhereHas('bookCategory', function($q) {
+                        ->orWhereHas('bookCategory', function ($q) {
                             $q->where('name', 'like', '%'.$this->searchTerm.'%');
                         });
                 });
             })
-            ->when($this->filterCategory, function($query) {
+            ->when($this->filterCategory, function ($query) {
                 $query->where('book_category_id', $this->filterCategory);
             })
-            ->when($this->dateRange, function($query) {
-                switch($this->dateRange) {
+            ->when($this->dateRange, function ($query) {
+                switch ($this->dateRange) {
                     case 'today':
                         $query->whereDate('created_at', today());
                         break;
@@ -213,28 +226,28 @@ class BookApprovalManagement extends Component
                         break;
                     case 'month':
                         $query->whereMonth('created_at', now()->month)
-                              ->whereYear('created_at', now()->year);
+                            ->whereYear('created_at', now()->year);
                         break;
                     case 'quarter':
                         $query->whereBetween('created_at', [now()->startOfQuarter(), now()->endOfQuarter()]);
                         break;
                 }
             })
-            ->with(['author.user', 'bookCategory', 'approvals' => function($query) {
+            ->with(['author.user', 'bookCategory', 'approvals' => function ($query) {
                 $query->latest();
             }]);
 
         // Filter by approval status
         if ($this->filterStatus === 'approved') {
-            $query->whereHas('approvals', function($q) {
+            $query->whereHas('approvals', function ($q) {
                 $q->where('status', 'approved');
             });
         } elseif ($this->filterStatus === 'rejected') {
-            $query->whereHas('approvals', function($q) {
+            $query->whereHas('approvals', function ($q) {
                 $q->where('status', 'rejected');
             });
         } elseif ($this->filterStatus === 'pending') {
-            $query->whereDoesntHave('approvals', function($q) {
+            $query->whereDoesntHave('approvals', function ($q) {
                 $q->whereIn('status', ['approved', 'rejected']);
             });
         }
@@ -247,7 +260,7 @@ class BookApprovalManagement extends Component
 
         return view('livewire.administrators.book-approval-management', [
             'books' => $books,
-            'categories' => $categories
+            'categories' => $categories,
         ]);
     }
 }

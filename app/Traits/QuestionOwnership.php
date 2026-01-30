@@ -4,8 +4,8 @@ namespace App\Traits;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 trait QuestionOwnership
 {
@@ -39,40 +39,39 @@ trait QuestionOwnership
                 ->log('created');
         });
 
+        static::updated(function ($model) {
+            $changes = $model->getChangesForLog();
+            $dirtyFields = array_keys($model->getDirty());
 
-static::updated(function ($model) {
-    $changes = $model->getChangesForLog();
-    $dirtyFields = array_keys($model->getDirty());
+            if (! empty($changes)) {
+                // Get readable field names for the summary
+                $changedFieldNames = [];
+                foreach ($dirtyFields as $field) {
+                    if (! in_array($field, ['updated_at', 'modified_by'])) {
+                        $changedFieldNames[] = $model->getReadableFieldName($field);
+                    }
+                }
 
-    if (!empty($changes)) {
-        // Get readable field names for the summary
-        $changedFieldNames = [];
-        foreach ($dirtyFields as $field) {
-            if (!in_array($field, ['updated_at', 'modified_by'])) {
-                $changedFieldNames[] = $model->getReadableFieldName($field);
+                activity('question_management')
+                    ->performedOn($model)
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'question_type' => $model->getQuestionType(),
+                        'changes' => $changes,
+                        'changed_fields' => $dirtyFields, // Add specific fields that changed
+                        'changed_fields_readable' => $changedFieldNames, // Human-readable field names
+                        'difficulty_level' => $model->difficulty_level ?? null,
+                        'score' => $model->score ?? null,
+                        'academic_subtopic_id' => $model->academic_subtopic_id ?? null,
+                        'academic_topic_id' => $model->academic_topic_id ?? null,
+                        'module' => 'questions',
+                        'entity_type' => class_basename($model),
+                        'metadata' => $model->getActivityMetadata(),
+                        'change_summary' => 'Updated '.implode(', ', $changedFieldNames), // Summary of changes
+                    ])
+                    ->log('updated');
             }
-        }
-
-        activity('question_management')
-            ->performedOn($model)
-            ->causedBy(Auth::user())
-            ->withProperties([
-                'question_type' => $model->getQuestionType(),
-                'changes' => $changes,
-                'changed_fields' => $dirtyFields, // Add specific fields that changed
-                'changed_fields_readable' => $changedFieldNames, // Human-readable field names
-                'difficulty_level' => $model->difficulty_level ?? null,
-                'score' => $model->score ?? null,
-                'academic_subtopic_id' => $model->academic_subtopic_id ?? null,
-                'academic_topic_id' => $model->academic_topic_id ?? null,
-                'module' => 'questions',
-                'entity_type' => class_basename($model),
-                'metadata' => $model->getActivityMetadata(),
-                'change_summary' => 'Updated ' . implode(', ', $changedFieldNames), // Summary of changes
-            ])
-            ->log('updated');
-    }
-});
+        });
 
         static::deleted(function ($model) {
             activity('question_management')
@@ -96,11 +95,11 @@ static::updated(function ($model) {
             ->logOnly([
                 'question', 'answer', 'score', 'difficulty_level',
                 'academic_topic_id', 'academic_subtopic_id',
-                'option_a', 'option_b', 'option_c', 'option_d', 'option_e'
+                'option_a', 'option_b', 'option_c', 'option_d', 'option_e',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => $eventName);
+            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
     }
 
     public function getQuestionType(): string
@@ -122,10 +121,10 @@ static::updated(function ($model) {
         $original = $this->getOriginal();
 
         foreach ($this->getDirty() as $key => $value) {
-            if (!in_array($key, ['updated_at', 'modified_by'])) {
+            if (! in_array($key, ['updated_at', 'modified_by'])) {
                 $changes[$key] = [
                     'old' => $this->getOriginalValueForLog($key, $original[$key] ?? null),
-                    'new' => $this->getNewValueForLog($key, $value)
+                    'new' => $this->getNewValueForLog($key, $value),
                 ];
             }
         }

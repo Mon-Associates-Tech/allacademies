@@ -13,6 +13,7 @@ class BookAudioConversionFailed extends Notification implements ShouldQueue
     use Queueable;
 
     public Book $book;
+
     public string $errorMessage;
 
     public function __construct(Book $book, string $errorMessage = '')
@@ -29,10 +30,10 @@ class BookAudioConversionFailed extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Audio Conversion Failed - ' . $this->book->title)
-            ->greeting('Hello ' . $notifiable->name . ',')
+            ->subject('Audio Conversion Failed - '.$this->book->title)
+            ->greeting('Hello '.$notifiable->name.',')
             ->line('Unfortunately, the audio conversion for your book encountered an error.')
-            ->line('**Book Title:** ' . $this->book->title)
+            ->line('**Book Title:** '.$this->book->title)
             ->line('Our team has been notified and will look into this issue.')
             ->action('View Book', route('books.show', $this->book->slug))
             ->line('We apologize for the inconvenience.');

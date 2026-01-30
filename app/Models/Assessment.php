@@ -11,16 +11,21 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Assessment extends Model
 {
-    use LogsActivity;
     use HasFactory;
+    use LogsActivity;
 
     public const STATUS_NOT_STARTED = 'not_started';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_PENDING_REVIEW = 'pending_review';
+
     public const STATUS_GRADED = 'graded';
 
     public const TYPE_SELF = 'self';
+
     public const TYPE_ASSIGNMENT = 'assignment';
 
     protected $fillable = [
@@ -45,7 +50,7 @@ class Assessment extends Model
         'graded_by',
         'graded_at',
         'teacher_feedback',
-        'questions_data'
+        'questions_data',
     ];
 
     protected $casts = [
@@ -115,7 +120,7 @@ class Assessment extends Model
 
     public function canAutoGrade(): bool
     {
-        return !$this->has_essay_questions;
+        return ! $this->has_essay_questions;
     }
 
     public function needsManualGrading(): bool
@@ -123,7 +128,7 @@ class Assessment extends Model
         return $this->has_essay_questions &&
                $this->essay_grading_status === 'pending' &&
                $this->assessmentResponse &&
-               !$this->assessmentResponse->allEssaysGraded();
+               ! $this->assessmentResponse->allEssaysGraded();
     }
 
     public function getTeacherForGrading(): ?Teacher
@@ -176,8 +181,8 @@ class Assessment extends Model
         $this->update(['questions_data' => $questionsData]);
     }
 
-    public function responses(){
+    public function responses()
+    {
         return $this->hasMany(AssessmentResponse::class);
     }
-
 }

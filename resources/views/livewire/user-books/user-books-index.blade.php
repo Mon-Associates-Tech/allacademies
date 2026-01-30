@@ -11,9 +11,12 @@
                 </a>
             </div>
         </div>
-
+   
+        <x-alert.token-subscription-banner variant="full-page" />
+    
         <div class="">
             <livewire:user-books.shared-books />
         </div>
+       
     </div>
 </div>

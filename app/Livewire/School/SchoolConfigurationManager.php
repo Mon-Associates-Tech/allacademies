@@ -2,8 +2,8 @@
 
 namespace App\Livewire\School;
 
-use App\Models\AcademicYear;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
 use App\Models\GradeScale;
 use App\Models\School;
 use Illuminate\Support\Facades\Storage;
@@ -15,78 +15,124 @@ class SchoolConfigurationManager extends Component
     use WithFileUploads;
 
     public School $school;
+
     public $activeSection = 'basic-info';
 
     // Basic Information
     public $name;
+
     public $code;
+
     public $email;
+
     public $phone;
+
     public $website;
+
     public $logo;
+
     public $newLogo;
 
     // Address Information
     public $address;
+
     public $city;
+
     public $state;
+
     public $country;
+
     public $postal_code;
 
     // School Details
     public $type;
+
     public $description;
+
     public $student_capacity;
+
     public $timezone;
+
     public $currency;
 
     // Branding & Report Headers
     public $report_header;
+
     public $report_footer;
+
     public $letterhead;
+
     public $newLetterhead;
+
     public $school_motto;
+
     public $school_colors = ['primary' => '#4F46E5', 'secondary' => '#10B981'];
 
     // Academic Years
     public $academicYears = [];
+
     public $currentAcademicYear = null;
+
     public $showAcademicYearModal = false;
+
     public $editingYearId = null;
 
     public $yearName;
+
     public $yearStartDate;
+
     public $yearEndDate;
+
     public $yearStatus = 'upcoming';
 
     // Academic Periods/Terms
     public $academicPeriods = [];
+
     public $showPeriodModal = false;
+
     public $editingPeriodId = null;
 
     public $periodTitle;
+
     public $periodType = 'term';
+
     public $periodAcademicYearId;
+
     public $periodSequence = 1;
+
     public $periodStartDate;
+
     public $periodEndDate;
+
     public $periodStatus = 'upcoming';
+
     public $periodDescription;
+
     public $registrationStart;
+
     public $registrationEnd;
+
     public $examStart;
+
     public $examEnd;
 
     // Grade Scales
     public $gradeScales = [];
+
     public $showGradeScaleModal = false;
+
     public $editingGradeScaleId = null;
 
     public $gradeName;
+
     public $gradeMinScore;
+
     public $gradeMaxScore;
+
     public $gradePoint;
+
     public $gradeDescription;
+
     public $gradeColor = '#10B981';
 
     // School Types
@@ -98,7 +144,7 @@ class SchoolConfigurationManager extends Component
         'university' => 'University',
         'technical' => 'Technical Institute',
         'vocational' => 'Vocational School',
-        'mixed' => 'Mixed/Combined'
+        'mixed' => 'Mixed/Combined',
     ];
 
     public $timezones = [
@@ -258,7 +304,7 @@ class SchoolConfigurationManager extends Component
 
         if ($this->newLetterhead) {
             // Delete old letterhead
-            if (!empty($settings['letterhead'])) {
+            if (! empty($settings['letterhead'])) {
                 Storage::disk('public')->delete($settings['letterhead']);
             }
 

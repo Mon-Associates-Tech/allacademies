@@ -2,12 +2,10 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\AcademicSubject;
+use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\Assignment;
 use App\Models\Student;
-use App\Models\StudentGroup;
-use App\Models\AcademicSubtopic;
 use App\Models\Teacher;
 use App\Services\AssignmentNotificationService;
 use App\Services\QuestionAvailabilityChecker;
@@ -19,47 +17,69 @@ use Livewire\Component;
 class CreateAssignment extends Component
 {
     public $title = '';
+
     public $description = '';
+
     public $type = 'quiz'; // quiz or examination
+
     public $academic_subject_id;
+
     public $duration_in_minutes = 60;
+
     public $starts_at;
+
     public $ends_at;
+
     public $is_randomized = false;
+
     public $instructions = '';
+
     public $total_marks = 100;
 
     // Assignment targets
     public $selectedAcademicGroups = [];
+
     public $selectedAcademicLevels = [];
+
     public $selectedStudentGroups = [];
+
     public $selectedStudents = [];
 
     // Questions selection
     public $selectedTopics = [];
+
     public $selectedSubtopics = [];
+
     public $questionTypes = [
         'multiple_choice_question' => ['enabled' => false, 'count' => 5, 'difficulty' => 'all'],
         'true_or_false_question' => ['enabled' => false, 'count' => 3, 'difficulty' => 'all'],
-        'essay_question' => ['enabled' => false, 'count' => 2, 'difficulty' => 'all']
+        'essay_question' => ['enabled' => false, 'count' => 2, 'difficulty' => 'all'],
     ];
 
     // Available options
     public $availableSubjects = [];
+
     public $availableAcademicGroups = [];
+
     public $availableAcademicLevels = [];
+
     public $availableStudentGroups = [];
+
     public $availableStudents = [];
+
     public $availableTopics = [];
+
     public $availableSubtopics = [];
 
     public $teacher;
+
     public $showQuestionSelection = false;
 
     public $restrict_navigation = false;
-    public $max_tab_switches = 3;
-    public $auto_submit_on_violation = true;
 
+    public $max_tab_switches = 3;
+
+    public $auto_submit_on_violation = true;
 
     protected $rules = [
         'title' => 'required|string|max:255',
@@ -78,8 +98,9 @@ class CreateAssignment extends Component
     ];
 
     protected $messages = [
-     //   'question_count_validation' => 'The selected topics/subtopics do not have enough questions to fulfill the assignment requirements.',
+        //   'question_count_validation' => 'The selected topics/subtopics do not have enough questions to fulfill the assignment requirements.',
     ];
+
     public function mount()
     {
 
@@ -93,7 +114,9 @@ class CreateAssignment extends Component
 
     public function loadAvailableOptions()
     {
-        if (!$this->teacher) return;
+        if (! $this->teacher) {
+            return;
+        }
 
         // Load teacher's subjects
         $this->availableSubjects = $this->teacher->academicSubjects()
@@ -158,11 +181,11 @@ class CreateAssignment extends Component
 
         // Ensure we're working with an array
         $topicIds = [];
-        if (!empty($this->selectedTopics) && is_array($this->selectedTopics)) {
+        if (! empty($this->selectedTopics) && is_array($this->selectedTopics)) {
             $topicIds = $this->selectedTopics;
         }
 
-        if (!empty($topicIds)) {
+        if (! empty($topicIds)) {
             $this->availableSubtopics = AcademicSubtopic::whereIn('academic_topic_id', $topicIds)
                 ->select('id', 'name', 'academic_topic_id')
                 ->with('academicTopic:id,name')
@@ -173,7 +196,7 @@ class CreateAssignment extends Component
 
     public function validateQuestionCounts()
     {
-        $checker = new QuestionAvailabilityChecker();
+        $checker = new QuestionAvailabilityChecker;
         $questionsConfig = $this->buildQuestionsConfiguration();
 
         $result = $checker->checkQuestionAvailability(
@@ -190,7 +213,7 @@ class CreateAssignment extends Component
     {
 
         session()->flash('success', 'Creating assignment...');
-//        $this->validate();
+        //        $this->validate();
 
         // Validate that at least one question type is enabled
         $hasQuestions = false;
@@ -201,17 +224,18 @@ class CreateAssignment extends Component
             }
         }
 
-        if (!$hasQuestions) {
+        if (! $hasQuestions) {
             session()->flash('error', 'Please enable at least one question type with a count greater than 0.');
+
             return;
         }
 
         // Validate question availability
         logError(json_encode($this->validateQuestionCounts()));
-        if (!$this->validateQuestionCounts()) {
+        if (! $this->validateQuestionCounts()) {
             logError('Question availability check failed');
-           // session()->flash('error', 'The selected topics/subtopics do not have enough questions to fulfill the assignment requirements.');
-           // return;
+            // session()->flash('error', 'The selected topics/subtopics do not have enough questions to fulfill the assignment requirements.');
+            // return;
         }
 
         try {
@@ -242,31 +266,31 @@ class CreateAssignment extends Component
             ]);
 
             // Assign to academic groups
-            if (!empty($this->selectedAcademicGroups)) {
+            if (! empty($this->selectedAcademicGroups)) {
                 $assignment->academicGroups()->attach($this->selectedAcademicGroups);
             }
 
             // Assign to academic levels
-            if (!empty($this->selectedAcademicLevels)) {
+            if (! empty($this->selectedAcademicLevels)) {
                 $assignment->academicLevels()->attach($this->selectedAcademicLevels);
             }
 
             // Assign to student groups
-            if (!empty($this->selectedStudentGroups)) {
+            if (! empty($this->selectedStudentGroups)) {
                 $assignment->studentGroups()->attach($this->selectedStudentGroups);
             }
 
             // Assign to individual students
-            if (!empty($this->selectedStudents)) {
+            if (! empty($this->selectedStudents)) {
                 $assignment->students()->attach($this->selectedStudents);
             }
 
             // Assign topics and subtopics
-            if (!empty($this->selectedTopics)) {
+            if (! empty($this->selectedTopics)) {
                 $assignment->topics()->attach($this->selectedTopics);
             }
 
-            if (!empty($this->selectedSubtopics)) {
+            if (! empty($this->selectedSubtopics)) {
                 $assignment->subtopics()->attach($this->selectedSubtopics);
             }
 
@@ -280,9 +304,9 @@ class CreateAssignment extends Component
             return redirect()->route('teachers.assignments.index');
 
         } catch (\Exception $e) {
-            logError('Assignment Creation Error: ' . $e->getMessage());
+            logError('Assignment Creation Error: '.$e->getMessage());
             DB::rollBack();
-            session()->flash('error', 'Failed to create assignment: ' . $e->getMessage());
+            session()->flash('error', 'Failed to create assignment: '.$e->getMessage());
         }
     }
 
@@ -291,7 +315,7 @@ class CreateAssignment extends Component
         $questionsConfig = [];
 
         foreach ($this->questionTypes as $type => $config) {
-            if (!$config['enabled'] || $config['count'] <= 0) {
+            if (! $config['enabled'] || $config['count'] <= 0) {
                 continue;
             }
 
@@ -301,13 +325,13 @@ class CreateAssignment extends Component
                 'difficulty' => $config['difficulty'],
                 'topic_ids' => [],
                 'subtopic_ids' => [],
-                'specific_ids' => []
+                'specific_ids' => [],
             ];
 
             // Add topic/subtopic filters if selected
-            if (!empty($this->selectedSubtopics)) {
+            if (! empty($this->selectedSubtopics)) {
                 $questionConfig['subtopic_ids'] = array_map('intval', $this->selectedSubtopics);
-            } elseif (!empty($this->selectedTopics)) {
+            } elseif (! empty($this->selectedTopics)) {
                 $questionConfig['topic_ids'] = array_map('intval', $this->selectedTopics);
             }
             // If no topics/subtopics selected, questions will be filtered by the assignment's subject
@@ -326,6 +350,7 @@ class CreateAssignment extends Component
                 $total += (int) $config['count'];
             }
         }
+
         return $total;
     }
 

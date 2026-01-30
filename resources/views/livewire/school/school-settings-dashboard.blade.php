@@ -81,7 +81,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                    <div class="mt-4 md:mt-0 flexd hidden items-center space-x-3">
                         <button wire:click="refreshData"
                                 class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-sm font-medium text-white hover:bg-opacity-30 transition-all duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +278,7 @@
             @include('livewire.school.partials.overview-tab')
             @include('livewire.school.partials.basic-info-tab')
             @include('livewire.school.partials.academic-periods-tab')
-{{--            @include('livewire.school.partials.system-settings-tab')--}}
+{{--        @include('livewire.school.partials.system-settings-tab')--}}
             @include('livewire.school.partials.fee-structure-tab')
             <livewire:school-settings.letterhead-settings />
             @include('livewire.school.partials.financial-aid-tab')
@@ -286,7 +286,7 @@
         </div>
 
         <!-- Academic Period Modal -->
-        @include('livewire.school.partials.period-modal')
+            @include('livewire.school.partials.period-modal')
 {{--        @include('livewire.school.partials.academic-year-modal')--}}
 
         <!-- Import Modal -  -->

@@ -4,31 +4,46 @@ namespace App\Livewire\Authors;
 
 use App\Livewire\AppComponent;
 use App\Models\Author;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 
 class Community extends AppComponent
 {
     public Author $author;
+
     public $activeTab = 'network';
+
     public $searchTerm = '';
+
     public $selectedGenre = 'all';
+
     public $selectedLocation = 'all';
+
     public $sortBy = 'newest';
+
     public $showCreatePostModal = false;
+
     public $showCreateEventModal = false;
+
     public $postContent = '';
+
     public $postTitle = '';
+
     public $eventTitle = '';
+
     public $eventDescription = '';
+
     public $eventDate = '';
+
     public $eventTime = '';
+
     public $eventLocation = '';
+
     public $eventType = 'virtual';
+
     public $selectedPost = null;
+
     public $replyContent = '';
+
     public $showReplyModal = false;
 
     public function mount(Author $author)
@@ -85,7 +100,7 @@ class Community extends AppComponent
                 'likes' => 24,
                 'comments' => 8,
                 'created_at' => now()->subHours(2),
-                'tags' => ['writing-tips', 'characters', 'fiction']
+                'tags' => ['writing-tips', 'characters', 'fiction'],
             ],
             [
                 'id' => 2,
@@ -95,7 +110,7 @@ class Community extends AppComponent
                 'likes' => 56,
                 'comments' => 15,
                 'created_at' => now()->subHours(4),
-                'tags' => ['self-publishing', 'marketing', 'success']
+                'tags' => ['self-publishing', 'marketing', 'success'],
             ],
             [
                 'id' => 3,
@@ -105,8 +120,8 @@ class Community extends AppComponent
                 'likes' => 18,
                 'comments' => 6,
                 'created_at' => now()->subHours(6),
-                'tags' => ['writing-tips', 'creativity', 'productivity']
-            ]
+                'tags' => ['writing-tips', 'creativity', 'productivity'],
+            ],
         ]);
     }
 
@@ -122,7 +137,7 @@ class Community extends AppComponent
                 'type' => 'virtual',
                 'attendees' => 45,
                 'max_attendees' => 50,
-                'host' => ['name' => 'Dr. Jennifer Smith', 'avatar' => null]
+                'host' => ['name' => 'Dr. Jennifer Smith', 'avatar' => null],
             ],
             [
                 'id' => 2,
@@ -134,8 +149,8 @@ class Community extends AppComponent
                 'location' => 'Downtown Library',
                 'attendees' => 23,
                 'max_attendees' => 30,
-                'host' => ['name' => 'Local Authors Guild', 'avatar' => null]
-            ]
+                'host' => ['name' => 'Local Authors Guild', 'avatar' => null],
+            ],
         ]);
     }
 
@@ -148,7 +163,7 @@ class Community extends AppComponent
                 'replies' => 34,
                 'last_activity' => now()->subMinutes(15),
                 'starter' => ['name' => 'Alex Rodriguez', 'avatar' => null],
-                'category' => 'Marketing'
+                'category' => 'Marketing',
             ],
             [
                 'id' => 2,
@@ -156,8 +171,8 @@ class Community extends AppComponent
                 'replies' => 28,
                 'last_activity' => now()->subHours(1),
                 'starter' => ['name' => 'Lisa Wang', 'avatar' => null],
-                'category' => 'Publishing'
-            ]
+                'category' => 'Publishing',
+            ],
         ]);
     }
 
@@ -172,7 +187,7 @@ class Community extends AppComponent
                 'total_spots' => 6,
                 'deadline' => now()->addDays(30),
                 'coordinator' => ['name' => 'Rachel Green', 'avatar' => null],
-                'genres' => ['Fantasy', 'Short Stories']
+                'genres' => ['Fantasy', 'Short Stories'],
             ],
             [
                 'id' => 2,
@@ -182,8 +197,8 @@ class Community extends AppComponent
                 'total_spots' => 8,
                 'deadline' => now()->addDays(7),
                 'coordinator' => ['name' => 'Tom Wilson', 'avatar' => null],
-                'genres' => ['All Genres']
-            ]
+                'genres' => ['All Genres'],
+            ],
         ]);
     }
 

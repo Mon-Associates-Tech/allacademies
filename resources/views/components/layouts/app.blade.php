@@ -1,14 +1,16 @@
 @props(['action' => null,
-'titleAlignCenter' => false,
-'breadcrumb' => null,
-'title' => null,
-'hasAction' => false,
-'pageName' => null,
-'action_link' => '',
-'actionLinkText' => '',
-'showTitleArea' => true,
-]
-)
+    'titleAlignCenter' => false,
+    'breadcrumb' => null,
+    'title' => null,
+    'hasAction' => false,
+    'pageName' => null,
+    'action_link' => '',
+    'actionLinkText' => '',
+    'showTitleArea' => true,
+    'fullWidth' => false,
+    // background allows callers to set additional body background classes, e.g. 'bg-white dark:bg-gray-900'
+    'background' => '',
+])
 
 @php
     // Determine if school switcher should be shown
@@ -46,11 +48,10 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar
-  bg-[radial-gradient(73%_147%,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
-  dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
-  bg-blend-screen"
-      :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
+<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ $background ? $background : 'bg-[radial-gradient(73%_147%,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
+    dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
+    bg-blend-screen' }}"
+            :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
       x-data="{ pageLoaded: false }"
       x-init="setTimeout(() => pageLoaded = true, 150)"
 >
@@ -69,7 +70,7 @@
 
 <x-alert.impersonation-banner></x-alert.impersonation-banner>
 @if(auth()->check() && auth()->user()->canAccessCrossSchool())
-    <livewire:administrators.school-switcher />
+        <livewire:administrators.school-switcher />
 @endif
 
 <!-- Page wrapper -->
@@ -113,7 +114,7 @@
 
             <!-- Page content - NO OVERFLOW HERE -->
             <div class="pb-12 mb-8 w-full">
-                <div class="w-full sm:px-4 lg:px-4">
+                <div class="w-full {{ $fullWidth ? '' : 'sm:px-4 lg:px-4' }}">
                     {{ $slot }}
                 </div>
             </div>

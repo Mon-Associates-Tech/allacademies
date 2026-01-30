@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Note;
-use App\Models\Book;
 use App\Models\AcademicSubject;
+use App\Models\Book;
+use App\Models\Note;
 use App\Models\NoteAttachment;
-use App\Models\User;
 use App\Services\NoteExportService;
 use App\Services\NoteShareService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Log;
+use Str;
+use Throwable;
 
 class NotesController extends Controller
 {
@@ -23,12 +26,11 @@ class NotesController extends Controller
     {
         $query = Note::query();
 
-        // Base query - user's own notes or shared notes
+        // Base query - user's own notesor shared notes
         $query->where(function ($q) {
-            $q->where('user_id', Auth::id())
-                ->orWhereHas('shares', function ($shareQuery) {
-                    $shareQuery->where('shared_with_user_id', Auth::id());
-                });
+            $q->where('user_id', Auth::id())->orWhereHas('shares', function ($shareQuery) {
+                $shareQuery->where('shared_with_user_id', Auth::id());
+            });
         });
 
         // Filter by ownership type
@@ -36,10 +38,9 @@ class NotesController extends Controller
             if ($request->ownership === 'my_notes') {
                 $query->where('user_id', Auth::id());
             } elseif ($request->ownership === 'shared_with_me') {
-                $query->where('user_id', '!=', Auth::id())
-                    ->whereHas('shares', function ($q) {
-                        $q->where('shared_with_user_id', Auth::id());
-                    });
+                $query->where('user_id', '!=', Auth::id())->whereHas('shares', function ($q) {
+                    $q->where('shared_with_user_id', Auth::id());
+                });
             }
         }
 
@@ -66,8 +67,7 @@ class NotesController extends Controller
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                    ->orWhere('content', 'like', "%{$searchTerm}%");
+                $q->where('title', 'like', "%{$searchTerm}%")->orWhere('content', 'like', "%{$searchTerm}%");
             });
         }
 
@@ -102,17 +102,15 @@ class NotesController extends Controller
 
         // Get filter options
         $books = Book::whereHas('notes', function ($q) {
-            $q->where('user_id', Auth::id())
-                ->orWhereHas('shares', function ($shareQuery) {
-                    $shareQuery->where('shared_with_user_id', Auth::id());
-                });
+            $q->where('user_id', Auth::id())->orWhereHas('shares', function ($shareQuery) {
+                $shareQuery->where('shared_with_user_id', Auth::id());
+            });
         })->orderBy('title')->get();
 
         $subjects = AcademicSubject::whereHas('notes', function ($q) {
-            $q->where('user_id', Auth::id())
-                ->orWhereHas('shares', function ($shareQuery) {
-                    $shareQuery->where('shared_with_user_id', Auth::id());
-                });
+            $q->where('user_id', Auth::id())->orWhereHas('shares', function ($shareQuery) {
+                $shareQuery->where('shared_with_user_id', Auth::id());
+            });
         })->orderBy('name')->get();
 
         // Get active filters for display
@@ -157,19 +155,12 @@ class NotesController extends Controller
                 $dateRange .= date('M d, Y', strtotime($request->date_from));
             }
             if ($request->filled('date_to')) {
-                $dateRange .= ' - ' . date('M d, Y', strtotime($request->date_to));
+                $dateRange .= ' - '.date('M d, Y', strtotime($request->date_to));
             }
             $filters['date_range'] = $dateRange;
         }
 
         return $filters;
-    }
-
-    public function create()
-    {
-        $books = Book::all();
-        $subjects = AcademicSubject::all();
-        return view('notes.create', compact('books', 'subjects'));
     }
 
     public function store(Request $request)
@@ -179,7 +170,14 @@ class NotesController extends Controller
             'content' => 'required|string',
             'book_id' => 'nullable|exists:books,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
-            'is_public' => 'boolean'
+            'is_public' => 'boolean',
+            'background_color' => 'nullable|string|in:'.implode(',', array_keys(Note::getBackgroundColors())),
+            'add_to_calendar' => 'in:on,1,0,true,false',
+            'calendar_event_start_date' => 'nullable|date',
+            'calendar_event_end_date' => 'nullable|date|after_or_equal:calendar_event_start_date',
+            'calendar_event_all_day' => 'boolean',
+            'calendar_event_color' => 'nullable|string',
+            'calendar_event_visibility' => 'nullable|in:private,public,shared',
         ]);
 
         $note = Note::create([
@@ -188,15 +186,46 @@ class NotesController extends Controller
             'user_id' => Auth::id(),
             'book_id' => $request->book_id,
             'academic_subject_id' => $request->academic_subject_id,
-            'is_public' => $request->boolean('is_public')
+            'is_public' => $request->boolean('is_public'),
+            'background_color' => $request->background_color ?? 'white',
         ]);
+
+        // Debug: Log request data for calendar event
+        Log::info('Note creation request data', ['add_to_calendar' => $request->boolean('add_to_calendar'), 'calendar_event_start_date' => $request->calendar_event_start_date, 'calendar_event_end_date' => $request->calendar_event_end_date, 'all_request_data' => $request->all()]);
+
+        // Create calendar event if requested
+        if ($request->filled('add_to_calendar') && $request->filled('calendar_event_start_date')) {
+            // Convert datetime-local format to proper datetime format if needed
+            $startDate = $request->calendar_event_start_date;
+            if ($startDate && strpos($startDate, 'T') !== false) {
+                // Convert 'T' format to space format for proper datetime handling
+                $startDate = str_replace('T', ' ', $startDate);
+            }
+
+            $endDate = $request->calendar_event_end_date;
+            if ($endDate && strpos($endDate, 'T') !== false) {
+                $endDate = str_replace('T', ' ', $endDate);
+            }
+
+            $eventData = ['title' => $request->title, 'description' => $request->content, 'start_date' => $startDate, 'end_date' => $endDate, 'all_day' => $request->boolean('calendar_event_all_day'), 'color' => $request->calendar_event_color, 'visibility' => $request->calendar_event_visibility ?? 'private'];
+
+            $note->createCalendarEvent($eventData);
+        }
 
         return redirect()->route('notes.show', $note)->with('success', 'Note created successfully.');
     }
 
+    public function create()
+    {
+        $books = Book::all();
+        $subjects = AcademicSubject::all();
+
+        return view('notes.create', compact('books', 'subjects'));
+    }
+
     public function show(Note $note)
     {
-        if (!$note->canUserView(Auth::id())) {
+        if (! $note->canUserView(Auth::id())) {
             abort(403);
         }
 
@@ -247,7 +276,7 @@ class NotesController extends Controller
 
     public function edit(Note $note)
     {
-        if (!$note->canUserEdit(Auth::id())) {
+        if (! $note->canUserEdit(Auth::id())) {
             abort(403);
         }
 
@@ -255,12 +284,13 @@ class NotesController extends Controller
         $subjects = AcademicSubject::all();
 
         $note->load(['book', 'academicSubject']);
+
         return view('notes.edit', compact('note', 'books', 'subjects'));
     }
 
     public function update(Request $request, Note $note)
     {
-        if (!$note->canUserEdit(Auth::id())) {
+        if (! $note->canUserEdit(Auth::id())) {
             abort(403);
         }
 
@@ -269,7 +299,14 @@ class NotesController extends Controller
             'content' => 'required|string',
             'book_id' => 'nullable|exists:books,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
-            'is_public' => 'boolean'
+            'is_public' => 'boolean',
+            'background_color' => 'nullable|string|in:'.implode(',', array_keys(Note::getBackgroundColors())),
+            'add_to_calendar' => 'in:on,1,0,true,false',
+            'calendar_event_start_date' => 'nullable|date',
+            'calendar_event_end_date' => 'nullable|date|after_or_equal:calendar_event_start_date',
+            'calendar_event_all_day' => 'boolean',
+            'calendar_event_color' => 'nullable|string',
+            'calendar_event_visibility' => 'nullable|in:private,public,shared',
         ]);
 
         $note->update([
@@ -277,8 +314,53 @@ class NotesController extends Controller
             'content' => $request->content,
             'book_id' => $request->book_id,
             'academic_subject_id' => $request->academic_subject_id,
-            'is_public' => $request->boolean('is_public')
+            'is_public' => $request->boolean('is_public'),
+            'background_color' => $request->background_color ?? $note->background_color ?? 'white',
         ]);
+
+        // Debug: Log request data for calendar event
+        Log::info('Note update request data', [
+            'note_id' => $note->id,
+            'add_to_calendar' => $request->boolean('add_to_calendar'),
+            'calendar_event_start_date' => $request->calendar_event_start_date,
+            'calendar_event_end_date' => $request->calendar_event_end_date,
+            'all_request_data' => $request->all(),
+        ]);
+
+        // Handle calendar event creation/update
+        if ($request->boolean('add_to_calendar') && $request->filled('calendar_event_start_date')) {
+            // Convert datetime-local format to proper datetime format if needed
+            $startDate = $request->calendar_event_start_date;
+            if ($startDate && strpos($startDate, 'T') !== false) {
+                // Convert 'T' format to space format for proper datetime handling
+                $startDate = str_replace('T', ' ', $startDate);
+            }
+            $endDate = $request->calendar_event_end_date;
+            if ($endDate && strpos($endDate, 'T') !== false) {
+                $endDate = str_replace('T', ' ', $endDate);
+            }
+
+            $eventData = [
+                'title' => $request->title,
+                'description' => $request->content,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'all_day' => $request->boolean('calendar_event_all_day'),
+                'color' => $request->calendar_event_color,
+                'visibility' => $request->calendar_event_visibility ?? 'private',
+            ];
+
+            if (! $note->calendarEvent) {
+                $note->createCalendarEvent($eventData);
+            } else {
+                $note->calendarEvent->update($eventData);
+            }
+        } elseif ($request->has('add_to_calendar') && ! $request->boolean('add_to_calendar')) {
+            // Remove calendar event if unchecked
+            if ($note->calendarEvent) {
+                $note->calendarEvent->delete();
+            }
+        }
 
         return redirect()->route('notes.show', $note)->with('success', 'Note updated successfully.');
     }
@@ -290,9 +372,13 @@ class NotesController extends Controller
         }
 
         $note->delete();
+
         return redirect()->route('notes.index')->with('success', 'Note deleted successfully.');
     }
 
+    /**
+     * @throws Throwable
+     */
     public function share(Request $request, Note $note)
     {
         if ($note->user_id !== Auth::id()) {
@@ -300,21 +386,16 @@ class NotesController extends Controller
         }
 
         $request->validate([
-            'share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide',
+            'share_type' => 'required|in:individual,academic_group,academic_level,student_group,school_wide,email',
             'recipient_ids' => 'required|array|min:1',
-            'recipient_ids.*' => 'required|integer',
-            'can_edit' => 'boolean'
+            'recipient_ids.*' => $request->share_type === 'email' ? 'required|string' : 'required',
+            'can_edit' => 'boolean',
         ]);
 
-        $result = $this->shareService->shareNote(
-            $note,
-            $request->share_type,
-            $request->recipient_ids,
-            $request->boolean('can_edit')
-        );
+        $result = $this->shareService->shareNote($note, $request->share_type, $request->recipient_ids, $request->boolean('can_edit'));
 
-        return back()->with('success', "Note shared with {$result['users_notified']} " .
-            \Str::plural('recipient', $result['users_notified']) . " successfully.");
+        return back()->with('success', "Note shared with {$result['users_notified']} ".
+            Str::plural('recipient', $result['users_notified']).' successfully.');
     }
 
     public function unshare(Note $note, Request $request)
@@ -323,56 +404,49 @@ class NotesController extends Controller
             abort(403);
         }
 
-        $request->validate([
-            'share_type' => 'required|string',
-            'identifier' => 'required',
-        ]);
+        $request->validate(['share_type' => 'required|string', 'identifier' => 'required']);
 
         $this->shareService->unshare($note, $request->share_type, $request->identifier);
 
-        return back()->with('success', 'Note access removed successfully.');
+        return back()->with('success', 'Noteaccess removed successfully.');
     }
 
     public function download(Note $note, Request $request)
     {
         // Check permissions
-        if (!$note->canUserView(Auth::id())) {
+        if (! $note->canUserView(Auth::id())) {
             abort(403, 'You do not have permission to download this note.');
         }
 
         $format = $request->get('format', 'pdf');
 
         // Validate format
-        if (!in_array($format, ['pdf', 'txt', 'docx'])) {
+        if (! in_array($format, ['pdf', 'txt', 'docx'])) {
             return back()->with('error', 'Invalid export format.');
         }
 
         try {
             $result = $this->exportService->export($note, $format);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return back()->with('error', $result['error']);
             }
 
             return response($result['content'])
                 ->header('Content-Type', $result['mime_type'])
-                ->header('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"');
+                ->header('Content-Disposition', 'attachment; filename="'.$result['filename'].'"');
 
-        } catch (\Exception $e) {
-            \Log::error('Note download failed', [
-                'note_id' => $note->id,
-                'format' => $format,
-                'error' => $e->getMessage(),
-            ]);
+        } catch (Exception $e) {
+            Log::error('Note download failed', ['note_id' => $note->id, 'format' => $format, 'error' => $e->getMessage()]);
 
-            return back()->with('error', 'Failed to download note. Please try again.');
+            return back()->with('error', 'Failed to downloadnote. Please try again.');
         }
     }
 
     public function downloadAttachment(Note $note, NoteAttachment $attachment)
     {
         // Check permissions
-        if (!$note->canUserView(Auth::id())) {
+        if (! $note->canUserView(Auth::id())) {
             abort(403, 'You do not have permission to access this note.');
         }
 
@@ -381,9 +455,9 @@ class NotesController extends Controller
             abort(404);
         }
 
-        $filePath = storage_path('app/public/' . $attachment->path);
+        $filePath = storage_path('app/public/'.$attachment->path);
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return back()->with('error', 'File not found.');
         }
 
@@ -393,7 +467,7 @@ class NotesController extends Controller
     public function viewAttachment(Note $note, NoteAttachment $attachment)
     {
         // Check permissions
-        if (!$note->canUserView(Auth::id())) {
+        if (! $note->canUserView(Auth::id())) {
             abort(403, 'You do not have permission to access this note.');
         }
 
@@ -402,16 +476,15 @@ class NotesController extends Controller
             abort(404);
         }
 
-        $filePath = storage_path('app/public/' . $attachment->path);
+        $filePath = storage_path('app/public/'.$attachment->path);
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return back()->with('error', 'File not found.');
         }
 
         return response()->file($filePath, [
             'Content-Type' => $attachment->mime_type,
-            'Content-Disposition' => 'inline; filename="' . $attachment->original_filename . '"'
+            'Content-Disposition' => 'inline; filename="'.$attachment->original_filename.'"',
         ]);
     }
-
 }

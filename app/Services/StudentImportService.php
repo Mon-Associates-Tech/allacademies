@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Imports\StudentsImporter;
 use Illuminate\Http\UploadedFile;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentImportService
 {
@@ -13,7 +13,7 @@ class StudentImportService
     {
         // Store the file temporarily
         $path = $file->store('imports/students', 'local');
-        
+
         try {
             // Create importer instance with options
             $importer = new StudentsImporter(
@@ -29,14 +29,14 @@ class StudentImportService
 
             return [
                 'success' => true,
-                'message' => "Import completed successfully",
+                'message' => 'Import completed successfully',
                 'stats' => $stats,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => "Import failed: " . $e->getMessage(),
+                'message' => 'Import failed: '.$e->getMessage(),
                 'stats' => null,
             ];
         } finally {
@@ -49,32 +49,32 @@ class StudentImportService
     {
         $requiredColumns = ['name', 'email'];
         $optionalColumns = [
-            'first_name', 'last_name', 'academic_level', 'academic_group', 
-            'school', 'student_group', 'student_id', 'date_of_birth', 
-            'phone', 'address', 'password'
+            'first_name', 'last_name', 'academic_level', 'academic_group',
+            'school', 'student_group', 'student_id', 'date_of_birth',
+            'phone', 'address', 'password',
         ];
 
         try {
             $path = $file->store('temp', 'local');
             $data = Excel::toArray([], Storage::path($path))[0];
-            
+
             if (empty($data)) {
                 return [
                     'valid' => false,
-                    'message' => 'CSV file is empty or invalid'
+                    'message' => 'CSV file is empty or invalid',
                 ];
             }
 
             $headers = array_map('strtolower', array_keys($data[0]));
             $missingRequired = array_diff($requiredColumns, $headers);
 
-            if (!empty($missingRequired)) {
+            if (! empty($missingRequired)) {
                 return [
                     'valid' => false,
-                    'message' => 'Missing required columns: ' . implode(', ', $missingRequired),
+                    'message' => 'Missing required columns: '.implode(', ', $missingRequired),
                     'required_columns' => $requiredColumns,
                     'optional_columns' => $optionalColumns,
-                    'found_columns' => $headers
+                    'found_columns' => $headers,
                 ];
             }
 
@@ -84,13 +84,13 @@ class StudentImportService
                 'required_columns' => $requiredColumns,
                 'optional_columns' => $optionalColumns,
                 'found_columns' => $headers,
-                'total_rows' => count($data)
+                'total_rows' => count($data),
             ];
 
         } catch (\Exception $e) {
             return [
                 'valid' => false,
-                'message' => 'Error reading CSV file: ' . $e->getMessage()
+                'message' => 'Error reading CSV file: '.$e->getMessage(),
             ];
         } finally {
             if (isset($path)) {
@@ -115,7 +115,7 @@ class StudentImportService
                 'date_of_birth' => '2008-05-15',
                 'phone' => '+1234567890',
                 'address' => '123 Main St, City, State',
-                'password' => 'student123'
+                'password' => 'student123',
             ],
             [
                 'name' => 'Jane Smith',
@@ -130,23 +130,23 @@ class StudentImportService
                 'date_of_birth' => '2007-09-22',
                 'phone' => '+1234567891',
                 'address' => '456 Oak Ave, City, State',
-                'password' => 'student456'
-            ]
+                'password' => 'student456',
+            ],
         ];
 
         $filename = 'sample_students_import.csv';
-        $filepath = storage_path('app/public/' . $filename);
+        $filepath = storage_path('app/public/'.$filename);
 
         $handle = fopen($filepath, 'w');
-        
+
         // Add header row
         fputcsv($handle, array_keys($sampleData[0]));
-        
+
         // Add data rows
         foreach ($sampleData as $row) {
             fputcsv($handle, $row);
         }
-        
+
         fclose($handle);
 
         return $filename;

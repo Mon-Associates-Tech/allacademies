@@ -10,7 +10,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class AcademicLevelController extends Controller
 {
@@ -68,7 +67,7 @@ class AcademicLevelController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicLevel $academic_level
+     * @param  AcademicLevel  $academic_level
      * @return \Illuminate\Http\Response
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel)
@@ -77,14 +76,14 @@ class AcademicLevelController extends Controller
 
         $academicLevel->load([
             'academicGroup',
-            'academicSubjects' => function($query) {
+            'academicSubjects' => function ($query) {
                 $query->withCount('topics') // if topics relationship exists
-                      ->orderBy('name');
-            }
+                    ->orderBy('name');
+            },
         ])->loadCount([
             'academicSubjects',
             'students', // if relationship exists
-            'teachers'  // if relationship exists
+            'teachers',  // if relationship exists
         ]);
 
         return view('academic-levels.show', [
@@ -95,7 +94,6 @@ class AcademicLevelController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicLevel $academicLevel
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel)
@@ -111,11 +109,6 @@ class AcademicLevelController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevelRequest $request
-     * @param AcademicLevel $academicLevel
-     * @return RedirectResponse
      */
     public function update(AcademicGroup $academicGroup, AcademicLevelRequest $request, AcademicLevel $academicLevel): RedirectResponse
     {
@@ -123,16 +116,12 @@ class AcademicLevelController extends Controller
 
         $academicLevel->update($request->validated());
 
-        return to_route('academic-levels.show', ['academic_level' =>  $academicLevel])
+        return to_route('academic-levels.show', ['academic_level' => $academicLevel])
             ->with('success', __('status.resource.updated', ['name' => $academicLevel->name]));
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @return RedirectResponse
      */
     public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel): RedirectResponse
     {

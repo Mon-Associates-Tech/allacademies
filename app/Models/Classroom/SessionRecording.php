@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SessionRecording extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $table = 'virtual_session_recordings';
 
@@ -76,7 +76,7 @@ class SessionRecording extends Model
     {
         return $query->where(function ($q) {
             $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>', now());
+                ->orWhere('expires_at', '>', now());
         });
     }
 
@@ -93,7 +93,7 @@ class SessionRecording extends Model
 
     public function isDownloaded(): bool
     {
-        return !empty($this->storage_path) && !empty($this->downloaded_at);
+        return ! empty($this->storage_path) && ! empty($this->downloaded_at);
     }
 
     public function canAccess(User $user): bool
@@ -123,7 +123,7 @@ class SessionRecording extends Model
 
     public function getFormattedSize(): string
     {
-        if (!$this->size_bytes) {
+        if (! $this->size_bytes) {
             return 'Unknown';
         }
 
@@ -136,12 +136,12 @@ class SessionRecording extends Model
             $unit++;
         }
 
-        return round($bytes, 2) . ' ' . $units[$unit];
+        return round($bytes, 2).' '.$units[$unit];
     }
 
     public function getFormattedDuration(): string
     {
-        if (!$this->duration_seconds) {
+        if (! $this->duration_seconds) {
             return 'Unknown';
         }
 

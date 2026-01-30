@@ -7,19 +7,17 @@ use App\Http\Requests\MultipleChoiceQuestionRequest;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class MultipleChoiceQuestionController extends Controller
 {
     use HasSubtopic;
+
     /**
      * Display a listing of the resource.
      *
@@ -41,15 +39,8 @@ class MultipleChoiceQuestionController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param MultipleChoiceQuestionRequest $request
-     * @return RedirectResponse
      */
-    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request): RedirectResponse
+    public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request): RedirectResponse
     {
         $this->authorize('moderate');
 
@@ -59,8 +50,7 @@ class MultipleChoiceQuestionController extends Controller
         $data['academic_subtopic_id'] = $this->getSubtopicId($multipleChoiceQuestion, $request);
         $multipleChoiceQuestion->update($data);
 
-
-        return to_route('multiple-choice-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => $academicSubject , 'academic_level' => $academicLevel, 'academic_group' => $academicGroup])
+        return to_route('multiple-choice-questions.index', ['academic_topic' => $academicTopic, 'academic_subject' => $academicSubject, 'academic_level' => $academicLevel, 'academic_group' => $academicGroup])
             ->with('success', __('status.resource.created', ['name' => $multipleChoiceQuestion->question->summary]));
     }
 
@@ -69,7 +59,7 @@ class MultipleChoiceQuestionController extends Controller
      *
      * @return Application|Factory|View|\Illuminate\View\View
      */
-    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic)
+    public function create(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
 
@@ -83,11 +73,6 @@ class MultipleChoiceQuestionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param MultipleChoiceQuestion $multipleChoiceQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, MultipleChoiceQuestion $multipleChoiceQuestion)
@@ -104,11 +89,6 @@ class MultipleChoiceQuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param MultipleChoiceQuestion $multipleChoiceQuestion
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, MultipleChoiceQuestion $multipleChoiceQuestion)
@@ -125,14 +105,6 @@ class MultipleChoiceQuestionController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @param MultipleChoiceQuestionRequest $request
-     * @param MultipleChoiceQuestion $multipleChoiceQuestion
-     * @return RedirectResponse
      */
     public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, MultipleChoiceQuestionRequest $request, MultipleChoiceQuestion $multipleChoiceQuestion): RedirectResponse
     {
@@ -150,9 +122,6 @@ class MultipleChoiceQuestionController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param MultipleChoiceQuestion $multipleChoiceQuestion
-     * @return RedirectResponse
      */
     public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, MultipleChoiceQuestion $multipleChoiceQuestion): RedirectResponse
     {

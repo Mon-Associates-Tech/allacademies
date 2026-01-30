@@ -13,19 +13,30 @@ class BookInventory extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $categoryFilter = 'all';
+
     public $publisherFilter = 'all';
+
     public $sortBy = 'title';
+
     public $sortDirection = 'asc';
+
     public $perPage = 15;
 
     // Modal properties
     public $showModal = false;
+
     public $selectedBook = null;
+
     public $newCopyQuantity = 1;
+
     public $selectedCondition = 'new';
+
     public $selectedLocation = '';
+
     public $notes = '';
 
     protected $queryString = [
@@ -153,7 +164,7 @@ class BookInventory extends Component
 
     private function generateBarcode()
     {
-        return 'BC' . str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
+        return 'BC'.str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
     }
 
     public function render()
@@ -166,9 +177,9 @@ class BookInventory extends Component
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('author', 'like', '%' . $this->search . '%')
-                  ->orWhere('isbn', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('author', 'like', '%'.$this->search.'%')
+                    ->orWhere('isbn', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -187,7 +198,7 @@ class BookInventory extends Component
                     break;
                 case 'low_stock':
                     $query->having('available_copies', '<=', 2)
-                          ->having('available_copies', '>', 0);
+                        ->having('available_copies', '>', 0);
                     break;
             }
         }
@@ -210,7 +221,7 @@ class BookInventory extends Component
         return view('livewire.librarians.book-inventory', [
             'books' => $books,
             'categories' => BookCategory::all(),
-            'publishers' => collect() // Publisher::all(),
+            'publishers' => collect(), // Publisher::all(),
         ]);
     }
 }

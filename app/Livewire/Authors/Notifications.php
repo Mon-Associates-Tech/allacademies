@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Auth;
 class Notifications extends AppComponent
 {
     public $notifications;
+
     public $unreadCount = 0;
+
     public $showAll = false;
+
     public $filterType = 'unread';
 
     public function mount()
@@ -52,7 +55,7 @@ class Notifications extends AppComponent
 
     public function toggleShowAll()
     {
-        $this->showAll = !$this->showAll;
+        $this->showAll = ! $this->showAll;
         $this->loadNotifications();
     }
 

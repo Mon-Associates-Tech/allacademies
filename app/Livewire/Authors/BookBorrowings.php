@@ -4,7 +4,4 @@ namespace App\Livewire\Authors;
 
 use App\Livewire\AppComponent;
 
-class BookBorrowings extends AppComponent
-{
-
-}
+class BookBorrowings extends AppComponent {}

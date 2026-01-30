@@ -21,36 +21,54 @@ class SelfAssessment extends Component
     use StartsAssessment;
 
     public $step = 'setup'; // setup, assessment, results
+
     public $assessmentMode = 'self'; // 'self' or 'assignment'
 
     // Setup phase
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $selectedAssignment = null;
+
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $difficulty = 'all';
+
     public $timeLimitMinutes = null;
 
     // Assessment phase
     public $currentQuestionIndex = 0;
+
     public $questions = [];
+
     public $responses = [];
+
     public $assessment = null;
+
     public $timeRemaining = null;
+
     public $timeLimitSeconds = 0;
+
     public $startTime = null;
 
     // Results phase
     public $assessmentResult = null;
+
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
+
     public $availableAssignments = [];
 
     protected $rules = [
@@ -62,8 +80,9 @@ class SelfAssessment extends Component
     {
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $this->subjects = collect();
+
             return;
         }
 
@@ -75,7 +94,7 @@ class SelfAssessment extends Component
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'accessed_self_assessment',
-                'page' => 'self-assessment'
+                'page' => 'self-assessment',
             ])
             ->log('Student accessed self-assessment page');
     }
@@ -100,7 +119,7 @@ class SelfAssessment extends Component
 
         // Merge individual subjects, removing duplicates
         foreach ($individualSubjects as $subject) {
-            if (!$this->subjects->contains('id', $subject->id)) {
+            if (! $this->subjects->contains('id', $subject->id)) {
                 $this->subjects->push($subject);
             }
         }
@@ -114,7 +133,7 @@ class SelfAssessment extends Component
             return $removedSubjects->contains($subject->id);
         });
 
-        if(count($this->subjects) === 0) {
+        if (count($this->subjects) === 0) {
             $this->subjects = Subject::get();
         }
     }
@@ -141,20 +160,23 @@ class SelfAssessment extends Component
 
     private function startFromAssignment(): void
     {
-        if (!$this->selectedAssignment) {
+        if (! $this->selectedAssignment) {
             session()->flash('error', 'Please select an assignment.');
+
             return;
         }
 
         $assignment = Assignment::find($this->selectedAssignment);
-        if (!$assignment) {
+        if (! $assignment) {
             session()->flash('error', 'Assignment not found.');
+
             return;
         }
 
         // Check if student can start this assignment
-        if (!$this->canStartAssignment($assignment)) {
+        if (! $this->canStartAssignment($assignment)) {
             session()->flash('error', 'You are not eligible to start this assignment or it is not available.');
+
             return;
         }
 
@@ -164,7 +186,7 @@ class SelfAssessment extends Component
             Log::error('Failed to start assignment practice', [
                 'assignment_id' => $assignment->id,
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to start assignment practice. Please try again.');
@@ -176,13 +198,14 @@ class SelfAssessment extends Component
         $this->validate();
         $student = auth()->user()->student;
         $this->loadStudentSubjects(auth()->user()->student);
-        if (!$student){
-           $this->showError('Student not found');
+        if (! $student) {
+            $this->showError('Student not found');
+
             return;
         }
 
         // Validate question type combinations
-        if (!$this->validateQuestionTypeCombinations()) {
+        if (! $this->validateQuestionTypeCombinations()) {
             return;
         }
 
@@ -193,7 +216,7 @@ class SelfAssessment extends Component
             Log::error('Failed to start self-assessment', [
                 'config' => $this->getConfigurationArray(),
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to start assessment. Please try again.');
@@ -206,12 +229,14 @@ class SelfAssessment extends Component
 
         if (empty($selectedTypes)) {
             session()->flash('error', 'Please select at least one question type.');
+
             return false;
         }
 
         // If essay is selected, it must be the only type
         if ($this->questionTypes['essay_question'] && count($selectedTypes) > 1) {
             session()->flash('error', 'Essay questions cannot be combined with other question types.');
+
             return false;
         }
 
@@ -245,30 +270,33 @@ class SelfAssessment extends Component
     {
         $config = $this->getConfigurationArray();
 
-
         $student = auth()->user()->student;
         $this->showError(json_encode($student));
-        if(!$student){
+        if (! $student) {
             $this->showError('Student not found');
+
             return;
         }
 
         // Ensure subject exists
         $subject = Subject::find($config['subject_id']);
-        if (!$subject) {
+        if (! $subject) {
             $this->showError('Subject not found.');
+
             return;
         }
 
         $topic = $config['topic_id'] ? Topic::find($config['topic_id']) : null;
-        if ($config['topic_id'] && !$topic) {
+        if ($config['topic_id'] && ! $topic) {
             $this->showError('Topic not found.');
+
             return;
         }
 
         $subtopic = $config['subtopic_id'] ? Subtopic::find($config['subtopic_id']) : null;
-        if ($config['subtopic_id'] && !$subtopic) {
+        if ($config['subtopic_id'] && ! $subtopic) {
             $this->showError('Subtopic not found.');
+
             return;
         }
 
@@ -340,7 +368,7 @@ class SelfAssessment extends Component
                 break;
         }
 
-        if (!$query) {
+        if (! $query) {
             return collect();
         }
 
@@ -351,7 +379,7 @@ class SelfAssessment extends Component
 
         $this->applyContentFilters($query, $config);
 
-        return $query->get()->map(fn($q) => ['type' => $type, 'model' => $q]);
+        return $query->get()->map(fn ($q) => ['type' => $type, 'model' => $q]);
     }
 
     private function applyContentFilters($query, array $config): void
@@ -450,7 +478,7 @@ class SelfAssessment extends Component
     {
         if (isset($this->responses[$questionIndex])) {
             $this->responses[$questionIndex]['student_answer'] = $response;
-            $this->responses[$questionIndex]['is_answered'] = !empty($response);
+            $this->responses[$questionIndex]['is_answered'] = ! empty($response);
             $this->responses[$questionIndex]['response_time'] = now()->diffInSeconds($this->startTime);
         }
     }
@@ -519,7 +547,7 @@ class SelfAssessment extends Component
             Log::error('Failed to submit assessment', [
                 'assessment_id' => $this->assessment->id,
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to submit assessment. Please try again.');
@@ -535,6 +563,7 @@ class SelfAssessment extends Component
     private function getConfigurationArray(): array
     {
         $subjectName = Subject::find($this->selectedSubject)?->name ?? 'Unknown';
+
         return [
             'subject_id' => $this->selectedSubject,
             'topic_id' => $this->selectedTopic,
@@ -543,7 +572,7 @@ class SelfAssessment extends Component
             'question_count' => $this->questionCount,
             'difficulty' => $this->difficulty,
             'time_limit_minutes' => $this->timeLimitMinutes,
-            'title' => 'Self Assessment - ' . $subjectName,
+            'title' => 'Self Assessment - '.$subjectName,
         ];
     }
 

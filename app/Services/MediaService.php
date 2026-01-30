@@ -3,17 +3,16 @@
 namespace App\Services;
 
 use App\Models\Media\MediaFile;
-
 use App\Models\Media\MediaFolder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Image;
 
-
 class MediaService
 {
     protected $disk;
+
     protected $allowedMimeTypes = [
         'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
         'video/mp4', 'video/avi', 'video/quicktime', 'video/webm',
@@ -22,7 +21,7 @@ class MediaService
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/plain', 'text/csv'
+        'text/plain', 'text/csv',
     ];
 
     protected $maxFileSize = 10485760; // 10MB in bytes
@@ -32,64 +31,64 @@ class MediaService
         $this->disk = config('filesystems.default', 'public');
     }
 
-public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $userId = null): MediaFile
-{
-    \Log::info('Starting file upload process', [
-        'original_name' => $file->getClientOriginalName(),
-        'size' => $file->getSize(),
-        'mime_type' => $file->getMimeType(),
-        'folder_id' => $folderId,
-        'user_id' => $userId
-    ]);
+    public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $userId = null): MediaFile
+    {
+        \Log::info('Starting file upload process', [
+            'original_name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+            'folder_id' => $folderId,
+            'user_id' => $userId,
+        ]);
 
-    $this->validateFile($file);
+        $this->validateFile($file);
 
-    $folder = $folderId ? MediaFolder::find($folderId) : null;
-    $path = $folder ? 'media/' . $folder->path : 'media';
+        $folder = $folderId ? MediaFolder::find($folderId) : null;
+        $path = $folder ? 'media/'.$folder->path : 'media';
 
-    \Log::info('Upload path determined', ['path' => $path]);
+        \Log::info('Upload path determined', ['path' => $path]);
 
-    // Generate unique filename
-    $filename = $this->generateUniqueFilename($file);
-    $filePath = $path . '/' . $filename;
+        // Generate unique filename
+        $filename = $this->generateUniqueFilename($file);
+        $filePath = $path.'/'.$filename;
 
-    \Log::info('Generated filename', ['filename' => $filename, 'full_path' => $filePath]);
+        \Log::info('Generated filename', ['filename' => $filename, 'full_path' => $filePath]);
 
-    // Store file
-    $storedPath = Storage::disk($this->disk)->putFileAs($path, $file, $filename);
+        // Store file
+        $storedPath = Storage::disk($this->disk)->putFileAs($path, $file, $filename);
 
-    \Log::info('File stored', ['stored_path' => $storedPath]);
+        \Log::info('File stored', ['stored_path' => $storedPath]);
 
-    // Create media file record
-    $mediaFile = MediaFile::create([
-        'name' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
-        'original_name' => $file->getClientOriginalName(),
-        'file_path' => $storedPath,
-        'disk' => $this->disk,
-        'mime_type' => $file->getMimeType(),
-        'extension' => $file->getClientOriginalExtension(),
-        'size' => $file->getSize(),
-        'folder_id' => $folderId,
-        'uploaded_by' => $userId ?? auth()->id(),
-        'metadata' => $this->extractMetadata($file, $storedPath)
-    ]);
+        // Create media file record
+        $mediaFile = MediaFile::create([
+            'name' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'original_name' => $file->getClientOriginalName(),
+            'file_path' => $storedPath,
+            'disk' => $this->disk,
+            'mime_type' => $file->getMimeType(),
+            'extension' => $file->getClientOriginalExtension(),
+            'size' => $file->getSize(),
+            'folder_id' => $folderId,
+            'uploaded_by' => $userId ?? auth()->id(),
+            'metadata' => $this->extractMetadata($file, $storedPath),
+        ]);
 
-    \Log::info('Media file record created', ['media_file_id' => $mediaFile->id]);
+        \Log::info('Media file record created', ['media_file_id' => $mediaFile->id]);
 
-    // Process image dimensions and create thumbnails if it's an image
-    if ($mediaFile->isImage()) {
-        $this->processImage($mediaFile, $storedPath);
+        // Process image dimensions and create thumbnails if it's an image
+        if ($mediaFile->isImage()) {
+            $this->processImage($mediaFile, $storedPath);
+        }
+
+        return $mediaFile;
     }
-
-    return $mediaFile;
-}
 
     public function createFolder(string $name, ?int $parentId = null, ?string $description = null): MediaFolder
     {
         return MediaFolder::create([
             'name' => $name,
             'description' => $description,
-            'parent_id' => $parentId
+            'parent_id' => $parentId,
         ]);
     }
 
@@ -97,10 +96,10 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
     {
         $oldPath = $file->file_path;
         $newFolder = $newFolderId ? MediaFolder::find($newFolderId) : null;
-        $newPath = $newFolder ? 'media/' . $newFolder->path : 'media';
+        $newPath = $newFolder ? 'media/'.$newFolder->path : 'media';
 
         $filename = basename($oldPath);
-        $newFilePath = $newPath . '/' . $filename;
+        $newFilePath = $newPath.'/'.$filename;
 
         // Move file in storage
         Storage::disk($this->disk)->move($oldPath, $newFilePath);
@@ -108,7 +107,7 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
         // Update file record
         $file->update([
             'file_path' => $newFilePath,
-            'folder_id' => $newFolderId
+            'folder_id' => $newFolderId,
         ]);
 
         return $file;
@@ -128,7 +127,7 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
 
     public function deleteFolder(MediaFolder $folder, bool $forceDelete = false): bool
     {
-        if (!$forceDelete && ($folder->children()->count() > 0 || $folder->files()->count() > 0)) {
+        if (! $forceDelete && ($folder->children()->count() > 0 || $folder->files()->count() > 0)) {
             throw new \Exception('Folder is not empty. Use forceDelete to delete non-empty folders.');
         }
 
@@ -157,14 +156,14 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
             ->where('folder_id', $folderId);
 
         // Apply filters
-        if (!empty($filters['mime_type'])) {
-            $filesQuery->where('mime_type', 'like', $filters['mime_type'] . '%');
+        if (! empty($filters['mime_type'])) {
+            $filesQuery->where('mime_type', 'like', $filters['mime_type'].'%');
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $filesQuery->where(function ($query) use ($filters) {
-                $query->where('name', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('original_name', 'like', '%' . $filters['search'] . '%');
+                $query->where('name', 'like', '%'.$filters['search'].'%')
+                    ->orWhere('original_name', 'like', '%'.$filters['search'].'%');
             });
         }
 
@@ -172,13 +171,13 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
 
         return [
             'folders' => $folders,
-            'files' => $files
+            'files' => $files,
         ];
     }
 
     public function getBreadcrumb(?int $folderId = null): array
     {
-        if (!$folderId) {
+        if (! $folderId) {
             return [['name' => 'Media Library', 'id' => null]];
         }
 
@@ -188,7 +187,7 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
         while ($folder) {
             array_unshift($breadcrumb, [
                 'name' => $folder->name,
-                'id' => $folder->id
+                'id' => $folder->id,
             ]);
             $folder = $folder->parent;
         }
@@ -200,8 +199,8 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
 
     protected function validateFile(UploadedFile $file): void
     {
-        if (!in_array($file->getMimeType(), $this->allowedMimeTypes)) {
-            throw new \Exception('File type not allowed: ' . $file->getMimeType());
+        if (! in_array($file->getMimeType(), $this->allowedMimeTypes)) {
+            throw new \Exception('File type not allowed: '.$file->getMimeType());
         }
 
         if ($file->getSize() > $this->maxFileSize) {
@@ -215,7 +214,7 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
         $filename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
         $uniqueId = uniqid();
 
-        return $filename . '-' . $uniqueId . '.' . $extension;
+        return $filename.'-'.$uniqueId.'.'.$extension;
     }
 
     protected function extractMetadata(UploadedFile $file, string $storedPath): array
@@ -243,14 +242,14 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
             // Update dimensions
             $mediaFile->update([
                 'width' => $image->width(),
-                'height' => $image->height()
+                'height' => $image->height(),
             ]);
 
             // Create thumbnails
             $this->createThumbnails($mediaFile, $image);
         } catch (\Exception $e) {
             // Log error but don't fail
-            \Log::error('Failed to process image: ' . $e->getMessage());
+            \Log::error('Failed to process image: '.$e->getMessage());
         }
     }
 
@@ -259,14 +258,14 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
         $thumbnailSizes = [
             'thumb' => [150, 150],
             'medium' => [300, 300],
-            'large' => [800, 600]
+            'large' => [800, 600],
         ];
 
         foreach ($thumbnailSizes as $size => $dimensions) {
             $thumbnail = clone $image;
             $thumbnail->fit($dimensions[0], $dimensions[1]);
 
-            $thumbPath = 'media/thumbnails/' . $size . '/' . basename($mediaFile->file_path);
+            $thumbPath = 'media/thumbnails/'.$size.'/'.basename($mediaFile->file_path);
 
             Storage::disk($this->disk)->put($thumbPath, $thumbnail->encode());
         }
@@ -277,7 +276,7 @@ public function uploadFile(UploadedFile $file, ?int $folderId = null, ?int $user
         $thumbnailSizes = ['thumb', 'medium', 'large'];
 
         foreach ($thumbnailSizes as $size) {
-            $thumbPath = 'media/thumbnails/' . $size . '/' . basename($file->file_path);
+            $thumbPath = 'media/thumbnails/'.$size.'/'.basename($file->file_path);
             Storage::disk($this->disk)->delete($thumbPath);
         }
     }

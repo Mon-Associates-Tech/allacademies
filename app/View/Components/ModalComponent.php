@@ -9,20 +9,35 @@ use Illuminate\View\Component;
 class ModalComponent extends Component
 {
     public string $name;
+
     public string $title;
+
     public string $size;
+
     public bool $closable;
+
     public bool $persistent;
+
     public string $backdrop;
+
     public string $position;
+
     public string $animation;
+
     public string $maxWidth;
+
     public bool $show;
+
     public string $headerBackground;
+
     public bool $fullheight;
+
     public string $height;
-    public bool  $fixedFooter;
+
+    public bool $fixedFooter;
+
     public array $modalData;
+
     public string $zIndex;
 
     public function __construct(
@@ -38,7 +53,7 @@ class ModalComponent extends Component
         bool $fullheight = false,
         string $headerBackground = 'bg-white dark:bg-gray-800',
         string $height = '',
-        bool  $fixedFooter = false,
+        bool $fixedFooter = false,
         array $modalData = [],
         string $zIndex = 'z-50'
     ) {

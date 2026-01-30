@@ -16,10 +16,15 @@ use Livewire\Component;
 class BookAnalytics extends Component
 {
     public $period = '30'; // days
+
     public $selectedBook = '';
+
     public $viewType = 'overview'; // overview, revenue, engagement
+
     public $comparisonPeriod = false;
+
     public $isLoading = false;
+
     public $refreshInterval = 300; // 5 minutes
 
     protected $queryString = [
@@ -50,7 +55,7 @@ class BookAnalytics extends Component
 
     public function toggleComparison()
     {
-        $this->comparisonPeriod = !$this->comparisonPeriod;
+        $this->comparisonPeriod = ! $this->comparisonPeriod;
         $this->loadAnalytics();
     }
 
@@ -61,7 +66,9 @@ class BookAnalytics extends Component
 
         try {
             $author = Auth::user()->author;
-            if (!$author) return;
+            if (! $author) {
+                return;
+            }
 
             $cacheKey = "analytics_author_{$author->id}_{$this->period}_{$this->selectedBook}_{$this->viewType}";
 
@@ -72,7 +79,7 @@ class BookAnalytics extends Component
 
             $this->dispatch('analytics-updated', $analytics);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to load analytics: ' . $e->getMessage());
+            session()->flash('error', 'Failed to load analytics: '.$e->getMessage());
         } finally {
             $this->isLoading = false;
         }
@@ -200,7 +207,7 @@ class BookAnalytics extends Component
     private function getTotalViews($bookIds, $startDate)
     {
         // Enhanced view tracking with caching
-        return Cache::remember("views_{$bookIds->implode('_')}_{$startDate}", 300, function () use ($bookIds, $startDate) {
+        return Cache::remember("views_{$bookIds->implode('_')}_{$startDate}", 300, function () use ($bookIds) {
             // Implement based on your view tracking system
             // This is a placeholder - you'll need to implement actual view tracking
             return $bookIds->count() * rand(100, 1000);
@@ -261,14 +268,14 @@ class BookAnalytics extends Component
     {
         return Book::whereIn('id', $bookIds)
             ->withCount([
-                'subscriptions' => function($query) use ($startDate) {
+                'subscriptions' => function ($query) use ($startDate) {
                     $query->where('created_at', '>=', $startDate);
                 },
-                'borrowings' => function($query) use ($startDate) {
+                'borrowings' => function ($query) use ($startDate) {
                     $query->where('created_at', '>=', $startDate);
-                }
+                },
             ])
-            ->with(['subscriptions' => function($query) use ($startDate) {
+            ->with(['subscriptions' => function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate)
                     ->where('status', 'completed');
             }])
@@ -279,6 +286,7 @@ class BookAnalytics extends Component
                 $book->performance_score = ($book->subscriptions_count * 0.6) +
                                          ($book->borrowings_count * 0.3) +
                                          ($revenue / 100 * 0.1);
+
                 return $book;
             })
             ->sortByDesc('performance_score')
@@ -356,7 +364,7 @@ class BookAnalytics extends Component
     private function getRevenueByBook($bookIds, $startDate)
     {
         return Book::whereIn('id', $bookIds)
-            ->with(['subscriptions' => function($query) use ($startDate) {
+            ->with(['subscriptions' => function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate)
                     ->where('status', 'completed');
             }])
@@ -498,15 +506,16 @@ class BookAnalytics extends Component
     {
         try {
             $author = Auth::user()->author;
-            if (!$author) {
+            if (! $author) {
                 session()->flash('error', 'Author not found');
+
                 return;
             }
 
             $analytics = $this->calculateAnalytics($author);
 
             // Generate export file
-            $filename = "analytics_export_{$author->id}_{$this->period}days_" . date('Y-m-d') . ".{$type}";
+            $filename = "analytics_export_{$author->id}_{$this->period}days_".date('Y-m-d').".{$type}";
 
             // In a real implementation, you would generate the actual file
             // For now, we'll just flash a success message
@@ -514,7 +523,7 @@ class BookAnalytics extends Component
 
             $this->dispatch('export-completed', ['filename' => $filename, 'type' => $type]);
         } catch (\Exception $e) {
-            session()->flash('error', 'Export failed: ' . $e->getMessage());
+            session()->flash('error', 'Export failed: '.$e->getMessage());
         }
     }
 
@@ -528,7 +537,9 @@ class BookAnalytics extends Component
     public function analytics()
     {
         $author = Auth::user()->author;
-        if (!$author) return [];
+        if (! $author) {
+            return [];
+        }
 
         $cacheKey = "analytics_author_{$author->id}_{$this->period}_{$this->selectedBook}_{$this->viewType}";
 

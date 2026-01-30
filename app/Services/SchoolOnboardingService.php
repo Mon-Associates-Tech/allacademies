@@ -2,41 +2,39 @@
 
 namespace App\Services;
 
-use App\Models\School;
-use App\Models\User;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Models\School;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class SchoolOnboardingService
 {
     public function createSchool(array $data, User $admin, array $academicGroups = [], array $academicLevels = []): School
     {
-        return DB::transaction(function() use ($data, $admin, $academicGroups, $academicLevels) {
+        return DB::transaction(function () use ($data, $admin, $academicGroups, $academicLevels) {
             // Create school
             $school = School::create([
                 ...$data,
                 // 'status' => 'inactive'
-                'status' => 'active'
+                'status' => 'active',
             ]);
 
             // Assign user to school and make them admin
             $admin->update(['school_id' => $school->id]);
 
             // Ensure user has admin role
-            if (!$admin->hasRole('admin')) {
+            if (! $admin->hasRole('admin')) {
                 $admin->assignRole('admin');
             }
 
             // Attach selected academic groups
-            if (!empty($academicGroups)) {
+            if (! empty($academicGroups)) {
                 $school->academicGroups()->sync($academicGroups);
             }
 
             // Attach selected academic levels - CORRECTED CODE
-            if (!empty($academicLevels)) {
+            if (! empty($academicLevels)) {
                 // Get the academic levels with their group information
                 $levels = AcademicLevel::whereIn('id', $academicLevels)
                     ->get(['id', 'academic_group_id']);
@@ -57,7 +55,7 @@ class SchoolOnboardingService
 
     public function completeOnboarding(School $school, User $admin): void
     {
-        DB::transaction(function() use ($school, $admin) {
+        DB::transaction(function () use ($school) {
             // Activate the school
             $school->update(['status' => 'active']);
 
@@ -82,11 +80,11 @@ class SchoolOnboardingService
                 'library_management' => true,
                 'academic_management' => true,
                 'user_management' => true,
-            ]
+            ],
         ];
 
         $school->update([
-            'settings' => array_merge($school->settings ?? [], $defaultSettings)
+            'settings' => array_merge($school->settings ?? [], $defaultSettings),
         ]);
     }
 
@@ -102,7 +100,7 @@ class SchoolOnboardingService
             );
 
             // Attach to school if not already attached
-            if (!$school->academicGroups()->where('academic_group_id', $group->id)->exists()) {
+            if (! $school->academicGroups()->where('academic_group_id', $group->id)->exists()) {
                 $school->academicGroups()->attach($group->id);
             }
         }

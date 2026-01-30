@@ -5,8 +5,8 @@ namespace Tests\Feature\Api;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Models\AcademicTopic;
 use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -83,11 +83,11 @@ class ExaminationGenerationTest extends TestCase
                     'count' => 5, // We want 5 total
                     'topics' => [$topic->id],
                     'subtopics' => [
-                        ['id' => $subtopic->id, 'count' => 5] // Try to get 5 from subtopic
+                        ['id' => $subtopic->id, 'count' => 5], // Try to get 5 from subtopic
                     ],
                     'instructions' => 'Select correct option',
-                ]
-            ]
+                ],
+            ],
         ];
 
         // 3. Make Request

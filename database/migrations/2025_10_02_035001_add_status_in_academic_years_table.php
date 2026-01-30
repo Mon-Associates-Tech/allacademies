@@ -32,7 +32,6 @@ return new class extends Migration
             $table->date('start_date')->nullable(false)->change();
             $table->date('end_date')->nullable(false)->change();
 
-
         });
     }
 };

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class FinancialAid extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -22,7 +22,7 @@ class FinancialAid extends Model
         'amount',
         'amount_raised',
         'school_payment_structure_id',
-        'status'
+        'status',
     ];
 
     protected static function boot()
@@ -31,7 +31,7 @@ class FinancialAid extends Model
 
         static::creating(function ($aid) {
             if (empty($aid->code)) {
-                $aid->code = strtoupper('AID-' . Str::random(8));
+                $aid->code = strtoupper('AID-'.Str::random(8));
             }
         });
     }
@@ -47,16 +47,15 @@ class FinancialAid extends Model
         return $this->belongsTo(SchoolPaymentStructure::class);
     }
 
-
     public function isTuition(): bool
     {
         return $this->schoolPaymentStructure && $this->schoolPaymentStructure->payment_type === 'tuition';
     }
 
-    public function school(){
+    public function school()
+    {
         return $this->belongsTo(School::class);
     }
-
 
     public function schoolFees()
     {
@@ -77,7 +76,10 @@ class FinancialAid extends Model
     // Helper to calculate progress
     public function getProgressPercentageAttribute()
     {
-        if ($this->amount <= 0) return 0;
+        if ($this->amount <= 0) {
+            return 0;
+        }
+
         return min(100, round(($this->amount_raised / $this->amount) * 100));
     }
 }

@@ -2,13 +2,15 @@
 
 namespace App\Livewire\Chats;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class TokenUsageHorizontal extends Component
 {
     public $subscription;
+
     public $showAlert = false;
+
     public $showText = true; // New prop
 
     protected $listeners = ['tokenUsageUpdated' => 'loadSubscription'];
@@ -21,7 +23,7 @@ class TokenUsageHorizontal extends Component
 
     public function loadSubscription()
     {
-        $this->subscription = Auth::user()->activeTokenSubscription;
+        $this->subscription = Auth::user()->activeSubscriptionCycle;
 
         if ($this->subscription && $this->subscription->isNearingDepletion()) {
             $this->showAlert = true;

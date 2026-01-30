@@ -32,7 +32,7 @@ trait HasRoles
     public function getRoleName(): ?string
     {
         // First try to get the first role from many-to-many relationship
-        if (!$this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
             $this->load('roles');
         }
 
@@ -42,7 +42,7 @@ trait HasRoles
 
         // Fall back to single role relationship if role_id is set
         if ($this->role_id) {
-            if (!$this->relationLoaded('primaryRole')) {
+            if (! $this->relationLoaded('primaryRole')) {
                 $this->load('primaryRole');
             }
 
@@ -60,39 +60,41 @@ trait HasRoles
      */
     public function getRoleNames(): array
     {
-        if (!$this->relationLoaded('roles')) {
+        $roleNames = [];
+
+        // Load all roles relationships without filtering
+        if (! $this->relationLoaded('roles')) {
             $this->load('roles');
         }
 
-        $roleNames = $this->roles->pluck('name')->toArray();
+        // Get all role names from the relationship
+        $roleNames = $this->roles()
+            ->get()
+            ->pluck('name')
+            ->toArray();
 
-        // Also include a primary role if it exists and isn't already in the list
-        $primaryRoleName = null;
+        // Add primary role if it exists
         if ($this->role_id) {
-            if (!$this->relationLoaded('primaryRole')) {
+            if (! $this->relationLoaded('primaryRole')) {
                 $this->load('primaryRole');
             }
 
-            if ($this->primaryRole) {
-                $primaryRoleName = $this->primaryRole->name;
+            if ($this->primaryRole && ! in_array($this->primaryRole->name, $roleNames)) {
+                $roleNames[] = $this->primaryRole->name;
             }
         }
 
-        // Add string role as fallback, handling enum value
-        $stringRole = null;
         if (isset($this->attributes['role'])) {
             $stringRole = $this->attributes['role'] instanceof UserRole
                 ? $this->attributes['role']->value
                 : $this->attributes['role'];
+
+            if ($stringRole && ! in_array($stringRole, $roleNames)) {
+                $roleNames[] = $stringRole;
+            }
         }
 
-        $allRoles = array_filter(array_unique(array_merge(
-            $roleNames,
-            $primaryRoleName ? [$primaryRoleName] : [],
-            $stringRole ? [$stringRole] : $stringRole
-        )));
-
-        return array_values($allRoles);
+        return array_values(array_filter($roleNames));
     }
 
     /**
@@ -100,7 +102,7 @@ trait HasRoles
      */
     public function hasRole(string $roleName): bool
     {
-        return in_array($roleName, $this->getRoleNames(), true);
+        return in_array($roleName, $this->getRoleNames());
     }
 
     /**
@@ -109,7 +111,8 @@ trait HasRoles
     public function hasAnyRole(array $roleNames): bool
     {
         $userRoles = $this->getRoleNames();
-        return !empty(array_intersect($roleNames, $userRoles));
+
+        return ! empty(array_intersect($roleNames, $userRoles));
     }
 
     /**
@@ -118,6 +121,7 @@ trait HasRoles
     public function hasAllRoles(array $roleNames): bool
     {
         $userRoles = $this->getRoleNames();
+
         return empty(array_diff($roleNames, $userRoles));
     }
 
@@ -128,11 +132,11 @@ trait HasRoles
     {
         $role = Role::where('name', $roleName)->first();
 
-        if (!$role) {
+        if (! $role) {
             return false;
         }
 
-        if (!$this->roles()->where('role_id', $role->id)->exists()) {
+        if (! $this->roles()->where('role_id', $role->id)->exists()) {
             $this->roles()->attach($role->id);
         }
 
@@ -146,11 +150,12 @@ trait HasRoles
     {
         $role = Role::where('name', $roleName)->first();
 
-        if (!$role) {
+        if (! $role) {
             return false;
         }
 
         $this->roles()->detach($role->id);
+
         return true;
     }
 
@@ -161,7 +166,7 @@ trait HasRoles
     {
         $roleIds = Role::whereIn('name', $roleNames)->pluck('id')->toArray();
         $this->roles()->sync($roleIds);
+
         return true;
     }
-
 }

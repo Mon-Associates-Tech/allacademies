@@ -6,12 +6,9 @@ use App\Mail\AssignmentAssignedMail;
 use App\Models\Assignment;
 use App\Models\AssignmentNotification;
 use App\Models\Student;
-use App\Models\User;
 use App\Notifications\NewAssignmentNotification;
-use App\Mail\AssignmentAssigned;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
 
 class AssignmentNotificationService
 {
@@ -76,7 +73,7 @@ class AssignmentNotificationService
                 \Log::error('Failed to send assignment email notification', [
                     'assignment_id' => $assignment->id,
                     'student_id' => $student->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -91,7 +88,7 @@ class AssignmentNotificationService
                 \Log::error('Failed to send in-app assignment notification', [
                     'assignment_id' => $assignment->id,
                     'student_id' => $student->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }

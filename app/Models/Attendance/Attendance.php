@@ -18,11 +18,11 @@ class Attendance extends Model
         'academic_subject_id',
         'date',
         'session', // e.g. 'morning', 'afternoon'
-        'remarks'
+        'remarks',
     ];
 
     protected $casts = [
-        'date' => 'date'
+        'date' => 'date',
     ];
 
     public function teacher()
@@ -45,4 +45,3 @@ class Attendance extends Model
         return $this->hasMany(AttendanceRecord::class);
     }
 }
-

@@ -25,7 +25,7 @@ class BookReview extends Model
         'is_approved',
         'helpful_votes',
         'helpful_count',
-        'approved_at'
+        'approved_at',
     ];
 
     protected $casts = [
@@ -35,7 +35,7 @@ class BookReview extends Model
         'helpful_votes' => 'array',
         'helpful_count' => 'integer',
         'approved_at' => 'datetime',
-        'author_replied_at' => 'datetime'
+        'author_replied_at' => 'datetime',
     ];
 
     /**
@@ -137,7 +137,7 @@ class BookReview extends Model
 
         $this->update([
             'helpful_votes' => $helpfulVotes,
-            'helpful_count' => count($helpfulVotes)
+            'helpful_count' => count($helpfulVotes),
         ]);
 
         return $wasHelpful;
@@ -148,7 +148,7 @@ class BookReview extends Model
      */
     public function hasAuthorReply(): bool
     {
-        return !is_null($this->author_reply);
+        return ! is_null($this->author_reply);
     }
 
     /**
@@ -176,9 +176,10 @@ class BookReview extends Model
         for ($i = 1; $i <= 5; $i++) {
             $stars[] = [
                 'filled' => $i <= $this->rating,
-                'number' => $i
+                'number' => $i,
             ];
         }
+
         return $stars;
     }
 
@@ -189,8 +190,9 @@ class BookReview extends Model
     {
         $words = explode(' ', $this->reviewer_name);
         if (count($words) >= 2) {
-            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+            return strtoupper(substr($words[0], 0, 1).substr($words[1], 0, 1));
         }
+
         return strtoupper(substr($this->reviewer_name, 0, 2));
     }
 
@@ -199,7 +201,7 @@ class BookReview extends Model
      */
     public function getRatingColorAttribute(): string
     {
-        return match($this->rating) {
+        return match ($this->rating) {
             5 => 'text-green-500',
             4 => 'text-green-400',
             3 => 'text-yellow-500',
@@ -214,7 +216,7 @@ class BookReview extends Model
      */
     public function getRatingBgColorAttribute(): string
     {
-        return match($this->rating) {
+        return match ($this->rating) {
             5 => 'bg-green-100 text-green-800',
             4 => 'bg-green-50 text-green-700',
             3 => 'bg-yellow-100 text-yellow-800',

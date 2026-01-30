@@ -3,8 +3,8 @@
 namespace App\Traits;
 
 use Illuminate\Support\Facades\Auth;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 trait AcademicGroupLogs
 {
@@ -24,7 +24,7 @@ trait AcademicGroupLogs
                     'old' => [],
                     'user_name' => $user ? $user->name : 'System',
                     'user_id' => $user ? $user->id : null,
-                    'action_type' => 'created'
+                    'action_type' => 'created',
                 ])
                 ->log('created');
         });
@@ -36,7 +36,7 @@ trait AcademicGroupLogs
             $original = $model->getOriginal();
 
             // Only log if there are actual changes
-            if (!empty($changes)) {
+            if (! empty($changes)) {
                 $oldValues = [];
                 foreach ($changes as $key => $newValue) {
                     $oldValues[$key] = $original[$key] ?? null;
@@ -50,7 +50,7 @@ trait AcademicGroupLogs
                         'old' => $oldValues,
                         'user_name' => $user ? $user->name : 'System',
                         'user_id' => $user ? $user->id : null,
-                        'action_type' => 'updated'
+                        'action_type' => 'updated',
                     ])
                     ->log('updated');
             }
@@ -68,27 +68,27 @@ trait AcademicGroupLogs
                     'old' => $model->getAttributes(),
                     'user_name' => $user ? $user->name : 'System',
                     'user_id' => $user ? $user->id : null,
-                    'action_type' => 'deleted'
+                    'action_type' => 'deleted',
                 ])
                 ->log('deleted');
         });
 
         // Log when model is restored (if using soft deletes)
-/*        static::restored(function ($model) {
-            $user = Auth::user();
+        /*        static::restored(function ($model) {
+                    $user = Auth::user();
 
-            activity()
-                ->causedBy($user)
-                ->performedOn($model)
-                ->withProperties([
-                    'attributes' => $model->getAttributes(),
-                    'old' => [],
-                    'user_name' => $user ? $user->name : 'System',
-                    'user_id' => $user ? $user->id : null,
-                    'action_type' => 'restored'
-                ])
-                ->log('restored');
-        });*/
+                    activity()
+                        ->causedBy($user)
+                        ->performedOn($model)
+                        ->withProperties([
+                            'attributes' => $model->getAttributes(),
+                            'old' => [],
+                            'user_name' => $user ? $user->name : 'System',
+                            'user_id' => $user ? $user->id : null,
+                            'action_type' => 'restored'
+                        ])
+                        ->log('restored');
+                });*/
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -138,7 +138,7 @@ trait AcademicGroupLogs
         $identifierFields = ['name', 'title', 'label', 'code', 'tag', 'slug'];
 
         foreach ($identifierFields as $field) {
-            if (isset($this->attributes[$field]) && !empty($this->attributes[$field])) {
+            if (isset($this->attributes[$field]) && ! empty($this->attributes[$field])) {
                 return $this->attributes[$field];
             }
         }
@@ -173,7 +173,7 @@ trait AcademicGroupLogs
                     'user_id' => $activity->properties['user_id'] ?? ($activity->causer ? $activity->causer->id : null),
                     'changes' => [
                         'old' => $activity->properties['old'] ?? [],
-                        'new' => $activity->properties['attributes'] ?? []
+                        'new' => $activity->properties['attributes'] ?? [],
                     ],
                     'created_at' => $activity->created_at,
                     'formatted_date' => $activity->created_at->format('M d, Y \a\t g:i A'),

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\RoleRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class SettingsController extends Controller
@@ -24,9 +23,9 @@ class SettingsController extends Controller
         if ($request->isMethod('POST')) {
             $user = User::query()->where('email', $request->validated('email'))->firstOrFail();
 
-            if (UserRole::OWNER === $user->role) {
+            if ($user->role === UserRole::OWNER) {
                 throw ValidationException::withMessages([
-                    'email' => "You can not change this user's role"
+                    'email' => "You can not change this user's role",
                 ]);
             }
 

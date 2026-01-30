@@ -11,8 +11,7 @@ class SubscriptionCalculator
         SubscriptionPackage $package = SubscriptionPackage::INDIVIDUAL_FULL,
         int $duration = AcademicDuration::QUARTER,
         string $tag = AcademicGroupTag::BASIC
-    ): int
-    {
+    ): int {
         switch ($package) {
             case SubscriptionPackage::INDIVIDUAL_FULL:
                 if ($tag === AcademicGroupTag::BASIC) {
@@ -29,8 +28,7 @@ class SubscriptionCalculator
                         AcademicDuration::ONE_OFF => SubscriptionAmount::SENIOR_SCHOOL_ONE_OFF,
                         default => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_QUARTER
                     };
-                }
-                elseif ($tag === AcademicGroupTag::UNIVERSITY) {
+                } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
                     return match ($duration) {
                         AcademicDuration::YEAR => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_YEAR,
                         AcademicDuration::HALF => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_HALF,
@@ -54,8 +52,7 @@ class SubscriptionCalculator
                         AcademicDuration::ONE_OFF => SubscriptionAmount::SENIOR_SCHOOL_ONE_OFF,
                         default => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
                     };
-                }
-                elseif ($tag === AcademicGroupTag::UNIVERSITY) {
+                } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
                     return match ($duration) {
                         AcademicDuration::YEAR => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
                         AcademicDuration::HALF => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
@@ -83,9 +80,9 @@ class SubscriptionCalculator
                 }
                 break;
             default:
-                throw new InvalidArgumentException("Invalid subscription package: " . $package->value);
+                throw new InvalidArgumentException('Invalid subscription package: '.$package->value);
         }
 
-        throw new InvalidArgumentException("Unsupported combination of package: " . $package->value . ", tag: " . $tag);
+        throw new InvalidArgumentException('Unsupported combination of package: '.$package->value.', tag: '.$tag);
     }
 }

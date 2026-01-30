@@ -2,21 +2,18 @@
 
 namespace App\Livewire\Assessment;
 
-use App\Models\Student;
+use App\Models\AcademicSubject;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
-use App\Models\AcademicSubject;
-use App\Livewire\Assessment\RandomQuestionSelectionService;
-use App\Livewire\Assessment\SubjectSelectionService;
+use App\Models\Student;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class StudentAssessmentService implements StudentAssessmentServiceInterface
 {
     protected RandomQuestionSelectionService $questionService;
+
     protected SubjectSelectionService $subjectService;
+
     protected AssessmentGradingService $gradingService;
 
     public function __construct(
@@ -62,12 +59,12 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'time_limit_minutes' => $timeLimit,
             'status' => Assessment::STATUS_NOT_STARTED,
             'has_essay_questions' => $hasEssayQuestions,
-            'questions_data' => $questions->toArray()
+            'questions_data' => $questions->toArray(),
         ]);
 
         $this->logActivity($student, 'assessment_created', [
             'assessment_id' => $assessment->id,
-            'config' => $config
+            'config' => $config,
         ]);
 
         return $assessment;
@@ -85,7 +82,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         // Update assessment status
         $assessment->update([
             'status' => Assessment::STATUS_IN_PROGRESS,
-            'start_time' => now()
+            'start_time' => now(),
         ]);
 
         // Initialize response tracking
@@ -97,7 +94,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                 'response' => null,
                 'is_answered' => false,
                 'time_spent' => 0,
-                'attempts' => 0
+                'attempts' => 0,
             ];
         });
 
@@ -107,12 +104,12 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'current_question' => 0,
             'progress' => 0,
             'time_remaining' => $assessment->time_limit_minutes * 60,
-            'started_at' => now()->toISOString()
+            'started_at' => now()->toISOString(),
         ];
 
         $this->logActivity($assessment->student, 'assessment_started', [
             'assessment_id' => $assessment->id,
-            'questions_count' => $questions->count()
+            'questions_count' => $questions->count(),
         ]);
 
         return $sessionData;
@@ -129,21 +126,21 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
 
         $questions = collect($assessment->getQuestionsData());
 
-        if (!isset($questions[$questionIndex])) {
+        if (! isset($questions[$questionIndex])) {
             throw new \Exception('Invalid question index');
         }
 
         $question = $questions[$questionIndex];
 
         // Validate response format
-        if (!$this->validateResponse($question, $response)) {
+        if (! $this->validateResponse($question, $response)) {
             return false;
         }
 
         // Get existing assessment response or create new one
         $assessmentResponse = $assessment->assessmentResponse ?? new AssessmentResponse([
             'assessment_id' => $assessment->id,
-            'data' => ['responses' => []]
+            'data' => ['responses' => []],
         ]);
 
         $responseData = $assessmentResponse->data ?? ['responses' => []];
@@ -154,11 +151,11 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'question_type' => $question['type'],
             'response' => $response,
             'answered_at' => now()->toISOString(),
-            'is_answered' => true
+            'is_answered' => true,
         ];
 
         // Update progress
-        $answeredCount = count(array_filter($responseData['responses'], fn($r) => $r['is_answered'] ?? false));
+        $answeredCount = count(array_filter($responseData['responses'], fn ($r) => $r['is_answered'] ?? false));
         $responseData['progress'] = ($answeredCount / count($questions)) * 100;
         $responseData['last_updated'] = now()->toISOString();
 
@@ -168,7 +165,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         $this->logActivity($assessment->student, 'question_answered', [
             'assessment_id' => $assessment->id,
             'question_index' => $questionIndex,
-            'question_type' => $question['type']
+            'question_type' => $question['type'],
         ]);
 
         return true;
@@ -182,7 +179,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         $questions = collect($assessment->getQuestionsData());
         $responses = $assessment->assessmentResponse?->data['responses'] ?? [];
 
-        $answeredCount = count(array_filter($responses, fn($r) => $r['is_answered'] ?? false));
+        $answeredCount = count(array_filter($responses, fn ($r) => $r['is_answered'] ?? false));
         $totalCount = $questions->count();
 
         $timeElapsed = $assessment->start_time ?
@@ -197,7 +194,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'time_elapsed' => $timeElapsed,
             'time_remaining' => $timeRemaining,
             'questions_by_type' => $this->getQuestionsByType($questions, $responses),
-            'current_status' => $assessment->status
+            'current_status' => $assessment->status,
         ];
     }
 
@@ -215,29 +212,29 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'end_time' => now(),
             'status' => $assessment->has_essay_questions ?
                 Assessment::STATUS_PENDING_REVIEW :
-                Assessment::STATUS_COMPLETED
+                Assessment::STATUS_COMPLETED,
         ]);
 
         // Get or create assessment response
         $assessmentResponse = $assessment->assessmentResponse ?? AssessmentResponse::create([
             'assessment_id' => $assessment->id,
-            'data' => ['responses' => []]
+            'data' => ['responses' => []],
         ]);
 
         // Auto-grade if possible
-        if (!$assessment->has_essay_questions) {
+        if (! $assessment->has_essay_questions) {
             $results = $this->gradeAssessment($assessment);
 
             // Update assessment with results
             $assessment->update([
                 'score' => $results['total_score'],
-                'percentage_score' => $results['percentage']
+                'percentage_score' => $results['percentage'],
             ]);
         }
 
         $this->logActivity($assessment->student, 'assessment_submitted', [
             'assessment_id' => $assessment->id,
-            'has_essay_questions' => $assessment->has_essay_questions
+            'has_essay_questions' => $assessment->has_essay_questions,
         ]);
 
         return $assessmentResponse;
@@ -259,7 +256,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'max_score' => $questions->sum('points'),
             'percentage' => 0,
             'question_results' => [],
-            'type_breakdown' => []
+            'type_breakdown' => [],
         ];
 
         foreach ($questions as $index => $question) {
@@ -279,12 +276,12 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
 
             // Update type breakdown
             $type = $question['type'];
-            if (!isset($results['type_breakdown'][$type])) {
+            if (! isset($results['type_breakdown'][$type])) {
                 $results['type_breakdown'][$type] = [
                     'total' => 0,
                     'correct' => 0,
                     'score' => 0,
-                    'max_score' => 0
+                    'max_score' => 0,
                 ];
             }
 
@@ -324,7 +321,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'difficulty_analysis' => $difficultyAnalysis,
             'time_analysis' => $timeAnalysis,
             'grade' => $this->calculateGrade($basicResults['percentage']),
-            'recommendations' => $this->getRecommendations($assessment)
+            'recommendations' => $this->getRecommendations($assessment),
         ]);
     }
 
@@ -343,19 +340,19 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                 'subtopic' => $assessment->subtopic?->name,
                 'date_taken' => $assessment->start_time->format('Y-m-d H:i:s'),
                 'duration' => $assessment->end_time ?
-                    $assessment->start_time->diffInMinutes($assessment->end_time) : null
+                    $assessment->start_time->diffInMinutes($assessment->end_time) : null,
             ],
             'overall_performance' => [
                 'score' => $results['total_score'],
                 'max_score' => $results['max_score'],
                 'percentage' => $results['percentage'],
                 'grade' => $results['grade'],
-                'status' => $this->getPerformanceStatus($results['percentage'])
+                'status' => $this->getPerformanceStatus($results['percentage']),
             ],
             'detailed_results' => $results,
             'strengths' => $this->identifyStrengths($results),
             'areas_for_improvement' => $this->identifyWeaknesses($results),
-            'recommendations' => $results['recommendations']
+            'recommendations' => $results['recommendations'],
         ];
     }
 
@@ -373,7 +370,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                 'type' => 'review',
                 'priority' => 'high',
                 'message' => 'Consider reviewing the fundamental concepts before attempting similar assessments.',
-                'action' => 'review_fundamentals'
+                'action' => 'review_fundamentals',
             ];
         }
 
@@ -387,7 +384,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                     'type' => 'practice',
                     'priority' => 'medium',
                     'message' => "Focus on improving {$type} question performance through targeted practice.",
-                    'action' => "practice_{$type}"
+                    'action' => "practice_{$type}",
                 ];
             }
         }
@@ -400,7 +397,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                     'type' => 'difficulty',
                     'priority' => 'medium',
                     'message' => "Work on {$difficulty} level questions to improve overall performance.",
-                    'action' => "practice_{$difficulty}"
+                    'action' => "practice_{$difficulty}",
                 ];
             }
         }
@@ -434,12 +431,12 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         $required = ['subject_id', 'question_types', 'question_count'];
 
         foreach ($required as $field) {
-            if (!isset($config[$field])) {
+            if (! isset($config[$field])) {
                 throw new \Exception("Missing required field: {$field}");
             }
         }
 
-        if (!$this->subjectService->canAccessSubject($config['subject_id'])) {
+        if (! $this->subjectService->canAccessSubject($config['subject_id'])) {
             throw new \Exception('Student does not have access to this subject');
         }
 
@@ -462,14 +459,14 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         $typeMultipliers = [
             'multiple_choice_question' => 1.0,
             'true_or_false_question' => 0.5,
-            'essay_question' => 3.0
+            'essay_question' => 3.0,
         ];
 
         $adjustedTime = $questions->sum(function ($question) use ($typeMultipliers) {
             return $typeMultipliers[$question['type']] ?? 1.0;
         });
 
-        return max(5, min(180, (int)$adjustedTime));
+        return max(5, min(180, (int) $adjustedTime));
     }
 
     protected function generateAssessmentTitle(array $config): string
@@ -477,7 +474,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         $subject = AcademicSubject::find($config['subject_id']);
         $title = "Self Assessment - {$subject->name}";
 
-        if (!empty($config['topic_id'])) {
+        if (! empty($config['topic_id'])) {
             $topic = $subject->academicTopics()->find($config['topic_id']);
             $title .= " - {$topic->name}";
         }
@@ -512,15 +509,16 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'is_correct' => false,
             'score_earned' => 0,
             'max_score' => $question['points'],
-            'response' => $response['response'] ?? null
+            'response' => $response['response'] ?? null,
         ];
 
-        if (!$result['is_answered']) {
+        if (! $result['is_answered']) {
             return $result;
         }
 
         if ($question['type'] === 'essay_question') {
             $result['is_correct'] = null; // Requires manual grading
+
             return $result;
         }
 
@@ -532,7 +530,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                 $result['is_correct'] = strtoupper($studentAnswer) === strtoupper($correctAnswer);
                 break;
             case 'true_or_false_question':
-                $result['is_correct'] = (bool)$studentAnswer === (bool)$correctAnswer;
+                $result['is_correct'] = (bool) $studentAnswer === (bool) $correctAnswer;
                 break;
         }
 
@@ -551,11 +549,11 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             $type = $question['type'];
             $response = $responses[$index] ?? null;
 
-            if (!isset($breakdown[$type])) {
+            if (! isset($breakdown[$type])) {
                 $breakdown[$type] = [
                     'total' => 0,
                     'answered' => 0,
-                    'percentage' => 0
+                    'percentage' => 0,
                 ];
             }
 
@@ -582,7 +580,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'accuracy_rate' => $results['answered_questions'] > 0 ?
                 ($results['correct_answers'] / $results['answered_questions']) * 100 : 0,
             'efficiency_score' => $this->calculateEfficiencyScore($assessment, $results),
-            'consistency_score' => $this->calculateConsistencyScore($results)
+            'consistency_score' => $this->calculateConsistencyScore($results),
         ];
     }
 
@@ -595,12 +593,12 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             $difficulty = $question['difficulty'] ?? 'medium';
             $questionResult = $results['question_results'][$index] ?? null;
 
-            if (!isset($difficultyBreakdown[$difficulty])) {
+            if (! isset($difficultyBreakdown[$difficulty])) {
                 $difficultyBreakdown[$difficulty] = [
                     'total' => 0,
                     'correct' => 0,
                     'score' => 0,
-                    'max_score' => 0
+                    'max_score' => 0,
                 ];
             }
 
@@ -633,24 +631,40 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
             'allocated_time_seconds' => $allocatedTime,
             'time_efficiency' => $allocatedTime > 0 ? ($totalTime / $allocatedTime) * 100 : 0,
             'average_time_per_question' => $assessment->getQuestionsData() ?
-                $totalTime / count($assessment->getQuestionsData()) : 0
+                $totalTime / count($assessment->getQuestionsData()) : 0,
         ];
     }
 
     protected function calculateGrade(float $percentage): string
     {
-        if ($percentage >= 90) return 'A';
-        if ($percentage >= 80) return 'B';
-        if ($percentage >= 70) return 'C';
-        if ($percentage >= 60) return 'D';
+        if ($percentage >= 90) {
+            return 'A';
+        }
+        if ($percentage >= 80) {
+            return 'B';
+        }
+        if ($percentage >= 70) {
+            return 'C';
+        }
+        if ($percentage >= 60) {
+            return 'D';
+        }
+
         return 'F';
     }
 
     protected function getPerformanceStatus(float $percentage): string
     {
-        if ($percentage >= 85) return 'excellent';
-        if ($percentage >= 70) return 'good';
-        if ($percentage >= 60) return 'satisfactory';
+        if ($percentage >= 85) {
+            return 'excellent';
+        }
+        if ($percentage >= 70) {
+            return 'good';
+        }
+        if ($percentage >= 60) {
+            return 'satisfactory';
+        }
+
         return 'needs_improvement';
     }
 
@@ -666,7 +680,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                 $strengths[] = [
                     'area' => $type,
                     'performance' => $percentage,
-                    'description' => "Strong performance in {$type} questions"
+                    'description' => "Strong performance in {$type} questions",
                 ];
             }
         }
@@ -686,7 +700,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
                 $weaknesses[] = [
                     'area' => $type,
                     'performance' => $percentage,
-                    'description' => "Room for improvement in {$type} questions"
+                    'description' => "Room for improvement in {$type} questions",
                 ];
             }
         }
@@ -720,7 +734,7 @@ class StudentAssessmentService implements StudentAssessmentServiceInterface
         }
 
         $average = array_sum($typePerformances) / count($typePerformances);
-        $variance = array_sum(array_map(fn($p) => pow($p - $average, 2), $typePerformances)) / count($typePerformances);
+        $variance = array_sum(array_map(fn ($p) => pow($p - $average, 2), $typePerformances)) / count($typePerformances);
         $standardDeviation = sqrt($variance);
 
         // Lower standard deviation = higher consistency

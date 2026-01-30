@@ -15,12 +15,12 @@ class ReadingAchievement extends Model
         'name',
         'description',
         'criteria',
-        'awarded_at'
+        'awarded_at',
     ];
 
     protected $casts = [
         'criteria' => 'array',
-        'awarded_at' => 'datetime'
+        'awarded_at' => 'datetime',
     ];
 
     /**
@@ -42,7 +42,7 @@ class ReadingAchievement extends Model
             'name' => $name,
             'description' => $description,
             'criteria' => $criteria,
-            'awarded_at' => now()
+            'awarded_at' => now(),
         ]);
     }
 }

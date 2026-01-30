@@ -30,15 +30,15 @@ return new class extends Migration
             ]);
         }
 
-        $indexes = DB::select("SHOW INDEX FROM books WHERE Column_name = 'category_id'");
-        foreach ($indexes as $index) {
-            DB::statement("ALTER TABLE books DROP INDEX {$index->Key_name}");
-        }
-
         Schema::table('books', function (Blueprint $table) {
-            $table->dropForeign(['book_category_id']);
-            $table->dropColumn('book_category_id');
-
+            if (Schema::hasColumn('books', 'book_category_id')) {
+                try {
+                    $table->dropForeign(['book_category_id']);
+                } catch (Exception $e) {
+                    // Foreign key might not exist
+                }
+                $table->dropColumn('book_category_id');
+            }
         });
     }
 
@@ -62,7 +62,7 @@ return new class extends Migration
         foreach ($bookCategories as $bc) {
             // if book already has a category_id, skip (keeps first one only)
             $exists = DB::table('books')->where('id', $bc->book_id)->value('book_category_id');
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('books')
                     ->where('id', $bc->book_id)
                     ->update(['book_category_id' => $bc->category_id]);
@@ -72,5 +72,4 @@ return new class extends Migration
         // 3. Drop the pivot table
         Schema::dropIfExists('book_category');
     }
-
 };

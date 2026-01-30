@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use App\Models\Subscription;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +18,7 @@ class SubscriptionExpiredNotification extends Notification
      */
     public function __construct(
         private Subscription $subscription
-    ) { }
+    ) {}
 
     /**
      * Get the notification's delivery channels.

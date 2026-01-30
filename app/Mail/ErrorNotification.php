@@ -14,8 +14,6 @@ class ErrorNotification extends Mailable
 
     /**
      * Create a new message instance.
-     *
-     * @param array $emailData
      */
     public function __construct(array $emailData)
     {
@@ -29,7 +27,7 @@ class ErrorNotification extends Mailable
      */
     public function build()
     {
-        return $this->subject('Error Notification - ' . $this->emailData['app_name'])
+        return $this->subject('Error Notification - '.$this->emailData['app_name'])
             ->markdown('emails.error-notification')
             ->with('emailData', $this->emailData);
     }

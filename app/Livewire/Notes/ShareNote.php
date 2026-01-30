@@ -8,16 +8,20 @@ use App\Models\Note;
 use App\Models\StudentGroup;
 use App\Models\User;
 use App\Services\NoteShareService;
-use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class ShareNote extends Component
 {
     public Note $note;
+
     public string $shareType = 'individual';
+
     public array $selectedRecipients = [];
+
     public string $emailInput = '';
+
     public bool $canEdit = false;
+
     public bool $notifyRecipients = true;
 
     protected $listeners = [
@@ -62,7 +66,7 @@ class ShareNote extends Component
         // Check if user exists in database
         $this->validateOnly('emailInput');
 
-        if (!empty($this->emailInput) && filter_var($this->emailInput, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($this->emailInput) && filter_var($this->emailInput, FILTER_VALIDATE_EMAIL)) {
             $user = User::where('email', $this->emailInput)
                 ->where('school_id', auth()->user()->school_id)
                 ->first();
@@ -85,24 +89,34 @@ class ShareNote extends Component
             return 1;
         }
 
-        if (empty($this->selectedRecipients)) {
+        if (empty($this->selectedRecipients) || ! is_array($this->selectedRecipients)) {
             return 0;
         }
 
-        $shareService = app(NoteShareService::class);
-        $recipients = $shareService->resolveRecipients(
-            $this->shareType,
-            $this->selectedRecipients,
-            auth()->user()->school_id
-        );
+        try {
+            $shareService = app(NoteShareService::class);
+            $recipients = $shareService->resolveRecipients(
+                $this->shareType,
+                $this->selectedRecipients,
+                $this->note->user->school_id
+            );
 
-        return $recipients->count();
+            return $recipients->count();
+        } catch (\Exception $e) {
+            \Log::error('Failed to get recipient count', [
+                'share_type' => $this->shareType,
+                'selected_recipients' => $this->selectedRecipients,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
     }
 
     // Lazy loading configuration methods
     public function getModelClassProperty(): ?string
     {
-        return match($this->shareType) {
+        return match ($this->shareType) {
             'individual' => User::class,
             'academic_group' => AcademicGroup::class,
             'academic_level' => AcademicLevel::class,
@@ -113,7 +127,7 @@ class ShareNote extends Component
 
     public function getSearchColumnsProperty(): array
     {
-        return match($this->shareType) {
+        return match ($this->shareType) {
             'individual' => ['name', 'email'],
             'academic_group' => ['name', 'tag'],
             'academic_level' => ['name', 'label'],
@@ -124,7 +138,7 @@ class ShareNote extends Component
 
     public function getLabelFormatProperty(): string
     {
-        return match($this->shareType) {
+        return match ($this->shareType) {
             'individual' => 'name_email',
             'academic_group' => 'name_count',
             'academic_level' => 'name_count',
@@ -167,16 +181,16 @@ class ShareNote extends Component
             $this->note->refresh();
 
             $this->dispatch('success',
-                message: "Note shared with {$result['users_notified']} " .
-                \Str::plural('recipient', $result['users_notified']) . " successfully!"
+                message: "Note shared with {$result['users_notified']} ".
+                \Str::plural('recipient', $result['users_notified']).' successfully!'
             );
 
         } catch (\Exception $e) {
-            \Log::error('Note sharing failed: ' . $e->getMessage(), [
+            \Log::error('Note sharing failed: '.$e->getMessage(), [
                 'share_type' => $this->shareType,
                 'selected_recipients' => $this->selectedRecipients,
                 'email_input' => $this->emailInput,
-                'exception' => $e->getTraceAsString()
+                'exception' => $e->getTraceAsString(),
             ]);
             $this->dispatch('error', message: 'Failed to share note. Please try again.');
         }
@@ -192,7 +206,7 @@ class ShareNote extends Component
 
             $this->dispatch('success', message: 'Share removed successfully!');
         } catch (\Exception $e) {
-            \Log::error('Failed to remove share: ' . $e->getMessage());
+            \Log::error('Failed to remove share: '.$e->getMessage());
             $this->dispatch('error', message: 'Failed to remove share. Please try again.');
         }
     }

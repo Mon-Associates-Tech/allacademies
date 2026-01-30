@@ -33,17 +33,19 @@ class SchoolFee extends Model
         return $this->belongsTo(School::class);
     }
 
-   public function payer()
-{
-    return $this->morphTo();
-}
+    public function payer()
+    {
+        return $this->morphTo();
+    }
 
     protected static function boot()
     {
         parent::boot();
 
         Relation::morphMap([
-            'parent', 'student', 'other' => User::class,
+            'parent' => StudentParent::class,
+            'student' => Student::class,
+            'other' => User::class,
         ]);
     }
 
@@ -56,7 +58,6 @@ class SchoolFee extends Model
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
-
 
     // Relationship to term (academic period)
     public function academicPeriod()
@@ -81,4 +82,18 @@ class SchoolFee extends Model
         return $this->belongsTo(FinancialAid::class);
     }
 
+    public function getPayerDisplayName(): string
+    {
+        if ($this->payer) {
+            // For parent payers, get the user's name through the relationship
+            if ($this->payer_type === 'parent' && isset($this->payer->user)) {
+                return $this->payer->user->name ?? 'Unknown Payer';
+            }
+
+            // For student and other payers, directly access the name
+            return $this->payer->name ?? 'Unknown Payer';
+        }
+
+        return 'Unknown Payer';
+    }
 }

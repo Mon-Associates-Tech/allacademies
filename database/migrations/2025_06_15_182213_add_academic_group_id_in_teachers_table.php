@@ -12,19 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('teachers', static function (Blueprint $table) {
-            $table->foreignId('academic_group_id')
-                ->nullable()
-                ->after('id')
-                ->constrained('academic_groups')
-                ->nullOnDelete()
-                ->comment('Foreign key to the academic groups table');
+            if (!Schema::hasColumn('teachers', 'academic_group_id')) {
+                $table->foreignId('academic_group_id')
+                    ->nullable()
+                    ->after('id')
+                    ->constrained('academic_groups')
+                    ->nullOnDelete()
+                    ->comment('Foreign key to the academic groups table');
+            }
 
-            $table->foreignId('academic_level_id')
-                ->nullable()
-                ->after('id')
-                ->constrained('academic_levels')
-                ->nullOnDelete()
-                ->comment('Foreign key to the academic levels table');
+            if (!Schema::hasColumn('teachers', 'academic_level_id')) {
+                $table->foreignId('academic_level_id')
+                    ->nullable()
+                    ->after('id')
+                    ->constrained('academic_levels')
+                    ->nullOnDelete()
+                    ->comment('Foreign key to the academic levels table');
+            }
         });
     }
 

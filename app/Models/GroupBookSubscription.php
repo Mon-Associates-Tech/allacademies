@@ -17,7 +17,7 @@ class GroupBookSubscription extends Model
         'end_date',
         'status',
         'subscribed_by_type',
-        'subscribed_by_id'
+        'subscribed_by_id',
     ];
 
     protected $casts = [

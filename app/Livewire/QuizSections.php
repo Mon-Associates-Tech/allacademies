@@ -16,7 +16,7 @@ class QuizSections extends Component
             'name' => '',
             'type' => '',
             'count' => '',
-            'topics' => []
+            'topics' => [],
         ]);
     }
 
@@ -30,7 +30,7 @@ class QuizSections extends Component
         $this->topics = $topics;
 
         $this->sections = old('sections') ?? [
-            ['name' => '', 'type' => '', 'count' => '', 'topics' => []]
+            ['name' => '', 'type' => '', 'count' => '', 'topics' => []],
         ];
     }
 

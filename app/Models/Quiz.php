@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Quiz extends Model
 {
@@ -28,7 +28,7 @@ class Quiz extends Model
     ];
 
     protected $with = [
-        'academicSubject'
+        'academicSubject',
     ];
 
     public function academicSubject()

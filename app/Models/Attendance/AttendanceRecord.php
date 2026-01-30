@@ -14,7 +14,7 @@ class AttendanceRecord extends Model
         'attendance_id',
         'student_id',
         'status', // 'present', 'absent', 'late', 'excused'
-        'remarks'
+        'remarks',
     ];
 
     public function attendance()
@@ -27,4 +27,3 @@ class AttendanceRecord extends Model
         return $this->belongsTo(Student::class);
     }
 }
-

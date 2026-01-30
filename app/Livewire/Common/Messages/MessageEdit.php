@@ -17,33 +17,52 @@ class MessageEdit extends Component
     use WithFileUploads;
 
     public Message $message;
+
     public $subject;
+
     public $body;
+
     public $targetType;
+
     public $isUrgent;
+
     public $scheduledAt;
+
     public $sendNow = true;
 
     // Target criteria
     public $selectedRoles = [];
+
     public $selectedAcademicGroups = [];
+
     public $selectedAcademicLevels = [];
+
     public $selectedSubjects = [];
+
     public $selectedUsers = [];
+
     public $includeStudents = true;
+
     public $includeTeachers = true;
 
     // File uploads
     public $attachments = [];
+
     public $existingAttachments = [];
 
     // Preview
     public $showPreview = false;
+
     public $previewRecipients = [];
+
     public $recipientCount = 0;
+
     public $userSearch = '';
+
     public $searchedUsers = [];
+
     public $selectedUsersList = [];
+
     protected $rules = [
         'subject' => 'required|string|max:255',
         'body' => 'required|string',
@@ -54,7 +73,7 @@ class MessageEdit extends Component
     public function mount(Message $message)
     {
         // Check if user can edit this message
-        if ($message->sender_id !== auth()->id() && !auth()->user()->hasRole(['admin', 'super-admin'])) {
+        if ($message->sender_id !== auth()->id() && ! auth()->user()->hasRole(['admin', 'super-admin'])) {
             abort(403, 'You do not have permission to edit this message.');
         }
 
@@ -103,12 +122,12 @@ class MessageEdit extends Component
 
     public function removeAcademicGroup($groupId)
     {
-        $this->selectedAcademicGroups = array_filter($this->selectedAcademicGroups, fn($id) => $id != $groupId);
+        $this->selectedAcademicGroups = array_filter($this->selectedAcademicGroups, fn ($id) => $id != $groupId);
     }
 
     public function addAcademicGroup($groupId)
     {
-        if (!in_array($groupId, $this->selectedAcademicGroups)) {
+        if (! in_array($groupId, $this->selectedAcademicGroups)) {
             $this->selectedAcademicGroups[] = $groupId;
         }
     }
@@ -125,12 +144,12 @@ class MessageEdit extends Component
 
     public function removeAcademicLevel($levelId)
     {
-        $this->selectedAcademicLevels = array_filter($this->selectedAcademicLevels, fn($id) => $id != $levelId);
+        $this->selectedAcademicLevels = array_filter($this->selectedAcademicLevels, fn ($id) => $id != $levelId);
     }
 
     public function addAcademicLevel($levelId)
     {
-        if (!in_array($levelId, $this->selectedAcademicLevels)) {
+        if (! in_array($levelId, $this->selectedAcademicLevels)) {
             $this->selectedAcademicLevels[] = $levelId;
         }
     }
@@ -145,16 +164,16 @@ class MessageEdit extends Component
         $this->showPreview = false;
     }
 
-// Add this method for user search functionality:
+    // Add this method for user search functionality:
 
     public function removeSubject($subjectId)
     {
-        $this->selectedSubjects = array_filter($this->selectedSubjects, fn($id) => $id != $subjectId);
+        $this->selectedSubjects = array_filter($this->selectedSubjects, fn ($id) => $id != $subjectId);
     }
 
     public function addSubject($subjectId)
     {
-        if (!in_array($subjectId, $this->selectedSubjects)) {
+        if (! in_array($subjectId, $this->selectedSubjects)) {
             $this->selectedSubjects[] = $subjectId;
         }
     }
@@ -171,12 +190,12 @@ class MessageEdit extends Component
 
     public function removeRole($role)
     {
-        $this->selectedRoles = array_filter($this->selectedRoles, fn($r) => $r !== $role);
+        $this->selectedRoles = array_filter($this->selectedRoles, fn ($r) => $r !== $role);
     }
 
     public function addRole($role)
     {
-        if (!in_array($role, $this->selectedRoles)) {
+        if (! in_array($role, $this->selectedRoles)) {
             $this->selectedRoles[] = $role;
         }
     }
@@ -193,14 +212,14 @@ class MessageEdit extends Component
 
     public function removeUser($userId)
     {
-        $this->selectedUsers = array_filter($this->selectedUsers, fn($id) => $id != $userId);
+        $this->selectedUsers = array_filter($this->selectedUsers, fn ($id) => $id != $userId);
         $this->selectedUsers = array_values($this->selectedUsers);
         $this->updateSelectedUsersList();
     }
 
     public function addUser($userId)
     {
-        if (!in_array($userId, $this->selectedUsers)) {
+        if (! in_array($userId, $this->selectedUsers)) {
             $this->selectedUsers[] = $userId;
             $this->updateSelectedUsersList();
         }
@@ -211,8 +230,8 @@ class MessageEdit extends Component
         if (strlen($this->userSearch) >= 2) {
             $this->searchedUsers = User::where('is_active', true)
                 ->where(function ($query) {
-                    $query->where('name', 'like', '%' . $this->userSearch . '%')
-                        ->orWhere('email', 'like', '%' . $this->userSearch . '%');
+                    $query->where('name', 'like', '%'.$this->userSearch.'%')
+                        ->orWhere('email', 'like', '%'.$this->userSearch.'%');
                 })
                 ->limit(10)
                 ->get();
@@ -233,7 +252,7 @@ class MessageEdit extends Component
         $this->validate(['attachments.*' => 'file|max:10240']);
 
         foreach ($this->attachments as $attachment) {
-            $filename = Str::uuid() . '.' . $attachment->getClientOriginalExtension();
+            $filename = Str::uuid().'.'.$attachment->getClientOriginalExtension();
             $path = $attachment->storeAs('message-attachments', $filename, 'public');
 
             MessageAttachment::create([
@@ -316,8 +335,9 @@ class MessageEdit extends Component
     {
         $this->validate();
 
-        if (!$this->sendNow && empty($this->scheduledAt)) {
+        if (! $this->sendNow && empty($this->scheduledAt)) {
             $this->addError('scheduledAt', 'Please select a scheduled time or choose to send now.');
+
             return;
         }
 
@@ -351,8 +371,9 @@ class MessageEdit extends Component
     {
         $this->validate();
 
-        if (!$this->sendNow && empty($this->scheduledAt)) {
+        if (! $this->sendNow && empty($this->scheduledAt)) {
             $this->addError('scheduledAt', 'Please select a scheduled time or choose to send now.');
+
             return;
         }
 
@@ -367,6 +388,7 @@ class MessageEdit extends Component
         ]);
 
         session()->flash('success', 'Message updated successfully!');
+
         return redirect()->route('admin.messages.show', $this->message);
     }
 

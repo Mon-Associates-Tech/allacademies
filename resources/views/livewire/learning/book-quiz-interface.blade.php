@@ -90,7 +90,6 @@
             <!-- Token Warning Banner -->
             @if(!$canGenerateQuiz)
                 <div class="mb-6">
-                    @if($tokenWarningMessage === 'no_subscription')
                         <div
                             class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">
@@ -101,10 +100,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-blue-800 dark:text-blue-200 mb-1">
-                                        🎁 Get Started with Free AI Tokens!
+                                        🎁 Get Started with  AI Messengers!
                                     </h3>
                                     <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                                        You don't have any active token subscription. Activate your free trial
+                                        You don't have any active messenger subscription. Activate a
                                         package to start generating quizzes with AI assistance!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -113,12 +112,12 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                         </svg>
-                                        Get Free Tokens
+                                        Get Messengers
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    @elseif($tokenWarningMessage === 'depleted')
+                    @if($tokenWarningMessage === 'depleted')
                         <div
                             class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">
@@ -130,10 +129,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-red-800 dark:text-red-200 mb-1">
-                                        😔 Tokens Exhausted
+                                        😔 Messengers Exhausted
                                     </h3>
                                     <p class="text-sm text-red-700 dark:text-red-300 mb-3">
-                                        Your token balance is fully depleted. Top up now to continue generating quizzes
+                                        Your Messenger balance is fully depleted. Top up now to continue generating quizzes
                                         and resume your learning journey!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -142,7 +141,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Buy More Tokens
+                                        Buy More Messengers
                                     </a>
                                 </div>
                             </div>
@@ -162,7 +161,7 @@
                                         ⏰ Subscription Expired
                                     </h3>
                                     <p class="text-sm text-orange-700 dark:text-orange-300 mb-3">
-                                        Your token subscription has expired. Purchase a new package to continue
+                                        Your Messenger subscription has expired. Purchase a new package to continue
                                         generating quizzes with AI assistance.
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -188,10 +187,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">
-                                        ⚠️ Insufficient Tokens
+                                        ⚠️ Insufficient Messengers
                                     </h3>
                                     <p class="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                                        You don't have enough tokens to generate a quiz. Top up now to keep learning
+                                        You don't have enough messengers to generate a quiz. Top up now to keep learning
                                         without interruption!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -200,7 +199,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Top Up Tokens
+                                        Top Up Messengers
                                     </a>
                                 </div>
                             </div>
@@ -236,7 +235,7 @@
                                         </div>
 
                                         <!-- Content Selection -->
-                                        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                                        <div class="bg-white shadow sm:rounded-lg mb-6">
                                             <div class="px-4 py-5 sm:p-6">
                                                 @if($contentSourceTab === 'book')
                                                     <div class="space-y-4">
@@ -262,16 +261,16 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject
                                                                 *</label>
-                                                            <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                                wire:model="selectedSubjectId">
-                                                                <option value="">Choose a subject...</option>
-                                                                @foreach($availableSubjects as $subject)
-                                                                    <option value="{{ $subject->id }}">
-                                                                        {{ $subject->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                            <livewire:common.searchable-multi-select
+                                                                :items="$availableSubjects"
+                                                                :selected="$selectedSubjectId ? [$selectedSubjectId] : []"
+                                                                placeholder="Search and select a subject..."
+                                                                :multiple="false"
+                                                                name="selectedSubjectId"
+                                                                value-key="id"
+                                                                label-key="display_name"
+                                                                wire:key="subject-select-book"
+                                                            />
                                                             @error('selectedSubjectId') <p
                                                                 class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                                             <p class="mt-1 text-xs text-gray-500">Select the subject
@@ -346,16 +345,16 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-gray-700 mb-1">Subject
                                                                 *</label>
-                                                            <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                                wire:model="selectedSubjectId">
-                                                                <option value="">Choose a subject...</option>
-                                                                @foreach($availableSubjects as $subject)
-                                                                    <option value="{{ $subject->id }}">
-                                                                        {{ $subject->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                            <livewire:common.searchable-multi-select
+                                                                :items="$availableSubjects"
+                                                                :selected="$selectedSubjectId ? [$selectedSubjectId] : []"
+                                                                placeholder="Search and select a subject..."
+                                                                :multiple="false"
+                                                                name="selectedSubjectId"
+                                                                value-key="id"
+                                                                label-key="display_name"
+                                                                wire:key="subject-select-upload"
+                                                            />
                                                             @error('selectedSubjectId') <p
                                                                 class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                                             <p class="mt-1 text-xs text-gray-500">Select the subject
@@ -523,7 +522,7 @@
                                                 :disabled="$wire.isGenerating || !{{ $canGenerateQuiz ? 'true' : 'false' }}"
                                                 class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                                 <span wire:loading.remove wire:target="generateQuiz">
-                                                    {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Tokens' }}
+                                                    {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Messengers' }}
                                                 </span>
                                                 <span wire:loading wire:target="generateQuiz">
                                                     Generating Quiz...
@@ -1446,6 +1445,19 @@
 
     <script>
         document.addEventListener('livewire:init', function () {
+            // Handle URL updates for quiz persistence
+            Livewire.on('update-url', (params) => {
+                const url = new URL(window.location);
+                
+                if (params[0].quiz) {
+                    url.searchParams.set('quiz', params[0].quiz);
+                } else {
+                    url.searchParams.delete('quiz');
+                }
+                
+                window.history.pushState({}, '', url);
+            });
+            
             Livewire.on('download-results', (data) => {
                 let content = `Quiz Results Report\n==================\n\n`;
                 content += `Book: ${data[0].book}\n`;

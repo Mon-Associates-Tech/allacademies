@@ -83,6 +83,7 @@ class TeacherController extends Controller
     public function getStudentGroups(Teacher $teacher)
     {
         $groups = $teacher->studentGroups()->paginate();
+
         return StudentGroupResource::collection($groups);
     }
 
@@ -165,7 +166,7 @@ class TeacherController extends Controller
         $book = Book::findOrFail($validated['book_id']);
         $this->authorize('groupSubscribe', $book);
 
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             return response()->json(['message' => 'This book does not have a softcopy available for subscription'], 422);
         }
 
@@ -185,12 +186,14 @@ class TeacherController extends Controller
     public function getLessons(Teacher $teacher)
     {
         $lessons = $teacher->lessons()->with('subject', 'studentGroup')->paginate();
+
         return LessonResource::collection($lessons);
     }
 
     public function getLessonNotes(Teacher $teacher)
     {
         $notes = $teacher->lessonNotes()->with('lesson', 'subject', 'topic')->paginate();
+
         return LessonNoteResource::collection($notes);
     }
 

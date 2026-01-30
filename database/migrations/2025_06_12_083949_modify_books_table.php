@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('books', static function (Blueprint $table) {
-            $table->decimal('annual_subscription_fee', 8, 2)->default(50.00)->after('content_url');
-            $table->text('subscription_conditions')->nullable()->after('annual_subscription_fee');
+            if (!Schema::hasColumn('books', 'annual_subscription_fee')) {
+                $table->decimal('annual_subscription_fee', 8, 2)->default(50.00)->after('content_url');
+            }
+            if (!Schema::hasColumn('books', 'subscription_conditions')) {
+                $table->text('subscription_conditions')->nullable()->after('annual_subscription_fee');
+            }
         });
     }
 

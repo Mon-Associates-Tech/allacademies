@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 
 class SchoolContextServiceProvider extends ServiceProvider
 {
@@ -14,7 +15,7 @@ class SchoolContextServiceProvider extends ServiceProvider
         Builder::macro('crossSchool', function () {
             $user = auth()->user();
 
-            if (!$user || (!$user->isSuperAdmin() && !$user->hasRole('owner'))) {
+            if (! $user || (! $user->isSuperAdmin() && ! $user->hasRole('owner'))) {
                 abort(403, 'Unauthorized to access cross-school data');
             }
 

@@ -51,7 +51,7 @@ trait HasAvatar
 
     protected function changeCoverImagePath($path): void
     {
-        if (!empty($path)) {
+        if (! empty($path)) {
             // Delete old cover image if exists
             if ($this->attributes['cover_image'] && Storage::disk('public')->exists($this->attributes['cover_image'])) {
                 Storage::disk('public')->delete($this->attributes['cover_image']);
@@ -90,7 +90,7 @@ trait HasAvatar
 
     protected function changeAvatarPath($path): void
     {
-        if (!empty($path)) {
+        if (! empty($path)) {
             // Delete old avatar if exists
             if ($this->attributes['avatar'] && Storage::disk('public')->exists($this->attributes['avatar'])) {
                 Storage::disk('public')->delete($this->attributes['avatar']);

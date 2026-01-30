@@ -23,7 +23,7 @@ class LibraryDashboard extends Component
     public function availableBooks()
     {
         return Book::where('status', 'published')
-            ->whereDoesntHave('borrowings', function($query) {
+            ->whereDoesntHave('borrowings', function ($query) {
                 $query->where('status', 'active');
             })
             ->count();
@@ -56,12 +56,12 @@ class LibraryDashboard extends Component
     #[Computed]
     public function topBorrowedBooks()
     {
-        return Book::withCount(['borrowings' => function($query) {
+        return Book::withCount(['borrowings' => function ($query) {
             $query->where('created_at', '>=', $this->getPeriodStartDate());
         }])
-        ->orderBy('borrowings_count', 'desc')
-        ->take(5)
-        ->get();
+            ->orderBy('borrowings_count', 'desc')
+            ->take(5)
+            ->get();
     }
 
     #[Computed]
@@ -72,7 +72,7 @@ class LibraryDashboard extends Component
         return [
             'new_borrowings' => BookBorrowing::where('created_at', '>=', $startDate)->count(),
             'returned_books' => BookBorrowing::where('return_date', '>=', $startDate)->count(),
-            'active_students' =>  User::whereHas('borrowedBooks', function($query) use ($startDate) {
+            'active_students' => User::whereHas('borrowedBooks', function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate);
             })->count(),
             'overdue_rate' => $this->calculateOverdueRate(),
@@ -81,7 +81,7 @@ class LibraryDashboard extends Component
 
     private function getPeriodStartDate()
     {
-        return match($this->selectedPeriod) {
+        return match ($this->selectedPeriod) {
             'today' => Carbon::today(),
             'week' => Carbon::now()->startOfWeek(),
             'month' => Carbon::now()->startOfMonth(),

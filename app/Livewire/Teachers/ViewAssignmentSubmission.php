@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\AssignmentSubmission;
-use App\Models\Teacher;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
+use App\Models\AssignmentSubmission;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,18 +14,29 @@ use Livewire\Component;
 class ViewAssignmentSubmission extends Component
 {
     public $submissionId;
+
     public $teacherId;
+
     public $showGradingPanel = false;
+
     public $currentEssayIndex = null;
+
     public $essayGrade = '';
+
     public $essayFeedback = '';
 
     protected $submission;
+
     protected $teacher;
+
     protected $assignment;
+
     protected $student;
+
     protected $questions = [];
+
     protected $answers = [];
+
     protected $gradingData = [];
 
     public function mount(AssignmentSubmission $submission)
@@ -41,7 +52,7 @@ class ViewAssignmentSubmission extends Component
         $this->submission = AssignmentSubmission::with([
             'assignment.academicSubject',
             'assignment.teacher',
-            'student.user'
+            'student.user',
         ])->find($this->submissionId);
 
         $this->teacher = Teacher::where('user_id', $this->teacherId)->first();
@@ -63,7 +74,7 @@ class ViewAssignmentSubmission extends Component
             'assignment_id' => $this->assignment->id,
             'assignment_title' => $this->assignment->title,
             'student_id' => $this->student->id,
-            'student_name' => $this->student->user->name ?? 'Unknown'
+            'student_name' => $this->student->user->name ?? 'Unknown',
         ]);
 
         // Additional debug: show first few answer entries
@@ -76,9 +87,10 @@ class ViewAssignmentSubmission extends Component
     // Use computed properties instead of public properties for complex data
     public function getSubmissionProperty()
     {
-        if (!$this->submission) {
+        if (! $this->submission) {
             $this->initializeData();
         }
+
         return $this->submission;
     }
 
@@ -97,6 +109,7 @@ class ViewAssignmentSubmission extends Component
         if (empty($this->questions)) {
             $this->loadActualQuestionsAnswered();
         }
+
         return $this->questions;
     }
 
@@ -110,6 +123,7 @@ class ViewAssignmentSubmission extends Component
         if (empty($this->gradingData)) {
             $this->loadActualQuestionsAnswered();
         }
+
         return $this->gradingData;
     }
 
@@ -127,20 +141,21 @@ class ViewAssignmentSubmission extends Component
     {
         Log::info('Starting to load actual questions answered', [
             'submission_id' => $this->submissionId,
-            'answers_count' => count($this->answers)
+            'answers_count' => count($this->answers),
         ]);
 
         // PRIORITY 1: Try to get data from AssessmentResponse first (this contains the correct processed data)
         $this->questions = $this->getQuestionsFromAssessmentResponse();
 
-        if (!empty($this->questions)) {
+        if (! empty($this->questions)) {
             Log::info('Successfully loaded questions from AssessmentResponse:', [
                 'count' => count($this->questions),
-                'question_ids' => collect($this->questions)->pluck('id')->toArray()
+                'question_ids' => collect($this->questions)->pluck('id')->toArray(),
             ]);
 
             // Initialize grading data from the assessment response
             $this->initializeGradingDataFromAssessmentResponse();
+
             return;
         }
 
@@ -151,7 +166,7 @@ class ViewAssignmentSubmission extends Component
         if (empty($this->questions)) {
             Log::error('No questions found for submission', [
                 'submission_id' => $this->submissionId,
-                'assignment_id' => $this->assignment->id
+                'assignment_id' => $this->assignment->id,
             ]);
             $this->questions = [];
         }
@@ -167,29 +182,32 @@ class ViewAssignmentSubmission extends Component
             ->where('student_id', $this->student->id)
             ->first();
 
-        if (!$assessment) {
+        if (! $assessment) {
             Log::info('No assessment found for submission', [
                 'submission_id' => $this->submissionId,
                 'assignment_id' => $this->assignment->id,
-                'student_id' => $this->student->id
+                'student_id' => $this->student->id,
             ]);
+
             return [];
         }
 
         // Try to get questions from assessment_responses table
         $assessmentResponse = AssessmentResponse::where('assessment_id', $assessment->id)->first();
 
-        if (!$assessmentResponse) {
+        if (! $assessmentResponse) {
             Log::info('No AssessmentResponse found', [
-                'assessment_id' => $assessment->id
+                'assessment_id' => $assessment->id,
             ]);
+
             return [];
         }
 
         $responseData = $assessmentResponse->data;
 
-        if (!isset($responseData['questions']) || empty($responseData['questions'])) {
+        if (! isset($responseData['questions']) || empty($responseData['questions'])) {
             Log::warning('No questions found in AssessmentResponse data');
+
             return [];
         }
 
@@ -197,7 +215,7 @@ class ViewAssignmentSubmission extends Component
 
         Log::info('Found questions in AssessmentResponse', [
             'count' => count($questionsData),
-            'submission_id' => $this->submissionId
+            'submission_id' => $this->submissionId,
         ]);
 
         return $this->formatQuestionsFromAssessmentResponse($questionsData);
@@ -280,7 +298,7 @@ class ViewAssignmentSubmission extends Component
                 'question_type' => $question['type'],
                 'student_answer' => $question['student_answer'],
                 'is_correct' => $question['is_correct'],
-                'points_earned' => $question['points_earned']
+                'points_earned' => $question['points_earned'],
             ]);
 
             $this->gradingData[$index] = [
@@ -291,7 +309,7 @@ class ViewAssignmentSubmission extends Component
                 'is_correct' => $question['is_correct'],
                 'points_possible' => $question['points'],
                 'points_earned' => $question['points_earned'],
-                'needs_manual_grading' => $question['type'] === 'essay_question' && !$question['is_graded'],
+                'needs_manual_grading' => $question['type'] === 'essay_question' && ! $question['is_graded'],
                 'teacher_feedback' => $question['teacher_feedback'] ?? '',
                 'is_graded' => $question['is_graded'],
                 'graded_by' => $question['graded_by'],
@@ -302,16 +320,16 @@ class ViewAssignmentSubmission extends Component
         Log::info('Grading data initialized from AssessmentResponse:', [
             'total_questions' => count($this->gradingData),
             'graded_questions' => collect($this->gradingData)->where('is_graded', true)->count(),
-            'correct_answers' => collect($this->gradingData)->where('is_correct', true)->count()
+            'correct_answers' => collect($this->gradingData)->where('is_correct', true)->count(),
         ]);
     }
 
-// Keep the existing getOnlyAnsweredQuestions method as fallback
+    // Keep the existing getOnlyAnsweredQuestions method as fallback
     private function getOnlyAnsweredQuestions()
     {
         Log::info('Getting only answered questions from submission (fallback method)', [
             'submission_id' => $this->submissionId,
-            'answers_count' => count($this->answers)
+            'answers_count' => count($this->answers),
         ]);
 
         if (empty($this->answers)) {
@@ -325,7 +343,7 @@ class ViewAssignmentSubmission extends Component
 
         Log::info('Question IDs that have answers:', [
             'question_ids' => $questionIds,
-            'count' => count($questionIds)
+            'count' => count($questionIds),
         ]);
 
         // Process each question ID individually to maintain exact control
@@ -341,7 +359,7 @@ class ViewAssignmentSubmission extends Component
                 Log::info("Found multiple choice question ID: {$questionId}");
             }
 
-            if (!$question) {
+            if (! $question) {
                 $tfQuestion = \App\Models\TrueOrFalseQuestion::find($questionId);
                 if ($tfQuestion) {
                     $question = $tfQuestion;
@@ -350,7 +368,7 @@ class ViewAssignmentSubmission extends Component
                 }
             }
 
-            if (!$question) {
+            if (! $question) {
                 $essayQuestion = \App\Models\EssayQuestion::find($questionId);
                 if ($essayQuestion) {
                     $question = $essayQuestion;
@@ -375,12 +393,12 @@ class ViewAssignmentSubmission extends Component
                     'id' => $question->id,
                     'type' => $questionType,
                     'has_answer' => isset($this->answers[$questionId]),
-                    'student_answer' => $this->answers[$questionId] ?? 'null'
+                    'student_answer' => $this->answers[$questionId] ?? 'null',
                 ]);
             } else {
                 Log::error('Could not find question in any table:', [
                     'question_id' => $questionId,
-                    'submission_id' => $this->submissionId
+                    'submission_id' => $this->submissionId,
                 ]);
             }
         }
@@ -389,7 +407,7 @@ class ViewAssignmentSubmission extends Component
             'expected_count' => count($questionIds),
             'actual_count' => count($answeredQuestions),
             'question_ids_expected' => $questionIds,
-            'question_ids_found' => collect($answeredQuestions)->pluck('id')->toArray()
+            'question_ids_found' => collect($answeredQuestions)->pluck('id')->toArray(),
         ]);
 
         return $answeredQuestions;
@@ -399,6 +417,7 @@ class ViewAssignmentSubmission extends Component
     {
         // DISABLE THIS METHOD - it's causing the 92 questions issue
         Log::info('Skipping AssessmentResponse - using only answered questions');
+
         return [];
     }
 
@@ -406,7 +425,7 @@ class ViewAssignmentSubmission extends Component
     {
         Log::info('Getting only answered questions from submission', [
             'submission_id' => $this->submissionId,
-            'answers_count' => count($this->answers)
+            'answers_count' => count($this->answers),
         ]);
 
         if (empty($this->answers)) {
@@ -420,7 +439,7 @@ class ViewAssignmentSubmission extends Component
 
         Log::info('Question IDs that have answers:', [
             'question_ids' => $questionIds,
-            'count' => count($questionIds)
+            'count' => count($questionIds),
         ]);
 
         // Process each question ID individually to maintain exact control
@@ -436,7 +455,7 @@ class ViewAssignmentSubmission extends Component
                 Log::info("Found multiple choice question ID: {$questionId}");
             }
 
-            if (!$question) {
+            if (! $question) {
                 $tfQuestion = \App\Models\TrueOrFalseQuestion::find($questionId);
                 if ($tfQuestion) {
                     $question = $tfQuestion;
@@ -445,7 +464,7 @@ class ViewAssignmentSubmission extends Component
                 }
             }
 
-            if (!$question) {
+            if (! $question) {
                 $essayQuestion = \App\Models\EssayQuestion::find($questionId);
                 if ($essayQuestion) {
                     $question = $essayQuestion;
@@ -470,12 +489,12 @@ class ViewAssignmentSubmission extends Component
                     'id' => $question->id,
                     'type' => $questionType,
                     'has_answer' => isset($this->answers[$questionId]),
-                    'student_answer' => $this->answers[$questionId] ?? 'null'
+                    'student_answer' => $this->answers[$questionId] ?? 'null',
                 ]);
             } else {
                 Log::error('Could not find question in any table:', [
                     'question_id' => $questionId,
-                    'submission_id' => $this->submissionId
+                    'submission_id' => $this->submissionId,
                 ]);
             }
         }
@@ -484,11 +503,12 @@ class ViewAssignmentSubmission extends Component
             'expected_count' => count($questionIds),
             'actual_count' => count($answeredQuestions),
             'question_ids_expected' => $questionIds,
-            'question_ids_found' => collect($answeredQuestions)->pluck('id')->toArray()
+            'question_ids_found' => collect($answeredQuestions)->pluck('id')->toArray(),
         ]);
 
         return $answeredQuestions;
     }
+
     private function getQuestionsFromAssessmentResponsess()
     {
         // Find the Assessment record for this submission
@@ -496,12 +516,13 @@ class ViewAssignmentSubmission extends Component
             ->where('student_id', $this->student->id)
             ->first();
 
-        if (!$assessment) {
+        if (! $assessment) {
             Log::info('No assessment found for submission', [
                 'submission_id' => $this->submissionId,
                 'assignment_id' => $this->assignment->id,
-                'student_id' => $this->student->id
+                'student_id' => $this->student->id,
             ]);
+
             return [];
         }
 
@@ -511,11 +532,12 @@ class ViewAssignmentSubmission extends Component
         if ($assessmentResponse) {
             $questionsData = $assessmentResponse->getQuestionsData();
 
-            if (!empty($questionsData)) {
+            if (! empty($questionsData)) {
                 Log::info('Found questions in AssessmentResponse', [
                     'count' => count($questionsData),
-                    'submission_id' => $this->submissionId
+                    'submission_id' => $this->submissionId,
                 ]);
+
                 return $this->formatQuestionsFromAssessmentResponse($questionsData);
             }
         }
@@ -524,8 +546,9 @@ class ViewAssignmentSubmission extends Component
         if ($assessment->questions_data) {
             Log::info('Found questions in Assessment.questions_data', [
                 'count' => count($assessment->questions_data),
-                'submission_id' => $this->submissionId
+                'submission_id' => $this->submissionId,
             ]);
+
             return $assessment->questions_data;
         }
 
@@ -541,7 +564,7 @@ class ViewAssignmentSubmission extends Component
                    $question->question['summary'] ??
                    $question->question['text'] ??
                    json_encode($question->question);
-        } else if (is_string($question->question)) {
+        } elseif (is_string($question->question)) {
             // Handle JSON string format
             $decoded = json_decode($question->question, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
@@ -551,8 +574,9 @@ class ViewAssignmentSubmission extends Component
                        $decoded['text'] ??
                        $question->question;
             }
+
             return $question->question;
-        } else if (is_object($question->question)) {
+        } elseif (is_object($question->question)) {
             return $question->question->up ??
                    $question->question->down ??
                    $question->question->summary ??
@@ -569,18 +593,20 @@ class ViewAssignmentSubmission extends Component
             $options = [];
 
             // Helper function to extract option text
-            $extractOptionText = function($option) {
+            $extractOptionText = function ($option) {
                 if (is_array($option)) {
                     return $option['up'] ?? $option['down'] ?? $option['text'] ?? json_encode($option);
-                } else if (is_string($option)) {
+                } elseif (is_string($option)) {
                     $decoded = json_decode($option, true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                         return $decoded['up'] ?? $decoded['down'] ?? $decoded['text'] ?? $option;
                     }
+
                     return $option;
-                } else if (is_object($option)) {
+                } elseif (is_object($option)) {
                     return $option->up ?? $option->down ?? $option->text ?? 'Option format not recognized';
                 }
+
                 return $option;
             };
 
@@ -609,7 +635,7 @@ class ViewAssignmentSubmission extends Component
 
     private function getCorrectAnswer($question, $type)
     {
-        return match($type) {
+        return match ($type) {
             'multiple_choice_question' => $question->answer,
             'true_or_false_question' => $question->answer ? 'true' : 'false',
             'essay_question' => null,
@@ -648,7 +674,7 @@ class ViewAssignmentSubmission extends Component
                 'question_type' => $questionType,
                 'raw_saved_answer' => $savedAnswer,
                 'extracted_student_answer' => $studentAnswer,
-                'correct_answer' => $question['answer'] ?? 'N/A'
+                'correct_answer' => $question['answer'] ?? 'N/A',
             ]);
 
             // Clean up the student answer based on question type
@@ -657,7 +683,7 @@ class ViewAssignmentSubmission extends Component
             Log::info('Cleaned student answer:', [
                 'question_id' => $question['id'],
                 'raw_answer' => $studentAnswer,
-                'cleaned_answer' => $cleanedStudentAnswer
+                'cleaned_answer' => $cleanedStudentAnswer,
             ]);
 
             $isCorrect = $this->evaluateAnswer($question, $cleanedStudentAnswer);
@@ -682,16 +708,16 @@ class ViewAssignmentSubmission extends Component
 
         Log::info('Grading data initialized:', [
             'total_questions' => count($this->gradingData),
-            'grading_summary' => collect($this->gradingData)->map(function($data, $index) {
+            'grading_summary' => collect($this->gradingData)->map(function ($data, $index) {
                 return [
                     'index' => $index,
                     'question_id' => $data['question_id'],
                     'type' => $data['question_type'],
                     'student_answer' => $data['student_answer'],
                     'raw_answer' => $data['raw_student_answer'],
-                    'is_correct' => $data['is_correct']
+                    'is_correct' => $data['is_correct'],
                 ];
-            })->toArray()
+            })->toArray(),
         ]);
     }
 
@@ -704,7 +730,7 @@ class ViewAssignmentSubmission extends Component
         Log::info('Cleaning answer:', [
             'question_type' => $questionType,
             'raw_answer' => $answer,
-            'answer_type' => gettype($answer)
+            'answer_type' => gettype($answer),
         ]);
 
         switch ($questionType) {
@@ -722,8 +748,9 @@ class ViewAssignmentSubmission extends Component
                     // For now, return as is - the evaluation will handle the mismatch
                     Log::warning('Multiple choice question has true/false answer - possible data issue', [
                         'answer' => $answer,
-                        'question_type' => $questionType
+                        'question_type' => $questionType,
                     ]);
+
                     return $answer;
                 }
 
@@ -746,6 +773,7 @@ class ViewAssignmentSubmission extends Component
                         return $lower;
                     }
                 }
+
                 return $answer;
 
             case 'essay_question':
@@ -769,10 +797,10 @@ class ViewAssignmentSubmission extends Component
             'student_answer' => $studentAnswer,
             'student_answer_type' => gettype($studentAnswer),
             'correct_answer' => $question['answer'],
-            'correct_answer_type' => gettype($question['answer'])
+            'correct_answer_type' => gettype($question['answer']),
         ]);
 
-        $result = match($question['type']) {
+        $result = match ($question['type']) {
             'multiple_choice_question' => $this->evaluateMultipleChoice($question, $studentAnswer),
             'true_or_false_question' => $this->evaluateTrueFalse($question, $studentAnswer),
             default => false,
@@ -780,7 +808,7 @@ class ViewAssignmentSubmission extends Component
 
         Log::info('Answer evaluation result:', [
             'question_id' => $question['id'],
-            'is_correct' => $result
+            'is_correct' => $result,
         ]);
 
         return $result;
@@ -799,7 +827,7 @@ class ViewAssignmentSubmission extends Component
             Log::warning('Multiple choice question answered with true/false', [
                 'question_id' => $question['id'],
                 'student_answer' => $studentAnswer,
-                'correct_answer' => $question['answer']
+                'correct_answer' => $question['answer'],
             ]);
 
             // For now, these will be marked incorrect since they don't match A,B,C,D format
@@ -849,7 +877,7 @@ class ViewAssignmentSubmission extends Component
     public function gradeEssayQuestion()
     {
         $this->validate([
-            'essayGrade' => 'required|numeric|min:0|max:' . $this->gradingData[$this->currentEssayIndex]['points_possible'],
+            'essayGrade' => 'required|numeric|min:0|max:'.$this->gradingData[$this->currentEssayIndex]['points_possible'],
             'essayFeedback' => 'nullable|string|max:1000',
         ]);
 
@@ -878,7 +906,7 @@ class ViewAssignmentSubmission extends Component
             Log::error('Failed to grade essay question', [
                 'error' => $e->getMessage(),
                 'submission_id' => $this->submissionId,
-                'question_index' => $this->currentEssayIndex
+                'question_index' => $this->currentEssayIndex,
             ]);
 
             session()->flash('error', 'Failed to grade essay question. Please try again.');
@@ -939,7 +967,7 @@ class ViewAssignmentSubmission extends Component
     {
         $percentage = $this->percentage;
 
-        return match(true) {
+        return match (true) {
             $percentage >= 90 => 'A',
             $percentage >= 80 => 'B',
             $percentage >= 70 => 'C',

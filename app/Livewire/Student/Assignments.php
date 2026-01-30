@@ -18,15 +18,22 @@ class Assignments extends Component
 
     // Assessment phase
     public $currentQuestionIndex = 0;
+
     public $questions = [];
+
     public $responses = [];
+
     public $assessment = null;
+
     public $timeRemaining = null;
+
     public $timeLimitSeconds = 0;
+
     public $startTime = null;
 
     // Results phase
     public $assessmentResult = null;
+
     public $availableAssignments = [];
 
     protected $rules = [
@@ -37,8 +44,9 @@ class Assignments extends Component
     {
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $this->availableAssignments = collect();
+
             return;
         }
 
@@ -49,7 +57,7 @@ class Assignments extends Component
             ->causedBy(auth()->user())
             ->withProperties([
                 'action' => 'accessed_assignment_practice',
-                'page' => 'assignment-practice'
+                'page' => 'assignment-practice',
             ])
             ->log('Student accessed assignment practice page');
     }
@@ -64,14 +72,16 @@ class Assignments extends Component
         $this->validate();
 
         $assignment = Assignment::find($this->selectedAssignment);
-        if (!$assignment) {
+        if (! $assignment) {
             session()->flash('error', 'Assignment not found.');
+
             return;
         }
 
         // Check if student can start this assignment
-        if (!$this->canStartAssignment($assignment)) {
+        if (! $this->canStartAssignment($assignment)) {
             session()->flash('error', 'You are not eligible to start this assignment or it is not available.');
+
             return;
         }
 
@@ -115,7 +125,7 @@ class Assignments extends Component
         Log::info('Generated questions from assignment', [
             'assignment_id' => $assignment->id,
             'assessment_id' => $this->assessment->id,
-            'question_count' => count($this->questions)
+            'question_count' => count($this->questions),
         ]);
     }
 

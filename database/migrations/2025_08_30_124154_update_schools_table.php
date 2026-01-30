@@ -33,7 +33,7 @@ return new class extends Migration
             $table->dropIndex(['code']);
             $table->dropColumn([
                 'code', 'status', 'subscription_plan',
-                'settings', 'subscription_ends_at'
+                'settings', 'subscription_ends_at',
             ]);
         });
     }

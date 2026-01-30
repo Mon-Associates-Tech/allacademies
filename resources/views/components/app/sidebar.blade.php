@@ -43,57 +43,44 @@
                 <div x-show="$store.sidebar.expanded" class="sidebar-text">
                     <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}</h1>
                     <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">{{ auth()->user()->email }}</h2>
-                    @if(auth()->check())
-                        @php
-                            $user = auth()->user();
-                            $currentSchool = null;
 
-                            // For owners, show the switched school context
-                            if ($user->hasRole('owner') || $user->isSuperAdmin()) {
-                                // Check if we're in "all schools" view (current_school_id is explicitly null)
-                                if (session()->has('current_school_id') && session('current_school_id') === null) {
-                                    $currentSchool = null; // Don't show school name when viewing all schools
-                                }
-                                // Check if we have a specific school context
-                                elseif (app()->bound('current_school')) {
-                                    try {
-                                        $currentSchool = app('current_school');
-                                    } catch (Exception $e) {
-                                        $currentSchool = null;
-                                    }
-                                }
-                                // Default to user's school if no context is set
-                                elseif ($user->school) {
-                                    $currentSchool = $user->school;
-                                }
-                            }
-                            // For regular users, show their own school
-                            elseif ($user->school) {
-                                $currentSchool = $user->school;
-                            }
-                        @endphp
+                    @php
+                        // Use the centralized helper function
+                        $currentSchool = getCurrentSchoolContext();
+                        $viewingAllSchools = isViewingAllSchools();
+                    @endphp
 
-                        @if($currentSchool)
-                            <div class="mt-1 text-center">
-                <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                        <circle cx="4" cy="4" r="3"/>
-                    </svg>
-                    {{ $currentSchool->name }}
-                </span>
-                            </div>
-                        @elseif($user->hasRole('owner') || $user->isSuperAdmin())
-                            <div class="mt-1 text-center">
-                <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                        <circle cx="4" cy="4" r="3"/>
-                    </svg>
-                    All Schools
-                </span>
-                            </div>
-                        @endif
+                    @if($currentSchool)
+                        <div class="mt-1 text-center">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                                <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                    <circle cx="4" cy="4" r="3"/>
+                                </svg>
+                                {{ $currentSchool->name }}
+                            </span>
+                        </div>
+                    @elseif($viewingAllSchools && (auth()->user()->hasRole('owner') || auth()->user()->isSuperAdmin()))
+                        <div class="mt-1 text-center">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                                <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor"
+                                     viewBox="0 0 8 8">
+                                    <circle cx="4" cy="4" r="3"/>
+                                </svg>
+                                All Schools
+                            </span>
+                        </div>
+                    @elseif(auth()->user()->school)
+                        <div class="mt-1 text-center">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                                <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                    <circle cx="4" cy="4" r="3"/>
+                                </svg>
+                                {{ auth()->user()->school->name }}
+                            </span>
+                        </div>
                     @endif
 
                 </div>
@@ -130,7 +117,7 @@
                         @include('livewire.navigations.author-navigation', [
                             'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                         ])
-                    @elseif($userRole === UserRole::SUBSCRIBER || $roleValue === 'subscriber')
+                    @elseif($userRole === UserRole::GUEST || $roleValue === 'guest')
                         @include('livewire.navigations.subscriber-navigation', [
                             'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                         ])
@@ -192,6 +179,25 @@
                                 </svg>
 
                                 <span class="text-sm ml-2 sidebar-text duration-200">Notes</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Calendar">
+                        <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                           class="block pl-3 rounded-lg transition {{ Route::is('calendar*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{route('calendar.index')}}">
+                            <div class="flex items-center">
+                                <svg
+                                    class="shrink-0 fill-current {{ Route::is('calendar*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path
+                                        d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v13z"/>
+                                    <path
+                                        d="M16 11H8v2h8v-2zm0 4H8v2h8v-2z"/>
+                                </svg>
+
+                                <span class="text-sm ml-2 sidebar-text duration-200">Calendar</span>
                             </div>
                         </a>
                     </li>

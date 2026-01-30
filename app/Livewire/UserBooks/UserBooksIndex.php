@@ -8,6 +8,7 @@ use Livewire\Component;
 class UserBooksIndex extends Component
 {
     public $userBooks = [];
+
     public $maxShares = 10; // Same as in form
 
     public function mount(): void
@@ -39,4 +40,3 @@ class UserBooksIndex extends Component
         return view('livewire.user-books.user-books-index');
     }
 }
-

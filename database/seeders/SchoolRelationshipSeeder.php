@@ -52,9 +52,10 @@ class SchoolRelationshipSeeder extends Seeder
             // Get the first available academic group
             $academicGroup = AcademicGroup::first();
 
-            if (!$academicGroup) {
-                $this->command->error("✗ No academic groups found. Please seed academic groups first.");
+            if (! $academicGroup) {
+                $this->command->error('✗ No academic groups found. Please seed academic groups first.');
                 DB::rollBack();
+
                 return;
             }
 
@@ -73,6 +74,7 @@ class SchoolRelationshipSeeder extends Seeder
             if ($academicLevels->isEmpty()) {
                 $this->command->error("✗ No academic levels found for group ID {$academicGroup->id}. Please seed academic levels first.");
                 DB::rollBack();
+
                 return;
             }
 
@@ -124,7 +126,7 @@ class SchoolRelationshipSeeder extends Seeder
 
                 $teacher = Teacher::where('user_id', $user->id)->first();
 
-                if (!$teacher) {
+                if (! $teacher) {
                     $teacher = Teacher::create([
                         'school_id' => $school->id,
                         'user_id' => $user->id,
@@ -179,7 +181,7 @@ class SchoolRelationshipSeeder extends Seeder
 
                 $parent = StudentParent::where('user_id', $user->id)->first();
 
-                if (!$parent) {
+                if (! $parent) {
                     $parent = StudentParent::create([
                         'school_id' => $school->id,
                         'user_id' => $user->id,
@@ -223,7 +225,7 @@ class SchoolRelationshipSeeder extends Seeder
 
                 $student = Student::where('user_id', $user->id)->first();
 
-                if (!$student) {
+                if (! $student) {
                     $student = Student::create([
                         'school_id' => $school->id,
                         'user_id' => $user->id,
@@ -259,17 +261,17 @@ class SchoolRelationshipSeeder extends Seeder
 
             // Display summary
             $this->command->newLine();
-            $this->command->info("=== Seeding Summary ===");
+            $this->command->info('=== Seeding Summary ===');
             $this->command->info("School: {$school->name} (ID: {$school->id})");
             $this->command->info("Academic Group: {$academicGroup->name} (ID: {$academicGroup->id})");
             $this->command->info("Academic Levels: {$academicLevels->count()}");
-            $this->command->info("Teachers: " . count($teachers));
-            $this->command->info("Parents: " . count($parents));
-            $this->command->info("Students: " . count($students));
+            $this->command->info('Teachers: '.count($teachers));
+            $this->command->info('Parents: '.count($parents));
+            $this->command->info('Students: '.count($students));
             $this->command->newLine();
 
             // Display relationships - reload students with relationships to avoid null issues
-            $this->command->info("=== Relationships Created ===");
+            $this->command->info('=== Relationships Created ===');
 
             // Reload students with all necessary relationships
             $studentsWithRelations = Student::with(['user', 'academicLevel', 'parents.user', 'teachers.user', 'primaryTeacher.user'])
@@ -287,25 +289,25 @@ class SchoolRelationshipSeeder extends Seeder
                 if ($academicLevel) {
                     $this->command->line("  - Level: {$academicLevel->name} (ID: {$academicLevel->id})");
                 } else {
-                    $this->command->line("  - Level: Not assigned");
+                    $this->command->line('  - Level: Not assigned');
                 }
 
                 $this->command->line("  - Group: {$academicGroup->name} (ID: {$academicGroup->id})");
-                $this->command->line("  - Parents: " . $studentParents->pluck('user.name')->implode(', '));
-                $this->command->line("  - Teachers: " . $studentTeachers->pluck('user.name')->implode(', '));
+                $this->command->line('  - Parents: '.$studentParents->pluck('user.name')->implode(', '));
+                $this->command->line('  - Teachers: '.$studentTeachers->pluck('user.name')->implode(', '));
 
                 $primaryTeacher = $student->primaryTeacher()->first();
-                $this->command->line("  - Primary Teacher: " . ($primaryTeacher?->user->name ?? 'None'));
+                $this->command->line('  - Primary Teacher: '.($primaryTeacher?->user->name ?? 'None'));
             }
 
             DB::commit();
             $this->command->newLine();
-            $this->command->info("✓ Seeding completed successfully!");
+            $this->command->info('✓ Seeding completed successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->command->error("✗ Seeding failed: " . $e->getMessage());
-            $this->command->error("Stack trace: " . $e->getTraceAsString());
+            $this->command->error('✗ Seeding failed: '.$e->getMessage());
+            $this->command->error('Stack trace: '.$e->getTraceAsString());
             throw $e;
         }
     }

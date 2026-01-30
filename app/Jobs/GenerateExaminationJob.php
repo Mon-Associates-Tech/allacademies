@@ -22,27 +22,24 @@ class GenerateExaminationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-   /**
+    /**
      * Create a new job instance.
      *
      * @return void
      */
     public function __construct(
         private readonly AcademicSubject $academicSubject,
-        private readonly Team            $team,
-        private readonly User            $creator,
-        private  array           $heading,
-        private  array           $sections,
+        private readonly Team $team,
+        private readonly User $creator,
+        private array $heading,
+        private array $sections,
         private array $metadata
-    )
-    {
+    ) {
         //
     }
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
     public function handle(): void
     {
@@ -50,7 +47,7 @@ class GenerateExaminationJob implements ShouldQueue
         $usedQuestions = [
             'multiple_choice_questions' => [],
             'true_or_false_questions' => [],
-            'essay_questions' => []
+            'essay_questions' => [],
         ];
 
         try {
@@ -59,7 +56,7 @@ class GenerateExaminationJob implements ShouldQueue
                 &$usedQuestions
             ) {
                 $table = $section['type'];
-                $topicIds = collect($section['topics'])->map(fn($id) => (int)$id)->all();
+                $topicIds = collect($section['topics'])->map(fn ($id) => (int) $id)->all();
                 $subtopics = $section['subtopics'] ?? [];
                 $sectionQuestions = [];
 
@@ -70,17 +67,17 @@ class GenerateExaminationJob implements ShouldQueue
                     $section['document'] = $path;
                 }
 
-                if (!empty($subtopics)) {
+                if (! empty($subtopics)) {
                     // Handle questions with subtopics
-                    collect($subtopics)->each(function ($subtopic) use ($table, $topicIds, &$sectionQuestions, &$usedQuestions) {
-                        $count = (int)$subtopic['count'];
+                    collect($subtopics)->each(function ($subtopic) use ($table, &$sectionQuestions, &$usedQuestions) {
+                        $count = (int) $subtopic['count'];
 
                         $questions = DB::table($table)
-                            ->select($table . '.id')
-                            ->join('academic_subtopics', $table . '.academic_subtopic_id', '=', 'academic_subtopics.id')
+                            ->select($table.'.id')
+                            ->join('academic_subtopics', $table.'.academic_subtopic_id', '=', 'academic_subtopics.id')
                             ->where('academic_subtopics.academic_topic_id', $subtopic['topic_id'])
                             ->where('academic_subtopics.id', $subtopic['id'])
-                            ->whereNotIn($table . '.id', $usedQuestions[$table])
+                            ->whereNotIn($table.'.id', $usedQuestions[$table])
                             ->inRandomOrder()
                             ->take($count)
                             ->get()
@@ -88,7 +85,7 @@ class GenerateExaminationJob implements ShouldQueue
                             ->all();
 
                         if (count($questions) < $count) {
-                            throw new NotEnoughQuestionsException();
+                            throw new NotEnoughQuestionsException;
                         }
 
                         $sectionQuestions = array_merge($sectionQuestions, $questions);
@@ -107,7 +104,7 @@ class GenerateExaminationJob implements ShouldQueue
                         ->all();
 
                     if (count($questions) < $section['count']) {
-                        throw new NotEnoughQuestionsException();
+                        throw new NotEnoughQuestionsException;
                     }
 
                     $sectionQuestions = $questions;
@@ -130,7 +127,6 @@ class GenerateExaminationJob implements ShouldQueue
             Log::info('section', $sections);
 
             $this->heading['down'] = TemplateRenderer::renderTwig($this->heading['instructions']['down'], $this->heading['duration'], $this->heading['title'], $this->metadata);
-
 
             $examination = new Examination([
                 'title' => $this->heading['title'],

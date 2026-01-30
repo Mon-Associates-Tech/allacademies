@@ -8,14 +8,23 @@ use Livewire\Component;
 class BookMedia extends Component
 {
     public Book $book;
+
     public $currentVideoTime = 0;
+
     public $currentAudioTime = 0;
+
     public $videoVolume = 75;
+
     public $audioVolume = 75;
+
     public $videoSpeed = 1;
+
     public $isVideoPlaying = false;
+
     public $isAudioPlaying = false;
+
     public $chapterVideoStates = [];
+
     public $chapterAudioStates = [];
 
     public function mount(Book $book)
@@ -31,7 +40,7 @@ class BookMedia extends Component
                 $this->chapterVideoStates[$index] = [
                     'isPlaying' => false,
                     'currentTime' => 0,
-                    'duration' => 0
+                    'duration' => 0,
                 ];
             }
         }
@@ -41,7 +50,7 @@ class BookMedia extends Component
                 $this->chapterAudioStates[$index] = [
                     'isPlaying' => false,
                     'currentTime' => 0,
-                    'duration' => 0
+                    'duration' => 0,
                 ];
             }
         }
@@ -49,31 +58,31 @@ class BookMedia extends Component
 
     public function toggleMainVideo()
     {
-        $this->isVideoPlaying = !$this->isVideoPlaying;
+        $this->isVideoPlaying = ! $this->isVideoPlaying;
         $this->dispatch('toggle-main-video', $this->isVideoPlaying);
     }
 
     public function toggleMainAudio()
     {
-        $this->isAudioPlaying = !$this->isAudioPlaying;
+        $this->isAudioPlaying = ! $this->isAudioPlaying;
         $this->dispatch('toggle-main-audio', $this->isAudioPlaying);
     }
 
     public function toggleChapterVideo($index)
     {
-        $this->chapterVideoStates[$index]['isPlaying'] = !$this->chapterVideoStates[$index]['isPlaying'];
+        $this->chapterVideoStates[$index]['isPlaying'] = ! $this->chapterVideoStates[$index]['isPlaying'];
         $this->dispatch('toggle-chapter-video', [
             'index' => $index,
-            'isPlaying' => $this->chapterVideoStates[$index]['isPlaying']
+            'isPlaying' => $this->chapterVideoStates[$index]['isPlaying'],
         ]);
     }
 
     public function toggleChapterAudio($index)
     {
-        $this->chapterAudioStates[$index]['isPlaying'] = !$this->chapterAudioStates[$index]['isPlaying'];
+        $this->chapterAudioStates[$index]['isPlaying'] = ! $this->chapterAudioStates[$index]['isPlaying'];
         $this->dispatch('toggle-chapter-audio', [
             'index' => $index,
-            'isPlaying' => $this->chapterAudioStates[$index]['isPlaying']
+            'isPlaying' => $this->chapterAudioStates[$index]['isPlaying'],
         ]);
     }
 
@@ -145,6 +154,7 @@ class BookMedia extends Component
     {
         $minutes = floor($seconds / 60);
         $remainingSeconds = floor($seconds % 60);
+
         return sprintf('%d:%02d', $minutes, $remainingSeconds);
     }
 
@@ -153,8 +163,8 @@ class BookMedia extends Component
         return view('livewire.books.media', [
             'hasMedia' => $this->book->single_video_file ||
                 $this->book->single_audio_file ||
-                !empty($this->book->chapter_videos) ||
-                !empty($this->book->chapter_audios),
+                ! empty($this->book->chapter_videos) ||
+                ! empty($this->book->chapter_audios),
             'chapterVideosCount' => $this->book->chapter_videos ? count($this->book->chapter_videos) : 0,
             'chapterAudiosCount' => $this->book->chapter_audios ? count($this->book->chapter_audios) : 0,
         ]);

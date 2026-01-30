@@ -17,13 +17,21 @@ use Log;
 class PerformanceOverview extends Component
 {
     public $selectedPeriod = 'all';
+
     public $selectedSubject = '';
+
     public $subjects = [];
+
     public $performanceData = [];
+
     public $overallStats = [];
+
     public $trendData = [];
+
     public $insights = [];
+
     public $upcomingAssignments = [];
+
     public $pendingAssignments = [];
 
     protected $listeners = ['refreshPerformanceData' => 'loadPerformanceData'];
@@ -39,10 +47,9 @@ class PerformanceOverview extends Component
     {
         $student = getStudent(auth()->id(), withoutScopes: true);
 
-        if (!$student) {
+        if (! $student) {
             $this->subjects = [];
         }
-
 
         // Get subjects that have assignment submissions for this student
         $subjectsWithSubmissions = AssignmentSubmission::where('student_id', $student->id)
@@ -58,6 +65,7 @@ class PerformanceOverview extends Component
 
         if (empty($subjectsWithSubmissions)) {
             $this->subjects = [];
+
             return;
         }
 
@@ -72,17 +80,18 @@ class PerformanceOverview extends Component
         try {
             $student = Auth::user()->student;
 
-            if (!$student) {
+            if (! $student) {
                 $student = Student::withoutGlobalScopes()
                     ->where('user_id', Auth::id())
                     ->first();
             }
 
-            if (!$student) {
+            if (! $student) {
                 Log::warning('No student found in loadPerformanceData', ['user_id' => Auth::id()]);
                 $this->performanceData = [];
                 $this->overallStats = $this->getEmptyStats();
                 $this->trendData = [];
+
                 return;
             }
 
@@ -91,7 +100,7 @@ class PerformanceOverview extends Component
 
             Log::info('Assignments loaded', [
                 'count' => $allAssignments->count(),
-                'student_id' => $student->id
+                'student_id' => $student->id,
             ]);
 
             // Get submissions for these assignments
@@ -104,7 +113,7 @@ class PerformanceOverview extends Component
             Log::info('Submissions loaded', [
                 'total' => $submissions->count(),
                 'graded' => $submissions->where('status', 'graded')->count(),
-                'student_id' => $student->id
+                'student_id' => $student->id,
             ]);
 
             // Apply period filter to submissions
@@ -135,7 +144,7 @@ class PerformanceOverview extends Component
 
             Log::info('Processing metrics', [
                 'graded_count' => $gradedSubmissions->count(),
-                'total_assignments' => $allAssignments->count()
+                'total_assignments' => $allAssignments->count(),
             ]);
 
             $this->calculatePerformanceMetrics($gradedSubmissions, []);
@@ -144,14 +153,14 @@ class PerformanceOverview extends Component
 
             Log::info('Performance data calculated', [
                 'performance_items' => count($this->performanceData),
-                'has_overall_stats' => !empty($this->overallStats),
-                'trend_items' => count($this->trendData)
+                'has_overall_stats' => ! empty($this->overallStats),
+                'trend_items' => count($this->trendData),
             ]);
 
         } catch (Exception $e) {
             Log::error('Error loading performance data', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->performanceData = [];
@@ -224,8 +233,9 @@ class PerformanceOverview extends Component
 
             // Add submissions data
             foreach ($submissions as $submission) {
-                if (!$submission->assignment) {
+                if (! $submission->assignment) {
                     Log::warning('Submission missing assignment', ['submission_id' => $submission->id]);
+
                     continue;
                 }
 
@@ -236,7 +246,7 @@ class PerformanceOverview extends Component
                         'score' => $submission->score,
                         'max_score' => $submission->total_marks,
                         'date' => $submission->submitted_at ?? now(),
-                        'type' => 'assignment'
+                        'type' => 'assignment',
                     ]);
                 }
             }
@@ -251,19 +261,20 @@ class PerformanceOverview extends Component
                         'score' => $assessment->score,
                         'max_score' => $assessment->max_score,
                         'date' => $assessment->created_at ?? now(),
-                        'type' => 'assessment'
+                        'type' => 'assessment',
                     ]);
                 }
             }
 
             Log::info('Performance metrics data collected', [
                 'total_items' => $allData->count(),
-                'subjects' => $allData->pluck('subject_id')->unique()->count()
+                'subjects' => $allData->pluck('subject_id')->unique()->count(),
             ]);
 
             if ($allData->isEmpty()) {
                 Log::info('No performance data to display');
                 $this->performanceData = [];
+
                 return;
             }
 
@@ -322,13 +333,13 @@ class PerformanceOverview extends Component
                 ->toArray();
 
             Log::info('Performance metrics calculated', [
-                'subjects_count' => count($this->performanceData)
+                'subjects_count' => count($this->performanceData),
             ]);
 
         } catch (Exception $e) {
             Log::error('Error calculating performance metrics', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             $this->performanceData = [];
         }
@@ -357,14 +368,15 @@ class PerformanceOverview extends Component
         try {
             $student = Auth::user()->student;
 
-            if (!$student) {
+            if (! $student) {
                 $student = Student::withoutGlobalScopes()
                     ->where('user_id', Auth::id())
                     ->first();
             }
 
-            if (!$student) {
+            if (! $student) {
                 $this->overallStats = $this->getEmptyStats();
+
                 return;
             }
 
@@ -397,7 +409,7 @@ class PerformanceOverview extends Component
             $gradedSubmissions = $submissionsCollection->where('status', 'graded');
             $gradedAssessments = $assessmentsCollection->whereIn('status', [
                 Assessment::STATUS_COMPLETED,
-                Assessment::STATUS_GRADED
+                Assessment::STATUS_GRADED,
             ]);
 
             $totalGraded = $gradedSubmissions->count() + $gradedAssessments->count();
@@ -411,7 +423,7 @@ class PerformanceOverview extends Component
                         'score' => $submission->score,
                         'max_score' => $submission->total_marks,
                         'date' => $submission->submitted_at ?? now(),
-                        'subject_id' => $submission->assignment->academic_subject_id
+                        'subject_id' => $submission->assignment->academic_subject_id,
                     ]);
                 }
             }
@@ -422,7 +434,7 @@ class PerformanceOverview extends Component
                         'score' => $assessment->score,
                         'max_score' => $assessment->max_score,
                         'date' => $assessment->created_at ?? now(),
-                        'subject_id' => $assessment->academic_subject_id
+                        'subject_id' => $assessment->academic_subject_id,
                     ]);
                 }
             }
@@ -444,6 +456,7 @@ class PerformanceOverview extends Component
                 ];
 
                 Log::info('Overall stats (empty data)', $this->overallStats);
+
                 return;
             }
 
@@ -471,7 +484,7 @@ class PerformanceOverview extends Component
         } catch (Exception $e) {
             Log::error('Error calculating overall stats', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             $this->overallStats = $this->getEmptyStats();
         }
@@ -507,7 +520,7 @@ class PerformanceOverview extends Component
             if ($submission->score !== null && $submission->total_marks > 0 && $submission->submitted_at) {
                 $allData->push([
                     'date' => $submission->submitted_at,
-                    'percentage' => ($submission->score / $submission->total_marks) * 100
+                    'percentage' => ($submission->score / $submission->total_marks) * 100,
                 ]);
             }
         }
@@ -518,13 +531,14 @@ class PerformanceOverview extends Component
             if ($assessment->score !== null && $assessment->max_score > 0 && $assessment->created_at) {
                 $allData->push([
                     'date' => $assessment->created_at,
-                    'percentage' => ($assessment->score / $assessment->max_score) * 100
+                    'percentage' => ($assessment->score / $assessment->max_score) * 100,
                 ]);
             }
         }
 
         if ($allData->isEmpty()) {
             $this->trendData = [];
+
             return;
         }
 
@@ -535,7 +549,7 @@ class PerformanceOverview extends Component
             return [
                 'week' => $group->first()['date']->format('M d'),
                 'percentage' => round($group->avg('percentage'), 1),
-                'count' => $group->count()
+                'count' => $group->count(),
             ];
         })->take(8)->reverse()->values();
 
@@ -546,6 +560,7 @@ class PerformanceOverview extends Component
     {
         if (empty($this->performanceData) || empty($this->overallStats)) {
             $this->insights = [];
+
             return;
         }
 
@@ -559,7 +574,7 @@ class PerformanceOverview extends Component
                 'title' => 'Top Performing Subject',
                 'message' => "You're excelling in {$strongest['subject']} with {$strongest['percentage']}% average!",
                 'action' => 'Keep up the great work!',
-                'color' => 'green'
+                'color' => 'green',
             ];
         }
 
@@ -571,7 +586,7 @@ class PerformanceOverview extends Component
                 'title' => 'Focus Area Identified',
                 'message' => "{$needsWork['subject']} needs attention - currently at {$needsWork['percentage']}%",
                 'action' => 'Consider additional practice in this subject',
-                'color' => 'orange'
+                'color' => 'orange',
             ];
         }
 
@@ -583,7 +598,7 @@ class PerformanceOverview extends Component
                 'title' => 'Excellent Consistency',
                 'message' => "{$streak} day study streak! You're building great habits.",
                 'action' => 'Keep maintaining this momentum!',
-                'color' => 'blue'
+                'color' => 'blue',
             ];
         } elseif ($streak < 3) {
             $insights[] = [
@@ -591,7 +606,7 @@ class PerformanceOverview extends Component
                 'title' => 'Consistency Opportunity',
                 'message' => 'Try to maintain daily practice for better results.',
                 'action' => 'Aim for at least one assignment per day',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ];
         }
 
@@ -603,7 +618,7 @@ class PerformanceOverview extends Component
                 'title' => 'Positive Progress',
                 'message' => "You're improving in {$improvingSubjects} subject(s)!",
                 'action' => 'Your hard work is paying off',
-                'color' => 'green'
+                'color' => 'green',
             ];
         }
 
@@ -630,7 +645,7 @@ class PerformanceOverview extends Component
         $this->dispatch('exportRequested', [
             'performance' => $this->performanceData,
             'stats' => $this->overallStats,
-            'period' => $this->selectedPeriod
+            'period' => $this->selectedPeriod,
         ]);
     }
 
@@ -662,7 +677,7 @@ class PerformanceOverview extends Component
 
                 return $assignment->starts_at <= now()
                     && $assignment->ends_at > now()
-                    && (!$submission || !in_array($submission->status, ['graded', 'submitted']));
+                    && (! $submission || ! in_array($submission->status, ['graded', 'submitted']));
             })
             ->sortBy('ends_at')
             ->take(5)
