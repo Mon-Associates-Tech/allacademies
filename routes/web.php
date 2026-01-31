@@ -351,7 +351,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'index'])->name('index');
         Route::get('/history', [\App\Http\Controllers\TokenSubscriptionController::class, 'history'])->name('history');
         Route::get('/create', [\App\Http\Controllers\TokenSubscriptionController::class, 'create'])->name('create');
-        Route::post('/checkout', [\App\Http\Controllers\TokenSubscriptionController::class, 'checkout'])->name('checkout');
+        Route::match(['get', 'post'], '/checkout', [\App\Http\Controllers\TokenSubscriptionController::class, 'checkout'])->name('checkout');
         Route::post('/process-payment', [\App\Http\Controllers\TokenSubscriptionController::class, 'processPayment'])->name('process-payment');
         Route::post('/', [\App\Http\Controllers\TokenSubscriptionController::class, 'store'])->name('store');
         Route::get('/{subscription}', [\App\Http\Controllers\TokenSubscriptionController::class, 'show'])->name('show');
@@ -382,6 +382,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('token-payments')->name('token-payments.')->group(function () {
         Route::get('/token/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');
         Route::get('/callback', [TokenPaymentController::class, 'callback'])->name('callback');
+        Route::get('/cancel', [TokenPaymentController::class, 'cancel'])->name('cancel');
     });
 
     // User Books Routes

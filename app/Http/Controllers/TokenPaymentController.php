@@ -23,6 +23,15 @@ class TokenPaymentController extends Controller
     {
         $this->paystack = $paystack;
         $this->subscriptionService = $subscriptionService;
+
+        // Prevent caching of payment pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['initialize', 'callback']);
     }
 
     /**
@@ -32,6 +41,16 @@ class TokenPaymentController extends Controller
     {
         $user = Auth::user();
         $pendingPayment = session('pending_payment');
+
+        // Check if pending payment is stale (older than 30 minutes)
+        $paymentTimestamp = session('payment_timestamp');
+        if ($paymentTimestamp && now()->diffInMinutes($paymentTimestamp) > 30) {
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp']);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('error', 'Payment session expired. Please start again.');
+        }
 
         if (! $pendingPayment) {
             return redirect()
@@ -66,6 +85,7 @@ class TokenPaymentController extends Controller
                 'pricing_tier_id' => $pendingPayment['pricing_tier_id'],
                 'name' => $user->name,
                 'phone' => $user->phone ?? '0000000000',
+                'cancel_action' => route('token-subscriptions.index'),
             ],
             'callback_url' => route('token-payments.callback'),
         ];
@@ -73,8 +93,11 @@ class TokenPaymentController extends Controller
         try {
             $response = $this->paystack->initializeTransaction($data);
 
-            // Store reference in session
-            session(['payment_reference' => $paystackReference]);
+            // Store reference and timestamp in session
+            session([
+                'payment_reference' => $paystackReference,
+                'payment_timestamp' => now(),
+            ]);
 
             \Log::info('Payment initialized successfully', [
                 'reference' => $paystackReference,
@@ -83,17 +106,40 @@ class TokenPaymentController extends Controller
                 'user_id' => $user->id,
             ]);
 
-            return redirect($response['data']['authorization_url']);
+            // Use 303 See Other status to convert POST to GET on redirect
+            // This prevents browser cache miss errors when user cancels payment
+            return redirect($response['data']['authorization_url'], 303);
         } catch (Exception $e) {
             \Log::error('Paystack initialization failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $user->id,
             ]);
 
+            // Clear stale data on error
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
             return redirect()
                 ->route('token-subscriptions.index')
                 ->with('error', 'Failed to initialize payment. Please try again.');
         }
+    }
+
+    /**
+     * Handle payment cancellation
+     * User cancelled payment at Paystack or wants to exit payment flow
+     */
+    public function cancel()
+    {
+        // Clear all payment-related session data
+        session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
+        \Log::info('Payment cancelled by user', [
+            'user_id' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('token-subscriptions.index')
+            ->with('info', 'Payment cancelled. You can try again anytime.');
     }
 
     /**
@@ -104,6 +150,9 @@ class TokenPaymentController extends Controller
         $reference = $request->query('reference');
 
         if (! $reference) {
+            // Clear stale session data
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
             return redirect()
                 ->route('token-subscriptions.index')
                 ->with('error', 'Invalid payment callback.');
@@ -113,6 +162,9 @@ class TokenPaymentController extends Controller
             $response = $this->paystack->verifyTransaction($reference);
 
             if (! $response['status'] || $response['data']['status'] !== 'success') {
+                // Clear stale session data on failed verification
+                session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
                 return redirect()
                     ->route('token-subscriptions.index')
                     ->with('error', 'Payment verification failed.');
@@ -181,7 +233,7 @@ class TokenPaymentController extends Controller
                 }
             });
 
-            session()->forget(['pending_payment', 'payment_reference']);
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
 
             return redirect()
                 ->route('token-subscriptions.index')

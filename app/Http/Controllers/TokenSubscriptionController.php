@@ -21,6 +21,15 @@ class TokenSubscriptionController extends Controller
     {
         $this->subscriptionService = $subscriptionService;
         $this->cycleService = $cycleService;
+
+        // Prevent caching of checkout pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['checkout', 'topup', 'processPayment', 'processTopup']);
     }
 
     public function index()
@@ -97,10 +106,22 @@ class TokenSubscriptionController extends Controller
 
     public function checkout(Request $request)
     {
+        // If accessed via GET (e.g., coming back from Paystack), redirect to subscriptions
+        if ($request->isMethod('get')) {
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('info', 'Checkout cancelled. You can try again anytime.');
+        }
+
         $request->validate([
             'pricing_tier_id' => 'required|exists:pricing_tiers,id',
             'months' => 'required|integer|min:1|max:12',
         ]);
+
+        // Clear any stale session data from previous payment attempts
+        session()->forget(['pending_payment', 'payment_reference', 'subscription_checkout']);
 
         /** @var User $user */
         $user = Auth::user();
@@ -144,12 +165,35 @@ class TokenSubscriptionController extends Controller
         ]);
     }
 
+    /**
+     * Show subscription data (called after user navigates back from payment page)
+     * This validates that session data still exists and is valid
+     */
+    public function validateCheckout()
+    {
+        $subscriptionCheckout = session('subscription_checkout');
+
+        // If session data is missing, clear and redirect
+        if (! $subscriptionCheckout) {
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('info', 'Your checkout session has ended. Please start a new subscription.');
+        }
+
+        return null; // Session is valid
+    }
+
     public function processPayment(Request $request)
     {
         $request->validate([
             'pricing_tier_id' => 'required|exists:pricing_tiers,id',
             'months' => 'required|integer|min:1|max:12',
         ]);
+
+        // Clear any stale session data before processing new payment
+        session()->forget(['payment_timestamp']);
 
         /** @var User $user */
         $user = Auth::user();
@@ -186,8 +230,9 @@ class TokenSubscriptionController extends Controller
             ],
         ]);
 
-        // Redirect to payment with group ID
-        return redirect()->route('token-payments.initialize', ['group_id' => $groupId])
+        // Redirect to payment with group ID using 303 to convert POST to GET
+        // This prevents 'Form Resubmission' errors when user cancels payment
+        return redirect()->route('token-payments.initialize', ['group_id' => $groupId], 303)
             ->with('success', 'Ready for payment. Please complete your transaction.');
     }
 
@@ -243,6 +288,9 @@ class TokenSubscriptionController extends Controller
             'amount' => 'required|numeric|min:10',
         ]);
 
+        // Clear any stale session data from previous payment attempts
+        session()->forget(['pending_payment', 'payment_reference']);
+
         /** @var User $user */
         $user = Auth::user();
 
@@ -272,8 +320,9 @@ class TokenSubscriptionController extends Controller
             ],
         ]);
 
-        // Redirect to payment
-        return redirect()->route('token-payments.initialize')
+        // Redirect to payment using 303 to convert POST to GET
+        // This prevents 'Form Resubmission' errors when user cancels payment
+        return redirect()->route('token-payments.initialize', 303)
             ->with('success', 'Ready for topup payment. Please complete your transaction.');
     }
 

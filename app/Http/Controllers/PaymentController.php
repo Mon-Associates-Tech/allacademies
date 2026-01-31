@@ -39,6 +39,15 @@ class PaymentController extends Controller
     {
         $this->paystack = $paystack;
         $this->subscriptionService = $subscriptionService;
+
+        // Prevent caching of payment pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['initialize', 'initializeBook', 'callback', 'bookCallback']);
     }
 
     /**
@@ -230,6 +239,7 @@ class PaymentController extends Controller
                 'subscription_id' => $subscription->id,
                 'name' => auth()->user()->name,
                 'phone' => auth()->user()->phone ?? '0000000000',
+                'cancel_action' => route('subscriptions.payment.show', $subscription),
             ],
             'callback_url' => route('payment.callback'),
         ];
@@ -271,6 +281,7 @@ class PaymentController extends Controller
                 'author_name' => $author->name,
                 'name' => auth()->user()->name,
                 'phone' => auth()->user()->phone ?? '0000000000',
+                'cancel_action' => route('books.show', $book),
             ],
             'callback_url' => route('payment.book.callback'),
         ];
