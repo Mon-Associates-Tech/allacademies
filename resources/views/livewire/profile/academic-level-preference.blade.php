@@ -19,7 +19,7 @@
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-medium text-gray-900 dark:text-white">Academic Level Preference</h3>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                @if ($isStudent && $isEditingOwnProfile)
+                @if ($this->isStudent && $isEditingOwnProfile)
                     Your academic level is set by your teacher or administrator.
                 @elseif (!$isEditingOwnProfile)
                     Set the academic level for this student.
