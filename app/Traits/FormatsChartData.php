@@ -13,9 +13,9 @@ trait FormatsChartData
     /**
      * Build a Chart.js-ready payload for Bar (or Line) charts.
      *
-     * @param array $labels   Array of x-axis labels
-     * @param array $series   Array of datasets, each as ['label' => string, 'data' => array, 'backgroundColor' => string|array, 'borderColor' => string|array]
-     * @param array $options  Additional Chart.js options
+     * @param  array  $labels  Array of x-axis labels
+     * @param  array  $series  Array of datasets, each as ['label' => string, 'data' => array, 'backgroundColor' => string|array, 'borderColor' => string|array]
+     * @param  array  $options  Additional Chart.js options
      * @return array{type:string,data:array,options:array}
      */
     public function formatBarData(array $labels, array $series, array $options = []): array
@@ -44,11 +44,46 @@ trait FormatsChartData
     }
 
     /**
+     * Build a Chart.js-ready payload for Line charts.
+     *
+     * @param  array  $labels  Array of x-axis labels
+     * @param  array  $series  Array of datasets, each as ['label' => string, 'data' => array, 'borderColor' => string, 'backgroundColor' => string, 'tension' => float, 'fill' => bool]
+     * @param  array  $options  Additional Chart.js options
+     * @return array{type:string,data:array,options:array}
+     */
+    public function formatLineData(array $labels, array $series, array $options = []): array
+    {
+        $datasets = [];
+
+        foreach ($series as $index => $s) {
+            $color = $s['borderColor'] ?? $this->fallbackColors()[$index % 10];
+            $datasets[] = [
+                'label' => $s['label'] ?? 'Series',
+                'data' => $this->ensureNumericArray($s['data'] ?? []),
+                'borderColor' => $color,
+                'backgroundColor' => $s['backgroundColor'] ?? $this->hexToRgba($color, 0.1),
+                'borderWidth' => $s['borderWidth'] ?? 2,
+                'tension' => $s['tension'] ?? 0.3,
+                'fill' => $s['fill'] ?? false,
+                'pointRadius' => $s['pointRadius'] ?? 4,
+                'pointHoverRadius' => $s['pointHoverRadius'] ?? 6,
+            ];
+        }
+
+        return [
+            'type' => 'line',
+            'data' => [
+                'labels' => array_values($labels),
+                'datasets' => $datasets,
+            ],
+            'options' => $this->mergeDefaultCartesianOptions($options),
+        ];
+    }
+
+    /**
      * Build a Chart.js-ready payload for Pie (or Doughnut) charts.
      *
-     * @param array $labels
-     * @param array $values  Numbers aligned by $labels
-     * @param array $options
+     * @param  array  $values  Numbers aligned by $labels
      * @return array{type:string,data:array,options:array}
      */
     public function formatPieData(array $labels, array $values, array $options = []): array
@@ -72,22 +107,27 @@ trait FormatsChartData
     /**
      * Build a Chart.js-ready payload for a Gauge using a Doughnut under the hood.
      *
-     * @param float|int $value
-     * @param float|int $min
-     * @param float|int $max
-     * @param array $thresholds Array of bands like [['max' => 50, 'color' => '#ef4444'], ...]
-     * @param array $options
+     * @param  float|int  $value
+     * @param  float|int  $min
+     * @param  float|int  $max
+     * @param  array  $thresholds  Array of bands like [['max' => 50, 'color' => '#ef4444'], ...]
      * @return array{type:string,data:array,options:array}
      */
     public function formatGaugeData($value, $min = 0, $max = 100, array $thresholds = [], array $options = []): array
     {
-        $min = (float)$min;
-        $max = (float)$max;
-        if ($max <= $min) { $max = $min + 1; }
+        $min = (float) $min;
+        $max = (float) $max;
+        if ($max <= $min) {
+            $max = $min + 1;
+        }
 
-        $val = (float)$value;
-        if ($val < $min) $val = $min;
-        if ($val > $max) $val = $max;
+        $val = (float) $value;
+        if ($val < $min) {
+            $val = $min;
+        }
+        if ($val > $max) {
+            $val = $max;
+        }
 
         $range = $max - $min;
         $progress = $range > 0 ? ($val - $min) / $range : 0;
@@ -97,12 +137,14 @@ trait FormatsChartData
         $data = [];
         $colors = [];
 
-        if (!empty($thresholds)) {
+        if (! empty($thresholds)) {
             $prev = $min;
             foreach ($thresholds as $t) {
-                $bandMax = isset($t['max']) ? (float)$t['max'] : $max;
-                if ($bandMax <= $prev) continue;
-                $labels[] = ($t['label'] ?? (string)$bandMax);
+                $bandMax = isset($t['max']) ? (float) $t['max'] : $max;
+                if ($bandMax <= $prev) {
+                    continue;
+                }
+                $labels[] = ($t['label'] ?? (string) $bandMax);
                 $segment = max(0, min($bandMax, $val) - $prev);
                 $data[] = $segment;
                 $colors[] = $t['color'] ?? '#9ca3af';
@@ -165,14 +207,17 @@ trait FormatsChartData
     private function fallbackColors(?int $n = null): array
     {
         $palette = [
-            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f43f5e', '#6366f1', '#14b8a6'
+            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f43f5e', '#6366f1', '#14b8a6',
         ];
-        if ($n === null) return $palette;
+        if ($n === null) {
+            return $palette;
+        }
         // repeat palette to reach N
         $out = [];
         for ($i = 0; $i < $n; $i++) {
             $out[] = $palette[$i % count($palette)];
         }
+
         return $out;
     }
 
@@ -213,5 +258,30 @@ trait FormatsChartData
         ];
 
         return array_replace_recursive($defaults, $options);
+    }
+
+    /**
+     * Convert a hex color to rgba format with specified opacity.
+     *
+     * @param  string  $hex  Hex color code (e.g., '#3b82f6' or '3b82f6')
+     * @param  float  $alpha  Opacity value between 0 and 1
+     * @return string RGBA color string
+     */
+    private function hexToRgba(string $hex, float $alpha = 1.0): string
+    {
+        // Remove # if present
+        $hex = ltrim($hex, '#');
+
+        // Handle shorthand hex (e.g., 'fff')
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+
+        // Parse hex values
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        return "rgba({$r}, {$g}, {$b}, {$alpha})";
     }
 }

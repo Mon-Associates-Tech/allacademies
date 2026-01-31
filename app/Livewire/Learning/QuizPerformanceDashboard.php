@@ -69,6 +69,45 @@ class QuizPerformanceDashboard extends Component
         'mixed' => 'Mixed',
     ];
 
+    // Chart data properties for Livewire chart components
+    public array $bookBarLabels = [];
+
+    public array $bookBarDatasets = [];
+
+    public array $bookBarOptions = [];
+
+    public array $difficultyPieLabels = [];
+
+    public array $difficultyPieValues = [];
+
+    public array $difficultyPieOptions = [];
+
+    public array $typePieLabels = [];
+
+    public array $typePieValues = [];
+
+    public array $typePieOptions = [];
+
+    public array $gradeBarLabels = [];
+
+    public array $gradeBarDatasets = [];
+
+    public array $gradeBarOptions = [];
+
+    public float $completionGaugeValue = 0.0;
+
+    public int $completionGaugeMin = 0;
+
+    public int $completionGaugeMax = 100;
+
+    public array $completionGaugeThresholds = [];
+
+    public array $trendLineLabels = [];
+
+    public array $trendLineDatasets = [];
+
+    public array $trendLineOptions = [];
+
     public function mount(?int $userId = null)
     {
         $this->userId = $userId ?? Auth::id();
@@ -77,6 +116,185 @@ class QuizPerformanceDashboard extends Component
         // Set default date range for custom
         $this->startDate = now()->subMonth()->format('Y-m-d');
         $this->endDate = now()->format('Y-m-d');
+
+        // Initialize chart data
+        $this->prepareChartData();
+    }
+
+    /**
+     * Called when any filter property is updated
+     */
+    public function updated($property): void
+    {
+        // Refresh chart data when filters change
+        if (in_array($property, ['selectedPeriod', 'selectedBookId', 'selectedDifficulty', 'selectedQuestionType', 'minScore', 'maxScore', 'startDate', 'endDate'])) {
+            $this->prepareChartData();
+        }
+    }
+
+    /**
+     * Prepare all chart data for Livewire chart components
+     */
+    protected function prepareChartData(): void
+    {
+        $this->prepareBookPerformanceChart();
+        $this->prepareDifficultyPieChart();
+        $this->prepareQuestionTypePieChart();
+        $this->prepareGradeDistributionChart();
+        $this->prepareCompletionGauge();
+        $this->prepareTrendLineChart();
+    }
+
+    /**
+     * Prepare bar chart data for performance by book
+     */
+    protected function prepareBookPerformanceChart(): void
+    {
+        $bookData = $this->performanceByBook;
+
+        if ($bookData->isEmpty()) {
+            $this->bookBarLabels = [];
+            $this->bookBarDatasets = [];
+
+            return;
+        }
+
+        $this->bookBarLabels = $bookData->take(10)->pluck('title')->map(fn ($title) => \Str::limit($title, 20))->toArray();
+        $barData = $bookData->take(10)->pluck('average_score')->toArray();
+
+        $this->bookBarDatasets = [
+            [
+                'label' => 'Avg Score %',
+                'data' => $barData,
+                'backgroundColor' => '#3b82f6',
+            ],
+        ];
+        $this->bookBarOptions = [
+            'plugins' => ['legend' => ['display' => true, 'position' => 'bottom']],
+            'scales' => [
+                'y' => ['beginAtZero' => true, 'max' => 100],
+            ],
+        ];
+    }
+
+    /**
+     * Prepare pie chart data for difficulty distribution
+     */
+    protected function prepareDifficultyPieChart(): void
+    {
+        $difficultyData = $this->performanceByDifficulty;
+
+        if ($difficultyData->isEmpty()) {
+            $this->difficultyPieLabels = [];
+            $this->difficultyPieValues = [];
+
+            return;
+        }
+
+        $this->difficultyPieLabels = $difficultyData->pluck('difficulty')->toArray();
+        $this->difficultyPieValues = $difficultyData->pluck('quiz_count')->toArray();
+        $this->difficultyPieOptions = ['plugins' => ['legend' => ['position' => 'right']]];
+    }
+
+    /**
+     * Prepare pie chart data for question type distribution
+     */
+    protected function prepareQuestionTypePieChart(): void
+    {
+        $typeData = $this->performanceByQuestionType;
+
+        if ($typeData->isEmpty()) {
+            $this->typePieLabels = [];
+            $this->typePieValues = [];
+
+            return;
+        }
+
+        $this->typePieLabels = $typeData->pluck('type')->toArray();
+        $this->typePieValues = $typeData->pluck('quiz_count')->toArray();
+        $this->typePieOptions = ['plugins' => ['legend' => ['position' => 'right']]];
+    }
+
+    /**
+     * Prepare bar chart data for grade distribution
+     */
+    protected function prepareGradeDistributionChart(): void
+    {
+        $gradeData = $this->performanceData['grade_distribution'] ?? [];
+
+        if (empty($gradeData)) {
+            $this->gradeBarLabels = [];
+            $this->gradeBarDatasets = [];
+
+            return;
+        }
+
+        $this->gradeBarLabels = array_keys($gradeData);
+        $barData = array_values($gradeData);
+
+        $this->gradeBarDatasets = [
+            [
+                'label' => 'Quiz Count',
+                'data' => $barData,
+                'backgroundColor' => ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'],
+            ],
+        ];
+        $this->gradeBarOptions = [
+            'plugins' => ['legend' => ['display' => false]],
+            'scales' => [
+                'y' => ['beginAtZero' => true],
+            ],
+        ];
+    }
+
+    /**
+     * Prepare gauge chart data for completion rate
+     */
+    protected function prepareCompletionGauge(): void
+    {
+        $this->completionGaugeValue = (float) ($this->performanceData['completion_rate'] ?? 0);
+        $this->completionGaugeMin = 0;
+        $this->completionGaugeMax = 100;
+        $this->completionGaugeThresholds = [
+            ['max' => 50, 'color' => '#ef4444', 'label' => 'Low'],
+            ['max' => 80, 'color' => '#f59e0b', 'label' => 'Medium'],
+            ['max' => 100, 'color' => '#10b981', 'label' => 'High'],
+        ];
+    }
+
+    /**
+     * Prepare line chart data for performance trends
+     */
+    protected function prepareTrendLineChart(): void
+    {
+        $trendData = $this->timeSeriesData;
+
+        if (empty($trendData)) {
+            $this->trendLineLabels = [];
+            $this->trendLineDatasets = [];
+
+            return;
+        }
+
+        $this->trendLineLabels = array_column($trendData, 'period');
+        $scoreData = array_column($trendData, 'average_score');
+
+        $this->trendLineDatasets = [
+            [
+                'label' => 'Avg Score %',
+                'data' => $scoreData,
+                'borderColor' => '#3b82f6',
+                'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                'tension' => 0.3,
+                'fill' => true,
+            ],
+        ];
+        $this->trendLineOptions = [
+            'plugins' => ['legend' => ['display' => true, 'position' => 'bottom']],
+            'scales' => [
+                'y' => ['beginAtZero' => true, 'max' => 100],
+            ],
+        ];
     }
 
     #[Computed]
