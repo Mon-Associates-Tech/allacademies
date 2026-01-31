@@ -157,6 +157,8 @@ class TokenPaymentController extends Controller
                         $tokensToAdd = $pricingTier->calculateTokensFromAmount($paidAmount);
                         $cycle->topup_tokens_allocated += $tokensToAdd;
                         $cycle->tokens_allocated += $tokensToAdd;
+                        // Add topup price to current_price (cumulative for this cycle)
+                        $cycle->current_price += $paidAmount;
                         $cycle->is_topup = true;
                         $cycle->save();
 
@@ -164,6 +166,7 @@ class TokenPaymentController extends Controller
                             'cycle_id' => $cycle->id,
                             'tokens_added' => $tokensToAdd,
                             'amount' => $paidAmount,
+                            'updated_cycle_price' => $cycle->current_price,
                         ]);
                     }
                 } elseif ($groupId) {

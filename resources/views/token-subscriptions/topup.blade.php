@@ -45,7 +45,7 @@
                             <form action="{{ route('token-subscriptions.process-topup') }}" method="POST" class="space-y-6"
                                 x-data="{
                                     amount: '',
-                                    tokensPerCurrency: {{ ($pricingTier->monthly_token_limit / (float) $pricingTier->initial_price) }},
+                                    tokensPerCurrency: {{ ($pricingTier->monthly_token_limit / (float) $pricingTier->base_price) }},
                                     get calculatedTokens() {
                                         const amt = parseFloat(this.amount) || 0;
                                         return Math.floor(amt * this.tokensPerCurrency);
