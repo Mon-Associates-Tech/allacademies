@@ -115,8 +115,8 @@ class SubscriptionCycleService
      */
     protected function createNewCycle(User $user, PricingTier $pricingTier, string $groupId, int $cycleNumber, $startDate, $endDate, bool $isPending = false): SubscriptionCycle
     {
-        // Use PricingTier's method to get correct cumulative price
-        $cumulativePrice = $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+        // Use monthly price increment for this cycle only
+        $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
 
         // If pending payment, always create as inactive with 0 tokens
         $status = 'inactive';
@@ -127,6 +127,7 @@ class SubscriptionCycleService
             $isCurrentCycle = now()->between($startDate, $endDate);
             $status = $isCurrentCycle ? 'active' : 'inactive';
             $tokensAllocated = $pricingTier->monthly_token_limit;
+            $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
         }
 
         return SubscriptionCycle::create([
@@ -139,7 +140,7 @@ class SubscriptionCycleService
             'tokens_allocated' => $tokensAllocated,
             'topup_tokens_allocated' => 0,
             'tokens_used' => 0,
-            'current_price' => $cumulativePrice,
+            'current_price' => $monthlyPrice,
             'status' => $status,
             'is_topup' => false,
             'is_merged' => false,
@@ -161,8 +162,8 @@ class SubscriptionCycleService
             // Cycle ends 30 days after start (anniversary date model)
             $endDate = $startDate->copy()->addDays(30);
 
-            // Use cumulative price (total cost up to this cycle)
-            $price = $customPrice ?? $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+            // Use monthly price increment only (not cumulative)
+            $monthlyPrice = $customPrice ?? $pricingTier->getMonthlyPriceIncrement($cycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             // Determine if this cycle should be active (is within current date range)
@@ -178,7 +179,7 @@ class SubscriptionCycleService
                 'cycle_end_date' => $endDate,
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
-                'current_price' => $price,
+                'current_price' => $monthlyPrice,
                 'status' => $status,
                 'is_topup' => $isTopup,
             ]);
@@ -189,7 +190,7 @@ class SubscriptionCycleService
                 'cycle_number' => $cycleNumber,
                 'pricing_tier' => $pricingTier->name,
                 'token_limit' => $tokenLimit,
-                'cumulative_price' => $price,
+                'monthly_price' => $monthlyPrice,
                 'cycle_start' => $startDate->toDateString(),
                 'cycle_end' => $endDate->toDateString(),
                 'group_id' => $groupId,
@@ -212,8 +213,9 @@ class SubscriptionCycleService
             $cycleStartDate = $subscriptionStartDate->copy()->startOfDay();
             $cycleEndDate = $subscriptionStartDate->copy()->addDays(30);
 
-            // Cycle 1 uses initial_price (cumulative is just initial_price for cycle 1)
-            $price = $pricingTier->getCumulativePriceUpToCycle(1);
+            // Cycle 1 uses base_price as the monthly increment
+            $cycleNumber = 1;
+            $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             // Determine if this cycle should be active (is within current date range)
@@ -224,12 +226,12 @@ class SubscriptionCycleService
             $cycle = SubscriptionCycle::create([
                 'user_id' => $user->id,
                 'pricing_tier_id' => $pricingTier->id,
-                'cycle_number' => 1,
+                'cycle_number' => $cycleNumber,
                 'cycle_start_date' => $cycleStartDate,
                 'cycle_end_date' => $cycleEndDate,
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
-                'current_price' => $price,
+                'current_price' => $monthlyPrice,
                 'status' => $status,
             ]);
 
@@ -238,7 +240,7 @@ class SubscriptionCycleService
                 'cycle_id' => $cycle->id,
                 'pricing_tier' => $pricingTier->name,
                 'subscription_start_date' => $subscriptionStartDate,
-                'cumulative_price' => $price,
+                'monthly_price' => $monthlyPrice,
                 'cycle_start' => $cycleStartDate->toDateString(),
                 'cycle_end' => $cycleEndDate->toDateString(),
             ]);
@@ -304,8 +306,8 @@ class SubscriptionCycleService
             $isCurrentCycle = now()->between($newStartDate, $newEndDate);
             $status = $isCurrentCycle ? 'active' : 'inactive';
 
-            // Use cumulative price (total cost up to this cycle number)
-            $price = $pricingTier->getCumulativePriceUpToCycle($nextCycleNumber);
+            // Use monthly price increment for this specific cycle number
+            $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($nextCycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             $newCycle = SubscriptionCycle::create([
@@ -316,7 +318,7 @@ class SubscriptionCycleService
                 'cycle_end_date' => $newEndDate,
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
-                'current_price' => $price,
+                'current_price' => $monthlyPrice,
                 'status' => $status,
             ]);
 
@@ -325,7 +327,7 @@ class SubscriptionCycleService
                 'cycle_id' => $newCycle->id,
                 'cycle_number' => $nextCycleNumber,
                 'token_limit' => $tokenLimit,
-                'cumulative_price' => $price,
+                'monthly_price' => $monthlyPrice,
                 'cycle_start' => $newStartDate->toDateString(),
                 'cycle_end' => $newEndDate->toDateString(),
             ]);
