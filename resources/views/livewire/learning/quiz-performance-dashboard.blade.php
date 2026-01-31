@@ -13,6 +13,12 @@
                         Track your performance and progress
                     @endif
                 </p>
+                <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                    <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                    {{ $this->getGradingSystemName() }}
+                </p>
             </div>
 
             <div class="flex gap-3">
@@ -144,8 +150,11 @@
                     <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                         {{ number_format($this->performanceData['average_score'], 1) }}%
                     </p>
+                    @php
+                        $avgGradeInfo = $this->getGrade($this->performanceData['average_score']);
+                    @endphp
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Grade: {{ $this->calculateLetterGrade($this->performanceData['average_score']) }}
+                        Grade: {{ $avgGradeInfo['grade'] }} ({{ $avgGradeInfo['interpretation'] }})
                     </p>
                 </div>
                 <div class="p-3 bg-green-100 dark:bg-green-900/50 rounded-full">

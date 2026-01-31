@@ -7,6 +7,10 @@
             <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-6">
                 @if(!empty($bookBarLabels))
                     <livewire:charts.bar-chart :labels="$bookBarLabels" :datasets="$bookBarDatasets" :options="$bookBarOptions" height-class="h-72" />
+                @else
+                    <div class="flex items-center justify-center h-72 text-gray-500 dark:text-gray-400">
+                        <p>No book performance chart data available</p>
+                    </div>
                 @endif
             </div>
 

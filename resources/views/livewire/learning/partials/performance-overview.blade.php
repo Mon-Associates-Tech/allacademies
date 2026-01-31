@@ -1,8 +1,7 @@
 <div class="performance-overview">
-    {{-- Stats Overview with Charts --}}
-    <div class="grid grid-cols-12 gap-6 mb-8">
-        {{-- Grade Distribution Chart --}}
-        <div class="col-span-12 lg:col-span-8">
+    {{-- Grade Distribution Chart - Full Row --}}
+    <div class="mb-8">
+        <div class="col-span-12">
             <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Grade Distribution</h3>
                 @if(!empty($gradeBarLabels))
@@ -14,37 +13,52 @@
                 @endif
             </div>
             {{-- Grade Cards --}}
-            <div class="grid grid-cols-5 gap-4 mt-4">
+            @php
+                $allGrades = \App\Support\GradingSystemResolver::getAllGrades($this->targetUser);
+                $gradeInterpretations = collect($allGrades)->keyBy('grade')->map(fn($g) => $g['interpretation'])->toArray();
+            @endphp
+            <div class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mt-4">
                 @foreach($this->performanceData['grade_distribution'] as $grade => $count)
-                    <div class="text-center p-4 rounded-lg border-2 {{ $count > 0 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-600' : 'border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700' }}">
-                        <div class="text-3xl font-bold {{ $count > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
+                    <div class="text-center p-3 rounded-lg border-2 {{ $count > 0 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-600' : 'border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700' }}">
+                        <div class="text-2xl font-bold {{ $count > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
                             {{ $grade }}
                         </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate" title="{{ $gradeInterpretations[$grade] ?? '' }}">
+                            {{ $gradeInterpretations[$grade] ?? '' }}
+                        </div>
+                        <div class="text-sm font-medium text-gray-600 dark:text-gray-400 mt-1">
                             {{ $count }} {{ Str::plural('quiz', $count) }}
                         </div>
                     </div>
                 @endforeach
             </div>
         </div>
+    </div>
 
-        {{-- Completion Rate Gauge --}}
-        <div class="col-span-12 lg:col-span-4">
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 h-full">
+    {{-- Completion Rate Gauge - Full Row --}}
+    <div class="mb-8">
+        <div class="col-span-12">
+            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Completion Rate</h3>
-                <div class="flex items-center justify-center">
-                    <livewire:charts.gauge-chart
-                        :value="$completionGaugeValue"
-                        :min="$completionGaugeMin"
-                        :max="$completionGaugeMax"
-                        :thresholds="$completionGaugeThresholds"
-                        center-label="Complete"
-                        height-class="h-48"
-                    />
-                </div>
-                <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    {{ number_format($completionGaugeValue, 1) }}% of started quizzes completed
-                </p>
+                @if(!empty($completionGaugeThresholds))
+                    <div class="flex items-center justify-center">
+                        <livewire:charts.gauge-chart
+                            :value="$completionGaugeValue"
+                            :min="$completionGaugeMin"
+                            :max="$completionGaugeMax"
+                            :thresholds="$completionGaugeThresholds"
+                            center-label="Complete"
+                            height-class="h-48"
+                        />
+                    </div>
+                    <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+                        {{ number_format($completionGaugeValue, 1) }}% of started quizzes completed
+                    </p>
+                @else
+                    <div class="flex items-center justify-center h-48 text-gray-500 dark:text-gray-400">
+                        <p>No completion data available yet</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -139,11 +153,19 @@
                                 {{ $quiz['question_type'] }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                        <span class="text-sm font-semibold {{ $quiz['score'] >= 80 ? 'text-green-600 dark:text-green-400' : ($quiz['score'] >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">
+                                @php
+                                    $quizGradeInfo = $this->getGrade($quiz['score']);
+                                @endphp
+                                <div class="flex flex-col">
+                                    <div class="flex items-center">
+                                        <span class="text-sm font-semibold {{ $quizGradeInfo['is_passing'] ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                                             {{ number_format($quiz['score'], 1) }}%
                                         </span>
-                                    <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">({{ $quiz['grade'] }})</span>
+                                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded {{ $quizGradeInfo['is_passing'] ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' }}">
+                                            {{ $quizGradeInfo['grade'] }}
+                                        </span>
+                                    </div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $quizGradeInfo['interpretation'] }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

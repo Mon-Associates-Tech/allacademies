@@ -5,6 +5,7 @@ namespace App\Livewire\Learning;
 use App\Models\Book;
 use App\Models\QuizSession;
 use App\Models\User;
+use App\Support\GradingSystemResolver;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -100,7 +101,11 @@ class QuizPerformanceDashboard extends Component
 
     public int $completionGaugeMax = 100;
 
-    public array $completionGaugeThresholds = [];
+    public array $completionGaugeThresholds = [
+        ['max' => 50, 'color' => '#ef4444', 'label' => 'Low'],
+        ['max' => 80, 'color' => '#f59e0b', 'label' => 'Medium'],
+        ['max' => 100, 'color' => '#10b981', 'label' => 'High'],
+    ];
 
     public array $trendLineLabels = [];
 
@@ -159,7 +164,7 @@ class QuizPerformanceDashboard extends Component
             return;
         }
 
-        $this->bookBarLabels = $bookData->take(10)->pluck('title')->map(fn ($title) => \Str::limit($title, 20))->toArray();
+        $this->bookBarLabels = $bookData->take(10)->pluck('book_title')->map(fn ($title) => \Str::limit($title, 20))->toArray();
         $barData = $bookData->take(10)->pluck('average_score')->toArray();
 
         $this->bookBarDatasets = [
@@ -242,7 +247,13 @@ class QuizPerformanceDashboard extends Component
         $this->gradeBarOptions = [
             'plugins' => ['legend' => ['display' => false]],
             'scales' => [
-                'y' => ['beginAtZero' => true],
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => [
+                        'stepSize' => 1,
+                        'precision' => 0,
+                    ],
+                ],
             ],
         ];
     }
@@ -971,18 +982,23 @@ class QuizPerformanceDashboard extends Component
 
     protected function calculateGradeDistribution($sessions): array
     {
-        $distribution = [
-            'A' => 0, // 90-100
-            'B' => 0, // 80-89
-            'C' => 0, // 70-79
-            'D' => 0, // 60-69
-            'F' => 0, // 0-59
-        ];
+        // Get all available grades for the user's grading system
+        $allGrades = GradingSystemResolver::getAllGrades($this->targetUser);
 
+        // Initialize distribution with all grades set to 0
+        $distribution = [];
+        foreach ($allGrades as $gradeInfo) {
+            $gradeKey = (string) $gradeInfo['grade'];
+            $distribution[$gradeKey] = 0;
+        }
+
+        // Count sessions per grade
         foreach ($sessions as $session) {
             $percentage = $session->results['percentage'] ?? 0;
-            $grade = $this->calculateLetterGrade($percentage);
-            $distribution[$grade]++;
+            $grade = (string) $this->calculateLetterGrade($percentage);
+            if (isset($distribution[$grade])) {
+                $distribution[$grade]++;
+            }
         }
 
         return $distribution;
@@ -1001,26 +1017,47 @@ class QuizPerformanceDashboard extends Component
         return round($last - $first, 2);
     }
 
-    protected function calculateLetterGrade(float $percentage): string
+    /**
+     * Calculate the grade for a given percentage using the new grading system.
+     *
+     * @return string|int The grade value
+     */
+    protected function calculateLetterGrade(float $percentage): string|int
     {
-        if ($percentage >= 90) {
-            return 'A';
-        }
-        if ($percentage >= 80) {
-            return 'B';
-        }
-        if ($percentage >= 70) {
-            return 'C';
-        }
-        if ($percentage >= 60) {
-            return 'D';
-        }
+        $user = $this->targetUser;
+        $gradeInfo = GradingSystemResolver::getGrade($user, $percentage);
 
-        return 'F';
+        return $gradeInfo['grade'];
+    }
+
+    /**
+     * Get the full grade information for a given percentage.
+     *
+     * @return array{grade: string|int, interpretation: string, is_passing: bool, system: string}
+     */
+    public function getGrade(float $percentage): array
+    {
+        return GradingSystemResolver::getGrade($this->targetUser, $percentage);
+    }
+
+    /**
+     * Get the grading system name for the current user.
+     */
+    public function getGradingSystemName(): string
+    {
+        return GradingSystemResolver::getSystemName($this->targetUser);
     }
 
     protected function getEmptyPerformanceData(): array
     {
+        // Build empty grade distribution based on user's grading system
+        $allGrades = GradingSystemResolver::getAllGrades($this->targetUser);
+        $emptyDistribution = [];
+        foreach ($allGrades as $gradeInfo) {
+            $gradeKey = (string) $gradeInfo['grade'];
+            $emptyDistribution[$gradeKey] = 0;
+        }
+
         return [
             'total_quizzes' => 0,
             'average_score' => 0,
@@ -1032,7 +1069,7 @@ class QuizPerformanceDashboard extends Component
             'total_time_spent' => 0,
             'completion_rate' => 0,
             'improvement_trend' => ['trend' => 'neutral', 'change' => 0],
-            'grade_distribution' => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0],
+            'grade_distribution' => $emptyDistribution,
         ];
     }
 

@@ -49,6 +49,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
         'country_code', 'country', 'region', 'city', 'gender', 'cover_image',
+        'preferred_academic_level_id',
     ];
 
     protected $hidden = [
@@ -359,6 +360,58 @@ class User extends Authenticatable implements MustVerifyEmail
     public function suspendedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'suspended_by');
+    }
+
+    // Academic Level Preference Relationship
+    public function preferredAcademicLevel(): BelongsTo
+    {
+        return $this->belongsTo(AcademicLevel::class, 'preferred_academic_level_id');
+    }
+
+    /**
+     * Get the effective academic level for the user.
+     *
+     * Priority:
+     * 1. For students: Use student's academic_level_id (set by teacher/admin)
+     * 2. For all users: Use preferred_academic_level_id if set
+     * 3. Default: Return null (BECE grading will be assumed)
+     */
+    public function getEffectiveAcademicLevel(): ?AcademicLevel
+    {
+        // For students, prioritize the student's assigned academic level
+        if ($this->student && $this->student->academic_level_id) {
+            return $this->student->academicLevel;
+        }
+
+        // Otherwise, use the user's preferred academic level
+        return $this->preferredAcademicLevel;
+    }
+
+    /**
+     * Get the academic group tag for the user's effective academic level.
+     *
+     * @return string|null Returns 'basic', 'senior', 'university', or null
+     */
+    public function getAcademicGroupTag(): ?string
+    {
+        $academicLevel = $this->getEffectiveAcademicLevel();
+
+        if (! $academicLevel) {
+            return null;
+        }
+
+        return $academicLevel->academicGroup?->tag;
+    }
+
+    /**
+     * Check if the user can set their own academic level preference.
+     *
+     * Students cannot set their own level (must be set by teacher/admin).
+     * Guests and other roles can set their own preference.
+     */
+    public function canSetOwnAcademicLevel(): bool
+    {
+        return ! $this->student;
     }
 
     // ==================== ROLE CHECKING ====================

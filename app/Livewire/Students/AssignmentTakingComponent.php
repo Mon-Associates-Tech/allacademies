@@ -9,6 +9,7 @@ use App\Models\AssessmentResponse;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\Student;
+use App\Support\GradingSystemResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -826,7 +827,8 @@ class AssignmentTakingComponent extends Component
     private function gradeResponses()
     {
         $totalScore = 0;
-        $maxScore = 0;
+        $maxScoreAll = 0;
+        $maxScoreAnswered = 0;
         $correctAnswers = 0;
         $needsManualGrading = false;
         $gradedResponses = [];
@@ -834,10 +836,11 @@ class AssignmentTakingComponent extends Component
         foreach ($this->questions as $index => $question) {
             $response = $this->responses[$index] ?? null;
             $questionMaxScore = $question['points'] ?? 1;
-            $maxScore += $questionMaxScore;
+            $maxScoreAll += $questionMaxScore;
 
             if (! empty($response)) {
                 $gradeResult = $this->gradeQuestionResponse($question, $response);
+                $maxScoreAnswered += $questionMaxScore;
 
                 if ($gradeResult['needs_manual_grading'] ?? false) {
                     $needsManualGrading = true;
@@ -860,10 +863,16 @@ class AssignmentTakingComponent extends Component
             }
         }
 
+        // Calculate percentage based on answered questions only
+        // This ensures that if a user answers 2 out of 10 questions correctly,
+        // they get 100% (2/2) instead of 20% (2/10)
+        $percentage = $maxScoreAnswered > 0 ? round(($totalScore / $maxScoreAnswered) * 100, 2) : 0;
+
         return [
             'total_score' => $totalScore,
-            'max_score' => $maxScore,
-            'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0,
+            'max_score' => $maxScoreAll,
+            'max_score_answered' => $maxScoreAnswered,
+            'percentage' => $percentage,
             'correct_answers' => $correctAnswers,
             'answered_questions' => $this->getAnsweredCount(),
             'total_questions' => count($this->questions),
@@ -1036,7 +1045,7 @@ class AssignmentTakingComponent extends Component
 
     public function getGrade($percentage)
     {
-        return Grade::fromPercentage($percentage);
+        return GradingSystemResolver::getGrade(Auth::user(), $percentage);
     }
 
     public function render()
