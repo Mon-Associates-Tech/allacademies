@@ -12,7 +12,10 @@ class LocationController extends Controller
 
     public function countries()
     {
-        return response()->json($this->locationService->getCountries());
+        $countries = $this->locationService->getCountries();
+
+        // Convert associative array to array of [code => name] for JavaScript
+        return response()->json($countries);
     }
 
     public function regions(Request $request)

@@ -4,6 +4,9 @@ use App\Http\Controllers\AcademicChatController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
+use App\Http\Controllers\Auth\RegisterAuthorController;
+use App\Http\Controllers\Auth\RegisterGuestController;
+use App\Http\Controllers\Auth\RegisterSchoolController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookCategoryController;
 use App\Http\Controllers\BookController;
@@ -67,7 +70,25 @@ Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'uns
 Route::middleware('guest')->group(function () {
     Route::get('login', [SignInController::class, 'create'])->name('login');
     Route::post('login', [SignInController::class, 'store']);
-    Route::get('register', [SignUpController::class, 'create'])->name('register');
+
+    // Registration Type Selection
+    Route::get('register', function () {
+        return view('auth.register-type-selection');
+    })->name('register');
+
+    // Guest Registration Flow
+    Route::get('register/guest', [RegisterGuestController::class, 'create'])->name('register.guest');
+    Route::post('register/guest', [RegisterGuestController::class, 'store'])->name('register.store-guest');
+
+    // Author Registration Flow
+    Route::get('register/author', [RegisterAuthorController::class, 'create'])->name('register.author');
+    Route::post('register/author', [RegisterAuthorController::class, 'store'])->name('register.store-author');
+
+    // School Registration Flow
+    Route::get('register/school', [RegisterSchoolController::class, 'create'])->name('register.school');
+    Route::post('register/school', [RegisterSchoolController::class, 'store'])->name('register.store-school');
+
+    // Legacy registration endpoint (redirect to type selection)
     Route::post('register', [SignUpController::class, 'store']);
 
     Route::prefix('password')->name('password.')->group(function () {
