@@ -322,7 +322,7 @@ class TeacherManagement extends Component
         $this->isEditing = true;
         $this->editingTeacherId = $teacherId;
 
-        $teacher = Teacher::with([
+        $teacher = Teacher::forCurrentSchool()->with([
             'user',
             'subjects',
             'academicGroups',
@@ -357,7 +357,7 @@ class TeacherManagement extends Component
 
     public function update()
     {
-        $teacher = Teacher::with('user')->findOrFail($this->editingTeacherId);
+        $teacher = Teacher::forCurrentSchool()->with('user')->findOrFail($this->editingTeacherId);
 
         $rules = $this->rules;
         $rules['email'] = ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)];
@@ -431,7 +431,7 @@ class TeacherManagement extends Component
 
     public function confirmDelete($teacherId)
     {
-        $this->teacherToDelete = Teacher::with('user')->findOrFail($teacherId);
+        $this->teacherToDelete = Teacher::forCurrentSchool()->with('user')->findOrFail($teacherId);
         $this->showDeleteModal = true;
     }
 
@@ -483,7 +483,7 @@ class TeacherManagement extends Component
     public function render()
     {
         // Build query with filters
-        $query = Teacher::with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents']);
+        $query = Teacher::forCurrentSchool()->with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents']);
 
         // Search filter
         if ($this->searchTerm) {
@@ -527,7 +527,8 @@ class TeacherManagement extends Component
             ? AcademicLevel::where('academic_group_id', $this->filterAcademicGroup)->orderBy('name')->get()
             : AcademicLevel::orderBy('name')->get();
         $filterSubjects = AcademicSubject::with('academicLevel')->orderBy('name')->get();
-        $filterSpecializations = Teacher::whereNotNull('specialization')
+        $filterSpecializations = Teacher::forCurrentSchool()
+            ->whereNotNull('specialization')
             ->distinct()
             ->pluck('specialization')
             ->filter()

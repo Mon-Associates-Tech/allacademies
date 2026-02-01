@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class GroupManagement extends Component
+class StudentGroupManagement extends Component
 {
     use WithPagination;
 
@@ -194,10 +194,12 @@ class GroupManagement extends Component
     public function render()
     {
         $groups = StudentGroup::forCurrentSchool()
-            ->where('name', 'like', '%'.$this->searchTerm.'%')
-            ->orWhere('description', 'like', '%'.$this->searchTerm.'%')
-            ->orWhereHas('teacher.user', function ($query) {
-                $query->where('name', 'like', '%'.$this->searchTerm.'%');
+            ->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('description', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('teacher.user', function ($query) {
+                        $query->where('name', 'like', '%'.$this->searchTerm.'%');
+                    });
             })
             ->with(['teacher.user', 'students'])
             ->paginate(10);

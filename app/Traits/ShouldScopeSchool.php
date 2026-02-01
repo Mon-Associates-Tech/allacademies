@@ -25,15 +25,19 @@ trait ShouldScopeSchool
 
             // Super admins and owners might see all or specific schools
             if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+                // If current_school_id is bound, use it to filter
                 if (app()->bound('current_school_id')) {
                     $schoolId = app('current_school_id');
-                    if ($schoolId === null) {
-                        // See all schools
-                        return $query;
-                    } elseif ($schoolId > 0) {
+                    if ($schoolId > 0) {
                         return $query->where('school_id', $schoolId);
                     }
+
+                    // If $schoolId is null or 0, return all schools (no filter)
+                    return $query;
                 }
+
+                // If not bound yet, return all schools (no filter)
+                return $query;
             }
 
             // Regular users see only their school

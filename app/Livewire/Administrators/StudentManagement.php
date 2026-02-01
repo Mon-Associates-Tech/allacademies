@@ -718,8 +718,8 @@ class StudentManagement extends Component
 
     public function render()
     {
-        // Start with base query
-        $query = Student::withoutGlobalScopes();
+        // Start with base query - keep SchoolScope active to filter by school
+        $query = Student::withoutGlobalScope('soft_deletes');
 
         // Search filter
         if ($this->searchTerm) {
