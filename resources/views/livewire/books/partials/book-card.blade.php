@@ -79,14 +79,14 @@
         <div class="flex-1 p-6 flex flex-col">
             <!-- Title & Author -->
             <div class="mb-4">
-                <h4 class="font-bold text-gray-900 dark:text-white text-lg/3 line-clamp-2 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300 leading-tight">
+                <h5 class="font-bold text-gray-900 dark:text-white text-md/3 line-clamp-2 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300 leading-tight">
                     {{ $book->title }}
-                </h4>
+                </h5>
 
                 <div class="flex items-center gap-2">
                     <div
                         class="w-1 h-4 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full flex-shrink-0"></div>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 font-medium truncate">
+                    <p class="text-xs text-gray-600 dark:text-gray-300 font-medium truncate">
                         {{ $book->author_name }}
                     </p>
                 </div>
@@ -120,7 +120,7 @@
             </div>
 
             <!-- Description -->
-            <div class="flex-1 mb-4">
+            <div class="flex-1 mb-4 hidden">
                 @if($book->description)
                     <div class="relative">
                         <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed">
