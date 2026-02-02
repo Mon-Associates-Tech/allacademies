@@ -66,7 +66,6 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/users/{user}/login-activities', [App\Http\Controllers\UserLoginActivityController::class, 'show'])
         ->name('login-activities.show');
 
-
     // Messages routes
     Route::prefix('messages')->name('messages.')->group(function () {
         Route::get('/', MessageIndex::class)->name('index');

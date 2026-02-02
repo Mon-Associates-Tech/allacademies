@@ -205,37 +205,85 @@ class Overview extends Component
     {
         $student = $this->student;
 
+        // Get the academic group ID that the student's academic level belongs to
+        // This is important because assignments can be assigned to academic groups,
+        // and all students whose academic level belongs to that group should see them
+        $academicLevelGroupId = null;
+        if ($student->academic_level_id) {
+            $academicLevel = \App\Models\AcademicLevel::find($student->academic_level_id);
+            $academicLevelGroupId = $academicLevel?->academic_group_id;
+        }
+
         return Assignment::where('status', 'published')
-            ->where('starts_at', '<=', now())
-            // Removed the ends_at filter to include overdue assignments
-            ->where(function ($query) use ($student) {
-                // Check academic groups
-                $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
-                if (! empty($academicGroupIds)) {
-                    $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
-                        $q->whereIn('academic_groups.id', $academicGroupIds);
-                    });
-                }
+            ->where('ends_at', '>', now())
+            // Include assignments where start time is in the past (or now) but end time is in the future
+            // This ensures we show currently active assignments
+            ->where(function ($query) use ($student, $academicLevelGroupId) {
+                $hasCondition = false;
 
                 // Check academic level
                 if ($student->academic_level_id) {
-                    $query->orWhereHas('academicLevels', function ($q) use ($student) {
+                    $query->whereHas('academicLevels', function ($q) use ($student) {
                         $q->where('academic_levels.id', $student->academic_level_id);
                     });
+                    $hasCondition = true;
+                }
+
+                // Check if assigned to the academic group that the student's academic level belongs to
+                // This matches the logic in AssignmentNotificationService
+                if ($academicLevelGroupId) {
+                    if ($hasCondition) {
+                        $query->orWhereHas('academicGroups', function ($q) use ($academicLevelGroupId) {
+                            $q->where('academic_groups.id', $academicLevelGroupId);
+                        });
+                    } else {
+                        $query->whereHas('academicGroups', function ($q) use ($academicLevelGroupId) {
+                            $q->where('academic_groups.id', $academicLevelGroupId);
+                        });
+                        $hasCondition = true;
+                    }
+                }
+
+                // Check academic groups (direct many-to-many relationship)
+                $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
+                if (! empty($academicGroupIds)) {
+                    if ($hasCondition) {
+                        $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
+                            $q->whereIn('academic_groups.id', $academicGroupIds);
+                        });
+                    } else {
+                        $query->whereHas('academicGroups', function ($q) use ($academicGroupIds) {
+                            $q->whereIn('academic_groups.id', $academicGroupIds);
+                        });
+                        $hasCondition = true;
+                    }
                 }
 
                 // Check student groups
                 $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
                 if (! empty($studentGroupIds)) {
-                    $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
-                        $q->whereIn('student_groups.id', $studentGroupIds);
-                    });
+                    if ($hasCondition) {
+                        $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
+                            $q->whereIn('student_groups.id', $studentGroupIds);
+                        });
+                    } else {
+                        $query->whereHas('studentGroups', function ($q) use ($studentGroupIds) {
+                            $q->whereIn('student_groups.id', $studentGroupIds);
+                        });
+                        $hasCondition = true;
+                    }
                 }
 
-                // Check direct assignment
-                $query->orWhereHas('students', function ($q) use ($student) {
-                    $q->where('students.id', $student->id);
-                });
+                // Check direct assignment (always check this)
+                if ($hasCondition) {
+                    $query->orWhereHas('students', function ($q) use ($student) {
+                        $q->where('students.id', $student->id);
+                    });
+                } else {
+                    $query->whereHas('students', function ($q) use ($student) {
+                        $q->where('students.id', $student->id);
+                    });
+                }
             })
             ->with(['academicSubject', 'teacher.user'])
             ->get();
@@ -455,12 +503,25 @@ class Overview extends Component
             ->sortBy('ends_at')
             ->take(5)
             ->map(function ($assignment) {
+                // Calculate days until due with proper formatting
+                $now = now();
+                $endsAt = $assignment->ends_at;
+                $diffInHours = $now->diffInHours($endsAt, false);
+
+                // Format days_until_due as a clean integer or show "< 1 day" for less than 24 hours
+                if ($diffInHours < 24 && $diffInHours > 0) {
+                    $daysUntilDue = round($diffInHours / 24, 1); // Show as decimal like 0.5 for half a day
+                } else {
+                    $daysUntilDue = (int) floor($diffInHours / 24); // Show as whole number of days
+                }
+
                 return [
                     'id' => $assignment->id,
                     'title' => $assignment->title,
                     'subject' => $assignment->academicSubject->name ?? 'N/A',
                     'due_date' => $assignment->ends_at,
-                    'days_until_due' => now()->diffInDays($assignment->ends_at, false),
+                    'days_until_due' => $daysUntilDue,
+                    'hours_until_due' => max(0, $diffInHours), // Also provide hours for more precise display
                 ];
             })
             ->values();

@@ -91,6 +91,22 @@ class BookBasedAssignment extends Component
 
     public $contentSourceTab = 'book';
 
+    // Question management state
+    public $editingQuestionIndex = null;
+
+    public $editingQuestion = null;
+
+    public $showDeleteConfirmation = false;
+
+    public $questionToDelete = null;
+
+    public $isRegenerating = false;
+
+    public $regeneratingIndex = null;
+
+    // Wizard step tracking (1 = Setup, 2 = Generate, 3 = Assign)
+    public $currentStep = 1;
+
     protected $rules = [
         'title' => 'required|string|max:255',
         'selectedSubjectId' => 'required|exists:academic_subjects,id',
@@ -103,6 +119,24 @@ class BookBasedAssignment extends Component
         'durationInMinutes' => 'required|integer|min:1',
         'startDate' => 'required|date',
         'endDate' => 'required|date|after:startDate',
+        'pageStart' => 'nullable|integer|min:1',
+        'pageEnd' => 'nullable|integer|min:1|gte:pageStart',
+    ];
+
+    protected $messages = [
+        'title.required' => 'Please enter an assignment title.',
+        'selectedSubjectId.required' => 'Please select a subject for this assignment.',
+        'selectedBookId.required_without' => 'Please select a book or upload a file.',
+        'questionCount.min' => 'You must generate at least 1 question.',
+        'questionCount.max' => 'You can generate a maximum of 50 questions.',
+        'totalMarks.required' => 'Please specify the total marks for this assignment.',
+        'totalMarks.min' => 'Total marks must be at least 1.',
+        'durationInMinutes.required' => 'Please specify the duration for this assignment.',
+        'durationInMinutes.min' => 'Duration must be at least 1 minute.',
+        'startDate.required' => 'Please select a start date.',
+        'endDate.required' => 'Please select an end date.',
+        'endDate.after' => 'End date must be after the start date.',
+        'pageEnd.gte' => 'End page must be greater than or equal to start page.',
     ];
 
     protected BookBasedLearningService $bookLearningService;
@@ -169,6 +203,133 @@ class BookBasedAssignment extends Component
             $this->academicLevels = $teacher->academicLevels()->get();
             $this->academicGroups = $teacher->academicGroups()->get();
         }
+    }
+
+    /**
+     * Navigate to the next step in the wizard
+     */
+    public function nextStep(): void
+    {
+        // Validate current step before proceeding
+        if (! $this->validateCurrentStep()) {
+            return;
+        }
+
+        if ($this->currentStep < 3) {
+            $this->currentStep++;
+        }
+    }
+
+    /**
+     * Navigate to the previous step in the wizard
+     */
+    public function previousStep(): void
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+        }
+    }
+
+    /**
+     * Navigate to a specific step in the wizard
+     */
+    public function goToStep(int $step): void
+    {
+        // Only allow going back or to completed steps
+        if ($step < $this->currentStep) {
+            $this->currentStep = $step;
+
+            return;
+        }
+
+        // For forward navigation, validate all previous steps
+        if ($step > $this->currentStep) {
+            // Validate step 1 before going to step 2 or 3
+            if ($this->currentStep === 1 && $step >= 2) {
+                if (! $this->validateStep1()) {
+                    return;
+                }
+            }
+
+            // Validate step 2 before going to step 3
+            if ($step === 3 && ! $this->validateStep2()) {
+                return;
+            }
+
+            $this->currentStep = $step;
+        }
+    }
+
+    /**
+     * Validate the current step
+     */
+    protected function validateCurrentStep(): bool
+    {
+        return match ($this->currentStep) {
+            1 => $this->validateStep1(),
+            2 => $this->validateStep2(),
+            default => true,
+        };
+    }
+
+    /**
+     * Validate Step 1: Setup (title, subject, content source)
+     */
+    protected function validateStep1(): bool
+    {
+        $this->resetErrorBag();
+
+        $hasErrors = false;
+
+        if (empty($this->title)) {
+            $this->addError('title', 'Please enter an assignment title.');
+            $hasErrors = true;
+        }
+
+        if (empty($this->selectedSubjectId)) {
+            $this->addError('selectedSubjectId', 'Please select a subject for this assignment.');
+            $hasErrors = true;
+        }
+
+        // Check if content source is selected
+        if (empty($this->selectedBookId) && empty($this->fileContent)) {
+            $this->addError('selectedBookId', 'Please select a book or upload a file.');
+            $hasErrors = true;
+        }
+
+        return ! $hasErrors;
+    }
+
+    /**
+     * Validate Step 2: Generate (questions must be generated)
+     */
+    protected function validateStep2(): bool
+    {
+        if (empty($this->generatedQuestions)) {
+            $this->addError('questions', 'Please generate questions before proceeding to the next step.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if Step 1 is complete (for progress indicator)
+     */
+    public function isStep1Complete(): bool
+    {
+        return ! empty($this->title)
+            && ! empty($this->selectedSubjectId)
+            && (! empty($this->selectedBookId) || ! empty($this->fileContent));
+    }
+
+    /**
+     * Check if Step 2 is complete (for progress indicator)
+     */
+    public function isStep2Complete(): bool
+    {
+        return ! empty($this->generatedQuestions);
     }
 
     public function updatedSelectedBookId()
@@ -351,6 +512,25 @@ class BookBasedAssignment extends Component
     public function createAssignment()
     {
         $this->validate();
+
+        // Validate that questions have been generated
+        if (empty($this->generatedQuestions)) {
+            $this->addError('questions', 'Please generate questions before creating the assignment.');
+
+            return;
+        }
+
+        // Validate that at least one target group is selected
+        $hasTargetGroup = ! empty($this->selectedStudentGroups)
+            || ! empty($this->selectedAcademicLevels)
+            || ! empty($this->selectedAcademicGroups)
+            || ! empty($this->selectedStudents);
+
+        if (! $hasTargetGroup) {
+            $this->addError('targetGroups', 'Please select at least one target group (student groups, academic levels, academic groups, or individual students).');
+
+            return;
+        }
 
         $teacher = Auth::user()->teacher;
 
@@ -600,6 +780,259 @@ class BookBasedAssignment extends Component
 
             throw $e;
         }
+    }
+
+    /**
+     * Start editing a question
+     */
+    public function startEditingQuestion(int $index): void
+    {
+        if (isset($this->generatedQuestions[$index])) {
+            $this->editingQuestionIndex = $index;
+            $this->editingQuestion = $this->generatedQuestions[$index];
+        }
+    }
+
+    /**
+     * Save the edited question
+     */
+    public function saveQuestion(): void
+    {
+        if ($this->editingQuestionIndex !== null && $this->editingQuestion) {
+            // Validate the edited question
+            if (empty($this->editingQuestion['question'])) {
+                $this->addError('editingQuestion.question', 'Question text is required.');
+
+                return;
+            }
+
+            // For multiple choice, validate options and correct answer
+            if (($this->editingQuestion['type'] ?? '') === 'multiple_choice') {
+                $options = array_filter($this->editingQuestion['options'] ?? []);
+                if (count($options) < 2) {
+                    $this->addError('editingQuestion.options', 'At least 2 options are required.');
+
+                    return;
+                }
+
+                if (empty($this->editingQuestion['correct_answer'])) {
+                    $this->addError('editingQuestion.correct_answer', 'Correct answer is required.');
+
+                    return;
+                }
+            }
+
+            // Update the question in the array
+            $this->generatedQuestions[$this->editingQuestionIndex] = $this->editingQuestion;
+
+            // Reset editing state
+            $this->cancelEditing();
+
+            $this->dispatch('question-updated');
+        }
+    }
+
+    /**
+     * Cancel editing
+     */
+    public function cancelEditing(): void
+    {
+        $this->editingQuestionIndex = null;
+        $this->editingQuestion = null;
+        $this->resetErrorBag('editingQuestion.*');
+    }
+
+    /**
+     * Show delete confirmation for a question
+     */
+    public function confirmDeleteQuestion(int $index): void
+    {
+        $this->questionToDelete = $index;
+        $this->showDeleteConfirmation = true;
+    }
+
+    /**
+     * Cancel delete confirmation
+     */
+    public function cancelDelete(): void
+    {
+        $this->questionToDelete = null;
+        $this->showDeleteConfirmation = false;
+    }
+
+    /**
+     * Remove a question from the list
+     */
+    public function removeQuestion(): void
+    {
+        if ($this->questionToDelete !== null && isset($this->generatedQuestions[$this->questionToDelete])) {
+            array_splice($this->generatedQuestions, $this->questionToDelete, 1);
+
+            // Re-index the array
+            $this->generatedQuestions = array_values($this->generatedQuestions);
+
+            $this->cancelDelete();
+            $this->dispatch('question-removed');
+        }
+    }
+
+    /**
+     * Move a question up in the list
+     */
+    public function moveQuestionUp(int $index): void
+    {
+        if ($index > 0 && isset($this->generatedQuestions[$index])) {
+            $temp = $this->generatedQuestions[$index - 1];
+            $this->generatedQuestions[$index - 1] = $this->generatedQuestions[$index];
+            $this->generatedQuestions[$index] = $temp;
+
+            $this->dispatch('question-reordered');
+        }
+    }
+
+    /**
+     * Move a question down in the list
+     */
+    public function moveQuestionDown(int $index): void
+    {
+        if ($index < count($this->generatedQuestions) - 1 && isset($this->generatedQuestions[$index])) {
+            $temp = $this->generatedQuestions[$index + 1];
+            $this->generatedQuestions[$index + 1] = $this->generatedQuestions[$index];
+            $this->generatedQuestions[$index] = $temp;
+
+            $this->dispatch('question-reordered');
+        }
+    }
+
+    /**
+     * Update marks for a specific question
+     */
+    public function updateQuestionMarks(int $index, $marks): void
+    {
+        if (isset($this->generatedQuestions[$index])) {
+            $this->generatedQuestions[$index]['points'] = max(1, (int) $marks);
+            $this->recalculateTotalMarks();
+        }
+    }
+
+    /**
+     * Recalculate total marks based on individual question marks
+     */
+    protected function recalculateTotalMarks(): void
+    {
+        $this->totalMarks = collect($this->generatedQuestions)->sum('points');
+    }
+
+    /**
+     * Distribute marks evenly across all questions
+     */
+    public function distributeMarksEvenly(): void
+    {
+        if (empty($this->generatedQuestions)) {
+            return;
+        }
+
+        $questionCount = count($this->generatedQuestions);
+        $marksPerQuestion = max(1, (int) floor($this->totalMarks / $questionCount));
+        $remainder = $this->totalMarks - ($marksPerQuestion * $questionCount);
+
+        foreach ($this->generatedQuestions as $index => &$question) {
+            // Distribute remainder to first questions
+            $question['points'] = $marksPerQuestion + ($index < $remainder ? 1 : 0);
+        }
+
+        $this->dispatch('marks-distributed');
+    }
+
+    /**
+     * Regenerate a single question
+     */
+    public function regenerateQuestion(int $index): void
+    {
+        if (! isset($this->generatedQuestions[$index])) {
+            return;
+        }
+
+        $this->isRegenerating = true;
+        $this->regeneratingIndex = $index;
+
+        try {
+            $currentQuestion = $this->generatedQuestions[$index];
+            $content = '';
+
+            // Get content based on source
+            if ($this->selectedBookId) {
+                $content = $this->extractBookContent();
+            } else {
+                $content = $this->fileContent;
+            }
+
+            if (empty($content)) {
+                $this->addError('regeneration', 'Failed to extract content for regeneration.');
+                $this->isRegenerating = false;
+                $this->regeneratingIndex = null;
+
+                return;
+            }
+
+            $parameters = [
+                'book_id' => $this->selectedBookId,
+                'question_type' => $currentQuestion['type'] ?? $this->questionType,
+                'question_count' => 1,
+                'difficulty' => $currentQuestion['difficulty'] ?? $this->difficulty,
+                'focus_topics' => $this->parseFocusTopics(),
+                'include_quotes' => $this->includeQuotes,
+                'content' => $content,
+                'file_content' => $this->fileContent ?: null,
+                'file_name' => $this->fileName ?: null,
+                'request_type' => 'single_question_regeneration',
+                'exclude_questions' => array_column($this->generatedQuestions, 'question'),
+            ];
+
+            if ($this->selectedBook) {
+                $parameters = array_merge($parameters, [
+                    'book_title' => $this->selectedBook->title,
+                    'author' => $this->selectedBook->author_name,
+                    'genre' => $this->selectedBook->genre,
+                ]);
+            }
+
+            $quizData = $this->bookLearningService->generateAdaptiveQuiz(
+                Auth::user(),
+                $this->selectedBook,
+                $parameters
+            );
+
+            if (! empty($quizData['questions'][0])) {
+                // Preserve the original points
+                $originalPoints = $this->generatedQuestions[$index]['points'] ?? 1;
+                $this->generatedQuestions[$index] = $quizData['questions'][0];
+                $this->generatedQuestions[$index]['points'] = $originalPoints;
+
+                $this->dispatch('question-regenerated');
+            } else {
+                $this->addError('regeneration', 'Failed to regenerate question. Please try again.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Question regeneration failed', [
+                'user_id' => Auth::id(),
+                'index' => $index,
+                'error' => $e->getMessage(),
+            ]);
+
+            $this->addError('regeneration', 'Unable to regenerate question. Please try again later.');
+        } finally {
+            $this->isRegenerating = false;
+            $this->regeneratingIndex = null;
+        }
+    }
+
+    /**
+     * Get the computed total marks from questions
+     */
+    public function getComputedTotalMarksProperty(): int
+    {
+        return collect($this->generatedQuestions)->sum('points');
     }
 
     public function render()

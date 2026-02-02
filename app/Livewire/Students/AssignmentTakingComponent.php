@@ -274,20 +274,35 @@ class AssignmentTakingComponent extends Component
         // Check if student is in assigned groups/levels
         $isEligible = false;
 
-        // Check academic groups
-        if ($this->assignment->academicGroups->isNotEmpty()) {
-            $studentAcademicGroupIds = $student->academicGroups?->pluck('id')->toArray();
-            $assignmentAcademicGroupIds = $this->assignment->academicGroups?->pluck('id')->toArray();
+        // Get the academic group ID that the student's academic level belongs to
+        // This is important because assignments can be assigned to academic groups,
+        // and all students whose academic level belongs to that group should be eligible
+        $academicLevelGroupId = null;
+        if ($student->academic_level_id) {
+            $academicLevel = \App\Models\AcademicLevel::find($student->academic_level_id);
+            $academicLevelGroupId = $academicLevel?->academic_group_id;
+        }
 
-            if (is_array($studentAcademicGroupIds) && is_array($assignmentAcademicGroupIds) && array_intersect($studentAcademicGroupIds, $assignmentAcademicGroupIds)) {
+        // Check academic groups (direct many-to-many relationship)
+        if ($this->assignment->academicGroups->isNotEmpty()) {
+            $studentAcademicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
+            $assignmentAcademicGroupIds = $this->assignment->academicGroups->pluck('id')->toArray();
+
+            // Check if student has direct academic group membership
+            if (! empty($studentAcademicGroupIds) && array_intersect($studentAcademicGroupIds, $assignmentAcademicGroupIds)) {
                 $isEligible = true;
             }
 
+            // Check if student's academic level belongs to one of the assignment's academic groups
+            // This matches the logic in AssignmentNotificationService
+            if (! $isEligible && $academicLevelGroupId && in_array($academicLevelGroupId, $assignmentAcademicGroupIds)) {
+                $isEligible = true;
+            }
         }
 
         // Check academic levels
         if (! $isEligible && $this->assignment->academicLevels?->isNotEmpty()) {
-            $assignmentAcademicLevelIds = $this->assignment->academicLevels?->pluck('id')->toArray();
+            $assignmentAcademicLevelIds = $this->assignment->academicLevels->pluck('id')->toArray();
 
             if (in_array($student->academic_level_id, $assignmentAcademicLevelIds)) {
                 $isEligible = true;
@@ -296,10 +311,10 @@ class AssignmentTakingComponent extends Component
 
         // Check student groups
         if (! $isEligible && $this->assignment->studentGroups->isNotEmpty()) {
-            $studentGroupIds = $student->studentGroups?->pluck('id')->toArray();
-            $assignmentStudentGroupIds = $this->assignment->studentGroups?->pluck('id')->toArray();
+            $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
+            $assignmentStudentGroupIds = $this->assignment->studentGroups->pluck('id')->toArray();
 
-            if (array_intersect($studentGroupIds, $assignmentStudentGroupIds)) {
+            if (! empty($studentGroupIds) && array_intersect($studentGroupIds, $assignmentStudentGroupIds)) {
                 $isEligible = true;
             }
         }
@@ -863,10 +878,10 @@ class AssignmentTakingComponent extends Component
             }
         }
 
-        // Calculate percentage based on answered questions only
-        // This ensures that if a user answers 2 out of 10 questions correctly,
-        // they get 100% (2/2) instead of 20% (2/10)
-        $percentage = $maxScoreAnswered > 0 ? round(($totalScore / $maxScoreAnswered) * 100, 2) : 0;
+        // Calculate percentage based on ALL questions (total possible score)
+        // This ensures proper grading: if a student answers 3 out of 5 questions correctly,
+        // they get 60% (3/5), not 75% (3/4 answered)
+        $percentage = $maxScoreAll > 0 ? round(($totalScore / $maxScoreAll) * 100, 2) : 0;
 
         return [
             'total_score' => $totalScore,
@@ -1043,9 +1058,11 @@ class AssignmentTakingComponent extends Component
         return redirect()->route('students.assignments');
     }
 
-    public function getGrade($percentage)
+    public function getGrade($percentage): string
     {
-        return GradingSystemResolver::getGrade(Auth::user(), $percentage);
+        $gradeInfo = GradingSystemResolver::getGrade(Auth::user(), $percentage);
+
+        return (string) ($gradeInfo['grade'] ?? 'N/A');
     }
 
     public function render()

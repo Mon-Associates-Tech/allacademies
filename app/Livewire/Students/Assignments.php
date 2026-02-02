@@ -123,41 +123,94 @@ class Assignments extends Component
         $basicCount = $query->count();
         \Log::info("Basic assignment query count (published, in date range): {$basicCount}");
 
-        // Add the relationship filters
-        $query->where(function ($query) use ($student) {
-            // Get student's academic group IDs
-            $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
-            \Log::info('Checking academic groups: ', $academicGroupIds);
+        // Get student's relationship IDs upfront
+        $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
+        $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
+        $academicLevelId = $student->academic_level_id;
 
-            // Check if assigned to any of student's academic groups
-            if (! empty($academicGroupIds)) {
-                $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
-                    $q->whereIn('academic_groups.id', $academicGroupIds);
-                });
-            }
+        // Get the academic group ID that the student's academic level belongs to
+        // This is important because assignments can be assigned to academic groups,
+        // and all students whose academic level belongs to that group should see them
+        $academicLevelGroupId = null;
+        if ($academicLevelId) {
+            $academicLevel = \App\Models\AcademicLevel::find($academicLevelId);
+            $academicLevelGroupId = $academicLevel?->academic_group_id;
+        }
+
+        \Log::info('Student assignment eligibility check:', [
+            'student_id' => $student->id,
+            'academic_level_id' => $academicLevelId,
+            'academic_level_group_id' => $academicLevelGroupId,
+            'academic_group_ids' => $academicGroupIds,
+            'student_group_ids' => $studentGroupIds,
+        ]);
+
+        // Add the relationship filters - student must match at least one assignment target
+        // Using a flag to track if we've added the first condition (to use whereHas vs orWhereHas)
+        $query->where(function ($query) use ($student, $academicGroupIds, $studentGroupIds, $academicLevelId, $academicLevelGroupId) {
+            $hasCondition = false;
 
             // Check if assigned to student's academic level
-            if ($student->academic_level_id) {
-                \Log::info('Checking academic level: '.$student->academic_level_id);
-                $query->orWhereHas('academicLevels', function ($q) use ($student) {
-                    $q->where('academic_levels.id', $student->academic_level_id);
+            if ($academicLevelId) {
+                $query->whereHas('academicLevels', function ($q) use ($academicLevelId) {
+                    $q->where('academic_levels.id', $academicLevelId);
                 });
+                $hasCondition = true;
             }
 
-            // Check if assigned to any of student's groups
-            $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
-            \Log::info('Checking student groups: ', $studentGroupIds);
+            // Check if assigned to the academic group that the student's academic level belongs to
+            // This matches the logic in AssignmentNotificationService
+            if ($academicLevelGroupId) {
+                if ($hasCondition) {
+                    $query->orWhereHas('academicGroups', function ($q) use ($academicLevelGroupId) {
+                        $q->where('academic_groups.id', $academicLevelGroupId);
+                    });
+                } else {
+                    $query->whereHas('academicGroups', function ($q) use ($academicLevelGroupId) {
+                        $q->where('academic_groups.id', $academicLevelGroupId);
+                    });
+                    $hasCondition = true;
+                }
+            }
+
+            // Check if assigned to any of student's direct academic groups (many-to-many relationship)
+            if (! empty($academicGroupIds)) {
+                if ($hasCondition) {
+                    $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
+                        $q->whereIn('academic_groups.id', $academicGroupIds);
+                    });
+                } else {
+                    $query->whereHas('academicGroups', function ($q) use ($academicGroupIds) {
+                        $q->whereIn('academic_groups.id', $academicGroupIds);
+                    });
+                    $hasCondition = true;
+                }
+            }
+
+            // Check if assigned to any of student's student groups
             if (! empty($studentGroupIds)) {
-                $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
-                    $q->whereIn('student_groups.id', $studentGroupIds);
-                });
+                if ($hasCondition) {
+                    $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
+                        $q->whereIn('student_groups.id', $studentGroupIds);
+                    });
+                } else {
+                    $query->whereHas('studentGroups', function ($q) use ($studentGroupIds) {
+                        $q->whereIn('student_groups.id', $studentGroupIds);
+                    });
+                    $hasCondition = true;
+                }
             }
 
-            // Check if assigned directly to this student
-            \Log::info('Checking direct student assignment for ID: '.$student->id);
-            $query->orWhereHas('students', function ($q) use ($student) {
-                $q->where('students.id', $student->id);
-            });
+            // Check if assigned directly to this student (always check this)
+            if ($hasCondition) {
+                $query->orWhereHas('students', function ($q) use ($student) {
+                    $q->where('students.id', $student->id);
+                });
+            } else {
+                $query->whereHas('students', function ($q) use ($student) {
+                    $q->where('students.id', $student->id);
+                });
+            }
         })
             ->with(['academicSubject', 'teacher.user', 'submissions' => function ($query) use ($student) {
                 $query->where('student_id', $student->id);
