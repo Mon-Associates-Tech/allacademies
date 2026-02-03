@@ -186,7 +186,7 @@ class BookForm extends Component
         $this->additionalInfo = $this->book->additional_info;
         $this->tableOfContents = $this->book->table_of_contents ?? [];
         $this->status = $this->book->status ?? 'draft';
-        $this->existingCoverImage = $this->book->cover_image_path;
+        $this->existingCoverImage = $this->book->cover_image;
         $this->existingPdfFile = $this->book->content_url;
         $this->existingSamplePdfFile = $this->book->sample_url;
         $this->existingSingleAudio = $this->book->single_audio;
@@ -284,9 +284,9 @@ class BookForm extends Component
                 'annualSubscriptionFee' => 'nullable|numeric|min:0|max:999999.99',
             ],
             4 => [
-                'coverImage' => 'nullable|image|max:2048',
-                'pdfFile' => 'nullable|mimes:pdf|max:10240',
-                'samplePdfFile' => 'nullable|mimes:pdf|max:5120',
+                'coverImage' => 'nullable|image|max:10240',
+                'pdfFile' => 'nullable|mimes:pdf|max:102400',
+                'samplePdfFile' => 'nullable|mimes:pdf|max:51200',
                 'singleAudio' => 'nullable|mimes:mp3,wav,m4a|max:51200',
                 'singleVideo' => 'nullable|mimes:mp4,avi,mov|max:102400',
                 'newChapterAudios.*' => 'nullable|mimes:mp3,wav,m4a|max:51200',
@@ -491,7 +491,7 @@ class BookForm extends Component
             ];
 
             if ($coverPath !== null) {
-                $bookData['cover_image_path'] = $coverPath;
+                $bookData['cover_image'] = $coverPath;
             }
 
             if ($pdfPath !== null) {
