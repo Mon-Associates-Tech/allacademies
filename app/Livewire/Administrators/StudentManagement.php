@@ -472,6 +472,19 @@ class StudentManagement extends Component
     {
         $this->validate();
 
+        // NEW: Check subscription capacity
+        $school = auth()->user()->school;
+
+        if (! $school || ! $school->canAddStudents(1)) {
+            $remaining = $school ? $school->getRemainingStudentCapacity() : 0;
+            $this->addError('general',
+                "Cannot add more students. Remaining capacity: {$remaining}. ".
+                'Please renew your subscription or remove some students.'
+            );
+
+            return;
+        }
+
         DB::transaction(function () {
             // Create user
             $user = User::create([

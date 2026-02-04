@@ -47,6 +47,32 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
 
     public function collection(Collection $collection): void
     {
+        // NEW: Check if school has active subscription
+        $school = School::find($this->defaultSchoolId);
+
+        if (! $school) {
+            throw new Exception('School not found');
+        }
+
+        if (! $school->hasActiveContentSubscription()) {
+            throw new Exception(
+                'Your school does not have an active content subscription. '
+                .'Please purchase a subscription before importing students.'
+            );
+        }
+
+        // Check if enough capacity for all students in file
+        $totalToImport = count($collection);
+        $remainingCapacity = $school->getRemainingStudentCapacity();
+
+        if ($totalToImport > $remainingCapacity) {
+            throw new Exception(
+                "Cannot import {$totalToImport} students. "
+                ."Remaining capacity: {$remainingCapacity}. "
+                ."Your subscription allows {$school->getActiveSubscription()->beneficiaries} students total."
+            );
+        }
+
         logInfo('data: '.json_encode($collection));
         foreach ($collection as $row) {
 

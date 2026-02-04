@@ -314,4 +314,83 @@ class School extends Model
             'active_periods' => $this->academicPeriods()->where('status', 'active')->count(),
         ];
     }
+
+    /**
+     * Get active content subscriptions (paid by admins for this school)
+     */
+    public function activeContentSubscriptions()
+    {
+        // Get subscriptions for teams owned by users in this school
+        return Subscription::query()
+            ->whereIn('team_id', function ($query) {
+                $query->select('teams.id')
+                    ->from('teams')
+                    ->join('users', 'users.id', '=', 'teams.owner_id')
+                    ->where('users.school_id', $this->id);
+            })
+            ->where('status', 'active')
+            ->where('expires_at', '>', now());
+    }
+
+    /**
+     * Check if this school has an active content subscription
+     */
+    public function hasActiveContentSubscription(): bool
+    {
+        return $this->activeContentSubscriptions()->exists();
+    }
+
+    /**
+     * Get the primary active subscription (most recent)
+     */
+    public function getActiveSubscription(): ?Subscription
+    {
+        return $this->activeContentSubscriptions()
+            ->latest('created_at')
+            ->first();
+    }
+
+    /**
+     * Get current subscription status/capacity
+     */
+    public function getSubscriptionStatus(): array
+    {
+        $subscription = $this->getActiveSubscription();
+
+        if (! $subscription) {
+            return [
+                'has_subscription' => false,
+                'message' => 'No active content subscription',
+            ];
+        }
+
+        return array_merge(
+            ['has_subscription' => true],
+            $subscription->getCapacityInfo()
+        );
+    }
+
+    /**
+     * Verify school can add more students
+     */
+    public function canAddStudents(int $count = 1): bool
+    {
+        $subscription = $this->getActiveSubscription();
+
+        if (! $subscription) {
+            return false; // No subscription = cannot add students
+        }
+
+        return $subscription->hasCapacityFor($count);
+    }
+
+    /**
+     * Get remaining student capacity
+     */
+    public function getRemainingStudentCapacity(): int
+    {
+        $subscription = $this->getActiveSubscription();
+
+        return $subscription ? $subscription->getRemainingCapacity() : 0;
+    }
 }

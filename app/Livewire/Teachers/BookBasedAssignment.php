@@ -350,6 +350,16 @@ class BookBasedAssignment extends Component
 
     public function createAssignment()
     {
+        // NEW: Check school has active content subscription before allowing assignment creation
+        $school = auth()->user()->school;
+        if (!$school || !$school->hasActiveContentSubscription()) {
+            $this->addError('subscription',
+                'Your school must have an active subscription to create assignments. ' .
+                'Please contact your school administrator.'
+            );
+            return;
+        }
+
         $this->validate();
 
         $teacher = Auth::user()->teacher;
