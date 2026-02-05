@@ -362,6 +362,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserPreference::class);
     }
 
+    // User Activities
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class);
+    }
+
     // Suspension Relationship
     public function suspendedBy(): BelongsTo
     {

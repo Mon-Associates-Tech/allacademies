@@ -25,7 +25,13 @@ trait ShouldScopeSchool
 
             // Super admins and owners might see all or specific schools
             if ($user->isSuperAdmin() || $user->hasRole('owner')) {
-                // If current_school_id is bound, use it to filter
+                // Priority 1: Check session first (persists across requests)
+                $schoolId = session('current_school_id');
+                if ($schoolId) {
+                    return $query->where('school_id', $schoolId);
+                }
+
+                // Priority 2: Check app binding
                 if (app()->bound('current_school_id')) {
                     $schoolId = app('current_school_id');
                     if ($schoolId > 0) {

@@ -67,6 +67,7 @@ class StudentGroupManagement extends Component
         $this->validate();
 
         StudentGroup::create([
+            'school_id' => getSchoolId(),
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
@@ -102,6 +103,7 @@ class StudentGroupManagement extends Component
         $group = StudentGroup::forCurrentSchool()->findOrFail($this->editingGroupId);
 
         $group->update([
+            'school_id' => getSchoolId(),
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,

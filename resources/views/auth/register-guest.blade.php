@@ -1,5 +1,5 @@
-<x-layouts.guest>
-    <section class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
+<x-app>
+    <section class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
         <!-- Animated background elements -->
         <div class="absolute inset-0">
             <div
@@ -12,11 +12,10 @@
 
         <div class="lg:grid lg:min-h-screen lg:grid-cols-12 relative z-10">
             <!-- Image section -->
-            <aside class="relative block h-32 lg:order-last lg:col-span-5 lg:h-screen lg:sticky lg:top-0 xl:col-span-6">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-green-600/20 backdrop-blur-sm"></div>
+            <aside class="relative hidden h-32 sm:block lg:order-last lg:col-span-5 lg:h-screen lg:sticky lg:top-0 xl:col-span-6">
                 <img
                     alt="Students studying together"
-                    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
+                    src="https://images.pexels.com/photos/3769999/pexels-photo-3769999.jpeg?auto=compress&cs=tinysrgb&w=1200"
                     class="absolute inset-0 h-full w-full object-cover"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent lg:bg-gradient-to-l"></div>
@@ -54,11 +53,11 @@
 
             <!-- Form section -->
             <main
-                class="flex items-center justify-center px-8 py-12 lg:col-span-7 lg:px-16 xl:col-span-6 lg:overflow-y-auto lg:h-screen lg:py-16">
+                class="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:col-span-7 lg:px-16 xl:col-span-6 lg:overflow-y-auto lg:h-screen lg:py-16 dark:bg-gray-800 bg-white lg:bg-transparent lg:dark:bg-transparent">
                 <div class="w-full max-w-md my-auto">
                     <!-- Logo and branding -->
                     <div class="mb-8">
-                        <a href="{{ route('register') }}" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 mb-4">
+                        <a href="{{ route('register') }}" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mb-4 transition-colors">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
@@ -71,10 +70,10 @@
                                 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">All Academies</span>
                         </div>
 
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                             Create your account
                         </h1>
-                        <p class="text-gray-600">
+                        <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
                             Start your learning journey today - it's free to get started!
                         </p>
                     </div>
@@ -85,204 +84,204 @@
 
                         <!-- Name fields -->
                         <div>
-                            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">First name</label>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">First name</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                 </div>
                                 <input id="first_name" name="first_name" type="text" required
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="First name" value="{{ old('first_name') }}">
                             </div>
-                            @error('first_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('first_name')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <div>
-                            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">Last name</label>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Last name</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                 </div>
                                 <input id="last_name" name="last_name" type="text" required
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="Last name" value="{{ old('last_name') }}">
                             </div>
-                            @error('last_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('last_name')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Other names field -->
                         <div>
-                            <label for="other_names" class="block text-sm font-medium text-gray-700 mb-2">Other names <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <label for="other_names" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Other names <span class="text-gray-400 dark:text-gray-500 text-xs">(optional)</span></label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                 </div>
                                 <input id="other_names" name="other_names" type="text"
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="Middle name(s)" value="{{ old('other_names') }}">
                             </div>
-                            @error('other_names')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('other_names')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Email field -->
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Email address</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
                                     </svg>
                                 </div>
                                 <input id="email" name="email" type="email" required
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="Enter your email" value="{{ old('email') }}">
                             </div>
-                            @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('email')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Location fields -->
                         <div>
-                            <label for="country" class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                            <label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Country</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </div>
                                 <select id="country" name="country" required
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors">
                                     <option value="">Select country</option>
                                 </select>
                             </div>
-                            @error('country')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('country')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <div>
-                            <label for="region" class="block text-sm font-medium text-gray-700 mb-2">Region/State</label>
+                            <label for="region" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Region/State</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
                                 </div>
                                 <select id="region" name="region" required disabled
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100">
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-600">
                                     <option value="">Select region</option>
                                 </select>
                             </div>
                             <div id="region-custom" class="mt-2 hidden">
                                 <input id="region_manual" name="region_manual" type="text" placeholder="Enter your region/state"
-                                    class="block w-full px-3 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    class="block w-full px-3 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                                     value="{{ old('region_manual') }}">
                             </div>
-                            @error('region')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('region')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <div>
-                            <label for="city" class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                            <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">City</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                     </svg>
                                 </div>
                                 <select id="city" name="city" required disabled
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100">
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-600">
                                     <option value="">Select city</option>
                                 </select>
                             </div>
                             <div id="city-custom" class="mt-2 hidden">
                                 <input id="city_manual" name="city_manual" type="text" placeholder="Enter your city/town"
-                                    class="block w-full px-3 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    class="block w-full px-3 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                                     value="{{ old('city_manual') }}">
                             </div>
-                            @error('city')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('city')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Date of Birth field -->
                         <div>
-                            <label for="date_of_birth" class="block text-sm font-medium text-gray-700 mb-2">Date of Birth <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <label for="date_of_birth" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Date of Birth <span class="text-gray-400 dark:text-gray-500 text-xs">(optional)</span></label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                 </div>
                                 <input id="date_of_birth" name="date_of_birth" type="date"
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     value="{{ old('date_of_birth') }}">
                             </div>
-                            @error('date_of_birth')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('date_of_birth')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Gender field -->
                         <div>
-                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">Gender <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Gender <span class="text-gray-400 dark:text-gray-500 text-xs">(optional)</span></label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                 </div>
                                 <select id="gender" name="gender"
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors">
                                     <option value="">Select gender</option>
                                     <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
                                     <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
                                 </select>
                             </div>
-                            @error('gender')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('gender')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Phone number field -->
                         <div>
-                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Phone Number <span class="text-gray-400 dark:text-gray-500 text-xs">(optional)</span></label>
                             <div class="relative">
                                 <input type="hidden" id="country_code" name="country_code" value="{{ old('country_code') }}">
                                 <input id="phone" name="phone" type="tel"
-                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="Enter phone number" value="{{ old('phone') }}">
                             </div>
-                            @error('country_code')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                            @error('phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('country_code')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
+                            @error('phone')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Password field -->
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Password</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                 </div>
                                 <input id="password" name="password" type="password" required
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="Create a password (min. 8 characters)">
                             </div>
-                            @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('password')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Password confirmation field -->
                         <div>
-                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">Confirm password</label>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Confirm password</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </div>
                                 <input id="password_confirmation" name="password_confirmation" type="password" required
-                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                                     placeholder="Confirm your password">
                             </div>
-                            @error('password_confirmation')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('password_confirmation')<div class="mt-1 flex items-center gap-1 text-sm text-red-600 dark:text-red-400"><svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>{{ $message }}</span></div>@enderror
                         </div>
 
                         <!-- Terms agreement -->
@@ -293,17 +292,17 @@
                                     name="terms"
                                     type="checkbox"
                                     required
-                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded"
                                 >
                             </div>
                             <div class="ml-3 text-sm">
-                                <label for="terms" class="text-gray-700">
+                                <label for="terms" class="text-gray-700 dark:text-gray-300">
                                     I agree to the
                                     <a href="{{route('branding.terms')}}"
-                                       class="font-medium text-blue-600 hover:text-blue-500">Terms of Service</a>
+                                       class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Terms of Service</a>
                                     and
                                     <a href="{{route('branding.privacy')}}"
-                                       class="font-medium text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                                       class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Privacy Policy</a>
                                 </label>
                             </div>
                         </div>
@@ -311,7 +310,7 @@
                         <!-- Sign up button -->
                         <button
                             type="submit"
-                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 dark:from-blue-600 dark:to-green-600 dark:hover:from-blue-700 dark:hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 dark:focus:ring-blue-400 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
                         >
             <span class="absolute left-0 inset-y-0 flex items-center pl-3">
               <svg class="h-5 w-5 text-white group-hover:text-white opacity-75" fill="none" stroke="currentColor"
@@ -328,10 +327,10 @@
                     <div class="mt-8 mb-6">
                         <div class="relative">
                             <div class="absolute inset-0 flex items-center">
-                                <div class="w-full border-t border-gray-300"/>
+                                <div class="w-full border-t border-gray-300 dark:border-gray-600"/>
                             </div>
                             <div class="relative flex justify-center text-sm">
-                                <span class="px-2 bg-white text-gray-500">Already have an account?</span>
+                                <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Already have an account?</span>
                             </div>
                         </div>
                     </div>
@@ -340,7 +339,7 @@
                     <div class="text-center">
                         <a
                             href="{{ route('login') }}"
-                            class="inline-flex items-center justify-center w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            class="inline-flex items-center justify-center w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-blue-300 dark:hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200"
                         >
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -455,5 +454,5 @@
             }
         });
     </script>
-</x-layouts.guest>
+</x-app>
 

@@ -323,6 +323,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
     Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
 
+    // Activity Tracker Routes
+    Route::get('/activities', \App\Livewire\Activities\ActivityTracker::class)->name('activities.index');
+
     // Academic Content Routes
     Route::get('/course-outlines', fn () => view('course-outlines'))->name('course-outlines');
     Route::get('/academic-calendar', fn () => view('academic-calendar'))->name('academic-calendar');
