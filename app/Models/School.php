@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLoggable;
 use App\Traits\HasMultipleSubAccounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Support\Collection;
 
 class School extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
     use HasMultipleSubAccounts;
 

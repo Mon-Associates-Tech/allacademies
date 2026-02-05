@@ -8,6 +8,7 @@ use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
 use App\Support\TokenSubscriptionStatus;
+use App\Traits\ActivityLoggable;
 use App\Traits\HasAvatar;
 use App\Traits\HasMultipleSubAccounts;
 use App\Traits\HasRoles;
@@ -32,6 +33,7 @@ use Log;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
+    use ActivityLoggable;
     use HasApiTokens;
     use HasAvatar;
     use HasFactory;
@@ -653,5 +655,21 @@ class User extends Authenticatable implements MustVerifyEmail
             UserRole::AUTHOR,
             UserRole::LIBRARIAN,
         ]);
+    }
+
+    // ==================== ACTIVITY LOGGING ====================
+
+    /**
+     * Specify additional sensitive fields that should not be logged
+     * The base trait already filters: password, api_key, secret, tokens, etc.
+     */
+    public function getSensitiveFieldsForLogging(): array
+    {
+        return [
+            'remember_token',
+            'password_hash',
+            'previous_password',
+            'old_password',
+        ];
     }
 }

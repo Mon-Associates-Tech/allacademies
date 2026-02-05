@@ -284,6 +284,20 @@ class TeacherManagement extends Component
 
                 // Step 7: Auto-assign all students at the same level
                 $this->autoAssignStudents($teacher);
+
+                // Log the activity explicitly with meaningful context
+                $teacher->logActivity(
+                    'create',
+                    'New Teacher Created',
+                    'academic',
+                    [
+                        'teacher_name' => $this->name,
+                        'teacher_email' => $this->email,
+                        'specialization' => $this->specialization,
+                        'created_by' => auth()->user()?->name ?? 'Unknown',
+                    ],
+                    description: "New teacher {$this->name} ({$this->email}) created with specialization in {$this->specialization}"
+                );
             });
 
             $this->resetForm();
@@ -367,6 +381,10 @@ class TeacherManagement extends Component
 
         try {
             DB::transaction(function () use ($teacher) {
+                // Capture original values for activity logging
+                $originalUserData = $teacher->user->only(['name', 'email']);
+                $originalTeacherData = $teacher->only(['specialization']);
+
                 // Update user
                 $userData = [
                     'name' => $this->name,
@@ -418,6 +436,30 @@ class TeacherManagement extends Component
                 // Re-assign students based on new level
                 $teacher->assignedStudents()->detach();
                 $this->autoAssignStudents($teacher);
+
+                // Log the activity explicitly with meaningful context
+                $userChanges = array_diff_assoc(
+                    $teacher->user->only(['name', 'email']),
+                    $originalUserData
+                );
+                $teacherChanges = array_diff_assoc(
+                    $teacher->only(['specialization']),
+                    $originalTeacherData
+                );
+
+                if (! empty($userChanges) || ! empty($teacherChanges)) {
+                    $teacher->logActivity(
+                        'update',
+                        'Teacher Information Updated',
+                        'academic',
+                        [
+                            'user_changes' => $userChanges,
+                            'teacher_changes' => $teacherChanges,
+                            'updated_by' => auth()->user()?->name ?? 'Unknown',
+                        ],
+                        description: "Teacher {$teacher->user->name} information updated by ".(auth()->user()?->name ?? 'Unknown')
+                    );
+                }
             });
 
             $this->resetForm();
@@ -439,6 +481,9 @@ class TeacherManagement extends Component
     {
         try {
             DB::transaction(function () {
+                $teacherName = $this->teacherToDelete->user->name;
+                $teacherId = $this->teacherToDelete->id;
+
                 // Detach all relationships
                 $this->teacherToDelete->subjects()->detach();
                 $this->teacherToDelete->academicGroups()->detach();
@@ -448,8 +493,24 @@ class TeacherManagement extends Component
                 // Delete teacher record
                 $this->teacherToDelete->delete();
 
-                // Optionally delete user if they have no other roles
+                // Log the activity before deleting (using a temporary model instance)
+                // Since the teacher is deleted, we log using the user model instead
                 $user = $this->teacherToDelete->user;
+                if ($user) {
+                    $user->logActivity(
+                        'delete',
+                        'Teacher Profile Deleted',
+                        'academic',
+                        [
+                            'teacher_name' => $teacherName,
+                            'teacher_id' => $teacherId,
+                            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+                        ],
+                        description: "Teacher {$teacherName} (ID: {$teacherId}) profile was deleted"
+                    );
+                }
+
+                // Optionally delete user if they have no other roles
                 if ($user && $user->roles()->count() <= 1) {
                     $user->delete();
                 }

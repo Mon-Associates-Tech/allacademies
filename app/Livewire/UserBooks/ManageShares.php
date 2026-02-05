@@ -139,6 +139,13 @@ class ManageShares extends Component
 
             $share = UserBookShare::create($shareData);
 
+            // Log activity
+            $share->logActivity('create', 'Book Share Created', 'user_book_share', [
+                'book_title' => $this->userBook->name ?? 'Unknown Book',
+                'share_type' => $this->shareType,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+
             // Send notifications if enabled
             if ($this->sendNotification) {
                 $this->sendShareNotifications($share);

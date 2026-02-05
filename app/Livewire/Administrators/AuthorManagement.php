@@ -229,7 +229,7 @@ class AuthorManagement extends Component
             }
 
             // Create author profile
-            Author::create([
+            $author = Author::create([
                 'user_id' => $user->id,
                 'biography' => $this->biography,
                 //                'specialization' => $this->specialization,
@@ -237,6 +237,15 @@ class AuthorManagement extends Component
                 'profile_image' => $profileImagePath,
                 'social_media' => json_encode($this->socialMedia),
                 'is_active' => $this->isActive,
+            ]);
+
+            // Log activity
+            $author->logActivity('create', 'Author Created', 'author', [
+                'author_name' => $this->name,
+                'author_email' => $this->email,
+                'website' => $this->website,
+                'is_active' => $this->isActive,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
             ]);
 
             $this->resetForm();
@@ -335,6 +344,9 @@ class AuthorManagement extends Component
     public function delete()
     {
         try {
+            $authorName = $this->authorToDelete->user->name ?? 'Unknown';
+            $authorId = $this->authorToDelete->id;
+
             // Delete profile image if exists
             if ($this->authorToDelete->profile_image) {
                 Storage::disk('public')->delete($this->authorToDelete->profile_image);
@@ -344,8 +356,15 @@ class AuthorManagement extends Component
             //            $this->authorToDelete->user->delete();
             $this->authorToDelete->delete();
 
+            // Log activity
+            Author::logActivityForModel('delete', 'Author Deleted', 'author', [
+                'author_name' => $authorName,
+                'author_id' => $authorId,
+                'deleted_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+
             $this->showDeleteModal = false;
-            session()->flash('message', "Author '{$this->authorToDelete->user->name}' has been deleted successfully!");
+            session()->flash('message', "Author '{$authorName}' has been deleted successfully!");
 
         } catch (\Exception $e) {
             logError($e);

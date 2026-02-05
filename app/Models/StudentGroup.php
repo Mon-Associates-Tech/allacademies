@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLoggable;
 use App\Traits\ShouldScopeSchool;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudentGroup extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
     use ShouldScopeSchool;
 

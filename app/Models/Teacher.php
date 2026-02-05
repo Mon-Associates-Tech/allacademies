@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Attendance\Attendance;
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\HasStudents;
 use App\Traits\ShouldScopeSchool;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Teacher extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
     use HasStudents;
 

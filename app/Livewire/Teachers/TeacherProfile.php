@@ -105,6 +105,8 @@ class TeacherProfile extends Component
         $validatedData = $this->validate();
 
         try {
+            $originalData = $user->only(['name', 'email', 'phone', 'bio']);
+
             // Handle avatar upload
             if ($this->avatar) {
                 // Delete old avatar if exists
@@ -135,6 +137,27 @@ class TeacherProfile extends Component
             $user->phone = $validatedData['phone'];
             $user->bio = $validatedData['bio'];
             $user->save();
+
+            // Track changes
+            $changes = [];
+            foreach ($originalData as $key => $value) {
+                if ($value !== $user->{$key}) {
+                    $changes[$key] = [
+                        'old' => $value,
+                        'new' => $user->{$key},
+                    ];
+                }
+            }
+
+            // Log activity if changes were made
+            if (! empty($changes) || $this->avatar || $this->cover_image) {
+                $user->logActivity('update', 'Teacher Profile Updated', 'teacher_profile', [
+                    'user_changes' => $changes,
+                    'avatar_updated' => ! empty($this->avatar),
+                    'cover_updated' => ! empty($this->cover_image),
+                    'updated_by' => auth()->user()?->name ?? 'Unknown',
+                ]);
+            }
 
             // Reset file inputs
             $this->avatar = null;
@@ -189,6 +212,12 @@ class TeacherProfile extends Component
             // Update password
             $user->password = Hash::make($this->new_password);
             $user->save();
+
+            // Log activity
+            $user->logActivity('update', 'Teacher Password Changed', 'teacher_profile', [
+                'password_changed' => true,
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
 
             // Reset password form
             $this->reset(['current_password', 'new_password', 'new_password_confirmation']);

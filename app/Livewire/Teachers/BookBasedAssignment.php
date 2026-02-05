@@ -352,11 +352,12 @@ class BookBasedAssignment extends Component
     {
         // NEW: Check school has active content subscription before allowing assignment creation
         $school = auth()->user()->school;
-        if (!$school || !$school->hasActiveContentSubscription()) {
+        if (! $school || ! $school->hasActiveContentSubscription()) {
             $this->addError('subscription',
-                'Your school must have an active subscription to create assignments. ' .
+                'Your school must have an active subscription to create assignments. '.
                 'Please contact your school administrator.'
             );
+
             return;
         }
 
@@ -404,6 +405,15 @@ class BookBasedAssignment extends Component
             if (! empty($this->selectedStudents)) {
                 $assignment->students()->attach($this->selectedStudents);
             }
+
+            // Log activity
+            $assignment->logActivity('create', 'Book-Based Assignment Created', 'assignment', [
+                'assignment_title' => $this->title,
+                'subject_id' => $this->selectedSubjectId,
+                'question_count' => count($this->generatedQuestions),
+                'total_marks' => $this->totalMarks,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
 
             DB::commit();
 

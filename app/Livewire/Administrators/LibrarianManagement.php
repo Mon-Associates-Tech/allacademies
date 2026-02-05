@@ -147,7 +147,7 @@ class LibrarianManagement extends Component
             }
 
             // Create librarian record
-            Librarian::create([
+            $librarian = Librarian::create([
                 'user_id' => $user->id,
                 'position' => $this->position,
                 'department' => $this->department,
@@ -159,6 +159,20 @@ class LibrarianManagement extends Component
                 'qualifications' => $this->qualifications,
                 'specializations' => $this->specializations,
             ]);
+
+            // Log the activity explicitly
+            $librarian->logActivity(
+                'create',
+                'New Librarian Created',
+                'system',
+                [
+                    'librarian_name' => $this->name,
+                    'librarian_email' => $this->email,
+                    'position' => $this->position,
+                    'created_by' => auth()->user()?->name ?? 'Unknown',
+                ],
+                description: "New librarian {$this->name} ({$this->email}) created with position {$this->position}"
+            );
         });
 
         $this->resetForm();
@@ -254,6 +268,7 @@ class LibrarianManagement extends Component
     {
         $librarian = Librarian::findOrFail($this->deletingLibrarianId);
         $userId = $librarian->user_id;
+        $librarianName = $librarian->user->name;
 
         // Check if librarian has book approvals
         if ($librarian->bookApprovals()->count() > 0) {
@@ -263,9 +278,22 @@ class LibrarianManagement extends Component
             return;
         }
 
-        DB::transaction(function () use ($librarian, $userId) {
+        DB::transaction(function () use ($librarian, $userId, $librarianName) {
             $librarian->delete();
             User::destroy($userId);
+
+            // Log the activity explicitly
+            $librarian->user->logActivity(
+                'delete',
+                'Librarian Profile Deleted',
+                'system',
+                [
+                    'librarian_name' => $librarianName,
+                    'librarian_id' => $librarian->id,
+                    'deleted_by' => auth()->user()?->name ?? 'Unknown',
+                ],
+                description: "Librarian {$librarianName} (ID: {$librarian->id}) profile was deleted"
+            );
         });
 
         $this->showDeleteModal = false;

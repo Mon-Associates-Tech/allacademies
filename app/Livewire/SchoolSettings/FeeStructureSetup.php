@@ -466,10 +466,28 @@ class FeeStructureSetup extends Component
                 $fee = SchoolPaymentStructure::where('school_id', $schoolId)->findOrFail($this->editingFeeId);
                 $data['updated_by'] = Auth::id();
                 $fee->update($data);
+
+                // Log activity
+                $fee->logActivity('update', 'Payment Structure Updated', 'school_payment_structure', [
+                    'fee_name' => $this->name,
+                    'payment_type' => $finalPaymentType,
+                    'amount' => $this->amount,
+                    'updated_by' => auth()->user()?->name ?? 'Unknown',
+                ]);
+
                 session()->flash('success', 'Payment structure updated successfully!');
             } else {
                 $data['created_by'] = Auth::id();
-                SchoolPaymentStructure::create($data);
+                $fee = SchoolPaymentStructure::create($data);
+
+                // Log activity
+                $fee->logActivity('create', 'Payment Structure Created', 'school_payment_structure', [
+                    'fee_name' => $this->name,
+                    'payment_type' => $finalPaymentType,
+                    'amount' => $this->amount,
+                    'created_by' => auth()->user()?->name ?? 'Unknown',
+                ]);
+
                 session()->flash('success', 'Payment structure created successfully!');
             }
 
@@ -491,7 +509,19 @@ class FeeStructureSetup extends Component
         try {
             $schoolId = $this->getSchoolId();
             $fee = SchoolPaymentStructure::where('school_id', $schoolId)->findOrFail($id);
+            $feeName = $fee->name;
+            $feeType = $fee->payment_type;
+
             $fee->delete();
+
+            // Log activity
+            SchoolPaymentStructure::logActivityForModel('delete', 'Payment Structure Deleted', 'school_payment_structure', [
+                'fee_name' => $feeName,
+                'payment_type' => $feeType,
+                'fee_id' => $id,
+                'deleted_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+
             session()->flash('success', 'Payment structure deleted successfully!');
         } catch (Exception $e) {
             session()->flash('error', 'Failed to delete payment structure. Please try again.');

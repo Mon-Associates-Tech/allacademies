@@ -66,12 +66,20 @@ class StudentGroupManagement extends Component
     {
         $this->validate();
 
-        StudentGroup::create([
+        $group = StudentGroup::create([
             'school_id' => getSchoolId(),
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
             'teacher_id' => $this->teacherId,
+        ]);
+
+        // Log activity
+        $group->logActivity('create', 'Student Group Created', 'student_group', [
+            'group_name' => $this->name,
+            'description' => $this->description,
+            'teacher_id' => $this->teacherId,
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->resetForm();
@@ -126,7 +134,16 @@ class StudentGroupManagement extends Component
             return;
         }
 
+        $groupName = $group->name;
         $group->delete();
+
+        // Log activity
+        StudentGroup::logActivityForModel('delete', 'Student Group Deleted', 'student_group', [
+            'group_name' => $groupName,
+            'group_id' => $groupId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
+
         session()->flash('message', 'Student group deleted successfully!');
     }
 

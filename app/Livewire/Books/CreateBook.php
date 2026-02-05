@@ -435,7 +435,7 @@ class CreateBook extends Component
             $tocData = $this->showTableOfContents ? $this->tableOfContents : null;
 
             // Create book
-            Book::create([
+            $book = Book::create([
                 'title' => $this->title,
                 'slug' => $this->slug,
                 'author_id' => $this->authorId,
@@ -452,6 +452,17 @@ class CreateBook extends Component
                 'content_url' => $pdfPath,
                 'table_of_contents' => $tocData,
                 'status' => $this->status,
+            ]);
+
+            // Log activity
+            $book->logActivity('create', 'Book Created', 'book', [
+                'book_title' => $this->title,
+                'author_id' => $this->authorId,
+                'category_id' => $this->bookCategoryId,
+                'has_hardcopy' => $this->hasHardcopy,
+                'has_softcopy' => $this->hasSoftcopy,
+                'status' => $this->status,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
             ]);
 
             DB::commit();

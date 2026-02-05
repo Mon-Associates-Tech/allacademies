@@ -53,6 +53,14 @@ class UserManagement extends Component
 
         $user->roles()->sync($this->roleIds);
 
+        // Log activity
+        $user->logActivity('create', 'User Created', 'user', [
+            'user_name' => $this->name,
+            'email' => $this->email,
+            'roles' => $this->roleIds,
+            'created_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
+
         $this->resetForm();
         session()->flash('message', 'User created successfully!');
     }
@@ -98,7 +106,17 @@ class UserManagement extends Component
     public function delete($userId)
     {
         $user = User::findOrFail($userId);
+        $userName = $user->name;
+        $userEmail = $user->email;
+
         $user->delete();
+
+        // Log activity
+        User::logActivityForModel('delete', 'User Deleted', 'user', [
+            'user_name' => $userName,
+            'user_email' => $userEmail,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         session()->flash('message', 'User deleted successfully!');
     }

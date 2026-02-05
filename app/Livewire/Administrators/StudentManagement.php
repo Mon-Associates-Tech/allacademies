@@ -522,6 +522,18 @@ class StudentManagement extends Component
 
             // Handle individual subject assignments
             $this->assignIndividualSubjects($student);
+
+            // Log activity
+            $student->logActivity('create', 'Student Created', 'student', [
+                'student_name' => $this->name,
+                'email' => $this->email,
+                'student_id' => $student->student_id,
+                'academic_group_id' => $this->academicGroupId,
+                'academic_level_id' => $this->academicLevelId,
+                'student_group_id' => $this->studentGroupId,
+                'teachers_assigned' => $this->selectedTeachers ?? [],
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
         });
 
         $this->resetForm();
@@ -719,10 +731,20 @@ class StudentManagement extends Component
     {
         $student = Student::findOrFail($studentId);
         $userId = $student->user_id;
+        $studentName = $student->user?->name ?? 'Unknown';
+        $studentEmail = $student->user?->email ?? 'N/A';
 
-        DB::transaction(function () use ($student, $userId) {
+        DB::transaction(function () use ($student, $userId, $studentName, $studentEmail) {
             $student->delete();
             User::destroy($userId);
+
+            // Log activity
+            Student::logActivityForModel('delete', 'Student Deleted', 'student', [
+                'student_name' => $studentName,
+                'student_email' => $studentEmail,
+                'student_id' => $student->student_id,
+                'deleted_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
         });
 
         session()->flash('message', 'Student deleted successfully!');

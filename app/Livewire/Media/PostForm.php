@@ -93,6 +93,7 @@ class PostForm extends Component
     {
         $this->validate();
 
+        $isCreating = ! $this->postId;
         $post = $this->postId ? Post::find($this->postId) : new Post;
 
         $post->fill([
@@ -122,6 +123,23 @@ class PostForm extends Component
         // Attach new gallery images
         foreach ($this->galleryImageIds as $index => $mediaId) {
             $post->attachMedia($mediaId, 'gallery', ['sort_order' => $index]);
+        }
+
+        // Log activity
+        if ($isCreating) {
+            $post->logActivity('create', 'Post Created', 'post', [
+                'post_title' => $this->title,
+                'has_featured_image' => ! empty($this->featuredImageId),
+                'gallery_image_count' => count($this->galleryImageIds),
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        } else {
+            $post->logActivity('update', 'Post Updated', 'post', [
+                'post_title' => $this->title,
+                'has_featured_image' => ! empty($this->featuredImageId),
+                'gallery_image_count' => count($this->galleryImageIds),
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
         }
 
         $this->emit('notify', 'Post saved successfully!', 'success');

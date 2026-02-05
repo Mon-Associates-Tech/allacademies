@@ -152,6 +152,9 @@ class DeleteUserModal extends Component
             return;
         }
 
+        $userName = $user->name;
+        $userEmail = $user->email;
+
         // $this->authorize('delete', $user);
 
         // Delete all user-related data
@@ -200,6 +203,13 @@ class DeleteUserModal extends Component
             // Finally delete the user
             $user->delete();
         });
+
+        // Log activity
+        User::logActivityForModel('delete', 'User Account Deleted', 'user', [
+            'user_name' => $userName,
+            'user_email' => $userEmail,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         $this->showModal = false;
 
