@@ -144,7 +144,7 @@
                                         d="M3 4h10v6H3V4zm0-1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3z"/>
                                 </svg>
 
-                                <span class="text-sm ml-2 sidebar-text duration-200">Messenger Subscriptions</span>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Premium Subscriptions</span>
                             </div>
                         </a>
                     </li>
@@ -202,7 +202,7 @@
                         </a>
                     </li>
 
-                    <li class="mb-0.5 last:mb-2" title="Activity Tracker">
+                    <li class="mb-0.5 last:mb-2 hidden" title="Activity Tracker">
                         <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                            class="block pl-3 rounded-lg transition {{ Route::is('activities*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                            href="{{route('activities.index')}}">

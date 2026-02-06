@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>All Academies: Account Verification Code</title>
+    <title>All Academies: Email Verification</title>
     <!--[if mso]>
     <noscript>
         <xml>
@@ -102,91 +102,38 @@
             line-height: 1.6;
         }
 
-        /* Verification code box */
-        .code-section {
-            margin: 32px 0;
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 32px 24px;
-            text-align: center;
-        }
-
-        .code-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin: 0 0 16px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+        .message strong {
             font-weight: 700;
         }
 
-        .verification-code {
-            font-size: 48px;
-            font-weight: 800;
-            color: #1f2937;
-            letter-spacing: 8px;
-            margin: 0;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 6px;
-            border: 2px solid #e5e7eb;
+        /* CTA Button */
+        .cta-button {
             display: inline-block;
-            word-spacing: 8px;
-        }
-
-        .code-hint {
-            font-size: 13px;
-            color: #6b7280;
-            margin: 16px 0 0 0;
-            font-weight: 400;
-        }
-
-        /* Alert boxes - WCAG AA contrast compliant */
-        .alert {
-            margin: 24px 0;
-            padding: 16px 20px;
+            background-color: #0284c7;
+            color: #ffffff;
+            padding: 14px 32px;
+            text-decoration: none;
             border-radius: 6px;
-            border-left: 4px solid;
-            font-size: 14px;
-            line-height: 1.5;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 24px 0;
+            text-align: center;
+            border: 2px solid #0284c7;
         }
 
-        .alert-warning {
-            background-color: #fef3c7;
-            border-left-color: #d97706;
-            color: #78350f;
+        .cta-button:hover {
+            background-color: #0369a1;
+            border-color: #0369a1;
         }
 
-        .alert-info {
-            background-color: #dbeafe;
-            border-left-color: #0284c7;
-            color: #003366;
+        .button-container {
+            text-align: center;
+            margin: 24px 0;
         }
 
-        .alert-danger {
-            background-color: #fee2e2;
-            border-left-color: #dc2626;
-            color: #7f1d1d;
-        }
-
-        .alert-title {
-            font-weight: 700;
-            margin: 0 0 8px 0;
-        }
-
-        .alert-text {
-            margin: 0;
-        }
-
-        .alert strong {
-            font-weight: 700;
-        }
-
-        /* Instructions */
-        .instructions-section {
-            background-color: #f9fafb;
+        /* Info sections */
+        .info-section {
+            background-color: #f3f4f6;
             border: 1px solid #d1d5db;
             border-radius: 6px;
             padding: 24px;
@@ -196,24 +143,47 @@
         .section-title {
             font-size: 15px;
             color: #1f2937;
-            margin: 0 0 16px 0;
+            margin: 0 0 12px 0;
             font-weight: 700;
         }
 
-        .instructions-list {
-            margin: 0;
-            padding-left: 24px;
-        }
-
-        .instructions-list li {
+        .info-text {
             font-size: 14px;
             color: #374151;
-            margin-bottom: 8px;
+            margin: 0 0 8px 0;
             line-height: 1.5;
         }
 
-        .instructions-list li:last-child {
+        .info-text:last-child {
             margin-bottom: 0;
+        }
+
+        .code-link {
+            word-break: break-all;
+            color: #0284c7;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            display: block;
+        }
+
+        /* Alert box */
+        .alert {
+            background-color: #fef3c7;
+            border-left: 4px solid #d97706;
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 14px;
+            color: #78350f;
+            line-height: 1.5;
+        }
+
+        .alert strong {
+            font-weight: 700;
         }
 
         /* Divider */
@@ -302,13 +272,10 @@
                 padding: 24px 20px !important;
             }
 
-            .verification-code {
-                font-size: 36px !important;
-                letter-spacing: 6px !important;
-            }
-
-            .code-section {
-                padding: 24px 16px !important;
+            .cta-button {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             .footer {
@@ -357,26 +324,17 @@
                 color: #d1d5db;
             }
 
-            .code-section {
-                background-color: #111827;
-                border-color: #374151;
+            .cta-button {
+                background-color: #0284c7;
+                border-color: #0284c7;
             }
 
-            .verification-code {
-                color: #f3f4f6;
-                background-color: #374151;
-                border-color: #4b5563;
+            .cta-button:hover {
+                background-color: #0369a1;
+                border-color: #0369a1;
             }
 
-            .code-label {
-                color: #9ca3af;
-            }
-
-            .code-hint {
-                color: #9ca3af;
-            }
-
-            .instructions-section {
+            .info-section {
                 background-color: #111827;
                 border-color: #374151;
             }
@@ -385,8 +343,19 @@
                 color: #f3f4f6;
             }
 
-            .instructions-list li {
+            .info-text {
                 color: #d1d5db;
+            }
+
+            .code-link {
+                background-color: #374151;
+                color: #93c5fd;
+            }
+
+            .alert {
+                background-color: #78350f;
+                border-left-color: #d97706;
+                color: #fef3c7;
             }
 
             .support-section {
@@ -423,49 +392,45 @@
                 <tr>
                     <td class="header">
                         <h1 class="header-title">All Academies</h1>
-                        <p class="header-subtitle">Account Security Verification</p>
+                        <p class="header-subtitle">Email Address Verification</p>
                     </td>
                 </tr>
 
                 <!-- Content -->
                 <tr>
                     <td class="content">
-                        <h2 class="greeting">Verify Your Login</h2>
+                        <h2 class="greeting">Verify Your Email Address</h2>
 
                         <p class="message">
-                            A login attempt was made on your All Academies account. To complete the sign-in process, please use the verification code below.
+                            Welcome to All Academies! Your account has been created successfully. To complete your registration and gain full access to our platform, please verify your email address by clicking the button below.
                         </p>
 
-                        <!-- Verification Code -->
-                        <div class="code-section">
-                            <p class="code-label">Your Verification Code</p>
-                            <p class="verification-code">{{ $code }}</p>
-                            <p class="code-hint">Enter this code in the verification screen to proceed</p>
+                        <!-- CTA Button -->
+                        <div class="button-container">
+                            <a href="{{ $actionUrl }}" class="cta-button">Verify Email Address</a>
                         </div>
 
-                        <!-- Expiration Warning -->
-                        <div class="alert alert-warning">
-                            <p class="alert-title">Code Expires in 1 Hour</p>
-                            <p class="alert-text">This code will expire in 1 hour. Please complete your authentication before it expires.</p>
+                        <p class="message">
+                            This verification link will expire in <strong>60 minutes</strong>. Please complete this step as soon as possible to activate your account.
+                        </p>
+
+                        <!-- Alternative Link Section -->
+                        <div class="info-section">
+                            <p class="section-title">If the button doesn't work, copy and paste this link:</p>
+                            <a href="{{ $actionUrl }}" class="code-link">{{ $actionUrl }}</a>
                         </div>
 
-                        <!-- Instructions -->
-                        <div class="instructions-section">
-                            <h3 class="section-title">Next Steps</h3>
-                            <ol class="instructions-list">
-                                <li>Copy or note the 6-digit code above</li>
-                                <li>Return to the All Academies login page</li>
-                                <li>Enter the code in the verification field</li>
-                                <li>Click "Verify" to complete sign-in</li>
-                            </ol>
+                        <!-- What's Next Section -->
+                        <div class="info-section">
+                            <p class="section-title">What happens next?</p>
+                            <p class="info-text">✓ Click the button or link above to verify your email</p>
+                            <p class="info-text">✓ You'll be redirected to sign in to your account</p>
+                            <p class="info-text">✓ Start exploring All Academies and access all features</p>
                         </div>
 
-                        <!-- Security Notice -->
-                        <div class="alert alert-danger">
-                            <p class="alert-title">Security Reminder</p>
-                            <p class="alert-text">
-                                <strong>Never share this code</strong> with anyone. All Academies staff will never ask you for this code. If you didn't attempt to log in, change your password immediately and contact support.
-                            </p>
+                        <!-- Expiration Alert -->
+                        <div class="alert">
+                            <strong>Important:</strong> This verification link expires in 60 minutes. If it expires, you can request a new one from the verification page.
                         </div>
 
                         <hr class="divider">
@@ -473,7 +438,7 @@
                         <!-- Support Section -->
                         <div class="support-section">
                             <p class="support-text">
-                                Need help? Contact our <a href="{{ route('branding.contact') }}" class="support-link">support team</a> or visit the <a href="#" class="support-link">help center</a>.
+                                Need help? Contact our <a href="mailto:support@allacademies.com" class="support-link">support team</a> if you have any questions.
                             </p>
                         </div>
                     </td>

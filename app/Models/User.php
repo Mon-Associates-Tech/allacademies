@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Log;
+use App\Notifications\VerifyEmailNotification;
 
 /**
  * @property mixed $school
@@ -454,6 +455,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return ! $this->isSuperAdmin() &&
             ! in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
             ($this->is_active ?? true);
+    }
+
+    // ==================== EMAIL VERIFICATION ====================
+
+    /**
+     * Send a custom email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification());
     }
 
     // ==================== SCHOOL ACCESS & MULTI-TENANCY ====================
