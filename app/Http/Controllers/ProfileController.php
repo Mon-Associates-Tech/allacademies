@@ -13,6 +13,73 @@ class ProfileController extends Controller
         $user->load('preferredAcademicLevel.academicGroup');
         $profileCompletion = $this->calculateProfileCompletion($user);
 
+        // Load all relationship counts for the User Relationships & Data section
+        $user->loadCount([
+            'subscriptions',
+            'ownedTeams',
+            'joinedTeams',
+            'worksheets',
+            'notes',
+            'quizSessions',
+            'borrowedBooks',
+            'bookSubscriptions',
+            'loginActivities',
+            'tokenSubscriptions',
+            'subscriptionCycles',
+            'tokenUsageLogs',
+            'uploadedMedia',
+            'preferences',
+            'roles',
+        ]);
+
+        // Load relationships with limits for display
+        $user->load([
+            'school',
+            'currentTeam',
+            // Role-specific profiles
+            'student',
+            'teacher',
+            'author',
+            'librarian',
+            'parent',
+            // Content relationships with limits
+            'subscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'ownedTeams' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'joinedTeams' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'notes' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'worksheets' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'quizSessions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'borrowedBooks' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'bookSubscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'loginActivities' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'tokenSubscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'subscriptionCycles' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'preferences',
+            'roles',
+        ]);
+
         return view('profile.show', [
             'user' => $user,
             'profileCompletion' => $profileCompletion,

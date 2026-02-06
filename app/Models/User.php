@@ -411,6 +411,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function canSetOwnAcademicLevel(): bool
     {
+        // Guests can always set their own academic level
+        if ($this->role === UserRole::GUEST) {
+            return true;
+        }
+
+        // Other users can set their level if they don't have a student profile
         return ! $this->student;
     }
 

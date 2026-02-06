@@ -80,7 +80,23 @@ class UserController extends Controller
                     $query->whereNotNull('email_verified_at');
                 }
             })
-            ->orderBy('name')
+            ->when($request->filled('sort_by'), function ($query) use ($request) {
+                $sortBy = $request->input('sort_by');
+                $sortDirection = $request->input('sort_direction', 'asc');
+
+                // Validate sort direction
+                $sortDirection = in_array(strtolower($sortDirection), ['asc', 'desc']) ? $sortDirection : 'asc';
+
+                // Validate and apply sorting
+                $allowedSortColumns = ['name', 'email', 'created_at', 'last_seen_at', 'role'];
+                if (in_array($sortBy, $allowedSortColumns)) {
+                    $query->orderBy($sortBy, $sortDirection);
+                } else {
+                    $query->orderBy('name', 'asc');
+                }
+            }, function ($query) {
+                $query->orderBy('name', 'asc');
+            })
             ->paginate(15)
             ->withQueryString();
 

@@ -25,8 +25,8 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
-        :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-52'"
+        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-80 lg:w-20 lg:sidebar-expanded:!w-80 2xl:w-80! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-80 lg:translate-x-0'"
         @click.outside="$store.sidebar.open =  false"
         style=""
         @keydown.escape.window="$store.sidebar.open = false"
@@ -110,40 +110,43 @@
                     $roleValue = $userRole instanceof UserRole ? $userRole->value : $userRole;
                 @endphp
 
-                @auth
-                    @if($userRole === UserRole::ADMIN || $userRole === UserRole::OWNER || in_array($roleValue, ['admin', 'owner']))
-                        @livewire('administrators.admin-navigation', [
-                            'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::STUDENT || $roleValue === 'student')
-                        @livewire('students.student-navigation', [
-                            'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::TEACHER || $roleValue === 'teacher')
-                        @include('livewire.navigations.teacher-navigation')
-                    @elseif($userRole === UserRole::PARENT || $roleValue === 'parent')
-                        @include('livewire.navigations.parent-navigation')
-                    @elseif($userRole === UserRole::LIBRARIAN || $roleValue === 'librarian')
-                        @include('livewire.navigations.librarian-navigation', [
-                            'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::AUTHOR || $roleValue === 'author')
-                        @include('livewire.navigations.author-navigation', [
-                            'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::GUEST || $roleValue === 'guest')
-                        @include('livewire.navigations.subscriber-navigation', [
-                            'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::MODERATOR || $roleValue === 'moderator')
-                        @include('livewire.navigations.moderator-navigation', [
-                            'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @endif
-                @endauth
+                <div class="mb-4">
+                     @auth
+                        @if($userRole === UserRole::ADMIN || $userRole === UserRole::OWNER || in_array($roleValue, ['admin', 'owner']))
+                            @livewire('administrators.admin-navigation', [
+                                'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::STUDENT || $roleValue === 'student')
+                            @livewire('students.student-navigation', [
+                                'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::TEACHER || $roleValue === 'teacher')
+                            @include('livewire.navigations.teacher-navigation')
+                        @elseif($userRole === UserRole::PARENT || $roleValue === 'parent')
+                            @include('livewire.navigations.parent-navigation')
+                        @elseif($userRole === UserRole::LIBRARIAN || $roleValue === 'librarian')
+                            @include('livewire.navigations.librarian-navigation', [
+                                'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::AUTHOR || $roleValue === 'author')
+                            @include('livewire.navigations.author-navigation', [
+                                'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::GUEST || $roleValue === 'guest')
+                            @include('livewire.navigations.subscriber-navigation', [
+                                'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::MODERATOR || $roleValue === 'moderator')
+                            @include('livewire.navigations.moderator-navigation', [
+                                'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @endif
+                    @endauth
+                </div>
+
 
                 <ul x-data="{ sidebarExpanded: $store.sidebar.expanded }"
-                    class="border-t-2 pt-4 border-gray-200 dark:border-gray-700 space-y-1">
+                    class="border-t-2 pt-4 mb-4 border-gray-200 dark:border-gray-700 space-y-1">
                     <li class="mb-0.5 last:mb-2" title="Messenger Subscriptions">
                         <a :class="sidebarExpanded ? 'py-2' : ''"
                            class="block pl-3  rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"

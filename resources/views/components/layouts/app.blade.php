@@ -105,11 +105,16 @@
             @if($showTitleArea)
                 <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
                     <div
-                        class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
+                        class="text-lg font-bold py-3 flex items-center {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
                         <div
-                            class="text-lg md:text-2xl hidden print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
+                            class="text-lg md:text-2xl print:hidden font-bold {{ $titleAlignCenter ? 'text-center w-full' : 'text-start' }}">
                             {{ $title }}
                         </div>
+                        @if(isset($actions))
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                {{ $actions }}
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
