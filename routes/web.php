@@ -465,3 +465,4 @@ include_once 'administrator.php';
 include_once 'academic.php';
 include_once 'guest.php';
 include_once 'misc.php';
+include_once 'lms.php';

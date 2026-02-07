@@ -6,9 +6,11 @@ use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Models\AcademicSubject;
 use App\Models\Chat\UserTokenSubscription;
+use App\Models\Lms\Course;
 use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
+use App\Policies\CoursePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserTokenSubscriptionPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -41,6 +43,7 @@ class AuthServiceProvider extends ServiceProvider
         Subject::class => SubjectPolicy::class,
         Topic::class => TopicPolicy::class,
         UserTokenSubscription::class => UserTokenSubscriptionPolicy::class,
+        Course::class => CoursePolicy::class,
 
     ];
 

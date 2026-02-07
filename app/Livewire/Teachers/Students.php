@@ -180,7 +180,7 @@ class Students extends Component
         $this->resetPage();
     }
 
-    public function viewStudentDetails($studentId): \Illuminate\Http\RedirectResponse
+    public function viewStudentDetails($studentId)
     {
         return redirect()->route('students.show', ['student' => $studentId]);
     }
