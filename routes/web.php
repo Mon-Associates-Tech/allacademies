@@ -62,6 +62,11 @@ Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
+// Solution Pages
+Route::view('/solutions/schools', 'branding.solutions.schools')->name('solutions.schools');
+Route::view('/solutions/teachers', 'branding.solutions.teachers')->name('solutions.teachers');
+Route::view('/solutions/students', 'branding.solutions.students')->name('solutions.students');
+
 // Test Error Notification Route
 Route::get('/test-error-notification', function () {
     throw new \Exception('This is a test error notification with stack trace');
