@@ -62,6 +62,11 @@ Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
+// Test Error Notification Route
+Route::get('/test-error-notification', function () {
+    throw new \Exception('This is a test error notification with stack trace');
+})->name('test.error');
+
 // Newsletter Routes
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');

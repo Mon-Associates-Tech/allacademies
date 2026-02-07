@@ -57,6 +57,7 @@ class ErrorExceptionHandler extends ExceptionHandler
 
                 try {
                     $errorService = app(ErrorNotificationService::class);
+                    $user = auth()->user();
                     $errorService->sendErrorNotification(
                         substr($exception->getMessage(), 0, 500), // Truncate message
                         [
@@ -64,7 +65,14 @@ class ErrorExceptionHandler extends ExceptionHandler
                             'line' => $exception->getLine(),
                             'url' => substr(request()->fullUrl(), 0, 255),
                             'method' => request()->method(),
-                            'user_id' => auth()->id() ?? 'Guest',
+                            'user_id' => $user ? $user->id : 'Guest',
+                            'user_name' => $user ? $user->name : 'Guest',
+                            'trace' => collect($exception->getTrace())->take(5)->map(fn($t) => [
+                                'file' => isset($t['file']) ? basename($t['file']) : 'unknown',
+                                'line' => $t['line'] ?? 0,
+                                'class' => $t['class'] ?? '',
+                                'function' => $t['function'] ?? '',
+                            ])->toArray(),
                         ]
                     );
                     $notificationSent = true;
