@@ -86,10 +86,11 @@
                                                 </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <a href="{{ route('token-subscriptions.show', ['subscription' => $subscription]) }}"
+                                            {{-- todo fix missing required parameter error --}}
+                                            {{-- <a href="{{ route('token-subscriptions.show', ['subscription' => $subscription]) }}"
                                                class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                                                 View Details →
-                                            </a>
+                                            </a> --}}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -141,7 +142,8 @@
                                             {{ $subscription->status?->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
                                             {{ ucfirst($subscription->status?->value ?? 'unknown') }}
                                         </span>
-                                        <a href="{{ route('token-subscriptions.show', $subscription->id) }}"
+                                        {{-- todo fix misissing required route parameters --}}
+                                        {{-- <a href="{{ route('token-subscriptions.show', $subscription) }}"
                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors">
                                             View
                                             <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor"
@@ -149,7 +151,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M9 5l7 7-7 7"/>
                                             </svg>
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 </div>
                             @endforeach

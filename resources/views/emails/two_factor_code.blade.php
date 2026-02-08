@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Your All Academies Verification Code</title>
+    <title>All Academies: Account Verification Code</title>
     <!--[if mso]>
     <noscript>
         <xml>
@@ -39,15 +39,15 @@
         body {
             margin: 0 !important;
             padding: 0 !important;
-            background-color: #f1f5f9;
+            background-color: #f9fafb;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #334155;
+            line-height: 1.5;
+            color: #1f2937;
         }
 
         /* Container */
         .email-wrapper {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background-color: #f9fafb;
             padding: 40px 20px;
         }
 
@@ -55,254 +55,149 @@
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 16px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e5e7eb;
         }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, #475569 0%, #1e293b 100%);
-            padding: 48px 32px;
+            background-color: #1f2937;
+            padding: 40px 32px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(255, 255, 255, 0.03) 10px,
-                rgba(255, 255, 255, 0.03) 20px
-            );
-            animation: slide 20s linear infinite;
-        }
-
-        @keyframes slide {
-            0% {
-                transform: translate(0, 0);
-            }
-            100% {
-                transform: translate(50px, 50px);
-            }
-        }
-
-        .logo-container {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, #64748b 0%, #334155 100%);
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .logo {
-            font-size: 36px;
-            margin: 0;
         }
 
         .header-title {
-            position: relative;
             color: #ffffff;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            margin: 16px 0 8px 0;
-            letter-spacing: -0.5px;
+            margin: 0;
+            letter-spacing: -0.25px;
         }
 
         .header-subtitle {
-            position: relative;
-            color: #cbd5e1;
-            font-size: 15px;
-            margin: 0;
-            font-weight: 500;
+            color: #d1d5db;
+            font-size: 14px;
+            margin: 8px 0 0 0;
+            font-weight: 400;
         }
 
         /* Content */
         .content {
-            padding: 48px 32px;
-            background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+            padding: 40px 32px;
+            background-color: #ffffff;
         }
 
         .greeting {
-            font-size: 20px;
-            color: #0f172a;
+            font-size: 18px;
+            color: #1f2937;
             margin: 0 0 16px 0;
             font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-
-        .greeting-icon {
-            display: inline-block;
-            margin-right: 8px;
-            font-size: 24px;
-            vertical-align: middle;
         }
 
         .message {
-            font-size: 16px;
-            color: #475569;
+            font-size: 15px;
+            color: #374151;
             margin: 0 0 32px 0;
-            line-height: 1.7;
+            line-height: 1.6;
         }
 
         /* Verification code box */
-        .code-wrapper {
-            margin: 40px 0;
-        }
-
-        .code-container {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            border: 3px solid #64748b;
-            border-radius: 20px;
-            padding: 36px 24px;
+        .code-section {
+            margin: 32px 0;
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 32px 24px;
             text-align: center;
-            box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.1), 0 4px 6px -2px rgba(100, 116, 139, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .code-container::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(135deg, #64748b, #475569, #334155);
-            border-radius: 20px;
-            z-index: -1;
-            opacity: 0.1;
         }
 
         .code-label {
             font-size: 12px;
-            color: #64748b;
-            margin: 0 0 12px 0;
+            color: #6b7280;
+            margin: 0 0 16px 0;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 0.8px;
             font-weight: 700;
         }
 
         .verification-code {
-            font-size: 42px;
+            font-size: 48px;
             font-weight: 800;
-            color: #1e293b;
-            letter-spacing: 14px;
-            margin: 0 0 0 14px;
+            color: #1f2937;
+            letter-spacing: 8px;
+            margin: 0;
             font-family: 'Courier New', Courier, monospace;
-            text-shadow: 2px 2px 4px rgba(30, 41, 59, 0.1);
-            padding: 16px;
-            background: #ffffff;
-            border-radius: 12px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            border: 2px solid #e5e7eb;
             display: inline-block;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+            word-spacing: 8px;
         }
 
         .code-hint {
             font-size: 13px;
-            color: #64748b;
+            color: #6b7280;
             margin: 16px 0 0 0;
-            font-style: italic;
-            font-weight: 500;
+            font-weight: 400;
         }
 
-        /* Expiration warning */
-        .expiration-warning {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-left: 5px solid #d97706;
-            padding: 20px 24px;
-            margin: 32px 0;
-            border-radius: 0 12px 12px 0;
-            box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.1);
-        }
-
-        .expiration-icon {
-            display: inline-block;
-            font-size: 20px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        .expiration-text {
+        /* Alert boxes - WCAG AA contrast compliant */
+        .alert {
+            margin: 24px 0;
+            padding: 16px 20px;
+            border-radius: 6px;
+            border-left: 4px solid;
             font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .alert-warning {
+            background-color: #fef3c7;
+            border-left-color: #d97706;
             color: #78350f;
-            margin: 0;
-            font-weight: 600;
-            line-height: 1.6;
         }
 
-        .expiration-time {
-            font-weight: 800;
-            color: #92400e;
-            font-size: 15px;
+        .alert-info {
+            background-color: #dbeafe;
+            border-left-color: #0284c7;
+            color: #003366;
         }
 
-        /* Security notice */
-        .security-notice {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            border: 2px solid #f87171;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 32px 0;
-            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
-        }
-
-        .security-icon {
-            display: inline-block;
-            font-size: 20px;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-
-        .security-text {
-            font-size: 14px;
+        .alert-danger {
+            background-color: #fee2e2;
+            border-left-color: #dc2626;
             color: #7f1d1d;
-            margin: 0;
-            line-height: 1.7;
-            font-weight: 600;
         }
 
-        .security-text strong {
-            font-weight: 800;
-            color: #991b1b;
+        .alert-title {
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+
+        .alert-text {
+            margin: 0;
+        }
+
+        .alert strong {
+            font-weight: 700;
         }
 
         /* Instructions */
-        .instructions {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            border: 2px solid #60a5fa;
-            border-radius: 12px;
+        .instructions-section {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
             padding: 24px;
-            margin: 32px 0;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+            margin: 24px 0;
         }
 
-        .instructions-title {
-            font-size: 16px;
-            color: #1e3a8a;
+        .section-title {
+            font-size: 15px;
+            color: #1f2937;
             margin: 0 0 16px 0;
             font-weight: 700;
-            letter-spacing: -0.2px;
-        }
-
-        .instructions-icon {
-            display: inline-block;
-            font-size: 18px;
-            margin-right: 8px;
-            vertical-align: middle;
         }
 
         .instructions-list {
@@ -312,10 +207,9 @@
 
         .instructions-list li {
             font-size: 14px;
-            color: #1e40af;
-            margin-bottom: 10px;
-            line-height: 1.6;
-            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
 
         .instructions-list li:last-child {
@@ -325,89 +219,58 @@
         /* Divider */
         .divider {
             height: 1px;
-            background: linear-gradient(to right, transparent, #cbd5e1, transparent);
+            background-color: #e5e7eb;
             margin: 32px 0;
+            border: none;
         }
 
         /* Support section */
         .support-section {
-            background-color: #f8fafc;
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 32px 0 0 0;
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 6px;
+            padding: 20px;
             text-align: center;
+            margin: 32px 0 0 0;
         }
 
         .support-text {
             font-size: 14px;
-            color: #475569;
+            color: #374151;
             margin: 0;
-            font-weight: 500;
+            line-height: 1.5;
         }
 
         .support-link {
-            color: #334155;
-            font-weight: 700;
+            color: #0284c7;
+            font-weight: 600;
             text-decoration: none;
         }
 
         .support-link:hover {
-            color: #1e293b;
             text-decoration: underline;
         }
 
         /* Footer */
         .footer {
-            background: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
-            padding: 40px 32px;
+            background-color: #f9fafb;
+            padding: 32px;
             text-align: center;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .footer-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background-color: #ffffff;
-            border: 2px solid #cbd5e1;
-            border-radius: 24px;
-            padding: 10px 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .footer-badge-icon {
-            font-size: 16px;
-        }
-
-        .footer-badge-text {
-            font-size: 12px;
-            color: #475569;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0;
+            border-top: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.5;
         }
 
         .footer-text {
-            font-size: 13px;
-            color: #64748b;
-            margin: 0 0 12px 0;
-            line-height: 1.6;
-        }
-
-        .company-info {
-            font-size: 12px;
-            color: #94a3b8;
-            margin: 0;
-            line-height: 1.7;
+            margin: 0 0 16px 0;
         }
 
         .footer-links {
             margin: 20px 0 0 0;
             padding: 0;
             list-style: none;
+            font-size: 12px;
         }
 
         .footer-links li {
@@ -416,14 +279,13 @@
         }
 
         .footer-links a {
-            color: #64748b;
+            color: #6b7280;
             text-decoration: none;
-            font-size: 12px;
             font-weight: 600;
         }
 
         .footer-links a:hover {
-            color: #334155;
+            text-decoration: underline;
         }
 
         /* Responsive */
@@ -437,76 +299,117 @@
             }
 
             .content {
-                padding: 32px 20px !important;
+                padding: 24px 20px !important;
             }
 
             .verification-code {
-                font-size: 32px !important;
-                letter-spacing: 8px !important;
-                margin-left: 8px !important;
+                font-size: 36px !important;
+                letter-spacing: 6px !important;
             }
 
-            .code-container {
+            .code-section {
                 padding: 24px 16px !important;
             }
 
-            .greeting {
-                font-size: 18px !important;
-            }
-
             .footer {
-                padding: 32px 20px !important;
+                padding: 24px 20px !important;
             }
 
             .footer-links li {
                 display: block !important;
-                margin: 8px 0 !important;
+                margin: 6px 0 !important;
             }
         }
 
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             body {
-                background-color: #0f172a;
+                background-color: #111827;
+                color: #e5e7eb;
             }
 
             .email-wrapper {
-                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                background-color: #111827;
             }
 
             .email-container {
-                background-color: #1e293b;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+                background-color: #1f2937;
+                border-color: #374151;
+            }
+
+            .header {
+                background-color: #111827;
+            }
+
+            .header-subtitle {
+                color: #9ca3af;
             }
 
             .content {
-                background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+                background-color: #1f2937;
             }
 
             .greeting {
-                color: #f8fafc;
+                color: #f3f4f6;
             }
 
             .message {
-                color: #cbd5e1;
+                color: #d1d5db;
+            }
+
+            .code-section {
+                background-color: #111827;
+                border-color: #374151;
             }
 
             .verification-code {
-                color: #f8fafc;
-                background: #334155;
+                color: #f3f4f6;
+                background-color: #374151;
+                border-color: #4b5563;
+            }
+
+            .code-label {
+                color: #9ca3af;
+            }
+
+            .code-hint {
+                color: #9ca3af;
+            }
+
+            .instructions-section {
+                background-color: #111827;
+                border-color: #374151;
+            }
+
+            .section-title {
+                color: #f3f4f6;
+            }
+
+            .instructions-list li {
+                color: #d1d5db;
             }
 
             .support-section {
-                background-color: #0f172a;
-                border-color: #334155;
+                background-color: #111827;
+                border-color: #374151;
             }
 
             .support-text {
-                color: #cbd5e1;
+                color: #d1d5db;
             }
 
             .footer {
-                background: linear-gradient(to bottom, #0f172a 0%, #020617 100%);
+                background-color: #111827;
+                border-top-color: #374151;
+                color: #9ca3af;
+            }
+
+            .footer-links a {
+                color: #9ca3af;
+            }
+
+            .divider {
+                background-color: #374151;
             }
         }
     </style>
@@ -519,76 +422,58 @@
                 <!-- Header -->
                 <tr>
                     <td class="header">
-                        <div class="logo-container">
-                            <div class="logo">🎓</div>
-                        </div>
                         <h1 class="header-title">All Academies</h1>
-                        <p class="header-subtitle">Secure Account Verification</p>
+                        <p class="header-subtitle">Account Security Verification</p>
                     </td>
                 </tr>
 
                 <!-- Content -->
                 <tr>
                     <td class="content">
-                        <h2 class="greeting">
-                            <span class="greeting-icon">🔐</span>Identity Verification Required
-                        </h2>
+                        <h2 class="greeting">Verify Your Login</h2>
 
                         <p class="message">
-                            We received a login request for your All Academies account. To ensure your security and
-                            complete your login, please use the verification code below:
+                            A login attempt was made on your All Academies account. To complete the sign-in process, please use the verification code below.
                         </p>
 
                         <!-- Verification Code -->
-                        <div class="code-wrapper">
-                            <div class="code-container">
-                                <p class="code-label">Your Verification Code</p>
-                                <div class="verification-code">{{ $code }}</div>
-                                <p class="code-hint">Enter this code on the verification page to proceed</p>
-                            </div>
+                        <div class="code-section">
+                            <p class="code-label">Your Verification Code</p>
+                            <p class="verification-code">{{ $code }}</p>
+                            <p class="code-hint">Enter this code in the verification screen to proceed</p>
                         </div>
 
                         <!-- Expiration Warning -->
-                        <div class="expiration-warning">
-                            <p class="expiration-text">
-                                <span class="expiration-icon">⏰</span>
-                                This code will expire in <span class="expiration-time">15 minutes</span> for your
-                                security. Please complete the verification process promptly.
-                            </p>
+                        <div class="alert alert-warning">
+                            <p class="alert-title">Code Expires in 1 Hour</p>
+                            <p class="alert-text">This code will expire in 1 hour. Please complete your authentication before it expires.</p>
                         </div>
 
                         <!-- Instructions -->
-                        <div class="instructions">
-                            <h3 class="instructions-title">
-                                <span class="instructions-icon">📝</span>How to complete verification:
-                            </h3>
+                        <div class="instructions-section">
+                            <h3 class="section-title">Next Steps</h3>
                             <ol class="instructions-list">
-                                <li>Return to the All Academies verification page</li>
-                                <li>Enter the 6-digit code exactly as shown above</li>
-                                <li>Click "Verify Code" to complete your login</li>
-                                <li>You'll be redirected to your dashboard immediately</li>
+                                <li>Copy or note the 6-digit code above</li>
+                                <li>Return to the All Academies login page</li>
+                                <li>Enter the code in the verification field</li>
+                                <li>Click "Verify" to complete sign-in</li>
                             </ol>
                         </div>
 
                         <!-- Security Notice -->
-                        <div class="security-notice">
-                            <p class="security-text">
-                                <span class="security-icon">🛡️</span>
-                                <strong>Important Security Notice:</strong> <br>
-                                If you didn't request this verification code, please ignore this email and consider
-                                changing your password immediately. Never share this code with anyone, including All
-                                Academies staff.
+                        <div class="alert alert-danger">
+                            <p class="alert-title">Security Reminder</p>
+                            <p class="alert-text">
+                                <strong>Never share this code</strong> with anyone. All Academies staff will never ask you for this code. If you didn't attempt to log in, change your password immediately and contact support.
                             </p>
                         </div>
 
-                        <div class="divider"></div>
+                        <hr class="divider">
 
                         <!-- Support Section -->
                         <div class="support-section">
                             <p class="support-text">
-                                Need assistance? Contact our <a href="{{route('branding.contact')}}"
-                                                                class="support-link">support team</a> or visit our <a
-                                    href="#" class="support-link">help center</a> for more information.
+                                Need help? Contact our <a href="{{ route('branding.contact') }}" class="support-link">support team</a> or visit the <a href="#" class="support-link">help center</a>.
                             </p>
                         </div>
                     </td>
@@ -597,25 +482,18 @@
                 <!-- Footer -->
                 <tr>
                     <td class="footer">
-                        <div class="footer-badge">
-                            <span class="footer-badge-icon">✓</span>
-                            <p class="footer-badge-text">Secured with 2FA</p>
-                        </div>
-
                         <p class="footer-text">
-                            This is an automated security message from All Academies.<br>
-                            Please do not reply directly to this email.
+                            This is an automated security email from All Academies.<br>
+                            Please do not reply to this email.
                         </p>
 
-                        <p class="company-info">
-                            &copy; {{ date('Y') }} All Academies. All rights reserved.<br>
-                            Empowering education through secure, innovative learning solutions.
+                        <p class="footer-text" style="font-size: 12px; color: #6b7280; margin-top: 16px;">
+                            &copy; {{ date('Y') }} All Academies. All rights reserved.
                         </p>
 
                         <ul class="footer-links">
-                            <li><a href="{{route('branding.privacy')}}">Privacy Policy</a></li>
-                            <li><a href="{{route('branding.terms')}}">Terms of Service</a></li>
-                            <li><a href="{{route('branding.contact')}}">Help Center</a></li>
+                            <li><a href="{{ route('branding.privacy') }}">Privacy Policy</a></li>
+                            <li><a href="{{ route('branding.terms') }}">Terms of Service</a></li>
                         </ul>
                     </td>
                 </tr>

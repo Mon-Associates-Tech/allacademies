@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\AcademicGroupLogs;
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class AcademicLevel extends Model
 {
     use AcademicGroupLogs;
+    use ActivityLoggable;
     use HasFactory;
     use SoftDeletes;
     use Trackable;

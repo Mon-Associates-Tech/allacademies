@@ -33,6 +33,7 @@ class SchoolContextMiddleware
             // For regular users, ensure their school context is set
             if ($user->school_id) {
                 app()->instance('current_school', $user->school);
+                app()->instance('current_school_id', $user->school_id);
             }
         }
 
@@ -80,6 +81,7 @@ class SchoolContextMiddleware
             $school = School::find($schoolId);
             if ($school) {
                 app()->instance('current_school', $school);
+                app()->instance('current_school_id', $schoolId);
 
                 // Also make it available as a request attribute
                 $request->attributes->set('current_school', $school);

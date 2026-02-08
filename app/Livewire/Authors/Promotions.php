@@ -495,6 +495,20 @@ class Promotions extends AppComponent
 
         // Create campaign logic here
         $this->closeCreateModal();
+
+        // Log activity
+        if (auth()->user() && auth()->user()->author) {
+            auth()->user()->author->logActivity('create', 'Promotion Campaign Created', 'promotion', [
+                'campaign_title' => $this->campaignTitle,
+                'campaign_type' => $this->campaignType,
+                'discount_value' => $this->discountValue,
+                'promo_code' => $this->promoCode,
+                'start_date' => $this->startDate,
+                'end_date' => $this->endDate,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
+
         session()->flash('message', 'Campaign created successfully!');
     }
 
@@ -513,11 +527,32 @@ class Promotions extends AppComponent
 
         // Update campaign logic here
         $this->closeEditModal();
+
+        // Log activity
+        if (auth()->user() && auth()->user()->author) {
+            auth()->user()->author->logActivity('update', 'Promotion Campaign Updated', 'promotion', [
+                'campaign_title' => $this->campaignTitle,
+                'campaign_type' => $this->campaignType,
+                'discount_value' => $this->discountValue,
+                'start_date' => $this->startDate,
+                'end_date' => $this->endDate,
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
+
         session()->flash('message', 'Campaign updated successfully!');
     }
 
     public function deleteCampaign($campaignId)
     {
+        // Log activity
+        if (auth()->user() && auth()->user()->author) {
+            auth()->user()->author->logActivity('delete', 'Promotion Campaign Deleted', 'promotion', [
+                'campaign_id' => $campaignId,
+                'deleted_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
+
         // Delete campaign logic here
         session()->flash('message', 'Campaign deleted successfully!');
     }

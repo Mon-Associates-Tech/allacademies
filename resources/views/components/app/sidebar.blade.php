@@ -161,7 +161,7 @@
                                         d="M3 4h10v6H3V4zm0-1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3z"/>
                                 </svg>
 
-                                <span class="text-sm ml-2 sidebar-text duration-200">Messenger Subscriptions</span>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Premium Subscriptions</span>
                             </div>
                         </a>
                     </li>
@@ -215,6 +215,23 @@
                                 </svg>
 
                                 <span class="text-sm ml-2 sidebar-text duration-200">Calendar</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2 hidden" title="Activity Tracker">
+                        <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                           class="block pl-3 rounded-lg transition {{ Route::is('activities*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{route('activities.index')}}">
+                            <div class="flex items-center">
+                                <svg
+                                    class="shrink-0 fill-current {{ Route::is('activities*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                </svg>
+
+                                <span class="text-sm ml-2 sidebar-text duration-200">Activity Tracker</span>
                             </div>
                         </a>
                     </li>

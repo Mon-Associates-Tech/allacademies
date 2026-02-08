@@ -8,6 +8,7 @@ use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
 use App\Support\TokenSubscriptionStatus;
+use App\Traits\ActivityLoggable;
 use App\Traits\HasAvatar;
 use App\Traits\HasMultipleSubAccounts;
 use App\Traits\HasRoles;
@@ -26,12 +27,14 @@ use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Log;
+use App\Notifications\VerifyEmailNotification;
 
 /**
  * @property mixed $school
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
+    use ActivityLoggable;
     use HasApiTokens;
     use HasAvatar;
     use HasFactory;
@@ -238,6 +241,14 @@ class User extends Authenticatable implements MustVerifyEmail
             return;
         }
 
+        // NEW: Only grant free tokens if student's school has active content subscription
+        if ($this->role === 'student') {
+            $school = $this->school;
+            if (! $school || ! $school->hasActiveContentSubscription()) {
+                return;
+            }
+        }
+
         $this->activateBasicTier();
     }
 
@@ -354,6 +365,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function preferences(): HasMany
     {
         return $this->hasMany(UserPreference::class);
+    }
+
+    // User Activities
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class);
     }
 
     // Suspension Relationship
@@ -498,6 +515,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return ! $this->isSuperAdmin() &&
             ! in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
             ($this->is_active ?? true);
+    }
+
+    // ==================== EMAIL VERIFICATION ====================
+
+    /**
+     * Send a custom email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification());
     }
 
     // ==================== SCHOOL ACCESS & MULTI-TENANCY ====================
@@ -699,5 +726,21 @@ class User extends Authenticatable implements MustVerifyEmail
             UserRole::AUTHOR,
             UserRole::LIBRARIAN,
         ]);
+    }
+
+    // ==================== ACTIVITY LOGGING ====================
+
+    /**
+     * Specify additional sensitive fields that should not be logged
+     * The base trait already filters: password, api_key, secret, tokens, etc.
+     */
+    public function getSensitiveFieldsForLogging(): array
+    {
+        return [
+            'remember_token',
+            'password_hash',
+            'previous_password',
+            'old_password',
+        ];
     }
 }

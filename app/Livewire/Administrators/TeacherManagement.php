@@ -3,6 +3,7 @@
 namespace App\Livewire\Administrators;
 
 use App\Models\School;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Models\Role;
@@ -305,8 +306,22 @@ class TeacherManagement extends Component
                     $teacher->subjects()->attach($subjectData);
                 }
 
-                // Step 7: Auto-assign all students at the same level (school-scoped)
-                $this->autoAssignStudents($teacher, $schoolId);
+                // Step 7: Auto-assign all students at the same level
+                $this->autoAssignStudents($teacher);
+
+                // Log the activity explicitly with meaningful context
+                $teacher->logActivity(
+                    'create',
+                    'New Teacher Created',
+                    'academic',
+                    [
+                        'teacher_name' => $this->name,
+                        'teacher_email' => $this->email,
+                        'specialization' => $this->specialization,
+                        'created_by' => auth()->user()?->name ?? 'Unknown',
+                    ],
+                    description: "New teacher {$this->name} ({$this->email}) created with specialization in {$this->specialization}"
+                );
             });
 
             $this->resetForm();
@@ -354,7 +369,7 @@ class TeacherManagement extends Component
         $this->isEditing = true;
         $this->editingTeacherId = $teacherId;
 
-        $teacher = Teacher::with([
+        $teacher = Teacher::forCurrentSchool()->with([
             'user',
             'subjects',
             'academicGroups',
@@ -389,14 +404,7 @@ class TeacherManagement extends Component
 
     public function update()
     {
-        $schoolId = getSchoolId();
-
-        if (!$schoolId) {
-            session()->flash('error', 'Please select a school before updating a teacher.');
-            return;
-        }
-
-        $teacher = Teacher::with('user')->findOrFail($this->editingTeacherId);
+        $teacher = Teacher::forCurrentSchool()->with('user')->findOrFail($this->editingTeacherId);
 
         $rules = $this->rules;
         $rules['email'] = ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)];
@@ -405,7 +413,11 @@ class TeacherManagement extends Component
         $this->validate($rules);
 
         try {
-            DB::transaction(function () use ($teacher, $schoolId) {
+            DB::transaction(function () use ($teacher) {
+                // Capture original values for activity logging
+                $originalUserData = $teacher->user->only(['name', 'email']);
+                $originalTeacherData = $teacher->only(['specialization']);
+
                 // Update user
                 $userData = [
                     'name' => $this->name,
@@ -421,7 +433,7 @@ class TeacherManagement extends Component
                 // Update teacher
                 $teacher->update([
                     'specialization' => $this->specialization,
-                    'school_id' => $schoolId, // Ensure school_id is set
+                    'school_id' => getSchoolId(), // Ensure school_id is set
                 ]);
 
                 // Update academic group association
@@ -457,7 +469,31 @@ class TeacherManagement extends Component
 
                 // Re-assign students based on new level (school-scoped)
                 $teacher->assignedStudents()->detach();
-                $this->autoAssignStudents($teacher, $schoolId);
+                $this->autoAssignStudents($teacher);
+
+                // Log the activity explicitly with meaningful context
+                $userChanges = array_diff_assoc(
+                    $teacher->user->only(['name', 'email']),
+                    $originalUserData
+                );
+                $teacherChanges = array_diff_assoc(
+                    $teacher->only(['specialization']),
+                    $originalTeacherData
+                );
+
+                if (! empty($userChanges) || ! empty($teacherChanges)) {
+                    $teacher->logActivity(
+                        'update',
+                        'Teacher Information Updated',
+                        'academic',
+                        [
+                            'user_changes' => $userChanges,
+                            'teacher_changes' => $teacherChanges,
+                            'updated_by' => auth()->user()?->name ?? 'Unknown',
+                        ],
+                        description: "Teacher {$teacher->user->name} information updated by ".(auth()->user()?->name ?? 'Unknown')
+                    );
+                }
             });
 
             $this->resetForm();
@@ -470,7 +506,7 @@ class TeacherManagement extends Component
     }
     public function confirmDelete($teacherId): void
     {
-        $this->teacherToDelete = Teacher::with('user')->findOrFail($teacherId);
+        $this->teacherToDelete = Teacher::forCurrentSchool()->with('user')->findOrFail($teacherId);
         $this->showDeleteModal = true;
     }
 
@@ -478,6 +514,9 @@ class TeacherManagement extends Component
     {
         try {
             DB::transaction(function () {
+                $teacherName = $this->teacherToDelete->user->name;
+                $teacherId = $this->teacherToDelete->id;
+
                 // Detach all relationships
                 $this->teacherToDelete->subjects()->detach();
                 $this->teacherToDelete->academicGroups()->detach();
@@ -487,8 +526,24 @@ class TeacherManagement extends Component
                 // Delete teacher record
                 $this->teacherToDelete->delete();
 
-                // Optionally delete user if they have no other roles
+                // Log the activity before deleting (using a temporary model instance)
+                // Since the teacher is deleted, we log using the user model instead
                 $user = $this->teacherToDelete->user;
+                if ($user) {
+                    $user->logActivity(
+                        'delete',
+                        'Teacher Profile Deleted',
+                        'academic',
+                        [
+                            'teacher_name' => $teacherName,
+                            'teacher_id' => $teacherId,
+                            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+                        ],
+                        description: "Teacher {$teacherName} (ID: {$teacherId}) profile was deleted"
+                    );
+                }
+
+                // Optionally delete user if they have no other roles
                 if ($user && $user->roles()->count() <= 1) {
                     $user->delete();
                 }
@@ -528,7 +583,7 @@ class TeacherManagement extends Component
         }
 
         // Build query with filters
-        $query = Teacher::with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents']);
+        $query = Teacher::forCurrentSchool()->with(['user', 'academicGroups', 'academicLevels', 'subjects', 'assignedStudents']);
 
         // Apply school context
         if ($schoolId) {
@@ -571,51 +626,19 @@ class TeacherManagement extends Component
 
         $teachers = $query->latest()->paginate(10);
 
-        // Get filter options - SCOPED TO CURRENT SCHOOL
-        // Academic groups that the school has adopted
-        $filterAcademicGroups = $schoolId
-            ? AcademicGroup::forSchool($schoolId)->orderBy('name')->get()
-            : collect();
-
-        // Academic levels - get from school's adopted groups
-        if ($this->filterAcademicGroup && $schoolId) {
-            $school = School::find($schoolId);
-            $availableLevels = $school->getAvailableAcademicLevels();
-            $filterAcademicLevels = $availableLevels->where('academic_group_id', $this->filterAcademicGroup)
-                ->sortBy('name')
-                ->values();
-        } elseif ($schoolId) {
-            $school = School::find($schoolId);
-            $filterAcademicLevels = $school->getAvailableAcademicLevels()
-                ->sortBy('name')
-                ->values();
-        } else {
-            $filterAcademicLevels = collect();
-        }
-
-        // Subjects - from school's adopted academic levels
-        if ($schoolId) {
-            $school = School::find($schoolId);
-            $availableLevels = $school->getAvailableAcademicLevels();
-            $levelIds = $availableLevels->pluck('id');
-            $filterSubjects = AcademicSubject::with('academicLevel')
-                ->whereIn('academic_level_id', $levelIds)
-                ->orderBy('name')
-                ->get();
-        } else {
-            $filterSubjects = collect();
-        }
-
-        // Specializations - from teachers in current school
-        $filterSpecializations = $schoolId
-            ? Teacher::where('school_id', $schoolId)
-                ->whereNotNull('specialization')
-                ->distinct()
-                ->pluck('specialization')
-                ->filter()
-                ->sort()
-                ->values()
-            : collect();
+        // Get filter options
+        $filterAcademicGroups = AcademicGroup::orderBy('name')->get();
+        $filterAcademicLevels = $this->filterAcademicGroup
+            ? AcademicLevel::where('academic_group_id', $this->filterAcademicGroup)->orderBy('name')->get()
+            : AcademicLevel::orderBy('name')->get();
+        $filterSubjects = AcademicSubject::with('academicLevel')->orderBy('name')->get();
+        $filterSpecializations = Teacher::forCurrentSchool()
+            ->whereNotNull('specialization')
+            ->distinct()
+            ->pluck('specialization')
+            ->filter()
+            ->sort()
+            ->values();
 
         // Count active filters
         $activeFiltersCount = collect([

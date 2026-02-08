@@ -56,7 +56,7 @@
             :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
       x-data="{ pageLoaded: false }"
       x-init="setTimeout(() => pageLoaded = true, 150)"
->
+      style="--header-height: 6rem; --sidebar-width: 16rem;">
 <!-- Global Page Loader -->
 <div
     class="fixed inset-0 z-[100] flex items-center justify-center bg-[#dcdcdc] dark:bg-gray-900 transition-opacity duration-500 ease-in-out"

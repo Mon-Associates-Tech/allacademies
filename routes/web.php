@@ -4,11 +4,17 @@ use App\Http\Controllers\AcademicChatController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
+use App\Http\Controllers\Auth\RegisterAuthorController;
+use App\Http\Controllers\Auth\RegisterGuestController;
+use App\Http\Controllers\Auth\RegisterSchoolController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookCategoryController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookProgressController;
 use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonNoteController;
@@ -17,10 +23,12 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SignInController;
 use App\Http\Controllers\StudentGroupController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
@@ -60,8 +68,74 @@ Route::post('/contact', [ContactController::class, 'submit'])->name('contact.sub
 Route::view('/account/suspended', 'auth.suspended')->name('account.suspended');
 
 // Newsletter
+// Solution Pages
+Route::view('/solutions/schools', 'branding.solutions.schools')->name('solutions.schools');
+Route::view('/solutions/teachers', 'branding.solutions.teachers')->name('solutions.teachers');
+Route::view('/solutions/students', 'branding.solutions.students')->name('solutions.students');
+
+// Test Error Notification Route
+Route::get('/test-error-notification', function () {
+    throw new \Exception('This is a test error notification with stack trace');
+})->name('test.error');
+
+// Newsletter Routes
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+// Guest Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('login', [SignInController::class, 'create'])->name('login');
+    Route::post('login', [SignInController::class, 'store']);
+
+    // Registration Type Selection
+    Route::get('register', function () {
+        return view('auth.register-type-selection');
+    })->name('register');
+
+    // Guest Registration Flow
+    Route::get('register/guest', [RegisterGuestController::class, 'create'])->name('register.guest');
+    Route::post('register/guest', [RegisterGuestController::class, 'store'])->name('register.store-guest');
+
+    // Author Registration Flow
+    Route::get('register/author', [RegisterAuthorController::class, 'create'])->name('register.author');
+    Route::post('register/author', [RegisterAuthorController::class, 'store'])->name('register.store-author');
+
+    // School Registration Flow
+    Route::get('register/school', [RegisterSchoolController::class, 'create'])->name('register.school');
+    Route::post('register/school', [RegisterSchoolController::class, 'store'])->name('register.store-school');
+
+    // Legacy registration endpoint (redirect to type selection)
+    Route::post('register', [SignUpController::class, 'store']);
+
+    Route::prefix('password')->name('password.')->group(function () {
+        Route::get('forgot', [PasswordController::class, 'forgotForm'])->name('request');
+        Route::post('forgot', [PasswordController::class, 'forgot'])->name('email');
+        Route::get('reset/{token}', [PasswordController::class, 'resetForm'])->name('reset');
+        Route::post('reset', [PasswordController::class, 'reset'])->name('update');
+    });
+});
+
+// Email Verification Routes
+Route::get('verify/email/notice', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+Route::post('verify/email/send', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('verification.send');
+Route::get('verify/email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
+
+// 2FA Routes
+Route::get('2fa/verify', [SignInController::class, 'show2faForm'])->name('2fa.verify');
+Route::post('2fa/verify', [SignInController::class, 'verify2fa']);
+Route::post('/2fa/resend', [SignInController::class, 'resend2fa'])->name('2fa.resend');
+
+// Public Payment Routes
+Route::prefix('general/pay')->name('payments.public.')->group(function () {
+    Route::get('/init', [App\Http\Controllers\PublicPaymentController::class, 'showLookupForm'])->name('lookup');
+    Route::post('/lookup', [App\Http\Controllers\PublicPaymentController::class, 'lookupStudent'])->name('lookup.post');
+    Route::post('/initialize', [App\Http\Controllers\PublicPaymentController::class, 'initializePayment'])->name('initialize');
+    Route::get('/callback', [App\Http\Controllers\PublicPaymentController::class, 'paymentCallback'])->name('callback');
+    Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
+});
+
+// Public Book Routes
+Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('books.public');
 
 // Public Financial Aid
 Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
@@ -278,11 +352,33 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('assessments', AssessmentController::class);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Academic Content
-    |--------------------------------------------------------------------------
-    */
+    // Book Routes
+    Route::get('books', [BookController::class, 'index'])->name('books.index');
+    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show')->middleware('token.subscription');
+    Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
+    Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
+    Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
+    Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
+
+    // Book Subscription Routes
+    Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])->name('books.payment-instructions');
+    Route::post('books/{book}/subscribe', [BookSubscriptionController::class, 'store'])->name('books.subscribe.store');
+    Route::get('subscriptions/{subscription}/payment', [BookSubscriptionController::class, 'showPayment'])->name('subscriptions.payment.show');
+    Route::post('subscriptions/{subscription}/verify-payment', [BookSubscriptionController::class, 'verifyPayment'])->name('subscriptions.payment.verify');
+    Route::delete('subscriptions/{subscription}/cancel', [BookSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('/books/{book}/reviews/')->name('books.reviews.store');
+
+    // Book Reading Progress Routes
+    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
+    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
+    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
+    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
+    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
+
+    // Activity Tracker Routes
+    Route::get('/activities', \App\Livewire\Activities\ActivityTracker::class)->name('activities.index');
+
+    // Academic Content Routes
     Route::get('/course-outlines', fn () => view('course-outlines'))->name('course-outlines');
     Route::get('/academic-calendar', fn () => view('academic-calendar'))->name('academic-calendar');
 

@@ -56,6 +56,15 @@ class AssignmentController extends Controller
     {
         $teacher = auth()->user()->teacher;
 
+        // NEW: Check school has active content subscription before allowing assignment creation
+        $school = auth()->user()->school;
+        if (! $school || ! $school->hasActiveContentSubscription()) {
+            return redirect()->back()->with('error',
+                'Your school must have an active subscription to create assignments. '.
+                'Please contact your school administrator.'
+            );
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

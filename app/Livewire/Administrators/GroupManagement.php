@@ -49,7 +49,7 @@ class GroupManagement extends Component
 
     public function mount(): void
     {
-        $this->teachers = Teacher::with('user')->get();
+        $this->teachers = Teacher::forCurrentSchool()->with('user')->get();
     }
 
     public function updatedName(): void
@@ -75,12 +75,20 @@ class GroupManagement extends Component
 
         $this->validate();
 
-        StudentGroup::create([
+        $group = StudentGroup::create([
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
             'teacher_id' => $this->teacherId,
             'school_id' => $schoolId,
+        ]);
+
+        // Log activity
+        $group->logActivity('create', 'Student Group Created', 'student_group', [
+            'group_name' => $this->name,
+            'description' => $this->description,
+            'teacher_id' => $this->teacherId,
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->resetForm();
@@ -105,7 +113,7 @@ class GroupManagement extends Component
         $this->isEditing = true;
         $this->editingGroupId = $groupId;
 
-        $group = StudentGroup::findOrFail($groupId);
+        $group = StudentGroup::forCurrentSchool()->findOrFail($groupId);
         $this->name = $group->name;
         $this->slug = $group->slug;
         $this->description = $group->description;
@@ -115,7 +123,7 @@ class GroupManagement extends Component
 
     public function delete($groupId): void
     {
-        $group = StudentGroup::findOrFail($groupId);
+        $group = StudentGroup::forCurrentSchool()->findOrFail($groupId);
 
         // Check if students are in this group
         if ($group->students()->count() > 0) {
@@ -124,7 +132,16 @@ class GroupManagement extends Component
             return;
         }
 
+        $groupName = $group->name;
         $group->delete();
+
+        // Log activity
+        StudentGroup::logActivityForModel('delete', 'Student Group Deleted', 'student_group', [
+            'group_name' => $groupName,
+            'group_id' => $groupId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
+
         session()->flash('message', 'Student group deleted successfully!');
     }
 

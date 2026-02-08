@@ -228,6 +228,16 @@ class EditAssignment extends Component
 
     public function updateAssignment()
     {
+        // NEW: Check school has active content subscription before allowing assignment updates
+        $school = auth()->user()->school;
+        if (!$school || !$school->hasActiveContentSubscription()) {
+            session()->flash('error',
+                'Your school must have an active subscription to update assignments. ' .
+                'Please contact your school administrator.'
+            );
+            return;
+        }
+
         $this->validate();
 
         // Validate that at least one question type is enabled

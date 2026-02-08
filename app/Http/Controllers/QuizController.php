@@ -74,6 +74,16 @@ class QuizController extends Controller
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
 
+        // NEW: Check school has active content subscription before allowing quiz creation
+        $school = auth()->user()->school;
+        if (! $school || ! $school->hasActiveContentSubscription()) {
+            return to_route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
+                ->with('error',
+                    'Your school must have an active subscription to create quizzes. '.
+                    'Please contact your school administrator.'
+                );
+        }
+
         dispatch(new GenerateQuizJob(
             $academicSubject,
             Team::query()->find($request->validated('team_id')),

@@ -128,6 +128,14 @@ class EditSession extends Component
                 'guest_policy' => $this->guest_policy,
             ]);
 
+            // Log activity
+            $this->session->logActivity('update', 'Virtual Session Updated', 'virtual_session', [
+                'session_title' => $this->title,
+                'new_scheduled_start' => $scheduledStart,
+                'duration' => $this->duration,
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+
             session()->flash('success', 'Session updated successfully!');
 
             return redirect()->route('teachers.classroom.show', $this->session);

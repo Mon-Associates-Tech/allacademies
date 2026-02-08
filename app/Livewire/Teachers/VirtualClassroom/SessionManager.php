@@ -67,7 +67,17 @@ class SessionManager extends Component
             return;
         }
 
+        $sessionTitle = $session->title;
+        $sessionId = $session->id;
+
         $session->delete();
+
+        // Log activity
+        $session->logActivity('delete', 'Virtual Session Deleted', 'virtual_session', [
+            'session_title' => $sessionTitle,
+            'session_id' => $sessionId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         $this->dispatch('success', 'Session deleted successfully.');
     }

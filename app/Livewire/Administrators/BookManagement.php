@@ -192,6 +192,7 @@ class BookManagement extends Component
     public function delete($bookId): void
     {
         $book = Book::findOrFail($bookId);
+        $bookTitle = $book->title;
 
         if ($book->borrowings()->count() > 0 || $book->subscriptions()->count() > 0) {
             session()->flash('error', 'Cannot delete book with active borrowings or subscriptions.');
@@ -211,6 +212,13 @@ class BookManagement extends Component
         $this->deleteBookFiles($book);
 
         $book->delete();
+
+        // Log activity
+        Book::logActivityForModel('delete', 'Book Deleted', 'book', [
+            'book_title' => $bookTitle,
+            'book_id' => $bookId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         session()->flash('message', 'Book deleted successfully!');
         $this->dispatch('refreshBooks');
@@ -328,7 +336,7 @@ class BookManagement extends Component
         }
 
         // Create book
-        Book::create([
+        $book = Book::create([
             'title' => $this->title,
             'slug' => $this->slug,
             'author_id' => $this->authorId,
@@ -344,6 +352,16 @@ class BookManagement extends Component
             'subscription_conditions' => $this->subscriptionConditions,
             'cover_image' => $coverPath,
             'content_url' => $pdfPath,
+        ]);
+
+        // Log activity
+        $book->logActivity('create', 'Book Created', 'book', [
+            'book_title' => $this->title,
+            'author_id' => $this->authorId,
+            'category_id' => $this->bookCategoryId,
+            'has_hardcopy' => $this->hasHardcopy,
+            'has_softcopy' => $this->hasSoftcopy,
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->resetForm();

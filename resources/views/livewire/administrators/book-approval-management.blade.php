@@ -203,8 +203,8 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-start">
                                     <div class="flex-shrink-0 mr-4">
-                                        @if($book->cover_image_path)
-                                            <img src="{{ Storage::url($book->cover_image_path) }}" alt="{{ $book->title }}"
+                                        @if($book->cover_image)
+                                            <img src="{{ Storage::url($book->cover_image) }}" alt="{{ $book->title }}"
                                                  class="h-16 w-12 object-cover rounded-lg shadow-sm border border-gray-200">
                                         @else
                                             <div class="h-16 w-12 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-300">
@@ -242,7 +242,7 @@
 
                             <!-- Author & Category -->
                             <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $book->author->user->name }}</div>
+                                <div class="text-sm font-medium text-gray-900">{{ $book->author_name }}</div>
                                 <div class="text-sm text-gray-500 mt-1">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             {{ $book->bookCategory?->name }}

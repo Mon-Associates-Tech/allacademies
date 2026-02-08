@@ -195,7 +195,24 @@ class CreateVirtualSession extends Component
             if ($this->is_recurring) {
                 $this->createRecurringSessions($teacher);
             } else {
-                $this->createSingleSession($teacher);
+                $session = $this->createSingleSession($teacher);
+            }
+
+            // Log activity
+            if ($this->is_recurring) {
+                VirtualSession::logActivityForModel('create', 'Recurring Virtual Sessions Created', 'virtual_session', [
+                    'session_title' => $this->title,
+                    'recurrence_pattern' => $this->recurrence_pattern,
+                    'recurrence_interval' => $this->recurrence_interval,
+                    'created_by' => auth()->user()?->name ?? 'Unknown',
+                ]);
+            } else {
+                $session->logActivity('create', 'Virtual Session Created', 'virtual_session', [
+                    'session_title' => $this->title,
+                    'scheduled_start' => $session->scheduled_start,
+                    'duration' => $this->duration,
+                    'created_by' => auth()->user()?->name ?? 'Unknown',
+                ]);
             }
 
             DB::commit();
