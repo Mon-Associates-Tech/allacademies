@@ -1,18 +1,10 @@
 <x-layouts.app>
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 -mt-8 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-8">
+    <div class="min-h-screen bg-gray-50 rounded-lg dark:bg-gray-900 -mt-8 px-4 sm:px-6 lg:px-8 py-8">
         <div class="max-w-7xl mx-auto">
             {{-- Page Header --}}
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Explore Courses</h1>
-                    <p class="mt-1 text-gray-600 dark:text-gray-400">Discover courses to enhance your skills and knowledge</p>
-                </div>
-                <a href="{{ route('lms.courses.browse') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    Browse All Courses
-                </a>
+            <div class="mb-8 mt-4">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Explore Courses</h1>
+                <p class="mt-1 text-gray-600 dark:text-gray-400">Discover courses to enhance your skills and knowledge</p>
             </div>
 
             {{-- Search & Filters --}}
@@ -94,11 +86,11 @@
                 </div>
 
                 {{-- Course Grid --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                     @foreach($courses as $course)
                         <a href="{{ route('lms.courses.show', $course->slug) }}" class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-600 transition-all">
                             {{-- Thumbnail --}}
-                            <div class="relative aspect-video bg-gray-100 dark:bg-gray-700">
+                            <div class="relative aspect-[16/10] bg-gray-100 dark:bg-gray-700">
                                 @if($course->thumbnail)
                                     <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                                 @else
@@ -156,6 +148,16 @@
                                     @endif
                                     <span class="text-sm text-gray-600 dark:text-gray-400">{{ $course->creator->name }}</span>
                                 </div>
+
+                                {{-- School Info --}}
+                                @if($course->school)
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
+                                        {{ $course->school->name }}
+                                    </div>
+                                @endif
 
                                 {{-- Stats --}}
                                 <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500 pt-3 border-t border-gray-100 dark:border-gray-700">

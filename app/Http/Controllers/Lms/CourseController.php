@@ -38,40 +38,15 @@ class CourseController extends Controller
                     $query->paid();
                 }
             })
-            ->latest('published_at')
-            ->paginate(12);
-
-        return view('lms.courses.index', compact('courses'));
-    }
-
-    /**
-     * Browse all available courses.
-     */
-    public function browse(Request $request): View
-    {
-        $user = Auth::user();
-
-        $courses = Course::query()
-            ->published()
-            ->forAudience($user)
-            ->with(['creator', 'school'])
-            ->withCount('enrollments')
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('title', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%');
-            })
-            ->when($request->filled('difficulty'), function ($query) use ($request) {
-                $query->where('difficulty_level', $request->difficulty);
-            })
             ->when($request->filled('category'), function ($query) use ($request) {
                 $query->whereJsonContains('metadata->category', $request->category);
             })
-            ->orderBy('title')
-            ->paginate(15);
+            ->latest('published_at')
+            ->paginate(12);
 
         $difficulties = ['beginner', 'intermediate', 'advanced'];
 
-        return view('lms.courses.browse', compact('courses', 'difficulties'));
+        return view('lms.courses.index', compact('courses', 'difficulties'));
     }
 
     /**
@@ -101,22 +76,28 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
-        $query = Course::query()
-            ->with(['creator', 'school'])
-            ->withCount(['enrollments', 'chapters']);
+        $baseQuery = Course::query();
 
         // Filter based on user role
         if ($user->hasAnyRole(['owner', 'admin'])) {
-            // Admins can see all courses
             if ($user->school_id) {
-                $query->where('school_id', $user->school_id);
+                $baseQuery->where('school_id', $user->school_id);
             }
         } else {
-            // Teachers/Authors can only see their own courses
-            $query->where('created_by', $user->id);
+            $baseQuery->where('created_by', $user->id);
         }
 
-        $courses = $query
+        // Get stats for the dashboard cards
+        $stats = [
+            'total' => (clone $baseQuery)->count(),
+            'published' => (clone $baseQuery)->where('status', 'published')->count(),
+            'draft' => (clone $baseQuery)->where('status', 'draft')->count(),
+            'archived' => (clone $baseQuery)->where('status', 'archived')->count(),
+        ];
+
+        $courses = (clone $baseQuery)
+            ->with(['creator', 'school'])
+            ->withCount(['enrollments', 'chapters'])
             ->when($request->filled('status'), function ($q) use ($request) {
                 $q->where('status', $request->status);
             })
@@ -128,7 +109,7 @@ class CourseController extends Controller
 
         $statuses = ['draft', 'published', 'unpublished', 'archived'];
 
-        return view('lms.courses.manage', compact('courses', 'statuses'));
+        return view('lms.courses.manage', compact('courses', 'statuses', 'stats'));
     }
 
     /**

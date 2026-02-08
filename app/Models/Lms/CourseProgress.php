@@ -100,10 +100,13 @@ class CourseProgress extends Model
         }
 
         // Check if video is considered complete (90% watched)
-        $watchPercentage = ($watchedSeconds / $totalSeconds) * 100;
-        if ($watchPercentage >= 90 && ! $this->is_completed) {
-            $this->is_completed = true;
-            $this->completed_at = now();
+        // Guard against division by zero when duration is unknown
+        if ($totalSeconds > 0) {
+            $watchPercentage = ($watchedSeconds / $totalSeconds) * 100;
+            if ($watchPercentage >= 90 && ! $this->is_completed) {
+                $this->is_completed = true;
+                $this->completed_at = now();
+            }
         }
 
         return $this->save();

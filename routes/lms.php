@@ -23,9 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // PUBLIC COURSE ROUTES (for enrolled users and course browsing)
     // =========================================================================
     Route::prefix('courses')->name('lms.courses.')->group(function () {
-        // Course listing and browsing
+        // Course listing
         Route::get('/', [CourseController::class, 'index'])->name('index');
-        Route::get('/browse', [CourseController::class, 'browse'])->name('browse');
         Route::get('/{course:slug}', [CourseController::class, 'show'])->name('show');
 
         // Course enrollment
