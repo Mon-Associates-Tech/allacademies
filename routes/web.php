@@ -384,6 +384,20 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Educational Resource Center
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('resources')->name('educational-resources.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EducationalResourceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\EducationalResourceController::class, 'create'])->name('create');
+        Route::get('/{educationalResource}/edit', [\App\Http\Controllers\EducationalResourceController::class, 'edit'])->name('edit');
+        Route::get('/{educationalResource}', [\App\Http\Controllers\EducationalResourceController::class, 'show'])->name('show');
+        Route::get('/{educationalResource}/download', [\App\Http\Controllers\EducationalResourceController::class, 'download'])->name('download');
+        Route::get('/{educationalResource}/stream', [\App\Http\Controllers\EducationalResourceController::class, 'stream'])->name('stream');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Media
     |--------------------------------------------------------------------------
     */
