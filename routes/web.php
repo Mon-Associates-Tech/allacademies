@@ -484,3 +484,6 @@ include_once 'administrator.php';
 include_once 'academic.php';
 include_once 'guest.php';
 include_once 'misc.php';
+
+// Public Assignment Routes (code-based assignments for teachers and participants)
+include_once 'public-assignment.php';
