@@ -130,7 +130,7 @@
                     </a>
                     <x-link.primary variant="primary" type="button" class="ml-4 hidden"
                                     to="{{ route('payments.public.lookup') }}">
-                        <span>School Payments Portal</span>
+                        <span>School Fees Payment Portal</span>
                     </x-link.primary>
                 </div>
 
@@ -207,7 +207,7 @@
                                 </a>
                                 <a href="{{ route('payments.public.lookup') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
-                                    School Payments Portal
+                                    School Fees Payment Portal
                                 </a>
                             </div>
                         </div>
