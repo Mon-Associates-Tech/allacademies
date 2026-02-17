@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\ResetMonthlySubscriptionCycles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Services\SubscriptionCycleService;
 
 class Kernel extends ConsoleKernel
 {
@@ -51,6 +52,11 @@ class Kernel extends ConsoleKernel
             ->dailyAt('00:00')
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
+
+        // Cleanup abandoned pending subscription cycles hourly
+        $schedule->call(function () {
+            app(SubscriptionCycleService::class)->cleanupAbandonedPendingCyclesAll();
+        })->hourly()->name('cleanup-pending-subscription-cycles');
 
     }
 

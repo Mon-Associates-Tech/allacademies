@@ -78,6 +78,9 @@ class TokenSubscriptionController extends Controller
         $user = Auth::user();
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
 
+        // Ensure any trial is expired before creating a paid cycle
+        $this->cycleService->expireTrialCycles($user);
+
         // Check if user already has an active subscription to the same tier
         $activeSubscription = $user->subscriptionCycles()
             ->where('status', 'active')
@@ -199,6 +202,11 @@ class TokenSubscriptionController extends Controller
         $user = Auth::user();
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
+
+        // Ensure trials are expired so paid cycles don't merge into them
+        $this->cycleService->expireTrialCycles($user);
+        // Cleanup abandoned pending placeholders before creating new cycles
+        $this->cycleService->cleanupAbandonedPendingCycles($user);
 
         // Calculate total price using same logic as checkout
         $totalPrice = 0;

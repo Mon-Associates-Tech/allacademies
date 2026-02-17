@@ -27,12 +27,31 @@ class SubscriptionCycleService
     {
         return DB::transaction(function () use ($user, $pricingTier, $months, $isPending) {
             $groupId = Str::uuid()->toString();
-            $startDate = now()->startOfDay();
+            // Start after the latest non-expired cycle to avoid overlap/shortening
+            $latestCycle = $user->subscriptionCycles()
+                ->where('status', '!=', 'expired')
+                ->where('is_trial', false)
+                ->where(function ($q) {
+                    // Ignore abandoned pending/zero-token placeholders
+                    $q->where('status', '!=', 'inactive')
+                        ->orWhere('tokens_allocated', '>', 0);
+                })
+                ->orderByDesc('cycle_end_date')
+                ->first();
+
+            $startDate = $latestCycle
+                ? $latestCycle->cycle_end_date->copy()->addDay()->startOfDay()
+                : now()->startOfDay();
             $cycles = [];
 
             // Get existing future cycles
             $existingCycles = $user->subscriptionCycles()
                 ->where('status', '!=', 'expired')
+                ->where('is_trial', false)
+                ->where(function ($q) {
+                    $q->where('status', '!=', 'inactive')
+                        ->orWhere('tokens_allocated', '>', 0);
+                })
                 ->orderBy('cycle_start_date')
                 ->get();
 
@@ -79,9 +98,10 @@ class SubscriptionCycleService
 
         $combinedTokens = $oldBaseTokens + $newBaseTokens + $oldTopupTokens;
 
-        // Calculate combined price: add the NEW cycle's increment to existing price
-        $newCycleIncrement = $newTier->getMonthlyPriceIncrement($newCycleNumber);
-        $combinedPrice = $existingCycle->current_price + $newCycleIncrement;
+        // Calculate per-cycle price (this month only) instead of cumulative
+        $oldCyclePrice = $oldTier->getMonthlyPriceIncrement($existingCycle->cycle_number);
+        $newCyclePrice = $newTier->getMonthlyPriceIncrement($newCycleNumber);
+        $combinedPrice = $oldCyclePrice + $newCyclePrice;
 
         // Update existing cycle with merged data
         $existingCycle->update([
@@ -100,8 +120,8 @@ class SubscriptionCycleService
             'old_tokens' => $oldBaseTokens,
             'new_tokens' => $newBaseTokens,
             'combined_tokens' => $combinedTokens,
-            'old_price' => $existingCycle->current_price - $newCycleIncrement,
-            'new_cycle_increment' => $newCycleIncrement,
+            'old_price' => $oldCyclePrice,
+            'new_cycle_increment' => $newCyclePrice,
             'combined_price' => $combinedPrice,
             'old_tier' => $oldTier->name,
             'new_tier' => $newTier->name,
@@ -512,5 +532,57 @@ class SubscriptionCycleService
         }
 
         return $deactivatedCount;
+    }
+
+    /**
+     * Remove abandoned pending cycles (zero-token placeholders from incomplete payments).
+     */
+    public function cleanupAbandonedPendingCycles(User $user, int $minutes = 60): int
+    {
+        $cutoff = now()->subMinutes($minutes);
+
+        return $user->subscriptionCycles()
+            ->where('status', 'inactive')
+            ->where('tokens_allocated', 0)
+            ->where('is_trial', false)
+            ->where('created_at', '<', $cutoff)
+            ->delete();
+    }
+
+    /**
+     * Cleanup abandoned pending cycles across all users.
+     */
+    public function cleanupAbandonedPendingCyclesAll(int $minutes = 60): int
+    {
+        $cutoff = now()->subMinutes($minutes);
+
+        return SubscriptionCycle::where('status', 'inactive')
+            ->where('tokens_allocated', 0)
+            ->where('is_trial', false)
+            ->where('created_at', '<', $cutoff)
+            ->delete();
+    }
+
+    /**
+     * Expire active or upcoming trial cycles so paid subscriptions don't merge into them.
+     */
+    public function expireTrialCycles(User $user): int
+    {
+        // Expire active trials (and clamp their end date)
+        $activeExpired = $user->subscriptionCycles()
+            ->where('is_trial', true)
+            ->where('status', 'active')
+            ->update([
+                'status' => 'expired',
+                'cycle_end_date' => now(),
+            ]);
+
+        // Expire inactive (upcoming) trials
+        $inactiveExpired = $user->subscriptionCycles()
+            ->where('is_trial', true)
+            ->where('status', 'inactive')
+            ->update(['status' => 'expired']);
+
+        return $activeExpired + $inactiveExpired;
     }
 }
