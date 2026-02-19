@@ -40,6 +40,7 @@ class TokenPaymentController extends Controller
     public function initialize()
     {
         $user = Auth::user();
+        
         $pendingPayment = session('pending_payment');
 
         // Check if pending payment is stale (older than 30 minutes)
@@ -222,12 +223,27 @@ class TokenPaymentController extends Controller
                         ]);
                     }
                 } elseif ($groupId) {
-                    // Subscription: activate cycles
+                    // Subscription: create cycles and activate current one
+                    $pendingPayment = session('pending_payment');
+                    $months = $pendingPayment['months'] ?? 1;
+                    
+                    // Create subscription cycles now that payment is successful
+                    $cycles = app(\App\Services\SubscriptionCycleService::class)
+                        ->createSubscriptionCycles($user, $pricingTier, $months);
+                    
+                    // Update group ID to match the one from payment
+                    foreach ($cycles as $cycle) {
+                        $cycle->subscription_group_id = $groupId;
+                        $cycle->save();
+                    }
+                    
+                    // Activate current cycle
                     $activatedCount = app(\App\Services\SubscriptionCycleService::class)
                         ->activatePendingCycles($groupId, $pricingTier);
 
-                    \Log::info('Cycles activated after payment', [
+                    \Log::info('Cycles created and activated after payment', [
                         'group_id' => $groupId,
+                        'cycles_created' => count($cycles),
                         'activated_count' => $activatedCount,
                     ]);
                 }

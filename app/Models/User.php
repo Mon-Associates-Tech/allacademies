@@ -654,10 +654,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function subscriptionHistory()
     {
         return $this->hasMany(SubscriptionCycle::class)
-            ->selectRaw('subscription_group_id, MAX(id) as latest_cycle_id, MAX(cycle_end_date) as group_end_date')
-            ->where('cycle_end_date', '<', now())
+            ->with('pricingTier')
+            ->selectRaw('subscription_group_id, 
+                        MIN(cycle_start_date) as group_start_date,
+                        MAX(cycle_end_date) as group_end_date,
+                        COUNT(*) as months_count,
+                        SUM(current_price) as total_cost,
+                        SUM(tokens_allocated) as total_tokens,
+                        MAX(id) as latest_cycle_id')
             ->groupBy('subscription_group_id')
-            ->orderBy('group_end_date', 'desc');
+            ->orderBy('group_start_date', 'desc');
     }
 
     public function tokenUsageLogs(): HasMany

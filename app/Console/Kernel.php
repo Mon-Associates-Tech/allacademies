@@ -53,11 +53,6 @@ class Kernel extends ConsoleKernel
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
 
-        // Cleanup abandoned pending subscription cycles hourly
-        $schedule->call(function () {
-            app(SubscriptionCycleService::class)->cleanupAbandonedPendingCyclesAll();
-        })->hourly()->name('cleanup-pending-subscription-cycles');
-
     }
 
     /**

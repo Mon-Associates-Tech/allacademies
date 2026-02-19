@@ -29,13 +29,19 @@
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Package
+                                        Subscription
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Action
+                                        Duration
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Messengers
+                                        Total Cost
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Tokens Allocated
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Tokens Used
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Period
@@ -43,54 +49,34 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Action
-                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 @foreach($subscriptionHistory as $subscription)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div
-                                                class="text-sm font-medium text-gray-900 dark:text-white">{{ $subscription->package?->name }}</div>
-                                            <div
-                                                class="text-xs text-gray-500 dark:text-gray-400">{{ $subscription->package?->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white" title="{{ $subscription->pricing_tier?->description ?? 'Subscription Plan' }}">{{ $subscription->pricing_tier?->name ?? 'Unknown' }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full
-                                                    {{ $subscription->action_type === 'trial' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
-                                                    {{ $subscription->action_type === 'upgrade' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
-                                                    {{ $subscription->action_type === 'downgrade' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
-                                                    {{ $subscription->action_type === 'purchase' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}">
-                                                    {{ ucfirst($subscription->action_type) }}
-                                                </span>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $subscription->months_count }} {{ $subscription->months_count == 1 ? 'month' : 'months' }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">${{ number_format($subscription->total_cost, 2) }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <div
-                                                class="text-gray-900 dark:text-white font-medium">{{ number_format($subscription->tokens_used) }}</div>
-                                            <div class="text-gray-500 dark:text-gray-400 text-xs">
-                                                of {{ number_format($subscription->tokens_purchased) }}</div>
+                                            <div class="text-gray-900 dark:text-white font-medium">{{ number_format($subscription->total_tokens) }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <div class="text-gray-900 dark:text-white font-medium">{{ number_format($subscription->tokens_used) }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                            <div>{{ $subscription->activated_at ? $subscription->activated_at->format('M d, Y') : 'N/A' }}</div>
-                                            <div class="text-xs">
-                                                to {{ $subscription->deactivated_at ? $subscription->deactivated_at->format('M d, Y') : 'N/A' }}</div>
+                                            <div>{{ \Carbon\Carbon::parse($subscription->group_start_date)->format('M d, Y') }}</div>
+                                            <div class="text-xs">to {{ \Carbon\Carbon::parse($subscription->group_end_date)->format('M d, Y') }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full
-                                                    {{ $subscription->status?->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
-                                                    {{ $subscription->status?->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
-                                                    {{ $subscription->status?->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
-                                                    {{ ucfirst($subscription->status?->value ?? 'unknown') }}
-                                                </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            {{-- todo fix missing required parameter error --}}
-                                            {{-- <a href="{{ route('token-subscriptions.show', ['subscription' => $subscription]) }}"
-                                               class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
-                                                View Details →
-                                            </a> --}}
+                                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full {{ $subscription->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' }}">
+                                                {{ $subscription->is_active ? 'Active' : 'Expired' }}
+                                            </span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -100,58 +86,50 @@
 
                         {{-- Mobile Card View --}}
                         <div class="md:hidden space-y-4 p-4">
-                            @foreach($subscriptionHistory as $subscription)
-                                <div
-                                    class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                                    {{-- Header with Package and Action --}}
-                                    <div class="flex items-start justify-between mb-3">
-                                        <div>
-                                            <h4 class="font-semibold text-gray-900 dark:text-white">{{ $subscription->package?->name }}</h4>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $subscription->package?->name === 'Premium' ? 'Advanced Messenger' : 'Basic Messenger' }}</p>
+                            @foreach($subscriptionHistory as $index => $subscription)
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                                    {{-- Collapsible Header --}}
+                                    <button onclick="toggleCard({{ $index }})" class="w-full p-4 text-left focus:outline-none">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900 dark:text-white">{{ $subscription->pricing_tier?->name ?? 'Unknown' }}</h4>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $subscription->months_count }} {{ $subscription->months_count == 1 ? 'month' : 'months' }} • ${{ number_format($subscription->total_cost, 2) }}</p>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full {{ $subscription->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' }}">
+                                                    {{ $subscription->is_active ? 'Active' : 'Expired' }}
+                                                </span>
+                                                <svg id="chevron-{{ $index }}" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </div>
                                         </div>
-                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
-                                            {{ $subscription->action_type === 'trial' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
-                                            {{ $subscription->action_type === 'upgrade' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
-                                            {{ $subscription->action_type === 'downgrade' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
-                                            {{ $subscription->action_type === 'purchase' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}">
-                                            {{ ucfirst($subscription->action_type) }}
-                                        </span>
-                                    </div>
+                                    </button>
 
-                                    {{-- Stats Grid --}}
-                                    <div class="grid grid-cols-2 gap-3 mb-3">
-                                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Messengers</p>
-                                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ number_format($subscription->tokens_used) }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                of {{ number_format($subscription->tokens_purchased) }}</p>
+                                    {{-- Collapsible Content --}}
+                                    <div id="card-content-{{ $index }}" class="hidden px-4 pb-4">
+                                        @if($subscription->pricing_tier?->description)
+                                            <div class="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                                <p class="text-xs text-blue-700 dark:text-blue-300">{{ $subscription->pricing_tier->description }}</p>
+                                            </div>
+                                        @endif
+                                        
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Tokens Allocated</p>
+                                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ number_format($subscription->total_tokens) }}</p>
+                                            </div>
+                                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Tokens Used</p>
+                                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ number_format($subscription->tokens_used) }}</p>
+                                            </div>
                                         </div>
+
                                         <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
                                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Period</p>
-                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $subscription->activated_at ? $subscription->activated_at->format('M d') : 'N/A' }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                to {{ $subscription->deactivated_at ? $subscription->deactivated_at->format('M d') : 'N/A' }}</p>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($subscription->group_start_date)->format('M d, Y') }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">to {{ \Carbon\Carbon::parse($subscription->group_end_date)->format('M d, Y') }}</p>
                                         </div>
-                                    </div>
-
-                                    {{-- Status and Action --}}
-                                    <div class="flex items-center justify-between">
-                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full
-                                            {{ $subscription->status?->value === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : '' }}
-                                            {{ $subscription->status?->value === 'depleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
-                                            {{ $subscription->status?->value === 'replaced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
-                                            {{ ucfirst($subscription->status?->value ?? 'unknown') }}
-                                        </span>
-                                        {{-- todo fix misissing required route parameters --}}
-                                        {{-- <a href="{{ route('token-subscriptions.show', $subscription) }}"
-                                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors">
-                                            View
-                                            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor"
-                                                 viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M9 5l7 7-7 7"/>
-                                            </svg>
-                                        </a> --}}
                                     </div>
                                 </div>
                             @endforeach
@@ -184,4 +162,19 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        function toggleCard(index) {
+            const content = document.getElementById(`card-content-${index}`);
+            const chevron = document.getElementById(`chevron-${index}`);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
 </x-layouts.app>

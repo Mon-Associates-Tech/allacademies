@@ -50,7 +50,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Subscriptions</p>
-                                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_subscriptions'] }}</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['paid_subscriptions_count'] }}</p>
                             </div>
                             <div
                                 class="flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg">

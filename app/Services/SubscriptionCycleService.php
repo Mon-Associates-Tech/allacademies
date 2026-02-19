@@ -27,15 +27,10 @@ class SubscriptionCycleService
     {
         return DB::transaction(function () use ($user, $pricingTier, $months, $isPending) {
             $groupId = Str::uuid()->toString();
-            // Start after the latest non-expired cycle to avoid overlap/shortening
+            // Start after the latest non-expired paid cycle (ignore trials)
             $latestCycle = $user->subscriptionCycles()
                 ->where('status', '!=', 'expired')
                 ->where('is_trial', false)
-                ->where(function ($q) {
-                    // Ignore abandoned pending/zero-token placeholders
-                    $q->where('status', '!=', 'inactive')
-                        ->orWhere('tokens_allocated', '>', 0);
-                })
                 ->orderByDesc('cycle_end_date')
                 ->first();
 
@@ -138,17 +133,9 @@ class SubscriptionCycleService
         // Use monthly price increment for this cycle only
         $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
 
-        // If pending payment, always create as inactive with 0 tokens
+        // Always allocate tokens immediately, set as inactive (activated after payment)
         $status = 'inactive';
-        $tokensAllocated = 0;
-
-        if (! $isPending) {
-            // Only check if should be active when not pending payment
-            $isCurrentCycle = now()->between($startDate, $endDate);
-            $status = $isCurrentCycle ? 'active' : 'inactive';
-            $tokensAllocated = $pricingTier->monthly_token_limit;
-            $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
-        }
+        $tokensAllocated = $pricingTier->monthly_token_limit;
 
         return SubscriptionCycle::create([
             'user_id' => $user->id,
@@ -445,6 +432,7 @@ class SubscriptionCycleService
 
     /**
      * Activate pending cycles after payment confirmation
+     * Only activates the first/current cycle
      */
     public function activatePendingCycles(string $groupId, PricingTier $pricingTier): int
     {
@@ -454,28 +442,13 @@ class SubscriptionCycleService
 
         $activatedCount = 0;
         foreach ($cycles as $cycle) {
-            $tokensAdded = false;
-
-            // New cycles from this subscription (not merged)
-            if ($cycle->subscription_group_id === $groupId && $cycle->tokens_allocated == 0) {
-                $cycle->tokens_allocated = $pricingTier->monthly_token_limit;
-                $tokensAdded = true;
-            }
-
-            // Merged cycles - add new subscription's tokens
-            if ($cycle->merged_with_group_id === $groupId && $cycle->is_merged) {
-                $cycle->tokens_allocated += $pricingTier->monthly_token_limit;
-                $tokensAdded = true;
-            }
-
+            // Only activate if cycle is current (within date range) and inactive
             $isCurrentCycle = now()->between($cycle->cycle_start_date, $cycle->cycle_end_date);
-            if ($isCurrentCycle && $cycle->status !== 'active') {
+            
+            if ($isCurrentCycle && $cycle->status === 'inactive') {
                 $cycle->status = 'active';
-                $activatedCount++;
-            }
-
-            if ($tokensAdded || $cycle->isDirty('status')) {
                 $cycle->save();
+                $activatedCount++;
             }
         }
 
@@ -483,8 +456,6 @@ class SubscriptionCycleService
             Log::info('Pending cycles activated after payment', [
                 'group_id' => $groupId,
                 'count' => $activatedCount,
-                'pricing_tier_id' => $pricingTier->id,
-                'tokens_per_cycle' => $pricingTier->monthly_token_limit,
             ]);
         }
 
@@ -541,12 +512,22 @@ class SubscriptionCycleService
     {
         $cutoff = now()->subMinutes($minutes);
 
-        return $user->subscriptionCycles()
+        $deleted = SubscriptionCycle::where('user_id', $user->id)
             ->where('status', 'inactive')
-            ->where('tokens_allocated', 0)
+            ->where('tokens_used', 0)
             ->where('is_trial', false)
             ->where('created_at', '<', $cutoff)
             ->delete();
+
+        if ($deleted > 0) {
+            Log::info('Cleaned up abandoned pending cycles', [
+                'user_id' => $user->id,
+                'deleted_count' => $deleted,
+                'cutoff_minutes' => $minutes,
+            ]);
+        }
+
+        return $deleted;
     }
 
     /**
@@ -557,7 +538,7 @@ class SubscriptionCycleService
         $cutoff = now()->subMinutes($minutes);
 
         return SubscriptionCycle::where('status', 'inactive')
-            ->where('tokens_allocated', 0)
+            ->where('tokens_used', 0)
             ->where('is_trial', false)
             ->where('created_at', '<', $cutoff)
             ->delete();
@@ -565,11 +546,12 @@ class SubscriptionCycleService
 
     /**
      * Expire active or upcoming trial cycles so paid subscriptions don't merge into them.
+     * Clamps active trial end dates to now() to prevent date calculation issues.
      */
     public function expireTrialCycles(User $user): int
     {
-        // Expire active trials (and clamp their end date)
-        $activeExpired = $user->subscriptionCycles()
+        // Expire active trials and clamp their end date to now
+        $activeExpired = SubscriptionCycle::where('user_id', $user->id)
             ->where('is_trial', true)
             ->where('status', 'active')
             ->update([
@@ -578,11 +560,29 @@ class SubscriptionCycleService
             ]);
 
         // Expire inactive (upcoming) trials
-        $inactiveExpired = $user->subscriptionCycles()
+        $inactiveExpired = SubscriptionCycle::where('user_id', $user->id)
             ->where('is_trial', true)
             ->where('status', 'inactive')
             ->update(['status' => 'expired']);
 
         return $activeExpired + $inactiveExpired;
+    }
+
+    /**
+     * Delete all cycles in a subscription group (used when payment fails/cancelled)
+     */
+    public function deletePendingCyclesByGroup(string $groupId): int
+    {
+        $deleted = SubscriptionCycle::where('subscription_group_id', $groupId)
+            ->where('status', 'inactive')
+            ->where('tokens_used', 0)
+            ->delete();
+
+        Log::info('Pending cycles deleted after payment failure/cancellation', [
+            'group_id' => $groupId,
+            'deleted_count' => $deleted,
+        ]);
+
+        return $deleted;
     }
 }

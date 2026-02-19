@@ -63,7 +63,29 @@ class TokenSubscriptionController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $subscriptionHistory = $user->subscriptionHistory;
+        $subscriptionHistory = $user->subscriptionHistory()->get()->map(function ($group) use ($user) {
+            // Get the latest cycle to access pricing tier info
+            $latestCycle = SubscriptionCycle::find($group->latest_cycle_id);
+            
+            // Calculate tokens used for this subscription group
+            $tokensUsed = $user->tokenUsageLogs()
+                ->whereHas('subscriptionCycle', function($query) use ($group) {
+                    $query->where('subscription_group_id', $group->subscription_group_id);
+                })
+                ->sum('total_tokens');
+            
+            return (object) [
+                'subscription_group_id' => $group->subscription_group_id,
+                'group_start_date' => $group->group_start_date,
+                'group_end_date' => $group->group_end_date,
+                'months_count' => $group->months_count,
+                'total_cost' => $group->total_cost,
+                'total_tokens' => $group->total_tokens,
+                'tokens_used' => $tokensUsed,
+                'pricing_tier' => $latestCycle?->pricingTier,
+                'is_active' => $group->group_end_date >= now(),
+            ];
+        });
 
         return view('token-subscriptions.history', compact('subscriptionHistory'));
     }
@@ -195,18 +217,17 @@ class TokenSubscriptionController extends Controller
             'months' => 'required|integer|min:1|max:12',
         ]);
 
+        /** @var User $user */
+        $user = Auth::user();
+
         // Clear any stale session data before processing new payment
         session()->forget(['payment_timestamp']);
 
-        /** @var User $user */
-        $user = Auth::user();
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
 
         // Ensure trials are expired so paid cycles don't merge into them
         $this->cycleService->expireTrialCycles($user);
-        // Cleanup abandoned pending placeholders before creating new cycles
-        $this->cycleService->cleanupAbandonedPendingCycles($user);
 
         // Calculate total price using same logic as checkout
         $totalPrice = 0;
@@ -214,25 +235,24 @@ class TokenSubscriptionController extends Controller
             $totalPrice += $pricingTier->getMonthlyPriceIncrement($cycleNumber);
         }
 
-        // Create subscription cycles as PENDING (no tokens assigned yet)
-        $cycles = $this->cycleService->createSubscriptionCycles($user, $pricingTier, $months, true);
-        $groupId = $cycles[0]->subscription_group_id;
+        // Generate group ID for future cycle creation
+        $groupId = \Illuminate\Support\Str::uuid()->toString();
 
         \Log::info('Processing payment for multi-month subscription', [
             'user_id' => $user->id,
             'pricing_tier_id' => $pricingTier->id,
             'pricing_tier_name' => $pricingTier->name,
             'months' => $months,
-            'cycles_created' => count($cycles),
             'group_id' => $groupId,
             'total_price' => $totalPrice,
         ]);
 
-        // Store payment info in session
+        // Store payment info in session (cycles will be created after payment)
         session([
             'pending_payment' => [
                 'group_id' => $groupId,
                 'pricing_tier_id' => $pricingTier->id,
+                'months' => $months,
                 'amount' => $totalPrice,
                 'type' => 'subscription',
             ],

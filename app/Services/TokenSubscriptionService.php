@@ -389,28 +389,10 @@ class TokenSubscriptionService
         $currentCycle = $user->getCurrentActiveCycle();
         $allCycles = $user->subscriptionCycles;
 
-        // Calculate total spent:
-        // 1. Sum MAX(current_price) per subscription_group_id (subscription payments)
-        // 2. Add topup payments from Payment records linked to topup cycles
+        // Calculate total spent using the same logic as subscription history
+        // This ensures consistency between index and history pages
         $subscriptionSpent = $user->subscriptionCycles()
-            ->selectRaw('subscription_group_id, MAX(current_price) as group_total')
-            ->groupBy('subscription_group_id')
-            ->get()
-            ->sum('group_total');
-
-        $topupSpent = \App\Models\Payment::whereIn('reference', function ($query) use ($user) {
-            $query->select('reference')
-                ->from('payments')
-                ->whereExists(function ($subQuery) use ($user) {
-                    $subQuery->select(\DB::raw(1))
-                        ->from('subscription_cycles')
-                        ->where('user_id', $user->id)
-                        ->where('is_topup', true)
-                        ->whereRaw('payments.created_at BETWEEN subscription_cycles.created_at AND subscription_cycles.updated_at');
-                });
-        })->sum('amount');
-
-        $totalSpent = $subscriptionSpent + $topupSpent;
+            ->sum('current_price');
 
         $totalTokensPurchased = $user->subscriptionCycles()
             ->sum('tokens_allocated');
@@ -425,7 +407,7 @@ class TokenSubscriptionService
             'current_subscription' => $currentCycle,
             'total_subscriptions' => $allCycles->count(),
             'paid_subscriptions_count' => $paidCyclesCount,
-            'total_spent' => round($totalSpent ?? 0, 2),
+            'total_spent' => round($subscriptionSpent ?? 0, 2),
             'total_tokens_purchased' => $totalTokensPurchased,
             'total_tokens_used' => $totalTokensUsed,
             'has_active' => (bool) $currentCycle,
