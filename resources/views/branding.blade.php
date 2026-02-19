@@ -86,17 +86,22 @@
                             class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4">
                             <div class="flex items-center space-x-1">
                                 <div class="flex -space-x-1">
-                                    <img class="w-8 h-8 rounded-full border-2 border-white"
-                                         src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"
-                                         alt="User">
-                                    <img class="w-8 h-8 rounded-full border-2 border-white"
-                                         src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
-                                         alt="User">
-                                    <img class="w-8 h-8 rounded-full border-2 border-white"
-                                         src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face"
-                                         alt="User">
+                                    @if($usersWithAvatars && $usersWithAvatars->count() > 0)
+                                        @foreach($usersWithAvatars as $user)
+                                            <x-avatar 
+                                                :name="$user->name" 
+                                                :avatar="$user->avatar" 
+                                                class="w-8 h-8 border-2 border-white" 
+                                            />
+                                        @endforeach
+                                    @else
+                                        <!-- Fallback to initials-based avatars if no users with profile pictures -->
+                                        <x-avatar name="John Doe" class="w-8 h-8 border-2 border-white" />
+                                        <x-avatar name="Jane Smith" class="w-8 h-8 border-2 border-white" />
+                                        <x-avatar name="Mike Johnson" class="w-8 h-8 border-2 border-white" />
+                                    @endif
                                 </div>
-                                <span class="text-white text-sm ml-2">Join thousands of learners</span>
+                                <span class="text-white text-sm ml-2">{{ number_format($usersCount ?? 0) }}+ users</span>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <div class="flex space-x-1">

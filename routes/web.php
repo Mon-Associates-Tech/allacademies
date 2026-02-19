@@ -14,6 +14,7 @@ use App\Http\Controllers\BookProgressController;
 use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
@@ -57,7 +58,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Branding & Static Pages
-Route::view('/', 'branding')->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
 Route::view('/terms', 'branding.terms')->name('branding.terms');
 Route::view('/features', 'branding.features')->name('branding.features');
