@@ -7,8 +7,8 @@
             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 dark:opacity-20 animate-blob animation-delay-4000"></div>
         </div>
 
-        <div class="h-screen flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 relative z-10 overflow-y-auto">
-            <div class="w-full max-w-5xl flex-shrink-0">
+        <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8 relative z-10">
+            <div class="w-full max-w-5xl">
                 <!-- Logo and branding -->
                 <div class="text-center mb-12">
                     <div class="inline-flex items-center justify-center gap-3 mb-6">
@@ -28,7 +28,7 @@
                 </div>
 
                 <!-- Registration type cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4 pt-4">
                     <!-- Guest Account -->
                     <a href="{{ route('register.guest') }}"
                        class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-xl dark:shadow-gray-900/50 hover:shadow-2xl dark:hover:shadow-indigo-500/20 transition-all duration-500 transform hover:-translate-y-3 overflow-visible border border-gray-100 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 md:scale-105 md:z-10">
