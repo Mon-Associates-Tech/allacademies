@@ -1,6 +1,6 @@
 <x-app>
     <!-- Navigation -->
-    <div class="bg-white dark:bg-gray-900 transition-colors  duration-300">
+    <div class="bg-white dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
         <!-- Navigation -->
         @include('branding.partials.header')
 
@@ -44,10 +44,18 @@
                                 <span class="text-xs font-medium">Trusted by Thousands of Students Worldwide</span>
                             </div>
 
+                            <!-- Standalone User Count -->
+                            <div class="mb-6">
+                                <span class="relative inline-block">
+                                    <span class="text-6xl sm:text-7xl md:text-8xl text-white font-black animate-pulse drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] [text-shadow:_0_0_20px_rgba(255,255,255,0.9),_0_0_40px_rgba(255,255,255,0.6),_0_0_60px_rgba(56,189,248,0.5)]">{{ number_format($usersCount ?? 0) }}+</span>
+                                    <span class="absolute -inset-4 bg-white/20 blur-xl rounded-lg -z-10"></span>
+                                </span>
+                                <p class="text-xl sm:text-2xl text-white/90 font-semibold mt-2">Users & Growing</p>
+                            </div>
+
+                            <!-- Hero Heading -->
                             <h1 class="text-4xl font-extrabold pt-2 tracking-tight text-white sm:text-5xl md:text-6xl">
-                                <span class="block">Transform Your Learning Journey</span>
-                                <span
-                                    class="hidden text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">Learning Journey</span>
+                                <span class="block">Educational Transformation</span>
                                 <span
                                     class="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">With All Academies</span>
                             </h1>
@@ -59,7 +67,7 @@
                             professional excellence.
                         </p>
 
-                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <div class="flex flex-col sm:flex-row gap-4 px-4 lg:px-0 justify-center">
                             <a href="#features"
                                class="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
                                 <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none"
@@ -85,48 +93,29 @@
                         <div
                             class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4">
                             <div class="flex items-center space-x-1">
-                                <div class="flex -space-x-1">
-                                    @if($usersWithAvatars && $usersWithAvatars->count() > 0)
-                                        @foreach($usersWithAvatars as $user)
-                                            <x-avatar 
-                                                :name="$user->name" 
-                                                :avatar="$user->avatar" 
-                                                class="w-8 h-8 border-2 border-white" 
-                                            />
-                                        @endforeach
-                                    @else
-                                        <!-- Fallback to initials-based avatars if no users with profile pictures -->
-                                        <x-avatar name="John Doe" class="w-8 h-8 border-2 border-white" />
-                                        <x-avatar name="Jane Smith" class="w-8 h-8 border-2 border-white" />
-                                        <x-avatar name="Mike Johnson" class="w-8 h-8 border-2 border-white" />
-                                    @endif
-                                </div>
-                                <span class="text-white text-sm ml-2">{{ number_format($usersCount ?? 0) }}+ users</span>
-                            </div>
-                            <div class="flex items-center space-x-1">
                                 <div class="flex space-x-1">
-                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
                                         <path
                                             d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                                     </svg>
-                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
                                         <path
                                             d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                                     </svg>
-                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
                                         <path
                                             d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                                     </svg>
-                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
                                         <path
                                             d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                                     </svg>
-                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
                                         <path
                                             d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                                     </svg>
                                 </div>
-                                <span class="text-white text-sm">4.9/5 Rating</span>
+                                <span class="text-white font-semibold text-lg ml-2">4.9/5 Rating</span>
                             </div>
                         </div>
                     </div>
@@ -159,12 +148,12 @@
                         </p>
                     </div>
 
-                    <div class="relative max-w-5xl mx-auto">
+                    <div class="relative max-w-5xl mx-auto overflow-hidden">
                         <!-- Decorative Elements -->
                         <div
-                            class="absolute -top-10 -left-10 w-40 h-40 bg-red-300 dark:bg-red-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                            class="absolute top-0 left-0 w-40 h-40 bg-red-300 dark:bg-red-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
                         <div
-                            class="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-300 dark:bg-orange-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                            class="absolute bottom-0 right-0 w-40 h-40 bg-orange-300 dark:bg-orange-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
                         <div
                             class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
@@ -967,13 +956,13 @@
                             </div>
 
                             <!-- Call to Action for Modules -->
-                            <div class="mt-20 relative">
+                            <div class="mt-20 relative overflow-hidden">
                                 <!-- Subtle Background Elements -->
                                 <div class="absolute inset-0 overflow-hidden pointer-events-none">
                                     <div
-                                        class="absolute -top-40 -right-40 w-80 h-80 bg-blue-50/30 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
+                                        class="absolute top-0 right-0 w-80 h-80 bg-blue-50/30 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
                                     <div
-                                        class="absolute -bottom-40 -left-40 w-80 h-80 bg-gray-50/40 dark:bg-gray-800/20 rounded-full blur-3xl"></div>
+                                        class="absolute bottom-0 left-0 w-80 h-80 bg-gray-50/40 dark:bg-gray-800/20 rounded-full blur-3xl"></div>
                                 </div>
 
                                 <div class="relative max-w-6xl mx-auto text-center">
@@ -1178,6 +1167,21 @@
 
                             .animation-delay-2000 {
                                 animation-delay: 2s;
+                            }
+
+                            @keyframes pulse-slow {
+                                0%, 100% {
+                                    opacity: 1;
+                                    transform: scale(1);
+                                }
+                                50% {
+                                    opacity: 0.95;
+                                    transform: scale(1.02);
+                                }
+                            }
+
+                            .animate-pulse-slow {
+                                animation: pulse-slow 3s ease-in-out infinite;
                             }
 
                             @keyframes float {
