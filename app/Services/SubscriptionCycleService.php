@@ -34,7 +34,9 @@ class SubscriptionCycleService
                 ->orderByDesc('cycle_end_date')
                 ->first();
 
-            $startDate = $latestCycle
+            // If there's a latest cycle that ends in the future, start after it
+            // Otherwise, start now
+            $startDate = ($latestCycle && $latestCycle->cycle_end_date->isFuture())
                 ? $latestCycle->cycle_end_date->copy()->addDay()->startOfDay()
                 : now()->startOfDay();
             $cycles = [];

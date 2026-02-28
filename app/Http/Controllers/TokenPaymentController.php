@@ -229,7 +229,7 @@ class TokenPaymentController extends Controller
                     
                     // Create subscription cycles now that payment is successful
                     $cycles = app(\App\Services\SubscriptionCycleService::class)
-                        ->createSubscriptionCycles($user, $pricingTier, $months);
+                        ->createSubscriptionCycles($user, $pricingTier, $months, false);
                     
                     // Update group ID to match the one from payment
                     foreach ($cycles as $cycle) {
@@ -237,14 +237,18 @@ class TokenPaymentController extends Controller
                         $cycle->save();
                     }
                     
-                    // Activate current cycle
-                    $activatedCount = app(\App\Services\SubscriptionCycleService::class)
-                        ->activatePendingCycles($groupId, $pricingTier);
+                    // Activate the first cycle (current month)
+                    $firstCycle = collect($cycles)->first();
+                    if ($firstCycle && $firstCycle->status === 'inactive') {
+                        $firstCycle->status = 'active';
+                        $firstCycle->save();
+                    }
 
-                    \Log::info('Cycles created and activated after payment', [
+                    \Log::info('Cycles created and first cycle activated after payment', [
                         'group_id' => $groupId,
                         'cycles_created' => count($cycles),
-                        'activated_count' => $activatedCount,
+                        'first_cycle_id' => $firstCycle?->id,
+                        'first_cycle_status' => $firstCycle?->status,
                     ]);
                 }
             });
