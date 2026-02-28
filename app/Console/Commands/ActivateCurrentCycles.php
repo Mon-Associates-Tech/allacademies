@@ -9,37 +9,56 @@ class ActivateCurrentCycles extends Command
 {
     protected $signature = 'cycles:activate {--user_id= : Activate cycles for a specific user}';
 
-    protected $description = 'Activate subscription cycles that are within their period and not expired';
+    protected $description = 'Manage subscription cycle lifecycle: expire old cycles, activate current cycles (one per user)';
 
     public function handle()
     {
         $userId = $this->option('user_id');
+        $now = now();
 
-        $query = SubscriptionCycle::where('status', 'inactive')
-            ->where('cycle_start_date', '<=', now())
-            ->where('cycle_end_date', '>=', now());
-
+        // Build base query
+        $baseQuery = SubscriptionCycle::query();
         if ($userId) {
-            $query->where('user_id', $userId);
+            $baseQuery->where('user_id', $userId);
         }
 
-        $cycles = $query->get();
+        // 1. Mark expired cycles
+        $expiredCount = (clone $baseQuery)
+            ->where('cycle_end_date', '<', $now)
+            ->whereIn('status', ['active', 'inactive'])
+            ->update(['status' => 'expired']);
 
-        if ($cycles->isEmpty()) {
-            $this->info('No inactive cycles found within current period.');
-            return 0;
-        }
+        // 2. Deactivate active cycles that are no longer current
+        $deactivatedCount = (clone $baseQuery)
+            ->where('status', 'active')
+            ->where(function($query) use ($now) {
+                $query->where('cycle_start_date', '>', $now)
+                      ->orWhere('cycle_end_date', '<', $now);
+            })
+            ->update(['status' => 'inactive']);
 
+        // 3. Find and activate the current cycle (only one per user)
+        $usersToProcess = $userId ? [$userId] : (clone $baseQuery)->distinct()->pluck('user_id');
         $activatedCount = 0;
-        foreach ($cycles as $cycle) {
-            $cycle->status = 'active';
-            $cycle->save();
-            $activatedCount++;
 
-            $this->info("Activated cycle #{$cycle->id} for user #{$cycle->user_id} (Period: {$cycle->cycle_start_date->format('Y-m-d')} to {$cycle->cycle_end_date->format('Y-m-d')})");
+        foreach ($usersToProcess as $currentUserId) {
+            $currentCycle = SubscriptionCycle::where('user_id', $currentUserId)
+                ->where('status', 'inactive')
+                ->where('cycle_start_date', '<=', $now)
+                ->where('cycle_end_date', '>=', $now)
+                ->orderBy('cycle_start_date')
+                ->first();
+
+            if ($currentCycle) {
+                $currentCycle->status = 'active';
+                $currentCycle->save();
+                $activatedCount++;
+
+                $this->info("Activated cycle #{$currentCycle->id} for user #{$currentCycle->user_id} (Period: {$currentCycle->cycle_start_date->format('Y-m-d')} to {$currentCycle->cycle_end_date->format('Y-m-d')})");
+            }
         }
 
-        $this->info("Successfully activated {$activatedCount} cycle(s).");
+        $this->info("Expired: {$expiredCount}, Deactivated: {$deactivatedCount}, Activated: {$activatedCount} cycle(s).");
         return 0;
     }
 }
