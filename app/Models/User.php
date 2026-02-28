@@ -46,6 +46,39 @@ class User extends Authenticatable implements MustVerifyEmail
     use Notifiable;
     use Trackable;
 
+    private const ROLE_MODEL_MAP = [
+        'student' => Student::class,
+        'teacher' => Teacher::class,
+        'author' => Author::class,
+        'librarian' => Librarian::class,
+        'parent' => StudentParent::class,
+    ];
+
+    private const ROLE_RELATION_MAP = [
+        'student' => 'student',
+        'teacher' => 'teacher',
+        'author' => 'author',
+        'librarian' => 'librarian',
+        'accountant' => 'accountant',
+        'parent' => 'parent',
+    ];
+
+    private const SCHOOL_BOUND_ROLES = [
+        'student',
+        'teacher',
+        'librarian',
+        'accountant',
+        'parent',
+        'author',
+        'admin',
+    ];
+
+    private const IMPERSONATION_PROTECTED_ROLES = [
+        'owner',
+        'admin',
+        'superadmin',
+    ];
+
     protected $fillable = [
         'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
@@ -109,21 +142,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function handleRoleChange(): void
     {
-        $roleModels = [
-            'student' => Student::class,
-            'teacher' => Teacher::class,
-            'author' => Author::class,
-            'librarian' => Librarian::class,
-            'parent' => StudentParent::class,
-        ];
+        $role = $this->getRoleValue();
 
-        $role = $this->role instanceof UserRole ? $this->role->value : $this->role;
-
-        if (! isset($roleModels[$role])) {
+        if (! isset(self::ROLE_MODEL_MAP[$role])) {
             return;
         }
 
-        $modelClass = $roleModels[$role];
+        $modelClass = self::ROLE_MODEL_MAP[$role];
         $data = ['user_id' => $this->id];
 
         if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
@@ -242,7 +267,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         // NEW: Only grant free tokens if student's school has active content subscription
-        if ($this->role === 'student') {
+        if ($this->role === UserRole::STUDENT) {
             $school = $this->school;
             if (! $school || ! $school->hasActiveContentSubscription()) {
                 return;
@@ -441,38 +466,30 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isOwner(): bool
     {
-        return $this->hasRole('owner');
+        return $this->hasRole(UserRole::OWNER->value);
     }
 
     public function isSchoolAdmin(): bool
     {
-        return $this->school_id && $this->hasRole('admin');
+        return $this->school_id && $this->hasRole(UserRole::ADMIN->value);
     }
 
     public function hasSchoolBoundRole(): bool
     {
-        return $this->student || $this->teacher || $this->admin ||
-            $this->librarian || $this->accountant || $this->parent;
+        return $this->hasAnyRole(self::SCHOOL_BOUND_ROLES);
     }
 
     public function getPrimarySchoolRole(): ?string
     {
-        $roles = [
-            'student' => $this->student,
-            'teacher' => $this->teacher,
-            'admin' => $this->admin,
-            'librarian' => $this->librarian,
-            'accountant' => $this->accountant,
-            'parent' => $this->parent,
-        ];
-
-        foreach ($roles as $role => $exists) {
-            if ($exists) {
+        foreach (self::ROLE_RELATION_MAP as $role => $relation) {
+            if ($this->{$relation}) {
                 return $role;
             }
         }
 
-        return null;
+        $role = $this->getRoleValue();
+
+        return in_array($role, self::SCHOOL_BOUND_ROLES, true) ? $role : null;
     }
 
     public function impersonateUser($userId)
@@ -507,13 +524,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole('superadmin');
+        return $this->hasRole(UserRole::SUPER_ADMIN->value);
     }
 
     public function canBeImpersonated(): bool
     {
+        $role = $this->getRoleValue();
+
         return ! $this->isSuperAdmin() &&
-            ! in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
+            ! in_array($role, self::IMPERSONATION_PROTECTED_ROLES, true) &&
             ($this->is_active ?? true);
     }
 
@@ -748,5 +767,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'previous_password',
             'old_password',
         ];
+    }
+
+    private function getRoleValue(): ?string
+    {
+        return $this->role instanceof UserRole ? $this->role->value : $this->role;
     }
 }

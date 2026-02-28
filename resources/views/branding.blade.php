@@ -45,17 +45,16 @@
                             </div>
 
                             <!-- Standalone User Count -->
-                            <div class="mb-6">
+                            <div class="mb-6 hidden">
                                 <span class="relative inline-block">
-                                    <span class="text-6xl sm:text-7xl md:text-8xl text-white font-black animate-pulse drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] [text-shadow:_0_0_20px_rgba(255,255,255,0.9),_0_0_40px_rgba(255,255,255,0.6),_0_0_60px_rgba(56,189,248,0.5)]">{{ number_format($usersCount ?? 0) }}+</span>
+                                    <span class="text-6xl sm:text-7xl md:text-8xl text-white font-black animate-pulse drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] [text-shadow:_0_0_20px_rgba(255,255,255,0.9),_0_0_40px_rgba(255,255,255,0.6),_0_0_60px_rgba(56,189,248,0.5)]">{{ number_format($usersCount ?? 0) }} Users</span>
                                     <span class="absolute -inset-4 bg-white/20 blur-xl rounded-lg -z-10"></span>
                                 </span>
-                                <p class="text-xl sm:text-2xl text-white/90 font-semibold mt-2">Users & Growing</p>
                             </div>
 
                             <!-- Hero Heading -->
                             <h1 class="text-4xl font-extrabold pt-2 tracking-tight text-white sm:text-5xl md:text-6xl">
-                                <span class="block">Educational Transformation</span>
+                                <span class="block">Join {{ number_format($usersCount ?? 0) }} Users Transforming Education</span>
                                 <span
                                     class="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">With All Academies</span>
                             </h1>
@@ -175,6 +174,11 @@
         <!-- Features Section -->
         <div id="features" class="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
             <div class="max-w-7xl mx-auto">
+
+                <!-- Public Payment Section -->
+                <section>
+                    @include('branding.partials.donation-support')
+                </section>
                 <div class="text-center mb-20">
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-sm mb-4">
@@ -1392,10 +1396,7 @@
                     </div>
                 </div>
 
-                <!-- Public Payment Section -->
-                <section>
-                    @include('branding.partials.donation-support')
-                </section>
+
 
 
                 <!-- FAQ Section -->
