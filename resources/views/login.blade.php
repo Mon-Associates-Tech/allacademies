@@ -91,11 +91,10 @@
                     <form method="POST" action="{{ route('login') }}" class="space-y-6">
                         @csrf
 
-                        <!-- Email field -->
+                        <!-- Login field -->
                         <div>
-                            <label for="email"
-                                   class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 transition-colors duration-300">Email
-                                address</label>
+                            <label for="login"
+                                   class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 transition-colors duration-300">Email or Username / Student ID</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300"
@@ -105,16 +104,16 @@
                                     </svg>
                                 </div>
                                 <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
+                                    id="login"
+                                    name="login"
+                                    type="text"
                                     required
                                     class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-300"
-                                    placeholder="Enter your email"
-                                    value="{{ old('email') }}"
+                                    placeholder="Email or Username / Student ID"
+                                    value="{{ old('login') }}"
                                 >
                             </div>
-                            @error('email')
+                            @error('login')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>

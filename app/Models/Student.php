@@ -43,7 +43,6 @@ class Student extends Model
 
     protected $with = [
         'user',
-        'user',
         'academicLevel',
         'academicGroup',
     ];
@@ -63,7 +62,12 @@ class Student extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withDefault();
+    }
+
+    public function hasPortalAccess(): bool
+    {
+        return $this->user_id !== null;
     }
 
     public function studentGroup(): BelongsTo
