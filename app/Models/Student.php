@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Attendance\AttendanceRecord;
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,12 +19,14 @@ class Student extends Model
 {
     use BelongsToSchoolEnhanced;
     use HasFactory, LogsActivity;
+    use ActivityLoggable;
 
     protected $fillable = [
         'school_id', 'user_id', 'student_id', 'student_group_id',
         'academic_level_id', 'academic_group_id', 'admission_date',
         'graduation_date', 'status', 'metadata',
         //
+        'parent_email',
         'date_of_birth',
         'blood_group',
         'address',

@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\StudentUsernameService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -21,11 +22,17 @@ class StudentManagement extends Component
 {
     use WithPagination;
 
-    public $name;
+    public $firstName;
+
+    public $lastName;
 
     public $email;
 
     public $password;
+
+    public $username;
+
+    public $parentEmail;
 
     public $studentGroupId;
 
@@ -107,12 +114,14 @@ class StudentManagement extends Component
     public $viewMode = 'card'; // 'card' or 'list'
 
     protected $rules = [
-        'name' => 'required|min:3',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|min:8',
+        'firstName' => 'required|min:2',
+        'lastName' => 'required|min:2',
+        'email' => 'nullable|email|unique:users,email',
+        'password' => 'nullable|min:8',
         'studentGroupId' => 'nullable|exists:student_groups,id',
         'academicGroupId' => 'required|exists:academic_groups,id',
         'academicLevelId' => 'required|exists:academic_levels,id',
+        'parentEmail' => 'nullable|email',
         'primaryTeacherId' => 'nullable|exists:teachers,id',
         'selectedTeachers' => 'nullable|array',
         'selectedTeachers.*' => 'exists:teachers,id',
@@ -202,9 +211,12 @@ class StudentManagement extends Component
 
         $this->showFormModal = false;
         $this->formMode = 'create';
-        $this->name = '';
+        $this->firstName = '';
+        $this->lastName = '';
         $this->email = '';
-        $this->password = '';
+        $this->password = 'pass1234';
+        $this->username = '';
+        $this->parentEmail = '';
         $this->studentGroupId = '';
         $this->academicGroupId = '';
         $this->academicLevelId = '';
@@ -520,27 +532,42 @@ class StudentManagement extends Component
      */
     public function create(): void
     {
+        // Default password if user leaves it blank
+        if (empty($this->password)) {
+            $this->password = 'pass1234';
+        }
+
         $this->validate();
 
-        // NEW: Check subscription capacity
-        $school = auth()->user()->school;
+        $schoolId = getSchoolId() ?? auth()->user()->school_id;
 
-        if (! $school || ! $school->canAddStudents(1)) {
-            $remaining = $school ? $school->getRemainingStudentCapacity() : 0;
+        if (! $schoolId) {
+            session()->flash('error', 'Please select a school before creating a student.');
+            return;
+        }
+
+        // NEW: Check subscription capacity (if school is available)
+        $school = auth()->user()->school;
+        if ($school && ! $school->canAddStudents(1)) {
+            $remaining = $school->getRemainingStudentCapacity();
             $this->addError('general',
                 "Cannot add more students. Remaining capacity: {$remaining}. ".
                 'Please renew your subscription or remove some students.'
             );
-
             return;
         }
 
-        DB::transaction(function () {
-            // Create user
+        DB::transaction(function () use ($schoolId) {
+
+            // Create user with username login type; email optional
             $user = User::create([
                 'role' => 'student',
-                'name' => $this->name,
-                'email' => $this->email,
+                'name' => trim("{$this->firstName} {$this->lastName}"),
+                'first_name' => $this->firstName,
+                'last_name' => $this->lastName,
+                'email' => $this->email ?: null,
+                'login_type' => $this->email ? 'email': 'username',
+                'email_verified_at' => $this->email ? null : now(),
                 'password' => Hash::make($this->password),
             ]);
 
@@ -548,31 +575,26 @@ class StudentManagement extends Component
             $studentRole = Role::where('name', 'student')->first();
             $user->roles()->attach($studentRole);
 
-            // Get school ID from context (for owner/admin scenarios)
-            $schoolId = getSchoolId() ?? auth()->user()->school_id;
-
             // Create student record
             $student = Student::create([
                 'user_id' => $user->id,
-                'school_id' => $schoolId, // ✅ Explicitly set school_id
+                'school_id' => $schoolId, // Explicitly set school_id
                 'student_group_id' => $this->studentGroupId,
                 'academic_group_id' => $this->academicGroupId,
                 'academic_level_id' => $this->academicLevelId,
-                'student_id' => Student::generateStudentId($schoolId), // ✅ Pass school_id
+                'student_id' => Student::generateStudentId($schoolId),
+                'parent_email' => $this->parentEmail,
             ]);
 
-            // Assign student role
-            $studentRole = Role::where('name', 'student')->first();
-            $user->roles()->attach($studentRole);
+            if(!$user->username || !$this->email){
+                // Generate and persist username now that student has an ID
+                $generatedUsername = app(StudentUsernameService::class)->generate($student);
+                $user->update([
+                    'username' => $generatedUsername,
+                    'login_type' => 'username',
+                ]);
+            }
 
-            // Create student record
-            $student = Student::create([
-                'user_id' => $user->id,
-                'student_group_id' => $this->studentGroupId,
-                'academic_group_id' => $this->academicGroupId,
-                'academic_level_id' => $this->academicLevelId,
-                'student_id' => Student::generateStudentId(),
-            ]);
 
             // Assign teachers to student
             if (! empty($this->selectedTeachers)) {
@@ -592,7 +614,8 @@ class StudentManagement extends Component
 
             // Log activity
             $student->logActivity('create', 'Student Created', 'student', [
-                'student_name' => $this->name,
+                'student_name' => trim("{$this->firstName} {$this->lastName}"),
+                'username' => $generatedUsername,
                 'email' => $this->email,
                 'student_id' => $student->student_id,
                 'academic_group_id' => $this->academicGroupId,
@@ -604,6 +627,8 @@ class StudentManagement extends Component
         });
 
         $this->resetForm();
+        $this->resetPage();
+        $this->dispatch('$refresh');
         session()->flash('message', 'Student created successfully! They have access to all subjects from their academic level plus any additional subjects assigned.');
         $this->js('window.Modal.close("student-add-form")');
     }
@@ -691,8 +716,11 @@ class StudentManagement extends Component
             'academicLevel.academicSubjects',
         ])->findOrFail($studentId);
 
-        $this->name = $student->user->name;
+        $this->firstName = $student->user->first_name;
+        $this->lastName = $student->user->last_name;
         $this->email = $student->user->email;
+        $this->username = $student->user->username;
+        $this->parentEmail = $student->parent_email;
         $this->password = '';
         $this->studentGroupId = $student->student_group_id;
         $this->academicGroupId = $student->academic_group_id;
@@ -738,8 +766,9 @@ class StudentManagement extends Component
         $student = Student::with(['user', 'teachers'])->findOrFail($this->editingStudentId);
 
         $this->validate([
-            'name' => 'required|min:3',
-            'email' => 'required|email|unique:users,email,'.$student->user_id,
+            'firstName' => 'required|min:2',
+            'lastName' => 'required|min:2',
+            'email' => 'nullable|email|unique:users,email,'.$student->user_id,
             'academicGroupId' => 'required|exists:academic_groups,id',
             'academicLevelId' => 'required|exists:academic_levels,id',
             'primaryTeacherId' => 'nullable|exists:teachers,id',
@@ -749,13 +778,17 @@ class StudentManagement extends Component
             'additionalSubjects.*' => 'exists:academic_subjects,id',
             'removedSubjects' => 'nullable|array',
             'removedSubjects.*' => 'exists:academic_subjects,id',
+            'parentEmail' => 'nullable|email',
         ]);
 
         DB::transaction(function () use ($student) {
             // Update user
             $userData = [
-                'name' => $this->name,
-                'email' => $this->email,
+                'name' => trim("{$this->firstName} {$this->lastName}"),
+                'first_name' => $this->firstName,
+                'last_name' => $this->lastName,
+                'email' => $this->email ?: null,
+                'login_type' => 'username',
             ];
 
             if ($this->password) {
@@ -769,6 +802,7 @@ class StudentManagement extends Component
                 'student_group_id' => $this->studentGroupId,
                 'academic_group_id' => $this->academicGroupId,
                 'academic_level_id' => $this->academicLevelId,
+                'parent_email' => $this->parentEmail,
             ]);
 
             // Update teacher assignments
