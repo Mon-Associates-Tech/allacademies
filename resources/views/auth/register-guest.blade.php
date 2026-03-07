@@ -364,7 +364,10 @@
 
             // Load countries on page load
             fetch('/api/countries')
-                .then(response => response.json())
+                .then(response => {
+                    response.json()
+                    console.log(response)
+                })
                 .then(countries => {
                     countrySelect.innerHTML = '<option value="">Select country</option>';
                     // countries is an object like { 'US': 'United States', 'GB': 'United Kingdom' }

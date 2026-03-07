@@ -133,6 +133,7 @@
 </div>
 
 <!-- Scripts -->
+@stack('scripts')
 @livewireScriptConfig
 
 <script>

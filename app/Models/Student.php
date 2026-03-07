@@ -25,6 +25,8 @@ class Student extends Model
         'school_id', 'user_id', 'student_id', 'student_group_id',
         'academic_level_id', 'academic_group_id', 'admission_date',
         'graduation_date', 'status', 'metadata',
+        // Core identity (duplicated on user for denormalized access)
+        'first_name', 'last_name', 'other_name',
         //
         'parent_email',
         'date_of_birth',

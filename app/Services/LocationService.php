@@ -13,7 +13,6 @@ class LocationService
         return Cache::remember('countries', 86400, function () {
             try {
                 $response = Http::timeout(10)->get('https://restcountries.com/v3.1/all?fields=name,cca2');
-
                 if ($response->successful()) {
                     $countries = [];
                     foreach ($response->json() as $country) {
@@ -23,11 +22,17 @@ class LocationService
 
                     return $countries;
                 }
+
+                Log::warning('Countries API returned non-success', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
             } catch (\Exception $e) {
                 Log::error('Failed to fetch countries from API', ['error' => $e->getMessage()]);
             }
 
-            return [];
+            // Fallback so UI remains usable when the API or network fails
+            return $this->localCountryList();
         });
     }
 
@@ -107,5 +112,51 @@ class LocationService
         $countries = $this->getCountries();
 
         return $countries[$countryCode] ?? $countryCode;
+    }
+
+    private function localCountryList(): array
+    {
+        $path = resource_path('data/countries.json');
+        if (file_exists($path)) {
+            $decoded = json_decode(file_get_contents($path), true);
+            if (is_array($decoded) && ! empty($decoded)) {
+                return $decoded;
+            }
+        }
+
+        // Minimal hard-coded fallback
+        return [
+            'US' => 'United States',
+            'CA' => 'Canada',
+            'GB' => 'United Kingdom',
+            'AU' => 'Australia',
+            'NZ' => 'New Zealand',
+            'NG' => 'Nigeria',
+            'KE' => 'Kenya',
+            'GH' => 'Ghana',
+            'ZA' => 'South Africa',
+            'EG' => 'Egypt',
+            'SA' => 'Saudi Arabia',
+            'AE' => 'United Arab Emirates',
+            'IN' => 'India',
+            'PK' => 'Pakistan',
+            'BD' => 'Bangladesh',
+            'SG' => 'Singapore',
+            'PH' => 'Philippines',
+            'MY' => 'Malaysia',
+            'ID' => 'Indonesia',
+            'CN' => 'China',
+            'JP' => 'Japan',
+            'KR' => 'South Korea',
+            'BR' => 'Brazil',
+            'AR' => 'Argentina',
+            'CL' => 'Chile',
+            'MX' => 'Mexico',
+            'ES' => 'Spain',
+            'FR' => 'France',
+            'DE' => 'Germany',
+            'IT' => 'Italy',
+            'NL' => 'Netherlands',
+        ];
     }
 }
