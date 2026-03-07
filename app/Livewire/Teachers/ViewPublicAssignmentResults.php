@@ -29,6 +29,8 @@ class ViewPublicAssignmentResults extends Component
 
     public ?array $submissionDetails = null;
 
+    public ?PublicAssignmentSubmission $viewingSubmission = null;
+
     public ?array $gradingSummary = null;
 
     public bool $showGradingSummary = false;
@@ -105,6 +107,7 @@ class ViewPublicAssignmentResults extends Component
         }
 
         $this->viewingSubmissionId = $submissionId;
+        $this->viewingSubmission = $submission;
         $this->submissionDetails = [
             'submission' => $submission,
             'participant_name' => $submission->getParticipantName(),
@@ -118,6 +121,7 @@ class ViewPublicAssignmentResults extends Component
     public function closeSubmissionView(): void
     {
         $this->viewingSubmissionId = null;
+        $this->viewingSubmission = null;
         $this->submissionDetails = null;
     }
 
@@ -150,8 +154,19 @@ class ViewPublicAssignmentResults extends Component
             session()->flash('success', "Results released! Notifications sent to {$notificationResults['sent']} participants.");
 
             $this->assignment->refresh();
+            $this->loadGradingSummary();
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to release results: '.$e->getMessage());
+        }
+    }
+
+    public function resendResultNotifications(): void
+    {
+        try {
+            $notificationResults = $this->verificationService->sendBulkResultNotifications($this->assignment);
+            session()->flash('success', "Result emails resent. Sent: {$notificationResults['sent']}, Failed: {$notificationResults['failed']}.");
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to resend result emails: '.$e->getMessage());
         }
     }
 
@@ -209,6 +224,31 @@ class ViewPublicAssignmentResults extends Component
         ];
     }
 
+    protected function buildStats(): array
+    {
+        $subs = $this->assignment->submissions;
+        $completedStatuses = [
+            PublicAssignmentSubmission::STATUS_SUBMITTED,
+            PublicAssignmentSubmission::STATUS_AUTO_GRADED,
+            PublicAssignmentSubmission::STATUS_MANUALLY_REVIEWED,
+            PublicAssignmentSubmission::STATUS_FINAL,
+        ];
+
+        $total = $subs->count();
+        $completed = $subs->whereIn('status', $completedStatuses)->count();
+        $inProgress = $subs->where('status', PublicAssignmentSubmission::STATUS_IN_PROGRESS)->count();
+        $average = $subs->whereNotNull('percentage')->avg('percentage') ?? 0;
+        $needsGrading = $subs->where('requires_manual_review', true)->count();
+
+        return [
+            'total' => $total,
+            'completed' => $completed,
+            'in_progress' => $inProgress,
+            'average_score' => $average,
+            'needs_grading' => $needsGrading,
+        ];
+    }
+
     public function getSubmissionCountsProperty(): array
     {
         $submissions = $this->assignment->submissions;
@@ -223,12 +263,34 @@ class ViewPublicAssignmentResults extends Component
         ];
     }
 
+    protected function formatTimeSpent(?int $seconds): string
+    {
+        if ($seconds === null || $seconds < 0) {
+            return '—';
+        }
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%dh %02dm', $hours, $minutes);
+        }
+
+        if ($minutes > 0) {
+            return sprintf('%dm %02ds', $minutes, $secs);
+        }
+
+        return sprintf('%ds', $secs);
+    }
+
     public function render()
     {
         return view('livewire.teachers.view-public-assignment-results', [
             'submissions' => $this->submissions,
             'statusOptions' => $this->statusOptions,
             'submissionCounts' => $this->submissionCounts,
+            'gradingSummary' => $this->gradingSummary,
+            'stats' => $this->buildStats(),
         ]);
     }
 }

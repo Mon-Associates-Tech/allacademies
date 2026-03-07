@@ -1,7 +1,6 @@
-@extends('layouts.app')
+<x-layouts.app>
+    <div class="container">
+        <livewire:teachers.view-public-assignment-results :assignment="$assignment" />
+    </div>
+</x-layouts.app>
 
-@section('content')
-<div class="container">
-    <livewire:teachers.view-public-assignment-results :assignment="$assignment" />
-</div>
-@endsection

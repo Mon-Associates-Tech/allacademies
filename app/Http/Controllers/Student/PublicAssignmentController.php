@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PublicAssignmentSubmission;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PublicAssignmentController extends Controller
@@ -35,8 +36,26 @@ class PublicAssignmentController extends Controller
     /**
      * Display the result for a specific submission.
      */
-    public function result(PublicAssignmentSubmission $submission): View
+    public function result(Request $request, PublicAssignmentSubmission $submission): View|RedirectResponse
     {
+        $email = strtolower(trim((string) $request->input('email')));
+        if ($email === '') {
+            return redirect()->back()->with('error', 'Please provide the email used for this assignment.');
+        }
+
+        $participantEmail = null;
+
+        if ($submission->participant_type === Student::class) {
+            $student = Student::where('id', $submission->participant_id)->with('user')->first();
+            $participantEmail = strtolower($student?->user?->email ?? '');
+        } else {
+            $participantEmail = strtolower(optional($submission->participant)->email ?? '');
+        }
+
+        if ($participantEmail === '' || $participantEmail !== $email) {
+            abort(403, 'Email does not match the submission.');
+        }
+
         return view('students.public-assignments.result', [
             'submission' => $submission,
         ]);

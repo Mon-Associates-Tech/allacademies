@@ -189,12 +189,11 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Points (max: {{ $currentQuestion->marks }})
+                                    Points
                                 </label>
                                 <input type="number"
                                        wire:model="questionGrades.{{ $currentQuestion->id }}.points"
                                        min="0"
-                                       max="{{ $currentQuestion->marks }}"
                                        step="0.5"
                                        class="w-32 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                             </div>

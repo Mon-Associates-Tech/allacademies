@@ -1,7 +1,5 @@
-@extends('layouts.app')
-
-@section('content')
+<x-layouts.app>
 <div class="container">
     <livewire:teachers.grade-public-assignment-submission :submission="$submission" />
 </div>
-@endsection
+</x-layouts.app>

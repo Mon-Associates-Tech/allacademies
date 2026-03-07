@@ -1,7 +1,18 @@
 <x-layouts.public-assignment title="Assignment Results" pageName="Results">
     <div class="py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-4xl mx-auto">
-            @if(isset($submission))
+            @if(($needsEmail ?? false) && ($token ?? false))
+                <div class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Confirm your email</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Enter the email you used for this assignment to view your results.</p>
+                    <form method="GET" action="{{ url()->current() }}">
+                        <input type="hidden" name="token" value="{{ $token }}">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                        <input type="email" name="email" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white mb-4">
+                        <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">View Results</button>
+                    </form>
+                </div>
+            @elseif(isset($submission) && $submission)
                 <!-- Header -->
                 <div class="mb-6 text-center">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $submission->assignment->title ?? 'Assignment Result' }}</h1>

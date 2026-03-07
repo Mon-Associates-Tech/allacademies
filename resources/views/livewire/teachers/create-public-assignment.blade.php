@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Str; @endphp
 <div class="py-6">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
@@ -341,9 +342,32 @@
                                         <span class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">{{ ucfirst(str_replace('_', ' ', $question['type'])) }}</span>
                                         <span class="text-xs text-gray-500">{{ $question['marks'] }} marks</span>
                                     </div>
-                                    <p class="text-gray-900 dark:text-white">
-                                        <x-form.markdown-editor :content="Str::limit($question['question'], 150)"/>
-{{--                                        {{ Str::limit($question['question'], 150) }}</p>--}}
+                                    <div class="text-gray-900 dark:text-white prose prose-sm dark:prose-invert max-w-none">
+                                        {!! $question['question'] !!}
+                                        @if(isset($question['options']) && is_array($question['options']) && count($question['options']))
+                                            <ul class="mt-3 space-y-2">
+                                                @foreach($question['options'] as $optIndex => $option)
+                                                    @php
+                                                        $answerValue = $question['answer'] ?? ($question['correct_answer'] ?? null);
+                                                        $isCorrect = $answerValue !== null && strtolower($answerValue) === strtolower($option);
+                                                    @endphp
+                                                    <li class="flex items-start gap-3">
+                                                        <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded-full {{ $isCorrect ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800/50 dark:text-emerald-200' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' }}">
+                                                            {{ chr(65 + (int) $loop->index) }}
+                                                        </span>
+                                                        <div class="flex-1">
+                                                            <div class="{{ $isCorrect ? 'font-semibold text-emerald-800 dark:text-emerald-200' : 'text-gray-800 dark:text-gray-200' }}">
+                                                                {!! $option !!}
+                                                            </div>
+                                                            @if($isCorrect)
+                                                                <div class="text-xs text-emerald-600 dark:text-emerald-300">Correct answer</div>
+                                                            @endif
+                                                        </div>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <button wire:click="moveQuestionUp({{ $index }})" class="p-1 text-gray-400 hover:text-gray-600" @if($index === 0) disabled @endif>

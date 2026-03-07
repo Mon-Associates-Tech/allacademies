@@ -19,6 +19,9 @@
                     <span class="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm rounded-full">
                         Results Released
                     </span>
+                    <button wire:click="resendResultNotifications" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+                        Resend Result Emails
+                    </button>
                 @endif
                 <button wire:click="exportResults" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                     Export CSV
@@ -27,6 +30,16 @@
         </div>
 
         <!-- Stats Cards -->
+        @php
+            $defaults = [
+                'total' => 0,
+                'completed' => 0,
+                'in_progress' => 0,
+                'average_score' => 0,
+                'needs_grading' => 0,
+            ];
+            $stats = array_merge($defaults, $stats ?? []);
+        @endphp
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total'] }}</div>
@@ -124,16 +137,19 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        @if($submission->score !== null)
-                                            <div class="font-medium text-gray-900 dark:text-white">
-                                                {{ number_format($submission->score, 1) }}%
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                {{ $submission->points_earned ?? 0 }}/{{ $submission->total_points ?? $assignment->total_marks }}
-                                            </div>
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
+                                        @php
+                                            $percent = $submission->percentage ?? (($submission->total_marks > 0 && $submission->score !== null) ? ($submission->score / $submission->total_marks * 100) : null);
+                                        @endphp
+                                        <div class="font-medium text-gray-900 dark:text-white">
+                                            {{ $percent !== null ? number_format($percent, 1).'%' : '—' }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            @if($submission->score !== null && $submission->total_marks !== null)
+                                                {{ $submission->score }}/{{ $submission->total_marks }}
+                                            @else
+                                                &nbsp;
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                                         {{ $this->formatTimeSpent($submission->time_spent_seconds) }}
@@ -193,7 +209,7 @@
     </div>
 
     <!-- Submission Detail Modal -->
-    @if($viewingSubmission)
+    @if($viewingSubmission ?? false)
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <div class="fixed inset-0 bg-black/50" wire:click="closeSubmissionView"></div>

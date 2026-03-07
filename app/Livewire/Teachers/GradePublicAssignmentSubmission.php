@@ -106,13 +106,19 @@ class GradePublicAssignmentSubmission extends Component
             return;
         }
 
-        // Validate points
-        $points = (float) $gradeData['points'];
-        if ($points < 0 || $points > $question->marks) {
-            session()->flash('error', "Points must be between 0 and {$question->marks}.");
+        // Determine points
+        $points = (float) ($gradeData['points'] ?? 0);
 
-            return;
+        // Auto-grade objective types
+        if (in_array($question->type, ['multiple_choice', 'true_false'], true)) {
+            $response = $this->getResponseForQuestion($questionId);
+            $isCorrect = $this->isResponseCorrect($question, $response);
+            $points = $isCorrect ? $question->marks : 0;
+            $gradeData['feedback'] = $gradeData['feedback'] ?? ($isCorrect ? 'Auto-graded: correct' : 'Auto-graded: incorrect');
         }
+
+        // Basic floor at 0
+        $points = max(0, $points);
 
         try {
             $this->gradingService->manualGradeQuestion(
@@ -120,13 +126,19 @@ class GradePublicAssignmentSubmission extends Component
                 $questionId,
                 $points,
                 $gradeData['feedback'] ?? null,
-                $this->teacher->user_id
+                $this->teacher->user_id ?? Auth::id()
             );
 
             $this->questionGrades[$questionId]['is_graded'] = true;
             $this->submission->refresh();
 
             session()->flash('success', 'Question grade saved successfully.');
+
+            // Move to next question after save
+            $totalQuestions = $this->assignment->questions->count();
+            if ($this->currentQuestionIndex < $totalQuestions - 1) {
+                $this->currentQuestionIndex++;
+            }
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to save grade: '.$e->getMessage());
         }
@@ -150,7 +162,7 @@ class GradePublicAssignmentSubmission extends Component
                         $questionId,
                         $points,
                         $gradeData['feedback'] ?? null,
-                        $this->teacher->user_id
+                        $this->teacher->user_id ?? Auth::id()
                     );
                 } catch (\Exception $e) {
                     // Continue with other questions
@@ -169,7 +181,7 @@ class GradePublicAssignmentSubmission extends Component
         try {
             $this->gradingService->finalizeGrading(
                 $this->submission,
-                $this->teacher->user,
+                $this->teacher->user ?? Auth::user(),
                 $this->overallFeedback
             );
 
@@ -201,6 +213,32 @@ class GradePublicAssignmentSubmission extends Component
         $responses = $this->submission->responses ?? [];
 
         return $responses[$questionId]['response'] ?? null;
+    }
+
+    protected function isResponseCorrect(PublicAssignmentQuestion $question, mixed $response): bool
+    {
+        if ($response === null) {
+            return false;
+        }
+
+        if ($question->type === 'multiple_choice') {
+            $normalizedResponse = strtoupper(trim((string) $response));
+            $normalizedCorrect = strtoupper(trim((string) $question->correct_answer));
+            return $normalizedResponse === $normalizedCorrect;
+        }
+
+        if ($question->type === 'true_false') {
+            $trueValues = ['true', '1', 'yes', 't'];
+            $falseValues = ['false', '0', 'no', 'f'];
+            $normalizedResponse = strtolower(trim((string) $response));
+            $normalizedCorrect = strtolower(trim((string) $question->correct_answer));
+            $responseIsTrue = in_array($normalizedResponse, $trueValues, true);
+            $responseIsFalse = in_array($normalizedResponse, $falseValues, true);
+            $correctIsTrue = in_array($normalizedCorrect, $trueValues, true);
+            return ($responseIsTrue && $correctIsTrue) || ($responseIsFalse && ! $correctIsTrue);
+        }
+
+        return false;
     }
 
     public function getGradingProgressProperty(): array

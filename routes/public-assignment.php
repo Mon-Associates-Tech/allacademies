@@ -70,8 +70,9 @@ Route::get('/assignments/results/{token}', [PublicAssignmentController::class, '
 
 Route::middleware(['auth', 'verified'])->prefix('teachers/public-assignments')->name('teachers.public-assignments.')->group(function () {
     // List all public assignments
-    Route::get('/', [TeacherPublicAssignmentController::class, 'index'])
-        ->name('index');
+    Route::get('/', [TeacherPublicAssignmentController::class, 'index']);
+    Route::get('/index', [TeacherPublicAssignmentController::class, 'index'])->name('index');
+    Route::get('/list', [TeacherPublicAssignmentController::class, 'index'])->name('list');
 
     // Create new public assignment
     Route::get('/create', [TeacherPublicAssignmentController::class, 'create'])

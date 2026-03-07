@@ -99,6 +99,10 @@ class CreatePublicAssignment extends Component
 
     public ?int $selectedAcademicSubjectId = null;
 
+    public ?int $selectedAcademicTopicId = null;
+
+    public ?int $selectedAcademicSubtopicId = null;
+
     public array $selectedAcademicTopicIds = [];
 
     public array $selectedAcademicSubtopicIds = [];
@@ -157,7 +161,19 @@ class CreatePublicAssignment extends Component
 
     public function mount(): void
     {
+        $schoolId = getSchoolId() ?? Auth::user()?->school_id;
         $this->teacher = Teacher::where('user_id', Auth::id())->first();
+
+        // Allow administrators/owners to create public assignments by ensuring a teacher profile exists
+        if (! $this->teacher && $schoolId) {
+            $this->teacher = Teacher::firstOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'school_id' => $schoolId,
+                    'status' => 'active',
+                ]
+            );
+        }
 
         // Set default dates
         $this->starts_at = Carbon::now()->addHour()->format('Y-m-d\TH:i');
@@ -202,6 +218,20 @@ class CreatePublicAssignment extends Component
     public function updatedSelectedAcademicSubtopicId(): void
     {
         $this->updateAvailableQuestionsCount();
+    }
+
+    public function updatedEditingQuestionType($value): void
+    {
+        if ($value === 'multiple_choice') {
+            $this->editingQuestion['options'] = ['A' => '', 'B' => '', 'C' => '', 'D' => ''];
+            $this->editingQuestion['correct_answer'] = 'A';
+        } elseif ($value === 'true_false') {
+            $this->editingQuestion['options'] = [];
+            $this->editingQuestion['correct_answer'] = 'true';
+        } else { // short_answer, essay, or others
+            $this->editingQuestion['options'] = [];
+            $this->editingQuestion['correct_answer'] = null;
+        }
     }
 
     // Get Academic Groups for dropdown
@@ -429,11 +459,15 @@ class CreatePublicAssignment extends Component
     // Convert database question to assignment format
     protected function convertDatabaseQuestionToFormat($dbQuestion, string $type): array
     {
+        $difficulty = strtolower($dbQuestion->difficulty_level ?? 'medium');
+        if (! in_array($difficulty, ['easy', 'medium', 'hard'], true)) {
+            $difficulty = 'medium';
+        }
         $baseQuestion = [
             'type' => $type,
             'question' => $this->extractStringFromMark($dbQuestion->question),
             'marks' => $dbQuestion->score ?? 1,
-            'difficulty' => $dbQuestion->difficulty_level ?? 'medium',
+            'difficulty' => $difficulty,
             'explanation' => '',
             'ai_generated' => false,
             'database_id' => $dbQuestion->id,
@@ -746,9 +780,14 @@ class CreatePublicAssignment extends Component
                 ? $this->sections[$sectionIndex]['questions'][$questionIndex]
                 : $this->questions[$questionIndex];
 
+            $difficulty = strtolower($currentQuestion['difficulty'] ?? 'medium');
+            if (! in_array($difficulty, ['easy', 'medium', 'hard'], true)) {
+                $difficulty = 'medium';
+            }
+
             $parameters = [
                 'question_types' => [$currentQuestion['type'] => 1],
-                'difficulty' => $currentQuestion['difficulty'] ?? 'medium',
+                'difficulty' => $difficulty,
             ];
 
             $content = $this->documentContent ?? $this->description ?? $this->title;
@@ -816,11 +855,20 @@ class CreatePublicAssignment extends Component
             return;
         }
 
-        if (! $this->teacher) {
-            session()->flash('error', 'Teacher profile not found.');
+        $schoolId = getSchoolId() ?? Auth::user()?->school_id;
+        $this->teacher = Teacher::where('user_id', Auth::id())->first();
 
-            return;
+        // Allow administrators/owners to create public assignments by ensuring a teacher profile exists
+        if (! $this->teacher && $schoolId) {
+            $this->teacher = Teacher::firstOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'school_id' => $schoolId,
+                    'status' => 'active',
+                ]
+            );
         }
+
 
         try {
             $data = [
@@ -867,10 +915,19 @@ class CreatePublicAssignment extends Component
 
     public function publishAssignment(): void
     {
-        if (! $this->teacher) {
-            session()->flash('error', 'Teacher profile not found.');
 
-            return;
+        $schoolId = getSchoolId() ?? Auth::user()?->school_id;
+        $this->teacher = Teacher::where('user_id', Auth::id())->first();
+
+        // Allow administrators/owners to create public assignments by ensuring a teacher profile exists
+        if (! $this->teacher && $schoolId) {
+            $this->teacher = Teacher::firstOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'school_id' => $schoolId,
+                    'status' => 'active',
+                ]
+            );
         }
 
         try {
@@ -888,6 +945,11 @@ class CreatePublicAssignment extends Component
 
     protected function prepareAssignmentData(): array
     {
+        $normalizeDifficulty = function ($value): string {
+            $value = strtolower($value ?? 'medium');
+            return in_array($value, ['easy', 'medium', 'hard'], true) ? $value : 'medium';
+        };
+
         $data = [
             'title' => $this->title,
             'description' => $this->description,
@@ -910,9 +972,26 @@ class CreatePublicAssignment extends Component
         ];
 
         if ($this->useSections && ! empty($this->sections)) {
-            $data['sections'] = $this->sections;
+            $data['sections'] = array_map(function ($section) use ($normalizeDifficulty) {
+                $section['questions'] = array_map(function ($q) use ($normalizeDifficulty) {
+                    $q['question'] = $this->extractStringFromMark($q['question']);
+                    $q['options'] = $q['options'] ?? null;
+                    $q['keywords'] = $q['keywords'] ?? null;
+                    $q['grading_rubric'] = $q['grading_rubric'] ?? null;
+                    $q['difficulty'] = $normalizeDifficulty($q['difficulty'] ?? null);
+                    return $q;
+                }, $section['questions'] ?? []);
+                return $section;
+            }, $this->sections);
         } else {
-            $data['questions'] = $this->questions;
+            $data['questions'] = array_map(function ($q) use ($normalizeDifficulty) {
+                $q['question'] = $this->extractStringFromMark($q['question']);
+                $q['options'] = $q['options'] ?? null;
+                $q['keywords'] = $q['keywords'] ?? null;
+                $q['grading_rubric'] = $q['grading_rubric'] ?? null;
+                $q['difficulty'] = $normalizeDifficulty($q['difficulty'] ?? null);
+                return $q;
+            }, $this->questions);
         }
 
         return $data;

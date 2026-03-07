@@ -29,7 +29,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Assignment Submitted!</h2>
                 <p class="text-gray-600 dark:text-gray-400 mb-6">Your responses have been recorded successfully.</p>
 
-                @if($canViewResults)
+                @if($canViewResults ?? false)
                     <a href="{{ route('public-assignments.results.token', $submission->result_token) }}"
                        class="inline-block w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors">
                         View Results
