@@ -15,7 +15,7 @@
                     type="text"
                     id="subject"
                     wire:model="subject"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter message subject"
                 >
                 @error('subject') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
@@ -117,7 +117,7 @@
                             <input type="text"
                                    wire:model.live.debounce.300ms="userSearch"
                                    placeholder="Search students by name..."
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         @if(!empty($userSearch))
@@ -165,7 +165,7 @@
                 <textarea
                     id="body"
                     wire:model="body"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     rows="6"
                     placeholder="Write your message here...">
                 </textarea>
@@ -176,7 +176,7 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
 
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors">
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-gray-400 transition-colors">
                     <input type="file"
                            wire:model.live="attachments"
                            multiple

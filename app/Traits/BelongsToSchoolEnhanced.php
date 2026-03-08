@@ -141,7 +141,8 @@ trait BelongsToSchoolEnhanced
         }
 
         // Non-school roles don't auto-assign
-        $nonSchoolRoles = ['subscriber'];
+        // Don't auto-assign for non-school roles
+        $nonSchoolRoles = ['guest'];
         if ($user->hasAnyRole($nonSchoolRoles)) {
             return false;
         }
@@ -178,8 +179,9 @@ trait BelongsToSchoolEnhanced
                         return null;
                     }
 
-                    // Non-school roles
-                    if ($user->hasAnyRole(['subscriber'])) {
+                    // Non-school roles don't have school context
+                    $nonSchoolRoles = ['guest'];
+                    if ($user->hasAnyRole($nonSchoolRoles)) {
                         return null;
                     }
 

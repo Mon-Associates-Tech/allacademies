@@ -96,13 +96,13 @@
                             <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label for="name" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">School Name *</label>
-                                    <input type="text" id="name" wire:model="name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="name" wire:model="name" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('name') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div>
                                     <label for="code" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">School Code</label>
-                                    <input type="text" id="code" wire:model="code" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="code" wire:model="code" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 </div>
                             </div>
 
@@ -110,19 +110,19 @@
                             <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
                                 <div>
                                     <label for="email" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                                    <input type="email" id="email" wire:model="email" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="email" id="email" wire:model="email" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('email') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div>
                                     <label for="phone" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                                    <input type="text" id="phone" wire:model="phone" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="phone" wire:model="phone" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('phone') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div>
                                     <label for="website" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Website</label>
-                                    <input type="url" id="website" wire:model="website" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="url" id="website" wire:model="website" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('website') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -130,28 +130,28 @@
                             {{-- Address Information --}}
                             <div class="mb-6">
                                 <label for="address" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                                <input type="text" id="address" wire:model="address" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <input type="text" id="address" wire:model="address" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                             </div>
 
                             <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-4">
                                 <div>
                                     <label for="city" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
-                                    <input type="text" id="city" wire:model="city" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="city" wire:model="city" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 </div>
 
                                 <div>
                                     <label for="state" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">State/Province</label>
-                                    <input type="text" id="state" wire:model="state" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="state" wire:model="state" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 </div>
 
                                 <div>
                                     <label for="country" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
-                                    <input type="text" id="country" wire:model="country" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="country" wire:model="country" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 </div>
 
                                 <div>
                                     <label for="postal_code" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Postal Code</label>
-                                    <input type="text" id="postal_code" wire:model="postal_code" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="postal_code" wire:model="postal_code" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 </div>
                             </div>
 
@@ -159,7 +159,7 @@
                             <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label for="type" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">School Type</label>
-                                    <select id="type" wire:model="type" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <select id="type" wire:model="type" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         <option value="">Select Type</option>
                                         @foreach($schoolTypes as $key => $value)
                                             <option value="{{ $key }}">{{ $value }}</option>
@@ -169,14 +169,14 @@
 
                                 <div>
                                     <label for="student_capacity" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Student Capacity</label>
-                                    <input type="number" id="student_capacity" wire:model="student_capacity" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="number" id="student_capacity" wire:model="student_capacity" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 </div>
                             </div>
 
                             <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label for="timezone" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Timezone</label>
-                                    <select id="timezone" wire:model="timezone" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <select id="timezone" wire:model="timezone" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @foreach($timezones as $key => $value)
                                             <option value="{{ $key }}">{{ $value }}</option>
                                         @endforeach
@@ -185,7 +185,7 @@
 
                                 <div>
                                     <label for="currency" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
-                                    <select id="currency" wire:model="currency" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <select id="currency" wire:model="currency" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @foreach($currencies as $key => $value)
                                             <option value="{{ $key }}">{{ $value }}</option>
                                         @endforeach
@@ -195,7 +195,7 @@
 
                             <div class="mb-6">
                                 <label for="description" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                                <textarea id="description" wire:model="description" rows="4" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
+                                <textarea id="description" wire:model="description" rows="4" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
                             </div>
 
                             <div class="flex justify-end">
@@ -220,7 +220,7 @@
                                     @if($letterhead)
                                         <img src="{{ Storage::url($letterhead) }}" alt="Letterhead" class="h-32 rounded-lg border border-gray-200 object-cover dark:border-gray-700">
                                     @else
-                                        <div class="flex h-32 w-48 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                        <div class="flex h-32 w-48 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-600">
                                             <span class="text-sm text-gray-500 dark:text-gray-400">No letterhead</span>
                                         </div>
                                     @endif
@@ -235,7 +235,7 @@
                             {{-- School Motto --}}
                             <div class="mb-6">
                                 <label for="school_motto" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">School Motto</label>
-                                <input type="text" id="school_motto" wire:model="school_motto" placeholder="e.g., Excellence in Education" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <input type="text" id="school_motto" wire:model="school_motto" placeholder="e.g., Excellence in Education" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                             </div>
 
                             {{-- School Colors --}}
@@ -262,13 +262,13 @@
                             {{-- Report Header --}}
                             <div class="mb-6">
                                 <label for="report_header" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Report Header Text</label>
-                                <textarea id="report_header" wire:model="report_header" rows="3" placeholder="Text to appear at the top of reports" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
+                                <textarea id="report_header" wire:model="report_header" rows="3" placeholder="Text to appear at the top of reports" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
                             </div>
 
                             {{-- Report Footer --}}
                             <div class="mb-6">
                                 <label for="report_footer" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Report Footer Text</label>
-                                <textarea id="report_footer" wire:model="report_footer" rows="3" placeholder="Text to appear at the bottom of reports" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
+                                <textarea id="report_footer" wire:model="report_footer" rows="3" placeholder="Text to appear at the bottom of reports" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
                             </div>
 
                             <div class="flex justify-end">
@@ -353,7 +353,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
+                                <div class="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 text-center dark:border-gray-700">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
@@ -445,7 +445,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
+                                <div class="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 text-center dark:border-gray-700">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
@@ -511,7 +511,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
+                                <div class="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 text-center dark:border-gray-700">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                     </svg>
@@ -542,27 +542,27 @@
                             <div class="space-y-4">
                                 <div>
                                     <label for="yearName" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Year Name *</label>
-                                    <input type="text" id="yearName" wire:model="yearName" placeholder="e.g., 2024-2025" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="yearName" wire:model="yearName" placeholder="e.g., 2024-2025" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('yearName') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="yearStartDate" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date *</label>
-                                        <input type="date" id="yearStartDate" wire:model="yearStartDate" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="yearStartDate" wire:model="yearStartDate" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @error('yearStartDate') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
                                         <label for="yearEndDate" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">End Date *</label>
-                                        <input type="date" id="yearEndDate" wire:model="yearEndDate" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="yearEndDate" wire:model="yearEndDate" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @error('yearEndDate') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
 
                                 <div>
                                     <label for="yearStatus" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                                    <select id="yearStatus" wire:model="yearStatus" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <select id="yearStatus" wire:model="yearStatus" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         <option value="upcoming">Upcoming</option>
                                         <option value="active">Active</option>
                                         <option value="completed">Completed</option>
@@ -574,7 +574,7 @@
                             <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm">
                                 {{ $editingYearId ? 'Update' : 'Create' }}
                             </button>
-                            <button type="button" wire:click="showAcademicYearModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto sm:text-sm">
+                            <button type="button" wire:click="showAcademicYearModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto sm:text-sm">
                                 Cancel
                             </button>
                         </div>
@@ -600,14 +600,14 @@
                             <div class="space-y-4">
                                 <div>
                                     <label for="periodTitle" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Period Title *</label>
-                                    <input type="text" id="periodTitle" wire:model="periodTitle" placeholder="e.g., Fall Semester 2024" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="periodTitle" wire:model="periodTitle" placeholder="e.g., Fall Semester 2024" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('periodTitle') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="grid grid-cols-3 gap-4">
                                     <div>
                                         <label for="periodType" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Type *</label>
-                                        <select id="periodType" wire:model="periodType" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <select id="periodType" wire:model="periodType" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                             <option value="semester">Semester</option>
                                             <option value="term">Term</option>
                                             <option value="quarter">Quarter</option>
@@ -619,12 +619,12 @@
 
                                     <div>
                                         <label for="periodSequence" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Sequence</label>
-                                        <input type="number" id="periodSequence" wire:model="periodSequence" min="1" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="number" id="periodSequence" wire:model="periodSequence" min="1" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     </div>
 
                                     <div>
                                         <label for="periodStatus" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                                        <select id="periodStatus" wire:model="periodStatus" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <select id="periodStatus" wire:model="periodStatus" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                             <option value="upcoming">Upcoming</option>
                                             <option value="active">Active</option>
                                             <option value="completed">Completed</option>
@@ -634,7 +634,7 @@
 
                                 <div>
                                     <label for="periodAcademicYearId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Academic Year</label>
-                                    <select id="periodAcademicYearId" wire:model="periodAcademicYearId" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <select id="periodAcademicYearId" wire:model="periodAcademicYearId" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         <option value="">Select Academic Year</option>
                                         @foreach($academicYears as $year)
                                             <option value="{{ $year->id }}">{{ $year->name }}</option>
@@ -645,13 +645,13 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="periodStartDate" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date *</label>
-                                        <input type="date" id="periodStartDate" wire:model="periodStartDate" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="periodStartDate" wire:model="periodStartDate" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @error('periodStartDate') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
                                         <label for="periodEndDate" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">End Date *</label>
-                                        <input type="date" id="periodEndDate" wire:model="periodEndDate" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="periodEndDate" wire:model="periodEndDate" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @error('periodEndDate') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
@@ -659,30 +659,30 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="registrationStart" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Registration Start</label>
-                                        <input type="date" id="registrationStart" wire:model="registrationStart" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="registrationStart" wire:model="registrationStart" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     </div>
 
                                     <div>
                                         <label for="registrationEnd" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Registration End</label>
-                                        <input type="date" id="registrationEnd" wire:model="registrationEnd" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="registrationEnd" wire:model="registrationEnd" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="examStart" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Exam Start</label>
-                                        <input type="date" id="examStart" wire:model="examStart" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="examStart" wire:model="examStart" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     </div>
 
                                     <div>
                                         <label for="examEnd" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Exam End</label>
-                                        <input type="date" id="examEnd" wire:model="examEnd" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="date" id="examEnd" wire:model="examEnd" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label for="periodDescription" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                                    <textarea id="periodDescription" wire:model="periodDescription" rows="3" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
+                                    <textarea id="periodDescription" wire:model="periodDescription" rows="3" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -690,7 +690,7 @@
                             <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm">
                                 {{ $editingPeriodId ? 'Update' : 'Create' }}
                             </button>
-                            <button type="button" wire:click="showPeriodModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto sm:text-sm">
+                            <button type="button" wire:click="showPeriodModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto sm:text-sm">
                                 Cancel
                             </button>
                         </div>
@@ -716,27 +716,27 @@
                             <div class="space-y-4">
                                 <div>
                                     <label for="gradeName" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Grade *</label>
-                                    <input type="text" id="gradeName" wire:model="gradeName" placeholder="e.g., A, B, C" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="text" id="gradeName" wire:model="gradeName" placeholder="e.g., A, B, C" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('gradeName') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="gradeMinScore" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Minimum Score (%) *</label>
-                                        <input type="number" id="gradeMinScore" wire:model="gradeMinScore" min="0" max="100" step="0.01" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="number" id="gradeMinScore" wire:model="gradeMinScore" min="0" max="100" step="0.01" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @error('gradeMinScore') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
                                         <label for="gradeMaxScore" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Maximum Score (%) *</label>
-                                        <input type="number" id="gradeMaxScore" wire:model="gradeMaxScore" min="0" max="100" step="0.01" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <input type="number" id="gradeMaxScore" wire:model="gradeMaxScore" min="0" max="100" step="0.01" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                         @error('gradeMaxScore') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
 
                                 <div>
                                     <label for="gradePoint" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Grade Point (GPA)</label>
-                                    <input type="number" id="gradePoint" wire:model="gradePoint" min="0" max="5" step="0.01" placeholder="e.g., 4.0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <input type="number" id="gradePoint" wire:model="gradePoint" min="0" max="5" step="0.01" placeholder="e.g., 4.0" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                     @error('gradePoint') <span class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
@@ -750,7 +750,7 @@
 
                                 <div>
                                     <label for="gradeDescription" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                                    <textarea id="gradeDescription" wire:model="gradeDescription" rows="3" placeholder="e.g., Excellent, Outstanding" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
+                                    <textarea id="gradeDescription" wire:model="gradeDescription" rows="3" placeholder="e.g., Excellent, Outstanding" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -758,7 +758,7 @@
                             <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm">
                                 {{ $editingGradeScaleId ? 'Update' : 'Create' }}
                             </button>
-                            <button type="button" wire:click="showGradeScaleModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto sm:text-sm">
+                            <button type="button" wire:click="showGradeScaleModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto sm:text-sm">
                                 Cancel
                             </button>
                         </div>

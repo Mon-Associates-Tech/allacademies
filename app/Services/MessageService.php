@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class MessageService
 {
@@ -24,7 +25,18 @@ class MessageService
         try {
             DB::beginTransaction();
 
-            $recipients = $this->getRecipientsForMessage($message);
+            $filtered = $this->filterValidRecipients(
+                $this->getRecipientsForMessage($message)
+            );
+
+            if ($filtered['skipped'] > 0) {
+                Log::warning('Skipped recipients without valid email', [
+                    'message_id' => $message->id,
+                    'skipped' => $filtered['skipped'],
+                ]);
+            }
+
+            $recipients = $filtered['recipients'];
 
             Log::info('Sending message to recipients', [
                 'message_id' => $message->id,
@@ -45,7 +57,8 @@ class MessageService
                     'user_id' => $recipient->id,
                 ]);
 
-                Mail::to($recipient->email)->send(new MessageNotificationMail($message, $recipient));
+                // Force immediate send so mail isn't left waiting on the queue worker
+                Mail::to($recipient->email)->sendNow(new MessageNotificationMail($message, $recipient));
 
                 Log::info('Email sent to recipient', [
                     'message_id' => $message->id,
@@ -88,6 +101,23 @@ class MessageService
     public function getRecipientsForMessage(Message $message): Collection
     {
         return $this->resolveRecipients($message->target_type, $message->target_criteria);
+    }
+
+    /**
+     * Remove recipients lacking a usable email to prevent Mime errors.
+     */
+    protected function filterValidRecipients(Collection $recipients): array
+    {
+        $valid = $recipients->filter(function ($recipient) {
+            $email = $recipient->email ?? '';
+
+            return filled($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+        });
+
+        return [
+            'recipients' => $valid->values(),
+            'skipped' => $recipients->count() - $valid->count(),
+        ];
     }
 
     public function resolveRecipients(string $targetType, array $criteria): Collection

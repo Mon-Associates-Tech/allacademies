@@ -21,12 +21,12 @@ return new class extends Migration
 
         Schema::table('parents', static function (Blueprint $table) {
             if (Schema::hasColumn('parents', 'student_id')) {
-                $table->dropIndex(['student_id']);
+                // Must drop foreign key before dropping the index it depends on
                 $table->dropForeign(['student_id']);
+                $table->dropIndex(['student_id']);
                 $table->dropColumn('student_id');
             }
             if (Schema::hasColumn('parents', 'relationship')) {
-                $table->dropIndex(['relationship']);
                 $table->dropColumn('relationship');
             }
         });

@@ -112,9 +112,16 @@
             </nav>
 
             <!-- Right side actions -->
-            <div class="flex items-center space-x-4">
-                <!-- Sign In Button -->
-                <div class="hidden lg:flex">
+            <div class="flex items-center space-x-3 lg:space-x-4">
+                <!-- Sign In and Register Buttons -->
+                <div class="hidden lg:flex items-center gap-3">
+                    <!-- Register Button (Smaller, Outlined) -->
+                    <a href="{{ route('register') }}"
+                       class="inline-flex items-center px-4 py-2 font-semibold rounded-lg transition-all duration-300 border-2"
+                       :class="scrolled ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950' : 'text-white border-white/40 hover:border-white hover:bg-white/10'">
+                        Register
+                    </a>
+                    <!-- Sign In Button -->
                     <a href="{{ route('login') }}"
                        class="inline-flex items-center px-6 py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                        :class="scrolled ? 'text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700' : 'text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white hover:text-blue-600'">
@@ -123,7 +130,7 @@
                     </a>
                     <x-link.primary variant="primary" type="button" class="ml-4 hidden"
                                     to="{{ route('payments.public.lookup') }}">
-                        <span>Make Payment</span>
+                        <span>School Fees Payment Portal</span>
                     </x-link.primary>
                 </div>
 
@@ -190,13 +197,17 @@
                                    x-on:click="open = false">FAQ</a>
                             </div>
                             <div class="py-6 space-y-3">
+                                <a href="{{ route('register') }}"
+                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:border-blue-400 dark:text-blue-400 transition-all">
+                                    Register
+                                </a>
                                 <a href="{{ route('login') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
                                     Sign In
                                 </a>
                                 <a href="{{ route('payments.public.lookup') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
-                                    Make Payment
+                                    School Fees Payment Portal
                                 </a>
                             </div>
                         </div>

@@ -142,7 +142,7 @@
 
                 @foreach($tabs as $tabKey => $tab)
                     <button wire:click="setActiveTab('{{ $tabKey }}')"
-                            class="flex items-center px-6 py-4 text-sm font-medium border-b-2 transition-colors {{ $activeTab === $tabKey ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            class="flex items-center px-6 py-4 text-sm font-medium border-b-2 transition-colors {{ $activeTab === $tabKey ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tab['icon'] }}"/>
                         </svg>

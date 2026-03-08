@@ -461,7 +461,15 @@ class StudentSelfAssessment extends Component
             'status' => Assessment::STATUS_IN_PROGRESS,
             'has_essay_questions' => in_array('essay_question', array_keys(array_filter($this->questionTypes))),
             'start_time' => now(),
-            'questions_data' => json_encode($this->questions), // JSON encode the data
+            'questions_data' => json_encode($this->questions),
+        ]);
+
+        // Log activity
+        $this->assessment->logActivity('create', 'Self Assessment Created', 'assessment', [
+            'assessment_title' => $this->assessment->title,
+            'subject_name' => $this->getSubjectName(),
+            'question_types' => array_keys(array_filter($this->questionTypes)),
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
     }
 
@@ -698,9 +706,18 @@ class StudentSelfAssessment extends Component
             'completed_at' => now(),
         ];
 
-        AssessmentResponse::create([
+        $response = AssessmentResponse::create([
             'assessment_id' => $this->assessment->id,
             'data' => $responseData,
+        ]);
+
+        // Log activity
+        $response->logActivity('create', 'Assessment Response Submitted', 'assessment_response', [
+            'assessment_title' => $this->assessment->title,
+            'score' => $this->results['total_score'],
+            'max_score' => $this->results['max_score'],
+            'percentage' => $this->results['percentage'],
+            'submitted_by' => auth()->user()?->name ?? 'Unknown',
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Livewire\Guests;
 
 use App\Models\Assessment;
 use App\Models\BookSubscription;
+use App\Models\QuizSession;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -21,6 +22,30 @@ class Analytics extends Component
 
     public $goals = [];
 
+    // Quiz/Self-Assessment Stats
+    public $totalQuizAttempts = 0;
+
+    public $averageSelfAssessmentScore = 0;
+
+    public $recentSelfAssessments = [];
+
+    public $quizzesByDifficulty = [];
+
+    public $quizzesByType = [];
+
+    // Quiz Chart props
+    public array $quizBarLabels = [];
+
+    public array $quizBarDatasets = [];
+
+    public array $quizBarOptions = [];
+
+    public array $quizPieLabels = [];
+
+    public array $quizPieValues = [];
+
+    public array $quizPieOptions = [];
+
     public function mount()
     {
         $this->loadAnalytics();
@@ -30,7 +55,7 @@ class Analytics extends Component
     {
         $user = Auth::user();
 
-        if (! $user->student) {
+        if (! $user) {
             return;
         }
 
@@ -39,16 +64,22 @@ class Analytics extends Component
         $this->analyticsData = Cache::remember($cacheKey, 300, function () use ($user) {
             return $this->calculateAnalytics($user);
         });
+
+        // Load quiz session stats (works for all users, not just students)
+        $this->loadQuizSessionStats($user);
     }
 
     private function calculateAnalytics($user)
     {
         $startDate = $this->getStartDate();
 
-        // Assessment performance
-        $assessments = Assessment::where('student_id', $user->student->id)
-            ->where('created_at', '>=', $startDate)
-            ->get();
+        // Assessment performance - only query if user has a student record
+        $studentId = $user->student?->id;
+        $assessments = $studentId
+            ? Assessment::where('student_id', $studentId)
+                ->where('created_at', '>=', $startDate)
+                ->get()
+            : collect();
 
         // Reading activity
         $subscriptions = BookSubscription::where('user_id', $user->id)
@@ -219,8 +250,13 @@ class Analytics extends Component
     private function getWeeklyAssessmentCount()
     {
         $user = Auth::user();
+        $studentId = $user->student?->id;
 
-        return Assessment::where('student_id', $user->student->id ?? 0)
+        if (! $studentId) {
+            return 0;
+        }
+
+        return Assessment::where('student_id', $studentId)
             ->where('created_at', '>=', Carbon::now()->startOfWeek())
             ->count();
     }
@@ -275,6 +311,120 @@ class Analytics extends Component
     {
         // Estimate based on assessment count (rough calculation)
         return $assessments->count() * 30; // 30 minutes per assessment session
+    }
+
+    private function loadQuizSessionStats($user): void
+    {
+        $startDate = $this->getStartDate();
+
+        // Get ALL quiz sessions (both book-based and uploaded content)
+        $allQuizSessions = QuizSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', $startDate)
+            ->with(['book', 'subject'])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+
+        $this->totalQuizAttempts = $allQuizSessions->count();
+
+        // Recent self-assessments (all types)
+        $this->recentSelfAssessments = $allQuizSessions->take(5)->map(function ($session) {
+            $title = $session->book?->title ?? ($session->context['book_title'] ?? 'Uploaded Content');
+
+            return [
+                'id' => $session->id,
+                'book_title' => $title,
+                'score' => $session->results['percentage'] ?? 0,
+                'completed_at' => $session->completed_at,
+                'questions_count' => $session->question_count ?? 0,
+                'difficulty' => $session->difficulty ?? 'medium',
+                'type' => $session->book_id ? 'book' : 'uploaded',
+            ];
+        })->toArray();
+
+        // Average self-assessment score
+        if ($allQuizSessions->count() > 0) {
+            $this->averageSelfAssessmentScore = round(
+                $allQuizSessions->avg(function ($session) {
+                    return $session->results['percentage'] ?? 0;
+                }),
+                1
+            );
+        }
+
+        // Group by difficulty for stats
+        $this->quizzesByDifficulty = $allQuizSessions->groupBy('difficulty')->map(function ($group, $difficulty) {
+            return [
+                'difficulty' => ucfirst($difficulty ?: 'medium'),
+                'count' => $group->count(),
+                'average_score' => round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1),
+            ];
+        })->values()->toArray();
+
+        // Group by question type
+        $this->quizzesByType = $allQuizSessions->groupBy('question_type')->map(function ($group, $type) {
+            $typeLabels = [
+                'multiple_choice' => 'Multiple Choice',
+                'true_false' => 'True/False',
+                'essay' => 'Essay',
+                'mixed' => 'Mixed',
+            ];
+
+            return [
+                'type' => $typeLabels[$type] ?? ucfirst(str_replace('_', ' ', $type ?: 'mixed')),
+                'count' => $group->count(),
+                'average_score' => round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1),
+            ];
+        })->values()->toArray();
+
+        // Prepare quiz chart data
+        $this->prepareQuizCharts($allQuizSessions);
+    }
+
+    private function prepareQuizCharts($quizSessions): void
+    {
+        if ($quizSessions->isEmpty()) {
+            $this->quizBarLabels = [];
+            $this->quizBarDatasets = [];
+            $this->quizPieLabels = [];
+            $this->quizPieValues = [];
+
+            return;
+        }
+
+        // Bar chart: Performance by book/content source
+        $bySource = $quizSessions->groupBy(function ($session) {
+            if ($session->book_id && $session->book) {
+                return $session->book->title;
+            }
+
+            return $session->context['book_title'] ?? 'Uploaded Content';
+        });
+
+        $this->quizBarLabels = $bySource->keys()->take(10)->toArray();
+        $barData = $bySource->take(10)->map(function ($group) {
+            return round($group->avg(fn ($s) => $s->results['percentage'] ?? 0), 1);
+        })->values()->toArray();
+
+        $this->quizBarDatasets = [
+            [
+                'label' => 'Avg Score %',
+                'data' => $barData,
+                'backgroundColor' => '#8b5cf6',
+            ],
+        ];
+        $this->quizBarOptions = [
+            'plugins' => ['legend' => ['display' => true, 'position' => 'bottom']],
+            'scales' => [
+                'y' => ['beginAtZero' => true, 'max' => 100],
+            ],
+        ];
+
+        // Pie chart: Distribution by difficulty
+        $byDifficulty = $quizSessions->groupBy('difficulty');
+        $this->quizPieLabels = $byDifficulty->keys()->map(fn ($d) => ucfirst($d ?: 'medium'))->toArray();
+        $this->quizPieValues = $byDifficulty->map(fn ($g) => $g->count())->values()->toArray();
+        $this->quizPieOptions = ['plugins' => ['legend' => ['position' => 'right']]];
     }
 
     public function updatedTimeframe()

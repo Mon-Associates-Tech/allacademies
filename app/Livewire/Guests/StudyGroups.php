@@ -117,6 +117,18 @@ class StudyGroups extends Component
             'join_code' => $this->isPrivate ? Str::upper(Str::random(8)) : null,
         ]);
 
+        // Log activity
+        $group->logActivity('create', 'Study Group Created', 'student_group', [
+            'group_name' => $this->name,
+            'is_private' => $this->isPrivate,
+            'has_join_code' => (bool) $this->isPrivate,
+            'academic_group_id' => $this->academicGroupId,
+            'academic_level_id' => $this->academicLevelId,
+            'subject_id' => $this->subjectId,
+            'requires_approval' => true,
+            'created_by' => $user->name,
+        ]);
+
         session()->flash('success', 'Study group created successfully! It will be live once approved by an administrator.');
         $this->closeCreateModal();
         $this->loadGroups();

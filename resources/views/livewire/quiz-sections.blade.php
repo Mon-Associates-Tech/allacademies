@@ -30,14 +30,14 @@
         <label class="block text-gray-800 font-medium text-sm mt-3">Available Questions</label>
 
         <fieldset>
-            <div class="overflow-hidden rounded-lg border border-gray-300 bg-white mt-3">
+            <div class="overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 mt-3">
                 <ul role="list" class="divide-y divide-gray-300">
                     @foreach ($topics as $topic)
                     <li class="p-3">
                         <div class="flex items-center justify-between text-sm">
                             <div class="relative flex items-start">
                                 <div class="flex h-6 items-center">
-                                    <input wire:key="topic-{{ $loop->parent->index }}-{{ $loop->index }}" wire:model.live="sections.{{ $loop->parent->index }}.topics" name="sections[{{ $loop->parent->index }}][topics][]" value="{{ $topic['id'] }}" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                                    <input wire:key="topic-{{ $loop->parent->index }}-{{ $loop->index }}" wire:model.live="sections.{{ $loop->parent->index }}.topics" name="sections[{{ $loop->parent->index }}][topics][]" value="{{ $topic['id'] }}" type="checkbox" class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 focus:ring-indigo-600">
                                 </div>
                                 <div class="ml-3  leading-6">
                                     <label class="font-medium text-gray-700">{{ $topic['name'] }}</label>

@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Librarian extends Model
 {
+    use ActivityLoggable;
     use BelongsToSchoolEnhanced;
     use HasFactory;
 

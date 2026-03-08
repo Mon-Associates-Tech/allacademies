@@ -235,6 +235,40 @@ class SubscriptionCycle extends Model
             return $nextCycle;
         }
 
+        // No next cycle but unused topup tokens remain — create a carryover cycle
+        $unusedTopup = $this->calculateUnusedTopupTokens();
+        if ($unusedTopup > 0) {
+            $startDate = now()->greaterThan($this->cycle_end_date)
+                ? now()
+                : $this->cycle_end_date->copy();
+            $endDate = $startDate->copy()->addDays(30);
+
+            $carryoverCycle = static::create([
+                'user_id' => $this->user_id,
+                'pricing_tier_id' => $this->pricing_tier_id,
+                'subscription_group_id' => $this->subscription_group_id,
+                'cycle_number' => $this->cycle_number + 1,
+                'cycle_start_date' => $startDate,
+                'cycle_end_date' => $endDate,
+                'tokens_allocated' => $unusedTopup,
+                'topup_tokens_allocated' => $unusedTopup,
+                'tokens_used' => 0,
+                'current_price' => 0, // already paid in the topup
+                'status' => now()->between($startDate, $endDate) ? 'active' : 'inactive',
+                'is_topup' => true,
+                'is_trial' => false,
+                'is_merged' => false,
+            ]);
+
+            \Illuminate\Support\Facades\Log::info('Created carryover cycle for unused topup tokens', [
+                'previous_cycle_id' => $this->id,
+                'carryover_cycle_id' => $carryoverCycle->id,
+                'tokens_carried' => $unusedTopup,
+            ]);
+
+            return $carryoverCycle;
+        }
+
         return null;
     }
 

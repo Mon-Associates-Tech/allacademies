@@ -543,6 +543,10 @@ class Settings extends AppComponent
         $user = Auth::user();
         $author = $user->author;
 
+        // Capture original data
+        $originalUserData = $user->only(['name', 'email']);
+        $originalAuthorData = $author ? $author->only(['pen_name', 'biography', 'website', 'writing_experience', 'education', 'awards', 'author_statement']) : [];
+
         // Update user data
         $user->update([
             'name' => $this->name,
@@ -561,6 +565,25 @@ class Settings extends AppComponent
                 'awards' => $this->awards,
                 'author_statement' => $this->author_statement,
             ]);
+
+            // Log activity
+            $author->logActivity('update', 'Author Profile Updated', 'author', [
+                'author_name' => $this->name,
+                'author_pen_name' => $this->pen_name,
+                'changes' => [
+                    'user' => [
+                        'name' => ['old' => $originalUserData['name'] ?? null, 'new' => $this->name],
+                        'email' => ['old' => $originalUserData['email'] ?? null, 'new' => $this->email],
+                    ],
+                    'author' => [
+                        'pen_name' => ['old' => $originalAuthorData['pen_name'] ?? null, 'new' => $this->pen_name],
+                        'biography' => ['old' => $originalAuthorData['biography'] ?? null, 'new' => $this->biography],
+                        'website' => ['old' => $originalAuthorData['website'] ?? null, 'new' => $this->website],
+                        'writing_experience' => ['old' => $originalAuthorData['writing_experience'] ?? null, 'new' => $this->writing_experience],
+                    ],
+                ],
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
         }
 
         session()->flash('profile-updated', 'Profile updated successfully!');
@@ -575,6 +598,13 @@ class Settings extends AppComponent
 
         Auth::user()->update([
             'password' => Hash::make($this->new_password),
+        ]);
+
+        // Log activity
+        Auth::user()->logActivity('update', 'Password Changed', 'user', [
+            'user_name' => auth()->user()?->name ?? 'Unknown',
+            'password_changed' => true,
+            'changed_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
@@ -692,6 +722,19 @@ class Settings extends AppComponent
 
     public function deleteAccount()
     {
+        $user = Auth::user();
+        $author = $user->author;
+
+        // Log activity before deletion
+        if ($author) {
+            $author->logActivity('delete', 'Author Account Deletion Initiated', 'author', [
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'author_pen_name' => $author->pen_name,
+                'initiated_by' => $user->name,
+            ]);
+        }
+
         // Handle account deletion
         session()->flash('account-deletion-initiated', 'Account deletion initiated. You will receive a confirmation email.');
     }

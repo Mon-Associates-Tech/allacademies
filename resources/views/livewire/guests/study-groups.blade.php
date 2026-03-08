@@ -238,7 +238,7 @@
                             Group Name *
                         </label>
                         <input wire:model="name" type="text" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                                placeholder="Enter group name...">
                         @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
@@ -248,7 +248,7 @@
                             Description
                         </label>
                         <textarea wire:model="description" rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                                   placeholder="Describe your study group..."></textarea>
                         @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
@@ -258,7 +258,7 @@
                             Academic Group *
                         </label>
                         <select wire:model="academicGroupId" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
                             <option value="">Select Academic Group</option>
                             @foreach($academicGroups as $group)
                                 <option value="{{ $group->id }}">{{ $group->name }}</option>
@@ -272,7 +272,7 @@
                             Academic Level *
                         </label>
                         <select wire:model="academicLevelId" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
                             <option value="">Select Academic Level</option>
                             @foreach($academicLevels as $level)
                                 <option value="{{ $level->id }}">{{ $level->name }}</option>
@@ -286,7 +286,7 @@
                             Subject *
                         </label>
                         <select wire:model="subjectId" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
                             <option value="">Select Subject</option>
                             @foreach($subjects as $subject)
                                 <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -354,7 +354,7 @@
                         Group Join Code
                     </label>
                     <input wire:model="joinCode" type="text"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                            placeholder="Enter group code...">
                 </div>
 

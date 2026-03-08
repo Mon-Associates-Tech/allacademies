@@ -180,9 +180,9 @@
             <div class="bg-white dark:bg-gray-900 shadow-2xl rounded-lg overflow-hidden">
                 <!-- Header -->
                 <div
-                    class="flex-shrink-0 !bg-gray-100 dark:bg-gray-800/50 border-b w-full border-gray-200 dark:border-gray-700">
+                    class="flex-shrink-0 bg-gray-100 dark:bg-gray-800/50 border-b w-full border-gray-200 dark:border-gray-700">
                     <div
-                        class="flex items-center justify-between px-4 !bg-gray-100 dark:bg-gray-800/50 {{$headerBackground}}">
+                        class="flex items-center justify-between px-4 bg-gray-100 dark:bg-gray-800/50 {{$headerBackground}}">
                         <div class="flex-1">
                             @if($title || isset($header))
                                 <div class="flex items-center space-x-3 py-3">

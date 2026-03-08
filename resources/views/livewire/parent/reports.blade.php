@@ -87,11 +87,11 @@
             <div class="border-b border-gray-200 dark:border-gray-700">
                 <nav class="flex space-x-8 px-6" aria-label="Tabs">
                     <button wire:click="changeTab('generate')"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'generate' ? 'border-violet-500 text-violet-600 dark:text-violet-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'generate' ? 'border-violet-500 text-violet-600 dark:text-violet-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300' }}">
                         Generate New Report
                     </button>
                     <button wire:click="changeTab('history')"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'history' ? 'border-violet-500 text-violet-600 dark:text-violet-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'history' ? 'border-violet-500 text-violet-600 dark:text-violet-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300' }}">
                         Report History
                     </button>
                 </nav>

@@ -26,7 +26,7 @@ class UserLoginService
             ->update([
                 'logout_at' => now(),
                 'action' => 'logged_out',
-                'logout_type' => 'new_session',
+                'logout_type' => 'session_timeout',
                 'duration_minutes' => DB::raw('TIMESTAMPDIFF(MINUTE, login_at, NOW())')
             ]);
 

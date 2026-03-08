@@ -16,7 +16,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
                             <label for="subject" class="block text-sm font-semibold text-gray-700">Subject</label>
-                            <select id="subject" wire:model="selectedSubject" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            <select id="subject" wire:model="selectedSubject" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                 <option value="">Select Subject</option>
                                 @foreach($subjects as $subject)
                                     <option value="{{ $subject['id'] }}">{{ $subject['name'] }}</option>
@@ -27,7 +27,7 @@
 
                         <div>
                             <label for="level" class="block text-sm font-semibold text-gray-700">Academic Level</label>
-                            <select id="level" wire:model="selectedLevel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            <select id="level" wire:model="selectedLevel" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                 <option value="">Select Level</option>
                                 @foreach($levels as $level)
                                     <option value="{{ $level['id'] }}">{{ $level['name'] }}</option>
@@ -38,7 +38,7 @@
 
                         <div>
                             <label for="period" class="block text-sm font-semibold text-gray-700">Academic Period</label>
-                            <select id="period" wire:model="selectedPeriod" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            <select id="period" wire:model="selectedPeriod" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                 <option value="">Select Period</option>
                                 @foreach($periods as $period)
                                     <option value="{{ $period['id'] }}">{{ $period['name'] }} ({{ $period['academic_year'] }})</option>
@@ -50,13 +50,13 @@
 
                     <div class="mt-6">
                         <label for="title" class="block text-sm font-semibold text-gray-700">Title</label>
-                        <input id="title" type="text" wire:model="title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Fall 2025 Introduction to Biology">
+                        <input id="title" type="text" wire:model="title" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Fall 2025 Introduction to Biology">
                         @error('title') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="mt-6">
                         <label for="description" class="block text-sm font-semibold text-gray-700">Description</label>
-                        <textarea id="description" wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Provide a brief description of the course outline."></textarea>
+                        <textarea id="description" wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Provide a brief description of the course outline."></textarea>
                         @error('description') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
@@ -166,13 +166,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="col-span-2">
                             <label for="plannedDate" class="block text-sm font-semibold text-gray-700">Planned Date</label>
-                            <input id="plannedDate" type="date" wire:model="plannedDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            <input id="plannedDate" type="date" wire:model="plannedDate" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
                             @error('plannedDate') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-span-2">
                             <label for="topic" class="block text-sm font-semibold text-gray-700">Topic</label>
-                            <select id="topic" wire:model.live="selectedTopic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                            <select id="topic" wire:model.live="selectedTopic" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                 <option value="">Select Topic</option>
                                 @foreach($topics as $topic)
                                     <option value="{{ $topic['id'] }}">{{ $topic['name'] }}</option>
@@ -185,7 +185,7 @@
                         @if($selectedTopic && $selectedTopic !== 'new_topic_option')
                             <div class="col-span-2">
                                 <label for="subtopic" class="block text-sm font-semibold text-gray-700">Subtopic (Optional)</label>
-                                <select id="subtopic" wire:model="selectedSubtopic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                                <select id="subtopic" wire:model="selectedSubtopic" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                     <option value="">Select Subtopic</option>
                                     @foreach($subtopics as $subtopic)
                                         <option value="{{ $subtopic['id'] }}">{{ $subtopic['name'] }}</option>
@@ -198,27 +198,27 @@
 
                         <div class="col-span-2">
                             <label for="learningObjectives" class="block text-sm font-semibold text-gray-700">Learning Objectives</label>
-                            <textarea id="learningObjectives" wire:model="learningObjectives" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Students will be able to identify the parts of a cell."></textarea>
+                            <textarea id="learningObjectives" wire:model="learningObjectives" rows="2" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Students will be able to identify the parts of a cell."></textarea>
                         </div>
 
                         <div>
                             <label for="teachingStrategy" class="block text-sm font-semibold text-gray-700">Teaching Strategy</label>
-                            <input id="teachingStrategy" type="text" wire:model="teachingStrategy" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Lecture, group discussion, lab work">
+                            <input id="teachingStrategy" type="text" wire:model="teachingStrategy" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Lecture, group discussion, lab work">
                         </div>
 
                         <div>
                             <label for="assessmentMethod" class="block text-sm font-semibold text-gray-700">Assessment Method</label>
-                            <input id="assessmentMethod" type="text" wire:model="assessmentMethod" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Quiz, participation, lab report">
+                            <input id="assessmentMethod" type="text" wire:model="assessmentMethod" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Quiz, participation, lab report">
                         </div>
 
                         <div class="col-span-2">
                             <label for="resourcesNeeded" class="block text-sm font-semibold text-gray-700">Resources Needed</label>
-                            <textarea id="resourcesNeeded" wire:model="resourcesNeeded" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Projector, whiteboard, lab equipment"></textarea>
+                            <textarea id="resourcesNeeded" wire:model="resourcesNeeded" rows="2" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Projector, whiteboard, lab equipment"></textarea>
                         </div>
 
                         <div class="col-span-2">
                             <label for="notes" class="block text-sm font-semibold text-gray-700">Notes</label>
-                            <textarea id="notes" wire:model="notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Add any additional notes for this item."></textarea>
+                            <textarea id="notes" wire:model="notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Add any additional notes for this item."></textarea>
                         </div>
                     </div>
 
@@ -256,13 +256,13 @@
                     <div class="space-y-6">
                         <div>
                             <label for="newTopicTitle" class="block text-sm font-semibold text-gray-700">Title</label>
-                            <input id="newTopicTitle" type="text" wire:model="newTopicTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., The Cell">
+                            <input id="newTopicTitle" type="text" wire:model="newTopicTitle" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., The Cell">
                             @error('newTopicTitle') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label for="newTopicDescription" class="block text-sm font-semibold text-gray-700">Description</label>
-                            <textarea id="newTopicDescription" wire:model="newTopicDescription" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Briefly describe this new topic."></textarea>
+                            <textarea id="newTopicDescription" wire:model="newTopicDescription" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Briefly describe this new topic."></textarea>
                             @error('newTopicDescription') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -301,13 +301,13 @@
                     <div class="space-y-6">
                         <div>
                             <label for="newSubtopicTitle" class="block text-sm font-semibold text-gray-700">Title</label>
-                            <input id="newSubtopicTitle" type="text" wire:model="newSubtopicTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Cellular Respiration">
+                            <input id="newSubtopicTitle" type="text" wire:model="newSubtopicTitle" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="e.g., Cellular Respiration">
                             @error('newSubtopicTitle') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label for="newSubtopicDescription" class="block text-sm font-semibold text-gray-700">Description</label>
-                            <textarea id="newSubtopicDescription" wire:model="newSubtopicDescription" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Briefly describe this new subtopic."></textarea>
+                            <textarea id="newSubtopicDescription" wire:model="newSubtopicDescription" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out" placeholder="Briefly describe this new subtopic."></textarea>
                             @error('newSubtopicDescription') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>

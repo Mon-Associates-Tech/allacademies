@@ -101,6 +101,14 @@ class Forums extends Component
             'user_id' => Auth::id(),
         ]);
 
+        // Log activity
+        $topic->logActivity('create', 'Forum Topic Created', 'forum_topic', [
+            'topic_title' => $this->newTopicTitle,
+            'forum_category_id' => $this->selectedCategory,
+            'has_initial_post' => true,
+            'created_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
+
         $this->reset(['newTopicTitle', 'newTopicContent']);
         $this->selectTopic($topic->id);
         session()->flash('success', 'Topic created successfully!');
@@ -119,10 +127,17 @@ class Forums extends Component
             'newPostContent' => 'required|string|min:10',
         ]);
 
-        ForumPost::create([
+        $post = ForumPost::create([
             'content' => $this->newPostContent,
             'forum_topic_id' => $this->selectedTopic,
             'user_id' => Auth::id(),
+        ]);
+
+        // Log activity
+        $post->logActivity('create', 'Forum Post Created', 'forum_post', [
+            'forum_topic_id' => $this->selectedTopic,
+            'content_length' => strlen($this->newPostContent),
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->reset(['newPostContent']);

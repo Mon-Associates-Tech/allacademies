@@ -22,6 +22,15 @@ class ParentFeeController extends Controller
     public function __construct(PaystackService $paystack)
     {
         $this->paystack = $paystack;
+
+        // Prevent caching of payment pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['initializePayment', 'callback']);
     }
 
     /**
@@ -256,6 +265,7 @@ class ParentFeeController extends Controller
                 'payer_type' => 'parent',
                 'payment_type' => $validated['payment_type'],
                 'payment_structure_id' => $validated['payment_structure_id'] ?? null,
+                'cancel_action' => route('parent.fees.index'),
             ],
         ];
 

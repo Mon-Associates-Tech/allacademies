@@ -138,8 +138,9 @@ class FinancialAidManager extends Component
         $this->validate($rules);
 
         $code = $this->code ?: strtoupper('AID-'.Str::random(6));
+        $isCreating = ! $this->aidId;
 
-        FinancialAid::updateOrCreate(['id' => $this->aidId], [
+        $aid = FinancialAid::updateOrCreate(['id' => $this->aidId], [
             'school_id' => $schoolId,
             'name' => $this->name,
             'code' => $code,
@@ -148,6 +149,23 @@ class FinancialAidManager extends Component
             'status' => $this->status,
             'school_payment_structure_id' => $this->school_payment_structure_id ?: null,
         ]);
+
+        // Log activity
+        if ($isCreating) {
+            $aid->logActivity('create', 'Financial Aid Created', 'financial_aid', [
+                'aid_name' => $this->name,
+                'code' => $code,
+                'amount' => $this->amount,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        } else {
+            $aid->logActivity('update', 'Financial Aid Updated', 'financial_aid', [
+                'aid_name' => $this->name,
+                'code' => $code,
+                'amount' => $this->amount,
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
 
         session()->flash('message', $this->aidId ? 'Financial Aid Updated.' : 'Financial Aid Created.');
         $this->closeModal();

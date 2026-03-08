@@ -20,7 +20,7 @@ class SchoolSwitcherPage extends Component
 
     public function mount(): void
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'superadmin', 'owner'])) {
+        if (! auth()->user()->hasAnyRole(['owner', 'superadmin', 'super_admin'])) {
             abort(403);
         }
 
@@ -38,13 +38,13 @@ class SchoolSwitcherPage extends Component
 
     public function switchToSchool($schoolId): void
     {
-        if (!auth()->user()->canAccessCrossSchool()) {
+        if (! auth()->user()->canAccessCrossSchool()) {
             abort(403);
         }
 
         $school = School::find($schoolId);
 
-        if (!$school) {
+        if (! $school) {
             session()->flash('error', 'School not found.');
 
             return;
@@ -68,7 +68,7 @@ class SchoolSwitcherPage extends Component
 
     public function showAllSchools(): void
     {
-        if (!auth()->user()->canAccessCrossSchool()) {
+        if (! auth()->user()->canAccessCrossSchool()) {
             abort(403);
         }
 

@@ -14,22 +14,28 @@ class ApplyUserPreferences
      */
     public function handle(Request $request, Closure $next)
     {
-        $response = $next($request);
+        try {
+            // Apply theme preference BEFORE processing request
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user) {
+                    $theme = $user->preferences->where('key', 'theme')->first();
+                    if ($theme && in_array($theme->value, ['light', 'dark'])) {
+                        view()->share('user_theme', $theme->value);
+                    }
 
-        // Apply theme preference
-        if (auth()->check()) {
-            $theme = auth()->user()->preferences->where('key', 'theme')->first();
-            if ($theme && in_array($theme->value, ['light', 'dark'])) {
-                // We can use this in our views to apply the theme
-                view()->share('user_theme', $theme->value);
+                    $font = $user->preferences->where('key', 'font')->first();
+                    if ($font) {
+                        view()->share('user_font', $font->value);
+                    }
+                }
             }
-
-            $font = auth()->user()->preferences->where('key', 'font')->first();
-            if ($font) {
-                view()->share('user_font', $font->value);
-            }
+        } catch (\Throwable $e) {
+            \Log::error('ApplyUserPreferences middleware error', [
+                'error' => $e->getMessage(),
+            ]);
         }
 
-        return $response;
+        return $next($request);
     }
 }

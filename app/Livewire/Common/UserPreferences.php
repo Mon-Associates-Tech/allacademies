@@ -44,11 +44,30 @@ class UserPreferences extends Component
 
     public function save()
     {
+        $changedPreferences = [];
+
         foreach ($this->preferences as $key => $value) {
+            // Track what changed
+            $oldValue = Auth::user()->preferences()->where('key', $key)->first()?->value;
+            if ($oldValue !== $value) {
+                $changedPreferences[$key] = [
+                    'old' => $oldValue,
+                    'new' => $value,
+                ];
+            }
+
             Auth::user()->preferences()->updateOrCreate(
                 ['key' => $key],
                 ['value' => $value]
             );
+        }
+
+        // Log activity if there were any changes
+        if (! empty($changedPreferences)) {
+            Auth::user()->logActivity('update', 'User Preferences Updated', 'user_preferences', [
+                'preferences_changed' => array_keys($changedPreferences),
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
         }
 
         session()->flash('message', 'Preferences saved successfully.');

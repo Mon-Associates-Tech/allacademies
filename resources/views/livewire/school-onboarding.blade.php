@@ -71,7 +71,7 @@
                                         School Name <span class="text-red-500 font-bold">*</span>
                                     </label>
                                     <input type="text" id="name" wire:model.defer="name"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('name') border-red-500 dark:border-red-500 @enderror"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('name') border-red-500 dark:border-red-500 @enderror"
                                            placeholder="Enter your school name" x-ref="firstInput">
                                     @error('name')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -84,7 +84,7 @@
                                         School Email <span class="text-red-500 font-bold">*</span>
                                     </label>
                                     <input type="email" id="email" wire:model.defer="email"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('email') border-red-500 dark:border-red-500 @enderror"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('email') border-red-500 dark:border-red-500 @enderror"
                                            placeholder="school@example.com">
                                     @error('email')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -97,7 +97,7 @@
                                         Phone Number
                                     </label>
                                     <input type="tel" id="phone" wire:model.defer="phone"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                            placeholder="+233 XX XXX XXXX"
                                            x-on:input="formatPhoneNumber($event)">
                                 </div>
@@ -108,7 +108,7 @@
                                         School Type <span class="text-red-500 font-bold">*</span>
                                     </label>
                                     <select id="type" wire:model.defer="type"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('type') border-red-500 dark:border-red-500 @enderror">
+                                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('type') border-red-500 dark:border-red-500 @enderror">
                                         <option value="">Select school type</option>
                                         @foreach($this->schoolTypes as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
@@ -125,7 +125,7 @@
                                         Ownership Type <span class="text-red-500 font-bold">*</span>
                                     </label>
                                     <select id="ownership" wire:model.defer="ownership"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('ownership') border-red-500 dark:border-red-500 @enderror">
+                                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('ownership') border-red-500 dark:border-red-500 @enderror">
                                         <option value="">Select ownership type</option>
                                         @foreach($this->ownershipTypes as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
@@ -142,7 +142,7 @@
                                         Website
                                     </label>
                                     <input type="url" id="website" wire:model.defer="website"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                            placeholder="https://www.yourschool.edu.gh">
                                 </div>
 
@@ -152,7 +152,7 @@
                                         Established Date
                                     </label>
                                     <input type="date" id="established_date" wire:model.defer="established_date"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
 
                                 {{-- Student Capacity --}}
@@ -161,7 +161,7 @@
                                         Student Capacity <span class="text-red-500 font-bold">*</span>
                                     </label>
                                     <input type="number" id="student_capacity" wire:model.defer="student_capacity" min="1"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('student_capacity') border-red-500 dark:border-red-500 @enderror"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('student_capacity') border-red-500 dark:border-red-500 @enderror"
                                            placeholder="e.g., 500">
                                     @error('student_capacity')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -174,7 +174,7 @@
                                         School Description
                                     </label>
                                     <textarea id="description" wire:model.defer="description" rows="4"
-                                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 resize-none"
+                                              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 resize-none"
                                               placeholder="Brief description of your school..."></textarea>
                                 </div>
 
@@ -185,7 +185,7 @@
                                     </label>
                                     <div class="flex items-center space-x-6">
                                         <div class="flex-shrink-0">
-                                            <div class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-700">
+                                            <div class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-600 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-700">
                                                 <template x-if="logoPreview">
                                                     <img :src="logoPreview" class="w-full h-full object-cover rounded-lg">
                                                 </template>
@@ -222,7 +222,7 @@
                                             Street Address <span class="text-red-500 font-bold">*</span>
                                         </label>
                                         <textarea id="address" wire:model.defer="address" rows="3"
-                                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 resize-none @error('address') border-red-500 dark:border-red-500 @enderror"
+                                                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 resize-none @error('address') border-red-500 dark:border-red-500 @enderror"
                                                   placeholder="Enter complete street address"></textarea>
                                         @error('address')
                                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -235,7 +235,7 @@
                                             City <span class="text-red-500 font-bold">*</span>
                                         </label>
                                         <input type="text" id="city" wire:model.defer="city"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('city') border-red-500 dark:border-red-500 @enderror"
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('city') border-red-500 dark:border-red-500 @enderror"
                                                placeholder="e.g., Accra">
                                         @error('city')
                                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -248,7 +248,7 @@
                                             Region/State <span class="text-red-500 font-bold">*</span>
                                         </label>
                                         <select id="state" wire:model.defer="state"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('state') border-red-500 dark:border-red-500 @enderror">
+                                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('state') border-red-500 dark:border-red-500 @enderror">
                                             <option value="">Select region</option>
                                             @foreach($this->ghanaRegions as $region)
                                                 <option value="{{ $region }}">{{ $region }}</option>
@@ -265,7 +265,7 @@
                                             Country
                                         </label>
                                         <input type="text" id="country" wire:model.defer="country"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
                                                readonly>
                                     </div>
 
@@ -275,7 +275,7 @@
                                             Postal Code
                                         </label>
                                         <input type="text" id="postal_code" wire:model.defer="postal_code"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                                placeholder="e.g., GA-123-4567">
                                     </div>
                                 </div>
@@ -366,7 +366,7 @@
                                             Timezone
                                         </label>
                                         <select id="timezone" wire:model.defer="timezone"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             @foreach($this->timezones as $value => $label)
                                                 <option value="{{ $value }}">{{ $label }}</option>
                                             @endforeach
@@ -378,7 +378,7 @@
                                             Currency
                                         </label>
                                         <select id="currency" wire:model.defer="currency"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             @foreach($this->currencies as $value => $label)
                                                 <option value="{{ $value }}">{{ $label }}</option>
                                             @endforeach
@@ -390,7 +390,7 @@
                                             Academic Year Start
                                         </label>
                                         <input type="date" id="academic_year_start" wire:model.defer="academic_year_start"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('academic_year_start') border-red-500 dark:border-red-500 @enderror">
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('academic_year_start') border-red-500 dark:border-red-500 @enderror">
                                         @error('academic_year_start')
                                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                         @enderror
@@ -401,7 +401,7 @@
                                             Academic Year End
                                         </label>
                                         <input type="date" id="academic_year_end" wire:model.defer="academic_year_end"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('academic_year_end') border-red-500 dark:border-red-500 @enderror">
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('academic_year_end') border-red-500 dark:border-red-500 @enderror">
                                         @error('academic_year_end')
                                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                         @enderror
@@ -445,7 +445,7 @@
                                     Select Bank
                                 </label>
                                 <select id="bank_code" wire:model.defer="bank_code"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">-- Select Bank --</option>
                                     @foreach(App\Constants\GhanaBanks::all() as $key => $bank)
                                         <option value="{{ $key }}">{{ $bank }}</option>
@@ -461,7 +461,7 @@
                                     Account Number
                                 </label>
                                 <input type="text" id="account_number" wire:model.defer="account_number"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('account_number') border-red-500 dark:border-red-500 @enderror"
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 @error('account_number') border-red-500 dark:border-red-500 @enderror"
                                        placeholder="Enter your account number">
                                 @error('account_number')
                                 <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

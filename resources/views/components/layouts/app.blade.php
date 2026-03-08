@@ -15,6 +15,8 @@
 @php
     // Determine if school switcher should be shown
     $hasSchoolSwitcher = auth()->check() && auth()->user()->canAccessCrossSchool();
+    // Determine if impersonation banner is showing
+    $hasImpersonationBanner = session()->has('impersonated_by');
 @endphp
 
     <!DOCTYPE html>
@@ -54,7 +56,7 @@
             :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
       x-data="{ pageLoaded: false }"
       x-init="setTimeout(() => pageLoaded = true, 150)"
->
+      style="--header-height: 6rem; --sidebar-width: 16rem;">
 <!-- Global Page Loader -->
 <div
     class="fixed inset-0 z-[100] flex items-center justify-center bg-[#dcdcdc] dark:bg-gray-900 transition-opacity duration-500 ease-in-out"
@@ -77,8 +79,8 @@
 <div class="flex h-full overflow-hidden">
 
     <!-- Sidebar -->
-    <aside class="print:hidden">
-        <x-app.sidebar :variant="$attributes['sidebarVariant']" :hasSchoolSwitcher="$hasSchoolSwitcher"></x-app.sidebar>
+    <aside class="h-full print:hidden">
+        <x-app.sidebar :variant="$attributes['sidebarVariant']" :hasSchoolSwitcher="$hasSchoolSwitcher" :hasImpersonationBanner="$hasImpersonationBanner"></x-app.sidebar>
     </aside>
 
     <!-- Content area - THIS IS THE ONLY SCROLLABLE CONTAINER -->
@@ -103,21 +105,23 @@
             @if($showTitleArea)
                 <div class="max-w-7xl mr-auto sm:px-6 lg:pl-8 lg:pr-2 print:hidden">
                     <div
-                        class="text-lg font-bold py-3 flex {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
+                        class="text-lg font-bold py-3 flex items-center {{ $titleAlignCenter ? 'justify-center' : 'justify-between' }}">
                         <div
-                            class="text-lg md:text-2xl hidden print:hidden font-bold w-full {{ $titleAlignCenter ? 'text-center' : 'text-start' }}">
+                            class="text-lg md:text-2xl print:hidden font-bold {{ $titleAlignCenter ? 'text-center w-full' : 'text-start' }}">
                             {{ $title }}
                         </div>
+                        @if(isset($actions))
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                {{ $actions }}
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
 
             <!-- Page content - NO OVERFLOW HERE -->
             <div class="pb-12 mb-8 w-full">
-                <div
-                    x-data="{}"
-                    class="w-full overflow-y-visible thin-scrollbar {{ $fullWidth ? '' : 'sm:px-4 lg:px-4' }}"
-                >
+                <div class="w-full {{ $fullWidth ? '' : 'sm:px-4 lg:px-4' }}">
                     {{ $slot }}
                 </div>
             </div>

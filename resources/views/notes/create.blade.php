@@ -128,6 +128,124 @@
                         </div>
                     </div>
 
+                    {{-- Background Color --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Background Color
+                            <span class="text-gray-400 font-normal">(Optional)</span>
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach(\App\Models\Note::getBackgroundColors() as $key => $color)
+                                <label class="cursor-pointer">
+                                    <input type="radio"
+                                           name="background_color"
+                                           value="{{ $key }}"
+                                           {{ old('background_color', $note->background_color ?? 'white') === $key ? 'checked' : '' }}
+                                           class="sr-only peer">
+                                    <span class="px-4 py-2 rounded-lg border-2 transition-all inline-block {{ $color['class'] }} peer-checked:border-indigo-600 peer-checked:ring-2 peer-checked:ring-indigo-500 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500">
+                                        {{ $color['name'] }}
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('background_color')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Calendar Integration --}}
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox"
+                                       name="add_to_calendar"
+                                       id="add_to_calendar"
+                                       {{ old('add_to_calendar') ? 'checked' : '' }}
+                                       class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+                            </div>
+                            <div class="ml-3">
+                                <label for="add_to_calendar" class="font-medium text-sm text-gray-900 dark:text-gray-100">
+                                    Add to Calendar
+                                </label>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Add this note as an event to your calendar.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="calendar-fields" class="mt-4 space-y-4" style="{{ old('add_to_calendar') ? '' : 'display: none;' }}">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="calendar_event_start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Start Date & Time
+                                    </label>
+                                    <input type="datetime-local"
+                                           name="calendar_event_start_date"
+                                           id="calendar_event_start_date"
+                                           value="{{ old('calendar_event_start_date') }}"
+                                           class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('calendar_event_start_date') border-red-500 @enderror">
+                                    @error('calendar_event_start_date')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="calendar_event_end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        End Date & Time
+                                    </label>
+                                    <input type="datetime-local"
+                                           name="calendar_event_end_date"
+                                           id="calendar_event_end_date"
+                                           value="{{ old('calendar_event_end_date') }}"
+                                           class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('calendar_event_end_date') border-red-500 @enderror">
+                                    @error('calendar_event_end_date')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox"
+                                           name="calendar_event_all_day"
+                                           id="calendar_event_all_day"
+                                           {{ old('calendar_event_all_day') ? 'checked' : '' }}
+                                           class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+                                    <label for="calendar_event_all_day" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                        All Day Event
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <label for="calendar_event_color" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Event Color
+                                    </label>
+                                    <input type="color"
+                                           name="calendar_event_color"
+                                           id="calendar_event_color"
+                                           value="{{ old('calendar_event_color', '#3b82f6') }}"
+                                           class="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="calendar_event_visibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Event Visibility
+                                </label>
+                                <select name="calendar_event_visibility"
+                                        id="calendar_event_visibility"
+                                        class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none @error('calendar_event_visibility') border-red-500 @enderror">
+                                    <option value="private" {{ old('calendar_event_visibility', 'private') === 'private' ? 'selected' : '' }}>Private</option>
+                                    <option value="public" {{ old('calendar_event_visibility') === 'public' ? 'selected' : '' }}>Public</option>
+                                    <option value="shared" {{ old('calendar_event_visibility') === 'shared' ? 'selected' : '' }}>Shared</option>
+                                </select>
+                                @error('calendar_event_visibility')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Visibility Settings --}}
                     <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <div class="flex items-start">
@@ -154,7 +272,7 @@
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 101 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                                 </svg>
                             </div>
                             <div class="ml-3">
@@ -167,6 +285,7 @@
                                         <li>Link notes to books and subjects for better organization</li>
                                         <li>Use headings and lists to structure your content</li>
                                         <li>Make notes public if you want to share knowledge with classmates</li>
+                                        <li>Add notes to your calendar to remember important deadlines or review dates</li>
                                     </ul>
                                 </div>
                             </div>

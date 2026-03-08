@@ -22,7 +22,7 @@
                     <!-- Academic Level -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Academic Level</label>
-                        <select wire:model.live="selectedLevel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select wire:model.live="selectedLevel" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">All Levels</option>
                             @foreach($academicLevels as $level)
                                 <option value="{{ $level->id }}">{{ $level->name }}</option>
@@ -33,7 +33,7 @@
                     <!-- Subject -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
-                        <select wire:model.live="selectedSubject" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select wire:model.live="selectedSubject" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">All Subjects</option>
                             @foreach($subjects as $subject)
                                 <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -44,12 +44,12 @@
                     <!-- Date Range -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">From Date</label>
-                        <input type="date" wire:model.live="dateFrom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <input type="date" wire:model.live="dateFrom" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">To Date</label>
-                        <input type="date" wire:model.live="dateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <input type="date" wire:model.live="dateTo" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                 </div>
 
@@ -57,7 +57,7 @@
                     <!-- Status Filter -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                        <select wire:model.live="statusFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select wire:model.live="statusFilter" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="all">All Status</option>
                             <option value="present">Present Only</option>
                             <option value="absent">Absent Only</option>
@@ -67,7 +67,7 @@
                     <!-- Group By -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Group By</label>
-                        <select wire:model.live="groupBy" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select wire:model.live="groupBy" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="daily">Daily</option>
                             <option value="weekly">Weekly</option>
                             <option value="monthly">Monthly</option>
@@ -77,7 +77,7 @@
                     <!-- Records Per Page -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Records Per Page</label>
-                        <select wire:model.live="perPage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select wire:model.live="perPage" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>

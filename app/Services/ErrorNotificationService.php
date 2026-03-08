@@ -47,6 +47,7 @@ class ErrorNotificationService
                 }, $additionalData),
                 'environment' => config('app.env'),
                 'app_name' => config('app.name'),
+                'trace' => isset($additionalData['trace']) ? $additionalData['trace'] : null,
             ];
 
             // Send synchronously to avoid queue serialization issues

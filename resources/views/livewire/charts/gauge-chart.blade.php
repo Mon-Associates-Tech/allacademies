@@ -11,39 +11,51 @@
 
         <div wire:ignore x-data="{
             chart: null,
+            created: false,
             init() {
                 const canvas = this.$refs.canvas;
                 const payload = @js($this->payload);
                 console.log('[GaugeChart] init payload:', payload);
-                if (!window.GaugeChart) {
-                    console.warn('[GaugeChart] GaugeChart helper not found. Is resources/js/charts/gauge.js imported?');
-                }
-                this.$nextTick(() => {
-                    try {
-                        // Destroy any existing Chart.js instance for this canvas (just in case)
-                        const existing = window.Chart && typeof window.Chart.getChart === 'function'
-                            ? window.Chart.getChart(canvas)
-                            : null;
-                        if (existing) {
-                            existing.destroy();
-                            console.log('[GaugeChart] existing Chart.js instance destroyed (registry)');
-                        }
-                        // Also destroy local instance if present
-                        if (this.chart && window.ChartHelpers) {
-                            window.ChartHelpers.destroyChart(this.chart);
-                            this.chart = null;
-                            console.log('[GaugeChart] previous chart destroyed before re-create');
-                        }
-                        if (window.GaugeChart && payload) {
-                            this.chart = window.GaugeChart.create(canvas, payload);
-                            console.log('[GaugeChart] chart created');
+                // Retry helper: wait briefly for GaugeChart and ChartHelpers to be attached to window (race protection)
+                const tryCreate = (attempt = 0) => {
+                    if (!window.ChartHelpers || !window.GaugeChart) {
+                        if (attempt === 0) console.warn('[GaugeChart] ChartHelpers or GaugeChart not found. Waiting for bundle to attach...');
+                        if (attempt < 10) {
+                            return setTimeout(() => tryCreate(attempt + 1), 100);
                         } else {
-                            console.warn('[GaugeChart] Skipping chart creation (helper or payload missing).');
+                            console.warn('[GaugeChart] ChartHelpers/GaugeChart still missing after retries. Is resources/js/charts/gauge.js imported and built?');
+                            return;
                         }
-                    } catch (e) {
-                        console.error('[GaugeChart] error creating chart:', e);
                     }
-                });
+                    this.$nextTick(() => {
+                        try {
+                            // Destroy any existing Chart.js instance for this canvas (just in case)
+                            const existing = window.Chart && typeof window.Chart.getChart === 'function'
+                                ? window.Chart.getChart(canvas)
+                                : null;
+                            if (existing) {
+                                existing.destroy();
+                                console.log('[GaugeChart] existing Chart.js instance destroyed (registry)');
+                            }
+                            // Also destroy local instance if present
+                            if (this.chart && window.ChartHelpers) {
+                                window.ChartHelpers.destroyChart(this.chart);
+                                this.chart = null;
+                                console.log('[GaugeChart] previous chart destroyed before re-create');
+                            }
+                            if (window.GaugeChart && payload) {
+                                this.chart = window.GaugeChart.create(canvas, payload);
+                                this.created = true;
+                                console.log('[GaugeChart] chart created');
+                            } else {
+                                console.warn('[GaugeChart] Skipping chart creation (helper or payload missing).');
+                            }
+                        } catch (e) {
+                            console.error('[GaugeChart] error creating chart:', e);
+                        }
+                    });
+                };
+                tryCreate();
                 this.$watch('$store.darkMode.on', (v) => {
                     const payload2 = @js($this->payload);
                     console.log('[GaugeChart] dark mode changed:', v);

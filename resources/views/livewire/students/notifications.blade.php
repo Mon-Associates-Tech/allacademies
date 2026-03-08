@@ -1,209 +1,271 @@
-<div class="px-4 lg:px-0 w-full mx-auto">
-
-    <div class="sm:flex sm:justify-between sm:items-center mb-6">
-        <div class="mb-4 sm:mb-0">
-            <div class="flex items-center space-x-3">
-                <svg class="w-9 h-9 text-violet-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
-                </svg>
-                <h1 class="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-slate-700 via-gray-600 to-slate-800 bg-clip-text text-transparent">Your Notifications</h1>
+<div class="p-4 lg:p-6 space-y-6">
+    <!-- Header with Gradient -->
+    <div class="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">Notifications</h1>
+                    <p class="text-violet-100 text-sm">Stay updated with your activities</p>
+                </div>
             </div>
-            <p class="mt-1 text-gray-600 dark:text-gray-400">Stay organized with your latest updates and assignments.</p>
+            <div class="flex items-center gap-3">
+                <div class="text-center bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
+                    <p class="text-2xl font-bold">{{ $totalNotifications }}</p>
+                    <p class="text-xs text-violet-100">Total</p>
+                </div>
+                @if($unreadCount > 0)
+                <div class="text-center bg-red-500/80 backdrop-blur-sm rounded-lg px-4 py-2">
+                    <p class="text-2xl font-bold">{{ $unreadCount }}</p>
+                    <p class="text-xs text-red-100">Unread</p>
+                </div>
+                @endif
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <div class="lg:col-span-2 space-y-6">
-
-            @if(count($pendingAssignments) > 0)
-                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
-                    <header class="px-5 py-4 border-b border-gray-100 dark:border-gray-700/60 bg-red-50 dark:bg-red-950/20">
-                        <h2 class="font-bold text-red-700 dark:text-red-300 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-.5-13h1v6h-1zm0 8h1v1h-1z"/></svg>
-                            Urgent: Pending Assignments
-                        </h2>
-                    </header>
-                    <div class="p-5">
-                        <div class="space-y-4">
-                            @foreach($pendingAssignments as $assignment)
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                    <div class="flex-1 mb-3 sm:mb-0">
-                                        <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">{{ $assignment['title'] }}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $assignment['subject'] }} • {{ $assignment['type'] }}</p>
-                                        <p class="text-xs text-red-600 dark:text-red-400 mt-1 flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8V4l8 8-8 8v-4H4V8z"/></svg>
-                                            Due {{ \Carbon\Carbon::parse($assignment['ends_at'])->diffForHumans() }}
-                                        </p>
-                                    </div>
-                                    <button wire:click="startAssignment({{ $assignment['id'] }})"
-                                            class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                        Start Now
-                                    </button>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
                 </div>
-            @endif
-
-            @if(count($upcomingAssignments) > 0)
-                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
-                    <header class="px-5 py-4 border-b border-gray-100 dark:border-gray-700/60">
-                        <h2 class="font-bold text-gray-800 dark:text-gray-100 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm.5-13h-1v6h1zM11 16h1v1h-1z"/></svg>
-                            Upcoming Assignments
-                        </h2>
-                    </header>
-                    <div class="p-5">
-                        <div class="space-y-4">
-                            @foreach($upcomingAssignments as $assignment)
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                    <div class="flex-1 mb-2 sm:mb-0">
-                                        <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">{{ $assignment['title'] }}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $assignment['subject'] }} • {{ $assignment['type'] }}</p>
-                                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8V4l8 8-8 8v-4H4V8z"/></svg>
-                                            Starts {{ \Carbon\Carbon::parse($assignment['starts_at'])->diffForHumans() }}
-                                        </p>
-                                    </div>
-                                    <div class="text-right text-sm text-gray-500 dark:text-gray-400">
-                                        <span>{{ $assignment['duration'] }} min</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $this->getCompletedAssignmentsCount() }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.172l-3.536-3.536 1.414-1.414L9 13.344 19.071 3.273l1.414 1.414L9 16.172z"/></svg>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ count($pendingAssignments) }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-.5-13h1v6h-1zm0 8h1v1h-1z"/></svg>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Upcoming</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ count($upcomingAssignments) }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm.5-13h-1v6h1zM11 16h1v1h-1z"/></svg>
-                    </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Assignments</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ $assignmentCount }}</p>
                 </div>
             </div>
         </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Assessments</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ $assessmentCount }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Completed</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ $completedAssignmentsCount }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg">
+                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Pending</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ count($pendingAssignments) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <div class="space-y-6">
-
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
-                <header class="px-5 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-                    <h2 class="font-bold text-gray-800 dark:text-gray-100">Recent Notifications</h2>
-                    <a href="{{ route('student.notifications.index') }}" class="text-sm text-violet-600 hover:text-violet-700 dark:text-violet-400 font-medium">
-                        View all &rarr;
-                    </a>
-                </header>
-                <div class="p-3">
-                    @if(count($recentNotifications) > 0)
-                        <div class="space-y-3">
-                            @foreach($recentNotifications as $notification)
-                                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 group">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-8 h-8 rounded-full {{ $notification['type'] === 'assignment' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400' }} flex items-center justify-center">
-                                            @if($notification['type'] === 'assignment')
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                                            @else
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 leading-tight">
-                                            {{ Str::limit($notification['title'], 60) }}
-                                        </p>
-                                        @if($notification['type'] === 'assignment' && isset($notification['subject']))
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $notification['subject'] }}</p>
-                                        @endif
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            {{ \Carbon\Carbon::parse($notification['created_at'])->diffForHumans() }}
-                                        </p>
-                                        <div class="mt-2 flex space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                            <a href="{{ route('notifications.show', ['type' => $notification['type'], 'id' => $notification['id']]) }}"
-                                               class="text-xs text-violet-600 hover:text-violet-700 dark:text-violet-400 font-medium">
-                                                View Details
-                                            </a>
-                                            @if($notification['type'] === 'assignment' && isset($notification['assignment_id']))
-                                                <button wire:click="startAssignment({{ $notification['assignment_id'] }})"
-                                                        class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium">
-                                                    Start Assignment
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div class="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg class="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-                            </div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">You're all caught up! No new notifications.</p>
-                        </div>
+    <!-- Filters and Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <!-- Tabs -->
+            <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <button wire:click="setActiveTab('all')" class="px-4 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'all' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}">
+                    All
+                </button>
+                <button wire:click="setActiveTab('unread')" class="px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 {{ $activeTab === 'unread' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}">
+                    Unread
+                    @if($unreadCount > 0)
+                    <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{{ $unreadCount }}</span>
                     @endif
-                </div>
+                </button>
+                <button wire:click="setActiveTab('read')" class="px-4 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'read' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }}">
+                    Read
+                </button>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
-                <header class="px-5 py-4 border-b border-gray-100 dark:border-gray-700/60">
-                    <h2 class="font-bold text-gray-800 dark:text-gray-100">Quick Actions</h2>
-                </header>
-                <div class="p-5 space-y-3">
-                    <a href="{{ route('student.notifications.index') }}"
-                       class="flex items-center p-3 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 group">
-                        <svg class="w-5 h-5 mr-3 text-violet-500 group-hover:text-violet-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-                        View All Notifications
-                    </a>
-                    <a href="#"
-                       class="flex items-center p-3 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 group">
-                        <svg class="w-5 h-5 mr-3 text-green-500 group-hover:text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                        View Grades
-                    </a>
-                    <a href="{{ route('profile.show') }}"
-                       class="flex items-center p-3 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 group">
-                        <svg class="w-5 h-5 mr-3 text-gray-500 group-hover:text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.09-.72-1.71-.97l-.37-2.65C14.05 2.18 13.73 2 13.31 2h-2.63c-.42 0-.74.18-.82.32l-.37 2.65c-.62.25-1.19.57-1.71.97l-2.49-1c-.22-.08-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.09.72 1.71.97l.37 2.65c.08.14.4.32.82.32h2.63c.42 0 .74-.18.82-.32l.37-2.65c.62-.25 1.19-.57 1.71-.97l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-                        Profile Settings
-                    </a>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <!-- Search -->
+                <div class="relative">
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search notifications..." class="w-full sm:w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent">
+                    <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
                 </div>
-            </div>
 
+                <!-- Type Filter -->
+                <select wire:model.live="typeFilter" class="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500">
+                    <option value="all">All Types</option>
+                    <option value="assignment">Assignments</option>
+                    <option value="assessment">Assessments</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <!-- Sort -->
+                <select wire:model.live="sortBy" class="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+
+                @if($unreadCount > 0)
+                <button wire:click="markAllAsRead" class="px-4 py-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-lg transition-colors">
+                    Mark all read
+                </button>
+                @endif
+            </div>
         </div>
     </div>
-</div>
 
-@script
-<script>
-    // Add a method to get completed assignments count
-    $wire.getCompletedAssignmentsCount = function() {
-        // This would typically come from the backend, e.g., via an API call or a Livewire component property.
-        // For demonstration, let's return a static number. In a real application, you'd fetch this dynamically.
-        return 23; // Placeholder value
-    };
-</script>
-@endscript
+    <!-- Notifications List -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        @if($notifications->count() > 0)
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            @foreach($notifications as $notification)
+            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors {{ !$notification['is_read'] ? 'bg-violet-50/50 dark:bg-violet-900/10' : '' }}" wire:key="notification-{{ $notification['id'] }}">
+                <div class="flex items-start gap-4">
+                    <!-- Icon -->
+                    <div class="flex-shrink-0">
+                        @if($notification['category'] === 'assignment')
+                        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        @elseif($notification['category'] === 'assessment')
+                        <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        @else
+                        <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white {{ !$notification['is_read'] ? 'font-bold' : '' }}">
+                                    {{ $notification['title'] }}
+                                </p>
+                                @if($notification['subject'])
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $notification['subject'] }}</p>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if(!$notification['is_read'])
+                                <span class="w-2 h-2 bg-violet-500 rounded-full"></span>
+                                @endif
+                                <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($notification['created_at'])->diffForHumans() }}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{{ $notification['message'] }}</p>
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-3 mt-3">
+                            @if($notification['category'] === 'assignment' && isset($notification['assignment_id']))
+                            <button wire:click="startAssignment({{ $notification['assignment_id'] }})" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Start
+                            </button>
+                            @endif
+                            @if($notification['category'] === 'assessment' && isset($notification['quiz_id']))
+                            <button wire:click="viewQuizResults({{ $notification['quiz_id'] }})" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                View Results
+                            </button>
+                            @endif
+                            @if(!$notification['is_read'] && $notification['type'] !== 'assessment')
+                            <button wire:click="markNotificationAsRead('{{ $notification['id'] }}', '{{ $notification['type'] }}')" class="text-xs text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
+                                Mark as read
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @else
+        <!-- Empty State -->
+        <div class="p-12 text-center">
+            <div class="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No notifications</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                @if($activeTab === 'unread')
+                    You're all caught up! No unread notifications.
+                @elseif($search)
+                    No notifications match your search.
+                @else
+                    You don't have any notifications yet.
+                @endif
+            </p>
+            @if($search || $typeFilter !== 'all' || $activeTab !== 'all')
+            <button wire:click="clearFilters" class="mt-4 text-sm text-violet-600 dark:text-violet-400 hover:underline">
+                Clear filters
+            </button>
+            @endif
+        </div>
+        @endif
+    </div>
+
+    <!-- Pending Assignments Alert -->
+    @if(count($pendingAssignments) > 0)
+    <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+            <div class="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg">
+                <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-sm font-semibold text-orange-800 dark:text-orange-200">{{ count($pendingAssignments) }} Pending Assignment(s)</h3>
+                <div class="mt-2 space-y-2">
+                    @foreach($pendingAssignments as $assignment)
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-orange-700 dark:text-orange-300">{{ $assignment['title'] }} - {{ $assignment['subject'] }}</span>
+                        <button wire:click="startAssignment({{ $assignment['id'] }})" class="text-orange-600 dark:text-orange-400 hover:underline font-medium">Start Now →</button>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+</div>

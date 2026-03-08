@@ -77,6 +77,9 @@ class CreateAssignment extends Component
 
     public $restrict_navigation = false;
 
+    // Wizard step tracking (1 = Basic Info, 2 = Time & Config, 3 = Questions, 4 = Targets)
+    public $currentStep = 1;
+
     public $max_tab_switches = 3;
 
     public $auto_submit_on_violation = true;
@@ -211,6 +214,15 @@ class CreateAssignment extends Component
 
     public function createAssignment()
     {
+        // NEW: Check school has active content subscription before allowing assignment creation
+        $school = auth()->user()->school;
+        if (!$school || !$school->hasActiveContentSubscription()) {
+            session()->flash('error',
+                'Your school must have an active subscription to create assignments. ' .
+                'Please contact your school administrator.'
+            );
+            return;
+        }
 
         session()->flash('success', 'Creating assignment...');
         //        $this->validate();
@@ -352,6 +364,189 @@ class CreateAssignment extends Component
         }
 
         return $total;
+    }
+
+    /**
+     * Navigate to the next step in the wizard
+     */
+    public function nextStep(): void
+    {
+        if (! $this->validateCurrentStep()) {
+            return;
+        }
+
+        if ($this->currentStep < 4) {
+            $this->currentStep++;
+        }
+    }
+
+    /**
+     * Navigate to the previous step in the wizard
+     */
+    public function previousStep(): void
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+        }
+    }
+
+    /**
+     * Navigate to a specific step in the wizard
+     */
+    public function goToStep(int $step): void
+    {
+        // Only allow going back or to completed steps
+        if ($step < $this->currentStep) {
+            $this->currentStep = $step;
+
+            return;
+        }
+
+        // For forward navigation, validate all previous steps
+        if ($step > $this->currentStep) {
+            for ($i = $this->currentStep; $i < $step; $i++) {
+                $this->currentStep = $i;
+                if (! $this->validateCurrentStep()) {
+                    return;
+                }
+            }
+            $this->currentStep = $step;
+        }
+    }
+
+    /**
+     * Validate the current step
+     */
+    protected function validateCurrentStep(): bool
+    {
+        return match ($this->currentStep) {
+            1 => $this->validateStep1(),
+            2 => $this->validateStep2(),
+            3 => $this->validateStep3(),
+            default => true,
+        };
+    }
+
+    /**
+     * Validate Step 1: Basic Information (title, type, subject)
+     */
+    protected function validateStep1(): bool
+    {
+        $this->resetErrorBag();
+
+        $hasErrors = false;
+
+        if (empty($this->title)) {
+            $this->addError('title', 'Please enter an assignment title.');
+            $hasErrors = true;
+        }
+
+        if (empty($this->academic_subject_id)) {
+            $this->addError('academic_subject_id', 'Please select a subject.');
+            $hasErrors = true;
+        }
+
+        return ! $hasErrors;
+    }
+
+    /**
+     * Validate Step 2: Time & Configuration
+     */
+    protected function validateStep2(): bool
+    {
+        $this->resetErrorBag();
+
+        $hasErrors = false;
+
+        if (empty($this->duration_in_minutes) || $this->duration_in_minutes < 5) {
+            $this->addError('duration_in_minutes', 'Please enter a valid duration (minimum 5 minutes).');
+            $hasErrors = true;
+        }
+
+        if (empty($this->starts_at)) {
+            $this->addError('starts_at', 'Please select a start date and time.');
+            $hasErrors = true;
+        }
+
+        if (empty($this->ends_at)) {
+            $this->addError('ends_at', 'Please select an end date and time.');
+            $hasErrors = true;
+        }
+
+        if (! empty($this->starts_at) && ! empty($this->ends_at) && $this->starts_at >= $this->ends_at) {
+            $this->addError('ends_at', 'End date must be after start date.');
+            $hasErrors = true;
+        }
+
+        return ! $hasErrors;
+    }
+
+    /**
+     * Validate Step 3: Question Configuration
+     */
+    protected function validateStep3(): bool
+    {
+        $this->resetErrorBag();
+
+        $hasQuestions = false;
+        foreach ($this->questionTypes as $type => $config) {
+            if ($config['enabled'] && $config['count'] > 0) {
+                $hasQuestions = true;
+                break;
+            }
+        }
+
+        if (! $hasQuestions) {
+            $this->addError('questionTypes', 'Please enable at least one question type with a count greater than 0.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if Step 1 is complete (for progress indicator)
+     */
+    public function isStep1Complete(): bool
+    {
+        return ! empty($this->title) && ! empty($this->academic_subject_id);
+    }
+
+    /**
+     * Check if Step 2 is complete (for progress indicator)
+     */
+    public function isStep2Complete(): bool
+    {
+        return ! empty($this->duration_in_minutes)
+            && ! empty($this->starts_at)
+            && ! empty($this->ends_at)
+            && ! empty($this->total_marks);
+    }
+
+    /**
+     * Check if Step 3 is complete (for progress indicator)
+     */
+    public function isStep3Complete(): bool
+    {
+        foreach ($this->questionTypes as $config) {
+            if ($config['enabled'] && $config['count'] > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if Step 4 is complete (for progress indicator)
+     */
+    public function isStep4Complete(): bool
+    {
+        return ! empty($this->selectedAcademicGroups)
+            || ! empty($this->selectedAcademicLevels)
+            || ! empty($this->selectedStudentGroups)
+            || ! empty($this->selectedStudents);
     }
 
     public function render()

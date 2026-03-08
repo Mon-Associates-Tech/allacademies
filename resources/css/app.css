@@ -266,37 +266,30 @@
 }
 
 
-/* Add to your CSS */
-body.sidebar-expanded #sidebar {
-    width: 16rem !important; /* 64px */
+/* Sidebar width and text visibility styles */
+/* Mobile: Always show full width sidebar with visible text when open */
+/* The sidebar slide-in/out is handled by translate classes in the blade template */
+
+/* Default (mobile): sidebar is always full width with visible text */
+#sidebar {
+    width: 13rem !important; /* w-52 equivalent */
 }
 
-body:not(.sidebar-expanded) #sidebar {
-    width: 3.5rem !important; /* 20px */
+#sidebar .sidebar-text {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
-@media (min-width: 1024px) { /* lg breakpoint */
+/* Large screens (lg+): Apply collapsed/expanded behavior */
+@media (min-width: 1024px) {
     body.sidebar-expanded #sidebar {
-        width: 16rem !important;
+        width: 13rem !important;
     }
 
     body:not(.sidebar-expanded) #sidebar {
         width: 3.5rem !important;
     }
-}
 
-/* Add to your app.css */
-body.sidebar-expanded #sidebar .sidebar-text {
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-body:not(.sidebar-expanded) #sidebar .sidebar-text {
-    opacity: 0 !important;
-    visibility: hidden !important;
-}
-
-@media (min-width: 1024px) { /* lg breakpoint */
     body.sidebar-expanded #sidebar .sidebar-text {
         opacity: 1 !important;
         visibility: visible !important;
@@ -305,6 +298,18 @@ body:not(.sidebar-expanded) #sidebar .sidebar-text {
     body:not(.sidebar-expanded) #sidebar .sidebar-text {
         opacity: 0 !important;
         visibility: hidden !important;
+    }
+}
+
+/* Extra large screens (2xl+): Always show expanded sidebar */
+@media (min-width: 1536px) {
+    #sidebar {
+        width: 13rem !important;
+    }
+
+    #sidebar .sidebar-text {
+        opacity: 1 !important;
+        visibility: visible !important;
     }
 }
 

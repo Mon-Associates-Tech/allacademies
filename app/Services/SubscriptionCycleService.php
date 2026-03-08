@@ -27,12 +27,28 @@ class SubscriptionCycleService
     {
         return DB::transaction(function () use ($user, $pricingTier, $months, $isPending) {
             $groupId = Str::uuid()->toString();
-            $startDate = now()->startOfDay();
+            // Start after the latest non-expired paid cycle (ignore trials)
+            $latestCycle = $user->subscriptionCycles()
+                ->where('status', '!=', 'expired')
+                ->where('is_trial', false)
+                ->orderByDesc('cycle_end_date')
+                ->first();
+
+            // If there's a latest cycle that ends in the future, start after it
+            // Otherwise, start now
+            $startDate = ($latestCycle && $latestCycle->cycle_end_date->isFuture())
+                ? $latestCycle->cycle_end_date->copy()->addDay()->startOfDay()
+                : now()->startOfDay();
             $cycles = [];
 
             // Get existing future cycles
             $existingCycles = $user->subscriptionCycles()
                 ->where('status', '!=', 'expired')
+                ->where('is_trial', false)
+                ->where(function ($q) {
+                    $q->where('status', '!=', 'inactive')
+                        ->orWhere('tokens_allocated', '>', 0);
+                })
                 ->orderBy('cycle_start_date')
                 ->get();
 
@@ -79,9 +95,10 @@ class SubscriptionCycleService
 
         $combinedTokens = $oldBaseTokens + $newBaseTokens + $oldTopupTokens;
 
-        // Calculate combined price: add the NEW cycle's increment to existing price
-        $newCycleIncrement = $newTier->getMonthlyPriceIncrement($newCycleNumber);
-        $combinedPrice = $existingCycle->current_price + $newCycleIncrement;
+        // Calculate per-cycle price (this month only) instead of cumulative
+        $oldCyclePrice = $oldTier->getMonthlyPriceIncrement($existingCycle->cycle_number);
+        $newCyclePrice = $newTier->getMonthlyPriceIncrement($newCycleNumber);
+        $combinedPrice = $oldCyclePrice + $newCyclePrice;
 
         // Update existing cycle with merged data
         $existingCycle->update([
@@ -100,8 +117,8 @@ class SubscriptionCycleService
             'old_tokens' => $oldBaseTokens,
             'new_tokens' => $newBaseTokens,
             'combined_tokens' => $combinedTokens,
-            'old_price' => $existingCycle->current_price - $newCycleIncrement,
-            'new_cycle_increment' => $newCycleIncrement,
+            'old_price' => $oldCyclePrice,
+            'new_cycle_increment' => $newCyclePrice,
             'combined_price' => $combinedPrice,
             'old_tier' => $oldTier->name,
             'new_tier' => $newTier->name,
@@ -115,19 +132,12 @@ class SubscriptionCycleService
      */
     protected function createNewCycle(User $user, PricingTier $pricingTier, string $groupId, int $cycleNumber, $startDate, $endDate, bool $isPending = false): SubscriptionCycle
     {
-        // Use PricingTier's method to get correct cumulative price
-        $cumulativePrice = $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+        // Use monthly price increment for this cycle only
+        $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
 
-        // If pending payment, always create as inactive with 0 tokens
+        // Always allocate tokens immediately, set as inactive (activated after payment)
         $status = 'inactive';
-        $tokensAllocated = 0;
-
-        if (! $isPending) {
-            // Only check if should be active when not pending payment
-            $isCurrentCycle = now()->between($startDate, $endDate);
-            $status = $isCurrentCycle ? 'active' : 'inactive';
-            $tokensAllocated = $pricingTier->monthly_token_limit;
-        }
+        $tokensAllocated = $pricingTier->monthly_token_limit;
 
         return SubscriptionCycle::create([
             'user_id' => $user->id,
@@ -139,7 +149,7 @@ class SubscriptionCycleService
             'tokens_allocated' => $tokensAllocated,
             'topup_tokens_allocated' => 0,
             'tokens_used' => 0,
-            'current_price' => $cumulativePrice,
+            'current_price' => $monthlyPrice,
             'status' => $status,
             'is_topup' => false,
             'is_merged' => false,
@@ -161,8 +171,8 @@ class SubscriptionCycleService
             // Cycle ends 30 days after start (anniversary date model)
             $endDate = $startDate->copy()->addDays(30);
 
-            // Use cumulative price (total cost up to this cycle)
-            $price = $customPrice ?? $pricingTier->getCumulativePriceUpToCycle($cycleNumber);
+            // Use monthly price increment only (not cumulative)
+            $monthlyPrice = $customPrice ?? $pricingTier->getMonthlyPriceIncrement($cycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             // Determine if this cycle should be active (is within current date range)
@@ -178,7 +188,7 @@ class SubscriptionCycleService
                 'cycle_end_date' => $endDate,
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
-                'current_price' => $price,
+                'current_price' => $monthlyPrice,
                 'status' => $status,
                 'is_topup' => $isTopup,
             ]);
@@ -189,7 +199,7 @@ class SubscriptionCycleService
                 'cycle_number' => $cycleNumber,
                 'pricing_tier' => $pricingTier->name,
                 'token_limit' => $tokenLimit,
-                'cumulative_price' => $price,
+                'monthly_price' => $monthlyPrice,
                 'cycle_start' => $startDate->toDateString(),
                 'cycle_end' => $endDate->toDateString(),
                 'group_id' => $groupId,
@@ -212,8 +222,9 @@ class SubscriptionCycleService
             $cycleStartDate = $subscriptionStartDate->copy()->startOfDay();
             $cycleEndDate = $subscriptionStartDate->copy()->addDays(30);
 
-            // Cycle 1 uses initial_price (cumulative is just initial_price for cycle 1)
-            $price = $pricingTier->getCumulativePriceUpToCycle(1);
+            // Cycle 1 uses base_price as the monthly increment
+            $cycleNumber = 1;
+            $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($cycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             // Determine if this cycle should be active (is within current date range)
@@ -224,12 +235,12 @@ class SubscriptionCycleService
             $cycle = SubscriptionCycle::create([
                 'user_id' => $user->id,
                 'pricing_tier_id' => $pricingTier->id,
-                'cycle_number' => 1,
+                'cycle_number' => $cycleNumber,
                 'cycle_start_date' => $cycleStartDate,
                 'cycle_end_date' => $cycleEndDate,
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
-                'current_price' => $price,
+                'current_price' => $monthlyPrice,
                 'status' => $status,
             ]);
 
@@ -238,7 +249,7 @@ class SubscriptionCycleService
                 'cycle_id' => $cycle->id,
                 'pricing_tier' => $pricingTier->name,
                 'subscription_start_date' => $subscriptionStartDate,
-                'cumulative_price' => $price,
+                'monthly_price' => $monthlyPrice,
                 'cycle_start' => $cycleStartDate->toDateString(),
                 'cycle_end' => $cycleEndDate->toDateString(),
             ]);
@@ -304,8 +315,8 @@ class SubscriptionCycleService
             $isCurrentCycle = now()->between($newStartDate, $newEndDate);
             $status = $isCurrentCycle ? 'active' : 'inactive';
 
-            // Use cumulative price (total cost up to this cycle number)
-            $price = $pricingTier->getCumulativePriceUpToCycle($nextCycleNumber);
+            // Use monthly price increment for this specific cycle number
+            $monthlyPrice = $pricingTier->getMonthlyPriceIncrement($nextCycleNumber);
             $tokenLimit = $this->pricingService->getMonthlyTokenLimit($pricingTier);
 
             $newCycle = SubscriptionCycle::create([
@@ -316,7 +327,7 @@ class SubscriptionCycleService
                 'cycle_end_date' => $newEndDate,
                 'tokens_allocated' => $tokenLimit,
                 'tokens_used' => 0,
-                'current_price' => $price,
+                'current_price' => $monthlyPrice,
                 'status' => $status,
             ]);
 
@@ -325,7 +336,7 @@ class SubscriptionCycleService
                 'cycle_id' => $newCycle->id,
                 'cycle_number' => $nextCycleNumber,
                 'token_limit' => $tokenLimit,
-                'cumulative_price' => $price,
+                'monthly_price' => $monthlyPrice,
                 'cycle_start' => $newStartDate->toDateString(),
                 'cycle_end' => $newEndDate->toDateString(),
             ]);
@@ -423,6 +434,7 @@ class SubscriptionCycleService
 
     /**
      * Activate pending cycles after payment confirmation
+     * Only activates the first/current cycle
      */
     public function activatePendingCycles(string $groupId, PricingTier $pricingTier): int
     {
@@ -432,20 +444,13 @@ class SubscriptionCycleService
 
         $activatedCount = 0;
         foreach ($cycles as $cycle) {
-            // If cycle has no tokens (pending), allocate them
-            if ($cycle->tokens_allocated == 0) {
-                $cycle->tokens_allocated = $pricingTier->monthly_token_limit;
-            }
-
-            // Activate if within date range
+            // Only activate if cycle is current (within date range) and inactive
             $isCurrentCycle = now()->between($cycle->cycle_start_date, $cycle->cycle_end_date);
-            if ($isCurrentCycle && $cycle->status !== 'active') {
+            
+            if ($isCurrentCycle && $cycle->status === 'inactive') {
                 $cycle->status = 'active';
                 $cycle->save();
                 $activatedCount++;
-            } elseif ($cycle->tokens_allocated > 0 && $cycle->status === 'inactive') {
-                // Just save token allocation for future cycles
-                $cycle->save();
             }
         }
 
@@ -453,8 +458,6 @@ class SubscriptionCycleService
             Log::info('Pending cycles activated after payment', [
                 'group_id' => $groupId,
                 'count' => $activatedCount,
-                'pricing_tier_id' => $pricingTier->id,
-                'tokens_per_cycle' => $pricingTier->monthly_token_limit,
             ]);
         }
 
@@ -502,5 +505,86 @@ class SubscriptionCycleService
         }
 
         return $deactivatedCount;
+    }
+
+    /**
+     * Remove abandoned pending cycles (zero-token placeholders from incomplete payments).
+     */
+    public function cleanupAbandonedPendingCycles(User $user, int $minutes = 60): int
+    {
+        $cutoff = now()->subMinutes($minutes);
+
+        $deleted = SubscriptionCycle::where('user_id', $user->id)
+            ->where('status', 'inactive')
+            ->where('tokens_used', 0)
+            ->where('is_trial', false)
+            ->where('created_at', '<', $cutoff)
+            ->delete();
+
+        if ($deleted > 0) {
+            Log::info('Cleaned up abandoned pending cycles', [
+                'user_id' => $user->id,
+                'deleted_count' => $deleted,
+                'cutoff_minutes' => $minutes,
+            ]);
+        }
+
+        return $deleted;
+    }
+
+    /**
+     * Cleanup abandoned pending cycles across all users.
+     */
+    public function cleanupAbandonedPendingCyclesAll(int $minutes = 60): int
+    {
+        $cutoff = now()->subMinutes($minutes);
+
+        return SubscriptionCycle::where('status', 'inactive')
+            ->where('tokens_used', 0)
+            ->where('is_trial', false)
+            ->where('created_at', '<', $cutoff)
+            ->delete();
+    }
+
+    /**
+     * Expire active or upcoming trial cycles so paid subscriptions don't merge into them.
+     * Clamps active trial end dates to now() to prevent date calculation issues.
+     */
+    public function expireTrialCycles(User $user): int
+    {
+        // Expire active trials and clamp their end date to now
+        $activeExpired = SubscriptionCycle::where('user_id', $user->id)
+            ->where('is_trial', true)
+            ->where('status', 'active')
+            ->update([
+                'status' => 'expired',
+                'cycle_end_date' => now(),
+            ]);
+
+        // Expire inactive (upcoming) trials
+        $inactiveExpired = SubscriptionCycle::where('user_id', $user->id)
+            ->where('is_trial', true)
+            ->where('status', 'inactive')
+            ->update(['status' => 'expired']);
+
+        return $activeExpired + $inactiveExpired;
+    }
+
+    /**
+     * Delete all cycles in a subscription group (used when payment fails/cancelled)
+     */
+    public function deletePendingCyclesByGroup(string $groupId): int
+    {
+        $deleted = SubscriptionCycle::where('subscription_group_id', $groupId)
+            ->where('status', 'inactive')
+            ->where('tokens_used', 0)
+            ->delete();
+
+        Log::info('Pending cycles deleted after payment failure/cancellation', [
+            'group_id' => $groupId,
+            'deleted_count' => $deleted,
+        ]);
+
+        return $deleted;
     }
 }

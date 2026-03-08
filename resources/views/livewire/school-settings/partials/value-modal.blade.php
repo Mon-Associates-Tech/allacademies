@@ -110,7 +110,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Value</label>
                                     <input type="text"
                                            wire:model="value"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                                            placeholder="Enter text value..."
                                         {{ $currentSetting->required ? 'required' : '' }}>
                                 </div>
@@ -120,7 +120,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Value</label>
                                     <textarea wire:model="value"
                                               rows="4"
-                                              class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 resize-none"
+                                              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 resize-none"
                                               placeholder="Enter long text value..."
                                               {{ $currentSetting->required ? 'required' : '' }}></textarea>
                                 </div>
@@ -130,7 +130,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Value</label>
                                     <input type="number"
                                            wire:model="value"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                                            placeholder="Enter numeric value..."
                                         {{ $currentSetting->required ? 'required' : '' }}>
                                 </div>
@@ -176,7 +176,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Value</label>
                                     <select wire:model="value"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white">
+                                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white">
                                         @if(!$currentSetting->required)
                                             <option value="">Select an option</option>
                                         @endif
@@ -193,7 +193,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Image Upload</label>
 
                                     <!-- File Upload Area -->
-                                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors duration-200">
+                                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors duration-200">
                                         <input type="file"
                                                wire:model="fileValue"
                                                accept="image/*"
@@ -223,7 +223,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">PDF Upload</label>
 
                                     <!-- File Upload Area -->
-                                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors duration-200">
+                                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors duration-200">
                                         <input type="file"
                                                wire:model="fileValue"
                                                accept=".pdf"
@@ -261,7 +261,7 @@
                                         <textarea wire:model="value"
                                                   rows="8"
                                                   placeholder='{"key": "value", "example": true}'
-                                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 font-mono text-sm bg-gray-50"
+                                                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 font-mono text-sm bg-gray-50"
                                                   {{ $currentSetting->required ? 'required' : '' }}></textarea>
                                         <div class="absolute top-2 right-2">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
@@ -297,7 +297,7 @@
                         <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
                             <button type="button"
                                     wire:click="closeValueModal"
-                                    class="px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+                                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
                                 Cancel
                             </button>
                             <button type="submit"

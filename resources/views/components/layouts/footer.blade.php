@@ -206,7 +206,7 @@
 
                     <li>
                         <x-link.primary type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
-                            <span>Make Payment</span>
+                            <span>School Fees Payment Portal</span>
                         </x-link.primary>
                     </li>
                 </ul>

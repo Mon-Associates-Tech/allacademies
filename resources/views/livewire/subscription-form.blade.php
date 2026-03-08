@@ -230,7 +230,7 @@
                                                                wire:model.live="academicSubjects"
                                                                name="academic_subject_ids[]"
                                                                type="checkbox"
-                                                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 focus:ring-offset-0">
+                                                               class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-500 focus:ring-blue-600 focus:ring-offset-0">
                                                         <div class="ml-3 flex-1 min-w-0">
                                                             <div
                                                                 class="text-sm font-medium text-gray-700 group-hover:text-blue-700 transition-colors">

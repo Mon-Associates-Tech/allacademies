@@ -55,6 +55,7 @@ Promise.resolve()
   .then(() => import('./charts/helpers'))
   .then(() => import('./charts/gauge'))
   .catch((e) => console.warn('Chart helpers load error:', e));
+import './calendar';
 // Configure axios
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 

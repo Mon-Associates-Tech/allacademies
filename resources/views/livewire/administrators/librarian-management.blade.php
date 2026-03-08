@@ -113,7 +113,7 @@
                         <div class="relative">
                             <input type="text" wire:model.live.debounce.300ms="searchTerm"
                                    placeholder="Search librarians..."
-                                   class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,14 +123,14 @@
                         </div>
 
                         <select wire:model.live="statusFilter"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
 
                         <select wire:model.live="departmentFilter"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">All Departments</option>
                             @foreach($departments as $dept)
                                 <option value="{{ $dept }}">{{ $dept }}</option>
@@ -138,7 +138,7 @@
                         </select>
 
                         <select wire:model.live="positionFilter"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">All Positions</option>
                             @foreach($positions as $pos)
                                 <option value="{{ $pos }}">{{ $pos }}</option>
@@ -203,7 +203,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left">
                             <input type="checkbox" wire:model.live="selectAll"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                   class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded cursor-pointer">
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                             wire:click="sortBy('name')">
@@ -268,7 +268,7 @@
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4">
                                 <input type="checkbox" wire:model.live="selectedLibrarians" value="{{ $librarian->id }}"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded cursor-pointer">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
@@ -388,15 +388,15 @@
         <x-slot:header>
             <div class="flex items-center space-x-4">
                 <div class="flex items-center">
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                    <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
                              viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <h2 class="text-xl font-semibold text-gray-900">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
                             {{ $isEditing ? 'Edit Librarian' : 'Create New Librarian' }}
                         </h2>
                     </div>
@@ -410,87 +410,87 @@
                     <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
                         <!-- Personal Information -->
                         <div class="space-y-6">
-                            <div class="border-b border-gray-100 pb-3">
-                                <h3 class="text-lg font-medium text-gray-900 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor"
+                            <div class="border-b border-gray-100 dark:border-gray-700 pb-3">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                     <div class="flex flex-col">
                                         <span>Personal Information</span>
-                                        <p class="text-xs text-gray-500">Basic personal details</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Basic personal details</p>
                                     </div>
                                 </h3>
 
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Name <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" wire:model.blur="name"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Email <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" wire:model.blur="email"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
                                 <input type="tel" wire:model.blur="phone"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
                                 <input type="date" wire:model.blur="dateOfBirth"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('dateOfBirth') <p
-                                    class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                                 <textarea wire:model.blur="address" rows="4"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"></textarea>
-                                @error('address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 resize-none"></textarea>
+                                @error('address') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
                         </div>
 
                         <!-- Professional Information -->
                         <div class="space-y-6">
-                            <div class="border-b border-gray-100 pb-3">
-                                <h3 class="text-lg font-medium text-gray-900 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor"
+                            <div class="border-b border-gray-100 dark:border-gray-700 pb-3">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-green-500 dark:text-green-400" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
                                     </svg>
                                     Professional Information
                                 </h3>
-                                <p class="text-sm text-gray-500 mt-1">Work-related details</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Work-related details</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Employee ID</label>
                                 <input type="text" wire:model.blur="employeeId"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200"
                                        placeholder="e.g., LIB001">
                                 @error('employeeId') <p
-                                    class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Position</label>
                                 <input type="text" wire:model.blur="position"
                                        list="positions"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
@@ -500,11 +500,11 @@
                                         <option value="{{ $pos }}">
                                     @endforeach
                                 </datalist>
-                                @error('position') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                @error('position') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
                                 <input type="text" wire:model.blur="department"
                                        list="departments"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
@@ -515,62 +515,62 @@
                                     @endforeach
                                 </datalist>
                                 @error('department') <p
-                                    class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hire Date</label>
                                 <input type="date" wire:model.blur="hireDate"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('hireDate') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
 
-                            <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                 <input type="checkbox" wire:model="isActive" id="isActive"
-                                       class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="isActive" class="ml-3 block text-sm font-medium text-gray-700">
+                                       class="h-5 w-5 text-blue-600 dark:bg-gray-600 dark:border-gray-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 rounded">
+                                <label for="isActive" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Active Account
-                                    <span class="block text-xs text-gray-500">Account will be able to login</span>
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400">Account will be able to login</span>
                                 </label>
                             </div>
                         </div>
 
                         <!-- Additional Information -->
                         <div class="space-y-6">
-                            <div class="border-b border-gray-100 pb-3">
-                                <h3 class="text-lg font-medium text-gray-900 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor"
+                            <div class="border-b border-gray-100 dark:border-gray-700 pb-3">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                     Additional Information
                                 </h3>
-                                <p class="text-sm text-gray-500 mt-1">Skills and qualifications</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Skills and qualifications</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Qualifications</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qualifications</label>
                                 <textarea wire:model.blur="qualifications" rows="5"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 resize-none"
                                           placeholder="e.g., MLS, Bachelor's in Library Science"></textarea>
                                 @error('qualifications') <p
-                                    class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Specializations</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Specializations</label>
                                 <textarea wire:model.blur="specializations" rows="4"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 resize-none"
                                           placeholder="e.g., Digital Archives, Research Methods"></textarea>
                                 @error('specializations') <p
-                                    class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                             </div>
 
                             <!-- Password Section -->
-                            <div class="pt-6 border-t border-gray-100">
-                                <h4 class="text-md font-medium text-gray-900 mb-4 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                            <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                                <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -579,23 +579,23 @@
                                 </h4>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Password {{ $isEditing ? '' : '*' }}
                                         </label>
                                         <input type="password" wire:model.blur="password"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
                                         @error('password') <p
-                                            class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                            class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Confirm Password {{ $isEditing ? '' : '*' }}
                                         </label>
                                         <input type="password" wire:model.blur="passwordConfirmation"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
                                         @error('passwordConfirmation') <p
-                                            class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                            class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                                     </div>
                                 </div>
                             </div>
@@ -608,7 +608,7 @@
 
         <x-slot:footer>
             <div class="flex items-center justify-between">
-                <div class="flex items-center text-sm text-gray-500">
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -617,7 +617,7 @@
                 </div>
                 <div class="flex space-x-3">
                     <button type="button" onclick="window.Modal.close('librarian-form-modal')"
-                            class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 transition-all duration-200 font-medium">
+                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 transition-all duration-200 font-medium">
                                 <span class="flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -652,15 +652,15 @@
 
     <x-modal-component name="librarian-delete-modal" title="Delete Librarian">
         <div class="mt-3 text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+                <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                 </svg>
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mt-2">Delete Librarian</h3>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mt-2">Delete Librarian</h3>
             <div class="mt-2 px-7 py-3">
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
                     Are you sure you want to delete this librarian? This action cannot be undone.
                 </p>
             </div>
@@ -669,11 +669,11 @@
             <div class="flex items-center justify-end">
                 <div class="items-end">
                     <button onclick="window.Modal.close('librarian-delete-modal')"
-                            class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-base font-medium rounded-md w-24 hover:bg-gray-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500">
                         Cancel
                     </button>
                     <button wire:click="delete"
-                            class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-500">
                         Delete
                     </button>
                 </div>

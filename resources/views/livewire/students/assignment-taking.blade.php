@@ -121,8 +121,8 @@
                                     </div>
                                 </div>
 
-                                <div class="prose prose-gray max-w-none dark:prose-invert">
-                                    <x-form.markdown-with-math :content="$question['question']"/>
+                                <div class="prose prose-gray max-w-none dark:prose-invert text-gray-900 dark:text-gray-100">
+                                    <p class="text-gray-900 dark:text-gray-100 text-base leading-relaxed">{{ $question['question'] }}</p>
                                 </div>
                             </div>
 
@@ -132,59 +132,71 @@
                                     <div class="space-y-3">
                                         @foreach($question['options'] as $optionKey => $optionValue)
                                             <label wire:key="mcq-{{ $currentQuestionIndex }}-{{ $optionKey }}"
-                                                   class="flex  items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                                                   class="flex items-center p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-violet-300 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 cursor-pointer transition-all duration-200 {{ ($responses[$currentQuestionIndex] ?? '') === $optionKey ? 'border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-900/30' : 'bg-white dark:bg-gray-700' }}">
                                                 <input type="radio"
                                                        name="question_{{ $currentQuestionIndex }}"
                                                        value="{{ $optionKey }}"
-                                                       wire:model="responses.{{ $currentQuestionIndex }}"
+                                                       wire:model.live="responses.{{ $currentQuestionIndex }}"
                                                        wire:key="mcq-input-{{ $currentQuestionIndex }}-{{ $optionKey }}"
-                                                       class="mt-1 h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 dark:border-gray-600">
-                                                <div class="flex-1">
-                                                    <span
-                                                        class="inline-flex items-center justify-center w-6 h-6 bg-gray-100 dark:bg-gray-600 rounded-full text-xs font-medium text-gray-800 dark:text-gray-200 mr-2">
-                                                        {{ $optionKey }}
-                                                    </span>
-                                                    <span class="text-gray-900 dark:text-gray-100">  <x-form.markdown-with-math
-                                                            :content="$optionValue"/></span>
-                                                </div>
+                                                       class="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 dark:border-gray-500 dark:bg-gray-600 flex-shrink-0">
+                                                <span class="inline-flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-gray-600 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 ml-3 flex-shrink-0">
+                                                    {{ $optionKey }}
+                                                </span>
+                                                <span class="text-gray-900 dark:text-gray-100 ml-3">{{ $optionValue }}</span>
                                             </label>
                                         @endforeach
                                     </div>
 
                                 @elseif($question['type'] === 'true_or_false_question')
-                                    <div class="space-y-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <label wire:key="tf-{{ $currentQuestionIndex }}-true"
-                                               class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                                               class="flex items-center justify-center p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 cursor-pointer transition-all duration-200 {{ ($responses[$currentQuestionIndex] ?? '') === 'true' ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30' : 'bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20' }}">
                                             <input type="radio"
                                                    name="question_{{ $currentQuestionIndex }}"
                                                    value="true"
-                                                   wire:model="responses.{{ $currentQuestionIndex }}"
+                                                   wire:model.live="responses.{{ $currentQuestionIndex }}"
                                                    wire:key="tf-input-{{ $currentQuestionIndex }}-true"
-                                                   class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 dark:border-gray-600">
-                                            <span class="text-green-800 dark:text-green-300 font-medium">True</span>
+                                                   class="sr-only">
+                                            <div class="text-center">
+                                                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                </div>
+                                                <span class="text-lg font-semibold text-green-700 dark:text-green-300">True</span>
+                                            </div>
                                         </label>
 
                                         <label wire:key="tf-{{ $currentQuestionIndex }}-false"
-                                               class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                                               class="flex items-center justify-center p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-red-400 dark:hover:border-red-500 cursor-pointer transition-all duration-200 {{ ($responses[$currentQuestionIndex] ?? '') === 'false' ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/30' : 'bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20' }}">
                                             <input type="radio"
                                                    name="question_{{ $currentQuestionIndex }}"
                                                    value="false"
-                                                   wire:model="responses.{{ $currentQuestionIndex }}"
+                                                   wire:model.live="responses.{{ $currentQuestionIndex }}"
                                                    wire:key="tf-input-{{ $currentQuestionIndex }}-false"
-                                                   class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 dark:border-gray-600">
-                                            <span class="text-red-800 dark:text-red-300 font-medium">False</span>
+                                                   class="sr-only">
+                                            <div class="text-center">
+                                                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </div>
+                                                <span class="text-lg font-semibold text-red-700 dark:text-red-300">False</span>
+                                            </div>
                                         </label>
                                     </div>
 
                                 @elseif($question['type'] === 'essay_question')
                                     <div>
                                         <textarea
-                                            wire:model="responses.{{ $currentQuestionIndex }}"
+                                            wire:model.live.debounce.500ms="responses.{{ $currentQuestionIndex }}"
                                             rows="8"
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-300 resize-none"
+                                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:focus:border-violet-400 bg-white dark:bg-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none transition-colors"
                                             placeholder="Type your answer here..."></textarea>
-                                        <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                            Word count: {{ str_word_count($responses[$currentQuestionIndex] ?? '') }}
+                                        <div class="mt-2 flex items-center justify-between text-sm">
+                                            <span class="text-gray-500 dark:text-gray-400">
+                                                Word count: <span class="font-medium text-gray-700 dark:text-gray-300">{{ str_word_count($responses[$currentQuestionIndex] ?? '') }}</span>
+                                            </span>
                                         </div>
                                     </div>
                                 @endif
@@ -192,7 +204,7 @@
 
                             <!-- Question Navigation -->
                             <div
-                                class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                                class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                                 <div class="flex items-center justify-between">
                                     <button
                                         wire:click="previousQuestion"
@@ -205,39 +217,54 @@
                                         Previous
                                     </button>
 
-                                    <div class="flex items-center space-x-2">
-                                        @if($currentQuestionIndex === count($questions) - 1)
-                                            <button
-                                                wire:click="submitAssessment"
-                                                class="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-sm">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                     viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          stroke-width="2"
-                                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                Submit Assignment
-                                            </button>
-                                        @else
-                                            <button
-                                                wire:click="nextQuestion"
-                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg hover:from-violet-600 hover:to-purple-700 transition-all duration-200 shadow-sm">
-                                                Next
-                                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor"
-                                                     viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                </svg>
-                                            </button>
-                                        @endif
-                                    </div>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Question {{ $currentQuestionIndex + 1 }} of {{ count($questions) }}
+                                    </span>
+
+                                    <button
+                                        wire:click="nextQuestion"
+                                        {{ $currentQuestionIndex === count($questions) - 1 ? 'disabled' : '' }}
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm">
+                                        Next
+                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Separate Submit Section -->
+                        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div class="text-center sm:text-left">
+                                    <h4 class="font-semibold text-gray-900 dark:text-gray-100">Ready to submit?</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        You have answered <span class="font-medium text-green-600 dark:text-green-400">{{ $this->getAnsweredCount() }}</span> of <span class="font-medium">{{ count($questions) }}</span> questions.
+                                        @if($this->getAnsweredCount() < count($questions))
+                                            <span class="text-orange-600 dark:text-orange-400">{{ count($questions) - $this->getAnsweredCount() }} unanswered.</span>
+                                        @else
+                                            <span class="text-green-600 dark:text-green-400">All questions answered!</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <button
+                                    wire:click="submitAssessment"
+                                    wire:confirm="Are you sure you want to submit this assignment? You cannot change your answers after submission."
+                                    class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-sm">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Submit Assignment
+                                </button>
                             </div>
                         </div>
                     @endif
                 </div>
 
-                responses :: {{ json_encode($this->responses) }}
                 <!-- Sidebar -->
                 <div class="lg:col-span-1">
                     <!-- Question Navigator -->
@@ -490,8 +517,7 @@
     @if($isTimerActive && $timeRemaining !== null)
         <script>
             let timer = setInterval(function () {
-                @this.
-                call('updateTimer');
+                @this.call('updateTimer');
             }, 1000);
 
             document.addEventListener('livewire:navigated', () => {

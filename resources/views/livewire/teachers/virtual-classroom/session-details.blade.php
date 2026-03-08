@@ -60,7 +60,7 @@
 
                     @if($session->status === 'scheduled')
                         <a href="{{ route('teachers.classroom.edit', $session) }}"
-                           class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                           class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
@@ -84,21 +84,21 @@
         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
             <nav class="flex -mb-px space-x-8">
                 <button wire:click="setTab('overview')"
-                        class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'overview' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'overview' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Overview
                 </button>
                 <button wire:click="setTab('participants')"
-                        class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'participants' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'participants' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Participants ({{ $session->participants->count() }})
                 </button>
                 @if($session->hasRecordings())
                     <button wire:click="setTab('recordings')"
-                            class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'recordings' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'recordings' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                         Recordings ({{ $session->recordings->where('status', 'published')->count() }})
                     </button>
                 @endif
                 <button wire:click="setTab('settings')"
-                        class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'settings' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        class="py-4 text-sm font-medium border-b-2 {{ $activeTab === 'settings' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
                     Settings
                 </button>
             </nav>

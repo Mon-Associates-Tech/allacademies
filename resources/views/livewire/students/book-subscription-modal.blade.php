@@ -95,7 +95,7 @@
                                 <div class="mt-6 p-4 bg-white dark:bg-gray-800 rounded border">
                                     <label class="flex items-start space-x-3 cursor-pointer">
                                         <input type="checkbox" wire:model="acceptedConditions"
-                                               class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                               class="mt-1 h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                         <span class="text-sm text-gray-700 dark:text-gray-300">
                                             I have read, understood, and agree to all the subscription conditions listed above.
                                             I understand that the book cannot be downloaded, copied, or printed, and I accept these restrictions.

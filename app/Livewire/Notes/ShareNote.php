@@ -89,18 +89,28 @@ class ShareNote extends Component
             return 1;
         }
 
-        if (empty($this->selectedRecipients)) {
+        if (empty($this->selectedRecipients) || ! is_array($this->selectedRecipients)) {
             return 0;
         }
 
-        $shareService = app(NoteShareService::class);
-        $recipients = $shareService->resolveRecipients(
-            $this->shareType,
-            $this->selectedRecipients,
-            auth()->user()->school_id
-        );
+        try {
+            $shareService = app(NoteShareService::class);
+            $recipients = $shareService->resolveRecipients(
+                $this->shareType,
+                $this->selectedRecipients,
+                $this->note->user->school_id
+            );
 
-        return $recipients->count();
+            return $recipients->count();
+        } catch (\Exception $e) {
+            \Log::error('Failed to get recipient count', [
+                'share_type' => $this->shareType,
+                'selected_recipients' => $this->selectedRecipients,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
     }
 
     // Lazy loading configuration methods

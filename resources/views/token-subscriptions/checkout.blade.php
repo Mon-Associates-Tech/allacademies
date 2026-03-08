@@ -285,6 +285,13 @@
                                         </button>
                                     </form>
 
+                                    {{-- Cancel Button --}}
+                                    <a href="{{ route('token-subscriptions.index') }}"
+                                       onclick="fetch('{{ route('token-payments.cancel') }}', {method: 'GET'}).catch(e => {}); return true;"
+                                       class="block w-full py-3 px-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-all duration-300 text-center">
+                                        Cancel
+                                    </a>
+
                                     {{-- Terms --}}
                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-6 text-center">
                                         By clicking "Proceed to Payment", you agree to our <a

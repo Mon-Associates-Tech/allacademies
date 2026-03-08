@@ -14,7 +14,7 @@
                 Book Title <span class="text-red-500">*</span>
             </label>
             <input type="text" wire:model.live="title" placeholder="Enter the complete book title"
-                   class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             @error('title') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
 
@@ -66,7 +66,7 @@
                     </div>
                     <div>
                         <input type="text" wire:model="newAuthorName" placeholder="Author name"
-                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
                         @error('newAuthorName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <button type="button" wire:click="createNewAuthor"
@@ -116,12 +116,12 @@
                     </div>
                     <div>
                         <input type="text" wire:model="newCategoryName" placeholder="Category name"
-                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500">
                         @error('newCategoryName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <textarea wire:model="newCategoryDescription" rows="3" placeholder="Brief description..."
-                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none"></textarea>
+                                  class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"></textarea>
                         @error('newCategoryDescription') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <button type="button" wire:click="createNewCategory"

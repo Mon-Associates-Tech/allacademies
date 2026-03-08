@@ -150,11 +150,14 @@ class PerformanceOverview extends Component
             $this->calculatePerformanceMetrics($gradedSubmissions, []);
             $this->calculateOverallStats($submissions, [], $allAssignments);
             $this->calculateTrendData($gradedSubmissions, []);
+            $this->loadUpcomingAndPendingAssignments($allAssignments, $submissions);
 
             Log::info('Performance data calculated', [
                 'performance_items' => count($this->performanceData),
                 'has_overall_stats' => ! empty($this->overallStats),
                 'trend_items' => count($this->trendData),
+                'upcoming_assignments' => count($this->upcomingAssignments),
+                'pending_assignments' => count($this->pendingAssignments),
             ]);
 
         } catch (Exception $e) {

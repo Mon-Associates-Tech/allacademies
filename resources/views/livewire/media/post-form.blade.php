@@ -2,12 +2,12 @@
     <form wire:submit.prevent="save" class="space-y-6 p-6">
         <!-- Title -->
         <div>
-            <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+            <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
             <input
                 type="text"
                 id="title"
                 wire:model="title"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter post title"
             >
             @error('title') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
@@ -15,12 +15,12 @@
 
         <!-- Excerpt -->
         <div>
-            <label for="excerpt" class="block text-sm font-medium text-gray-700">Excerpt</label>
+            <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Excerpt</label>
             <textarea
                 id="excerpt"
                 wire:model="excerpt"
                 rows="3"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Brief description of the post"
             ></textarea>
             @error('excerpt') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
@@ -61,7 +61,7 @@
                 <button
                     type="button"
                     wire:click="openFeaturedImagePicker"
-                    class="w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-48 h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                     <div class="text-center">
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
@@ -75,12 +75,12 @@
 
         <!-- Content -->
         <div>
-            <label for="content" class="block text-sm font-medium text-gray-700">Content</label>
+            <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Content</label>
             <textarea
                 id="content"
                 wire:model="content"
                 rows="10"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Write your post content here..."
             ></textarea>
             @error('content') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
@@ -118,7 +118,7 @@
                 <button
                     type="button"
                     wire:click="openGalleryPicker"
-                    class="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                     <div class="text-center">
                         <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

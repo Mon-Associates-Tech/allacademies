@@ -87,10 +87,10 @@ class ShareNoteRecipientsSelect extends Component
             $query->where('school_id', $this->schoolId);
         }
 
-        if (! empty($this->search)) {
-            $query->where(function ($q) {
-                $q->where('name', 'LIKE', '%'.$this->search.'%')
-                    ->orWhere('email', 'LIKE', '%'.$this->search.'%');
+        if (!empty($this->search)) {
+            $query->where(function($q) {
+                $q->where('name', 'LIKE', '%' . $this->search . '%')
+                  ->orWhere('email', 'LIKE', '%' . $this->search . '%');
             });
         }
 
@@ -152,8 +152,10 @@ class ShareNoteRecipientsSelect extends Component
         }
 
         return AcademicGroup::whereIn('id', $this->selected)
-            ->withCount(['students' => function($q) {
-                $q->where('school_id', $this->schoolId);
+            ->withCount(['students' => function ($q) {
+                if ($this->schoolId !== null) {
+                    $q->where('school_id', $this->schoolId);
+                }
             }])
             ->get()
             ->map(fn ($group) => [
@@ -175,21 +177,19 @@ class ShareNoteRecipientsSelect extends Component
         if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('name', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('label', 'LIKE', '%' . $this->search . '%');
+                  ->orWhere('label', 'LIKE', '%' . $this->search . '%');
             });
         }
 
-        return $query->withCount(['students' => function ($q) {
-            if ($this->schoolId !== null) {
+        return $query->withCount(['students' => function($q) {
                 $q->where('school_id', $this->schoolId);
-            }
-        }])
+            }])
             ->orderBy('name')
             ->limit(50)
             ->get()
-            ->map(fn ($level) => [
+            ->map(fn($level) => [
                 'id' => $level->id,
-                'name' => $level->name.' ('.$level->students_count.' students)',
+                'name' => $level->name . ' (' . $level->students_count . ' students)',
             ])
             ->toArray();
     }
@@ -205,9 +205,9 @@ class ShareNoteRecipientsSelect extends Component
                 $q->where('school_id', $this->schoolId);
             }])
             ->get()
-            ->map(fn ($level) => [
+            ->map(fn($level) => [
                 'id' => $level->id,
-                'name' => $level->name.' ('.$level->students_count.' students)',
+                'name' => $level->name . ' (' . $level->students_count . ' students)',
             ])
             ->toArray();
     }

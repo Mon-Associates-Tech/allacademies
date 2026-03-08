@@ -18,16 +18,17 @@
 @endphp
 
 @if(auth()->check() && !$has_token_subscription ?? false)
-    <div class="absolute inset-0 z-40"
+    <div class="fixed inset-0 z-40 pointer-events-none"
          x-data="{ init() { document.body.style.overflow = 'hidden'; }, destroy() { document.body.style.overflow = 'auto'; } }"
          x-init="init()"
-         x-show="true">
-        <!-- Overlay Background - absolute to cover slot area only -->
-        <div class="absolute inset-0 bg-black/70 dark:bg-black/80 z-40 pointer-events-auto" role="presentation"></div>
+         x-show="true"
+         style="top: var(--header-height, 0); left: var(--sidebar-width, 0); right: 0; bottom: 0; pointer-events: auto;">
+        <!-- Overlay Background - fixed to cover content area only -->
+        <div class="fixed inset-0 bg-black/70 dark:bg-black/80 z-40 pointer-events-auto" role="presentation" style="top: var(--header-height, 0); left: var(--sidebar-width, 0); right: 0; bottom: 0;"></div>
 
         @if($variant === 'full-page')
             <!-- Full Page Variant -->
-            <div class="absolute inset-0 flex items-center justify-center z-50 p-4 pointer-events-auto" role="alert">
+            <div class="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-auto" role="alert" style="top: var(--header-height, 0); left: var(--sidebar-width, 0); right: 0; bottom: 0;">
                 <div class="max-w-md w-full bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-8">
                     <div class="flex justify-center mb-6">
                         <div class="flex-shrink-0">

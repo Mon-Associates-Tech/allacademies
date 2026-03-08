@@ -1,8 +1,7 @@
 <x-layouts.app>
-        @if(auth()->check() && !$has_token_subscription ?? false)
-        <x-alert.token-subscription-banner />
-    @else
-    <div class="max-w-5xl mx-auto  lg:px-8">
+    <x-alert.token-subscription-banner />
+
+    <div class="max-w-6xl mx-auto lg:px-8">
         {{-- Header Section --}}
         <div class="page-header-sky rounded-t-xl overflow-visible">
             <div class="px-2 py-3 sm:px-6 sm:py-6 border-b border-gray-100 dark:border-gray-700">
@@ -84,6 +83,18 @@
                                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                     Private
+                                </span>
+                            @endif
+
+                            @if($note->calendarEvent)
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20 dark:bg-orange-500/10 dark:text-orange-400 dark:ring-orange-500/20">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Added to Calendar
                                 </span>
                             @endif
                         </div>
@@ -292,15 +303,15 @@
         </div>
 
         {{-- Content Area --}}
-        <div class="border-x border-gray-200 dark:border-gray-700 shadow-sm {{ $note->getBackgroundClass() }}">
-            <div class="px-6 py-8 sm:px-8">
+        <div class="bg-white dark:bg-gray-800 border-x border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="px-4 py-8 sm:px-6">
                 <x-prose-content :content="$note->content"/>
             </div>
         </div>
 
         {{-- Attachments Section --}}
-        <div class="border-x border-b border-gray-200 dark:border-gray-700 shadow-sm {{ $note->getBackgroundClass() }}">
-            <div class="px-6 py-6 sm:px-8">
+        <div class="bg-white dark:bg-gray-800 border-x border-b border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="px-4 py-6 sm:px-8">
                 @livewire('notes.note-attachment-manager', ['note' => $note])
             </div>
         </div>
@@ -353,5 +364,4 @@
             </div>
         @endif
     </div>
-    @endif
 </x-layouts.app>

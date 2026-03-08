@@ -8,6 +8,7 @@ use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
 use App\Support\TokenSubscriptionStatus;
+use App\Traits\ActivityLoggable;
 use App\Traits\HasAvatar;
 use App\Traits\HasMultipleSubAccounts;
 use App\Traits\HasRoles;
@@ -26,12 +27,14 @@ use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Log;
+use App\Notifications\VerifyEmailNotification;
 
 /**
  * @property mixed $school
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
+    use ActivityLoggable;
     use HasApiTokens;
     use HasAvatar;
     use HasFactory;
@@ -43,12 +46,46 @@ class User extends Authenticatable implements MustVerifyEmail
     use Notifiable;
     use Trackable;
 
+    private const ROLE_MODEL_MAP = [
+        'student' => Student::class,
+        'teacher' => Teacher::class,
+        'author' => Author::class,
+        'librarian' => Librarian::class,
+        'parent' => StudentParent::class,
+    ];
+
+    private const ROLE_RELATION_MAP = [
+        'student' => 'student',
+        'teacher' => 'teacher',
+        'author' => 'author',
+        'librarian' => 'librarian',
+        'accountant' => 'accountant',
+        'parent' => 'parent',
+    ];
+
+    private const SCHOOL_BOUND_ROLES = [
+        'student',
+        'teacher',
+        'librarian',
+        'accountant',
+        'parent',
+        'author',
+        'admin',
+    ];
+
+    private const IMPERSONATION_PROTECTED_ROLES = [
+        'owner',
+        'admin',
+        'superadmin',
+    ];
+
     protected $fillable = [
         'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
         'country_code', 'country', 'region', 'city', 'gender', 'cover_image',
+        'preferred_academic_level_id',
     ];
 
     protected $hidden = [
@@ -63,6 +100,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_expires_at' => 'datetime',
         'is_active' => 'boolean',
         'role' => UserRole::class,
+        'suspended_at' => 'datetime',
     ];
 
     protected $with = [
@@ -93,7 +131,8 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         });
 
-        static::observe(new class {
+        static::observe(new class
+        {
             public function verified(User $user): void
             {
                 $user->createFreeTrialSubscription();
@@ -103,21 +142,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function handleRoleChange(): void
     {
-        $roleModels = [
-            'student' => Student::class,
-            'teacher' => Teacher::class,
-            'author' => Author::class,
-            'librarian' => Librarian::class,
-            'parent' => StudentParent::class,
-        ];
+        $role = $this->getRoleValue();
 
-        $role = $this->role instanceof UserRole ? $this->role->value : $this->role;
-
-        if (!isset($roleModels[$role])) {
+        if (! isset(self::ROLE_MODEL_MAP[$role])) {
             return;
         }
 
-        $modelClass = $roleModels[$role];
+        $modelClass = self::ROLE_MODEL_MAP[$role];
         $data = ['user_id' => $this->id];
 
         if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
@@ -147,7 +178,7 @@ class User extends Authenticatable implements MustVerifyEmail
             case 'teacher':
                 $data['employee_id'] = method_exists($modelClass, 'generateEmployeeId')
                     ? $modelClass::generateEmployeeId($this->school_id)
-                    : 'EMP' . time() . rand(100, 999);
+                    : 'EMP'.time().rand(100, 999);
                 $data['hire_date'] = now();
                 $data['employment_type'] = 'full_time';
                 $data['status'] = 'active';
@@ -156,7 +187,7 @@ class User extends Authenticatable implements MustVerifyEmail
             case 'librarian':
                 $data['employee_id'] = method_exists($modelClass, 'generateEmployeeId')
                     ? $modelClass::generateEmployeeId($this->school_id)
-                    : 'LIB' . time() . rand(100, 999);
+                    : 'LIB'.time().rand(100, 999);
                 $data['hire_date'] = now();
                 $data['status'] = 'active';
                 break;
@@ -164,12 +195,12 @@ class User extends Authenticatable implements MustVerifyEmail
             case 'student':
                 $data['student_id'] = method_exists($modelClass, 'generateStudentId')
                     ? $modelClass::generateStudentId($this->school_id)
-                    : 'STU' . time() . rand(100, 999);
+                    : 'STU'.time().rand(100, 999);
                 $data['admission_date'] = now();
                 $data['status'] = 'active';
 
                 // Activate basic tier for students
-                if ($this->hasVerifiedEmail() && !$this->hasActiveSubscriptionCycle()) {
+                if ($this->hasVerifiedEmail() && ! $this->hasActiveSubscriptionCycle()) {
                     $this->activateBasicTier();
                 }
                 break;
@@ -184,7 +215,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('is_active', true)
             ->first();
 
-        if (!$basicTier) {
+        if (! $basicTier) {
             Log::warning('Basic tier not found for user', ['user_id' => $this->id]);
 
             return;
@@ -215,11 +246,11 @@ class User extends Authenticatable implements MustVerifyEmail
     private function ensureRequiredFields(array &$data, string $role): void
     {
         if ($role === 'student' && empty($data['student_id'])) {
-            $data['student_id'] = 'STU' . $this->id . time();
+            $data['student_id'] = 'STU'.$this->id.time();
         }
 
         if (in_array($role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
-            $data['employee_id'] = strtoupper(substr($role, 0, 3)) . $this->id . time();
+            $data['employee_id'] = strtoupper(substr($role, 0, 3)).$this->id.time();
         }
     }
 
@@ -227,12 +258,20 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function createFreeTrialSubscription(bool $force = false): void
     {
-        if (!$force && !$this->hasVerifiedEmail()) {
+        if (! $force && ! $this->hasVerifiedEmail()) {
             return;
         }
 
         if ($this->hasActiveSubscriptionCycle()) {
             return;
+        }
+
+        // NEW: Only grant free tokens if student's school has active content subscription
+        if ($this->role === UserRole::STUDENT) {
+            $school = $this->school;
+            if (! $school || ! $school->hasActiveContentSubscription()) {
+                return;
+            }
         }
 
         $this->activateBasicTier();
@@ -241,9 +280,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getNameAttribute($value): string
     {
         if ($this->first_name && $this->last_name) {
-            $name = trim($this->first_name . ' ' . $this->last_name);
+            $name = trim($this->first_name.' '.$this->last_name);
             if ($this->other_names) {
-                $name = trim($this->first_name . ' ' . $this->other_names . ' ' . $this->last_name);
+                $name = trim($this->first_name.' '.$this->other_names.' '.$this->last_name);
             }
 
             return $name;
@@ -353,61 +392,117 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserPreference::class);
     }
 
+    // User Activities
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class);
+    }
+
     // Suspension Relationship
     public function suspendedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'suspended_by');
     }
 
+    // Academic Level Preference Relationship
+    public function preferredAcademicLevel(): BelongsTo
+    {
+        return $this->belongsTo(AcademicLevel::class, 'preferred_academic_level_id');
+    }
+
+    /**
+     * Get the effective academic level for the user.
+     *
+     * Priority:
+     * 1. For students: Use student's academic_level_id (set by teacher/admin)
+     * 2. For all users: Use preferred_academic_level_id if set
+     * 3. Default: Return null (BECE grading will be assumed)
+     */
+    public function getEffectiveAcademicLevel(): ?AcademicLevel
+    {
+        // For students, prioritize the student's assigned academic level
+        if ($this->student && $this->student->academic_level_id) {
+            return $this->student->academicLevel;
+        }
+
+        // Otherwise, use the user's preferred academic level
+        return $this->preferredAcademicLevel;
+    }
+
+    /**
+     * Get the academic group tag for the user's effective academic level.
+     *
+     * @return string|null Returns 'basic', 'senior', 'university', or null
+     */
+    public function getAcademicGroupTag(): ?string
+    {
+        $academicLevel = $this->getEffectiveAcademicLevel();
+
+        if (! $academicLevel) {
+            return null;
+        }
+
+        return $academicLevel->academicGroup?->tag;
+    }
+
+    /**
+     * Check if the user can set their own academic level preference.
+     *
+     * Students cannot set their own level (must be set by teacher/admin).
+     * Guests and other roles can set their own preference.
+     */
+    public function canSetOwnAcademicLevel(): bool
+    {
+        // Guests can always set their own academic level
+        if ($this->role === UserRole::GUEST) {
+            return true;
+        }
+
+        // Other users can set their level if they don't have a student profile
+        return ! $this->student;
+    }
+
     // ==================== ROLE CHECKING ====================
 
     public function isOwner(): bool
     {
-        return $this->hasRole('owner');
+        return $this->hasRole(UserRole::OWNER->value);
     }
 
     public function isSchoolAdmin(): bool
     {
-        return $this->school_id && $this->hasRole('admin');
+        return $this->school_id && $this->hasRole(UserRole::ADMIN->value);
     }
 
     public function hasSchoolBoundRole(): bool
     {
-        return $this->student || $this->teacher || $this->admin ||
-            $this->librarian || $this->accountant || $this->parent;
+        return $this->hasAnyRole(self::SCHOOL_BOUND_ROLES);
     }
 
     public function getPrimarySchoolRole(): ?string
     {
-        $roles = [
-            'student' => $this->student,
-            'teacher' => $this->teacher,
-            'admin' => $this->admin,
-            'librarian' => $this->librarian,
-            'accountant' => $this->accountant,
-            'parent' => $this->parent,
-        ];
-
-        foreach ($roles as $role => $exists) {
-            if ($exists) {
+        foreach (self::ROLE_RELATION_MAP as $role => $relation) {
+            if ($this->{$relation}) {
                 return $role;
             }
         }
 
-        return null;
+        $role = $this->getRoleValue();
+
+        return in_array($role, self::SCHOOL_BOUND_ROLES, true) ? $role : null;
     }
 
     public function impersonateUser($userId)
     {
         $user = self::findOrFail($userId);
 
-        if (!Auth::user()->canImpersonate()) {
+        if (! Auth::user()->canImpersonate()) {
             session()->flash('error', 'You do not have permission to impersonate users.');
 
             return;
         }
 
-        if (!$user->canBeImpersonated()) {
+        if (! $user->canBeImpersonated()) {
             session()->flash('error', 'This user cannot be impersonated.');
 
             return;
@@ -429,14 +524,26 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole('superadmin');
+        return $this->hasRole(UserRole::SUPER_ADMIN->value);
     }
 
     public function canBeImpersonated(): bool
     {
-        return !$this->isSuperAdmin() &&
-            !in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
+        $role = $this->getRoleValue();
+
+        return ! $this->isSuperAdmin() &&
+            ! in_array($role, self::IMPERSONATION_PROTECTED_ROLES, true) &&
             ($this->is_active ?? true);
+    }
+
+    // ==================== EMAIL VERIFICATION ====================
+
+    /**
+     * Send a custom email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification());
     }
 
     // ==================== SCHOOL ACCESS & MULTI-TENANCY ====================
@@ -447,7 +554,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return !$this->school_id;
+        return ! $this->school_id;
     }
 
     public function canAccessSchool($schoolId): bool
@@ -487,7 +594,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('0=1');
         }
 
@@ -507,7 +614,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('0=1');
         }
 
@@ -566,10 +673,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function subscriptionHistory()
     {
         return $this->hasMany(SubscriptionCycle::class)
-            ->selectRaw('subscription_group_id, MAX(id) as latest_cycle_id, MAX(cycle_end_date) as group_end_date')
-            ->where('cycle_end_date', '<', now())
+            ->with('pricingTier')
+            ->selectRaw('subscription_group_id, 
+                        MIN(cycle_start_date) as group_start_date,
+                        MAX(cycle_end_date) as group_end_date,
+                        COUNT(*) as months_count,
+                        SUM(current_price) as total_cost,
+                        SUM(tokens_allocated) as total_tokens,
+                        MAX(id) as latest_cycle_id')
             ->groupBy('subscription_group_id')
-            ->orderBy('group_end_date', 'desc');
+            ->orderBy('group_start_date', 'desc');
     }
 
     public function tokenUsageLogs(): HasMany
@@ -583,7 +696,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $cycle = $this->subscriptionCycles()->where('status', 'active')->first();
 
-        if (!$cycle) {
+        if (! $cycle) {
             return false;
         }
 
@@ -600,7 +713,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $cycle = $this->getCurrentActiveCycle();
 
-        if (!$cycle) {
+        if (! $cycle) {
             return true;
         }
 
@@ -615,7 +728,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $cycle = $this->getCurrentActiveCycle();
 
-        if (!$cycle || !$cycle->pricingTier) {
+        if (! $cycle || ! $cycle->pricingTier) {
             return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
@@ -638,5 +751,26 @@ class User extends Authenticatable implements MustVerifyEmail
             UserRole::AUTHOR,
             UserRole::LIBRARIAN,
         ]);
+    }
+
+    // ==================== ACTIVITY LOGGING ====================
+
+    /**
+     * Specify additional sensitive fields that should not be logged
+     * The base trait already filters: password, api_key, secret, tokens, etc.
+     */
+    public function getSensitiveFieldsForLogging(): array
+    {
+        return [
+            'remember_token',
+            'password_hash',
+            'previous_password',
+            'old_password',
+        ];
+    }
+
+    private function getRoleValue(): ?string
+    {
+        return $this->role instanceof UserRole ? $this->role->value : $this->role;
     }
 }
