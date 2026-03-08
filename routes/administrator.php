@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
+    Route::get('/students/create', StudentManagement::class)->name('students.create');
+    Route::get('/students/{student}/edit', StudentManagement::class)->name('students.edit');
     Route::get('/student-groups', StudentGroupManagement::class)->name('student-groups');
     Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
     Route::get('/book-management', BookManagement::class)->name('book-management');

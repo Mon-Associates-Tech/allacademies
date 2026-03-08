@@ -38,6 +38,7 @@ use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
+use App\Services\LocationService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -191,6 +192,13 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::post('export/pdf', fn () => exportToPdf())->name('export.pdf');
     Route::post('export/word', fn () => exportToWord())->name('export.word');
+
+    // Location debug route
+    Route::get('/debug/location', function (LocationService $locationService) {
+        return view('debug.location', [
+            'countries' => $locationService->getCountries(),
+        ]);
+    })->name('debug.location');
 
     /*
     |--------------------------------------------------------------------------

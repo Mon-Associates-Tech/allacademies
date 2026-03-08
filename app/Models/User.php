@@ -80,7 +80,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $fillable = [
-        'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'password', 'role', 'avatar', 'role_id',
+        'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'username', 'login_type', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
